@@ -419,7 +419,9 @@ namespace Il2Native.Logic
                 case Code.Ldelem_I8:
                 case Code.Ldelem_R4:
                 case Code.Ldelem_R8:
-                    return this.ResultOf(opCode.OpCodeOperands[0]);
+                    result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    // we are loading address of item of the array so we need to return type of element not the type of the array
+                    return new ReturnResult(result.Type.GetElementType());
                 case Code.Ldelem_Ref:
                     result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult(null);
                     result.IsReference = true;
@@ -831,6 +833,7 @@ namespace Il2Native.Logic
             {
                 OpCodePart opCodePartUsed = this.Stack.Pop();
 
+                var dupInsertedBack = false;
                 if (opCodePartUsed.ToCode() == Code.Nop)
                 {
                     if (insertBack == null)
@@ -859,6 +862,8 @@ namespace Il2Native.Logic
                     }
 
                     insertBack.Add(opCodePartUsed);
+
+                    dupInsertedBack = true;
                 }
 
                 if (opCodePartUsed.Any(Code.Leave, Code.Leave_S))
@@ -964,7 +969,7 @@ namespace Il2Native.Logic
                     opCodePartUsed = opCodeBlock;
                 }
 
-                if (insertBack != null && insertBack.Count > 0 && !insertBack[0].HasDup)
+                if (insertBack != null && insertBack.Count > 0 && !dupInsertedBack && !insertBack[0].HasDup)
                 {
                     // use as pre init block
                     insertBack.Reverse();

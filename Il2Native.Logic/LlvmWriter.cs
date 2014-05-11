@@ -259,7 +259,7 @@
             return opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop0
                    && !opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S)
                    && !opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S)
-                   && !opCode.Any(Code.Ldfld, Code.Ldsfld, Code.Ldflda, Code.Ldsflda);
+                   && !opCode.Any(Code.Ldfld, Code.Ldsfld, Code.Ldflda);
         }
 
         /// <summary>
@@ -303,15 +303,7 @@
             {
                 this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
                 this.WriteTypePrefix(this.Output, field.FieldType, false);
-
-                if (field.FieldType.IsValueType)
-                {
-                    this.Output.WriteLine(" 0");
-                }
-                else
-                {
-                    this.Output.WriteLine(" null");
-                }
+                this.Output.WriteLine(" undef");
             }
         }
 
@@ -349,7 +341,7 @@
                 ////&& baseType.Name != "Object"
                 )
             {
-                this.WriteTypeWithoutReferences(this.Output, baseType);
+                this.WriteTypeWithoutModifiers(this.Output, baseType);
             }
         }
 
@@ -679,7 +671,7 @@
                 this.Output.Write("> ");
             }
 
-            this.WriteTypeWithoutReferences(this.Output, type);
+            this.WriteTypeWithoutModifiers(this.Output, type);
 
             this.Output.Write(" = type ");
 
@@ -982,7 +974,10 @@
             {
                 if (opCode.BeforeBlock != null)
                 {
-                    this.ActualWriteBlock(writer, opCode.BeforeBlock as OpCodeBlock);
+                    var beforeBlock = opCode.BeforeBlock;
+                    // to prevent cercular reference for Dup commands
+                    opCode.BeforeBlock = null;
+                    this.ActualWriteBlock(writer, beforeBlock as OpCodeBlock);
                 }
 
                 endings = this.ActualWriteOpCode(writer, opCode, endings);
@@ -1161,8 +1156,9 @@
                     writer.Write("null");
                     break;
                 case Code.Ldtoken:
+                    // TODO: finish loading Token
                     opCodeInt32 = opCode as OpCodeInt32Part;
-                    writer.Write("System::RuntimeTypeHandle::New(System::RuntimeType::New())");
+                    writer.Write("undef");
                     break;
                 case Code.Localloc:
                     writer.Write("alloca i32 ");
@@ -1184,10 +1180,18 @@
 
                     break;
                 case Code.Ldsfld:
+
                     Type castFrom;
                     var operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     this.WriteLlvmLoad(writer, opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
+
+                    break;
+                case Code.Ldsflda:
+
+                    opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    writer.Write(string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
+
                     break;
                 case Code.Stfld:
 
@@ -1214,11 +1218,11 @@
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    operandType = this.DetectTypePrefix(opCode, null, OperandOptions.None, out castFrom);
-
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-                    this.ProcessOperator(writer, opCode, "store");
+                    operandType = opCodeFieldInfoPart.Operand.FieldType;
+
+                    this.ProcessOperator(writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand);
 
                     this.PostProcessOperand(writer, opCode, 0, directResult1);
                     writer.Write(", ");
@@ -1566,9 +1570,18 @@
                     }
 
                     var localType = this.LocalInfo[index].LocalType;
-                    this.UnaryOper(writer, opCode, "store", localType);
-                    writer.Write(", ");
-                    this.WriteLlvmLocalVarAccess(writer, index, true);
+
+                    if (localType.IsStructureType())
+                    {
+                        opCode.OpCodeOperands[0].DestinationName = GetLocalVarName(index);
+                        this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    }
+                    else
+                    {
+                        this.UnaryOper(writer, opCode, "store", localType);
+                        writer.Write(", ");
+                        this.WriteLlvmLocalVarAccess(writer, index, true);
+                    }
 
                     break;
                 case Code.Ldloc:
@@ -2240,6 +2253,13 @@
         private bool IsFloatingPointOpOperand(OpCodePart opCode)
         {
             var op1ReturnResult = this.ResultOf(opCode);
+
+            // TODO: result of unbox is null, fix it
+            if (op1ReturnResult == null || op1ReturnResult.Type == null)
+            {
+                return false;
+            }
+
             var op1IsReal = op1ReturnResult.Type.IsReal();
             return op1IsReal;
         }
@@ -2519,7 +2539,7 @@
             writer.Write("bitcast i8* ");
             WriteResultNumber(res);
             writer.Write(" to ");
-            this.WriteTypeWithoutReferences(writer, toType);
+            this.WriteTypeWithoutModifiers(writer, toType);
             writer.Write('*');
             opCode.ResultType = toType;
         }
@@ -2538,7 +2558,7 @@
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutReferences(writer, fromType);
+            this.WriteTypeWithoutModifiers(writer, fromType);
             writer.Write("* ");
             WriteResultNumber(res);
             writer.Write(" to i8*");
@@ -2549,7 +2569,7 @@
         {
             UnaryOper(writer, opCode, "bitcast");
             writer.Write(" to ");
-            this.WriteTypeWithoutReferences(writer, toType);
+            this.WriteTypeWithoutModifiers(writer, toType);
             writer.Write('*');
             opCode.ResultType = typeof(byte*);
         }
@@ -2570,11 +2590,11 @@
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutReferences(writer, fromType);
+            this.WriteTypeWithoutModifiers(writer, fromType);
             writer.Write("* ");
             WriteResultNumber(res);
             writer.Write(" to ");
-            this.WriteTypeWithoutReferences(writer, toType);
+            this.WriteTypeWithoutModifiers(writer, toType);
             writer.Write('*');
             opCode.ResultType = toType;
 
@@ -2600,7 +2620,7 @@
             writer.Write("bitcast i8* ");
             writer.Write(name);
             writer.Write(" to ");
-            this.WriteTypeWithoutReferences(writer, toType);
+            this.WriteTypeWithoutModifiers(writer, toType);
             writer.Write('*');
             opCode.ResultType = toType;
         }
@@ -2619,7 +2639,7 @@
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutReferences(writer, fromType);
+            this.WriteTypeWithoutModifiers(writer, fromType);
             writer.Write("* ");
             writer.Write(name);
             writer.Write(" to i8*");
@@ -2642,11 +2662,11 @@
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutReferences(writer, fromType);
+            this.WriteTypeWithoutModifiers(writer, fromType);
             writer.Write("* ");
             writer.Write(name);
             writer.Write(" to ");
-            this.WriteTypeWithoutReferences(writer, toType);
+            this.WriteTypeWithoutModifiers(writer, toType);
             writer.WriteLine('*');
             opCode.ResultType = toType;
         }
@@ -3080,10 +3100,16 @@
                 writer.Write('*');
             }
 
-            writer.Write(string.Concat(" %local", index));
+            writer.Write(' ');
+            writer.Write(GetLocalVarName(index));
 
             // TODO: optional do we need to calculate it propertly?
             writer.Write(", align " + pointerSize);
+        }
+
+        private string GetLocalVarName(int index)
+        {
+            return string.Concat("%local", index);
         }
 
         /// <summary>
@@ -3473,23 +3499,43 @@
         /// </param>
         private void WriteTypePrefix(IndentedTextWriter writer, Type type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
         {
-            var effectiveType = this.WriteTypeWithoutReferences(writer, type, doNotIncludeTypePrefixId);
+            this.WriteTypeWithoutModifiers(writer, type, doNotIncludeTypePrefixId);
+            WriteTypeModifiers(writer, type, asReference, refChar);
+        }
 
-            var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
-            if ((isReference || asReference) && !type.IsGenericParameter)
-            {
-                writer.Write(refChar);
-            }
+        private static void WriteTypeModifiers(IndentedTextWriter writer, Type type, bool asReference, char refChar)
+        {
 
-            if (type.IsArray)
-            {
-                writer.Write(refChar);
-            }
+            var effectiveType = type;
 
-            if (type.IsByRef)
+            do
             {
-                writer.Write(refChar);
-            }
+                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
+                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.IsArray)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.IsByRef)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.HasElementType)
+                {
+                    effectiveType = effectiveType.GetElementType();
+                }
+                else
+                {
+                    break;
+                }
+
+            } while (effectiveType != null);
         }
 
         /// <summary>
@@ -3502,7 +3548,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Type WriteTypeWithoutReferences(IndentedTextWriter writer, Type type, bool doNotIncludeTypePrefixId = false)
+        private void WriteTypeWithoutModifiers(IndentedTextWriter writer, Type type, bool doNotIncludeTypePrefixId = false)
         {
             var effectiveType = type;
 
@@ -3520,8 +3566,6 @@
 
             // write base name
             this.WriteName(writer, effectiveType);
-
-            return effectiveType;
         }
 
         #endregion
