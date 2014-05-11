@@ -1,9 +1,0 @@
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\Ll2NativeTests.dll
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\Ll2NativeTests.pdb
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\Il2Native.Logic.dll
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\nunit.framework.dll
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\Il2Native.Logic.pdb
-C:\Dev\Temp\Il2Native\Ll2NativeTests\bin\Debug\nunit.framework.xml
-C:\Dev\Temp\Il2Native\Ll2NativeTests\obj\Debug\Ll2NativeTests.csprojResolveAssemblyReference.cache
-C:\Dev\Temp\Il2Native\Ll2NativeTests\obj\Debug\Ll2NativeTests.dll
-C:\Dev\Temp\Il2Native\Ll2NativeTests\obj\Debug\Ll2NativeTests.pdb
