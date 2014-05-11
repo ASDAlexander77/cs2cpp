@@ -1,0 +1,57 @@
+%"System.Object" = type {
+}
+
+%"System.ValueType" = type {
+    %"System.Object"
+}
+
+%"System.String" = type {
+    %"System.Object",
+    i8*
+}
+
+%"System.MulticastDelegate" = type {
+    %"System.Object"
+}
+
+%"System.AsyncCallback" = type {
+    %"System.Object"
+}
+
+%"System.IAsyncResult" = type {
+    %"System.Object"
+}
+
+define void @"Void System.Object..ctor()"(%"System.Object"* %.this) #99003 {
+    ret void
+}
+
+define void @"Void System.Console.WriteLine(System.String)"(i8* %str) #99005 {
+    %1 = call i32 (...)* @puts(i8* %str)
+    ret void
+}
+
+define void @"Void System.Console.Write(System.String)"(i8* %str) #99006 {
+    %1 = call i32 (...)* @puts(i8* %str)
+    ret void
+}
+
+@.prni = private unnamed_addr constant [5 x i8] c"%i
+\00", align 1
+
+define void @"Void System.Console.WriteLine(Int32)"(i32 %i) #98001 {
+    %1 = call i32 (...)* @printf(i8* getelementptr inbounds ([5 x i8]* @.prni, i32 0, i32 0), i32 %i)
+    ret void
+}
+
+define i1 @"Boolean System.String.op_Equality(System.String, System.String)"(i8* %str1, i8* %str2) #97001 {
+    %1 = call i32 (i8*, i8*)* @strcmp(i8* %str1, i8* %str2)
+    %2 = icmp eq i32 %1, 0
+    ret i1 %2
+}
+
+define i1 @"Boolean System.String.op_Inequality(System.String, System.String)"(i8* %str1, i8* %str2) #97002 {
+    %1 = call i32 (i8*, i8*)* @strcmp(i8* %str1, i8* %str2)
+    %2 = icmp ne i32 %1, 0
+    ret i1 %2
+}

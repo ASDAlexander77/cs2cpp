@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8F2A92D0-8862-4CF7-9C95-120681F5A689}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Il2Native.Logic</RootNamespace>
+    <AssemblyName>Il2Native.Logic</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseWriter.cs" />
+    <Compile Include="Code.cs" />
+    <Compile Include="CodeEnum.cs" />
+    <Compile Include="CodeParts\OpCodeBytePart.cs" />
+    <Compile Include="CodeParts\OpCodeConstructorInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeDoublePart.cs" />
+    <Compile Include="CodeParts\OpCodeFieldInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeInt16Part.cs" />
+    <Compile Include="CodeParts\OpCodeInt32Part.cs" />
+    <Compile Include="CodeParts\OpCodeInt64Part.cs" />
+    <Compile Include="CodeParts\OpCodeLabelPart.cs" />
+    <Compile Include="CodeParts\OpCodeLabelsPart.cs" />
+    <Compile Include="CodeParts\OpCodeLocalBuilderPart.cs" />
+    <Compile Include="CodeParts\OpCodeMethodInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeParamPart.cs" />
+    <Compile Include="CodeParts\OpCodePart.cs" />
+    <Compile Include="CodeParts\OpCodeSBytePart.cs" />
+    <Compile Include="CodeParts\OpCodeSignatureHelperPart.cs" />
+    <Compile Include="CodeParts\OpCodeSinglePart.cs" />
+    <Compile Include="CodeParts\OpCodeStringPart.cs" />
+    <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="CWriter.cs" />
+    <Compile Include="CWriterWithBlocks.cs" />
+    <Compile Include="CAsmWriter.cs" />
+    <Compile Include="ICodeWriter.cs" />
+    <Compile Include="Il2Converter.cs" />
+    <Compile Include="IlReader.cs" />
+    <Compile Include="LlvmWriter.cs" />
+    <Compile Include="OpCodeBlock.cs" />
+    <Compile Include="OpCodeExtentions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\llvm_declarations.li" />
+    <None Include="Resources\llvm_mini_mscore_lib.li" />
+    <None Include="Resources\operations.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\stack.h" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

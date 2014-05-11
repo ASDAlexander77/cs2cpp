@@ -1,0 +1,8 @@
+C:\Dev\Temp\Il2Native\Il2Native\bin\Debug\Il2Bc.exe.config
+C:\Dev\Temp\Il2Native\Il2Native\bin\Debug\Il2Bc.exe
+C:\Dev\Temp\Il2Native\Il2Native\bin\Debug\Il2Bc.pdb
+C:\Dev\Temp\Il2Native\Il2Native\bin\Debug\Il2Native.Logic.dll
+C:\Dev\Temp\Il2Native\Il2Native\bin\Debug\Il2Native.Logic.pdb
+C:\Dev\Temp\Il2Native\Il2Native\obj\Debug\Il2Native.CmdLine.csprojResolveAssemblyReference.cache
+C:\Dev\Temp\Il2Native\Il2Native\obj\Debug\Il2Bc.exe
+C:\Dev\Temp\Il2Native\Il2Native\obj\Debug\Il2Bc.pdb

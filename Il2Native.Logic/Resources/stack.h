@@ -1,0 +1,8 @@
+class Stack
+{
+public:
+	Stack() 
+	{
+	}
+};
+

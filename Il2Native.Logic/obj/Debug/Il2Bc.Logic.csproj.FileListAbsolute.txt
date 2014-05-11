@@ -1,0 +1,5 @@
+C:\Users\Alexander\Documents\Visual Studio 2012\Projects\Il2Bc\Il2Bc.Logic\bin\Debug\Il2Bc.Logic.dll
+C:\Users\Alexander\Documents\Visual Studio 2012\Projects\Il2Bc\Il2Bc.Logic\bin\Debug\Il2Bc.Logic.pdb
+C:\Users\Alexander\Documents\Visual Studio 2012\Projects\Il2Bc\Il2Bc.Logic\obj\Debug\Il2Bc.Logic.csprojResolveAssemblyReference.cache
+C:\Users\Alexander\Documents\Visual Studio 2012\Projects\Il2Bc\Il2Bc.Logic\obj\Debug\Il2Bc.Logic.dll
+C:\Users\Alexander\Documents\Visual Studio 2012\Projects\Il2Bc\Il2Bc.Logic\obj\Debug\Il2Bc.Logic.pdb
