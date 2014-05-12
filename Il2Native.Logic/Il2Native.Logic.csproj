@@ -60,9 +60,6 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
-    <Compile Include="CWriter.cs" />
-    <Compile Include="CWriterWithBlocks.cs" />
-    <Compile Include="CAsmWriter.cs" />
     <Compile Include="ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs" />
     <Compile Include="IlReader.cs" />

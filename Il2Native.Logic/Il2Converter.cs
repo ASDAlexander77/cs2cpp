@@ -25,24 +25,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="outputFolder">
         /// </param>
-        public static void Convert(string source, string outputFolder, bool useLlvm = false)
+        public static void Convert(string source, string outputFolder)
         {
             var ilReader = new IlReader(source);
             ilReader.Load();
-
-            if (!useLlvm)
-            {
-#if SPLIT
-                GenerateHeader(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
-                GenerateCpp(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
-#else
-                GenerateStandartCpp(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
-#endif
-            }
-            else
-            {
-                GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
-            }
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
         }
 
         /// <summary>
@@ -56,12 +43,7 @@ namespace Il2Native.Logic
             var ilReader = new IlReader();
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
-#if SPLIT
-            GenerateHeader(ilReader, name, outputFolder, null);
-            GenerateCpp(ilReader, name, outputFolder, null);
-#else
-            GenerateStandartCpp(ilReader, name, outputFolder, null);
-#endif
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder);
         }
 
         #endregion
@@ -191,38 +173,6 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="ilReader">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="filter">
-        /// </param>
-        private static void GenerateCpp(IlReader ilReader, string fileName, string outputFolder, Type[] filter = null)
-        {
-            var codeWriter = GetCppSourceWriter(fileName, outputFolder);
-            GenerateSource(ilReader, filter, codeWriter);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ilReader">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="filter">
-        /// </param>
-        private static void GenerateHeader(IlReader ilReader, string fileName, string outputFolder, Type[] filter = null)
-        {
-            var codeWriter = GetHeaderWriter(fileName, outputFolder);
-            GenerateSource(ilReader, filter, codeWriter);
-        }
-
         private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, Type[] filter = null)
         {
             var codeWriter = GetLlvmWriter(fileName, outputFolder);
@@ -293,22 +243,6 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ilReader">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="filter">
-        /// </param>
-        private static void GenerateStandartCpp(IlReader ilReader, string fileName, string outputFolder, Type[] filter = null)
-        {
-            var codeWriter = GetStandartCppSourceWriter(fileName, outputFolder);
-            GenerateSource(ilReader, filter, codeWriter);
         }
 
         /// <summary>
@@ -437,19 +371,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static ICodeWriter GetCppSourceWriter(string fileName, string outputFolder)
-        {
-            return new CWriter(Path.Combine(outputFolder, fileName), CWriter.WritingMode.CodeOnly) as ICodeWriter;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -457,40 +378,6 @@ namespace Il2Native.Logic
         private static Type GetDeclType(Type type)
         {
             return !type.DeclaringType.IsNested ? type.DeclaringType : GetDeclType(type.DeclaringType);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static ICodeWriter GetHeaderWriter(string fileName, string outputFolder)
-        {
-#if NEST_TYPES
-            return new CAsmWriter(Path.Combine(outputFolder, fileName), CAsmWriter.WritingMode.HeaderOnly, true) as ICodeWriter;
-#else
-            return new CWriter(Path.Combine(outputFolder, fileName), CWriter.WritingMode.HeaderOnly, false) as ICodeWriter;
-#endif
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static ICodeWriter GetStandartCppSourceWriter(string fileName, string outputFolder)
-        {
-#if NEST_TYPES
-            return new CAsmWriter(Path.Combine(outputFolder, fileName), CAsmWriter.WritingMode.Standart, true) as ICodeWriter;
-#else
-            return new CWriter(Path.Combine(outputFolder, fileName), CWriter.WritingMode.Standart, false) as ICodeWriter;
-#endif
         }
 
         private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder)

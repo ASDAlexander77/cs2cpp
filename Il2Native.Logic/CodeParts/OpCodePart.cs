@@ -1,17 +1,39 @@
 ﻿namespace Il2Native.Logic.CodeParts
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
 
+    /// <summary>
+    /// </summary>
     [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
     public class OpCodePart
     {
-        private int? resultNumber;
-        private System.Type resultType;
+        #region Fields
 
+        /// <summary>
+        /// </summary>
+        private int? resultNumber;
+
+        /// <summary>
+        /// </summary>
+        private Type resultType;
+
+        #endregion
+
+        #region Constructors and Destructors
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opcode">
+        /// </param>
+        /// <param name="addressStart">
+        /// </param>
+        /// <param name="addressEnd">
+        /// </param>
         public OpCodePart(OpCode opcode, int addressStart, int addressEnd)
         {
             this.OpCode = opcode;
@@ -19,24 +41,70 @@
             this.AddressEnd = addressEnd;
         }
 
+        /// <summary>
+        /// </summary>
         protected OpCodePart()
         {
         }
 
-        public OpCode OpCode { get; private set; }
+        #endregion
 
-        public int AddressStart { get; private set; }
+        #region Public Properties
 
+        /// <summary>
+        /// </summary>
         public int AddressEnd { get; private set; }
 
-        public virtual int GroupAddressStart
-        {
-            get
-            {
-                return OpCodeOperands != null && OpCodeOperands.Length > 0 ? OpCodeOperands[0].GroupAddressStart : this.AddressStart;
-            }
-        }
+        /// <summary>
+        /// </summary>
+        public int AddressStart { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        public List<OpCodePart> Cases { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int CloseRoundBrackets { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool ConjunctionAndCondition { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool ConjunctionOrCondition { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool DefaultCase { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public string DestinationName { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public Type DestinationType { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool DupProcessedOnce { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<int> EndOfClausesOrFinal { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<int> EndOfTry { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public List<ExceptionHandlingClause> ExceptionHandlers { get; set; }
+
+        /// <summary>
+        /// </summary>
         public virtual int GroupAddressEnd
         {
             get
@@ -45,16 +113,18 @@
             }
         }
 
-        public OpCodePart[] OpCodeOperands { get; set; }
+        /// <summary>
+        /// </summary>
+        public virtual int GroupAddressStart
+        {
+            get
+            {
+                return this.OpCodeOperands != null && this.OpCodeOperands.Length > 0 ? this.OpCodeOperands[0].GroupAddressStart : this.AddressStart;
+            }
+        }
 
-        // to mark Op as used to skip it in write operation
-        public bool Skip { get; set; }
-
-        // used to mark that jump for this op is process when blocks builds
-        public bool JumpProcessed { get; set; }
-
-        public bool UseAsBoolean { get; set; }
-
+        /// <summary>
+        /// </summary>
         public bool HasDup
         {
             get
@@ -74,72 +144,36 @@
             }
         }
 
-        public HashSet<int> Try { get; set; }
-
-        public HashSet<int> EndOfTry { get; set; }
-
-        public List<ExceptionHandlingClause> ExceptionHandlers { get; set; }
-
-        public HashSet<int> EndOfClausesOrFinal { get; set; }
-
-        public List<OpCodePart> Cases { get; set; }
-
-        public bool DefaultCase { get; set; }
-
-        public List<OpCodePart> JumpDestination { get; set; }
-
+        /// <summary>
+        /// </summary>
         public bool InvertCondition { get; set; }
 
-        public bool ConjunctionAndCondition { get; set; }
+        /// <summary>
+        /// </summary>
+        public List<OpCodePart> JumpDestination { get; set; }
 
-        public bool ConjunctionOrCondition { get; set; }
+        /// <summary>
+        /// </summary>
+        public bool JumpProcessed { get; set; }
 
+        /// <summary>
+        /// </summary>
+        public OpCode OpCode { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public OpCodePart[] OpCodeOperands { get; set; }
+
+        /// <summary>
+        /// </summary>
         public int OpenRoundBrackets { get; set; }
 
-        public int CloseRoundBrackets { get; set; }
-
-        public bool UseAsEmpty { get; set; }
-
-        public bool UseAsIf { get; set; }
-
-        public bool UseAsIfWhileForSubCondition { get; set; }
-
-        public bool UseAsElse { get; set; }
-
-        public bool UseAsFor { get; set; }
-
-        public bool UseAsDoWhile { get; set; }
-
-        public bool UseAsWhile { get; set; }
-
-        public bool UseAsBreak { get; set; }
-
-        public bool UseAsConditionalBreak { get; set; }
-
-        public bool UseAsContinue { get; set; }
-
-        public bool UseAsConditionalContinue { get; set; }
-
-        public bool UseAsConditionalExpression { get; set; }
-
-        public bool UseAsNullCoalescingExpression { get; set; }
-
-        public bool UseAsLeadingIncDecExpression { get; set; }
-
-        public bool UseAsIncDecExpression { get; set; }
-
-        public bool UseAsSwitch { get; set; }
-
-        public bool UseAsIfElseSwitch { get; set; }
-
-        public bool UseAsCaseCondition { get; set; }
-
-        public bool UseAsCaseBreak { get; set; }
-
-        public bool DupProcessedOnce { get; set; }
-
+        /// <summary>
+        /// </summary>
         public bool ReadExceptionFromStack { get; set; }
 
+        /// <summary>
+        /// </summary>
         public int? ResultNumber
         {
             get
@@ -151,13 +185,16 @@
 
                 return this.resultNumber;
             }
+
             set
             {
                 this.resultNumber = value;
             }
         }
 
-        public System.Type ResultType
+        /// <summary>
+        /// </summary>
+        public Type ResultType
         {
             get
             {
@@ -168,16 +205,101 @@
 
                 return this.resultType;
             }
+
             set
             {
                 this.resultType = value;
             }
         }
 
-        public string DestinationName { get; set; }
+        /// <summary>
+        /// </summary>
+        public bool Skip { get; set; }
 
-        public System.Type DestinationType { get; set; }
+        /// <summary>
+        /// </summary>
+        public HashSet<int> Try { get; set; }
 
-        public OpCodeBlock BeforeBlock { get; set; }
+        /// <summary>
+        /// </summary>
+        public bool UseAsBoolean { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsBreak { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsCaseBreak { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsCaseCondition { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsConditionalBreak { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsConditionalContinue { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsConditionalExpression { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsContinue { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsDoWhile { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsElse { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsEmpty { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsFor { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsIf { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsIfElseSwitch { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsIfWhileForSubCondition { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsIncDecExpression { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsLeadingIncDecExpression { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsNullCoalescingExpression { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsSwitch { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsWhile { get; set; }
+
+        #endregion
     }
 }
