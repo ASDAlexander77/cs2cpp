@@ -20,27 +20,19 @@ namespace Il2Native.Logic
     /// </summary>
     public class BaseWriter
     {
-        #region Fields
-
-        /// <summary>
-        /// </summary>
-        protected List<ConstructorInfo> StaticConstructors = new List<ConstructorInfo>();
-
-        #endregion
-
         #region Constructors and Destructors
 
         /// <summary>
         /// </summary>
         public BaseWriter()
         {
+            this.StaticConstructors = new List<ConstructorInfo>();
+            this.Ops = new List<OpCodePart>();
             this.Stack = new Stack<OpCodePart>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressEnd = new SortedDictionary<int, OpCodePart>();
-            this.DetectStatements = true;
-            this.JoinDups = true;
         }
 
         #endregion
@@ -69,10 +61,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected bool DetectStatements { get; set; }
-
-        /// <summary>
-        /// </summary>
         protected IList<ExceptionHandlingClause> ExceptionHandlingClauses { get; private set; }
 
         /// <summary>
@@ -86,10 +74,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected bool IsInterface { get; set; }
-
-        /// <summary>
-        /// </summary>
-        protected bool JoinDups { get; set; }
 
         /// <summary>
         /// </summary>
@@ -113,11 +97,19 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        protected List<OpCodePart> Ops { get; private set; }
+
+        /// <summary>
+        /// </summary>
         protected ParameterInfo[] ParameterInfo { get; private set; }
 
         /// <summary>
         /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected List<ConstructorInfo> StaticConstructors { get; set; }
 
         /// <summary>
         /// </summary>
@@ -420,6 +412,7 @@ namespace Il2Native.Logic
                 case Code.Ldelem_R4:
                 case Code.Ldelem_R8:
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
+
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.Type.GetElementType());
                 case Code.Ldelem_Ref:
@@ -428,6 +421,7 @@ namespace Il2Native.Logic
                     return result;
                 case Code.Ldelema:
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
+
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.Type.GetElementType()) { IsAddress = true };
                 case Code.Ldc_I4_0:
@@ -633,21 +627,15 @@ namespace Il2Native.Logic
         /// </param>
         protected void AssignJumpBlocks(OpCodePart[] opCodes)
         {
-            foreach (OpCodePart opCodePart in opCodes)
+            foreach (var opCodePart in opCodes)
             {
                 if (opCodePart.IsAnyBranch())
                 {
                     var jumpOp = opCodePart as OpCodeInt32Part;
                     if (jumpOp != null)
                     {
-                        int nextAddress = opCodePart.JumpAddress();
-                        OpCodePart target;
-
-                        if (!this.OpsByGroupAddressStart.TryGetValue(nextAddress, out target))
-                        {
-                            target = this.OpsByAddressStart[nextAddress];
-                        }
-
+                        var nextAddress = opCodePart.JumpAddress();
+                        OpCodePart target = this.OpsByAddressStart[nextAddress];
                         if (target.JumpDestination == null)
                         {
                             target.JumpDestination = new List<OpCodePart>();
@@ -661,11 +649,11 @@ namespace Il2Native.Logic
                     var switchOp = opCodePart as OpCodeLabelsPart;
                     if (switchOp != null)
                     {
-                        int index = 0;
-                        foreach (int jumpAddress in switchOp.Operand)
+                        var index = 0;
+                        foreach (var jumpAddress in switchOp.Operand)
                         {
-                            int nextAddress = switchOp.JumpAddress(index);
-                            OpCodePart target = this.OpsByGroupAddressStart[nextAddress];
+                            var nextAddress = switchOp.JumpAddress(index);
+                            var target = this.OpsByGroupAddressStart[nextAddress];
                             if (target.JumpDestination == null)
                             {
                                 target.JumpDestination = new List<OpCodePart>();
@@ -691,7 +679,7 @@ namespace Il2Native.Logic
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
-            foreach (OpCodePart opCodePart in opCodes)
+            foreach (var opCodePart in opCodes)
             {
                 if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
                 {
@@ -703,113 +691,6 @@ namespace Il2Native.Logic
                     this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodes">
-        /// </param>
-        /// <param name="isCycle">
-        /// </param>
-        /// <param name="startOfCycleAddress">
-        /// </param>
-        /// <param name="endOfCycleAddress">
-        /// </param>
-        /// <param name="skip">
-        /// </param>
-        /// <param name="skipIsAddress">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected OpCodePart[] BuildStatements(
-            OpCodePart[] opCodes, bool isCycle, int startOfCycleAddress, int endOfCycleAddress, int skip = 0, bool skipIsAddress = false, int? length = null)
-        {
-            if (opCodes.Length == 0)
-            {
-                return opCodes;
-            }
-
-            var ctx = new BuildStatementsContext
-                          {
-                              CurrentOpCodePart = null, 
-                              ArgOpCodeParts = opCodes, 
-                              ResultOpCodes = new List<OpCodePart>(), 
-                              Recording = false, 
-                              Including = false, 
-                              FirstOpControl = false, 
-                              Stop = null, 
-                              NewBlockOpCodes = null, 
-                              StartAddress = skipIsAddress ? skip : opCodes[skip].GroupAddressStart, 
-                              EndAddress = opCodes[(length ?? opCodes.Length) - 1].GroupAddressEnd, 
-                              IsCycle = isCycle, 
-                              StartOfCycleAddress = startOfCycleAddress, 
-                              EndOfCycleAddress = endOfCycleAddress
-                          };
-
-            int lengthToProcess = length ?? opCodes.Length;
-
-            foreach (OpCodePart opCodePart in opCodes)
-            {
-                ctx.CurrentOpCodePart = opCodePart;
-
-                // to reduce scopes
-                if (lengthToProcess <= 0)
-                {
-                    ctx.ResultOpCodes.Add(opCodePart);
-                    continue;
-                }
-
-                lengthToProcess--;
-
-                if (!skipIsAddress && skip > 0)
-                {
-                    ctx.ResultOpCodes.Add(opCodePart);
-                    skip--;
-                    continue;
-                }
-
-                if (skipIsAddress && skip > opCodePart.GroupAddressStart)
-                {
-                    ctx.ResultOpCodes.Add(opCodePart);
-                    continue;
-                }
-
-                if (!ctx.Recording)
-                {
-                    this.ShouldStartOpBlockRecording(ctx);
-                }
-
-                if (!ctx.Including && ctx.Stop == opCodePart)
-                {
-                    this.AppendStatement(ctx);
-
-                    // check if after AppendState because Stop OpCode can be start of next group
-                    this.ShouldStartOpBlockRecording(ctx);
-                }
-
-                if (ctx.Recording)
-                {
-                    ctx.NewBlockOpCodes.Add(opCodePart);
-                }
-                else
-                {
-                    ctx.ResultOpCodes.Add(opCodePart);
-                }
-
-                if (ctx.Including && ctx.Stop == opCodePart)
-                {
-                    this.AppendStatement(ctx);
-                }
-            }
-
-            if (ctx.NewBlockOpCodes != null)
-            {
-                this.AppendStatement(ctx);
-            }
-
-            return ctx.ResultOpCodes.ToArray();
         }
 
         /// <summary>
@@ -829,11 +710,10 @@ namespace Il2Native.Logic
 
             var opCodeParts = new OpCodePart[size];
 
-            for (int i = 1; i <= size; i++)
+            for (var i = 1; i <= size; i++)
             {
                 OpCodePart opCodePartUsed = this.Stack.Pop();
 
-                var dupInsertedBack = false;
                 if (opCodePartUsed.ToCode() == Code.Nop)
                 {
                     if (insertBack == null)
@@ -862,8 +742,6 @@ namespace Il2Native.Logic
                     }
 
                     insertBack.Add(opCodePartUsed);
-
-                    dupInsertedBack = true;
                 }
 
                 if (opCodePartUsed.Any(Code.Leave, Code.Leave_S))
@@ -881,7 +759,7 @@ namespace Il2Native.Logic
                 }
                 else if ((opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
                           || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
-                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as MethodInfo).ReturnType.IsVoid()) && (!opCodePartUsed.HasDup || !this.JoinDups))
+                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as MethodInfo).ReturnType.IsVoid()) && !opCodePartUsed.HasDup)
                 {
                     if (insertBack == null)
                     {
@@ -916,6 +794,12 @@ namespace Il2Native.Logic
                     for (int k = 0; k < sizeOfCondition; k++)
                     {
                         newBlockOps.Add(this.Stack.Pop());
+                    }
+
+                    // because it is used you do not need to process it twice
+                    foreach (var opCode in newBlockOps)
+                    {
+                        opCode.Skip = true;
                     }
 
                     newBlockOps.Reverse();
@@ -969,15 +853,6 @@ namespace Il2Native.Logic
                     opCodePartUsed = opCodeBlock;
                 }
 
-                if (insertBack != null && insertBack.Count > 0 && !dupInsertedBack && !insertBack[0].HasDup)
-                {
-                    // use as pre init block
-                    insertBack.Reverse();
-                    var block = new OpCodeBlock(insertBack.ToArray(), false);
-                    opCodePartUsed.BeforeBlock = block;
-                    insertBack.Clear();
-                }
-
                 opCodeParts[size - i] = opCodePartUsed;
             }
 
@@ -987,7 +862,7 @@ namespace Il2Native.Logic
             if (insertBack != null)
             {
                 insertBack.Reverse();
-                foreach (OpCodePart pushBack in insertBack)
+                foreach (var pushBack in insertBack)
                 {
                     this.Stack.Push(pushBack);
                 }
@@ -1004,18 +879,11 @@ namespace Il2Native.Logic
         {
             OpCodePart[] rest = this.Stack.Reverse().ToArray();
 
-            this.Stack.Clear();
-
             this.BuildGroupAddressIndexes(rest);
             this.AssignExceptionsToOpCodes();
             this.AssignJumpBlocks(rest);
-            if (this.DetectStatements)
-            {
-                OpCodePart[] newRest = this.BuildStatements(rest, false, 0, 0);
-                return newRest;
-            }
 
-            return rest;
+            return this.Ops.ToArray();
         }
 
         /// <summary>
@@ -1024,14 +892,13 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
+            this.Ops.Add(opCode);
+
             this.AddAddressIndex(opCode);
 
-            Code code = opCode.ToCode();
+            var code = opCode.ToCode();
             switch (code)
             {
-                    // case Code.Dup:
-                    // stack.Push(stack.Peek());
-                    // return;
                 case Code.Call:
                     MethodBase methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
@@ -1327,11 +1194,12 @@ namespace Il2Native.Logic
         /// </summary>
         protected void StartProcess()
         {
+            this.Ops.Clear();
+            this.Stack.Clear();
             this.OpsByAddressStart.Clear();
             this.OpsByAddressEnd.Clear();
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
-            this.Stack.Clear();
         }
 
         /// <summary>
@@ -1397,45 +1265,6 @@ namespace Il2Native.Logic
         {
             this.OpsByAddressStart[opCode.AddressStart] = opCode;
             this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ctx">
-        /// </param>
-        private void AppendStatement(BuildStatementsContext ctx)
-        {
-            ctx.Recording = false;
-
-            OpCodePart[] body = ctx.NewBlockOpCodes.ToArray();
-            var tempBlock = new OpCodeBlock(body, true, true);
-            bool isCycle = tempBlock.UseAsDoWhile || tempBlock.UseAsFor || tempBlock.UseAsWhile;
-
-            bool addressSkipIsUsed = ctx.SkipControlsUntilAddress != 0;
-
-            OpCodePart[] currentArray = ctx.NewBlockOpCodes.Count > 1
-                                            ? (ctx.FirstOpControl
-                                                   ? this.BuildStatements(
-                                                       body, 
-                                                       isCycle ? isCycle : ctx.IsCycle, 
-                                                       isCycle ? ctx.StartAddress : ctx.StartOfCycleAddress, 
-                                                       isCycle ? ctx.EndAddress : ctx.EndOfCycleAddress, 
-                                                       !addressSkipIsUsed ? 1 : ctx.SkipControlsUntilAddress, 
-                                                       addressSkipIsUsed, 
-                                                       ctx.NewBlockOpCodes.Count)
-                                                   : this.BuildStatements(
-                                                       body, 
-                                                       isCycle ? isCycle : ctx.IsCycle, 
-                                                       isCycle ? ctx.StartAddress : ctx.StartOfCycleAddress, 
-                                                       isCycle ? ctx.EndAddress : ctx.EndOfCycleAddress, 
-                                                       0, 
-                                                       false, 
-                                                       ctx.NewBlockOpCodes.Count - 1))
-                                            : body;
-
-            ctx.ResultOpCodes.Add(new OpCodeBlock(currentArray));
-
-            ctx.NewBlockOpCodes = null;
         }
 
         /// <summary>
@@ -2090,160 +1919,6 @@ namespace Il2Native.Logic
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ctx">
-        /// </param>
-        private void ShouldStartOpBlockRecording(BuildStatementsContext ctx)
-        {
-            bool hasBranch = ctx.CurrentOpCodePart.IsAnyBranch() && !ctx.CurrentOpCodePart.JumpProcessed;
-
-            bool hasUnprocessedJump = ctx.CurrentOpCodePart.JumpDestination != null && ctx.CurrentOpCodePart.JumpDestination.Any(j => !j.JumpProcessed);
-
-            if (hasBranch)
-            {
-                // test if it is break;
-                if (this.IsSwitch(ctx.CurrentOpCodePart, ctx))
-                {
-                    hasBranch = false;
-
-                    ctx.Recording = true;
-                    ctx.NewBlockOpCodes = new List<OpCodePart>();
-                }
-                else if (this.IsBranchBreak(ctx.CurrentOpCodePart, ctx))
-                {
-                    ctx.CurrentOpCodePart.UseAsBreak = ctx.CurrentOpCodePart.IsBranch();
-                    ctx.CurrentOpCodePart.UseAsConditionalBreak = ctx.CurrentOpCodePart.IsCondBranch();
-                    ctx.CurrentOpCodePart.JumpProcessed = true;
-                    hasBranch = false;
-                }
-                else if (this.IsBranchContinue(ctx.CurrentOpCodePart, ctx))
-                {
-                    ctx.CurrentOpCodePart.UseAsContinue = ctx.CurrentOpCodePart.IsBranch();
-                    ctx.CurrentOpCodePart.UseAsConditionalContinue = ctx.CurrentOpCodePart.IsCondBranch();
-                    ctx.CurrentOpCodePart.JumpProcessed = true;
-                    hasBranch = false;
-                }
-                else if (this.IsConditionalLoop(ctx.CurrentOpCodePart, ctx))
-                {
-                    hasBranch = false;
-
-                    ctx.Recording = true;
-                    ctx.NewBlockOpCodes = new List<OpCodePart>();
-                }
-            }
-
-            // check if it has priority
-            if (hasBranch && hasUnprocessedJump)
-            {
-                OpCodePart stopForBranch = this.OpsByGroupAddressStart[ctx.CurrentOpCodePart.JumpAddress()];
-                OpCodePart stopForJump = ctx.CurrentOpCodePart.JumpDestination.First(j => !j.JumpProcessed);
-                if (stopForJump.GroupAddressStart > stopForBranch.GroupAddressStart)
-                {
-                    // jump has priority
-                    hasBranch = false;
-                }
-            }
-
-            if (hasBranch)
-            {
-                ctx.Recording = true;
-                ctx.Including = false;
-                ctx.FirstOpControl = true;
-                ctx.Stop = this.OpsByGroupAddressStart[ctx.CurrentOpCodePart.JumpAddress()];
-
-                // check if it is while cycle
-                if (ctx.Stop.IsCondBranch() && !ctx.Stop.IsJumpForward())
-                {
-                    if (ctx.Stop.JumpAddress() == ctx.CurrentOpCodePart.GroupAddressEnd)
-                    {
-                        // this is pare br/jump back which is 'while' kind
-                        ctx.Including = true;
-                    }
-                    else
-                    {
-                        // this is jump on while cycle, we need to cut the scope
-                        ctx.Stop = this.OpsByGroupAddressEnd[ctx.Stop.JumpAddress()];
-                    }
-                }
-
-                // when it is pointing to itself
-                if (ctx.CurrentOpCodePart == ctx.Stop)
-                {
-                    ctx.Including = true;
-                }
-
-                // check if it is 'If' with multiple conditions
-                OpCodePart current = ctx.CurrentOpCodePart;
-                while (current != null && current.IsCondBranch() && current.IsJumpForward() && current.GroupAddressStart <= ctx.Stop.GroupAddressStart)
-                {
-                    ctx.Stop = this.OpsByGroupAddressStart[current.JumpAddress()];
-                    current.JumpProcessed = true;
-                    current.UseAsIfWhileForSubCondition = true;
-
-                    // if jump goes over all Conditions then it is part of '1 if'
-                    OpCodePart test = current;
-
-                    // test for OR cobination
-                    while (test.IsCondBranch() && test.IsJumpForward() && test.GroupAddressEnd < ctx.Stop.GroupAddressStart)
-                    {
-                        test = test.NextOpCodeGroup(this);
-                    }
-
-                    if (test.IsCondBranch() && test.GroupAddressEnd == ctx.Stop.GroupAddressStart)
-                    {
-                        // this is not last if
-                        current = current.NextOpCodeGroup(this);
-                        continue;
-                    }
-
-                    test = current.NextOpCodeGroup(this);
-
-                    // test for AND
-                    bool hasAny = false;
-                    while (test.IsCondBranch() && test.IsJumpForward() && test.JumpAddress() == current.JumpAddress())
-                    {
-                        test = test.NextOpCodeGroup(this);
-                        hasAny = true;
-                    }
-
-                    if (hasAny)
-                    {
-                        // this is not last if
-                        current = current.NextOpCodeGroup(this);
-                        continue;
-                    }
-
-                    break;
-                }
-
-                // check if it is if/else
-                OpCodePart beforeStop = ctx.Stop.PreviousOpCodeGroup(this);
-                if (beforeStop != null && beforeStop.IsBranch() && beforeStop.IsJumpForward() && !this.IsBranchBreak(beforeStop, ctx)
-                    && !this.IsBranchContinue(beforeStop, ctx))
-                {
-                    ctx.Stop = beforeStop;
-                    ctx.Including = false;
-                }
-
-                // we need to mark as processed, otherwise it may be processed one more time 
-                ctx.CurrentOpCodePart.JumpProcessed = true;
-
-                ctx.NewBlockOpCodes = new List<OpCodePart>();
-            }
-
-            if (hasUnprocessedJump)
-            {
-                ctx.Recording = true;
-                ctx.Including = true;
-                ctx.FirstOpControl = false;
-                ctx.Stop = ctx.CurrentOpCodePart.JumpDestination.First(j => !j.JumpProcessed);
-                ctx.Stop.JumpProcessed = true;
-
-                ctx.NewBlockOpCodes = new List<OpCodePart>();
-            }
         }
 
         #endregion

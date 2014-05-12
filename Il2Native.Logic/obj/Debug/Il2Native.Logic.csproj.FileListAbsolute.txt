@@ -4,4 +4,3 @@ C:\Dev\Temp\Il2Native\Il2Native.Logic\obj\Debug\Il2Native.Logic.Properties.Resou
 C:\Dev\Temp\Il2Native\Il2Native.Logic\obj\Debug\Il2Native.Logic.csproj.GenerateResource.Cache
 C:\Dev\Temp\Il2Native\Il2Native.Logic\obj\Debug\Il2Native.Logic.dll
 C:\Dev\Temp\Il2Native\Il2Native.Logic\obj\Debug\Il2Native.Logic.pdb
-C:\Dev\Temp\Il2Native\Il2Native.Logic\obj\Debug\Il2Native.Logic.csprojResolveAssemblyReference.cache

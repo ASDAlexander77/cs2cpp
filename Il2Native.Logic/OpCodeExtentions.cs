@@ -279,6 +279,13 @@
             return ret;
         }
 
+        public static OpCodePart NextOpCode(this OpCodePart opCode, BaseWriter baseWriter)
+        {
+            OpCodePart ret = null;
+            baseWriter.OpsByAddressStart.TryGetValue(opCode.AddressEnd, out ret);
+            return ret;
+        }
+
         public static OpCodePart JumpOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
             var jumpAddress = opCode.JumpAddress();
@@ -303,6 +310,13 @@
         {
             OpCodePart ret = null;
             baseWriter.OpsByGroupAddressEnd.TryGetValue(opCode.GroupAddressStart, out ret);
+            return ret;
+        }
+
+        public static OpCodePart PreviousOpCode(this OpCodePart opCode, BaseWriter baseWriter)
+        {
+            OpCodePart ret = null;
+            baseWriter.OpsByAddressEnd.TryGetValue(opCode.AddressStart, out ret);
             return ret;
         }
 

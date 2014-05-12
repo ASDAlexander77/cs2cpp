@@ -14,8 +14,9 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"D:\Temp\tests\";
+        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"C:\Temp\tests\";
+        private const string OutputPath = @"C:\Temp\IlCTests\";
 
         public MSTests()
         {
@@ -85,15 +86,15 @@
         [TestMethod]
         public void TestType()
         {
-            Il2Converter.Convert(typeof(string), @"D:\Temp\IlCTests\");
-            //Il2Converter.Convert(typeof(Type), @"D:\Temp\IlCTests\");
-            //Il2Converter.Convert(typeof(object), @"D:\Temp\IlCTests\");
+            Il2Converter.Convert(typeof(string), OutputPath);
+            //Il2Converter.Convert(typeof(Type), OutputPath);
+            //Il2Converter.Convert(typeof(object), OutputPath);
         }
 
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(@"D:\Temp\CorLib\bin\Release\CorLib.dll", @"D:\Temp\IlCTests\");
+            Il2Converter.Convert(@"D:\Temp\CorLib\bin\Release\CorLib.dll", OutputPath);
         }
         
 
@@ -148,7 +149,7 @@
                 // test-%1.exe
 
                 var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = "D:\\Temp\\IlCTests\\";
+                pi.WorkingDirectory = OutputPath;
                 pi.FileName = "c.bat";
                 pi.Arguments = index.ToString();
 
@@ -159,7 +160,7 @@
                 System.Diagnostics.Trace.WriteLine("Running EXE for " + index);
 
                 // run test file
-                var process = System.Diagnostics.Process.Start(string.Format("D:\\Temp\\IlCTests\\test-{0}.exe", index));
+                var process = System.Diagnostics.Process.Start(string.Format("{1}test-{0}.exe", index, OutputPath));
 
                 process.WaitForExit();
 
@@ -196,7 +197,7 @@
                 // test-%1.exe
 
                 var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = "D:\\Temp\\IlCTests\\";
+                pi.WorkingDirectory = OutputPath;
                 pi.FileName = "cg.bat";
                 pi.Arguments = index.ToString("000");
 
@@ -207,7 +208,7 @@
                 System.Diagnostics.Trace.WriteLine("Running EXE for " + index);
 
                 // run test file
-                var process = System.Diagnostics.Process.Start(string.Format("D:\\Temp\\IlCTests\\gtest-{0}.exe", index.ToString("000")));
+                var process = System.Diagnostics.Process.Start(string.Format("{1}gtest-{0}.exe", index.ToString("000"), OutputPath));
 
                 process.WaitForExit();
 
@@ -219,7 +220,7 @@
         public void TestRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 33, 34, 35, 36, 37 };
+            var skip = new int[] { 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37 };
 
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
@@ -230,9 +231,9 @@
                 System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
 
                 var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = "D:\\Temp\\IlCTests\\";
+                pi.WorkingDirectory = OutputPath;
                 pi.FileName = "lli.exe";
-                pi.Arguments = string.Format("D:\\Temp\\IlCTests\\test-{0}.li", index);
+                pi.Arguments = string.Format("{1}test-{0}.li", index, OutputPath);
 
                 var piProc = System.Diagnostics.Process.Start(pi);
 
@@ -244,18 +245,17 @@
 
         private void Test(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), @"D:\Temp\IlCTests\", true);
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath);
         }
 
         private void TestCustom(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), @"D:\Temp\IlCTests\", true);
+            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath);
         }
 
         private void TestGen(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), @"D:\Temp\IlCTests\");
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath);
         }
-
     }
 }
