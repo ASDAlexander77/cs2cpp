@@ -1237,9 +1237,13 @@
                 case Code.Ldfld:
 
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteFieldAccess(writer, opCodeFieldInfoPart);
-                    writer.WriteLine(string.Empty);
-                    this.WriteLlvmLoad(writer, opCode, opCode.ResultType, string.Format("%.r{0}", opCode.ResultNumber ?? -1));
+                    var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.DestinationName == null;
+                    if (!skip)
+                    {
+                        this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+                        writer.WriteLine(string.Empty);
+                        this.WriteLlvmLoad(writer, opCode, opCode.ResultType, string.Format("%.r{0}", opCode.ResultNumber ?? -1));
+                    }
 
                     break;
                 case Code.Ldflda:
@@ -2790,6 +2794,11 @@
         private void WriteCall(
             IndentedTextWriter writer, OpCodePart opCodeMethodInfo, MethodBase methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber)
         {
+            if (opCodeMethodInfo.ResultNumber.HasValue)
+            {
+                return;
+            }
+
             var preProcessedOperandResults = new List<bool>();
 
             if (opCodeMethodInfo.OpCodeOperands != null)
