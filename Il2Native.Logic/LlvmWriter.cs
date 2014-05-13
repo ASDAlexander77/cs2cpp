@@ -1069,7 +1069,7 @@
             if (block.UseAsConditionalExpression)
             {
                 // thos os a hack for return () ? a : b; expressions
-                int expressionPart = -1;
+                 int expressionPart = -1;
                 if (block.OpCodes[block.OpCodes.Length - 2].OpCode.FlowControl == FlowControl.Branch)
                 {
                     expressionPart = 3;
@@ -1595,10 +1595,12 @@
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     break;
                 case Code.Box:
+                    writer.WriteLine("; Boxing");
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     break;
                 case Code.Unbox:
                 case Code.Unbox_Any:
+                    writer.WriteLine("; Unboxing");
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     break;
                 case Code.Ret:
@@ -1617,7 +1619,7 @@
 
                     this.UnaryOper(writer, opCode, "ret", this.MethodReturnType, opts);
 
-                    if (this.MethodReturnType == null || this.MethodReturnType.IsStructureType())
+                    if (this.MethodReturnType.IsStructureType())
                     {
                         writer.Write("void");
                     }
@@ -1977,24 +1979,18 @@
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-
-                    writer.Write("dynamic_cast<");
-                    this.WriteTypePrefix(writer, opCodeTypePart.Operand, true);
-                    writer.Write(">(");
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                    writer.Write(")");
+                    writer.WriteLine(string.Empty);
+                    WriteBitcast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0].ResultType, opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, opCodeTypePart.Operand, true);
 
                     break;
 
                 case Code.Isinst:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-
-                    writer.Write("dynamic_cast<");
-                    this.WriteTypePrefix(writer, opCodeTypePart.Operand, true);
-                    writer.Write(">(");
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                    writer.Write(") != nullptr");
+                    writer.WriteLine(string.Empty);
+                    WriteBitcast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0].ResultType, opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, opCodeTypePart.Operand, true);
 
                     break;
 
@@ -2210,7 +2206,7 @@
             {
                 effectiveType = requiredType;
             }
-            else if (opCode.OpCodeOperands != null && (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands.Length > 0))
+            else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
             {
                 if (!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || res2 == null || (res2.IsConst ?? false))
                 {
@@ -2864,11 +2860,13 @@
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
                 this.WriteTypePrefix(writer, methodInfo.ReturnType, false);
+                opCodeMethodInfo.ResultType = methodInfo.ReturnType;
             }
             else
             {
                 // this is constructor
                 writer.Write("void");
+                opCodeMethodInfo.ResultType = null;
             }
 
             writer.Write(' ');
@@ -2885,8 +2883,8 @@
                 preProcessedOperandResults, 
                 thisResultNumber, 
                 thisType, 
-                opCodeMethodInfo.ResultNumber, 
-                methodInfo != null ? methodInfo.ReturnType : null);
+                opCodeMethodInfo.ResultNumber,
+                opCodeMethodInfo.ResultType);
         }
 
         /// <summary>

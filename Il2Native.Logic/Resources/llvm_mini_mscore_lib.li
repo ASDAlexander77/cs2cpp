@@ -22,6 +22,10 @@
     %"System.Object"
 }
 
+%"System.Attribute" = type {
+    %"System.Object"
+}
+
 define void @"Void System.Object..ctor()"(%"System.Object"* %.this) #99003 {
     ret void
 }
