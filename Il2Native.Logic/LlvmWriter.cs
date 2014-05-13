@@ -1617,7 +1617,7 @@
 
                     this.UnaryOper(writer, opCode, "ret", this.MethodReturnType, opts);
 
-                    if (this.MethodReturnType.IsStructureType())
+                    if (this.MethodReturnType == null || this.MethodReturnType.IsStructureType())
                     {
                         writer.Write("void");
                     }
@@ -1906,12 +1906,12 @@
 
                 case Code.Conv_R4:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.UnaryOper(writer, opCode, isFloatingPoint ? "trunc" : "sitofp");
+                    this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
                     writer.Write(" to float");
                     break;
                 case Code.Conv_R8:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.UnaryOper(writer, opCode, isFloatingPoint ? "trunc" : "sitofp");
+                    this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
                     writer.Write(" to double");
                     break;
 
@@ -1941,7 +1941,7 @@
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
+                    this.UnaryOper(writer, opCode, "zext");
                     writer.Write(" to i64");
                     break;
 
@@ -1970,7 +1970,7 @@
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
 
-                    this.UnaryOper(writer, opCode, "trunc");
+                    this.UnaryOper(writer, opCode, "zext");
                     writer.Write(" to i64");
                     break;
 
@@ -2010,7 +2010,10 @@
                     writer.WriteLine(string.Empty);
 
                     methodBase = opCodeConstructorInfoPart.Operand;
-                    this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, code == Code.Callvirt, true, true, opCode.ResultNumber);
+                    var resAlloc = opCode.ResultNumber;
+                    opCode.ResultNumber = null;
+                    this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, code == Code.Callvirt, true, true, resAlloc);
+                    opCode.ResultNumber = resAlloc;
 
                     break;
 
@@ -2207,12 +2210,7 @@
             {
                 effectiveType = requiredType;
             }
-                
-                ////else if (opCode.ResultType != null)
-                ////{
-                ////    effectiveType = opCode.ResultType;
-                ////}
-            else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands.Length > 0)
+            else if (opCode.OpCodeOperands != null && (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands.Length > 0))
             {
                 if (!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || res2 == null || (res2.IsConst ?? false))
                 {
@@ -2386,7 +2384,7 @@
         /// </param>
         private void PostProcessOperand(IndentedTextWriter writer, OpCodePart opCode, int index, bool directResult, bool detectAndWriteTypePrefix = false)
         {
-            if (opCode.OpCodeOperands.Length == 0)
+            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
                 return;
             }
