@@ -2815,6 +2815,11 @@
             if (hasThisArgument)
             {
                 var used = opCodeMethodInfo.OpCodeOperands;
+                if (used[0].ResultType == null)
+                {
+                    used[0].ResultType = ResultOf(used[0]).Type;
+                }
+
                 if (IsClassCastRequired(thisType, used[0]))
                 {
                     this.WriteBitcast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
@@ -2840,7 +2845,7 @@
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid())
             {
-                this.WriteSetResultNumber(opCodeMethodInfo);
+                this.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
 
             // allocate space for structure if return type is structure
@@ -2860,13 +2865,11 @@
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
                 this.WriteTypePrefix(writer, methodInfo.ReturnType, false);
-                opCodeMethodInfo.ResultType = methodInfo.ReturnType;
             }
             else
             {
                 // this is constructor
                 writer.Write("void");
-                opCodeMethodInfo.ResultType = null;
             }
 
             writer.Write(' ');
@@ -2884,7 +2887,7 @@
                 thisResultNumber, 
                 thisType, 
                 opCodeMethodInfo.ResultNumber,
-                opCodeMethodInfo.ResultType);
+                methodInfo != null ? methodInfo.ReturnType : null);
         }
 
         /// <summary>
