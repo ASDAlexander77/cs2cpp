@@ -759,7 +759,7 @@ namespace Il2Native.Logic
                 }
                 else if ((opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
                           || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
-                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as MethodInfo).ReturnType.IsVoid()) && !opCodePartUsed.HasDup)
+                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as MethodInfo).ReturnType.IsVoid()))
                 {
                     if (insertBack == null)
                     {
@@ -824,32 +824,6 @@ namespace Il2Native.Logic
 
                     var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray(), false);
                     opCodeBlock.UseAsNullCoalescingExpression = true;
-                    opCodePartUsed = opCodeBlock;
-                }
-
-                // ++/--X
-                if (this.IsLeadingIncDecExpression(opCodePart, opCodePartUsed, this.Stack))
-                {
-                    var newBlockOps = new List<OpCodePart>();
-                    newBlockOps.Add(opCodePartUsed);
-                    newBlockOps.Add(this.Stack.Pop());
-                    newBlockOps.Reverse();
-
-                    var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray(), false);
-                    opCodeBlock.UseAsLeadingIncDecExpression = true;
-                    opCodePartUsed = opCodeBlock;
-                }
-
-                // X++/--
-                if (this.IsIncDecExpression(opCodePart, opCodePartUsed, this.Stack))
-                {
-                    var newBlockOps = new List<OpCodePart>();
-                    newBlockOps.Add(opCodePartUsed);
-                    newBlockOps.Add(this.Stack.Pop());
-                    newBlockOps.Reverse();
-
-                    var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray(), false);
-                    opCodeBlock.UseAsIncDecExpression = true;
                     opCodePartUsed = opCodeBlock;
                 }
 
