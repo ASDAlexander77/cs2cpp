@@ -413,6 +413,10 @@ namespace Il2Native.Logic
                 case Code.Ldelem_I8:
                 case Code.Ldelem_R4:
                 case Code.Ldelem_R8:
+                case Code.Ldelem_U1:
+                case Code.Ldelem_U2:
+                case Code.Ldelem_U4:
+
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
@@ -953,6 +957,9 @@ namespace Il2Native.Logic
                 case Code.Ldelem_I2:
                 case Code.Ldelem_I4:
                 case Code.Ldelem_I8:
+                case Code.Ldelem_U1:
+                case Code.Ldelem_U2:
+                case Code.Ldelem_U4:
                 case Code.Ldelem_R4:
                 case Code.Ldelem_R8:
                 case Code.Ldelem_Ref:
