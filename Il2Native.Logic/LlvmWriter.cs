@@ -146,7 +146,7 @@
         {
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
-            this.Output = new IndentedTextWriter(new StreamWriter(outputFile));
+            this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
         }
 
         #endregion
@@ -2096,6 +2096,11 @@
         /// </param>
         private void BinaryOper(IndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None)
         {
+            if (opCode.ResultNumber.HasValue)
+            {
+                return;
+            }
+
             var directResult1 = this.PreProcessOperand(writer, opCode, 0, options);
             var directResult2 = this.PreProcessOperand(writer, opCode, 1, options);
 
@@ -2627,7 +2632,7 @@
             var res = opCode.ResultNumber;
             var resLen = WriteSetResultNumber(writer, opCode);
             writer.Write("getelementptr ");
-            this.WriteTypePrefix(writer, typeof(int*));
+            this.WriteTypePrefix(writer, typeof(int));
             writer.Write("* ");
             WriteResultNumber(res ?? -1);
             writer.WriteLine(", i32 -1");

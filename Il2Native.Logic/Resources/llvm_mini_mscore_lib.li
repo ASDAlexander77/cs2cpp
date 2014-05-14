@@ -10,6 +10,12 @@
     i8*
 }
 
+%"System.Array" = type {
+    %"System.Object",
+    i32,
+    i8*
+}
+
 %"System.MulticastDelegate" = type {
     %"System.Object"
 }
