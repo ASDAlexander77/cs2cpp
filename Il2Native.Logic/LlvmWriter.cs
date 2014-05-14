@@ -1316,8 +1316,19 @@
 
                     writer.Write(string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
                     break;
-                case Code.Stobj:
+
+                case Code.Ldobj:
+
                     var opCodeTypePart = opCode as OpCodeTypePart;
+
+                    directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                    //opCode.OpCodeOperands[0].DestinationName = this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
+                    this.WriteLlvmLoad(writer, opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
+
+                    break;
+
+                case Code.Stobj:
+                    opCodeTypePart = opCode as OpCodeTypePart;
 
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
@@ -1745,22 +1756,12 @@
                 case Code.Starg:
                 case Code.Starg_S:
 
-                    asString = code.ToString();
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
-
-                    if (this.HasMethodThis && index == 0)
-                    {
-                        writer.Write("this");
-                    }
-                    else
-                    {
-                        writer.Write(this.ParameterInfo[index - (this.HasMethodThis ? 1 : 0)].Name);
-                    }
-
-                    writer.Write(" = ");
-
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    var actualIndex = index - (this.HasMethodThis ? 1 : 0);
+                    this.UnaryOper(writer, opCode, "store", this.ParameterInfo[actualIndex].ParameterType);
+                    writer.Write(", ");
+                    this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
 
                     break;
 
@@ -2270,6 +2271,11 @@
         private string GetLocalVarName(int index)
         {
             return string.Concat("%local", index);
+        }
+
+        private string GetArgVarName(int index)
+        {
+            return string.Concat("%.", ParameterInfo[index].Name);
         }
 
         /// <summary>
@@ -3252,6 +3258,21 @@
             writer.Write(", align " + pointerSize);
         }
 
+        private void WriteLlvmArgVarAccess(IndentedTextWriter writer, int index, bool asReference = false)
+        {
+            this.WriteTypePrefix(writer, this.ParameterInfo[index].ParameterType, false);
+            if (asReference)
+            {
+                writer.Write('*');
+            }
+
+            writer.Write(' ');
+            writer.Write(this.GetArgVarName(index));
+
+            // TODO: optional do we need to calculate it propertly?
+            writer.Write(", align " + pointerSize);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="locals">
@@ -3283,6 +3304,15 @@
                 this.GetResultNumber(op1.Value), 
                 this.GetResultNumber(op2.Value), 
                 this.GetTypeSize(type), 
+                pointerSize /*Align*/);
+        }
+
+        private void WriteMemSet(IndentedTextWriter writer, Type type, int? op1)
+        {
+            writer.Write(
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                this.GetResultNumber(op1.Value),
+                this.GetTypeSize(type),
                 pointerSize /*Align*/);
         }
 
@@ -3503,6 +3533,8 @@
             var res = WriteSetResultNumber(writer, opCode);
             var size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
+            WriteMemSet(writer, declaringType, res);
+            writer.WriteLine(string.Empty);
             WriteBitcast(writer, opCode, res, declaringType);
         }
 

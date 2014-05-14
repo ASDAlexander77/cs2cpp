@@ -472,6 +472,9 @@ namespace Il2Native.Logic
                 case Code.Ldflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
+                case Code.Ldobj:
+                    var opCodeTypePart = opCode as OpCodeTypePart;
+                    return new ReturnResult(opCodeTypePart.Operand);
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
