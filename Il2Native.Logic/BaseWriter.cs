@@ -360,6 +360,8 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
                     return new ReturnResult(typeof(ulong));
+                case Code.Castclass:
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ret:
                 case Code.Neg:
                 case Code.Not:
