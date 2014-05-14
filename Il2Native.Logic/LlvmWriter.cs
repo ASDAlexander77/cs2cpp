@@ -798,9 +798,18 @@
             {
                 type = opCode.ResultType;
             }
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 && opCode.OpCodeOperands[0].ResultType != null)
+            {
+                type = opCode.OpCodeOperands[0].ResultType;
+            }
             else
             {
                 type = typeof(byte*);
+            }
+
+            if (type.IsByRef)
+            {
+                return type.GetElementType();
             }
 
             return type;
@@ -868,7 +877,7 @@
             do
             {
                 var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
-                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray)
+                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
@@ -1510,14 +1519,12 @@
                             break;
                     }
 
-                    this.ActualWrite(writer, opCode.OpCodeOperands[1]);
-                    writer.WriteLine(string.Empty);
+                    directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
                     this.UnaryOper(writer, opCode, 1, "store", type);
                     writer.Write(", ");
                     this.WriteTypePrefix(writer, opCode.OpCodeOperands[0].ResultType);
-                    writer.Write(' ');
-                    WriteResultNumber(opCode.OpCodeOperands[0]);
+                    this.PostProcessOperand(writer, opCode, 0, directResult1);
 
                     break;
                 case Code.Call:
@@ -1851,8 +1858,19 @@
                 case Code.Brfalse:
                 case Code.Brfalse_S:
 
-                    this.UnaryOper(writer, opCode, "icmp eq", options: OperandOptions.GenerateResult);
-                    writer.WriteLine(opCode.Any(Code.Brtrue, Code.Brtrue_S) ? ", 1" : ", 0");
+                    var forTure = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
+                    var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
+
+                    this.UnaryOper(writer, opCode, "icmp " + forTure, options: OperandOptions.GenerateResult);
+
+                    if (resultOf.Type.IsValueType())
+                    {
+                        writer.WriteLine(", 0");
+                    }
+                    else
+                    {
+                        writer.WriteLine(", null");
+                    }
 
                     if (!opCode.UseAsConditionalExpression)
                     {
@@ -1913,7 +1931,7 @@
                     break;
                 case Code.Conv_R8:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
+                    this.UnaryOper(writer, opCode, isFloatingPoint ? "fpext" : "sitofp");
                     writer.Write(" to double");
                     break;
 
