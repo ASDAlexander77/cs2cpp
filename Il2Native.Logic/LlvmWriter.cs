@@ -1078,7 +1078,7 @@
             if (block.UseAsConditionalExpression)
             {
                 // thos os a hack for return () ? a : b; expressions
-                 int expressionPart = -1;
+                int expressionPart = -1;
                 if (block.OpCodes[block.OpCodes.Length - 2].OpCode.FlowControl == FlowControl.Branch)
                 {
                     expressionPart = 3;
@@ -1322,7 +1322,8 @@
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
-                    //opCode.OpCodeOperands[0].DestinationName = this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
+
+                    // opCode.OpCodeOperands[0].DestinationName = this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
                     this.WriteLlvmLoad(writer, opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
 
                     break;
@@ -1694,7 +1695,12 @@
                         index = int.Parse(asString.Substring(asString.Length - 1));
                     }
 
-                    this.WriteLlvmLoad(writer, opCode, this.LocalInfo[index].LocalType, string.Concat("%local", index));
+                    skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
+                    if (!skip)
+                    {
+                        this.WriteLlvmLoad(writer, opCode, this.LocalInfo[index].LocalType, string.Concat("%local", index));
+                    }
+
                     break;
                 case Code.Ldloca:
                 case Code.Ldloca_S:
@@ -1730,7 +1736,12 @@
                     else
                     {
                         var parameter = this.ParameterInfo[index - (this.HasMethodThis ? 1 : 0)];
-                        this.WriteLlvmLoad(writer, opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));
+
+                        skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
+                        if (!skip)
+                        {
+                            this.WriteLlvmLoad(writer, opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));
+                        }
                     }
 
                     break;
@@ -2000,7 +2011,13 @@
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    WriteBitcast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0].ResultType, opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, opCodeTypePart.Operand, true);
+                    this.WriteBitcast(
+                        writer, 
+                        opCodeTypePart, 
+                        opCodeTypePart.OpCodeOperands[0].ResultType, 
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        opCodeTypePart.Operand, 
+                        true);
 
                     break;
 
@@ -2009,7 +2026,13 @@
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    WriteBitcast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0].ResultType, opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, opCodeTypePart.Operand, true);
+                    this.WriteBitcast(
+                        writer, 
+                        opCodeTypePart, 
+                        opCodeTypePart.OpCodeOperands[0].ResultType, 
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        opCodeTypePart.Operand, 
+                        true);
 
                     break;
 
@@ -2078,6 +2101,10 @@
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
                     endings = Ending.NoEndings;
+                    break;
+
+                case Code.Switch:
+                    writer.Write("; Switch !!!");
                     break;
             }
 
@@ -2252,6 +2279,17 @@
 
         /// <summary>
         /// </summary>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private string GetArgVarName(int index)
+        {
+            return string.Concat("%.", this.ParameterInfo[index].Name);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="methodBase">
         /// </param>
         /// <returns>
@@ -2276,11 +2314,6 @@
         private string GetLocalVarName(int index)
         {
             return string.Concat("%local", index);
-        }
-
-        private string GetArgVarName(int index)
-        {
-            return string.Concat("%.", ParameterInfo[index].Name);
         }
 
         /// <summary>
@@ -2846,7 +2879,7 @@
                 var used = opCodeMethodInfo.OpCodeOperands;
                 if (used[0].ResultType == null)
                 {
-                    used[0].ResultType = ResultOf(used[0]).Type;
+                    used[0].ResultType = this.ResultOf(used[0]).Type;
                 }
 
                 if (IsClassCastRequired(thisType, used[0]))
@@ -2915,7 +2948,7 @@
                 preProcessedOperandResults, 
                 thisResultNumber, 
                 thisType, 
-                opCodeMethodInfo.ResultNumber,
+                opCodeMethodInfo.ResultNumber, 
                 methodInfo != null ? methodInfo.ReturnType : null);
         }
 
@@ -3201,6 +3234,29 @@
         /// </summary>
         /// <param name="writer">
         /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <param name="asReference">
+        /// </param>
+        private void WriteLlvmArgVarAccess(IndentedTextWriter writer, int index, bool asReference = false)
+        {
+            this.WriteTypePrefix(writer, this.ParameterInfo[index].ParameterType, false);
+            if (asReference)
+            {
+                writer.Write('*');
+            }
+
+            writer.Write(' ');
+            writer.Write(this.GetArgVarName(index));
+
+            // TODO: optional do we need to calculate it propertly?
+            writer.Write(", align " + pointerSize);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="type">
@@ -3263,21 +3319,6 @@
             writer.Write(", align " + pointerSize);
         }
 
-        private void WriteLlvmArgVarAccess(IndentedTextWriter writer, int index, bool asReference = false)
-        {
-            this.WriteTypePrefix(writer, this.ParameterInfo[index].ParameterType, false);
-            if (asReference)
-            {
-                writer.Write('*');
-            }
-
-            writer.Write(' ');
-            writer.Write(this.GetArgVarName(index));
-
-            // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + pointerSize);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="locals">
@@ -3312,12 +3353,20 @@
                 pointerSize /*Align*/);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="op1">
+        /// </param>
         private void WriteMemSet(IndentedTextWriter writer, Type type, int? op1)
         {
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                this.GetResultNumber(op1.Value),
-                this.GetTypeSize(type),
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", 
+                this.GetResultNumber(op1.Value), 
+                this.GetTypeSize(type), 
                 pointerSize /*Align*/);
         }
 
@@ -3538,7 +3587,7 @@
             var res = WriteSetResultNumber(writer, opCode);
             var size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
-            WriteMemSet(writer, declaringType, res);
+            this.WriteMemSet(writer, declaringType, res);
             writer.WriteLine(string.Empty);
             WriteBitcast(writer, opCode, res, declaringType);
         }
