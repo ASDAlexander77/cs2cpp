@@ -192,7 +192,7 @@
         /// </returns>
         public static bool IsStructureType(this Type type, bool recurse = false)
         {
-            return type != null && (type.IsValueType && !type.IsPrimitive && !type.IsVoid() || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
+            return type != null && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
         /// <summary>

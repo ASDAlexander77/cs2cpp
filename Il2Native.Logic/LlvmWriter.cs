@@ -512,7 +512,11 @@
         {
             if (field.IsStatic)
             {
-                this.staticFieldsInfo.Add(field);
+                if (!field.IsLiteral)
+                {
+                    this.staticFieldsInfo.Add(field);
+                }
+
                 return;
             }
 
@@ -689,7 +693,8 @@
                 this.Output.Write("> ");
             }
 
-            this.WriteTypeWithoutModifiers(this.Output, type);
+            this.Output.Write("%");
+            this.WriteTypeName(this.Output, type, true);
 
             this.Output.Write(" = type ");
 
@@ -834,7 +839,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static string TypeToCType(Type type)
+        private string TypeToCType(Type type, bool doNotConvert = false)
         {
             var effectiveType = type;
 
@@ -843,18 +848,32 @@
                 effectiveType = type.GetElementType();
             }
 
-            if (effectiveType.Namespace == "System")
+            if (!doNotConvert)
             {
-                string ctype;
-                if (systemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
+                if (effectiveType.Namespace == "System")
                 {
-                    return ctype;
+                    string ctype;
+                    if (systemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
+                    {
+                        return ctype;
+                    }
                 }
-            }
 
-            if (type.IsValueType && type.IsPrimitive)
-            {
-                return type.Name.ToLowerInvariant();
+                if (type.IsEnum)
+                {
+                    switch (GetTypeSize(type))
+                    {
+                        case 1: return "i8";
+                        case 2: return "i16";
+                        case 4: return "i32";
+                        case 8: return "i64";
+                    }
+                }
+
+                if (type.IsValueType && type.IsPrimitive)
+                {
+                    return type.Name.ToLowerInvariant();
+                }
             }
 
             return string.Concat('"', type.FullName, '"');
@@ -2104,7 +2123,27 @@
                     break;
 
                 case Code.Switch:
-                    writer.Write("; Switch !!!");
+
+                    var opCodeLabels = opCode as OpCodeLabelsPart;
+
+                    UnaryOper(writer, opCode, "switch");
+
+                    index = 0;
+                    writer.Write(", label %.a{0} [ ", opCode.GroupAddressEnd);
+
+                    foreach (var label in opCodeLabels.Operand)
+                    {
+                        writer.Write("i32 {0}, label %.a{1} ", index, opCodeLabels.JumpAddress(index++));
+                    }
+
+                    writer.WriteLine("]", opCode.GroupAddressEnd);
+
+                    writer.Indent--;
+                    writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+                    writer.Indent++;
+
+                    opCode.NextOpCode(this).JumpProcessed = true;
+
                     break;
             }
 
@@ -2191,6 +2230,11 @@
             {
                 // i8** (...)
                 return pointerSize;
+            }
+
+            if (type.IsEnum)
+            {
+                return GetTypeSize(type.GetFields()[0].FieldType);
             }
 
             var size = 0;
@@ -3552,9 +3596,9 @@
         /// </param>
         /// <param name="type">
         /// </param>
-        private void WriteName(IndentedTextWriter writer, Type type)
+        private void WriteTypeName(IndentedTextWriter writer, Type type, bool doNotConvert = false)
         {
-            var typeBaseName = TypeToCType(type);
+            var typeBaseName = TypeToCType(type, doNotConvert);
 
             // clean name
             if (typeBaseName.EndsWith("&"))
@@ -3762,14 +3806,14 @@
             }
 
             // TODO: remove String test when you use real string class
-            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid()
+            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum
                 && !(effectiveType.Namespace == "System" && effectiveType.Name == "String"))
             {
                 writer.Write('%');
             }
 
             // write base name
-            this.WriteName(writer, effectiveType);
+            this.WriteTypeName(writer, effectiveType);
         }
 
         #endregion

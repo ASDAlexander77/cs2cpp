@@ -662,7 +662,7 @@ namespace Il2Native.Logic
                         foreach (var jumpAddress in switchOp.Operand)
                         {
                             var nextAddress = switchOp.JumpAddress(index);
-                            var target = this.OpsByGroupAddressStart[nextAddress];
+                            var target = this.OpsByAddressStart[nextAddress];
                             if (target.JumpDestination == null)
                             {
                                 target.JumpDestination = new List<OpCodePart>();

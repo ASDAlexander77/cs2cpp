@@ -5,6 +5,10 @@
     %"System.Object"
 }
 
+%"System.Enum" = type {
+    %"System.ValueType"
+}
+
 %"System.String" = type {
     %"System.Object",
     i8*
