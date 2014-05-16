@@ -2035,8 +2035,7 @@
                         opCodeTypePart, 
                         opCodeTypePart.OpCodeOperands[0].ResultType, 
                         opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
-                        opCodeTypePart.Operand, 
-                        true);
+                        opCodeTypePart.Operand);
 
                     break;
 
@@ -2050,8 +2049,7 @@
                         opCodeTypePart, 
                         opCodeTypePart.OpCodeOperands[0].ResultType, 
                         opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
-                        opCodeTypePart.Operand, 
-                        true);
+                        opCodeTypePart.Operand);
 
                     break;
 
@@ -2733,30 +2731,8 @@
             writer.Write("bitcast i8* ");
             WriteResultNumber(res);
             writer.Write(" to ");
-            this.WriteTypeWithoutModifiers(writer, toType);
-            writer.Write('*');
+            this.WriteTypePrefix(writer, toType, true);
             opCode.ResultType = toType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="res">
-        /// </param>
-        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast ");
-            this.WriteTypeWithoutModifiers(writer, fromType);
-            writer.Write("* ");
-            WriteResultNumber(res);
-            writer.Write(" to i8*");
-            opCode.ResultType = typeof(byte*);
         }
 
         /// <summary>
@@ -2771,8 +2747,7 @@
         {
             this.UnaryOper(writer, opCode, "bitcast");
             writer.Write(" to ");
-            this.WriteTypeWithoutModifiers(writer, toType);
-            writer.Write('*');
+            this.WriteTypePrefix(writer, toType, true);
             opCode.ResultType = typeof(byte*);
         }
 
@@ -2790,43 +2765,23 @@
         /// </param>
         /// <param name="noNewLine">
         /// </param>
-        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, Type toType, bool noNewLine = false)
+        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, Type toType, bool appendReference = false)
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutModifiers(writer, fromType);
-            writer.Write("* ");
+            this.WriteTypePrefix(writer, fromType, true);
+            writer.Write(' ');
             WriteResultNumber(res);
             writer.Write(" to ");
-            this.WriteTypeWithoutModifiers(writer, toType);
-            writer.Write('*');
-            opCode.ResultType = toType;
-
-            if (!noNewLine)
+            this.WriteTypePrefix(writer, toType, true);
+            if (appendReference)
             {
-                writer.WriteLine(string.Empty);
+                // result should be array
+                writer.Write('*');
             }
-        }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="name">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, string name, Type toType)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast i8* ");
-            writer.Write(name);
-            writer.Write(" to ");
-            this.WriteTypeWithoutModifiers(writer, toType);
-            writer.Write('*');
             opCode.ResultType = toType;
+            writer.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -2843,36 +2798,11 @@
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
-            this.WriteTypeWithoutModifiers(writer, fromType);
-            writer.Write("* ");
+            this.WriteTypePrefix(writer, fromType, true);
+            writer.Write(" ");
             writer.Write(name);
             writer.Write(" to i8*");
             opCode.ResultType = typeof(byte*);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="name">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, string name, Type toType)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast ");
-            this.WriteTypeWithoutModifiers(writer, fromType);
-            writer.Write("* ");
-            writer.Write(name);
-            writer.Write(" to ");
-            this.WriteTypeWithoutModifiers(writer, toType);
-            writer.WriteLine('*');
-            opCode.ResultType = toType;
         }
 
         /// <summary>
@@ -3389,7 +3319,7 @@
         /// </param>
         private void WriteMemCopy(IndentedTextWriter writer, Type type, int? op1, int? op2)
         {
-            writer.Write(
+            writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
                 this.GetResultNumber(op1.Value), 
                 this.GetResultNumber(op2.Value), 
