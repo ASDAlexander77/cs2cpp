@@ -796,7 +796,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static Type GetTypeOfReference(OpCodePart opCode)
+        private Type GetTypeOfReference(OpCodePart opCode)
         {
             Type type = null;
             if (opCode.ResultType != null)
@@ -812,7 +812,7 @@
                 type = typeof(byte*);
             }
 
-            if (type.IsByRef)
+            if (type.IsArray || type.IsByRef)
             {
                 return type.GetElementType();
             }
@@ -2892,11 +2892,6 @@
             }
 
             writer.Write("call ");
-
-            if (startsWithThis)
-            {
-                writer.Write("x86_thiscallcc ");
-            }
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
