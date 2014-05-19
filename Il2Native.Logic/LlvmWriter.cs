@@ -159,11 +159,11 @@
         {
             /// <summary>
             /// </summary>
-            SeparatorWithNewLine, 
+            SeparatorWithNewLine,
 
             /// <summary>
             /// </summary>
-            NewLine, 
+            NewLine,
 
             /// <summary>
             /// </summary>
@@ -177,43 +177,43 @@
         {
             /// <summary>
             /// </summary>
-            None = 0, 
+            None = 0,
 
             /// <summary>
             /// </summary>
-            GenerateResult = 1, 
+            GenerateResult = 1,
 
             /// <summary>
             /// </summary>
-            ToFloat = 2, 
+            ToFloat = 2,
 
             /// <summary>
             /// </summary>
-            ToInteger = 4, 
+            ToInteger = 4,
 
             /// <summary>
             /// </summary>
-            TypeIsInSecondOperand = 8, 
+            TypeIsInSecondOperand = 8,
 
             /// <summary>
             /// </summary>
-            TypeIsInOperator = 16, 
+            TypeIsInOperator = 16,
 
             /// <summary>
             /// </summary>
-            NoTypePrefix = 32, 
+            NoTypePrefix = 32,
 
             /// <summary>
             /// </summary>
-            AppendPointer = 64, 
+            AppendPointer = 64,
 
             /// <summary>
             /// </summary>
-            IgnoreOperand = 128, 
+            IgnoreOperand = 128,
 
             /// <summary>
             /// </summary>
-            DetectTypeInSecondOperand = 256, 
+            DetectTypeInSecondOperand = 256,
         }
 
         #endregion
@@ -255,28 +255,28 @@
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
-                Code.Ldc_I4_0, 
-                Code.Ldc_I4_1, 
-                Code.Ldc_I4_2, 
-                Code.Ldc_I4_3, 
-                Code.Ldc_I4_4, 
-                Code.Ldc_I4_5, 
-                Code.Ldc_I4_6, 
-                Code.Ldc_I4_7, 
-                Code.Ldc_I4_8, 
-                Code.Ldc_I4_M1, 
-                Code.Ldc_I4, 
-                Code.Ldc_I4_S, 
-                Code.Ldc_I8, 
-                Code.Ldc_R4, 
-                Code.Ldc_R8, 
-                Code.Ldstr, 
-                Code.Ldnull, 
-                Code.Ldtoken, 
-                Code.Ldsflda, 
-                Code.Ldloca, 
-                Code.Ldloca_S, 
-                Code.Ldarga, 
+                Code.Ldc_I4_0,
+                Code.Ldc_I4_1,
+                Code.Ldc_I4_2,
+                Code.Ldc_I4_3,
+                Code.Ldc_I4_4,
+                Code.Ldc_I4_5,
+                Code.Ldc_I4_6,
+                Code.Ldc_I4_7,
+                Code.Ldc_I4_8,
+                Code.Ldc_I4_M1,
+                Code.Ldc_I4,
+                Code.Ldc_I4_S,
+                Code.Ldc_I8,
+                Code.Ldc_R4,
+                Code.Ldc_R8,
+                Code.Ldstr,
+                Code.Ldnull,
+                Code.Ldtoken,
+                Code.Ldsflda,
+                Code.Ldloca,
+                Code.Ldloca_S,
+                Code.Ldarga,
                 Code.Ldarga_S);
         }
 
@@ -335,8 +335,9 @@
             if (this.ThisType.HasAnyVirtualMethod())
             {
                 this.Output.WriteLine(string.Empty);
-                this.Output.Write("@");
-                this.WriteTypeName(this.Output, this.ThisType, true);
+                this.Output.Write("@\"");
+                this.Output.Write(this.ThisType.FullName);
+                this.Output.Write(" Virtual Table\"");
 
                 var virtualTable = new List<Pair<string, MethodInfo>>();
                 BuildVirtualTable(this.ThisType, virtualTable);
@@ -350,9 +351,9 @@
                     this.Output.Write(", i8* bitcast (");
                     // write pointer to method
                     this.WriteMethodReturnType(this.Output, method);
-                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.ReturnType);
+                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
                     this.Output.Write("* ");
-                    this.WriteMethodName(this.Output, method);
+                    this.WriteMethodDefinitionName(this.Output, method);
                     this.Output.Write(" to i8*)");
                 }
 
@@ -368,7 +369,7 @@
             }
 
             // get all virtual methods in current type and replace or append
-            foreach(var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
+            foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
             {
                 if (virtualOrAbstractMethod.IsAbstract)
                 {
@@ -478,7 +479,7 @@
                 this.StaticConstructors.Add(ctor);
             }
 
-            this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, typeof(void));
+            this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, typeof(void));
 
             this.WriteMethodNumber();
 
@@ -674,7 +675,7 @@
 
             this.WriteMethodDefinitionName(this.Output, method);
 
-            this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, method.ReturnType);
+            this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
 
             this.WriteMethodNumber();
 
@@ -1016,16 +1017,16 @@
         /// <param name="returnType">
         /// </param>
         private void ActualWrite(
-            IndentedTextWriter writer, 
-            OpCodePart[] used, 
-            IEnumerable<ParameterInfo> parameterInfos, 
-            bool @isVirtual, 
-            bool hasThis, 
-            bool isCtor, 
-            IList<bool> isDirectValue, 
-            int? resultNumberForThis, 
-            Type thisType, 
-            int? resultNumberForReturn, 
+            IndentedTextWriter writer,
+            OpCodePart[] used,
+            IEnumerable<ParameterInfo> parameterInfos,
+            bool @isVirtual,
+            bool hasThis,
+            bool isCtor,
+            IList<bool> isDirectValue,
+            int? resultNumberForThis,
+            Type thisType,
+            int? resultNumberForReturn,
             Type returnType)
         {
             writer.Write("(");
@@ -1312,8 +1313,8 @@
                     var opCodeString = opCode as OpCodeStringPart;
                     writer.Write(
                         string.Format(
-                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)", 
-                            this.GetStringIndex(opCodeString.Operand), 
+                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)",
+                            this.GetStringIndex(opCodeString.Operand),
                             opCodeString.Operand.Length + 1));
                     break;
                 case Code.Ldnull:
@@ -1631,12 +1632,12 @@
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
                     this.WriteCall(
-                        writer, 
-                        opCodeMethodInfoPart, 
-                        methodBase, 
-                        code == Code.Callvirt, 
-                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis), 
-                        false, 
+                        writer,
+                        opCodeMethodInfoPart,
+                        methodBase,
+                        code == Code.Callvirt,
+                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
+                        false,
                         null);
                     break;
                 case Code.Add:
@@ -2099,10 +2100,10 @@
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteBitcast(
-                        writer, 
-                        opCodeTypePart, 
-                        opCodeTypePart.OpCodeOperands[0].ResultType, 
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        writer,
+                        opCodeTypePart,
+                        opCodeTypePart.OpCodeOperands[0].ResultType,
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
                         opCodeTypePart.Operand);
 
                     break;
@@ -2113,10 +2114,10 @@
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteBitcast(
-                        writer, 
-                        opCodeTypePart, 
-                        opCodeTypePart.OpCodeOperands[0].ResultType, 
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        writer,
+                        opCodeTypePart,
+                        opCodeTypePart.OpCodeOperands[0].ResultType,
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
                         opCodeTypePart.Operand);
 
                     break;
@@ -2976,16 +2977,16 @@
             this.WriteMethodDefinitionName(writer, methodBase);
 
             this.ActualWrite(
-                writer, 
-                opCodeMethodInfo.OpCodeOperands, 
-                methodBase.GetParameters(), 
-                isVirtual, 
-                hasThis, 
-                isCtor, 
-                preProcessedOperandResults, 
-                thisResultNumber, 
-                thisType, 
-                opCodeMethodInfo.ResultNumber, 
+                writer,
+                opCodeMethodInfo.OpCodeOperands,
+                methodBase.GetParameters(),
+                isVirtual,
+                hasThis,
+                isCtor,
+                preProcessedOperandResults,
+                thisResultNumber,
+                thisType,
+                opCodeMethodInfo.ResultNumber,
                 methodInfo != null ? methodInfo.ReturnType : null);
         }
 
@@ -3004,8 +3005,8 @@
                                  && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call);
                 if (splitBlock)
                 {
-                    // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
-                    http: // zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
+                // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
+                http: // zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
                     writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));
                 }
 
@@ -3383,10 +3384,10 @@
         private void WriteMemCopy(IndentedTextWriter writer, Type type, int? op1, int? op2)
         {
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
-                this.GetResultNumber(op1.Value), 
-                this.GetResultNumber(op2.Value), 
-                this.GetTypeSize(type), 
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                this.GetResultNumber(op1.Value),
+                this.GetResultNumber(op2.Value),
+                this.GetTypeSize(type),
                 pointerSize /*Align*/);
         }
 
@@ -3401,9 +3402,9 @@
         private void WriteMemSet(IndentedTextWriter writer, Type type, int? op1)
         {
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", 
-                this.GetResultNumber(op1.Value), 
-                this.GetTypeSize(type), 
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                this.GetResultNumber(op1.Value),
+                this.GetTypeSize(type),
                 pointerSize /*Align*/);
         }
 
@@ -3462,24 +3463,6 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="methodBase">
-        /// </param>
-        /// <param name="ending">
-        /// </param>
-        private void WriteMethodName(IndentedTextWriter writer, MethodBase methodBase, bool ending = true)
-        {
-            writer.Write("@\"");
-            this.WriteMemberName(writer, methodBase);
-            if (ending)
-            {
-                writer.Write("\"");
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         private void WriteMethodNumber()
         {
             // write number of method
@@ -3497,7 +3480,7 @@
         /// </param>
         /// <param name="returnType">
         /// </param>
-        private void WriteMethodParamsDef(IndentedTextWriter writer, IEnumerable<ParameterInfo> parameterInfos, bool hasThis, Type returnType)
+        private void WriteMethodParamsDef(IndentedTextWriter writer, IEnumerable<ParameterInfo> parameterInfos, bool hasThis, Type thisType, Type returnType, bool noArgumentName = false)
         {
             writer.Write("(");
 
@@ -3516,8 +3499,11 @@
                     writer.Write(", ");
                 }
 
-                this.WriteTypePrefix(writer, this.ThisType, this.ThisType.IsStructureType());
-                writer.Write(" %this");
+                this.WriteTypePrefix(writer, thisType, thisType.IsStructureType());
+                if (!noArgumentName)
+                {
+                    writer.Write(" %this");
+                }
             }
 
             var index = start;
@@ -3532,14 +3518,20 @@
                 if (parameter.ParameterType.IsStructureType())
                 {
                     writer.Write(" byval align " + pointerSize);
-                    writer.Write(" %.");
+                    if (!noArgumentName)
+                    {
+                        writer.Write(" %.");
+                    }
                 }
-                else
+                else if (!noArgumentName)
                 {
                     writer.Write(" %");
                 }
 
-                writer.Write(parameter.Name);
+                if (!noArgumentName)
+                {
+                    writer.Write(parameter.Name);
+                }
 
                 index++;
             }

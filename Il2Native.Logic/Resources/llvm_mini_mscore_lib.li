@@ -1,6 +1,24 @@
 %"System.Object" = type {
 }
 
+@"System.Object Virtual Table" = linkonce_odr unnamed_addr constant [5 x i8*] [i8* null, i8* bitcast (i32 (%"System.Object"*)* @"Int32 System.Object.GetHashCode()" to i8*), i8* bitcast (i1 (%"System.Object"*, %"System.Object"*)* @"Boolean System.Object.Equals(System.Object)" to i8*), i8* bitcast (i8* (%"System.Object"*)* @"System.String System.Object.ToString()" to i8*), i8* bitcast (void (%"System.Object"*)* @"Void System.Object.Finalize()" to i8*)]
+
+define i8* @"System.String System.Object.ToString()"(%"System.Object"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.Object.Equals(System.Object)"(%"System.Object"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.Object.GetHashCode()"(%"System.Object"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.Object.Finalize()"(%"System.Object"* %this) #4 {
+    ret void
+}
+
 %"System.ValueType" = type {
     %"System.Object"
 }
