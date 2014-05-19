@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Linq;
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
@@ -31,43 +32,6 @@
             }
 
             return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int Int(this OpCodePart opCode)
-        {
-            switch (opCode.ToCode())
-            {
-                case Code.Ldc_I4_1:
-                    return 1;
-                case Code.Ldc_I4_2:
-                    return 2;
-                case Code.Ldc_I4_3:
-                    return 3;
-                case Code.Ldc_I4_4:
-                    return 4;
-                case Code.Ldc_I4_5:
-                    return 5;
-                case Code.Ldc_I4_6:
-                    return 6;
-                case Code.Ldc_I4_7:
-                    return 7;
-                case Code.Ldc_I4_8:
-                    return 8;
-                case Code.Ldc_I4_M1:
-                    return -1;
-                case Code.Ldc_I4:
-                case Code.Ldc_I4_S:
-                    var opCodeInt32 = opCode as OpCodeInt32Part;
-                    return opCodeInt32.Operand;
-            }
-
-            return 0;
         }
 
         /// <summary>
@@ -197,17 +161,6 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsSwitchBranch(this OpCodePart opCodePart)
-        {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() == Code.Switch;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -215,11 +168,6 @@
         public static bool IsValueType(this Type type)
         {
             return type != null && type.IsValueType;
-        }
-
-        public static bool IsReference(this Type type)
-        {
-            return type != null && !type.IsPrimitive && !type.IsValueType && !type.IsByRef && !type.IsArray;
         }
 
         /// <summary>
@@ -335,6 +283,16 @@
             }
 
             return (Code)(val - (val >> 8 << 8) + 0xE1);
+        }
+
+        public static bool HasAnyVirtualMethod(this Type thisType)
+        {
+            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
+            {
+                return true;
+            }
+
+            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
         }
 
         #endregion

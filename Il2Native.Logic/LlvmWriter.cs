@@ -305,6 +305,13 @@
         {
         }
 
+        public class Pair<K, V>
+        {
+            public K Key { get; set; }
+
+            public V Value { get; set; }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="count">
@@ -322,6 +329,62 @@
                 this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
                 this.WriteTypePrefix(this.Output, field.FieldType, false);
                 this.Output.WriteLine(" undef");
+            }
+
+            // write VirtualTable
+            if (this.ThisType.HasAnyVirtualMethod())
+            {
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write("@");
+                this.WriteTypeName(this.Output, this.ThisType, true);
+
+                var virtualTable = new List<Pair<string, MethodInfo>>();
+                BuildVirtualTable(this.ThisType, virtualTable);
+                this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
+
+                // define virtual table
+                foreach (var virtualMethod in virtualTable)
+                {
+                    var method = virtualMethod.Value;
+                    // write method pointer
+                    this.Output.Write(", i8* bitcast (");
+                    // write pointer to method
+                    this.WriteMethodReturnType(this.Output, method);
+                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.ReturnType);
+                    this.Output.Write("* ");
+                    this.WriteMethodName(this.Output, method);
+                    this.Output.Write(" to i8*)");
+                }
+
+                this.Output.WriteLine("]");
+            }
+        }
+
+        private void BuildVirtualTable(Type thisType, List<Pair<string, MethodInfo>> virtualTable)
+        {
+            if (thisType.BaseType != null)
+            {
+                BuildVirtualTable(thisType.BaseType, virtualTable);
+            }
+
+            // get all virtual methods in current type and replace or append
+            foreach(var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
+            {
+                if (virtualOrAbstractMethod.IsAbstract)
+                {
+                    virtualTable.Add(new Pair<string, MethodInfo>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                    continue;
+                }
+
+                // find method in virtual table
+                var baseMethod = virtualTable.FirstOrDefault(m => m.Key == virtualOrAbstractMethod.ToString());
+                if (baseMethod != null)
+                {
+                    baseMethod.Value = virtualOrAbstractMethod;
+                    continue;
+                }
+
+                virtualTable.Add(new Pair<string, MethodInfo>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
             }
         }
 
@@ -605,19 +668,11 @@
                 this.Output.Write("define ");
             }
 
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
-            {
-                this.WriteTypePrefix(this.Output, method.ReturnType, false);
-                this.Output.Write(" ");
-            }
-            else
-            {
-                this.Output.Write("void ");
-            }
+            ReadMethodInfo(method);
+
+            this.WriteMethodReturnType(this.Output, method);
 
             this.WriteMethodDefinitionName(this.Output, method);
-
-            ReadMethodInfo(method);
 
             this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, method.ReturnType);
 
@@ -636,6 +691,19 @@
             }
 
             methodNumberIncremental++;
+        }
+
+        private void WriteMethodReturnType(IndentedTextWriter writer, MethodInfo method)
+        {
+            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
+            {
+                this.WriteTypePrefix(writer, method.ReturnType, false);
+                writer.Write(" ");
+            }
+            else
+            {
+                this.Output.Write("void ");
+            }
         }
 
         /// <summary>
