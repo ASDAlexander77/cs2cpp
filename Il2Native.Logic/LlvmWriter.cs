@@ -155,23 +155,6 @@
 
         /// <summary>
         /// </summary>
-        private enum Ending
-        {
-            /// <summary>
-            /// </summary>
-            SeparatorWithNewLine,
-
-            /// <summary>
-            /// </summary>
-            NewLine,
-
-            /// <summary>
-            /// </summary>
-            NoEndings
-        }
-
-        /// <summary>
-        /// </summary>
         [Flags]
         private enum OperandOptions
         {
@@ -408,15 +391,21 @@
         /// </param>
         public void WriteBeforeFields(int count)
         {
+            var baseType = this.ThisType.BaseType;
+
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
+            // put virtual root table if type has no any base with virtual types
             if (this.ThisType.IsInterface)
             {
                 this.Output.WriteLine("i32 (...)**");
             }
+            else if (this.ThisType.HasAnyVirtualMethodInCurrentType() && (baseType == null || !baseType.HasAnyVirtualMethod()))
+            {
+                this.Output.WriteLine("i32 (...)**");
+            }
 
-            var baseType = this.ThisType.BaseType;
             if (baseType != null
 
                 ////&& baseType.Namespace != "System"
@@ -1119,10 +1108,8 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Ending ActualWrite(IndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
+        private void ActualWrite(IndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
-            var endings = Ending.SeparatorWithNewLine;
-
             if (firstLevel)
             {
                 this.WriteCaseAndLabels(writer, opCode);
@@ -1133,24 +1120,18 @@
             var block = opCode as OpCodeBlock;
             if (block != null)
             {
-                endings = this.ActualWriteBlock(writer, block);
+                this.ActualWriteBlock(writer, block);
             }
             else
             {
                 var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.Skip);
                 if (!skip)
                 {
-                    endings = this.ActualWriteOpCode(writer, opCode, endings);
-                }
-                else
-                {
-                    endings = Ending.NoEndings;
+                    this.ActualWriteOpCode(writer, opCode);
                 }
             }
 
-            endings = this.WriteCatchFinnally(writer, opCode, endings);
-
-            return endings;
+            this.WriteCatchFinnally(writer, opCode);
         }
 
         /// <summary>
@@ -1161,7 +1142,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Ending ActualWriteBlock(IndentedTextWriter writer, OpCodeBlock block)
+        private void ActualWriteBlock(IndentedTextWriter writer, OpCodeBlock block)
         {
             if (block.UseAsConditionalExpression)
             {
@@ -1205,12 +1186,11 @@
 
                 block.ResultNumber = block.ResultNumber;
 
-                return Ending.SeparatorWithNewLine;
+                return;
             }
 
             // just array
             this.ActualWriteBlockBody(writer, block);
-            return Ending.SeparatorWithNewLine;
         }
 
         /// <summary>
@@ -1229,8 +1209,7 @@
 
             foreach (var subOpCode in query)
             {
-                var endings = this.ActualWrite(writer, subOpCode);
-                this.WriteEndings(endings);
+                this.ActualWrite(writer, subOpCode);
             }
         }
 
@@ -1244,7 +1223,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Ending ActualWriteOpCode(IndentedTextWriter writer, OpCodePart opCode, Ending endings)
+        private void ActualWriteOpCode(IndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
             switch (code)
@@ -2176,17 +2155,14 @@
                 case Code.Leave_S:
                 case Code.Endfilter:
                 case Code.Endfinally:
-                    endings = Ending.NoEndings;
                     break;
 
                 case Code.Pop:
-                    endings = Ending.NoEndings;
                     break;
 
                 case Code.Constrained:
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
-                    endings = Ending.NoEndings;
                     break;
 
                 case Code.Switch:
@@ -2213,8 +2189,6 @@
 
                     break;
             }
-
-            return endings;
         }
 
         /// <summary>
@@ -3029,33 +3003,25 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Ending WriteCatchFinnally(IndentedTextWriter writer, OpCodePart opCode, Ending endings)
+        private void WriteCatchFinnally(IndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.EndOfTry != null && opCode.EndOfTry.Count > 0)
             {
-                this.WriteEndings(endings);
-
                 foreach (var endOfTryId in opCode.EndOfTry)
                 {
                     writer.WriteLine(string.Empty);
                     writer.Indent--;
                     writer.WriteLine("}");
-
-                    endings = Ending.NewLine;
                 }
             }
 
             if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
             {
-                this.WriteEndings(endings);
-
                 foreach (var endOfCaluseId in opCode.EndOfClausesOrFinal)
                 {
                     // writer.WriteLine(string.Empty);
                     writer.Indent--;
                     writer.WriteLine("}");
-
-                    endings = Ending.NewLine;
                 }
             }
 
@@ -3079,11 +3045,7 @@
                     writer.Write('{');
                     writer.Indent++;
                 }
-
-                endings = Ending.NewLine;
             }
-
-            return endings;
         }
 
         /// <summary>
@@ -3124,23 +3086,6 @@
             writer.WriteLine(string.Empty);
 
             this.WriteMemCopy(writer, type, op1, op2);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="endings">
-        /// </param>
-        private void WriteEndings(Ending endings)
-        {
-            switch (endings)
-            {
-                case Ending.SeparatorWithNewLine:
-                case Ending.NewLine:
-                    this.Output.WriteLine(string.Empty);
-                    break;
-                default:
-                    break;
-            }
         }
 
         /// <summary>
@@ -3430,7 +3375,7 @@
             var i = 0;
             foreach (var opCodePart in rest)
             {
-                var endings = this.ActualWrite(this.Output, opCodePart, true);
+                this.ActualWrite(this.Output, opCodePart, true);
                 i++;
 
                 if (endPart != null && i == rest.Length)
@@ -3438,15 +3383,7 @@
                     this.Output.Write(endPart);
                 }
 
-                switch (endings)
-                {
-                    case Ending.SeparatorWithNewLine:
-                    case Ending.NewLine:
-                        this.Output.WriteLine(string.Empty);
-                        break;
-                    default:
-                        break;
-                }
+                this.Output.WriteLine(string.Empty);
             }
         }
 

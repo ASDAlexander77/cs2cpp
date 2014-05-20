@@ -287,12 +287,22 @@
 
         public static bool HasAnyVirtualMethod(this Type thisType)
         {
-            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
+            if (thisType.HasAnyVirtualMethodInCurrentType())
             {
                 return true;
             }
 
             return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
+        }
+
+        public static bool HasAnyVirtualMethodInCurrentType(this Type thisType)
+        {
+            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #endregion
