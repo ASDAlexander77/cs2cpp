@@ -37,6 +37,9 @@
         /// </summary>
         private static IDictionary<string, string> systemTypesToCTypes = new SortedDictionary<string, string>();
 
+
+        private static IDictionary<string, List<Pair<string, MethodInfo>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+
         #endregion
 
         #region Fields
@@ -318,12 +321,9 @@
             if (this.ThisType.HasAnyVirtualMethod())
             {
                 this.Output.WriteLine(string.Empty);
-                this.Output.Write("@\"");
-                this.Output.Write(this.ThisType.FullName);
-                this.Output.Write(" Virtual Table\"");
+                this.Output.Write(GetVirtualTableName(this.ThisType));
 
-                var virtualTable = new List<Pair<string, MethodInfo>>();
-                BuildVirtualTable(this.ThisType, virtualTable);
+                var virtualTable = GetVirtualTable(this.ThisType);
                 this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
 
                 // define virtual table
@@ -342,6 +342,28 @@
 
                 this.Output.WriteLine("]");
             }
+        }
+
+        public string GetVirtualTableName(Type type)
+        {
+            return string.Concat("@\"", type.FullName, " Virtual Table\"");
+        }
+
+        private List<Pair<string, MethodInfo>> GetVirtualTable(Type thisType)
+        {
+            List<Pair<string, MethodInfo>> virtualTable;
+
+            if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
+            {
+                return virtualTable;
+            }
+
+            virtualTable = new List<Pair<string, MethodInfo>>();
+            BuildVirtualTable(thisType, virtualTable);
+
+            virtualTableByType[thisType.FullName] = virtualTable;
+
+            return virtualTable;
         }
 
         private void BuildVirtualTable(Type thisType, List<Pair<string, MethodInfo>> virtualTable)
@@ -3555,7 +3577,26 @@
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
             this.WriteMemSet(writer, declaringType, res);
             writer.WriteLine(string.Empty);
+
+            if (declaringType.HasAnyVirtualMethod())
+            {
+                writer.WriteLine("; set virtual table");
+
+                // initializw virtual table
+                WriteBitcast(writer, opCode, res, typeof(byte**));
+                writer.WriteLine(string.Empty);
+
+                var virtualTable = GetVirtualTable(declaringType);
+
+                writer.Write("store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", virtualTable.Count + 1, GetVirtualTableName(declaringType));
+                WriteResultNumber(opCode.ResultNumber ?? -1);
+                writer.WriteLine(string.Empty);
+            }
+
             WriteBitcast(writer, opCode, res, declaringType);
+            writer.WriteLine(string.Empty);
+
+            writer.WriteLine("; end of new obj");
         }
 
         /// <summary>
@@ -3573,7 +3614,7 @@
             var size = this.GetTypeSize(declaringType);
             this.UnaryOper(writer, opCode, "mul");
             writer.WriteLine(string.Format(", {0}", size));
-
+             
             var resMul = opCode.ResultNumber;
 
             WriteSetResultNumber(writer, opCode);
@@ -3615,6 +3656,8 @@
                 writer.WriteLine(string.Empty);
                 this.WriteBitcast(writer, opCode, typeof(int), resGetArr, declaringType, true);
             }
+
+            writer.WriteLine("; end of new array");
         }
 
         /// <summary>
@@ -3724,7 +3767,7 @@
 
             while (effectiveType.HasElementType)
             {
-                effectiveType = type.GetElementType();
+                effectiveType = effectiveType.GetElementType();
             }
 
             // TODO: remove String test when you use real string class
