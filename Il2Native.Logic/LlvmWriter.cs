@@ -2870,6 +2870,19 @@
             opCode.ResultType = typeof(byte*);
         }
 
+        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, string custom)
+        {
+            WriteSetResultNumber(writer, opCode);
+            writer.Write("bitcast ");
+            this.WriteTypePrefix(writer, fromType, true);
+            writer.Write(' ');
+            WriteResultNumber(res);
+            writer.Write(" to ");
+            writer.Write(custom);
+
+            writer.WriteLine(string.Empty);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2924,7 +2937,50 @@
                 if (IsClassCastRequired(thisType, used[0]))
                 {
                     this.WriteBitcast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
+                    writer.WriteLine(string.Empty);
                 }
+            }
+
+            int? virtualMethodAddressResult = null;
+            if (isVirtual)
+            {
+                // get pointer to Virtual Table and call method
+                // 1) get pointer to virtual table
+                writer.WriteLine("; Get Virtual Table");
+                UnaryOper(writer, opCodeMethodInfo, "bitcast");
+                writer.Write(" to i32 (");
+                WriteTypePrefix(writer, thisType);
+                writer.WriteLine(")***");
+
+                // load pointer
+                var bitcastRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("load i32 (");
+                WriteTypePrefix(writer, thisType);
+                writer.Write(")*** ");
+                WriteResultNumber(bitcastRes ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // get address of a function
+                var loadVTableRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("getelementptr inbounds i32 (");
+                WriteTypePrefix(writer, thisType);
+                writer.Write(")** ");
+                WriteResultNumber(loadVTableRes ?? -1);
+                writer.WriteLine(", i64 {0}", GetVirtualMethodIndex(thisType, methodInfo));
+
+                // load method address
+                var vtableRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("load i32 (");
+                WriteTypePrefix(writer, thisType);
+                writer.Write(")** ");
+                WriteResultNumber(vtableRes ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // remember virtual method address result
+                virtualMethodAddressResult = opCodeMethodInfo.ResultNumber;
             }
 
             // check if you need to cast parameter
@@ -2970,7 +3026,14 @@
 
             writer.Write(' ');
 
-            this.WriteMethodDefinitionName(writer, methodBase);
+            if (isVirtual)
+            {
+                WriteResultNumber(virtualMethodAddressResult ?? -1);
+            }
+            else
+            {
+                this.WriteMethodDefinitionName(writer, methodBase);
+            }
 
             this.ActualWrite(
                 writer,
@@ -2984,6 +3047,26 @@
                 thisType,
                 opCodeMethodInfo.ResultNumber,
                 methodInfo != null ? methodInfo.ReturnType : null);
+        }
+
+        // TODO: speed up the function
+        private int GetVirtualMethodIndex(Type thisType, MethodInfo methodInfo)
+        {
+            var virtualTable = GetVirtualTable(thisType);
+
+            var index = 0;
+            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
+            {
+                if (virtualMethod.ToString() == methodInfo.ToString())
+                {
+                    return index + 1;
+                }
+
+                index++;
+            }
+
+            // incorret result
+            return -1;
         }
 
         /// <summary>
