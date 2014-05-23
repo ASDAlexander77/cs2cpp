@@ -96,7 +96,7 @@
         {
             Il2Converter.Convert(@"D:\Temp\CorLib\bin\Release\CorLib.dll", OutputPath);
         }
-        
+
 
         [TestMethod]
         public void TestRun()

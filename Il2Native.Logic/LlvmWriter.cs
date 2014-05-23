@@ -2926,8 +2926,7 @@
             var startsWithThis = hasThisArgument && opCodeMethodInfo.OpCodeOperands[0].Any(Code.Ldarg_0);
 
             int? virtualMethodAddressResult = null;
-            var virtualMethodIndex = isVirtual ? GetVirtualMethodIndex(thisType, methodInfo) : -1;
-            if (isVirtual && virtualMethodIndex >= 0)
+            if (isVirtual && methodBase.IsVirtual)
             {
                 // get pointer to Virtual Table and call method
                 // 1) get pointer to virtual table
@@ -2953,7 +2952,7 @@
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
                 WriteResultNumber(loadVTableRes ?? -1);
-                writer.WriteLine(", i64 {0}", virtualMethodIndex);
+                writer.WriteLine(", i64 {0}", GetVirtualMethodIndex(thisType, methodInfo));
 
                 // load method address
                 var vtableRes = opCodeMethodInfo.ResultNumber;
@@ -3027,7 +3026,7 @@
 
             writer.Write(' ');
 
-            if (isVirtual && virtualMethodIndex >= 0)
+            if (isVirtual && methodBase.IsVirtual)
             {
                 WriteResultNumber(virtualMethodAddressResult ?? -1);
             }
@@ -3066,8 +3065,7 @@
                 index++;
             }
 
-            // TODO: sometimes .NET calls non-virtual methods with CALLVIRT (why?)
-            return -1;
+            throw new KeyNotFoundException("virtual method could not be found");
         }
 
         /// <summary>
