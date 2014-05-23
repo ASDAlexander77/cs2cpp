@@ -2925,6 +2925,49 @@
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
             var startsWithThis = hasThisArgument && opCodeMethodInfo.OpCodeOperands[0].Any(Code.Ldarg_0);
 
+            int? virtualMethodAddressResult = null;
+            var virtualMethodIndex = isVirtual ? GetVirtualMethodIndex(thisType, methodInfo) : -1;
+            if (isVirtual && virtualMethodIndex >= 0)
+            {
+                // get pointer to Virtual Table and call method
+                // 1) get pointer to virtual table
+                writer.WriteLine("; Get Virtual Table");
+                UnaryOper(writer, opCodeMethodInfo, "bitcast");
+                writer.Write(" to ");
+                this.WriteMethodPointerType(writer, methodInfo);
+                writer.WriteLine("**");
+
+                // load pointer
+                var bitcastRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("load ");
+                this.WriteMethodPointerType(writer, methodInfo);
+                writer.Write("** ");
+                WriteResultNumber(bitcastRes ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // get address of a function
+                var loadVTableRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("getelementptr inbounds ");
+                this.WriteMethodPointerType(writer, methodInfo);
+                writer.Write("* ");
+                WriteResultNumber(loadVTableRes ?? -1);
+                writer.WriteLine(", i64 {0}", virtualMethodIndex);
+
+                // load method address
+                var vtableRes = opCodeMethodInfo.ResultNumber;
+                this.WriteSetResultNumber(opCodeMethodInfo);
+                writer.Write("load ");
+                this.WriteMethodPointerType(writer, methodInfo);
+                writer.Write("* ");
+                WriteResultNumber(vtableRes ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // remember virtual method address result
+                virtualMethodAddressResult = opCodeMethodInfo.ResultNumber;
+            }
+
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
@@ -2939,48 +2982,6 @@
                     this.WriteBitcast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
                     writer.WriteLine(string.Empty);
                 }
-            }
-
-            int? virtualMethodAddressResult = null;
-            if (isVirtual)
-            {
-                // get pointer to Virtual Table and call method
-                // 1) get pointer to virtual table
-                writer.WriteLine("; Get Virtual Table");
-                UnaryOper(writer, opCodeMethodInfo, "bitcast");
-                writer.Write(" to i32 (");
-                WriteTypePrefix(writer, thisType);
-                writer.WriteLine(")***");
-
-                // load pointer
-                var bitcastRes = opCodeMethodInfo.ResultNumber;
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("load i32 (");
-                WriteTypePrefix(writer, thisType);
-                writer.Write(")*** ");
-                WriteResultNumber(bitcastRes ?? -1);
-                writer.WriteLine(string.Empty);
-
-                // get address of a function
-                var loadVTableRes = opCodeMethodInfo.ResultNumber;
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("getelementptr inbounds i32 (");
-                WriteTypePrefix(writer, thisType);
-                writer.Write(")** ");
-                WriteResultNumber(loadVTableRes ?? -1);
-                writer.WriteLine(", i64 {0}", GetVirtualMethodIndex(thisType, methodInfo));
-
-                // load method address
-                var vtableRes = opCodeMethodInfo.ResultNumber;
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("load i32 (");
-                WriteTypePrefix(writer, thisType);
-                writer.Write(")** ");
-                WriteResultNumber(vtableRes ?? -1);
-                writer.WriteLine(string.Empty);
-
-                // remember virtual method address result
-                virtualMethodAddressResult = opCodeMethodInfo.ResultNumber;
             }
 
             // check if you need to cast parameter
@@ -3026,7 +3027,7 @@
 
             writer.Write(' ');
 
-            if (isVirtual)
+            if (isVirtual && virtualMethodIndex >= 0)
             {
                 WriteResultNumber(virtualMethodAddressResult ?? -1);
             }
@@ -3059,13 +3060,13 @@
             {
                 if (virtualMethod.ToString() == methodInfo.ToString())
                 {
-                    return index + 1;
+                    return index;
                 }
 
                 index++;
             }
 
-            // incorret result
+            // TODO: sometimes .NET calls non-virtual methods with CALLVIRT (why?)
             return -1;
         }
 
