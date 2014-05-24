@@ -24,6 +24,22 @@ define void @"Void System.Object.Finalize()"(%"System.Object"* %this) #4 {
     %"System.Object"
 }
 
+define i8* @"System.String System.ValueType.ToString()"(%"System.ValueType"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.ValueType.Equals(System.Object)"(%"System.ValueType"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.ValueType.GetHashCode()"(%"System.ValueType"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.ValueType.Finalize()"(%"System.ValueType"* %this) #4 {
+    ret void
+}
+
 %"System.Enum" = type {
     %"System.ValueType"
 }

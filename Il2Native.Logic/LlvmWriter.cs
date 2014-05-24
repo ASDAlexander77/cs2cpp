@@ -37,9 +37,9 @@
         /// </summary>
         private static IDictionary<string, string> systemTypesToCTypes = new SortedDictionary<string, string>();
 
-        private static IDictionary<string, List<Pair<string, MethodInfo>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+        private IDictionary<string, List<Pair<string, MethodInfo>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
 
-        private static IDictionary<string, List<Pair<string, MethodInfo>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+        private IDictionary<string, List<Pair<string, MethodInfo>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
 
         #endregion
 
@@ -2370,9 +2370,26 @@
 
             var size = 0;
 
+            // add shift for virtual table
+            if (type.IsRootOfVirtualTable())
+            {
+                size += pointerSize;
+            }
+
             if (type.BaseType != null)
             {
                 size += this.GetTypeSize(type.BaseType);
+            }
+
+            // add shift for interfaces
+            if (type.BaseType == null)
+            {
+                size += type.GetInterfaces().Count() * pointerSize;
+            }
+            else
+            {
+                var baseInterfaces = type.BaseType.GetInterfaces();
+                size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * pointerSize;
             }
 
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
