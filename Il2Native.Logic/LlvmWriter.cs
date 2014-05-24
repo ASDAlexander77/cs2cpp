@@ -37,8 +37,9 @@
         /// </summary>
         private static IDictionary<string, string> systemTypesToCTypes = new SortedDictionary<string, string>();
 
-
         private static IDictionary<string, List<Pair<string, MethodInfo>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+
+        private static IDictionary<string, List<Pair<string, MethodInfo>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
 
         #endregion
 
@@ -318,35 +319,52 @@
             }
 
             // write VirtualTable
-            if (this.ThisType.HasAnyVirtualMethod())
+            if (!this.ThisType.IsInterface && this.ThisType.HasAnyVirtualMethod())
             {
                 this.Output.WriteLine(string.Empty);
                 this.Output.Write(GetVirtualTableName(this.ThisType));
-
                 var virtualTable = GetVirtualTable(this.ThisType);
-                this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
-
-                // define virtual table
-                foreach (var virtualMethod in virtualTable)
-                {
-                    var method = virtualMethod.Value;
-                    // write method pointer
-                    this.Output.Write(", i8* bitcast (");
-                    // write pointer to method
-                    this.WriteMethodReturnType(this.Output, method);
-                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
-                    this.Output.Write("* ");
-                    this.WriteMethodDefinitionName(this.Output, method);
-                    this.Output.Write(" to i8*)");
-                }
-
-                this.Output.WriteLine("]");
+                WriteTableOfMethods(virtualTable);
             }
+
+            foreach (var @interface in this.ThisType.GetInterfaces())
+            {
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write(GetVirtualInterfaceTableName(this.ThisType, @interface));
+                var virtualInterfaceTable = GetVirtualInterfaceTable(this.ThisType, @interface);
+                WriteTableOfMethods(virtualInterfaceTable);
+            }
+        }
+
+        private void WriteTableOfMethods(List<Pair<string, MethodInfo>> virtualTable)
+        {
+            this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
+
+            // define virtual table
+            foreach (var virtualMethod in virtualTable)
+            {
+                var method = virtualMethod.Value;
+                // write method pointer
+                this.Output.Write(", i8* bitcast (");
+                // write pointer to method
+                this.WriteMethodReturnType(this.Output, method);
+                this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
+                this.Output.Write("* ");
+                this.WriteMethodDefinitionName(this.Output, method);
+                this.Output.Write(" to i8*)");
+            }
+
+            this.Output.WriteLine("]");
         }
 
         public string GetVirtualTableName(Type type)
         {
             return string.Concat("@\"", type.FullName, " Virtual Table\"");
+        }
+
+        public string GetVirtualInterfaceTableName(Type type, Type @interface)
+        {
+            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
         }
 
         private List<Pair<string, MethodInfo>> GetVirtualTable(Type thisType)
@@ -394,6 +412,35 @@
             }
         }
 
+        private List<Pair<string, MethodInfo>> GetVirtualInterfaceTable(Type thisType, Type @interface)
+        {
+            List<Pair<string, MethodInfo>> virtualInterfaceTable;
+
+            if (virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
+            {
+                return virtualInterfaceTable;
+            }
+
+            virtualInterfaceTable = new List<Pair<string, MethodInfo>>();
+            BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
+
+            virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
+
+            return virtualInterfaceTable;
+        }
+
+        private void BuildVirtualInterfaceTable(Type thisType, Type @interface, List<Pair<string, MethodInfo>> virtualTable)
+        {
+            var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+
+            // get all virtual methods in current type and replace or append
+            foreach (var interfaceMember in IlReader.Methods(@interface))
+            {
+                var foundMethod = allPublic.First(pub => pub.ToString() == interfaceMember.ToString());
+                virtualTable.Add(new Pair<string, MethodInfo>() { Key = foundMethod.ToString(), Value = foundMethod });
+            }
+        }
+
         /// <summary>
         /// </summary>
         public void WriteAfterMethods()
@@ -423,18 +470,27 @@
             {
                 this.Output.WriteLine("i32 (...)**");
             }
-            else if (this.ThisType.HasAnyVirtualMethodInCurrentType() && (baseType == null || !baseType.HasAnyVirtualMethod()))
+            else if (this.ThisType.IsRootOfVirtualTable())
             {
                 this.Output.WriteLine("i32 (...)**");
             }
 
-            if (baseType != null
-
-                ////&& baseType.Namespace != "System"
-                ////&& baseType.Name != "Object"
-                )
+            if (baseType != null)
             {
                 this.WriteTypeWithoutModifiers(this.Output, baseType);
+            }
+
+            var index = 0;
+            foreach (var @interface in this.ThisType.GetInterfaces())
+            {
+                if (this.ThisType.BaseType.GetInterfaces().Contains(@interface))
+                {
+                    continue;
+                }
+
+                this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
+                WriteTypeWithoutModifiers(this.Output, @interface);
+                index++;
             }
         }
 
@@ -2100,7 +2156,7 @@
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    this.WriteBitcast(
+                    this.WriteCast(
                         writer,
                         opCodeTypePart,
                         opCodeTypePart.OpCodeOperands[0].ResultType,
@@ -2114,7 +2170,7 @@
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    this.WriteBitcast(
+                    this.WriteCast(
                         writer,
                         opCodeTypePart,
                         opCodeTypePart.OpCodeOperands[0].ResultType,
@@ -2254,6 +2310,7 @@
         {
             var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
+
             while (index < list.Count && list[index] != fieldInfo)
             {
                 index++;
@@ -2264,16 +2321,27 @@
                 throw new KeyNotFoundException();
             }
 
-            // adjust for base type and interfaces
+            // add shift for virtual table
+            if (type.IsRootOfVirtualTable())
+            {
+                index++;
+            }
+
+            // add shift for base type
             if (type.BaseType != null)
             {
                 index++;
             }
 
-            var interfaces = type.GetInterfaces();
-            if (interfaces != null)
+            // add shift for interfaces
+            if (type.BaseType == null)
             {
-                // index += interfaces.Count();
+                index += type.GetInterfaces().Count();
+            }
+            else
+            {
+                var baseInterfaces = type.BaseType.GetInterfaces();
+                index += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i));
             }
 
             this.indexByFieldInfo[GetFullFieldName(fieldInfo)] = index;
@@ -2632,7 +2700,7 @@
             var effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
             if (castFrom != null && opCode.OpCodeOperands[0].ResultNumber.HasValue)
             {
-                WriteBitcast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
+                WriteCast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
             }
 
             writer.Write(op);
@@ -2830,19 +2898,26 @@
         /// </param>
         /// <param name="noNewLine">
         /// </param>
-        private void WriteBitcast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, Type toType, bool appendReference = false)
+        private void WriteCast(IndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, Type toType, bool appendReference = false)
         {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast ");
-            this.WriteTypePrefix(writer, fromType, true);
-            writer.Write(' ');
-            WriteResultNumber(res);
-            writer.Write(" to ");
-            this.WriteTypePrefix(writer, toType, true);
-            if (appendReference)
+            if (!fromType.IsInterface && toType.IsInterface)
             {
-                // result should be array
-                writer.Write('*');
+                WriteInterfaceAccess(writer, opCode, fromType, toType);
+            }
+            else
+            {
+                WriteSetResultNumber(writer, opCode);
+                writer.Write("bitcast ");
+                this.WriteTypePrefix(writer, fromType, true);
+                writer.Write(' ');
+                WriteResultNumber(res);
+                writer.Write(" to ");
+                this.WriteTypePrefix(writer, toType, true);
+                if (appendReference)
+                {
+                    // result should be array
+                    writer.Write('*');
+                }
             }
 
             opCode.ResultType = toType;
@@ -2978,7 +3053,7 @@
 
                 if (IsClassCastRequired(thisType, used[0]))
                 {
-                    this.WriteBitcast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
+                    this.WriteCast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
                     writer.WriteLine(string.Empty);
                 }
             }
@@ -2993,7 +3068,7 @@
 
                     if (IsClassCastRequired(parameter.ParameterType, operand))
                     {
-                        this.WriteBitcast(writer, operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
+                        this.WriteCast(writer, operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
                     }
 
                     index++;
@@ -3244,6 +3319,70 @@
             if (!this.indexByFieldInfo.TryGetValue(GetFullFieldName(fieldInfo), out index))
             {
                 index = this.CalculateFieldIndex(fieldInfo, type);
+            }
+
+            writer.Write(", i32 ");
+            writer.Write(index);
+        }
+
+        private void WriteInterfaceAccess(IndentedTextWriter writer, OpCodePart opCode, Type declaringType, Type @interface)
+        {
+            var objectResult = opCode.ResultNumber;
+
+            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator);
+            writer.Write(' ');
+            writer.Write(this.GetResultNumber(objectResult ?? -1));
+            this.WriteInterfaceIndex(writer, declaringType, @interface);
+            writer.WriteLine(string.Empty);
+        }
+
+        private void WriteInterfaceIndex(IndentedTextWriter writer, Type classType, Type @interface)
+        {
+            var type = classType;
+
+            // first element for pointer (Type* + 0)
+            writer.Write(", i32 0");
+
+            while (!type.GetInterfaces().Contains(@interface) || type.BaseType.GetInterfaces().Contains(@interface))
+            {
+                type = type.BaseType;
+                if (type == null)
+                {
+                    break;
+                }
+
+                // first index is base type index
+                writer.Write(", i32 0");
+            }
+
+            // find index
+            int index = 0;
+
+            if (type.IsRootOfVirtualTable())
+            {
+                index++;
+            }
+
+            if (type.BaseType != null)
+            {
+                index++;
+            }
+
+            var found = false;
+            foreach (var typeInterface in type.GetInterfaces())
+            {
+                if (typeInterface == @interface)
+                {
+                    found = true;
+                    break;
+                }
+
+                index++;
+            }
+
+            if (!found)
+            {
+                throw new IndexOutOfRangeException("Could not find an interface");
             }
 
             writer.Write(", i32 ");
@@ -3654,18 +3793,38 @@
         /// </param>
         private void WriteNew(IndentedTextWriter writer, OpCodePart opCode, Type declaringType)
         {
-            var res = WriteSetResultNumber(writer, opCode);
+            var mallocResult = WriteSetResultNumber(writer, opCode);
             var size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
-            this.WriteMemSet(writer, declaringType, res);
+            this.WriteMemSet(writer, declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
+            WriteBitcast(writer, opCode, mallocResult, declaringType);
+            writer.WriteLine(string.Empty);
+
+            var castResult = opCode.ResultNumber;
+
+            WriteInitObject(writer, opCode, declaringType);
+
+            // restore result and type
+            opCode.ResultNumber = castResult;
+            opCode.ResultType = declaringType;
+
+            writer.WriteLine("; end of new obj");
+        }
+
+        private void WriteInitObject(IndentedTextWriter writer, OpCodePart opCode, Type declaringType)
+        {
+            // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
             {
+                var opCodeResult = opCode.ResultNumber;
+                var opCodeType = opCode.ResultType;
+
                 writer.WriteLine("; set virtual table");
 
                 // initializw virtual table
-                WriteBitcast(writer, opCode, res, typeof(byte**));
+                WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, typeof(byte**));
                 writer.WriteLine(string.Empty);
 
                 var virtualTable = GetVirtualTable(declaringType);
@@ -3673,12 +3832,28 @@
                 writer.Write("store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", virtualTable.Count + 1, GetVirtualTableName(declaringType));
                 WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
+
+                // restore
+                opCode.ResultNumber = opCodeResult;
+                opCode.ResultType = opCodeType;
             }
 
-            WriteBitcast(writer, opCode, res, declaringType);
-            writer.WriteLine(string.Empty);
+            // init all interfaces
+            foreach (var @interface in declaringType.GetInterfaces())
+            {
+                writer.WriteLine("; set virtual interface table");
 
-            writer.WriteLine("; end of new obj");
+                WriteInterfaceAccess(writer, opCode, declaringType, @interface);
+
+                WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, typeof(byte**));
+                writer.WriteLine(string.Empty);
+
+                var virtualInterfaceTable = GetVirtualInterfaceTable(declaringType, @interface);
+
+                writer.Write("store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", virtualInterfaceTable.Count + 1, GetVirtualInterfaceTableName(declaringType, @interface));
+                WriteResultNumber(opCode.ResultNumber ?? -1);
+                writer.WriteLine(string.Empty);
+            }
         }
 
         /// <summary>
@@ -3736,7 +3911,7 @@
             if (declaringType != typeof(int))
             {
                 writer.WriteLine(string.Empty);
-                this.WriteBitcast(writer, opCode, typeof(int), resGetArr, declaringType, true);
+                this.WriteCast(writer, opCode, typeof(int), resGetArr, declaringType, true);
             }
 
             writer.WriteLine("; end of new array");

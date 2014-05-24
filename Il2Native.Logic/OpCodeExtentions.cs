@@ -305,6 +305,12 @@
             return false;
         }
 
+        public static bool IsRootOfVirtualTable(this Type type)
+        {
+            return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+        }
+
+
         #endregion
     }
 }
