@@ -6,7 +6,7 @@ namespace Il2Native.Logic
     using System.Collections.Generic;
     using System.Reflection.Emit;
 
-    interface ICodeWriter
+    public interface ICodeWriter
     {
         void Write(string rawText);
 
@@ -34,7 +34,7 @@ namespace Il2Native.Logic
 
         void WriteFieldEnd(System.Reflection.FieldInfo field, int number, int count);
 
-        void WriteAfterFields(int count);
+        void WriteAfterFields(int count, bool disablePostDeclarations = false);
 
         void WriteBeforeMethods();
 

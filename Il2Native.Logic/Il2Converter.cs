@@ -1,7 +1,4 @@
-﻿
-#define SPLIT
-//#define NEST_TYPES
-namespace Il2Native.Logic
+﻿namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
@@ -25,11 +22,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="outputFolder">
         /// </param>
-        public static void Convert(string source, string outputFolder)
+        public static void Convert(string source, string outputFolder, string[] args = null)
         {
             var ilReader = new IlReader(source);
             ilReader.Load();
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder);
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder, args);
         }
 
         /// <summary>
@@ -38,12 +35,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="outputFolder">
         /// </param>
-        public static void Convert(Type type, string outputFolder)
+        public static void Convert(Type type, string outputFolder, string[] args = null)
         {
             var ilReader = new IlReader();
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder);
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args);
         }
 
         #endregion
@@ -85,33 +82,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void ConvertType(IlReader ilReader, ICodeWriter codeWriter, Type type, Type genericDefinition)
         {
-            codeWriter.WriteTypeStart(type, genericDefinition);
-
-#if NEST_TYPES
-    
-    // process nested types
-            var nestedTypes = type.GetNestedTypes(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-            foreach (var nestedType in nestedTypes)
-            {
-                ConvertType(ilReader, codeWriter, nestedType);
-            }
-#endif
-
-            var fields = IlReader.Fields(type);
-            var count = fields.Count();
-            var number = 1;
-
-            codeWriter.WriteBeforeFields(count);
-
-            foreach (var field in fields)
-            {
-                codeWriter.WriteFieldStart(field, number, count);
-                codeWriter.WriteFieldEnd(field, number, count);
-
-                number++;
-            }
-
-            codeWriter.WriteAfterFields(count);
+            WriteTypeDefinition(codeWriter, type, genericDefinition);
 
             codeWriter.WriteBeforeConstructors();
 
@@ -144,6 +115,27 @@ namespace Il2Native.Logic
             codeWriter.WriteTypeEnd(type);
         }
 
+        public static void WriteTypeDefinition(ICodeWriter codeWriter, Type type, Type genericDefinition, bool disablePostDeclarations = false)
+        {
+            codeWriter.WriteTypeStart(type, genericDefinition);
+
+            var fields = IlReader.Fields(type);
+            var count = fields.Count();
+            var number = 1;
+
+            codeWriter.WriteBeforeFields(count);
+
+            foreach (var field in fields)
+            {
+                codeWriter.WriteFieldStart(field, number, count);
+                codeWriter.WriteFieldEnd(field, number, count);
+
+                number++;
+            }
+
+            codeWriter.WriteAfterFields(count, disablePostDeclarations);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -173,9 +165,9 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, Type[] filter = null)
+        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, Type[] filter = null)
         {
-            var codeWriter = GetLlvmWriter(fileName, outputFolder);
+            var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
 
@@ -210,13 +202,6 @@ namespace Il2Native.Logic
             // enumarte all types
             foreach (var type in newListOfTypes)
             {
-#if NEST_TYPES
-                if (type.IsNested)
-                {
-                    continue;
-                }
-#endif
-
                 if (filter != null && !filter.Contains(type))
                 {
                     continue;
@@ -292,13 +277,6 @@ namespace Il2Native.Logic
                         DicoverGenericSpecializedType(field.FieldType, genericSpecializations);
                         yield return field.FieldType;
                     }
-
-#if NEST_TYPES
-                    if (field.FieldType.IsNested)
-                    {
-                        yield return GetDeclType(field.FieldType);
-                    }
-#endif
                 }
             }
 
@@ -309,22 +287,10 @@ namespace Il2Native.Logic
                 foreach (var method in methods)
                 {
                     DicoverGenericSpecializedType(method.ReturnType, genericSpecializations);
-#if NEST_TYPES
-                    if (method.ReturnType.IsNested)
-                    {
-                        yield return GetDeclType(method.ReturnType);
-                    }
-#endif
 
                     foreach (var param in method.GetParameters())
                     {
                         DicoverGenericSpecializedType(param.ParameterType, genericSpecializations);
-#if NEST_TYPES
-                        if (param.ParameterType.IsNested)
-                        {
-                            yield return GetDeclType(param.ParameterType);
-                        }
-#endif
                     }
 
                     var methodBody = method.GetMethodBody();
@@ -337,36 +303,6 @@ namespace Il2Native.Logic
                     }
                 }
             }
-
-            ////if (type.IsGenericType && !type.IsGenericTypeDefinition)
-            ////{
-            ////    DicoverGenericSpecializedType(type, genericSpecializations);
-
-            ////    // find definition and return as required type
-            ////    foreach (var typeOne in allTypes)
-            ////    {
-            ////        if (typeOne.GUID == type.GUID && typeOne.IsGenericTypeDefinition)
-            ////        {
-            ////            yield return typeOne;
-            ////            break;
-            ////        }
-            ////    }
-            ////}
-#if NEST_TYPES
-            var nestedTypes = type.GetNestedTypes(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-            foreach (var nestedType in nestedTypes)
-            {
-                foreach (var reqNestedType in GetAllRequiredTypesForType(nestedType, allTypes))
-                {
-                    var hasBase = reqNestedType.BaseType != null && reqNestedType.BaseType.GUID == type.GUID;
-                    var hasDeclatingType = reqNestedType.DeclaringType != null && reqNestedType.DeclaringType.GUID == type.GUID;
-                    if (!hasBase && !hasDeclatingType)
-                    {
-                        yield return reqNestedType;
-                    }
-                }
-            }
-#endif
         }
 
         /// <summary>
@@ -380,9 +316,9 @@ namespace Il2Native.Logic
             return !type.DeclaringType.IsNested ? type.DeclaringType : GetDeclType(type.DeclaringType);
         }
 
-        private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder)
+        private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder, string[] args)
         {
-            return new LlvmWriter(Path.Combine(outputFolder, fileName)) as ICodeWriter;
+            return new LlvmWriter(Path.Combine(outputFolder, fileName), args) as ICodeWriter;
         }
 
         /// <summary>
@@ -421,23 +357,7 @@ namespace Il2Native.Logic
                 {
                     AddRequiredType(requiredType, requiredTypesToAdd, typesAdded);
                 }
-
-#if NEST_TYPES
-                if (requiredType.IsNested && type != requiredType.DeclaringType)
-                {
-                    AddRequiredType(requiredType.DeclaringType, requiredTypesToAdd, typesAdded);
-                }
-#endif
             }
-
-            ////if (requiredTypesToAdd.Count > 0)
-            ////{
-            ////    var requiredTypesToAddNextList = new List<Type>();
-            ////    ProcessRequiredTypesForTypes(requiredTypesToAdd, allTypes, typesAdded, requiredTypesToAddNextList);
-            ////    requiredTypesToAddNextList.AddRange(requiredTypesToAdd);
-            ////    requiredTypesToAdd.Clear();
-            ////    requiredTypesToAdd.AddRange(requiredTypesToAddNextList);
-            ////}
         }
 
         /// <summary>
@@ -507,9 +427,6 @@ namespace Il2Native.Logic
                 foreach (var type in typesWithRequired)
                 {
                     var requiredTypes = type.Item2;
-#if NEST_TYPES
-                    requiredTypes.RemoveAll(r => newOrder.Any(n => n.GUID == r.GUID || IsBelongToDeclaringType(r, n));
-#else
                     if (strictMode)
                     {
                         requiredTypes.RemoveAll(r => newOrder.Any(n => n == r));
@@ -519,7 +436,6 @@ namespace Il2Native.Logic
                         requiredTypes.RemoveAll(r => newOrder.Any(n => n.GUID == r.GUID));
                     }
 
-#endif
                     if (requiredTypes.Count == 0)
                     {
                         toRemove.Add(type);

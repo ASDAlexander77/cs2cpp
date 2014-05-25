@@ -20,7 +20,7 @@
                 return;
             }
 
-            Il2Converter.Convert(args[0], Environment.CurrentDirectory);
+            Il2Converter.Convert(args[0], Environment.CurrentDirectory, args);
         }
     }
 }

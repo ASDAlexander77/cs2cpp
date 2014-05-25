@@ -54,7 +54,6 @@
   </Choose>
   <ItemGroup>
     <Compile Include="MSTests.cs" />
-    <Compile Include="NUnitTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

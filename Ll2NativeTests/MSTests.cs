@@ -84,6 +84,12 @@
         }
 
         [TestMethod]
+        public void TestCustomCompileAndRun()
+        {
+            TestCustomCompileAndRun(1);
+        }
+
+        [TestMethod]
         public void TestType()
         {
             Il2Converter.Convert(typeof(string), OutputPath);
@@ -95,77 +101,6 @@
         public void TestCoreLib()
         {
             Il2Converter.Convert(@"D:\Temp\CorLib\bin\Release\CorLib.dll", OutputPath);
-        }
-
-
-        [TestMethod]
-        public void TestRun()
-        {
-            // 9, 10 - Decimal class
-            // 12 object class
-            // 14 new keyword in function
-            // 19 delegates
-            // 26, 27 - delegate, order, imdelcared interfaces
-            // 28 - object, hashtable
-            // 30 - Explicit Interface
-            // 33 - GetType()
-            // 34, 35 - array of Objects
-            // 36 - big mess with ldtoken etc
-            // 37, 66 - array functionality
-            // 38 - mess with arrays and 'Dup' commands
-            // 43, 44, 45 - multi array
-            // 46 - boxing/unboxing
-            // 52 - arrays, enumerator
-            // 57 UI classes (Button, EventHandler)
-            // 59 - dynamic cast to Object
-            // 61 - event, delegate
-
-            // TO FIX:
-            // 24  = = =  with Set/Get method, somehow it does not work. Priority now !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // 42  = = =  ++/-- mess
-            // 49 string ops
-            // 50, 67 missing file
-            // 64 enum, namespace issue.
-            // 66 simple multi arrays + static constructor
-            // 68 ToString() + Console.WriteLine with 2 args
-            // 69 extern function
-
-            var skip = new int[] { 9, 10, 12, 14, 19, 24, 26, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 57, 59, 61, 64, 66, 67, 68, 69 };
-
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
-            {
-                System.Diagnostics.Trace.WriteLine("Generating CPP for " + index);
-
-                Test(index);
-
-                System.Diagnostics.Trace.WriteLine("Compiling CPP for " + index);
-
-                // compile and run test
-                // ====== Natch content ====
-                // call vcvars32.bat
-                // del test-%1.exe
-                // cl.exe test-%1.cpp
-                // del test-%1.obj
-                // test-%1.exe
-
-                var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = OutputPath;
-                pi.FileName = "c.bat";
-                pi.Arguments = index.ToString();
-
-                var piProc = System.Diagnostics.Process.Start(pi);
-
-                piProc.WaitForExit();
-
-                System.Diagnostics.Trace.WriteLine("Running EXE for " + index);
-
-                // run test file
-                var process = System.Diagnostics.Process.Start(string.Format("{1}test-{0}.exe", index, OutputPath));
-
-                process.WaitForExit();
-
-                Assert.AreEqual(0, process.ExitCode);
-            }
         }
 
         [TestMethod]
@@ -224,38 +159,99 @@
 
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
-                System.Diagnostics.Trace.WriteLine("Generating LLVM BC(il) for " + index);
-
-                Test(index);
-
-                System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
-
-                var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = OutputPath;
-                pi.FileName = "lli.exe";
-                pi.Arguments = string.Format("{1}test-{0}.ll", index, OutputPath);
-
-                var piProc = System.Diagnostics.Process.Start(pi);
-
-                piProc.WaitForExit();
-
-                Assert.AreEqual(0, piProc.ExitCode);
+                RunInterpreter(index);
             }
         }
 
-        private void Test(int number)
+        [TestMethod]
+        public void TestCompileAndRunLlvm()
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath);
+            // 9, 10 - Decimal class
+            var skip = new int[] { 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53 };
+
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            {
+                CompileAndRun(index);
+            }
         }
 
-        private void TestCustom(int number)
+        private void RunInterpreter(int index)
+        {
+            System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+
+            Test(index, true);
+
+            System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
+
+            var pi = new ProcessStartInfo();
+            pi.WorkingDirectory = OutputPath;
+            pi.FileName = "lli.exe";
+            pi.Arguments = string.Format("{1}test-{0}.ll", index, OutputPath);
+
+            var piProc = System.Diagnostics.Process.Start(pi);
+
+            piProc.WaitForExit();
+
+            Assert.AreEqual(0, piProc.ExitCode);
+        }
+
+        private void CompileAndRun(int index)
+        {
+            System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+
+            Test(index, false);
+
+            System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
+
+            // https://chromium.googlesource.com/chromiumos/third_party/llvm/+/master/test/MC/COFF/global_ctors_dtors.ll
+            /*
+                call vcvars32.bat
+                llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
+                llc -mtriple i686-pc-win32 -filetype=obj test-%1.ll
+                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib corelib.obj test-%1.obj /OUT:test-%1.exe
+                del test-%1.obj
+            */
+            var pi = new ProcessStartInfo();
+            pi.WorkingDirectory = OutputPath;
+            pi.FileName = "ll.bat";
+            pi.Arguments = string.Format("{0}", index);
+
+            var piProc = System.Diagnostics.Process.Start(pi);
+
+            piProc.WaitForExit();
+
+            Assert.AreEqual(0, piProc.ExitCode);
+
+            var piexec = new ProcessStartInfo();
+            piexec.WorkingDirectory = OutputPath;
+            piexec.FileName = string.Format("{1}test-{0}.exe", index, OutputPath);
+
+            var piexecProc = System.Diagnostics.Process.Start(piexec);
+            
+            piexecProc.WaitForExit();
+
+            Assert.AreEqual(0, piexecProc.ExitCode);
+
+        }
+
+        private void Test(int number, bool includeMiniCore = true)
+        {
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath, includeMiniCore ? new [] { "includeMiniCore" } : null);
+        }
+
+        private void TestCustom(int number, bool includeMiniCore = true)
+        {
+            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, includeMiniCore ? new[] { "includeMiniCore" } : null);
+        }
+
+        private void TestCustomCompileAndRun(int number, bool includeMiniCore = true)
         {
             Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath);
         }
 
-        private void TestGen(int number)
+        private void TestGen(int number, bool includeMiniCore = true)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath);
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath, includeMiniCore ? new[] { "includeMiniCore" } : null);
         }
     }
 }
