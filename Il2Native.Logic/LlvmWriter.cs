@@ -41,6 +41,10 @@
 
         private IDictionary<string, List<Pair<string, MethodInfo>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
 
+        private HashSet<Type> typeDeclRequired = new HashSet<Type>();
+
+        private HashSet<MethodBase> methodDeclRequired = new HashSet<MethodBase>();
+
         #endregion
 
         #region Fields
@@ -394,6 +398,8 @@
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
             {
+                CheckIfExternalDeclarationIsRequied(virtualOrAbstractMethod);
+
                 if (virtualOrAbstractMethod.IsAbstract)
                 {
                     virtualTable.Add(new Pair<string, MethodInfo>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
@@ -462,6 +468,8 @@
         {
             var baseType = this.ThisType.BaseType;
 
+            CheckIfExternalDeclarationIsRequied(baseType);
+
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
@@ -487,6 +495,8 @@
                 {
                     continue;
                 }
+
+                CheckIfExternalDeclarationIsRequied(@interface);
 
                 this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
                 WriteTypeWithoutModifiers(this.Output, @interface);
@@ -617,6 +627,47 @@
             this.Output.WriteLine("ret void");
             this.Output.Indent--;
             this.Output.WriteLine("}");
+
+            if (typeDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (var opaqueType in typeDeclRequired)
+                {
+                    WriteTypeDeclarationStart(opaqueType);
+                    this.Output.WriteLine("opaque");
+                }
+            }
+
+            if (methodDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (var externalMethodDecl in methodDeclRequired)
+                {
+                    this.Output.Write("declare ");
+
+                    var method = externalMethodDecl as MethodInfo;
+                    if (method != null)
+                    {
+                        ReadMethodInfo(method);
+                        this.WriteMethodReturnType(this.Output, method);
+                        this.WriteMethodDefinitionName(this.Output, method);
+                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+                        this.Output.WriteLine(string.Empty);
+                        continue;
+                    }
+
+                    var ctor = externalMethodDecl as ConstructorInfo;
+                    if (ctor != null)
+                    {
+                        ReadMethodInfo(ctor);
+                        this.Output.Write("void ");
+                        this.WriteMethodDefinitionName(this.Output, ctor);
+                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, typeof(void));
+                        this.Output.WriteLine(string.Empty);
+                        continue;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -829,10 +880,7 @@
                 this.Output.Write("> ");
             }
 
-            this.Output.Write("%");
-            this.WriteTypeName(this.Output, type, true);
-
-            this.Output.Write(" = type ");
+            WriteTypeDeclarationStart(type);
 
             /*
             var index = 0;
@@ -881,6 +929,14 @@
 
             this.Output.Indent++;
             */
+        }
+
+        private void WriteTypeDeclarationStart(Type type)
+        {
+            this.Output.Write("%");
+            this.WriteTypeName(this.Output, type, true);
+
+            this.Output.Write(" = type ");
         }
 
         #endregion
@@ -1141,6 +1197,8 @@
 
             foreach (var parameter in parameterInfos)
             {
+                CheckIfExternalDeclarationIsRequied(parameter.ParameterType);
+
                 if (hasThis || index > 0 || returnIsStruct)
                 {
                     writer.Write(", ");
@@ -2999,6 +3057,8 @@
                 return;
             }
 
+            CheckIfExternalDeclarationIsRequied(methodBase);
+
             var preProcessedOperandResults = new List<bool>();
 
             if (opCodeMethodInfo.OpCodeOperands != null)
@@ -3109,6 +3169,8 @@
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
                 this.WriteTypePrefix(writer, methodInfo.ReturnType, false);
+
+                CheckIfExternalDeclarationIsRequied(methodInfo.ReturnType);
             }
             else
             {
@@ -3139,6 +3201,42 @@
                 thisType,
                 opCodeMethodInfo.ResultNumber,
                 methodInfo != null ? methodInfo.ReturnType : null);
+        }
+
+        private void CheckIfExternalDeclarationIsRequied(MethodBase methodBase)
+        {
+            var mi = methodBase as MethodInfo;
+            if (mi != null)
+            {
+                if (mi.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.methodDeclRequired.Add(methodBase);
+                }
+
+                return;
+            }
+
+            var ci = methodBase as ConstructorInfo;
+            if (ci != null)
+            {
+                if (ci.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.methodDeclRequired.Add(methodBase);
+                }
+
+                return;
+            }
+        }
+
+        private void CheckIfExternalDeclarationIsRequied(Type type)
+        {
+            if (type != null)
+            {
+                if (type.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.typeDeclRequired.Add(type);
+                }
+            }
         }
 
         // TODO: speed up the function
