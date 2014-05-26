@@ -326,7 +326,7 @@
         /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) : Assembly.LoadFrom(this.Source);
+            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) : Assembly.ReflectionOnlyLoadFrom(this.Source);
         }
 
         /// <summary>
