@@ -3536,7 +3536,8 @@
                 type = type.BaseType;
                 if (type == null)
                 {
-                    break;
+                    //break;
+                    return;
                 }
 
                 // first index is base type index

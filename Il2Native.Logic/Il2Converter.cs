@@ -40,7 +40,7 @@
             var ilReader = new IlReader();
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args);
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type });
         }
 
         #endregion

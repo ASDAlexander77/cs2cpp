@@ -92,63 +92,15 @@
         [TestMethod]
         public void TestType()
         {
-            Il2Converter.Convert(typeof(string), OutputPath);
+            //Il2Converter.Convert(typeof(string), OutputPath);
             //Il2Converter.Convert(typeof(Type), OutputPath);
-            //Il2Converter.Convert(typeof(object), OutputPath);
+            Il2Converter.Convert(typeof(object), OutputPath);
         }
 
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(@"D:\Temp\CorLib\bin\Release\CorLib.dll", OutputPath);
-        }
-
-        [TestMethod]
-        public void TestGenRun()
-        {
-            // 13, 17 - not compilable
-            // 21 - string oper, GetType
-            // 24 - boxing int
-            // 25 - GetType
-            // 28, 29 - use Object 
-            // 30, 31 - can't be compiled
-
-            var skip = new int[] { 13, 17, 21, 24, 25, 28, 29, 30, 31 };
-
-            foreach (var index in Enumerable.Range(1, 472).Where(n => !skip.Contains(n)))
-            {
-                System.Diagnostics.Trace.WriteLine("Generating CPP for generic " + index);
-
-                TestGen(index);
-
-                System.Diagnostics.Trace.WriteLine("Compiling CPP for generic " + index);
-
-                // compile and run test
-                // ====== Natch content ====
-                // call vcvars32.bat
-                // del test-%1.exe
-                // cl.exe test-%1.cpp
-                // del test-%1.obj
-                // test-%1.exe
-
-                var pi = new ProcessStartInfo();
-                pi.WorkingDirectory = OutputPath;
-                pi.FileName = "cg.bat";
-                pi.Arguments = index.ToString("000");
-
-                var piProc = System.Diagnostics.Process.Start(pi);
-
-                piProc.WaitForExit();
-
-                System.Diagnostics.Trace.WriteLine("Running EXE for " + index);
-
-                // run test file
-                var process = System.Diagnostics.Process.Start(string.Format("{1}gtest-{0}.exe", index.ToString("000"), OutputPath));
-
-                process.WaitForExit();
-
-                Assert.AreEqual(0, process.ExitCode);
-            }
+            Il2Converter.Convert(@"D:\Temp\CoreLib\bin\Release\CoreLib.dll", OutputPath);
         }
 
         [TestMethod]
@@ -206,9 +158,9 @@
             // https://chromium.googlesource.com/chromiumos/third_party/llvm/+/master/test/MC/COFF/global_ctors_dtors.ll
             /*
                 call vcvars32.bat
-                llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
+                llc -mtriple i686-pc-win32 -filetype=obj mscorlib.ll
                 llc -mtriple i686-pc-win32 -filetype=obj test-%1.ll
-                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib corelib.obj test-%1.obj /OUT:test-%1.exe
+                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib mscorlib.obj test-%1.obj /OUT:test-%1.exe
                 del test-%1.obj
             */
             var pi = new ProcessStartInfo();
