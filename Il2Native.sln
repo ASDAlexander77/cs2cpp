@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2Native.Logic", "Il2Nativ
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Il2Native.CmdLine", "Il2Native\Il2Native.CmdLine.csproj", "{A5344EFC-0550-4C3B-B066-9841645ECE1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeAnalysis", "CoreSource\CodeAnalysis.csproj", "{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PEAssemblyReader", "PEAssemblyReader\PEAssemblyReader.csproj", "{278B563A-A934-489C-8DFC-39B021816C25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +29,14 @@ Global
 		{A5344EFC-0550-4C3B-B066-9841645ECE1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A5344EFC-0550-4C3B-B066-9841645ECE1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A5344EFC-0550-4C3B-B066-9841645ECE1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EE8CAD3-55F9-4D91-96B2-084641DA9A6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{278B563A-A934-489C-8DFC-39B021816C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{278B563A-A934-489C-8DFC-39B021816C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{278B563A-A934-489C-8DFC-39B021816C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{278B563A-A934-489C-8DFC-39B021816C25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
