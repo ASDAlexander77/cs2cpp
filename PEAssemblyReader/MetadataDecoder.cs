@@ -22,10 +22,24 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        public MetadataDecoder(PEModule module, AssemblyMetadata assemblyMetadata) :
-            base(module, assemblyMetadata.Assembly.Identity)
+        public MetadataDecoder(ModuleMetadata module, AssemblyMetadata assemblyMetadata) :
+            base(module.Module, assemblyMetadata.Assembly.Identity)
         {
             this.assemblyMetadata = assemblyMetadata;
+        }
+
+        public IEnumerable<ITypeSymbol> GetTypes()
+        {
+            foreach (var module in this.assemblyMetadata.Modules)
+            {
+                foreach (var @namespace in module.GroupTypesByNamespace())
+                {
+                    foreach (var type in @namespace)
+                    {
+                        yield return new TypeSymbolAdapter(type, module);
+                    }
+                }
+            }
         }
 
         public ITypeSymbol FindTypeSymbolByName(string namespaceName, string typeName)

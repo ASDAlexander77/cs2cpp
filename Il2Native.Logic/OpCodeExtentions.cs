@@ -5,6 +5,7 @@
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -154,7 +155,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsStructureType(this Type type, bool recurse = false)
+        public static bool IsStructureType(this IType type, bool recurse = false)
         {
             return type != null && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }

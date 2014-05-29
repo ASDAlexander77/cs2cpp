@@ -14,6 +14,8 @@
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
     using System.Text;
+    using Microsoft.CodeAnalysis;
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -280,7 +282,7 @@
         {
             get
             {
-                return this.Assembly.GetName().Name;
+                return this.Assembly.ManifestModule.Name;
             }
         }
 
@@ -290,7 +292,7 @@
 
         /// <summary>
         /// </summary>
-        protected Assembly Assembly { get; private set; }
+        protected AssemblyMetadata Assembly { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -326,7 +328,7 @@
         /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) : Assembly.ReflectionOnlyLoadFrom(this.Source);
+            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) :  AssemblyMetadata.CreateFromFile(this.Source);
         }
 
         /// <summary>
@@ -335,7 +337,7 @@
         /// </param>
         public void Load(Type type)
         {
-            this.Assembly = type.Module.Assembly;
+            this.Assembly = AssemblyMetadata.CreateFromFile(type.Module.Assembly.CodeBase);
         }
 
         /// <summary>
@@ -592,11 +594,12 @@
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<Type> Types()
+        public IEnumerable<IType> Types()
         {
             try
             {
-                return this.Assembly.GetTypes();
+                var decoder = new MetadataDecoder(this.Assembly.ManifestModule, this.Assembly);
+                return decoder.GetTypes();
             }
             catch (ReflectionTypeLoadException ex)
             {
@@ -634,7 +637,7 @@
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
-        private static Assembly Compile(string source)
+        private static  AssemblyMetadata Compile(string source)
         {
             var codeProvider = new CSharpCodeProvider();
             var icc = codeProvider.CreateCompiler();
@@ -642,7 +645,7 @@
 
             var parameters = new CompilerParameters();
             parameters.GenerateExecutable = false;
-            parameters.GenerateInMemory = true;
+            parameters.GenerateInMemory = false;
             parameters.CompilerOptions = "/optimize+ /unsafe+";
 
             // parameters.CompilerOptions = "/optimize-";
@@ -657,7 +660,7 @@
             }
 
             // Successful Compile
-            return results.CompiledAssembly;
+            return  AssemblyMetadata.CreateFromFile(results.PathToAssembly);
         }
 
         /// <summary>

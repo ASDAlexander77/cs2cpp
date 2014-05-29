@@ -11,9 +11,9 @@
         public PEAssemblyReader(string fileName)
         {
             var assemblyMetadata = AssemblyMetadata.CreateFromFile(fileName);
-            var module0 = assemblyMetadata.Modules.First();
+            var module0 = assemblyMetadata.ManifestModule;
 
-            var decoder = new MetadataDecoder(module0.Module, assemblyMetadata);
+            var decoder = new MetadataDecoder(module0, assemblyMetadata);
             
             var appDomainType = decoder.FindTypeSymbolByName("System", "AppDomain");
             var method = appDomainType.GetMembers("CreateInstanceAndUnwrap").First() as IMethodSymbol;

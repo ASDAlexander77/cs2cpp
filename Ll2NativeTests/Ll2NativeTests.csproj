@@ -60,9 +60,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
+      <Project>{1ee8cad3-55f9-4d91-96b2-084641da9a6c}</Project>
+      <Name>CodeAnalysis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Il2Native.Logic\Il2Native.Logic.csproj">
       <Project>{8F2A92D0-8862-4CF7-9C95-120681F5A689}</Project>
       <Name>Il2Native.Logic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PEAssemblyReader\PEAssemblyReader.csproj">
+      <Project>{278b563a-a934-489c-8dfc-39b021816c25}</Project>
+      <Name>PEAssemblyReader</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

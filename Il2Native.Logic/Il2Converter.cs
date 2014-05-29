@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
+    using Microsoft.CodeAnalysis;
+    using PEAssemblyReader;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -35,7 +37,7 @@
         /// </param>
         /// <param name="outputFolder">
         /// </param>
-        public static void Convert(Type type, string outputFolder, string[] args = null)
+        public static void Convert(IType type, string outputFolder, string[] args = null)
         {
             var ilReader = new IlReader();
             ilReader.Load(type);
@@ -51,25 +53,25 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="requiredTypesToAdd">
+        /// <param name="requiredITypesToAdd">
         /// </param>
         /// <param name="typesAdded">
         /// </param>
-        private static void AddRequiredType(Type type, List<Type> requiredTypesToAdd, HashSet<Type> typesAdded)
+        private static void AddRequiredIType(IType type, List<IType> requiredITypesToAdd, HashSet<IType> typesAdded)
         {
-            var effectiveType = type;
-            while (effectiveType.HasElementType)
+            var effectiveIType = type;
+            while (effectiveIType.HasElementType)
             {
-                effectiveType = effectiveType.GetElementType();
+                effectiveIType = effectiveIType.GetElementType();
             }
 
-            if (typesAdded.Contains(effectiveType))
+            if (typesAdded.Contains(effectiveIType))
             {
                 return;
             }
 
-            typesAdded.Add(effectiveType);
-            requiredTypesToAdd.Add(effectiveType);
+            typesAdded.Add(effectiveIType);
+            requiredITypesToAdd.Add(effectiveIType);
         }
 
         /// <summary>
@@ -80,9 +82,9 @@
         /// </param>
         /// <param name="type">
         /// </param>
-        private static void ConvertType(IlReader ilReader, ICodeWriter codeWriter, Type type, Type genericDefinition)
+        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition)
         {
-            WriteTypeDefinition(codeWriter, type, genericDefinition);
+            WriteITypeDefinition(codeWriter, type, genericDefinition);
 
             codeWriter.WriteBeforeConstructors();
 
@@ -115,7 +117,7 @@
             codeWriter.WriteTypeEnd(type);
         }
 
-        public static void WriteTypeDefinition(ICodeWriter codeWriter, Type type, Type genericDefinition, bool disablePostDeclarations = false)
+        public static void WriteITypeDefinition(ICodeWriter codeWriter, IType type, IType genericDefinition, bool disablePostDeclarations = false)
         {
             codeWriter.WriteTypeStart(type, genericDefinition);
 
@@ -142,7 +144,7 @@
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
-        private static void DicoverGenericSpecializedType(Type type, HashSet<Type> genericSpecializations)
+        private static void DicoverGenericSpecializedIType(IType type, HashSet<IType> genericSpecializations)
         {
             if (type == null || genericSpecializations == null)
             {
@@ -151,7 +153,7 @@
 
             if (type.HasElementType)
             {
-                DicoverGenericSpecializedType(type.GetElementType(), genericSpecializations);
+                DicoverGenericSpecializedIType(type.GetElementType(), genericSpecializations);
                 return;
             }
 
@@ -161,11 +163,11 @@
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                GetAllRequiredTypesForType(type, null, genericSpecializations).ToArray();
+                GetAllRequiredITypesForIType(type, null, genericSpecializations).ToArray();
             }
         }
 
-        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, Type[] filter = null)
+        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, IType[] filter = null)
         {
             var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
@@ -179,28 +181,28 @@
         /// </param>
         /// <param name="codeWriter">
         /// </param>
-        private static void GenerateSource(IlReader ilReader, Type[] filter, ICodeWriter codeWriter)
+        private static void GenerateSource(IlReader ilReader, IType[] filter, ICodeWriter codeWriter)
         {
             codeWriter.WriteStart(ilReader.ModuleName);
 
-            var genericSpecializations = new HashSet<Type>();
-            var newListOfTypes = ResortTypes(ilReader.Types().ToList(), genericSpecializations);
+            var genericSpecializations = new HashSet<IType>();
+            var newListOfITypes = ResortITypes(ilReader.Types().ToList(), genericSpecializations);
 
             // build quick access array for Generic Definitions
-            var genDefinitionsByGuid = new SortedDictionary<string, Type>();
-            foreach (var genDef in newListOfTypes.Where(t => t.IsGenericTypeDefinition))
+            var genDefinitionsByGuid = new SortedDictionary<string, IType>();
+            foreach (var genDef in newListOfITypes.Where(t => t.IsGenericTypeDefinition))
             {
                 genDefinitionsByGuid[genDef.Name] = genDef;
             }
 
-            for (var index = 0; index < newListOfTypes.Count; index++)
+            for (var index = 0; index < newListOfITypes.Count; index++)
             {
-                var type = newListOfTypes[index];
-                codeWriter.WriteForwardDeclaration(type, index, newListOfTypes.Count);
+                var type = newListOfITypes[index];
+                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
             // enumarte all types
-            foreach (var type in newListOfTypes)
+            foreach (var type in newListOfITypes)
             {
                 if (filter != null && !filter.Contains(type))
                 {
@@ -211,18 +213,18 @@
                 {
                     ////foreach (var genericSpecialization in genericSpecializations.Where(g => g.GUID == type.GUID))
                     ////{
-                    ////    ConvertType(ilReader, codeWriter, genericSpecialization);
+                    ////    ConvertIType(ilReader, codeWriter, genericSpecialization);
                     ////}
                     continue;
                 }
 
-                Type genDef = null;
+                IType genDef = null;
                 if (type.IsGenericType)
                 {
                     genDefinitionsByGuid.TryGetValue(type.Name, out genDef);
                 }
 
-                ConvertType(ilReader, codeWriter, type, genDef);
+                ConvertIType(ilReader, codeWriter, type, genDef);
             }
 
             codeWriter.WriteEnd();
@@ -234,13 +236,13 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="allTypes">
+        /// <param name="allITypes">
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
         /// <returns>
         /// </returns>
-        private static IEnumerable<Type> GetAllRequiredTypesForType(Type type, List<Type> allTypes, HashSet<Type> genericSpecializations)
+        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, List<IType> allITypes, HashSet<IType> genericSpecializations)
         {
             // if (type.FullName == "System.Object")
             // {
@@ -253,7 +255,7 @@
 
             if (type.BaseType != null)
             {
-                DicoverGenericSpecializedType(type.BaseType, genericSpecializations);
+                DicoverGenericSpecializedIType(type.BaseType, genericSpecializations);
                 yield return type.BaseType;
             }
 
@@ -262,7 +264,7 @@
             {
                 foreach (var @interface in interfaces)
                 {
-                    DicoverGenericSpecializedType(@interface, genericSpecializations);
+                    DicoverGenericSpecializedIType(@interface, genericSpecializations);
                     yield return @interface;
                 }
             }
@@ -274,7 +276,7 @@
                 {
                     if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
                     {
-                        DicoverGenericSpecializedType(field.FieldType, genericSpecializations);
+                        DicoverGenericSpecializedIType(field.FieldType, genericSpecializations);
                         yield return field.FieldType;
                     }
                 }
@@ -286,11 +288,11 @@
             {
                 foreach (var method in methods)
                 {
-                    DicoverGenericSpecializedType(method.ReturnType, genericSpecializations);
+                    DicoverGenericSpecializedIType(method.ReturnType, genericSpecializations);
 
                     foreach (var param in method.GetParameters())
                     {
-                        DicoverGenericSpecializedType(param.ParameterType, genericSpecializations);
+                        DicoverGenericSpecializedIType(param.ParameterType, genericSpecializations);
                     }
 
                     var methodBody = method.GetMethodBody();
@@ -298,22 +300,11 @@
                     {
                         foreach (var localVar in methodBody.LocalVariables)
                         {
-                            DicoverGenericSpecializedType(localVar.LocalType, genericSpecializations);
+                            DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
                         }
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static Type GetDeclType(Type type)
-        {
-            return !type.DeclaringType.IsNested ? type.DeclaringType : GetDeclType(type.DeclaringType);
         }
 
         private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder, string[] args)
@@ -325,37 +316,23 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static bool IsBelongToDeclaringType(Type type, Type declaringType)
-        {
-            return type != null
-                   && (type.IsNested && type.DeclaringType.GUID == declaringType.GUID || IsBelongToDeclaringType(type.DeclaringType, declaringType));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allTypes">
+        /// <param name="allITypes">
         /// </param>
         /// <param name="typesAdded">
         /// </param>
-        /// <param name="requiredTypesToAdd">
+        /// <param name="requiredITypesToAdd">
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
-        private static void ProcessNextRequiredTypes(
-            Type type, List<Type> allTypes, HashSet<Type> typesAdded, List<Type> requiredTypesToAdd, HashSet<Type> genericSpecializations)
+        private static void ProcessNextRequiredITypes(
+            IType type, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericSpecializations)
         {
-            var requiredTypes = GetAllRequiredTypesForType(type, allTypes, genericSpecializations).ToList();
-            foreach (var requiredType in requiredTypes)
+            var requiredITypes = GetAllRequiredITypesForIType(type, allITypes, genericSpecializations).ToList();
+            foreach (var requiredIType in requiredITypes)
             {
-                if (type != requiredType)
+                if (type != requiredIType)
                 {
-                    AddRequiredType(requiredType, requiredTypesToAdd, typesAdded);
+                    AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
                 }
             }
         }
@@ -364,27 +341,27 @@
         /// </summary>
         /// <param name="types">
         /// </param>
-        /// <param name="allTypes">
+        /// <param name="allITypes">
         /// </param>
         /// <param name="typesAdded">
         /// </param>
-        /// <param name="newListOfTypes">
+        /// <param name="newListOfITypes">
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
-        private static void ProcessRequiredTypesForTypes(
-            List<Type> types, List<Type> allTypes, HashSet<Type> typesAdded, List<Type> newListOfTypes, HashSet<Type> genericSpecializations)
+        private static void ProcessRequiredITypesForITypes(
+            List<IType> types, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
         {
             foreach (var type in types)
             {
-                var requiredTypesToAdd = new List<Type>();
-                ProcessNextRequiredTypes(type, allTypes, typesAdded, requiredTypesToAdd, genericSpecializations);
-                newListOfTypes.AddRange(requiredTypesToAdd);
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, allITypes, typesAdded, requiredITypesToAdd, genericSpecializations);
+                newListOfITypes.AddRange(requiredITypesToAdd);
 
                 if (!typesAdded.Contains(type))
                 {
                     typesAdded.Add(type);
-                    newListOfTypes.Add(type);
+                    newListOfITypes.Add(type);
                 }
             }
         }
@@ -397,46 +374,46 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static List<Type> ResortTypes(List<Type> types, HashSet<Type> genericSpecializations)
+        private static List<IType> ResortITypes(List<IType> types, HashSet<IType> genericSpecializations)
         {
-            var newOrder = new List<Type>();
+            var newOrder = new List<IType>();
 
-            var typesWithRequired = new List<Tuple<Type, List<Type>>>();
+            var typesWithRequired = new List<Tuple<IType, List<IType>>>();
             foreach (var type in types)
             {
-                var requiredTypesToAdd = new List<Type>();
-                ProcessNextRequiredTypes(type, types, new HashSet<Type>(), requiredTypesToAdd, genericSpecializations);
-                typesWithRequired.Add(new Tuple<Type, List<Type>>(type, requiredTypesToAdd));
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, genericSpecializations);
+                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
             // the same for generic specialized types
             foreach (var type in genericSpecializations)
             {
-                var requiredTypesToAdd = new List<Type>();
-                ProcessNextRequiredTypes(type, types, new HashSet<Type>(), requiredTypesToAdd, null);
-                typesWithRequired.Add(new Tuple<Type, List<Type>>(type, requiredTypesToAdd));
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, null);
+                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
             var strictMode = true;
             while (typesWithRequired.Count > 0)
             {
                 var before = typesWithRequired.Count;
-                var toRemove = new List<Tuple<Type, List<Type>>>();
+                var toRemove = new List<Tuple<IType, List<IType>>>();
 
                 // step 1 find Root;
                 foreach (var type in typesWithRequired)
                 {
-                    var requiredTypes = type.Item2;
+                    var requiredITypes = type.Item2;
                     if (strictMode)
                     {
-                        requiredTypes.RemoveAll(r => newOrder.Any(n => n == r));
+                        requiredITypes.RemoveAll(r => newOrder.Any(n => n == r));
                     }
                     else
                     {
-                        requiredTypes.RemoveAll(r => newOrder.Any(n => n.GUID == r.GUID));
+                        requiredITypes.RemoveAll(r => newOrder.Any(n => n.GUID == r.GUID));
                     }
 
-                    if (requiredTypes.Count == 0)
+                    if (requiredITypes.Count == 0)
                     {
                         toRemove.Add(type);
                         newOrder.Add(type.Item1);
@@ -476,7 +453,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool TypeHasGenericParameter(Type type)
+        private static bool TypeHasGenericParameter(IType type)
         {
             return type.IsGenericParameter
                    || type.GenericTypeArguments.Any(
@@ -491,7 +468,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool TypeHasGenericParameterInGenericArguments(Type type)
+        private static bool TypeHasGenericParameterInGenericArguments(IType type)
         {
             return type.IsGenericParameter
                    || type.GetGenericArguments()
@@ -505,7 +482,7 @@
 
         /// <summary>
         /// </summary>
-        private class InheritanceTypeComparer : IComparer<Type>
+        private class InheritanceITypeComparer : IComparer<IType>
         {
             #region Public Methods and Operators
 
@@ -513,15 +490,15 @@
             /// </summary>
             /// <param name="type">
             /// </param>
-            /// <param name="baseType">
+            /// <param name="baseIType">
             /// </param>
             /// <returns>
             /// </returns>
-            public static bool DependsOn(Type type, Type baseType)
+            public static bool DependsOn(IType type, IType baseIType)
             {
                 if (type.BaseType != null)
                 {
-                    if (type.BaseType.GUID == baseType.GUID || DependsOn(type.BaseType, baseType))
+                    if (type.BaseType.GUID == baseIType.GUID || DependsOn(type.BaseType, baseIType))
                     {
                         return true;
                     }
@@ -534,13 +511,13 @@
             /// </summary>
             /// <param name="type">
             /// </param>
-            /// <param name="valueType">
+            /// <param name="valueIType">
             /// </param>
             /// <returns>
             /// </returns>
-            public static bool HasAsValueType(Type type, Type valueType)
+            public static bool HasAsValueType(IType type, IType valueIType)
             {
-                if (!valueType.IsValueType)
+                if (!valueIType.IsValueType)
                 {
                     return false;
                 }
@@ -551,7 +528,7 @@
                 {
                     foreach (var field in fields)
                     {
-                        if (field.FieldType.GUID == valueType.GUID)
+                        if (field.FieldType.GUID == valueIType.GUID)
                         {
                             return true;
                         }
@@ -569,7 +546,7 @@
             /// </param>
             /// <returns>
             /// </returns>
-            public static bool HasInterface(Type type, Type baseInterface)
+            public static bool HasInterface(IType type, IType baseInterface)
             {
                 var interfaces = type.GetInterfaces();
                 if (interfaces != null)
@@ -592,7 +569,7 @@
             /// </param>
             /// <returns>
             /// </returns>
-            public static int InheritanceLevel(Type t)
+            public static int InheritanceLevel(IType t)
             {
                 if (t == null || t.BaseType == null)
                 {
@@ -610,7 +587,7 @@
             /// </param>
             /// <returns>
             /// </returns>
-            public int Compare(Type x, Type y)
+            public int Compare(IType x, IType y)
             {
                 var lvlX = InheritanceLevel(x);
                 var lvlY = InheritanceLevel(y);

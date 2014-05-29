@@ -48,7 +48,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IField.cs" />
+    <Compile Include="ILocalVariable.cs" />
+    <Compile Include="IMethod.cs" />
     <Compile Include="IMethodBody.cs" />
+    <Compile Include="IParam.cs" />
+    <Compile Include="IType.cs" />
     <Compile Include="MetadataDecoder.cs" />
     <Compile Include="MethodSymbolAdapter.cs" />
     <Compile Include="PEAssemblyReader.cs" />

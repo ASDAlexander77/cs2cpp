@@ -30,6 +30,11 @@
             }
         }
 
+        public System.Collections.Generic.IEnumerable<ILocalVariable> LocalVariables
+        {
+            get { throw new NotImplementedException(); }
+        }
+
         public SymbolKind Kind { get; private set; }
 
         public string Language { get; private set; }

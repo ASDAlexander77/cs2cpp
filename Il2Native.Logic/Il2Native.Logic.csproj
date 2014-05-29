@@ -89,6 +89,16 @@
   <ItemGroup>
     <Content Include="Resources\stack.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
+      <Project>{1ee8cad3-55f9-4d91-96b2-084641da9a6c}</Project>
+      <Name>CodeAnalysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PEAssemblyReader\PEAssemblyReader.csproj">
+      <Project>{278b563a-a934-489c-8dfc-39b021816c25}</Project>
+      <Name>PEAssemblyReader</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
