@@ -6,6 +6,8 @@
     {
         IEnumerable<ILocalVariable> LocalVariables { get; }
 
-        byte[] IL { get; }
+        IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses { get; }
+
+        byte[] GetILAsByteArray();
     }
 }

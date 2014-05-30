@@ -56,7 +56,6 @@
     <Compile Include="CodeParts\OpCodeParamPart.cs" />
     <Compile Include="CodeParts\OpCodePart.cs" />
     <Compile Include="CodeParts\OpCodeSBytePart.cs" />
-    <Compile Include="CodeParts\OpCodeSignatureHelperPart.cs" />
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />

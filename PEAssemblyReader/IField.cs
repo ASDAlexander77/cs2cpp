@@ -3,10 +3,10 @@
     using System.Collections.Generic;
     using System.Reflection;
 
-    public interface IField
+    public interface IField : IMember
     {
-        string Name { get; }
-
         IType FieldType { get; }
+
+        bool IsLiteral { get; }
     }
 }

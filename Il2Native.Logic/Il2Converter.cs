@@ -37,12 +37,12 @@
         /// </param>
         /// <param name="outputFolder">
         /// </param>
-        public static void Convert(IType type, string outputFolder, string[] args = null)
+        public static void Convert(Type type, string outputFolder, string[] args = null)
         {
             var ilReader = new IlReader();
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type });
+            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
         }
 
         #endregion
@@ -84,14 +84,14 @@
         /// </param>
         private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition)
         {
-            WriteITypeDefinition(codeWriter, type, genericDefinition);
+            WriteTypeDefinition(codeWriter, type, genericDefinition);
 
             codeWriter.WriteBeforeConstructors();
 
             foreach (var ctor in IlReader.Constructors(type))
             {
                 codeWriter.WriteConstructorStart(ctor);
-                foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments(), null /*ctor.GetGenericArguments()*/))
+                foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
                 {
                     codeWriter.Write(ilCode);
                 }
@@ -105,7 +105,7 @@
             foreach (var method in IlReader.Methods(type))
             {
                 codeWriter.WriteMethodStart(method);
-                foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments(), method.GetGenericArguments()))
+                foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
                 {
                     codeWriter.Write(ilCode);
                 }
@@ -117,7 +117,7 @@
             codeWriter.WriteTypeEnd(type);
         }
 
-        public static void WriteITypeDefinition(ICodeWriter codeWriter, IType type, IType genericDefinition, bool disablePostDeclarations = false)
+        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IType genericDefinition, bool disablePostDeclarations = false)
         {
             codeWriter.WriteTypeStart(type, genericDefinition);
 
@@ -167,7 +167,7 @@
             }
         }
 
-        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, IType[] filter = null)
+        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
         {
             var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
@@ -181,7 +181,7 @@
         /// </param>
         /// <param name="codeWriter">
         /// </param>
-        private static void GenerateSource(IlReader ilReader, IType[] filter, ICodeWriter codeWriter)
+        private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
             codeWriter.WriteStart(ilReader.ModuleName);
 
@@ -204,7 +204,7 @@
             // enumarte all types
             foreach (var type in newListOfITypes)
             {
-                if (filter != null && !filter.Contains(type))
+                if (filter != null && !filter.Contains(type.FullName))
                 {
                     continue;
                 }

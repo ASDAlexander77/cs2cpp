@@ -77,7 +77,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsDouble(this Type type)
+        public static bool IsDouble(this IType type)
         {
             return type != null && type.Name == "Double" && type.Namespace == "System";
         }
@@ -88,12 +88,12 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsFloat(this Type type)
+        public static bool IsFloat(this IType type)
         {
             return type != null && type.Name == "Float" && type.Namespace == "System";
         }
 
-        public static bool IsSingle(this Type type)
+        public static bool IsSingle(this IType type)
         {
             return type != null && type.Name == "Single" && type.Namespace == "System";
         }
@@ -122,7 +122,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsPrimitiveType(this Type type)
+        public static bool IsPrimitiveType(this IType type)
         {
             return type != null && type.IsValueType && type.IsPrimitive;
         }
@@ -133,7 +133,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsReal(this Type type)
+        public static bool IsReal(this IType type)
         {
             return type.IsFloat() || type.IsDouble() || type.IsSingle();
         }
@@ -166,7 +166,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsValueType(this Type type)
+        public static bool IsValueType(this IType type)
         {
             return type != null && type.IsValueType;
         }
@@ -177,7 +177,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsVoid(this Type type)
+        public static bool IsVoid(this IType type)
         {
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
@@ -286,7 +286,7 @@
             return (Code)(val - (val >> 8 << 8) + 0xE1);
         }
 
-        public static bool HasAnyVirtualMethod(this Type thisType)
+        public static bool HasAnyVirtualMethod(this IType thisType)
         {
             if (thisType.HasAnyVirtualMethodInCurrentType())
             {
@@ -296,7 +296,7 @@
             return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
         }
 
-        public static bool HasAnyVirtualMethodInCurrentType(this Type thisType)
+        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType)
         {
             if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
             {
@@ -306,7 +306,7 @@
             return false;
         }
 
-        public static bool IsRootOfVirtualTable(this Type type)
+        public static bool IsRootOfVirtualTable(this IType type)
         {
             return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
         }

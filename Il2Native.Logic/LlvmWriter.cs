@@ -13,6 +13,8 @@
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Properties;
 
+    using PEAssemblyReader;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
@@ -37,17 +39,17 @@
         /// </summary>
         private static IDictionary<string, string> systemTypesToCTypes = new SortedDictionary<string, string>();
 
-        private IDictionary<string, List<Pair<string, MethodInfo>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+        private IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
-        private IDictionary<string, List<Pair<string, MethodInfo>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, MethodInfo>>>();
+        private IDictionary<string, List<Pair<string, IMethod>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
-        private HashSet<Type> typeDeclRequired = new HashSet<Type>();
+        private HashSet<IType> typeDeclRequired = new HashSet<IType>();
 
-        private HashSet<MethodBase> methodDeclRequired = new HashSet<MethodBase>();
+        private HashSet<IMethod> methodDeclRequired = new HashSet<IMethod>();
 
-        private HashSet<Type> processedTypes = new HashSet<Type>();
+        private HashSet<IType> processedTypes = new HashSet<IType>();
 
-        private HashSet<MethodBase> processedMethods = new HashSet<MethodBase>();
+        private HashSet<IMethod> processedMethods = new HashSet<IMethod>();
 
         #endregion
 
@@ -67,7 +69,7 @@
 
         /// <summary>
         /// </summary>
-        private IList<FieldInfo> staticFieldsInfo = new List<FieldInfo>();
+        private IList<IField> staticFieldsInfo = new List<IField>();
 
         /// <summary>
         /// </summary>
@@ -355,7 +357,7 @@
             }
         }
 
-        private void WriteTableOfMethods(List<Pair<string, MethodInfo>> virtualTable)
+        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable)
         {
             this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
 
@@ -376,26 +378,26 @@
             this.Output.WriteLine("]");
         }
 
-        public string GetVirtualTableName(Type type)
+        public string GetVirtualTableName(IType type)
         {
             return string.Concat("@\"", type.FullName, " Virtual Table\"");
         }
 
-        public string GetVirtualInterfaceTableName(Type type, Type @interface)
+        public string GetVirtualInterfaceTableName(IType type, IType @interface)
         {
             return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
         }
 
-        private List<Pair<string, MethodInfo>> GetVirtualTable(Type thisType)
+        private List<Pair<string, IMethod>> GetVirtualTable(IType thisType)
         {
-            List<Pair<string, MethodInfo>> virtualTable;
+            List<Pair<string, IMethod>> virtualTable;
 
             if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
             {
                 return virtualTable;
             }
 
-            virtualTable = new List<Pair<string, MethodInfo>>();
+            virtualTable = new List<Pair<string, IMethod>>();
             BuildVirtualTable(thisType, virtualTable);
 
             virtualTableByType[thisType.FullName] = virtualTable;
@@ -403,7 +405,7 @@
             return virtualTable;
         }
 
-        private void BuildVirtualTable(Type thisType, List<Pair<string, MethodInfo>> virtualTable)
+        private void BuildVirtualTable(IType thisType, List<Pair<string, IMethod>> virtualTable)
         {
             if (thisType.BaseType != null)
             {
@@ -417,7 +419,7 @@
 
                 if (virtualOrAbstractMethod.IsAbstract)
                 {
-                    virtualTable.Add(new Pair<string, MethodInfo>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                    virtualTable.Add(new Pair<string, IMethod>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
                     continue;
                 }
 
@@ -429,20 +431,20 @@
                     continue;
                 }
 
-                virtualTable.Add(new Pair<string, MethodInfo>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                virtualTable.Add(new Pair<string, IMethod>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
             }
         }
 
-        private List<Pair<string, MethodInfo>> GetVirtualInterfaceTable(Type thisType, Type @interface)
+        private List<Pair<string, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
         {
-            List<Pair<string, MethodInfo>> virtualInterfaceTable;
+            List<Pair<string, IMethod>> virtualInterfaceTable;
 
             if (virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
             {
                 return virtualInterfaceTable;
             }
 
-            virtualInterfaceTable = new List<Pair<string, MethodInfo>>();
+            virtualInterfaceTable = new List<Pair<string, IMethod>>();
             BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
 
             virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
@@ -450,7 +452,7 @@
             return virtualInterfaceTable;
         }
 
-        private void BuildVirtualInterfaceTable(Type thisType, Type @interface, List<Pair<string, MethodInfo>> virtualTable)
+        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<string, IMethod>> virtualTable)
         {
             var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
 
@@ -458,7 +460,7 @@
             foreach (var interfaceMember in IlReader.Methods(@interface))
             {
                 var foundMethod = allPublic.First(pub => pub.ToString() == interfaceMember.ToString());
-                virtualTable.Add(new Pair<string, MethodInfo>() { Key = foundMethod.ToString(), Value = foundMethod });
+                virtualTable.Add(new Pair<string, IMethod>() { Key = foundMethod.ToString(), Value = foundMethod });
             }
         }
 
@@ -529,7 +531,7 @@
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorEnd(ConstructorInfo ctor)
+        public void WriteConstructorEnd(IConstructor ctor)
         {
             this.WriteMethodBody(string.Empty);
 
@@ -547,7 +549,7 @@
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorStart(ConstructorInfo ctor)
+        public void WriteConstructorStart(IConstructor ctor)
         {
             processedMethods.Add(ctor);
 
@@ -573,7 +575,7 @@
                 this.StaticConstructors.Add(ctor);
             }
 
-            this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, typeof(void));
+            this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, TypeAdapter.FromType(typeof(void)));
 
             this.WriteMethodNumber();
 
@@ -680,7 +682,7 @@
 
                     this.Output.Write("declare ");
 
-                    var method = externalMethodDecl as MethodInfo;
+                    var method = externalMethodDecl as IMethod;
                     if (method != null)
                     {
                         ReadMethodInfo(method);
@@ -691,13 +693,13 @@
                         continue;
                     }
 
-                    var ctor = externalMethodDecl as ConstructorInfo;
+                    var ctor = externalMethodDecl as IConstructor;
                     if (ctor != null)
                     {
                         ReadMethodInfo(ctor);
                         this.Output.Write("void ");
                         this.WriteMethodDefinitionName(this.Output, ctor);
-                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, typeof(void));
+                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, TypeAdapter.FromType(typeof(void)));
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }
@@ -713,7 +715,7 @@
         /// </param>
         /// <param name="count">
         /// </param>
-        public void WriteFieldEnd(FieldInfo field, int number, int count)
+        public void WriteFieldEnd(IField field, int number, int count)
         {
         }
 
@@ -725,7 +727,7 @@
         /// </param>
         /// <param name="count">
         /// </param>
-        public void WriteFieldStart(FieldInfo field, int number, int count)
+        public void WriteFieldStart(IField field, int number, int count)
         {
             if (field.IsStatic)
             {
@@ -754,7 +756,7 @@
         /// </param>
         /// <param name="count">
         /// </param>
-        public void WriteForwardDeclaration(Type type, int number, int count)
+        public void WriteForwardDeclaration(IType type, int number, int count)
         {
         }
 
@@ -762,7 +764,7 @@
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodEnd(MethodInfo method)
+        public void WriteMethodEnd(IMethod method)
         {
             this.WriteMethodBody();
 
@@ -793,7 +795,7 @@
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodStart(MethodInfo method)
+        public void WriteMethodStart(IMethod method)
         {
             processedMethods.Add(method);
 
@@ -849,7 +851,7 @@
             methodNumberIncremental++;
         }
 
-        private void WriteMethodReturnType(LlvmIndentedTextWriter writer, MethodInfo method)
+        private void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
         {
             if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
             {
@@ -896,7 +898,7 @@
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void WriteTypeEnd(Type type)
+        public void WriteTypeEnd(IType type)
         {
             this.Output.WriteLine(string.Empty);
         }
@@ -907,7 +909,7 @@
         /// </param>
         /// <param name="genericType">
         /// </param>
-        public void WriteTypeStart(Type type, Type genericType)
+        public void WriteTypeStart(IType type, IType genericType)
         {
             processedTypes.Add(type);
 
@@ -930,7 +932,7 @@
             WriteTypeDeclarationStart(type);
         }
 
-        private void WriteTypeDefinitionIfNotWrittenYet(Type type)
+        private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
             if (processedTypes.Contains(type))
             {
@@ -943,7 +945,7 @@
             this.Output.WriteLine(string.Empty);
         }
 
-        private void WriteTypeDeclarationStart(Type type)
+        private void WriteTypeDeclarationStart(IType type)
         {
             this.Output.Write("%");
             this.WriteTypeName(this.Output, type, true);
@@ -961,7 +963,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static string GetFullFieldName(FieldInfo field)
+        private static string GetFullFieldName(IField field)
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(field.DeclaringType.Namespace))
@@ -1000,9 +1002,9 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Type GetTypeOfReference(OpCodePart opCode)
+        private IType GetTypeOfReference(OpCodePart opCode)
         {
-            Type type = null;
+            IType type = null;
             if (opCode.ResultType != null)
             {
                 type = opCode.ResultType;
@@ -1013,7 +1015,7 @@
             }
             else
             {
-                type = typeof(byte*);
+                type = TypeAdapter.FromType(typeof(byte*));
             }
 
             if (type.IsArray || type.IsByRef)
@@ -1032,7 +1034,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool IsClassCastRequired(Type requiredType, OpCodePart opCodePart)
+        private static bool IsClassCastRequired(IType requiredType, OpCodePart opCodePart)
         {
             return opCodePart.ResultNumber.HasValue && requiredType != opCodePart.ResultType && requiredType.IsAssignableFrom(opCodePart.ResultType);
         }
@@ -1043,7 +1045,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private string TypeToCType(Type type, bool doNotConvert = false)
+        private string TypeToCType(IType type, bool doNotConvert = false)
         {
             var effectiveType = type;
 
@@ -1093,7 +1095,7 @@
         /// </param>
         /// <param name="refChar">
         /// </param>
-        private static void WriteTypeModifiers(LlvmIndentedTextWriter writer, Type type, bool asReference, char refChar)
+        private static void WriteTypeModifiers(LlvmIndentedTextWriter writer, IType type, bool asReference, char refChar)
         {
             var effectiveType = type;
 
@@ -1154,15 +1156,15 @@
         private void ActualWrite(
             LlvmIndentedTextWriter writer,
             OpCodePart[] used,
-            IEnumerable<ParameterInfo> parameterInfos,
+            IEnumerable<IParam> parameterInfos,
             bool @isVirtual,
             bool hasThis,
             bool isCtor,
             IList<bool> isDirectValue,
             int? resultNumberForThis,
-            Type thisType,
+            IType thisType,
             int? resultNumberForReturn,
-            Type returnType)
+            IType returnType)
         {
             writer.Write("(");
 
@@ -1324,7 +1326,7 @@
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
 
-                this.ProcessOperator(writer, block, "select", typeof(bool), options: OperandOptions.GenerateResult);
+                this.ProcessOperator(writer, block, "select", TypeAdapter.FromType(typeof(bool)), options: OperandOptions.GenerateResult);
 
                 this.PostProcess(writer, opCode1, directResult1);
                 writer.Write(',');
@@ -1478,7 +1480,7 @@
                     break;
                 case Code.Ldsfld:
 
-                    Type castFrom;
+                    IType castFrom;
                     var operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     this.WriteLlvmLoad(writer, opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
@@ -1569,30 +1571,30 @@
                     this.BinaryOper(writer, opCode, "getelementptr inbounds", options: OperandOptions.DetectTypeInSecondOperand);
 
                     bool actualLoad = true;
-                    Type type = null;
+                    IType type = null;
                     switch (opCode.ToCode())
                     {
                         case Code.Ldelem:
                         case Code.Ldelem_I:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldelem_I1:
-                            type = typeof(byte);
+                            type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Ldelem_I2:
-                            type = typeof(short);
+                            type = TypeAdapter.FromType(typeof(short));
                             break;
                         case Code.Ldelem_I4:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldelem_I8:
-                            type = typeof(long);
+                            type = TypeAdapter.FromType(typeof(long));
                             break;
                         case Code.Ldelem_R4:
-                            type = typeof(float);
+                            type = TypeAdapter.FromType(typeof(float));
                             break;
                         case Code.Ldelem_R8:
-                            type = typeof(double);
+                            type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Ldelem_Ref:
                             type = GetTypeOfReference(opCode);
@@ -1627,25 +1629,25 @@
                     {
                         case Code.Stelem:
                         case Code.Stelem_I:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Stelem_I1:
-                            type = typeof(byte);
+                            type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Stelem_I2:
-                            type = typeof(short);
+                            type = TypeAdapter.FromType(typeof(short));
                             break;
                         case Code.Stelem_I4:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Stelem_I8:
-                            type = typeof(long);
+                            type = TypeAdapter.FromType(typeof(long));
                             break;
                         case Code.Stelem_R4:
-                            type = typeof(float);
+                            type = TypeAdapter.FromType(typeof(float));
                             break;
                         case Code.Stelem_R8:
-                            type = typeof(double);
+                            type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Stelem_Ref:
                             type = GetTypeOfReference(opCode);
@@ -1676,28 +1678,28 @@
                     switch (opCode.ToCode())
                     {
                         case Code.Ldind_I:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldind_I1:
                         case Code.Ldind_U1:
-                            type = typeof(byte);
+                            type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Ldind_I2:
                         case Code.Ldind_U2:
-                            type = typeof(short);
+                            type = TypeAdapter.FromType(typeof(short));
                             break;
                         case Code.Ldind_I4:
                         case Code.Ldind_U4:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldind_I8:
-                            type = typeof(long);
+                            type = TypeAdapter.FromType(typeof(long));
                             break;
                         case Code.Ldind_R4:
-                            type = typeof(float);
+                            type = TypeAdapter.FromType(typeof(float));
                             break;
                         case Code.Ldind_R8:
-                            type = typeof(double);
+                            type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Ldind_Ref:
                             type = GetTypeOfReference(opCode);
@@ -1721,25 +1723,25 @@
                     switch (opCode.ToCode())
                     {
                         case Code.Stind_I:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Stind_I1:
-                            type = typeof(byte);
+                            type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Stind_I2:
-                            type = typeof(short);
+                            type = TypeAdapter.FromType(typeof(short));
                             break;
                         case Code.Stind_I4:
-                            type = typeof(int);
+                            type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Stind_I8:
-                            type = typeof(long);
+                            type = TypeAdapter.FromType(typeof(long));
                             break;
                         case Code.Stind_R4:
-                            type = typeof(float);
+                            type = TypeAdapter.FromType(typeof(float));
                             break;
                         case Code.Stind_R8:
-                            type = typeof(double);
+                            type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Stind_Ref:
                             type = GetTypeOfReference(opCode);
@@ -1950,7 +1952,7 @@
                     }
                     else
                     {
-                        var parameter = this.ParameterInfo[index - (this.HasMethodThis ? 1 : 0)];
+                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
 
                         skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
                         if (!skip)
@@ -1973,7 +1975,7 @@
                     }
                     else
                     {
-                        var parameter = this.ParameterInfo[index - (this.HasMethodThis ? 1 : 0)];
+                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
                         writer.Write(string.Concat("%.", parameter.Name));
                     }
 
@@ -1985,7 +1987,7 @@
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
-                    this.UnaryOper(writer, opCode, "store", this.ParameterInfo[actualIndex].ParameterType);
+                    this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType);
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
 
@@ -2090,7 +2092,7 @@
 
                     this.UnaryOper(writer, opCode, "icmp " + forTure, options: OperandOptions.GenerateResult);
 
-                    if (resultOf.Type.IsValueType())
+                    if (resultOf.IType.IsValueType())
                     {
                         writer.WriteLine(", 0");
                     }
@@ -2148,7 +2150,7 @@
 
                 case Code.Conv_R_Un:
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(double))
+                    if (resultOf.IType != typeof(double))
                     {
                         this.UnaryOper(writer, opCode, "sitofp");
                         writer.Write(" to double");
@@ -2164,7 +2166,7 @@
                 case Code.Conv_R4:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(float) && resultOf.Type != typeof(Single))
+                    if (resultOf.IType != typeof(float) && resultOf.IType != typeof(Single))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
                         writer.Write(" to float");
@@ -2179,7 +2181,7 @@
                 case Code.Conv_R8:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(double))
+                    if (resultOf.IType != typeof(double))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fpext" : "sitofp");
                         writer.Write(" to double");
@@ -2197,7 +2199,7 @@
                 case Code.Conv_Ovf_I1_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(byte) && resultOf.Type != typeof(SByte))
+                    if (resultOf.IType != typeof(byte) && resultOf.IType != typeof(SByte))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i8");
@@ -2215,7 +2217,7 @@
                 case Code.Conv_Ovf_I2_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(short))
+                    if (resultOf.IType != typeof(short))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i16");
@@ -2233,7 +2235,7 @@
                 case Code.Conv_Ovf_I4_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.Type != typeof(int))
+                    if (resultOf.IType != typeof(int))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i32");
@@ -2437,7 +2439,7 @@
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        private int CalculateFieldIndex(FieldInfo fieldInfo, Type type)
+        private int CalculateFieldIndex(IField fieldInfo, IType type)
         {
             var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
@@ -2486,7 +2488,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private int CalculateSize(Type type)
+        private int CalculateSize(IType type)
         {
             if (type.IsInterface)
             {
@@ -2496,7 +2498,7 @@
 
             if (type.IsEnum)
             {
-                return GetTypeSize(type.GetFields()[0].FieldType);
+                return GetTypeSize(type.GetFields(BindingFlags.Default).First().FieldType);
             }
 
             var size = 0;
@@ -2563,7 +2565,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private Type DetectTypePrefix(OpCodePart opCode, Type requiredType, OperandOptions options, out Type castFrom)
+        private IType DetectTypePrefix(OpCodePart opCode, IType requiredType, OperandOptions options, out IType castFrom)
         {
             castFrom = null;
 
@@ -2574,7 +2576,7 @@
             var res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 1 ? this.ResultOf(opCode.OpCodeOperands[1]) : null;
 
             // write type
-            var effectiveType = typeof(void);
+            var effectiveType = TypeAdapter.FromType(typeof(void));
 
             if (requiredType != null)
             {
@@ -2584,17 +2586,17 @@
             {
                 if (!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || res2 == null || (res2.IsConst ?? false))
                 {
-                    effectiveType = res1.Type;
+                    effectiveType = res1.IType;
                 }
                 else
                 {
-                    effectiveType = res2.Type;
+                    effectiveType = res2.IType;
                 }
             }
 
-            if (res1 != null && res1.Type != effectiveType && res1.Type.IsClass && effectiveType.IsAssignableFrom(res1.Type))
+            if (res1 != null && res1.IType != effectiveType && res1.IType.IsClass && effectiveType.IsAssignableFrom(res1.IType))
             {
-                castFrom = res1.Type;
+                castFrom = res1.IType;
             }
 
             return effectiveType;
@@ -2608,7 +2610,7 @@
         /// </returns>
         private string GetArgVarName(int index)
         {
-            return string.Concat("%.", this.ParameterInfo[index].Name);
+            return string.Concat("%.", this.Parameters[index].Name);
         }
 
         /// <summary>
@@ -2617,7 +2619,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetFullMethodName(MethodBase methodBase)
+        private string GetFullMethodName(IMethod methodBase)
         {
             var sb = new StringBuilder();
             sb.Append("@\"");
@@ -2669,7 +2671,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private int GetTypeSize(Type type)
+        private int GetTypeSize(IType type)
         {
             // find index
             int size;
@@ -2704,12 +2706,12 @@
             var op1ReturnResult = this.ResultOf(opCode);
 
             // TODO: result of unbox is null, fix it
-            if (op1ReturnResult == null || op1ReturnResult.Type == null)
+            if (op1ReturnResult == null || op1ReturnResult.IType == null)
             {
                 return false;
             }
 
-            var op1IsReal = op1ReturnResult.Type.IsReal();
+            var op1IsReal = op1ReturnResult.IType.IsReal();
             return op1IsReal;
         }
 
@@ -2731,9 +2733,9 @@
             {
                 if (detectAndWriteTypePrefix)
                 {
-                    Type castFrom;
+                    IType castFrom;
                     var effectiveType = this.DetectTypePrefix(operand, null, OperandOptions.TypeIsInOperator, out castFrom);
-                    this.WriteTypePrefix(writer, effectiveType ?? typeof(void));
+                    this.WriteTypePrefix(writer, effectiveType ?? TypeAdapter.FromType(typeof(void)));
                     writer.Write(' ');
                 }
 
@@ -2743,7 +2745,7 @@
             {
                 if (detectAndWriteTypePrefix)
                 {
-                    this.WriteTypePrefix(writer, operand.ResultType ?? typeof(void));
+                    this.WriteTypePrefix(writer, operand.ResultType ?? TypeAdapter.FromType(typeof(void)));
                     writer.Write(' ');
                 }
 
@@ -2836,15 +2838,15 @@
         /// <param name="options">
         /// </param>
         private void ProcessOperator(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, Type requiredType = null, OperandOptions options = OperandOptions.None)
+            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType requiredType = null, OperandOptions options = OperandOptions.None)
         {
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
             {
                 var resultOf = this.ResultOf(opCode);
-                this.WriteSetResultNumber(opCode, resultOf != null ? resultOf.Type : null);
+                this.WriteSetResultNumber(opCode, resultOf != null ? resultOf.IType : null);
             }
 
-            Type castFrom;
+            IType castFrom;
             var effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
             if (castFrom != null && opCode.OpCodeOperands[0].ResultNumber.HasValue)
             {
@@ -2856,7 +2858,7 @@
 
             if (!options.HasFlag(OperandOptions.NoTypePrefix) && !options.HasFlag(OperandOptions.IgnoreOperand))
             {
-                this.WriteTypePrefix(writer, effectiveType ?? typeof(void));
+                this.WriteTypePrefix(writer, effectiveType ?? TypeAdapter.FromType(typeof(void)));
                 if (options.HasFlag(OperandOptions.AppendPointer))
                 {
                     writer.Write('*');
@@ -2876,7 +2878,7 @@
         /// </param>
         /// <param name="options">
         /// </param>
-        private void UnaryOper(LlvmIndentedTextWriter writer, OpCodePart opCode, string op, Type localType = null, OperandOptions options = OperandOptions.None)
+        private void UnaryOper(LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType localType = null, OperandOptions options = OperandOptions.None)
         {
             this.UnaryOper(writer, opCode, 0, op, localType, options);
         }
@@ -2896,7 +2898,7 @@
         /// <param name="options">
         /// </param>
         private void UnaryOper(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex, string op, Type requiredType = null, OperandOptions options = OperandOptions.None)
+            LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex, string op, IType requiredType = null, OperandOptions options = OperandOptions.None)
         {
             var directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
 
@@ -2914,7 +2916,7 @@
         /// </param>
         /// <param name="type">
         /// </param>
-        private void WriteAlloca(LlvmIndentedTextWriter writer, Type type)
+        private void WriteAlloca(LlvmIndentedTextWriter writer, IType type)
         {
             // for value types
             writer.Write("alloca ");
@@ -2930,7 +2932,7 @@
         /// </param>
         /// <param name="isThis">
         /// </param>
-        private void WriteArgumentCopyDeclaration(string name, Type type, bool isThis = false)
+        private void WriteArgumentCopyDeclaration(string name, IType type, bool isThis = false)
         {
             if (!isThis && type.IsStructureType())
             {
@@ -2961,7 +2963,7 @@
         /// </param>
         /// <param name="hasThis">
         /// </param>
-        private void WriteArgumentCopyDeclarations(IList<ParameterInfo> parametersInfo, bool hasThis)
+        private void WriteArgumentCopyDeclarations(IEnumerable<IParam> parametersInfo, bool hasThis)
         {
             if (hasThis)
             {
@@ -2982,18 +2984,18 @@
         /// </param>
         private void WriteArrayGetLength(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            this.WriteBitcast(writer, opCode, typeof(int));
+            this.WriteBitcast(writer, opCode, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
             var res = opCode.ResultNumber;
             var resLen = WriteSetResultNumber(writer, opCode);
             writer.Write("getelementptr ");
-            this.WriteTypePrefix(writer, typeof(int));
+            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
             writer.Write("* ");
             WriteResultNumber(res ?? -1);
             writer.WriteLine(", i32 -1");
 
-            this.WriteLlvmLoad(writer, opCode, typeof(int), this.GetResultNumber(resLen));
+            this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(resLen));
         }
 
         /// <summary>
@@ -3006,7 +3008,7 @@
         /// </param>
         /// <param name="toType">
         /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, int res, Type toType)
+        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, int res, IType toType)
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast i8* ");
@@ -3024,12 +3026,12 @@
         /// </param>
         /// <param name="toType">
         /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, Type toType)
+        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType toType)
         {
             this.UnaryOper(writer, opCode, "bitcast");
             writer.Write(" to ");
             this.WriteTypePrefix(writer, toType, true);
-            opCode.ResultType = typeof(byte*);
+            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
         }
 
         /// <summary>
@@ -3046,7 +3048,7 @@
         /// </param>
         /// <param name="noNewLine">
         /// </param>
-        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, Type toType, bool appendReference = false)
+        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
         {
             if (!fromType.IsInterface && toType.IsInterface)
             {
@@ -3082,7 +3084,7 @@
         /// </param>
         /// <param name="name">
         /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, Type fromType, string name)
+        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string name)
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
@@ -3090,10 +3092,10 @@
             writer.Write(" ");
             writer.Write(name);
             writer.Write(" to i8*");
-            opCode.ResultType = typeof(byte*);
+            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
         }
 
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, Type fromType, int res, string custom)
+        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, string custom)
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast ");
@@ -3123,7 +3125,7 @@
         /// <param name="thisResultNumber">
         /// </param>
         private void WriteCall(
-            LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, MethodBase methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber)
+            LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber)
         {
             if (opCodeMethodInfo.ResultNumber.HasValue)
             {
@@ -3144,7 +3146,7 @@
                 }
             }
 
-            var methodInfo = methodBase as MethodInfo;
+            var methodInfo = methodBase as IMethod;
             var thisType = methodBase.DeclaringType;
 
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
@@ -3198,7 +3200,7 @@
                 var used = opCodeMethodInfo.OpCodeOperands;
                 if (used[0].ResultType == null)
                 {
-                    used[0].ResultType = this.ResultOf(used[0]).Type;
+                    used[0].ResultType = this.ResultOf(used[0]).IType;
                 }
 
                 if (IsClassCastRequired(thisType, used[0]))
@@ -3276,9 +3278,9 @@
                 methodInfo != null ? methodInfo.ReturnType : null);
         }
 
-        private void CheckIfExternalDeclarationIsRequied(MethodBase methodBase)
+        private void CheckIfExternalDeclarationIsRequied(IMethod methodBase)
         {
-            var mi = methodBase as MethodInfo;
+            var mi = methodBase as IMethod;
             if (mi != null)
             {
                 if (mi.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
@@ -3289,7 +3291,7 @@
                 return;
             }
 
-            var ci = methodBase as ConstructorInfo;
+            var ci = methodBase as IConstructor;
             if (ci != null)
             {
                 if (ci.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
@@ -3301,7 +3303,7 @@
             }
         }
 
-        private void CheckIfExternalDeclarationIsRequied(Type type)
+        private void CheckIfExternalDeclarationIsRequied(IType type)
         {
             if (type != null)
             {
@@ -3313,7 +3315,7 @@
         }
 
         // TODO: speed up the function
-        private int GetVirtualMethodIndex(Type thisType, MethodInfo methodInfo)
+        private int GetVirtualMethodIndex(IType thisType, IMethod methodInfo)
         {
             var virtualTable = GetVirtualTable(thisType);
 
@@ -3443,7 +3445,7 @@
         /// </param>
         /// <param name="desctVarName">
         /// </param>
-        private void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, Type type, string sourceVarName, string desctVarName)
+        private void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string sourceVarName, string desctVarName)
         {
             WriteBitcast(writer, opCode, type, desctVarName);
             var op1 = opCode.ResultNumber;
@@ -3465,13 +3467,13 @@
         {
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
-            if (operand.Type.IsStructureType())
+            if (operand.IType.IsStructureType())
             {
                 opts |= OperandOptions.AppendPointer;
             }
 
             this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", options: opts);
-            this.WriteFieldIndex(writer, operand.Type, opCodeFieldInfoPart.Operand);
+            this.WriteFieldIndex(writer, operand.IType, opCodeFieldInfoPart.Operand);
             opCodeFieldInfoPart.ResultType = opCodeFieldInfoPart.Operand.FieldType;
         }
 
@@ -3483,11 +3485,11 @@
         /// </param>
         /// <param name="fieldInfo">
         /// </param>
-        private void WriteFieldIndex(LlvmIndentedTextWriter writer, Type classType, FieldInfo fieldInfo)
+        private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
         {
             var type = fieldInfo.DeclaringType;
 
-            // first element for pointer (Type* + 0)
+            // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
             while (type != classType)
@@ -3513,7 +3515,7 @@
             writer.Write(index);
         }
 
-        private void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, Type declaringType, Type @interface)
+        private void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
         {
             var objectResult = opCode.ResultNumber;
 
@@ -3524,11 +3526,11 @@
             writer.WriteLine(string.Empty);
         }
 
-        private void WriteInterfaceIndex(LlvmIndentedTextWriter writer, Type classType, Type @interface)
+        private void WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface)
         {
             var type = classType;
 
-            // first element for pointer (Type* + 0)
+            // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
             while (!type.GetInterfaces().Contains(@interface) || type.BaseType.GetInterfaces().Contains(@interface))
@@ -3584,7 +3586,7 @@
         /// </param>
         /// <param name="method">
         /// </param>
-        private void WriteGenericParameters(LlvmIndentedTextWriter writer, MethodInfo method)
+        private void WriteGenericParameters(LlvmIndentedTextWriter writer, IMethod method)
         {
             var i = 0;
             foreach (var generic in method.GetGenericArguments())
@@ -3607,7 +3609,7 @@
         /// </param>
         /// <param name="type">
         /// </param>
-        private void WriteGenericParameters(LlvmIndentedTextWriter writer, Type type)
+        private void WriteGenericParameters(LlvmIndentedTextWriter writer, IType type)
         {
             var index = type.Name.IndexOf('`');
             var level = int.Parse(type.Name.Substring(index + 1));
@@ -3621,7 +3623,7 @@
 
                 writer.Write("typename ");
 
-                Type generic = null;
+                IType generic = null;
 
                 if (this.GenericMethodArguments != null)
                 {
@@ -3655,7 +3657,7 @@
         /// </param>
         private void WriteLlvmArgVarAccess(LlvmIndentedTextWriter writer, int index, bool asReference = false)
         {
-            this.WriteTypePrefix(writer, this.ParameterInfo[index].ParameterType, false);
+            this.WriteTypePrefix(writer, this.Parameters[index].ParameterType, false);
             if (asReference)
             {
                 writer.Write('*');
@@ -3683,7 +3685,7 @@
         /// <param name="structAsRef">
         /// </param>
         private void WriteLlvmLoad(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, Type type, string localVarName, bool appendReference = true, bool structAsRef = false)
+            LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
         {
             if (!type.IsStructureType() || structAsRef)
             {
@@ -3738,7 +3740,7 @@
         /// </summary>
         /// <param name="locals">
         /// </param>
-        private void WriteLocalVariableDeclarations(IList<LocalVariableInfo> locals)
+        private void WriteLocalVariableDeclarations(IEnumerable<ILocalVariable> locals)
         {
             foreach (var local in locals)
             {
@@ -3758,7 +3760,7 @@
         /// </param>
         /// <param name="op2">
         /// </param>
-        private void WriteMemCopy(LlvmIndentedTextWriter writer, Type type, int? op1, int? op2)
+        private void WriteMemCopy(LlvmIndentedTextWriter writer, IType type, int? op1, int? op2)
         {
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
@@ -3776,7 +3778,7 @@
         /// </param>
         /// <param name="op1">
         /// </param>
-        private void WriteMemSet(LlvmIndentedTextWriter writer, Type type, int? op1)
+        private void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
         {
             writer.Write(
                 "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
@@ -3829,7 +3831,7 @@
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        private void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, MethodBase methodBase)
+        private void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, IMethod methodBase)
         {
             writer.Write(this.GetFullMethodName(methodBase));
         }
@@ -3853,7 +3855,7 @@
         /// </param>
         /// <param name="returnType">
         /// </param>
-        private void WriteMethodParamsDef(LlvmIndentedTextWriter writer, IEnumerable<ParameterInfo> parameterInfos, bool hasThis, Type thisType, Type returnType, bool noArgumentName = false)
+        private void WriteMethodParamsDef(LlvmIndentedTextWriter writer, IEnumerable<IParam> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
         {
             writer.Write("(");
 
@@ -3918,10 +3920,10 @@
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        private void WriteMethodPointerType(LlvmIndentedTextWriter writer, MethodBase methodBase)
+        private void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
         {
             var fullMethodName = this.GetFullMethodName(methodBase);
-            var methodInfo = methodBase as MethodInfo;
+            var methodInfo = methodBase as IMethod;
             this.WriteTypePrefix(writer, methodInfo.ReturnType);
 
             writer.Write(" (");
@@ -3954,7 +3956,7 @@
         /// </param>
         /// <param name="type">
         /// </param>
-        private void WriteTypeName(LlvmIndentedTextWriter writer, Type type, bool doNotConvert = false)
+        private void WriteTypeName(LlvmIndentedTextWriter writer, IType type, bool doNotConvert = false)
         {
             var typeBaseName = TypeToCType(type, doNotConvert);
 
@@ -3984,7 +3986,7 @@
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        private void WriteNew(LlvmIndentedTextWriter writer, OpCodePart opCode, Type declaringType)
+        private void WriteNew(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
             var mallocResult = WriteSetResultNumber(writer, opCode);
             var size = this.GetTypeSize(declaringType);
@@ -4006,7 +4008,7 @@
             writer.WriteLine("; end of new obj");
         }
 
-        private void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, Type declaringType)
+        private void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
@@ -4017,7 +4019,7 @@
                 writer.WriteLine("; set virtual table");
 
                 // initializw virtual table
-                WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, typeof(byte**));
+                WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
                 writer.WriteLine(string.Empty);
 
                 var virtualTable = GetVirtualTable(declaringType);
@@ -4038,7 +4040,7 @@
 
                 WriteInterfaceAccess(writer, opCode, declaringType, @interface);
 
-                WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, typeof(byte**));
+                WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
                 writer.WriteLine(string.Empty);
 
                 var virtualInterfaceTable = GetVirtualInterfaceTable(declaringType, @interface);
@@ -4059,7 +4061,7 @@
         /// </param>
         /// <param name="length">
         /// </param>
-        private void WriteNewArray(LlvmIndentedTextWriter writer, OpCodePart opCode, Type declaringType, OpCodePart length)
+        private void WriteNewArray(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, OpCodePart length)
         {
             var size = this.GetTypeSize(declaringType);
             this.UnaryOper(writer, opCode, "mul");
@@ -4077,7 +4079,7 @@
             writer.Write("call i8* @malloc(i32 {0})", this.GetResultNumber(resAdd ?? -1));
             writer.WriteLine(string.Empty);
 
-            WriteBitcast(writer, opCode, resAlloc, typeof(int));
+            WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
             var opCodeTemp = new OpCodePart(OpCodesEmit.Nop, 0, 0);
@@ -4087,7 +4089,7 @@
             this.ProcessOperator(writer, opCodeTemp, "store");
             this.PostProcessOperand(writer, opCode, 0, !opCode.OpCodeOperands[0].ResultNumber.HasValue);
             writer.Write(", ");
-            this.WriteTypePrefix(writer, typeof(int));
+            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
             writer.Write("* ");
             WriteResultNumber(opCode.ResultNumber ?? -1);
             writer.WriteLine(string.Empty);
@@ -4101,10 +4103,10 @@
             WriteResultNumber(tempRes);
             writer.Write(", i32 1");
 
-            if (declaringType != typeof(int))
+            if (declaringType != TypeAdapter.FromType(typeof(int)))
             {
                 writer.WriteLine(string.Empty);
-                this.WriteCast(writer, opCode, typeof(int), resGetArr, declaringType, true);
+                this.WriteCast(writer, opCode, TypeAdapter.FromType(typeof(int)), resGetArr, declaringType, true);
             }
 
             writer.WriteLine("; end of new array");
@@ -4138,7 +4140,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private int WriteSetResultNumber(OpCodePart opCode, Type type = null)
+        private int WriteSetResultNumber(OpCodePart opCode, IType type = null)
         {
             return this.WriteSetResultNumber(this.Output, opCode, type);
         }
@@ -4153,7 +4155,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        private int WriteSetResultNumber(LlvmIndentedTextWriter writer, OpCodePart opCode, Type type = null)
+        private int WriteSetResultNumber(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type = null)
         {
             // write number of method
             writer.Write("%.r");
@@ -4197,7 +4199,7 @@
         /// </param>
         /// <param name="refChar">
         /// </param>
-        private void WriteTypePrefix(LlvmIndentedTextWriter writer, Type type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
+        private void WriteTypePrefix(LlvmIndentedTextWriter writer, IType type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
         {
             this.WriteTypeWithoutModifiers(writer, type, doNotIncludeTypePrefixId);
             WriteTypeModifiers(writer, type, asReference, refChar);
@@ -4211,7 +4213,7 @@
         /// </param>
         /// <param name="doNotIncludeTypePrefixId">
         /// </param>
-        private void WriteTypeWithoutModifiers(LlvmIndentedTextWriter writer, Type type, bool doNotIncludeTypePrefixId = false)
+        private void WriteTypeWithoutModifiers(LlvmIndentedTextWriter writer, IType type, bool doNotIncludeTypePrefixId = false)
         {
             var effectiveType = type;
 

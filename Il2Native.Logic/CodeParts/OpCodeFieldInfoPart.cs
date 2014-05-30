@@ -4,9 +4,11 @@
     using System.Reflection;
     using System.Reflection.Emit;
 
-    public class OpCodeFieldInfoPart : OpCodeParamPart<FieldInfo>
+    using PEAssemblyReader;
+
+    public class OpCodeFieldInfoPart : OpCodeParamPart<IField>
     {
-        public OpCodeFieldInfoPart(OpCode opcode, int addressStart, int addressEnd, FieldInfo param)
+        public OpCodeFieldInfoPart(OpCode opcode, int addressStart, int addressEnd, IField param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

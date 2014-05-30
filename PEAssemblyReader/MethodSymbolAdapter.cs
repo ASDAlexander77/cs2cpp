@@ -10,7 +10,7 @@
     using Microsoft.CodeAnalysis;
     using System.Threading;
 
-    public class MethodSymbolAdapter : IMethodSymbol, IMethodBody
+    public class MethodSymbolAdapter : IMethodSymbol
     {
         private MethodHandle methodDef;
 
@@ -20,19 +20,6 @@
         {
             this.methodDef = methodDef;
             this.module = module;
-        }
-
-        public byte[] IL
-        {
-            get
-            {
-                return this.module.Module.GetMethodBodyOrThrow(this.methodDef).GetILBytes();
-            }
-        }
-
-        public System.Collections.Generic.IEnumerable<ILocalVariable> LocalVariables
-        {
-            get { throw new NotImplementedException(); }
         }
 
         public SymbolKind Kind { get; private set; }

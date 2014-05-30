@@ -7,6 +7,8 @@
     {
         string Name { get; }
 
+        int LocalIndex { get; }
+
         IType LocalType { get; }
     }
 }

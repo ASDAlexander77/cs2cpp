@@ -4,9 +4,11 @@
     using System.Reflection;
     using System.Reflection.Emit;
 
-    public class OpCodeMethodInfoPart : OpCodeParamPart<MethodBase>
+    using PEAssemblyReader;
+
+    public class OpCodeMethodInfoPart : OpCodeParamPart<IMethod>
     {
-        public OpCodeMethodInfoPart(OpCode opcode, int addressStart, int addressEnd, MethodBase param)
+        public OpCodeMethodInfoPart(OpCode opcode, int addressStart, int addressEnd, IMethod param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

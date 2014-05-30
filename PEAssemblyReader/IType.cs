@@ -4,17 +4,17 @@
     using System.Collections.Generic;
     using System.Reflection;
 
-    public interface IType
+    public interface IType : IName
     {
-        string Name { get; }
-
-        string FullName { get; }
-
         bool HasElementType { get; }
 
         bool IsGenericType { get; }
 
         bool IsPointer { get; }
+
+        bool IsArray { get; }
+
+        bool IsByRef { get; }
 
         bool IsValueType { get; }
 
@@ -30,9 +30,11 @@
         
         bool IsPrimitive { get; }
 
-        IEnumerable<IType> GenericTypeArguments { get; }
+        bool IsClass { get; }
 
-        IType DeclaringType { get; }
+        int GenericParameterPosition { get; }
+
+        IEnumerable<IType> GenericTypeArguments { get; }
 
         Guid GUID { get; }
 
@@ -42,10 +44,14 @@
 
         IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags);
 
+        IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags);
+
         IEnumerable<IType> GetInterfaces();
 
         IEnumerable<IType> GetGenericArguments();
 
         IType GetElementType();
+
+        bool IsAssignableFrom(IType type);
     }
 }

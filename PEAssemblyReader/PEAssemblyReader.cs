@@ -18,8 +18,6 @@
             var appDomainType = decoder.FindTypeSymbolByName("System", "AppDomain");
             var method = appDomainType.GetMembers("CreateInstanceAndUnwrap").First() as IMethodSymbol;
 
-            var body = (method as IMethodBody).IL;
-
             // get method params, 1 param is ReturnType
             //byte callingConvention;
             //BadImageFormatException metadataException;

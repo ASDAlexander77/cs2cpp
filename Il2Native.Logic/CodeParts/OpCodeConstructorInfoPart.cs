@@ -3,9 +3,11 @@
     using System.Reflection;
     using System.Reflection.Emit;
 
-    public class OpCodeConstructorInfoPart : OpCodeParamPart<ConstructorInfo>
+    using PEAssemblyReader;
+
+    public class OpCodeConstructorInfoPart : OpCodeParamPart<IConstructor>
     {
-        public OpCodeConstructorInfoPart(OpCode opcode, int addressStart, int addressEnd, ConstructorInfo param)
+        public OpCodeConstructorInfoPart(OpCode opcode, int addressStart, int addressEnd, IConstructor param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

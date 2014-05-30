@@ -308,7 +308,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<ConstructorInfo> Constructors(Type type)
+        public static IEnumerable<IConstructor> Constructors(IType type)
         {
             return type.GetConstructors(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
@@ -319,7 +319,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<FieldInfo> Fields(Type type)
+        public static IEnumerable<IField> Fields(IType type)
         {
             return type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
@@ -346,7 +346,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MethodInfo> Methods(Type type)
+        public static IEnumerable<IMethod> Methods(IType type)
         {
             return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
@@ -361,7 +361,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(ConstructorInfo ctor, Type[] typeGenerics, Type[] methodGenerics)
+        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IType[] typeGenerics, IType[] methodGenerics)
         {
             if (ctor == null)
             {
@@ -384,7 +384,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(MethodInfo method, Type[] typeGenerics, Type[] methodGenerics)
+        public IEnumerable<OpCodePart> OpCodes(IMethod method, IType[] typeGenerics, IType[] methodGenerics)
         {
             if (method == null)
             {
@@ -409,7 +409,7 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(MethodBody methodBody, Module module, Type[] typeGenerics, Type[] methodGenerics)
+        public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IType[] typeGenerics, IType[] methodGenerics)
         {
             if (methodBody == null)
             {
@@ -523,7 +523,7 @@
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var constructor = module.ResolveMember(token, typeGenerics, methodGenerics) as ConstructorInfo;
+                        var constructor = module.ResolveMember(token, typeGenerics, methodGenerics) as IConstructor;
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
                     case Code.Call:
@@ -601,25 +601,8 @@
                 var decoder = new MetadataDecoder(this.Assembly.ManifestModule, this.Assembly);
                 return decoder.GetTypes();
             }
-            catch (ReflectionTypeLoadException ex)
+            catch (Exception)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (Exception exSub in ex.LoaderExceptions)
-                {
-                    sb.AppendLine(exSub.Message);
-                    if (exSub is FileNotFoundException)
-                    {
-                        FileNotFoundException exFileNotFound = exSub as FileNotFoundException;
-                        if (!string.IsNullOrEmpty(exFileNotFound.FusionLog))
-                        {
-                            sb.AppendLine("Fusion Log:");
-                            sb.AppendLine(exFileNotFound.FusionLog);
-                        }
-                    }
-                    sb.AppendLine();
-                }
-                string errorMessage = sb.ToString();
-                //Display or log the error based on your application.         
             }
 
             return null;

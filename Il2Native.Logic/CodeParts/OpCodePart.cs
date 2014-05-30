@@ -7,6 +7,8 @@
     using System.Reflection;
     using System.Reflection.Emit;
 
+    using PEAssemblyReader;
+
     /// <summary>
     /// </summary>
     [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
@@ -20,7 +22,7 @@
 
         /// <summary>
         /// </summary>
-        private Type resultType;
+        private IType resultType;
 
         #endregion
 
@@ -85,7 +87,7 @@
 
         /// <summary>
         /// </summary>
-        public Type DestinationType { get; set; }
+        public IType DestinationType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -101,7 +103,7 @@
 
         /// <summary>
         /// </summary>
-        public List<ExceptionHandlingClause> ExceptionHandlers { get; set; }
+        public IList<IExceptionHandlingClause> ExceptionHandlers { get; set; }
 
         /// <summary>
         /// </summary>
@@ -194,7 +196,7 @@
 
         /// <summary>
         /// </summary>
-        public Type ResultType
+        public IType ResultType
         {
             get
             {

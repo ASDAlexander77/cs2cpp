@@ -14,6 +14,8 @@ namespace Il2Native.Logic
 
     using Il2Native.Logic.CodeParts;
 
+    using PEAssemblyReader;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
@@ -26,7 +28,7 @@ namespace Il2Native.Logic
         /// </summary>
         public BaseWriter()
         {
-            this.StaticConstructors = new List<ConstructorInfo>();
+            this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
             this.Stack = new Stack<OpCodePart>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -61,11 +63,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IList<ExceptionHandlingClause> ExceptionHandlingClauses { get; private set; }
+        protected IExceptionHandlingClause[] ExceptionHandlingClauses { get; private set; }
 
         /// <summary>
         /// </summary>
-        protected Type[] GenericMethodArguments { get; private set; }
+        protected IType[] GenericMethodArguments { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -77,7 +79,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected LocalVariableInfo[] LocalInfo { get; private set; }
+        protected ILocalVariable[] LocalInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -85,11 +87,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected MethodInfo MainMethod { get; set; }
+        protected IMethod MainMethod { get; set; }
 
         /// <summary>
         /// </summary>
-        protected Type MethodReturnType { get; private set; }
+        protected IType MethodReturnType { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -101,7 +103,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected ParameterInfo[] ParameterInfo { get; private set; }
+        protected IParam[] Parameters { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -109,15 +111,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected List<ConstructorInfo> StaticConstructors { get; set; }
+        protected List<IConstructor> StaticConstructors { get; set; }
 
         /// <summary>
         /// </summary>
-        protected Type ThisType { get; private set; }
+        protected IType ThisType { get; private set; }
 
         /// <summary>
         /// </summary>
-        protected Type[] TypeGenericArguments { get; private set; }
+        protected IType[] TypeGenericArguments { get; private set; }
 
         #endregion
 
@@ -276,14 +278,14 @@ namespace Il2Native.Logic
             {
                 case Code.Call:
                 case Code.Callvirt:
-                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand as MethodInfo;
+                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
                 case Code.Newobj:
-                    ConstructorInfo ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
+                    var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
                 case Code.Ldfld:
                 case Code.Ldsfld:
-                    FieldInfo fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
+                    var fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
                     return new ReturnResult(fieldInfo.FieldType);
                 case Code.Add:
                 case Code.Add_Ovf:
@@ -371,7 +373,7 @@ namespace Il2Native.Logic
                     return new ReturnResult(typeof(int));
                 case Code.Ldloca:
                 case Code.Ldloca_S:
-                    Type localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
+                    IType localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
                     return new ReturnResult(localVarType) { IsAddress = true };
                 case Code.Ldloc:
                 case Code.Ldloc_S:
@@ -391,18 +393,18 @@ namespace Il2Native.Logic
                     return new ReturnResult(localVarType);
                 case Code.Ldarg:
                 case Code.Ldarg_S:
-                    return new ReturnResult(this.ParameterInfo[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)].ParameterType);
+                    return new ReturnResult(this.Parameters[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)].ParameterType);
                 case Code.Ldarg_0:
-                    return new ReturnResult(this.HasMethodThis ? this.ThisType : this.ParameterInfo[0].ParameterType);
+                    return new ReturnResult(this.HasMethodThis ? this.ThisType : this.Parameters[0].ParameterType);
                 case Code.Ldarg_1:
-                    return new ReturnResult(this.ParameterInfo[this.HasMethodThis ? 0 : 1].ParameterType);
+                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 0 : 1].ParameterType);
                 case Code.Ldarg_2:
-                    return new ReturnResult(this.ParameterInfo[this.HasMethodThis ? 1 : 2].ParameterType);
+                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 1 : 2].ParameterType);
                 case Code.Ldarg_3:
-                    return new ReturnResult(this.ParameterInfo[this.HasMethodThis ? 2 : 3].ParameterType);
+                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 2 : 3].ParameterType);
                 case Code.Ldarga:
                 case Code.Ldarga_S:
-                    var result = new ReturnResult(this.ParameterInfo[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)].ParameterType);
+                    var result = new ReturnResult(this.Parameters[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)].ParameterType);
                     result.IsAddress = true;
                     return result;
                 case Code.Ldelem:
@@ -420,16 +422,16 @@ namespace Il2Native.Logic
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.Type.GetElementType());
+                    return new ReturnResult(result.IType.GetElementType());
                 case Code.Ldelem_Ref:
-                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult(null);
+                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
                     result.IsReference = true;
                     return result;
                 case Code.Ldelema:
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.Type.GetElementType()) { IsAddress = true };
+                    return new ReturnResult(result.IType.GetElementType()) { IsAddress = true };
                 case Code.Ldc_I4_0:
                 case Code.Ldc_I4_1:
                 case Code.Ldc_I4_2:
@@ -472,7 +474,7 @@ namespace Il2Native.Logic
                 case Code.Ldind_R8:
                     return new ReturnResult(typeof(double)) { IsIndirect = true };
                 case Code.Ldind_Ref:
-                    return new ReturnResult(this.ResultOf(opCode.OpCodeOperands[0]).Type.GetElementType()) { IsIndirect = true, IsReference = true };
+                    return new ReturnResult(this.ResultOf(opCode.OpCodeOperands[0]).IType.GetElementType()) { IsIndirect = true, IsReference = true };
                 case Code.Ldflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
@@ -485,7 +487,7 @@ namespace Il2Native.Logic
                     ReturnResult res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        return new ReturnResult(res.Type) { Boxed = true };
+                        return new ReturnResult(res.IType) { Boxed = true };
                     }
                     else
                     {
@@ -583,7 +585,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            foreach (ExceptionHandlingClause exceptionHandlingClause in this.ExceptionHandlingClauses)
+            foreach (var exceptionHandlingClause in this.ExceptionHandlingClauses)
             {
                 OpCodePart opCodePart;
                 if (this.OpsByGroupAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
@@ -622,7 +624,7 @@ namespace Il2Native.Logic
                 {
                     if (opCodePart.ExceptionHandlers == null)
                     {
-                        opCodePart.ExceptionHandlers = new List<ExceptionHandlingClause>();
+                        opCodePart.ExceptionHandlers = new List<IExceptionHandlingClause>();
                     }
 
                     opCodePart.ExceptionHandlers.Add(exceptionHandlingClause);
@@ -768,7 +770,7 @@ namespace Il2Native.Logic
                 }
                 else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
                           || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
-                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as MethodInfo).ReturnType.IsVoid())
+                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as IMethod).ReturnType.IsVoid())
                 {
                     if (insertBack == null)
                     {
@@ -883,17 +885,17 @@ namespace Il2Native.Logic
             switch (code)
             {
                 case Code.Call:
-                    MethodBase methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
-                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Length);
+                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Length);
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
                     break;
                 case Code.Newobj:
-                    ConstructorInfo ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Length);
+                    IConstructor ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
                     break;
                 case Code.Stelem:
                 case Code.Stelem_I:
@@ -1089,34 +1091,26 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="methodBase">
+        /// <param name="methodInfo">
         /// </param>
-        protected void ReadMethodInfo(MethodBase methodBase)
+        protected void ReadMethodInfo(IMethod methodInfo)
         {
-            this.ParameterInfo = methodBase.GetParameters();
-            this.HasMethodThis = methodBase.CallingConvention.HasFlag(CallingConventions.HasThis);
+            this.Parameters = methodInfo.GetParameters().ToArray();
+            this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
 
             this.MethodReturnType = null;
-            this.ThisType = methodBase.DeclaringType;
+            this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            MethodBody methodBody = methodBase.GetMethodBody();
+            var methodBody = methodInfo.GetMethodBody();
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];
-                this.ExceptionHandlingClauses = methodBody.ExceptionHandlingClauses;
+                this.ExceptionHandlingClauses = methodBody.ExceptionHandlingClauses.ToArray();
             }
-        }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        protected void ReadMethodInfo(MethodInfo methodInfo)
-        {
-            this.ReadMethodInfo((MethodBase)methodInfo);
             this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
         }
 
@@ -1126,10 +1120,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericType">
         /// </param>
-        protected void ReadTypeInfo(Type type, Type genericType)
+        protected void ReadTypeInfo(IType type, IType genericType)
         {
             this.IsInterface = type.IsInterface;
-            this.TypeGenericArguments = type.GetGenericArguments();
+            this.TypeGenericArguments = type.GetGenericArguments().ToArray();
             this.ThisType = type;
         }
 
@@ -1413,9 +1407,26 @@ namespace Il2Native.Logic
             /// </summary>
             /// <param name="type">
             /// </param>
+            public ReturnResult(IType type)
+            {
+                this.IType = type;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <param name="asReference">
+            /// </param>
+            public ReturnResult(IType type, bool asReference)
+                : this(type)
+            {
+                this.IsReference = asReference;
+            }
+
             public ReturnResult(Type type)
             {
-                this.Type = type;
+                this.IType = TypeAdapter.FromType(type);
             }
 
             /// <summary>
@@ -1452,8 +1463,8 @@ namespace Il2Native.Logic
             {
                 get
                 {
-                    return this.Type != null && this.Type.IsValueType || ((this.IsAddress ?? false) && (this.IsField ?? false))
-                           || this.Type != null && this.Type.IsByRef && this.Type.GetElementType().IsValueType;
+                    return this.IType != null && this.IType.IsValueType || ((this.IsAddress ?? false) && (this.IsField ?? false))
+                           || this.IType != null && this.IType.IsByRef && this.IType.GetElementType().IsValueType;
                 }
             }
 
@@ -1476,7 +1487,7 @@ namespace Il2Native.Logic
                         return true;
                     }
 
-                    if (this.Type.IsValueType())
+                    if (this.IType.IsValueType())
                     {
                         return false;
                     }
@@ -1491,7 +1502,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public Type Type { get; set; }
+            public IType IType { get; set; }
 
             #endregion
 
@@ -1505,7 +1516,7 @@ namespace Il2Native.Logic
             /// </returns>
             public bool Equals(ReturnResult other)
             {
-                return this.Type == other.Type && this.IsReference == other.IsReference && this.IsField == other.IsField && this.Boxed == other.Boxed;
+                return this.IType == other.IType && this.IsReference == other.IsReference && this.IsField == other.IsField && this.Boxed == other.Boxed;
             }
 
             /// <summary>
@@ -1514,14 +1525,24 @@ namespace Il2Native.Logic
             /// </param>
             /// <returns>
             /// </returns>
-            public bool IsTypeOf(Type type)
+            public bool IsTypeOf(IType type)
             {
-                if (this.Type == null || type == null)
+                if (this.IType == null || type == null)
                 {
                     return false;
                 }
 
-                return this.Type == type;
+                return this.IType == type;
+            }
+
+            public bool IsTypeOf(Type type)
+            {
+                if (this.IType == null || type == null)
+                {
+                    return false;
+                }
+
+                return this.IType == TypeAdapter.FromType(type);
             }
 
             #endregion

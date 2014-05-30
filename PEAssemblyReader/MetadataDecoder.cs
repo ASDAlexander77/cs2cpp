@@ -28,7 +28,7 @@
             this.assemblyMetadata = assemblyMetadata;
         }
 
-        public IEnumerable<ITypeSymbol> GetTypes()
+        public IEnumerable<IType> GetTypes()
         {
             foreach (var module in this.assemblyMetadata.Modules)
             {
@@ -36,7 +36,7 @@
                 {
                     foreach (var type in @namespace)
                     {
-                        yield return new TypeSymbolAdapter(type, module);
+                        yield return new MetadataTypeAdapter(type, module);
                     }
                 }
             }
