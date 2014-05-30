@@ -620,7 +620,7 @@
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
-        private static  AssemblyMetadata Compile(string source)
+        private static AssemblyMetadata Compile(string source)
         {
             var codeProvider = new CSharpCodeProvider();
             var icc = codeProvider.CreateCompiler();

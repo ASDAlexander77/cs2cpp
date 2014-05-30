@@ -182,6 +182,16 @@
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
+        public static bool Equals(this IType type, Type other)
+        {
+            return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
+        }
+
+        public static bool NotEquals(this IType type, Type other)
+        {
+            return !type.Equals(other);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
