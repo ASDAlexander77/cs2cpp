@@ -45,7 +45,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataTypeAdapter(this.fieldDef.Type);
             }
         }
 

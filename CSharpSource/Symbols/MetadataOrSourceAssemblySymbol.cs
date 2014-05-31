@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <remarks></remarks>
         internal override NamedTypeSymbol GetDeclaredSpecialType(SpecialType type)
         {
-#if DEBUG
+#if _DEBUG
             foreach (var module in this.Modules)
             {
                 Debug.Assert(module.GetReferencedAssemblies().Length == 0);

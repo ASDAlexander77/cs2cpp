@@ -103,7 +103,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IParam[] Parameters { get; private set; }
+        protected IParameter[] Parameters { get; private set; }
 
         /// <summary>
         /// </summary>

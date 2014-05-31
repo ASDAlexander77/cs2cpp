@@ -840,7 +840,7 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        private static bool IsMscorlib(AssemblyIdentity identity)
+        public static bool IsMscorlib(AssemblyIdentity identity)
         {
             return string.Equals(identity.Name, "mscorlib", StringComparison.Ordinal) && ByteSequenceComparer.Instance.Equals(identity.PublicKeyToken, MscorlibPublicKeyToken);
         }

@@ -5,25 +5,25 @@
     using System.Linq;
     using System.Text;
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
-    public class MetadataParameterAdapter : IParam
+    public class MetadataParameterAdapter : IParameter
     {
-        private PEParameterSymbol paramDef;
+        private ParameterSymbol paramDef;
 
-        internal MetadataParameterAdapter(PEParameterSymbol paramDef)
+        internal MetadataParameterAdapter(ParameterSymbol paramDef)
         {
             this.paramDef = paramDef;
         }
 
         public string Name
         {
-            get { throw new NotImplementedException(); }
+            get { return this.paramDef.Name; }
         }
 
         public IType ParameterType
         {
-            get { throw new NotImplementedException(); }
+            get { return new MetadataTypeAdapter(this.paramDef.Type); }
         }
     }
 }

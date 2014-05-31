@@ -13,7 +13,7 @@
 
         CallingConventions CallingConvention { get; }
 
-        IEnumerable<IParam> GetParameters();
+        IEnumerable<IParameter> GetParameters();
 
         IMethodBody GetMethodBody();
 

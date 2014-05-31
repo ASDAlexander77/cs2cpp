@@ -1156,7 +1156,7 @@
         private void ActualWrite(
             LlvmIndentedTextWriter writer,
             OpCodePart[] used,
-            IEnumerable<IParam> parameterInfos,
+            IEnumerable<IParameter> parameterInfos,
             bool @isVirtual,
             bool hasThis,
             bool isCtor,
@@ -2963,7 +2963,7 @@
         /// </param>
         /// <param name="hasThis">
         /// </param>
-        private void WriteArgumentCopyDeclarations(IEnumerable<IParam> parametersInfo, bool hasThis)
+        private void WriteArgumentCopyDeclarations(IEnumerable<IParameter> parametersInfo, bool hasThis)
         {
             if (hasThis)
             {
@@ -3855,7 +3855,7 @@
         /// </param>
         /// <param name="returnType">
         /// </param>
-        private void WriteMethodParamsDef(LlvmIndentedTextWriter writer, IEnumerable<IParam> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
+        private void WriteMethodParamsDef(LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
         {
             writer.Write("(");
 

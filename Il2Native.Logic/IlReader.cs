@@ -599,6 +599,9 @@
         {
             var assemblySymbol = new PEAssemblySymbol(this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
+            // TODO: find mscorlib
+            assemblySymbol.SetCorLibrary(assemblySymbol);
+
             foreach (var module in assemblySymbol.Modules)
             {
                 var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();

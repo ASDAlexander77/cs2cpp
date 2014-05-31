@@ -68,7 +68,8 @@
         {
             get
             {
-                throw new NotImplementedException();
+                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
+                return metadataTypeName.FullName;
             }
         }
 
@@ -109,7 +110,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsArray();
             }
         }
 
@@ -125,7 +126,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsClassType();
             }
         }
 
@@ -133,7 +134,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsEnumType();
             }
         }
 
@@ -166,7 +167,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsInterfaceType();
             }
         }
 
@@ -174,7 +175,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsPointerType();
             }
         }
 
@@ -182,7 +183,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsPrimitiveRecursiveStruct();
             }
         }
 
@@ -190,7 +191,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsValueType;
             }
         }
 
@@ -198,8 +199,7 @@
         {
             get
             {
-                throw new NotImplementedException();
-
+                return this.typeDef.Name;
             }
         }
 
@@ -207,7 +207,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.ContainingNamespace.Name;
             }
         }
 

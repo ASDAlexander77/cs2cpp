@@ -3,7 +3,7 @@
     using System.Collections.Generic;
     using System.Reflection;
 
-    public interface IParam
+    public interface IParameter
     {
         string Name { get; }
 

@@ -8,6 +8,9 @@
     using Microsoft.CodeAnalysis;
     using System.Reflection.Metadata;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using System.Collections.Immutable;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using System.Diagnostics;
 
     public class MetadataMethodAdapter : IMethod
     {
@@ -112,7 +115,33 @@
         {
             get
             {
-                throw new NotImplementedException();
+                var localInfo = default(ImmutableArray<MetadataDecoder.LocalInfo>);
+                try
+                {
+                    var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+                    var peModule = peModuleSymbol.Module;
+                    var peMethodSymbol = this.methodDef as PEMethodSymbol;
+                    Debug.Assert(peModule.HasIL);
+                    var methodBody = peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
+
+                    if (methodBody != null && !methodBody.LocalSignature.IsNil)
+                    {
+                        var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                        localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
+                    }
+                    else
+                    {
+                        localInfo = ImmutableArray<MetadataDecoder.LocalInfo>.Empty;
+                    }
+                }
+                catch (UnsupportedSignatureContent)
+                {
+                }
+                catch (BadImageFormatException)
+                {
+                }
+
+                return localInfo.Select(l => new MetadataLocalVariableAdapter(l));
             }
         }
 
@@ -169,12 +198,12 @@
 
         public IMethodBody GetMethodBody()
         {
-            throw new NotImplementedException();
+            return this;
         }
 
-        public IEnumerable<IParam> GetParameters()
+        public IEnumerable<IParameter> GetParameters()
         {
-            throw new NotImplementedException();
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p));
         }
 
         #endregion

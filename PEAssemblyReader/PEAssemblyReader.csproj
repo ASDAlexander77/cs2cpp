@@ -60,6 +60,7 @@
     <Compile Include="IParam.cs" />
     <Compile Include="IType.cs" />
     <Compile Include="MetadataFieldAdapter.cs" />
+    <Compile Include="MetadataLocalVariableAdapter.cs" />
     <Compile Include="MetadataMethodAdapter.cs" />
     <Compile Include="MetadataParameterAdapter.cs" />
     <Compile Include="PEAssemblyReader.cs" />
