@@ -32,6 +32,7 @@ namespace Microsoft.CodeAnalysis
 
         private readonly Lazy<IdentifierCollection> lazyTypeNameCollection;
         private readonly Lazy<IdentifierCollection> lazyNamespaceNameCollection;
+        private readonly Lazy<IEnumerable<KeyValuePair<string, string>>> lazyTypeWithNamespaceNameCollection;
 
         private string lazyName;
         private bool isDisposed;
@@ -82,6 +83,7 @@ namespace Microsoft.CodeAnalysis
             this.lazyMetadataReader = metadataReader;
             this.lazyTypeNameCollection = new Lazy<IdentifierCollection>(ComputeTypeNameCollection);
             this.lazyNamespaceNameCollection = new Lazy<IdentifierCollection>(ComputeNamespaceNameCollection);
+            this.lazyTypeWithNamespaceNameCollection = new Lazy<IEnumerable<KeyValuePair<string, string>>>(ComputeFullTypeNamesCollection);
             this.hashesOpt = (peReader != null) ? new PEHashProvider(peReader) : null;
         }
 
@@ -805,6 +807,26 @@ namespace Microsoft.CodeAnalysis
                 {
                     namespaces.Add(namespaceName, null);
                 }
+            }
+        }
+
+        private IEnumerable<KeyValuePair<string, string>> ComputeFullTypeNamesCollection()
+        {
+            try
+            {
+                var allTypeDefs = GetTypeDefsOrThrow(topLevelOnly: false);
+                var typeNames =
+                    from typeDef in allTypeDefs
+                    let namespaceType = typeDef.NamespaceHandle.IsNil ? string.Empty : MetadataReader.GetString(typeDef.NamespaceHandle)
+                    let metadataName = GetTypeDefNameOrThrow(typeDef.TypeDef)
+                    let backtickIndex = metadataName.IndexOf('`')
+                    select new KeyValuePair<string, string>(backtickIndex < 0 ? metadataName : metadataName.Substring(0, backtickIndex), namespaceType);
+
+                return typeNames;
+            }
+            catch (BadImageFormatException)
+            {
+                return null;
             }
         }
 
@@ -2835,6 +2857,14 @@ namespace Microsoft.CodeAnalysis
             get
             {
                 return lazyNamespaceNameCollection.Value;
+            }
+        }
+
+        internal IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
+        {
+            get
+            {
+                return lazyTypeWithNamespaceNameCollection.Value;
             }
         }
 

@@ -18,13 +18,13 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataMethodAdapter(IMethodSymbol methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public MetadataMethodAdapter(IMethodSymbol methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             this.methodDef = methodDef;
             this.module = module;

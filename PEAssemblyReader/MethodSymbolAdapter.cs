@@ -18,9 +18,9 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
-        public MethodSymbolAdapter(MethodHandle methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public MethodSymbolAdapter(MethodHandle methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             this.methodDef = methodDef;
             this.module = module;

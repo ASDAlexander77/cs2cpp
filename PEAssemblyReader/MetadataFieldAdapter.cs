@@ -15,7 +15,7 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
         private Lazy<ITypeSymbol> fieldType;
 
@@ -23,7 +23,7 @@
 
         #region Constructors and Destructors
 
-        public MetadataFieldAdapter(IFieldSymbol fieldDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public MetadataFieldAdapter(IFieldSymbol fieldDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             this.fieldDef = fieldDef;
             this.module = module;

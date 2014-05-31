@@ -100,7 +100,9 @@
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(@"D:\Temp\CoreLib\obj\Release\CoreLib.dll", OutputPath);
+            new PEAssemblyReader.PEAssemblyReader(@"D:\Temp\CoreLib\obj\Release\CoreLib.dll");
+
+            //Il2Converter.Convert(@"D:\Temp\CoreLib\obj\Release\CoreLib.dll", OutputPath);
         }
 
         [TestMethod]

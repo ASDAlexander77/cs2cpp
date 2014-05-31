@@ -14,11 +14,11 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
         private Lazy<IType> type;
 
-        public MetadataParameterAdapter(IParameterSymbol paramDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public MetadataParameterAdapter(IParameterSymbol paramDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             this.paramDef = paramDef;
             this.module = module;

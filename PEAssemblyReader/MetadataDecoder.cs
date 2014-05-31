@@ -16,14 +16,14 @@
     /// <summary>
     /// Helper class to resolve metadata tokens and signatures.
     /// </summary>
-    public class MetadataDecoder : MetadataDecoder<ITypeSymbol, IMethodSymbol, IFieldSymbol, IAssemblySymbol, ISymbol>
+    public class PEAssemblyReaderMetadataDecoder : MetadataDecoder<ITypeSymbol, IMethodSymbol, IFieldSymbol, IAssemblySymbol, ISymbol>
     {
         private ConcurrentDictionary<TypeHandle, ITypeSymbol> cacheTypes = new ConcurrentDictionary<TypeHandle, ITypeSymbol>();
         private ConcurrentDictionary<TypeReferenceHandle, ITypeSymbol> cacheTypeRefs = new ConcurrentDictionary<TypeReferenceHandle, ITypeSymbol>();
 
         private AssemblyMetadata assemblyMetadata;
 
-        public MetadataDecoder(ModuleMetadata module, AssemblyMetadata assemblyMetadata) :
+        public PEAssemblyReaderMetadataDecoder(ModuleMetadata module, AssemblyMetadata assemblyMetadata) :
             base(module.Module, assemblyMetadata.Assembly.Identity)
         {
             this.assemblyMetadata = assemblyMetadata;

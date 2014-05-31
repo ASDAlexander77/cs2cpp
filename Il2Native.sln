@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeAnalysis", "CoreSource\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PEAssemblyReader", "PEAssemblyReader\PEAssemblyReader.csproj", "{278B563A-A934-489C-8DFC-39B021816C25}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpCodeAnalysis", "CSharpSource\CSharpCodeAnalysis.csproj", "{B501A547-C911-4A05-AC6E-274A50DFF30E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{278B563A-A934-489C-8DFC-39B021816C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{278B563A-A934-489C-8DFC-39B021816C25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{278B563A-A934-489C-8DFC-39B021816C25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B501A547-C911-4A05-AC6E-274A50DFF30E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B501A547-C911-4A05-AC6E-274A50DFF30E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B501A547-C911-4A05-AC6E-274A50DFF30E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B501A547-C911-4A05-AC6E-274A50DFF30E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

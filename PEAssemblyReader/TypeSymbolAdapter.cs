@@ -18,7 +18,7 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
         private Lazy<string> name;
 
@@ -28,7 +28,7 @@
 
         private Lazy<System.Collections.Immutable.ImmutableArray<ISymbol>> members;
 
-        public TypeSymbolAdapter(TypeHandle typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public TypeSymbolAdapter(TypeHandle typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             Debug.Assert(typeDef != null);
 
@@ -117,7 +117,10 @@
 
         public SpecialType SpecialType
         {
-            get { throw new NotImplementedException(); }
+            get 
+            {
+                return SpecialType.None; 
+            }
         }
 
         public ISymbol FindImplementationForInterfaceMember(ISymbol interfaceMember)

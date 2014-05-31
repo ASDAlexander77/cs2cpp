@@ -598,7 +598,7 @@
         {
             try
             {
-                var decoder = new MetadataDecoder(this.Assembly.ManifestModule, this.Assembly);
+                var decoder = new PEAssemblyReaderMetadataDecoder(this.Assembly.ManifestModule, this.Assembly);
                 return decoder.GetTypes();
             }
             catch (Exception)

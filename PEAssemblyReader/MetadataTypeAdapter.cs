@@ -19,7 +19,7 @@
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
         private Lazy<MetadataTypeName> metadataTypeName;
 
@@ -35,7 +35,7 @@
 
         #region Constructors and Destructors
 
-        public MetadataTypeAdapter(ITypeSymbol typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public MetadataTypeAdapter(ITypeSymbol typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             Debug.Assert(typeDef != null);
 

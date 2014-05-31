@@ -10,15 +10,15 @@
 
     class TypeParameterSymbolAdapter : ITypeParameterSymbol
     {
-        private MetadataDecoder.ParamInfo paramInfo;
+        private PEAssemblyReaderMetadataDecoder.ParamInfo paramInfo;
 
         private ModuleMetadata module;
 
         private AssemblyMetadata assemblyMetadata;
 
-        private MetadataDecoder metadataDecoder;
+        private PEAssemblyReaderMetadataDecoder metadataDecoder;
 
-        public TypeParameterSymbolAdapter(MetadataDecoder.ParamInfo paramInfo, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
+        public TypeParameterSymbolAdapter(PEAssemblyReaderMetadataDecoder.ParamInfo paramInfo, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
         {
             this.paramInfo = paramInfo;
             this.module = module;
