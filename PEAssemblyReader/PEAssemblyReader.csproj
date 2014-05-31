@@ -59,20 +59,13 @@
     <Compile Include="IName.cs" />
     <Compile Include="IParam.cs" />
     <Compile Include="IType.cs" />
-    <Compile Include="MetadataDecoder.cs" />
     <Compile Include="MetadataFieldAdapter.cs" />
     <Compile Include="MetadataMethodAdapter.cs" />
     <Compile Include="MetadataParameterAdapter.cs" />
-    <Compile Include="MethodSymbolAdapter.cs" />
-    <Compile Include="NamespaceSymbolAdapter.cs" />
-    <Compile Include="ParameterSymbolAdapter.cs" />
     <Compile Include="PEAssemblyReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeAdapter.cs" />
-    <Compile Include="SpecialTypeSymbolAdapter.cs" />
     <Compile Include="MetadataTypeAdapter.cs" />
-    <Compile Include="TypeParameterSymbolAdapter.cs" />
-    <Compile Include="TypeSymbolAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">

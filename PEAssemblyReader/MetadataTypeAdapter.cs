@@ -8,88 +8,24 @@
 
     using Microsoft.CodeAnalysis;
     using System.Diagnostics;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class MetadataTypeAdapter : IType
     {
         #region Fields
 
-        private ModuleMetadata module;
-
-        private ITypeSymbol typeDef;
-
-        private AssemblyMetadata assemblyMetadata;
-
-        private PEAssemblyReaderMetadataDecoder metadataDecoder;
-
-        private Lazy<MetadataTypeName> metadataTypeName;
-
-        private Lazy<MetadataTypeAdapter> baseTypeDef;
-
-        private Lazy<IEnumerable<IType>> interfaces;
-
-        private Lazy<IEnumerable<IField>> fields;
-
-        private Lazy<IEnumerable<IMethod>> methods;
+        private TypeSymbol typeDef;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataTypeAdapter(ITypeSymbol typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
+        internal MetadataTypeAdapter(TypeSymbol typeDef)
         {
             Debug.Assert(typeDef != null);
 
             this.typeDef = typeDef;
-            this.module = module;
-            this.assemblyMetadata = assemblyMetadata;
-            this.metadataDecoder = metadataDecoder;
-
-            this.metadataTypeName = new Lazy<MetadataTypeName>(
-                () =>
-                    {
-                        if (this.typeDef.ContainingNamespace != null)
-                        {
-                            return MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
-                        }
-                        else
-                        {
-                            return MetadataTypeName.FromTypeName(this.typeDef.Name);
-                        }
-                    });
-
-            this.baseTypeDef = new Lazy<MetadataTypeAdapter>(
-                () =>
-                    {
-                        var baseType = this.typeDef.BaseType;
-                        if (baseType == null)
-                        {
-                            return null;
-                        }
-
-                        return new MetadataTypeAdapter(this.typeDef.BaseType, this.module, this.assemblyMetadata, this.metadataDecoder);
-                    });
-
-            this.interfaces = new Lazy<IEnumerable<IType>>(
-                () =>
-                    { 
-                        return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i, module, assemblyMetadata, metadataDecoder));
-                    });
-
-            this.fields = new Lazy<IEnumerable<IField>>(
-                () =>
-                {
-                    return this.typeDef
-                        .GetMembers().Where(f => f is IFieldSymbol)
-                        .Select(f => new MetadataFieldAdapter(f as IFieldSymbol, module, assemblyMetadata, metadataDecoder));
-                });
-
-            this.methods = new Lazy<IEnumerable<IMethod>>(
-                () =>
-                {
-                    return this.typeDef.GetMembers()
-                        .Where(m => m is IMethodSymbol)
-                        .Select(m => new MetadataMethodAdapter(m as IMethodSymbol, module, assemblyMetadata, metadataDecoder));
-                });
         }
 
         #endregion
@@ -108,7 +44,7 @@
         {
             get
             {
-                return this.baseTypeDef.Value;
+                return this.typeDef.BaseType != null ? new MetadataTypeAdapter(this.typeDef.BaseType) : null;
             }
         }
 
@@ -132,7 +68,7 @@
         {
             get
             {
-                return this.metadataTypeName.Value.FullName;
+                throw new NotImplementedException();
             }
         }
 
@@ -262,7 +198,7 @@
         {
             get
             {
-                return this.metadataTypeName.Value.TypeName;
+                throw new NotImplementedException();
 
             }
         }
@@ -271,7 +207,7 @@
         {
             get
             {
-                return this.metadataTypeName.Value.NamespaceName;
+                throw new NotImplementedException();
             }
         }
 
@@ -296,7 +232,7 @@
 
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
-            return this.fields.Value;
+            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
         }
 
         public IEnumerable<IType> GetGenericArguments()
@@ -306,12 +242,12 @@
 
         public IEnumerable<IType> GetInterfaces()
         {
-            return this.interfaces.Value;
+            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i));
         }
 
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
-            return this.methods.Value;
+            return this.typeDef.GetMembers().Where(m => m is MethodSymbol).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
         }
 
         public bool IsAssignableFrom(IType type)

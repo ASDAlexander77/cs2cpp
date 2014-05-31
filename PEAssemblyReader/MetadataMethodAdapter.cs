@@ -7,29 +7,21 @@
 
     using Microsoft.CodeAnalysis;
     using System.Reflection.Metadata;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class MetadataMethodAdapter : IMethod
     {
         #region Fields
 
-        private IMethodSymbol methodDef;
-
-        private ModuleMetadata module;
-
-        private AssemblyMetadata assemblyMetadata;
-
-        private PEAssemblyReaderMetadataDecoder metadataDecoder;
+        private MethodSymbol methodDef;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataMethodAdapter(IMethodSymbol methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
+        internal MetadataMethodAdapter(MethodSymbol methodDef)
         {
             this.methodDef = methodDef;
-            this.module = module;
-            this.assemblyMetadata = assemblyMetadata;
-            this.metadataDecoder = metadataDecoder;
         }
 
         #endregion
@@ -64,7 +56,7 @@
         {
             get
             {
-                return (this.methodDef as IMethodBody).ExceptionHandlingClauses;
+                throw new NotImplementedException();
             }
         }
 
@@ -120,7 +112,7 @@
         {
             get
             {
-                return (this.methodDef as IMethodBody).LocalVariables;
+                throw new NotImplementedException();
             }
         }
 
@@ -152,7 +144,7 @@
         {
             get
             {
-                return methodDef.ReturnType != null ? new MetadataTypeAdapter(methodDef.ReturnType, this.module, this.assemblyMetadata, this.metadataDecoder) : null;
+                return new MetadataTypeAdapter(this.methodDef.ReturnType);
             }
         }
 
@@ -172,17 +164,17 @@
 
         public byte[] GetILAsByteArray()
         {
-            return (this.methodDef as IMethodBody).GetILAsByteArray();
+            throw new NotImplementedException();
         }
 
         public IMethodBody GetMethodBody()
         {
-            return this.methodDef as IMethodBody;
+            throw new NotImplementedException();
         }
 
         public IEnumerable<IParam> GetParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.module, this.assemblyMetadata, this.metadataDecoder));
+            throw new NotImplementedException();
         }
 
         #endregion

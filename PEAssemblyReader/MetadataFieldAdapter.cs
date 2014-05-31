@@ -4,31 +4,21 @@
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     public class MetadataFieldAdapter : IField
     {
         #region Fields
 
-        private IFieldSymbol fieldDef;
-
-        private ModuleMetadata module;
-
-        private AssemblyMetadata assemblyMetadata;
-
-        private PEAssemblyReaderMetadataDecoder metadataDecoder;
-
-        private Lazy<ITypeSymbol> fieldType;
+        private FieldSymbol fieldDef;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataFieldAdapter(IFieldSymbol fieldDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, PEAssemblyReaderMetadataDecoder metadataDecoder)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef)
         {
             this.fieldDef = fieldDef;
-            this.module = module;
-            this.assemblyMetadata = assemblyMetadata;
-            this.metadataDecoder = metadataDecoder;
         }
 
         #endregion
@@ -55,7 +45,7 @@
         {
             get
             {
-                return new MetadataTypeAdapter(this.fieldDef.Type, this.module, this.assemblyMetadata, this.metadataDecoder);
+                throw new NotImplementedException();
             }
         }
 

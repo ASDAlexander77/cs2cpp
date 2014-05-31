@@ -26,6 +26,13 @@
                 {
                     var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
                     var symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
+
+                    var methods = symbol.GetMembers().Where(m => m is PEMethodSymbol).ToArray();
+
+                    if (methods.Count() > 0)
+                    {
+                        var first = methods.First();
+                    }
                 }
             }
 

@@ -5,17 +5,18 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
-
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CSharp;
+    using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using System.Text;
-    using Microsoft.CodeAnalysis;
-    using PEAssemblyReader;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
     /// </summary>
@@ -596,16 +597,18 @@
         /// </returns>
         public IEnumerable<IType> Types()
         {
-            try
-            {
-                var decoder = new PEAssemblyReaderMetadataDecoder(this.Assembly.ManifestModule, this.Assembly);
-                return decoder.GetTypes();
-            }
-            catch (Exception)
-            {
-            }
+            var assemblySymbol = new PEAssemblySymbol(this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
-            return null;
+            foreach (var module in assemblySymbol.Modules)
+            {
+                var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
+                foreach (var typeWithNamespace in typeWithNamespaces)
+                {
+                    var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
+                    var symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
+                    yield return new MetadataTypeAdapter(symbol as TypeSymbol);
+                }
+            }
         }
 
         #endregion
@@ -643,7 +646,7 @@
             }
 
             // Successful Compile
-            return  AssemblyMetadata.CreateFromFile(results.PathToAssembly);
+            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
         }
 
         /// <summary>

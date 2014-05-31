@@ -36,4 +36,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 [assembly: InternalsVisibleTo("PEAssemblyReader")]
+[assembly: InternalsVisibleTo("Il2Native.Logic")]
 [assembly: InternalsVisibleTo("Microsoft.CodeAnalysis.CSharp")]
