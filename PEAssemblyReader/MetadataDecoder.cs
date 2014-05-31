@@ -18,7 +18,8 @@
     /// </summary>
     public class MetadataDecoder : MetadataDecoder<ITypeSymbol, IMethodSymbol, IFieldSymbol, IAssemblySymbol, ISymbol>
     {
-        private ConcurrentDictionary<TypeHandle, ITypeSymbol> cache = new ConcurrentDictionary<TypeHandle, ITypeSymbol>();
+        private ConcurrentDictionary<TypeHandle, ITypeSymbol> cacheTypes = new ConcurrentDictionary<TypeHandle, ITypeSymbol>();
+        private ConcurrentDictionary<TypeReferenceHandle, ITypeSymbol> cacheTypeRefs = new ConcurrentDictionary<TypeReferenceHandle, ITypeSymbol>();
 
         private AssemblyMetadata assemblyMetadata;
 
@@ -36,7 +37,7 @@
                 {
                     foreach (var type in @namespace)
                     {
-                        yield return new MetadataTypeAdapter(type, module);
+                        yield return new MetadataTypeAdapter(this.GetTypeOfToken(type), module, assemblyMetadata, this);
                     }
                 }
             }
@@ -56,7 +57,7 @@
                     @namespace.Select(t => new Tuple<TypeHandle, string>(t, module.Module.GetTypeDefNameOrThrow(t))).FirstOrDefault(pair => pair.Item2 == typeName);
                 if (type != null)
                 {
-                    return new TypeSymbolAdapter(type.Item1, module);
+                    return new TypeSymbolAdapter(type.Item1, module, this.assemblyMetadata, this);
                 }
             }
 
@@ -95,12 +96,12 @@
 
         protected override ConcurrentDictionary<TypeHandle, ITypeSymbol> GetTypeHandleToTypeMap()
         {
-            return this.cache;
+            return this.cacheTypes;
         }
 
         protected override ConcurrentDictionary<TypeReferenceHandle, ITypeSymbol> GetTypeRefHandleToTypeMap()
         {
-            throw new NotImplementedException();
+            return this.cacheTypeRefs;
         }
 
         protected override ITypeSymbol LookupTopLevelTypeDefSymbol(ref MetadataTypeName emittedName, out bool isNoPiaLocalType)

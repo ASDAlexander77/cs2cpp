@@ -1,30 +1,90 @@
 ﻿namespace PEAssemblyReader
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+
     using Microsoft.CodeAnalysis;
     using System.Threading;
 
-    public class SpecialTypeSymbolAdapter : ITypeSymbol
+    class TypeParameterSymbolAdapter : ITypeParameterSymbol
     {
-        private static SmallDictionary<SpecialType, Type> specialTypeToType = new SmallDictionary<SpecialType, Type>();
+        private MetadataDecoder.ParamInfo paramInfo;
 
-        private Type type;
+        private ModuleMetadata module;
 
-        static SpecialTypeSymbolAdapter()
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
+
+        public TypeParameterSymbolAdapter(MetadataDecoder.ParamInfo paramInfo, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
-            specialTypeToType.Add(SpecialType.None, null);
-            specialTypeToType.Add(SpecialType.System_Object, typeof(object));
-            specialTypeToType.Add(SpecialType.System_String, typeof(string));
-            specialTypeToType.Add(SpecialType.System_Boolean, typeof(bool));
-            specialTypeToType.Add(SpecialType.System_Void, typeof(void));
-            specialTypeToType.Add(SpecialType.System_Int16, typeof(short));
-            specialTypeToType.Add(SpecialType.System_Int32, typeof(int));
-            specialTypeToType.Add(SpecialType.System_Int64, typeof(long));
+            this.paramInfo = paramInfo;
+            this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
         }
 
-        public SpecialTypeSymbolAdapter(SpecialType specialType)
+        public int Ordinal
         {
-            this.type = specialTypeToType[specialType];
+            get { throw new NotImplementedException(); }
+        }
+
+        public VarianceKind Variance
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public TypeParameterKind TypeParameterKind
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IMethodSymbol DeclaringMethod
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public INamedTypeSymbol DeclaringType
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool HasReferenceTypeConstraint
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool HasValueTypeConstraint
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool HasConstructorConstraint
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public System.Collections.Immutable.ImmutableArray<ITypeSymbol> ConstraintTypes
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public new ITypeParameterSymbol OriginalDefinition
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ITypeParameterSymbol ReducedFrom
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+
+        ISymbol ISymbol.OriginalDefinition
+        {
+            get { throw new NotImplementedException(); }
         }
 
         public TypeKind TypeKind
@@ -62,7 +122,7 @@
             get { throw new NotImplementedException(); }
         }
 
-        public ITypeSymbol OriginalDefinition
+        ITypeSymbol ITypeSymbol.OriginalDefinition
         {
             get { throw new NotImplementedException(); }
         }
@@ -222,11 +282,6 @@
             get { throw new NotImplementedException(); }
         }
 
-        ISymbol ISymbol.OriginalDefinition
-        {
-            get { throw new NotImplementedException(); }
-        }
-
         public void Accept(SymbolVisitor visitor)
         {
             throw new NotImplementedException();
@@ -242,7 +297,7 @@
             throw new NotImplementedException();
         }
 
-        public string GetDocumentationCommentXml(System.Globalization.CultureInfo preferredCulture = null, bool expandIncludes = false, System.Threading.CancellationToken cancellationToken = default(CancellationToken))
+        public string GetDocumentationCommentXml(System.Globalization.CultureInfo preferredCulture = null, bool expandIncludes = false, CancellationToken cancellationToken = default(CancellationToken))
         {
             throw new NotImplementedException();
         }

@@ -7,17 +7,66 @@
 
     using Microsoft.CodeAnalysis;
     using System.Threading;
+    using System.Diagnostics;
+    using System.Collections.Generic;
 
-    public class TypeSymbolAdapter : ITypeSymbol
+    public class TypeSymbolAdapter : INamedTypeSymbol
     {
         private TypeHandle typeDef;
 
         private ModuleMetadata module;
 
-        public TypeSymbolAdapter(TypeHandle typeDef, ModuleMetadata module)
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
+
+        private Lazy<string> name;
+
+        private Lazy<INamedTypeSymbol> baseType;
+
+        private Lazy<System.Collections.Immutable.ImmutableArray<INamedTypeSymbol>> interfaces;
+
+        private Lazy<System.Collections.Immutable.ImmutableArray<ISymbol>> members;
+
+        public TypeSymbolAdapter(TypeHandle typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
+            Debug.Assert(typeDef != null);
+
             this.typeDef = typeDef;
             this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
+
+            this.name = new Lazy<string>(() =>
+            {
+                return this.module.Module.GetTypeDefNameOrThrow(this.typeDef);
+            });
+
+            this.baseType = new Lazy<INamedTypeSymbol>(() =>
+            {
+                var baseType = this.module.Module.GetBaseTypeOfTypeOrThrow(typeDef);
+                if (!baseType.IsNil)
+                {
+                    return (INamedTypeSymbol)this.metadataDecoder.GetTypeOfToken(this.module.Module.GetBaseTypeOfTypeOrThrow(typeDef));
+                }
+
+                return null;
+            });
+
+            this.interfaces = new Lazy<ImmutableArray<INamedTypeSymbol>>(() =>
+            {
+                var array = new List<INamedTypeSymbol>();
+                array.AddRange(
+                    this.module.Module.GetImplementedInterfacesOrThrow(this.typeDef).Select(i => new TypeSymbolAdapter((TypeHandle)i, this.module, this.assemblyMetadata, this.metadataDecoder)));
+                return array.ToImmutableArray();
+            });
+
+            this.members = new Lazy<ImmutableArray<ISymbol>>(() =>
+            {
+                var array = new List<ISymbol>();
+                array.AddRange(module.Module.GetMethodsOfTypeOrThrow(this.typeDef).Select(m => new MethodSymbolAdapter(m, this.module, this.assemblyMetadata, this.metadataDecoder)));
+                return array.ToImmutableArray();
+            });
         }
 
         public TypeKind TypeKind
@@ -27,12 +76,18 @@
 
         public INamedTypeSymbol BaseType
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return this.baseType.Value;
+            }
         }
 
         public System.Collections.Immutable.ImmutableArray<INamedTypeSymbol> Interfaces
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                return this.interfaces.Value;
+            }
         }
 
         public System.Collections.Immutable.ImmutableArray<INamedTypeSymbol> AllInterfaces
@@ -72,35 +127,13 @@
 
         public System.Collections.Immutable.ImmutableArray<ISymbol> GetMembers()
         {
-            var array = new System.Collections.Immutable.ImmutableArray<ISymbol>();
-            foreach (var methodHandler in module.Module.GetMethodsOfTypeOrThrow(this.typeDef))
-            {
-                array.Add(new MethodSymbolAdapter(methodHandler, this.module));
-            }
-
-            return array;
+            return this.members.Value;
         }
 
         public System.Collections.Immutable.ImmutableArray<ISymbol> GetMembers(string name)
         {
             var immutableArray = ImmutableArray.CreateBuilder<ISymbol>();
-
-            foreach (var methodDef in module.Module.GetMethodsOfTypeOrThrow(this.typeDef))
-            {
-                if (methodDef.IsNil)
-                {
-                    continue;
-                }
-
-                var methodName = module.Module.GetMethodDefNameOrThrow(methodDef);
-                if (name != methodName)
-                {
-                    continue;
-                }
-
-                immutableArray.Add(new MethodSymbolAdapter(methodDef, this.module));
-            }
-
+            immutableArray.AddRange(this.members.Value.Where(m => m.Name == name));
             return immutableArray.ToImmutableArray();
         }
 
@@ -141,7 +174,7 @@
 
         public string Name
         {
-            get { throw new NotImplementedException(); }
+            get { return this.name.Value; }
         }
 
         public string MetadataName
@@ -171,7 +204,11 @@
 
         public INamespaceSymbol ContainingNamespace
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                var @namespace = this.module.MetadataReader.GetTypeDefinition(this.typeDef).Namespace;
+                return new NamespaceSymbolAdapter(@namespace, module, metadataDecoder);
+            }
         }
 
         public bool IsDefinition
@@ -285,6 +322,101 @@
         }
 
         public bool HasUnsupportedMetadata
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public int Arity
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsGenericType
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsUnboundGenericType
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsScriptClass
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool IsImplicitClass
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public System.Collections.Generic.IEnumerable<string> MemberNames
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ImmutableArray<ITypeParameterSymbol> TypeParameters
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ImmutableArray<ITypeSymbol> TypeArguments
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        INamedTypeSymbol INamedTypeSymbol.OriginalDefinition
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IMethodSymbol DelegateInvokeMethod
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public INamedTypeSymbol EnumUnderlyingType
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public INamedTypeSymbol ConstructedFrom
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public INamedTypeSymbol Construct(params ITypeSymbol[] typeArguments)
+        {
+            throw new NotImplementedException();
+        }
+
+        public INamedTypeSymbol ConstructUnboundGenericType()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ImmutableArray<IMethodSymbol> InstanceConstructors
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ImmutableArray<IMethodSymbol> StaticConstructors
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ImmutableArray<IMethodSymbol> Constructors
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public ISymbol AssociatedSymbol
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public bool MightContainExtensionMethods
         {
             get { throw new NotImplementedException(); }
         }

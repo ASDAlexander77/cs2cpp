@@ -7,6 +7,7 @@
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
+    using System.Diagnostics;
 
     public class MetadataTypeAdapter : IType
     {
@@ -14,9 +15,13 @@
 
         private ModuleMetadata module;
 
-        private TypeHandle typeDef;
+        private ITypeSymbol typeDef;
 
-        private Lazy<MetadataTypeName> metadataTypeName; 
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
+
+        private Lazy<MetadataTypeName> metadataTypeName;
 
         private Lazy<MetadataTypeAdapter> baseTypeDef;
 
@@ -30,45 +35,60 @@
 
         #region Constructors and Destructors
 
-        public MetadataTypeAdapter(TypeHandle typeDef, ModuleMetadata module)
+        public MetadataTypeAdapter(ITypeSymbol typeDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
+            Debug.Assert(typeDef != null);
+
             this.typeDef = typeDef;
             this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
 
             this.metadataTypeName = new Lazy<MetadataTypeName>(
                 () =>
                     {
-                        var name = this.module.Module.GetTypeDefNameOrThrow(this.typeDef);
-                        var @namespace = this.module.Module.GetTypeDefNamespaceOrThrow(this.typeDef);
-                        return MetadataTypeName.FromNamespaceAndTypeName(@namespace, name);
+                        if (this.typeDef.ContainingNamespace != null)
+                        {
+                            return MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
+                        }
+                        else
+                        {
+                            return MetadataTypeName.FromTypeName(this.typeDef.Name);
+                        }
                     });
 
             this.baseTypeDef = new Lazy<MetadataTypeAdapter>(
                 () =>
                     {
-                        var baseHandler = this.module.Module.GetBaseTypeOfTypeOrThrow(this.typeDef);
-                        return !baseHandler.IsNil ? new MetadataTypeAdapter((TypeHandle)baseHandler, module) : null;
+                        var baseType = this.typeDef.BaseType;
+                        if (baseType == null)
+                        {
+                            return null;
+                        }
+
+                        return new MetadataTypeAdapter(this.typeDef.BaseType, this.module, this.assemblyMetadata, this.metadataDecoder);
                     });
 
             this.interfaces = new Lazy<IEnumerable<IType>>(
                 () =>
                     { 
-                        var interaceColl = this.module.Module.GetImplementedInterfacesOrThrow(this.typeDef);
-                        return interaceColl.Select(i => new MetadataTypeAdapter((TypeHandle)i, module));
+                        return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i, module, assemblyMetadata, metadataDecoder));
                     });
 
             this.fields = new Lazy<IEnumerable<IField>>(
                 () =>
                 {
-                    var fieldColl = this.module.Module.GetFieldsOfTypeOrThrow(this.typeDef);
-                    return fieldColl.Select(f => new MetadataFieldAdapter(f, module));
+                    return this.typeDef
+                        .GetMembers().Where(f => f is IFieldSymbol)
+                        .Select(f => new MetadataFieldAdapter(f as IFieldSymbol, module, assemblyMetadata, metadataDecoder));
                 });
 
             this.methods = new Lazy<IEnumerable<IMethod>>(
                 () =>
                 {
-                    var methodColl = this.module.Module.GetMethodsOfTypeOrThrow(this.typeDef);
-                    return methodColl.Select(m => new MetadataMethodAdapter(m, module));
+                    return this.typeDef.GetMembers()
+                        .Where(m => m is IMethodSymbol)
+                        .Select(m => new MetadataMethodAdapter(m as IMethodSymbol, module, assemblyMetadata, metadataDecoder));
                 });
         }
 
@@ -144,7 +164,8 @@
         {
             get
             {
-                throw new NotImplementedException();
+                // TODO: finish it
+                return false;
             }
         }
 
@@ -192,7 +213,8 @@
         {
             get
             {
-                throw new NotImplementedException();
+                // TODO: finish it
+                return false;
             }
         }
 

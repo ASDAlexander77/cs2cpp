@@ -9,18 +9,26 @@
     {
         #region Fields
 
-        private FieldHandle fieldDef;
+        private IFieldSymbol fieldDef;
 
         private ModuleMetadata module;
+
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
+
+        private Lazy<ITypeSymbol> fieldType;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataFieldAdapter(FieldHandle fieldDef, ModuleMetadata module)
+        public MetadataFieldAdapter(IFieldSymbol fieldDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
             this.fieldDef = fieldDef;
             this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
         }
 
         #endregion
@@ -47,7 +55,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataTypeAdapter(this.fieldDef.Type, this.module, this.assemblyMetadata, this.metadataDecoder);
             }
         }
 

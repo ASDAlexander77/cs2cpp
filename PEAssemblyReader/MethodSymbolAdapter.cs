@@ -10,72 +10,78 @@
     using Microsoft.CodeAnalysis;
     using System.Threading;
 
-    public class MethodSymbolAdapter : IMethodSymbol
+    public class MethodSymbolAdapter : IMethodSymbol, IMethodBody
     {
         private MethodHandle methodDef;
 
         private ModuleMetadata module;
 
-        public MethodSymbolAdapter(MethodHandle methodDef, ModuleMetadata module)
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
+
+        public MethodSymbolAdapter(MethodHandle methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
             this.methodDef = methodDef;
             this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
         }
 
-        public SymbolKind Kind { get; private set; }
+        public SymbolKind Kind { get { throw new NotImplementedException(); } }
 
-        public string Language { get; private set; }
+        public string Language { get { throw new NotImplementedException(); } }
 
-        public string Name { get; private set; }
+        public string Name { get { throw new NotImplementedException(); } }
 
-        public string MetadataName { get; private set; }
+        public string MetadataName { get { throw new NotImplementedException(); } }
 
-        public ISymbol ContainingSymbol { get; private set; }
+        public ISymbol ContainingSymbol { get { throw new NotImplementedException(); } }
 
-        public IAssemblySymbol ContainingAssembly { get; private set; }
+        public IAssemblySymbol ContainingAssembly { get { throw new NotImplementedException(); } }
 
-        public IModuleSymbol ContainingModule { get; private set; }
+        public IModuleSymbol ContainingModule { get { throw new NotImplementedException(); } }
 
-        public INamedTypeSymbol ContainingType { get; private set; }
+        public INamedTypeSymbol ContainingType { get { throw new NotImplementedException(); } }
 
-        public INamespaceSymbol ContainingNamespace { get; private set; }
+        public INamespaceSymbol ContainingNamespace { get { throw new NotImplementedException(); } }
 
-        public bool IsDefinition { get; private set; }
+        public bool IsDefinition { get { throw new NotImplementedException(); } }
 
-        public bool IsStatic { get; private set; }
+        public bool IsStatic { get { throw new NotImplementedException(); } }
 
-        public bool IsVirtual { get; private set; }
+        public bool IsVirtual { get { throw new NotImplementedException(); } }
 
-        public bool IsOverride { get; private set; }
+        public bool IsOverride { get { throw new NotImplementedException(); } }
 
-        public bool IsAbstract { get; private set; }
+        public bool IsAbstract { get { throw new NotImplementedException(); } }
 
-        public bool IsSealed { get; private set; }
+        public bool IsSealed { get { throw new NotImplementedException(); } }
 
-        public bool IsExtern { get; private set; }
+        public bool IsExtern { get { throw new NotImplementedException(); } }
 
-        public bool IsImplicitlyDeclared { get; private set; }
+        public bool IsImplicitlyDeclared { get { throw new NotImplementedException(); } }
 
-        public bool CanBeReferencedByName { get; private set; }
+        public bool CanBeReferencedByName { get { throw new NotImplementedException(); } }
 
-        public ImmutableArray<Location> Locations { get; private set; }
+        public ImmutableArray<Location> Locations { get { throw new NotImplementedException(); } }
 
-        public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences { get; private set; }
+        public ImmutableArray<SyntaxReference> DeclaringSyntaxReferences { get { throw new NotImplementedException(); } }
 
         public ImmutableArray<AttributeData> GetAttributes()
         {
             throw new NotImplementedException();
         }
 
-        public Accessibility DeclaredAccessibility { get; private set; }
+        public Accessibility DeclaredAccessibility { get { throw new NotImplementedException(); } }
 
-        public IMethodSymbol OriginalDefinition { get; private set; }
+        public IMethodSymbol OriginalDefinition { get { throw new NotImplementedException(); } }
 
-        public IMethodSymbol OverriddenMethod { get; private set; }
+        public IMethodSymbol OverriddenMethod { get { throw new NotImplementedException(); } }
 
-        public ITypeSymbol ReceiverType { get; private set; }
+        public ITypeSymbol ReceiverType { get { throw new NotImplementedException(); } }
 
-        public IMethodSymbol ReducedFrom { get; private set; }
+        public IMethodSymbol ReducedFrom { get { throw new NotImplementedException(); } }
 
         public ITypeSymbol GetTypeInferredDuringReduction(ITypeParameterSymbol reducedFromTypeParameter)
         {
@@ -87,60 +93,87 @@
             throw new NotImplementedException();
         }
 
-        public ImmutableArray<IMethodSymbol> ExplicitInterfaceImplementations { get; private set; }
+        public ImmutableArray<IMethodSymbol> ExplicitInterfaceImplementations { get { throw new NotImplementedException(); } }
 
-        public ImmutableArray<CustomModifier> ReturnTypeCustomModifiers { get; private set; }
+        public ImmutableArray<CustomModifier> ReturnTypeCustomModifiers { get { throw new NotImplementedException(); } }
 
         public ImmutableArray<AttributeData> GetReturnTypeAttributes()
         {
             throw new NotImplementedException();
         }
 
-        public ISymbol AssociatedSymbol { get; private set; }
+        public ISymbol AssociatedSymbol { get { throw new NotImplementedException(); } }
 
         public IMethodSymbol Construct(params ITypeSymbol[] typeArguments)
         {
             throw new NotImplementedException();
         }
 
-        public IMethodSymbol PartialDefinitionPart { get; private set; }
+        public IMethodSymbol PartialDefinitionPart { get { throw new NotImplementedException(); } }
 
-        public IMethodSymbol PartialImplementationPart { get; private set; }
+        public IMethodSymbol PartialImplementationPart { get { throw new NotImplementedException(); } }
 
         public DllImportData GetDllImportData()
         {
             throw new NotImplementedException();
         }
 
-        public INamedTypeSymbol AssociatedAnonymousDelegate { get; private set; }
+        public INamedTypeSymbol AssociatedAnonymousDelegate { get { throw new NotImplementedException(); } }
 
-        public MethodKind MethodKind { get; private set; }
+        public MethodKind MethodKind { get { throw new NotImplementedException(); } }
 
-        public int Arity { get; private set; }
+        public int Arity { get { throw new NotImplementedException(); } }
 
-        public bool IsGenericMethod { get; private set; }
+        public bool IsGenericMethod { get { throw new NotImplementedException(); } }
 
-        public bool IsExtensionMethod { get; private set; }
+        public bool IsExtensionMethod { get { throw new NotImplementedException(); } }
 
-        public bool IsAsync { get; private set; }
+        public bool IsAsync { get { throw new NotImplementedException(); } }
 
-        public bool IsVararg { get; private set; }
+        public bool IsVararg { get { throw new NotImplementedException(); } }
 
-        public bool IsCheckedBuiltin { get; private set; }
+        public bool IsCheckedBuiltin { get { throw new NotImplementedException(); } }
 
-        public bool HidesBaseMethodsByName { get; private set; }
+        public bool HidesBaseMethodsByName { get { throw new NotImplementedException(); } }
 
-        public bool ReturnsVoid { get; private set; }
+        public bool ReturnsVoid { get { throw new NotImplementedException(); } }
 
-        public ITypeSymbol ReturnType { get; private set; }
+        public ITypeSymbol ReturnType 
+        { 
+            get 
+            { 
+                byte callingConvention;
+                BadImageFormatException metadataException;
+                var param = this.metadataDecoder.GetSignatureForMethod(this.methodDef, out callingConvention, out metadataException);
+                return param[0].Type;
+            } 
+        }
 
-        public ImmutableArray<ITypeSymbol> TypeArguments { get; private set; }
+        public ImmutableArray<ITypeSymbol> TypeArguments { get { throw new NotImplementedException(); } }
 
-        public ImmutableArray<ITypeParameterSymbol> TypeParameters { get; private set; }
+        public ImmutableArray<ITypeParameterSymbol> TypeParameters
+        {
+            get
+            {
+                byte callingConvention;
+                BadImageFormatException metadataException;
+                var param = this.metadataDecoder.GetSignatureForMethod(this.methodDef, out callingConvention, out metadataException);
+                return param.Skip(1).Select(p => (ITypeParameterSymbol)new TypeParameterSymbolAdapter(p, this.module, this.assemblyMetadata, this.metadataDecoder)).ToImmutableArray();
+            }
+        }
 
-        public ImmutableArray<IParameterSymbol> Parameters { get; private set; }
+        public ImmutableArray<IParameterSymbol> Parameters 
+        {       
+            get
+            {
+                byte callingConvention;
+                BadImageFormatException metadataException;
+                var param = this.metadataDecoder.GetSignatureForMethod(this.methodDef, out callingConvention, out metadataException);
+                return param.Skip(1).Select(p => (IParameterSymbol)new ParameterSymbolAdapter(p, this.module, this.assemblyMetadata, this.metadataDecoder)).ToImmutableArray();
+            }
+        }
 
-        public IMethodSymbol ConstructedFrom { get; private set; }
+        public IMethodSymbol ConstructedFrom { get { throw new NotImplementedException(); } }
 
         ISymbol ISymbol.OriginalDefinition
         {
@@ -191,6 +224,45 @@
             throw new NotImplementedException();
         }
 
-        public bool HasUnsupportedMetadata { get; private set; }
+        public bool HasUnsupportedMetadata { get { throw new NotImplementedException(); } }
+
+        public System.Collections.Generic.IEnumerable<ILocalVariable> LocalVariables
+        {
+            get
+            {
+                var methodBody = this.module.Module.GetMethodBodyOrThrow(this.methodDef);
+                if (methodBody != null && !methodBody.LocalSignature.IsNil)
+                {
+                    this.metadataDecoder.DecodeLocalSignatureOrThrow(this.module.Module.MetadataReader.GetLocalSignature(methodBody.LocalSignature));
+                }
+
+                return new ILocalVariable[0];
+            }
+        }
+
+        public System.Collections.Generic.IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
+        {
+            get
+            {
+                ////var methodBody = this.module.Module.GetMethodBodyOrThrow(this.methodDef);
+                ////if (methodBody != null)
+                ////{
+                ////    return methodBody.ExceptionRegions.Select(r => new MetadataExceptionHandlingClauseAdapter(r, this.module));
+                ////}
+
+                return null;
+            }
+        }
+
+        public byte[] GetILAsByteArray()
+        {
+            var methodBody = this.module.Module.GetMethodBodyOrThrow(this.methodDef);
+            if (methodBody != null)
+            {
+                return methodBody.GetILBytes();
+            }
+
+            return null;
+        }
     }
 }

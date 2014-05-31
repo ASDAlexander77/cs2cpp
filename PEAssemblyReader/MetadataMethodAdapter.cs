@@ -1,6 +1,7 @@
 ﻿namespace PEAssemblyReader
 {
     using System;
+    using System.Linq;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -11,18 +12,24 @@
     {
         #region Fields
 
-        private MethodHandle methodDef;
+        private IMethodSymbol methodDef;
 
         private ModuleMetadata module;
+
+        private AssemblyMetadata assemblyMetadata;
+
+        private MetadataDecoder metadataDecoder;
 
         #endregion
 
         #region Constructors and Destructors
 
-        public MetadataMethodAdapter(MethodHandle methodDef, ModuleMetadata module)
+        public MetadataMethodAdapter(IMethodSymbol methodDef, ModuleMetadata module, AssemblyMetadata assemblyMetadata, MetadataDecoder metadataDecoder)
         {
             this.methodDef = methodDef;
             this.module = module;
+            this.assemblyMetadata = assemblyMetadata;
+            this.metadataDecoder = metadataDecoder;
         }
 
         #endregion
@@ -57,7 +64,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return (this.methodDef as IMethodBody).ExceptionHandlingClauses;
             }
         }
 
@@ -113,7 +120,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return (this.methodDef as IMethodBody).LocalVariables;
             }
         }
 
@@ -145,7 +152,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return methodDef.ReturnType != null ? new MetadataTypeAdapter(methodDef.ReturnType, this.module, this.assemblyMetadata, this.metadataDecoder) : null;
             }
         }
 
@@ -165,17 +172,17 @@
 
         public byte[] GetILAsByteArray()
         {
-            throw new NotImplementedException();
+            return (this.methodDef as IMethodBody).GetILAsByteArray();
         }
 
         public IMethodBody GetMethodBody()
         {
-            throw new NotImplementedException();
+            return this.methodDef as IMethodBody;
         }
 
         public IEnumerable<IParam> GetParameters()
         {
-            throw new NotImplementedException();
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.module, this.assemblyMetadata, this.metadataDecoder));
         }
 
         #endregion

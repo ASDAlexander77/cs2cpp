@@ -328,7 +328,7 @@
         /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) :  AssemblyMetadata.CreateFromFile(this.Source);
+            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) : AssemblyMetadata.CreateFromFile(this.Source);
         }
 
         /// <summary>
