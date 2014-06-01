@@ -16,16 +16,18 @@
         #region Fields
 
         private TypeSymbol typeDef;
+        private bool isByRef;
 
         #endregion
 
         #region Constructors and Destructors
 
-        internal MetadataTypeAdapter(TypeSymbol typeDef)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
         {
             Debug.Assert(typeDef != null);
 
             this.typeDef = typeDef;
+            this.isByRef = isByRef;
         }
 
         #endregion
@@ -36,7 +38,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.ContainingAssembly.Identity.ToAssemblyName().FullName;
             }
         }
 
@@ -73,14 +75,6 @@
             }
         }
 
-        public Guid GUID
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public int GenericParameterPosition
         {
             get
@@ -101,8 +95,7 @@
         {
             get
             {
-                // TODO: finish it
-                return false;
+                return this.IsByRef || this.IsArray || this.IsPointer;
             }
         }
 
@@ -118,7 +111,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.isByRef;
             }
         }
 
@@ -142,7 +135,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.typeDef.IsTypeParameter();
             }
         }
 
@@ -150,8 +143,7 @@
         {
             get
             {
-                // TODO: finish it
-                return false;
+                return this.typeDef.ContainsTypeParameter();
             }
         }
 
@@ -159,7 +151,13 @@
         {
             get
             {
-                throw new NotImplementedException();
+                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
+                {
+                    return namedTypeSymbol.TypeParameters.Any() && !namedTypeSymbol.TypeArguments.Any();
+                }
+
+                return false;
             }
         }
 
@@ -217,27 +215,67 @@
 
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
+            var type = obj as IType;
+            if (type == null)
+            {
+                return 1;
+            }
+
+            var val = type.Name.CompareTo(this.Name);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            val = type.Namespace.CompareTo(this.Namespace);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            return 0;
         }
 
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
-            throw new NotImplementedException();
+            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && ((PEMethodSymbol)m).MethodKind != MethodKind.Conversion).Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
         }
 
         public IType GetElementType()
         {
-            throw new NotImplementedException();
+            if (this.IsArray)
+            {
+                return new MetadataTypeAdapter((this.typeDef as ArrayTypeSymbol).ElementType);
+            }
+
+            if (this.IsByRef)
+            {
+                return new MetadataTypeAdapter(this.typeDef);
+            }
+
+            if (this.IsPointer)
+            {
+                return new MetadataTypeAdapter((this.typeDef as PointerTypeSymbol).PointedAtType);
+            }
+
+            Debug.Fail("");
+            return null;
         }
 
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            return this.typeDef.GetMembers().Where(m => m is PEFieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
         }
 
         public IEnumerable<IType> GetGenericArguments()
         {
-            throw new NotImplementedException();
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return null;
         }
 
         public IEnumerable<IType> GetInterfaces()
@@ -247,7 +285,7 @@
 
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is MethodSymbol).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
+            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
         }
 
         public bool IsAssignableFrom(IType type)

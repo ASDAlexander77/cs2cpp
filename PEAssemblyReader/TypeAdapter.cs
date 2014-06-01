@@ -104,18 +104,6 @@ namespace PEAssemblyReader
         /// </summary>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public Guid GUID
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
         public int GenericParameterPosition
         {
             get
@@ -144,7 +132,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.HasElementType;
             }
         }
 
@@ -156,7 +144,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsArray;
             }
         }
 
@@ -168,7 +156,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsByRef;
             }
         }
 
@@ -180,7 +168,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsClass;
             }
         }
 
@@ -192,7 +180,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsEnum;
             }
         }
 
@@ -204,7 +192,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsGenericParameter;
             }
         }
 
@@ -216,7 +204,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsGenericType;
             }
         }
 
@@ -228,7 +216,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsGenericTypeDefinition;
             }
         }
 
@@ -240,7 +228,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsInterface;
             }
         }
 
@@ -252,7 +240,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsPointer;
             }
         }
 
@@ -264,7 +252,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsPrimitive;
             }
         }
 
@@ -276,7 +264,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.IsValueType;
             }
         }
 
@@ -288,7 +276,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.Name;
             }
         }
 
@@ -300,7 +288,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.Namespace;
             }
         }
 

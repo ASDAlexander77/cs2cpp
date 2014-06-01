@@ -36,8 +36,6 @@
 
         IEnumerable<IType> GenericTypeArguments { get; }
 
-        Guid GUID { get; }
-
         IType BaseType { get; }
 
         IEnumerable<IField> GetFields(BindingFlags bindingFlags);

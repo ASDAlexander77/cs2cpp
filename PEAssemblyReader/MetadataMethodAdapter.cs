@@ -43,7 +43,17 @@
         {
             get
             {
-                throw new NotImplementedException();
+                CallingConventions callConv = 0;
+                if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.Standard))
+                    callConv |= CallingConventions.Standard;
+                if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.ExtraArguments))
+                    callConv |= CallingConventions.VarArgs;
+                if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.HasThis))
+                    callConv |= CallingConventions.HasThis;
+                if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.ExplicitThis))
+                    callConv |= CallingConventions.ExplicitThis;
+
+                return callConv;
             }
         }
 
@@ -51,7 +61,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataTypeAdapter(methodDef.ContainingType);
             }
         }
 
@@ -59,7 +69,21 @@
         {
             get
             {
-                throw new NotImplementedException();
+                var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+                var peModule = peModuleSymbol.Module;
+                var peMethodSymbol = this.methodDef as PEMethodSymbol;
+                if (peMethodSymbol != null)
+                {
+                    var methodBodyBlock = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                    if (methodBodyBlock != null)
+                    {
+                        return methodBodyBlock
+                            .ExceptionRegions
+                            .Select(er => new MetadataExceptionHandlingClauseAdapter(er, new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType)));
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -75,23 +99,21 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.IsAbstract;
             }
         }
 
         public bool IsConstructor
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get;
+            set;
         }
 
         public bool IsGenericMethod
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.TypeParameters.Any();
             }
         }
 
@@ -99,7 +121,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.IsStatic;
             }
         }
 
@@ -107,7 +129,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.IsVirtual;
             }
         }
 
@@ -121,17 +143,33 @@
                     var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
                     var peModule = peModuleSymbol.Module;
                     var peMethodSymbol = this.methodDef as PEMethodSymbol;
-                    Debug.Assert(peModule.HasIL);
-                    var methodBody = peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
-
-                    if (methodBody != null && !methodBody.LocalSignature.IsNil)
+                    if (peMethodSymbol != null)
                     {
-                        var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
-                        localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
+                        var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                        if (methodBody != null && !methodBody.LocalSignature.IsNil)
+                        {
+                            var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                            localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
+                        }
+                        else
+                        {
+                            localInfo = ImmutableArray<MetadataDecoder.LocalInfo>.Empty;
+                        }
                     }
                     else
                     {
-                        localInfo = ImmutableArray<MetadataDecoder.LocalInfo>.Empty;
+                        var synthesizedInstanceConstructor = this.methodDef as SynthesizedInstanceConstructor;
+                        if (synthesizedInstanceConstructor != null)
+                        {
+
+                        }
+                        else
+                        {
+                            var synthesizedStaticConstructor = this.methodDef as SynthesizedStaticConstructor;
+                            if (synthesizedStaticConstructor != null)
+                            {
+                            }
+                        }
                     }
                 }
                 catch (UnsupportedSignatureContent)
@@ -204,6 +242,18 @@
         public IEnumerable<IParameter> GetParameters()
         {
             return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p));
+        }
+
+        private MethodBodyBlock GetMethodBodyBlock(PEModuleSymbol peModuleSymbol, PEMethodSymbol peMethodSymbol)
+        {
+            var peModule = peModuleSymbol.Module;
+            if (peMethodSymbol != null)
+            {
+                Debug.Assert(peModule.HasIL);
+                return peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
+            };
+
+            return null;
         }
 
         #endregion

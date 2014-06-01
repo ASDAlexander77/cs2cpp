@@ -2150,7 +2150,7 @@
 
                 case Code.Conv_R_Un:
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(double)))
+                    if (resultOf.IType.TypeNotEquals(typeof(double)))
                     {
                         this.UnaryOper(writer, opCode, "sitofp");
                         writer.Write(" to double");
@@ -2166,7 +2166,7 @@
                 case Code.Conv_R4:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(float)) && resultOf.IType.NotEquals(typeof(Single)))
+                    if (resultOf.IType.TypeNotEquals(typeof(float)) && resultOf.IType.TypeNotEquals(typeof(Single)))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
                         writer.Write(" to float");
@@ -2181,7 +2181,7 @@
                 case Code.Conv_R8:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(double)))
+                    if (resultOf.IType.TypeNotEquals(typeof(double)))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fpext" : "sitofp");
                         writer.Write(" to double");
@@ -2199,7 +2199,7 @@
                 case Code.Conv_Ovf_I1_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(byte)) && resultOf.IType.NotEquals(typeof(SByte)))
+                    if (resultOf.IType.TypeNotEquals(typeof(byte)) && resultOf.IType.TypeNotEquals(typeof(SByte)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i8");
@@ -2217,7 +2217,7 @@
                 case Code.Conv_Ovf_I2_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(short)))
+                    if (resultOf.IType.TypeNotEquals(typeof(short)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i16");
@@ -2235,7 +2235,7 @@
                 case Code.Conv_Ovf_I4_Un:
 
                     resultOf = ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.NotEquals(typeof(int)))
+                    if (resultOf.IType.TypeNotEquals(typeof(int)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
                         writer.Write(" to i32");

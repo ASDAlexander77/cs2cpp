@@ -28,7 +28,7 @@ namespace PEAssemblyReader
 
         public IType LocalType
         {
-            get { return new MetadataTypeAdapter(this.localInfo.Type); }
+            get { return new MetadataTypeAdapter(this.localInfo.Type, this.localInfo.IsByRef); }
         }
     }
 }

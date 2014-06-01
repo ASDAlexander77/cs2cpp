@@ -404,15 +404,7 @@
                 foreach (var type in typesWithRequired)
                 {
                     var requiredITypes = type.Item2;
-                    if (strictMode)
-                    {
-                        requiredITypes.RemoveAll(r => newOrder.Any(n => n == r));
-                    }
-                    else
-                    {
-                        requiredITypes.RemoveAll(r => newOrder.Any(n => n.GUID == r.GUID));
-                    }
-
+                    requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
                     if (requiredITypes.Count == 0)
                     {
                         toRemove.Add(type);
@@ -498,7 +490,7 @@
             {
                 if (type.BaseType != null)
                 {
-                    if (type.BaseType.GUID == baseIType.GUID || DependsOn(type.BaseType, baseIType))
+                    if (type.BaseType.TypeEquals(baseIType) || DependsOn(type.BaseType, baseIType))
                     {
                         return true;
                     }
@@ -528,7 +520,7 @@
                 {
                     foreach (var field in fields)
                     {
-                        if (field.FieldType.GUID == valueIType.GUID)
+                        if (field.FieldType.TypeEquals(valueIType))
                         {
                             return true;
                         }
@@ -553,7 +545,7 @@
                 {
                     foreach (var @interface in interfaces)
                     {
-                        if (@interface.GUID == baseInterface.GUID || HasInterface(@interface, baseInterface))
+                        if (@interface.TypeEquals(baseInterface) || HasInterface(@interface, baseInterface))
                         {
                             return true;
                         }

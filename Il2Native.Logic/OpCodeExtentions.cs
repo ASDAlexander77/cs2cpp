@@ -182,12 +182,22 @@
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
-        public static bool Equals(this IType type, Type other)
+        public static bool TypeEquals(this IType type, IType other)
+        {
+            return type != null && other.CompareTo(type) == 0;
+        }
+
+        public static bool TypeNotEquals(this IType type, IType other)
+        {
+            return !type.Equals(other);
+        }
+
+        public static bool TypeEquals(this IType type, Type other)
         {
             return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
         }
 
-        public static bool NotEquals(this IType type, Type other)
+        public static bool TypeNotEquals(this IType type, Type other)
         {
             return !type.Equals(other);
         }
