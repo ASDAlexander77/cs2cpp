@@ -38,7 +38,14 @@
         {
             get
             {
-                return this.typeDef.ContainingAssembly.Identity.ToAssemblyName().FullName;
+                var effective = this.typeDef;
+
+                if (this.typeDef.TypeKind == TypeKind.ArrayType)
+                {
+                    effective = this.GetElementTypeSymbol();
+                }
+
+                return effective.ContainingAssembly.Identity.ToAssemblyName().FullName;
             }
         }
 
@@ -236,9 +243,14 @@
             return 0;
         }
 
+        private bool IsAny(MethodKind source, MethodKind methodKind1, MethodKind methodKind2)
+        {
+            return source == methodKind1 || source == methodKind2;
+        }
+
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && ((PEMethodSymbol)m).MethodKind != MethodKind.Conversion).Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
+            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor)).Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
         }
 
         public IType GetElementType()
@@ -259,6 +271,26 @@
             }
 
             Debug.Fail("");
+            return null;
+        }
+
+        private TypeSymbol GetElementTypeSymbol()
+        {
+            if (this.IsArray)
+            {
+                return (this.typeDef as ArrayTypeSymbol).ElementType;
+            }
+
+            if (this.IsByRef)
+            {
+                return this.typeDef;
+            }
+
+            if (this.IsPointer)
+            {
+                return (this.typeDef as PointerTypeSymbol).PointedAtType;
+            }
+
             return null;
         }
 
@@ -290,7 +322,16 @@
 
         public bool IsAssignableFrom(IType type)
         {
-            throw new NotImplementedException();
+            var metadataType = type as MetadataTypeAdapter;
+            if (metadataType != null)
+            {
+                HashSet<DiagnosticInfo> diagInfo = null;
+                return metadataType.typeDef.IsDerivedFrom(this.typeDef);
+            }
+
+            Debug.Assert(metadataType != null);
+
+            return false;
         }
 
         #endregion

@@ -64,6 +64,7 @@
     <Compile Include="MetadataFieldAdapter.cs" />
     <Compile Include="MetadataLocalVariableAdapter.cs" />
     <Compile Include="MetadataMethodAdapter.cs" />
+    <Compile Include="MetadataModuleAdapter.cs" />
     <Compile Include="MetadataParameterAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TypeAdapter.cs" />

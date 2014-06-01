@@ -83,7 +83,7 @@
                     }
                 }
 
-                return null;
+                return new IExceptionHandlingClause[0];
             }
         }
 
@@ -156,21 +156,6 @@
                             localInfo = ImmutableArray<MetadataDecoder.LocalInfo>.Empty;
                         }
                     }
-                    else
-                    {
-                        var synthesizedInstanceConstructor = this.methodDef as SynthesizedInstanceConstructor;
-                        if (synthesizedInstanceConstructor != null)
-                        {
-
-                        }
-                        else
-                        {
-                            var synthesizedStaticConstructor = this.methodDef as SynthesizedStaticConstructor;
-                            if (synthesizedStaticConstructor != null)
-                            {
-                            }
-                        }
-                    }
                 }
                 catch (UnsupportedSignatureContent)
                 {
@@ -179,7 +164,11 @@
                 {
                 }
 
-                return localInfo.Select(l => new MetadataLocalVariableAdapter(l));
+                var index = 0;
+                foreach (var li in localInfo)
+                {
+                    yield return new MetadataLocalVariableAdapter(li, index++);
+                }
             }
         }
 
@@ -187,7 +176,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataModuleAdapter(this.methodDef.ContainingModule);
             }
         }
 
@@ -195,7 +184,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.Name;
             }
         }
 
@@ -203,7 +192,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.ContainingNamespace.Name;
             }
         }
 
@@ -226,17 +215,41 @@
 
         public IEnumerable<IType> GetGenericArguments()
         {
-            throw new NotImplementedException();
+            return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
         }
 
         public byte[] GetILAsByteArray()
         {
-            throw new NotImplementedException();
+            var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+            var peModule = peModuleSymbol.Module;
+            var peMethodSymbol = this.methodDef as PEMethodSymbol;
+            if (peMethodSymbol != null)
+            {
+                var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                if (methodBody != null)
+                {
+                    return methodBody.GetILBytes();
+                }
+            }
+
+            return null;
         }
 
         public IMethodBody GetMethodBody()
         {
-            return this;
+            var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+            var peModule = peModuleSymbol.Module;
+            var peMethodSymbol = this.methodDef as PEMethodSymbol;
+            if (peMethodSymbol != null)
+            {
+                var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                if (methodBody != null && methodBody.GetILBytes() != null)
+                {
+                    return this;
+                }
+            }
+
+            return null;
         }
 
         public IEnumerable<IParameter> GetParameters()

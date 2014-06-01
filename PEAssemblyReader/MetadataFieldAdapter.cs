@@ -37,7 +37,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataTypeAdapter(this.fieldDef.ContainingType);
             }
         }
 
@@ -53,7 +53,8 @@
         {
             get
             {
-                throw new NotImplementedException();
+                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
+                return metadataTypeName.FullName;
             }
         }
 
@@ -61,7 +62,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.fieldDef.IsAbstract;
             }
         }
 
@@ -69,7 +70,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return false;
             }
         }
 
@@ -77,7 +78,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.fieldDef.IsStatic;
             }
         }
 
@@ -85,7 +86,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.fieldDef.IsVirtual;
             }
         }
 
@@ -93,7 +94,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return new MetadataModuleAdapter(this.fieldDef.ContainingModule);
             }
         }
 
@@ -101,7 +102,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.fieldDef.Name;
             }
         }
 
@@ -109,7 +110,7 @@
         {
             get
             {
-                throw new NotImplementedException();
+                return this.fieldDef.ContainingNamespace.Name;
             }
         }
 

@@ -11,9 +11,10 @@ namespace PEAssemblyReader
     {
         private MetadataDecoder.LocalInfo localInfo;
 
-        internal MetadataLocalVariableAdapter(MetadataDecoder.LocalInfo localInfo)
+        internal MetadataLocalVariableAdapter(MetadataDecoder.LocalInfo localInfo, int index)
         {
             this.localInfo = localInfo;
+            this.LocalIndex = index;
         }
 
         public string Name
@@ -21,10 +22,7 @@ namespace PEAssemblyReader
             get { throw new NotImplementedException(); }
         }
 
-        public int LocalIndex
-        {
-            get { throw new NotImplementedException(); }
-        }
+        public int LocalIndex { get; protected set; }
 
         public IType LocalType
         {

@@ -341,7 +341,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IType GetElementType()
         {
-            throw new NotImplementedException();
+            return new TypeAdapter(this.type.GetElementType());
         }
 
         /// <summary>
