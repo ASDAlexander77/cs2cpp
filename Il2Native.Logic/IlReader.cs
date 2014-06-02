@@ -4,6 +4,7 @@
     using System.CodeDom.Compiler;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -338,7 +339,7 @@
         /// </param>
         public void Load(Type type)
         {
-            this.Assembly = AssemblyMetadata.CreateFromFile(type.Module.Assembly.CodeBase);
+            this.Assembly = AssemblyMetadata.CreateFromFile(type.Module.Assembly.Location);
         }
 
         /// <summary>
@@ -591,6 +592,12 @@
             }
         }
 
+        private static AssemblySymbol MapAssemblyIdentityToResolvedSymbol(AssemblyIdentity identity, Dictionary<AssemblyIdentity, AssemblySymbol> map)
+        {
+            AssemblySymbol symbol;
+            return map.TryGetValue(identity, out symbol) ? symbol : new MissingAssemblySymbol(identity);
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -600,8 +607,42 @@
             var assemblySymbol = new PEAssemblySymbol(this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
             // TODO: find mscorlib
-            assemblySymbol.SetCorLibrary(assemblySymbol);
+            // 1) set corelib
+            bool coreLibSet = false;
+            var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+            var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+            foreach (var assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
+            {
+                if (assemblyIdentity.Name == "mscorlib")
+                {
+                    var coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
+                    var coreAssemblySymbol = new PEAssemblySymbol(coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+                    coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
+                    assemblySymbol.SetCorLibrary(coreAssemblySymbol);
+                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
+                    
+                    unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
 
+                    coreLibSet = true;
+
+                    continue;
+                }
+
+                // TODO: finish it, loading Assebly (find it by DLL name etc)
+            }
+
+            if (!coreLibSet)
+            {
+                assemblySymbol.SetCorLibrary(assemblySymbol);
+            }
+
+            // 2) set references
+            var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
+            var moduleReferences = new ModuleReferences<AssemblySymbol>(
+                this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
+            assemblySymbol.Modules[0].SetReferences(moduleReferences);
+
+            // 3) Load Types
             foreach (var module in assemblySymbol.Modules)
             {
                 var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
