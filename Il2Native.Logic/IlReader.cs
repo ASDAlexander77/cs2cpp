@@ -639,11 +639,12 @@
             var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
             var moduleReferences = new ModuleReferences<AssemblySymbol>(
                 this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
-            assemblySymbol.Modules[0].SetReferences(moduleReferences);
 
             // 3) Load Types
             foreach (var module in assemblySymbol.Modules)
             {
+                
+                module.SetReferences(moduleReferences);
                 var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
                 foreach (var typeWithNamespace in typeWithNamespaces)
                 {

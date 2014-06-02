@@ -25,8 +25,27 @@ namespace PEAssemblyReader
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
             var peModule = peModuleSymbol.Module;
 
-            var stringHandle = MetadataTokens.StringHandle((int)(token - 2013265920u));
-            return peModule.MetadataReader.GetString(stringHandle);
+            var stringHandle = MetadataTokens.StringHandle(token);
+            var stringValue = peModule.MetadataReader.GetString(stringHandle);
+            if (stringValue != null)
+            {
+                return stringValue;
+            }
+
+            // try to resolve in other modules
+            foreach (var assemblySymbol in peModuleSymbol.GetReferencedAssemblySymbols())
+            {
+                foreach (var moduleInAssemblySymbol in assemblySymbol.Modules)
+                {
+                    stringValue = (moduleInAssemblySymbol as PEModuleSymbol).Module.MetadataReader.GetString(stringHandle);
+                    if (stringValue != null)
+                    {
+                        return stringValue;
+                    }
+                }
+            }
+
+            throw new NotImplementedException();
         }
 
         public IMember ResolveMember(int token, IType[] typeGenerics, IType[] methodGenerics)
@@ -55,11 +74,28 @@ namespace PEAssemblyReader
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
             var peModule = peModuleSymbol.Module;
 
-            var methodHandle = MetadataTokens.MethodHandle((int)(token - 100663296u));
-            var method = peModule.MetadataReader.GetMethod(methodHandle);
+            var methodHandle = MetadataTokens.MethodHandle(token);
             var methodSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken((Handle)methodHandle) as MethodSymbol;
 
-            return new MetadataMethodAdapter(methodSymbol);
+            if (methodSymbol != null)
+            {
+                return new MetadataMethodAdapter(methodSymbol);
+            }
+
+            // try to resolve in other modules
+            foreach (var assemblySymbol in peModuleSymbol.GetReferencedAssemblySymbols())
+            {
+                foreach (var moduleInAssemblySymbol in assemblySymbol.Modules)
+                {
+                    methodSymbol = new MetadataDecoder(moduleInAssemblySymbol as PEModuleSymbol).GetSymbolForILToken((Handle)methodHandle) as MethodSymbol;
+                    if (methodSymbol != null)
+                    {
+                        return new MetadataMethodAdapter(methodSymbol);
+                    }
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
 
         public IField ResolveField(int token, IType[] typeGenerics, IType[] methodGenerics)
@@ -67,11 +103,28 @@ namespace PEAssemblyReader
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
             var peModule = peModuleSymbol.Module;
 
-            var fieldHandle = MetadataTokens.FieldHandle((int)(token - 67108864u));
-            var typeDef = peModule.MetadataReader.GetField(fieldHandle);
+            var fieldHandle = MetadataTokens.FieldHandle(token);
             var fieldSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken((Handle)fieldHandle) as FieldSymbol;
 
-            return new MetadataFieldAdapter(fieldSymbol);
+            if (fieldSymbol != null)
+            {
+                return new MetadataFieldAdapter(fieldSymbol);
+            }
+
+            // try to resolve in other modules
+            foreach (var assemblySymbol in peModuleSymbol.GetReferencedAssemblySymbols())
+            {
+                foreach (var moduleInAssemblySymbol in assemblySymbol.Modules)
+                {
+                    fieldSymbol = new MetadataDecoder(moduleInAssemblySymbol as PEModuleSymbol).GetSymbolForILToken((Handle)fieldHandle) as FieldSymbol;
+                    if (fieldSymbol != null)
+                    {
+                        return new MetadataFieldAdapter(fieldSymbol);
+                    }
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
 
         public IType ResolveType(int token, IType[] typeGenerics, IType[] methodGenerics)
@@ -79,11 +132,28 @@ namespace PEAssemblyReader
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
             var peModule = peModuleSymbol.Module;
 
-            var typedefHandle = MetadataTokens.TypeHandle((int)(token - 33554432u));
-            var typeDef = peModule.MetadataReader.GetTypeDefinition(typedefHandle);
+            var typedefHandle = MetadataTokens.TypeHandle(token);
             var typeSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken((Handle)typedefHandle) as TypeSymbol;
 
-            return new MetadataTypeAdapter(typeSymbol);
+            if (typeSymbol != null)
+            {
+                return new MetadataTypeAdapter(typeSymbol);
+            }
+
+            // try to resolve in other modules
+            foreach (var assemblySymbol in peModuleSymbol.GetReferencedAssemblySymbols())
+            {
+                foreach (var moduleInAssemblySymbol in assemblySymbol.Modules)
+                {
+                    typeSymbol = new MetadataDecoder(moduleInAssemblySymbol as PEModuleSymbol).GetSymbolForILToken((Handle)typedefHandle) as TypeSymbol;
+                    if (typeSymbol != null)
+                    {
+                        return new MetadataTypeAdapter(typeSymbol);
+                    }
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
     }
 }

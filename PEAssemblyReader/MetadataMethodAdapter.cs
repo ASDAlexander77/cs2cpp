@@ -24,6 +24,7 @@
 
         internal MetadataMethodAdapter(MethodSymbol methodDef)
         {
+            Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
         }
 
