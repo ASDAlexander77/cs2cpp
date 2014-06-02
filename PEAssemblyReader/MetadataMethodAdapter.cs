@@ -206,11 +206,34 @@
 
         #endregion
 
+        public override string ToString()
+        {
+            return this.methodDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
         #region Public Methods and Operators
 
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
+            var name = obj as IName;
+            if (name == null)
+            {
+                return 1;
+            }
+
+            var val = name.Name.CompareTo(this.Name);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            val = name.Namespace.CompareTo(this.Namespace);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            return 0;
         }
 
         public IEnumerable<IType> GetGenericArguments()

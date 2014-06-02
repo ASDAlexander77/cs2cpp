@@ -618,13 +618,12 @@
                     var coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
                     var coreAssemblySymbol = new PEAssemblySymbol(coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
                     coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
+
                     assemblySymbol.SetCorLibrary(coreAssemblySymbol);
-                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
                     
+                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
                     unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
-
                     coreLibSet = true;
-
                     continue;
                 }
 

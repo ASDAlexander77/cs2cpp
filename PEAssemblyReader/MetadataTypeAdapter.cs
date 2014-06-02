@@ -328,12 +328,17 @@
 
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
+            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && !IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor)).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
         }
 
         public bool IsAssignableFrom(IType type)
         {
             return type.IsDerivedFrom(this);
+        }
+
+        public override string ToString()
+        {
+            return this.typeDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
 
         #endregion

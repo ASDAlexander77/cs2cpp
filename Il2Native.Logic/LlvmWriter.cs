@@ -459,7 +459,7 @@
             // get all virtual methods in current type and replace or append
             foreach (var interfaceMember in IlReader.Methods(@interface))
             {
-                var foundMethod = allPublic.First(pub => pub.ToString() == interfaceMember.ToString());
+                var foundMethod = allPublic.First(pub => pub.NameEquals(interfaceMember));
                 virtualTable.Add(new Pair<string, IMethod>() { Key = foundMethod.ToString(), Value = foundMethod });
             }
         }

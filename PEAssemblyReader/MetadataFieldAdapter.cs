@@ -118,6 +118,11 @@
 
         #endregion
 
+        public override string ToString()
+        {
+            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
         #region Public Methods and Operators
 
         public int CompareTo(object obj)
