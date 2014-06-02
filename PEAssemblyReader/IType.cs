@@ -50,6 +50,8 @@
 
         IType GetElementType();
 
+        IType GetEnumUnderlyingType();
+
         bool IsAssignableFrom(IType type);
     }
 }

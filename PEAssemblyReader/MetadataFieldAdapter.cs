@@ -1,11 +1,13 @@
 ﻿namespace PEAssemblyReader
 {
     using System;
+    using System.Diagnostics;
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
+    [DebuggerDisplay("Name = {Name}, Type = {FieldType.FullName}")]
     public class MetadataFieldAdapter : IField
     {
         #region Fields
@@ -120,7 +122,25 @@
 
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
+            var name = obj as IName;
+            if (name == null)
+            {
+                return 1;
+            }
+
+            var val = name.Name.CompareTo(this.Name);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            val = name.Namespace.CompareTo(this.Namespace);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            return 0;
         }
 
         #endregion

@@ -11,6 +11,8 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
     using System.Reflection;
 
     /// <summary>
@@ -33,6 +35,7 @@ namespace PEAssemblyReader
         /// </param>
         protected TypeAdapter(Type type)
         {
+            Debug.Assert(type != null);
             this.type = type;
         }
 
@@ -60,7 +63,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.BaseType != null ? new TypeAdapter(this.type.BaseType) : null;
             }
         }
 
@@ -317,7 +320,25 @@ namespace PEAssemblyReader
         /// </exception>
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
+            var type = obj as IType;
+            if (type == null)
+            {
+                return 1;
+            }
+
+            var val = type.Name.CompareTo(this.Name);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            val = type.Namespace.CompareTo(this.Namespace);
+            if (val != 0)
+            {
+                return val;
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -331,6 +352,17 @@ namespace PEAssemblyReader
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
             throw new NotImplementedException();
+        }
+
+        public IType GetEnumUnderlyingType()
+        {
+            if (this.type.IsEnum)
+            {
+                var firstEnumField = type.GetFields(BindingFlags.Default).First();
+                return new TypeAdapter(firstEnumField.FieldType);
+            }
+
+            return null;
         }
 
         /// <summary>

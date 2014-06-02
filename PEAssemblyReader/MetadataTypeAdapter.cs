@@ -11,6 +11,7 @@
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
+    [DebuggerDisplay("Type = {FullName}")]
     public class MetadataTypeAdapter : IType
     {
         #region Fields
@@ -253,6 +254,16 @@
             return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor)).Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
         }
 
+        public IType GetEnumUnderlyingType()
+        {
+            if (this.typeDef.IsEnumType())
+            {
+                return new MetadataTypeAdapter(this.typeDef.EnumUnderlyingType());
+            }
+
+            return null;
+        }
+
         public IType GetElementType()
         {
             if (this.IsArray)
@@ -322,16 +333,7 @@
 
         public bool IsAssignableFrom(IType type)
         {
-            var metadataType = type as MetadataTypeAdapter;
-            if (metadataType != null)
-            {
-                HashSet<DiagnosticInfo> diagInfo = null;
-                return metadataType.typeDef.IsDerivedFrom(this.typeDef);
-            }
-
-            Debug.Assert(metadataType != null);
-
-            return false;
+            return type.IsDerivedFrom(this);
         }
 
         #endregion

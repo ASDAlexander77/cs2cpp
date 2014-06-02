@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extentions.cs" />
     <Compile Include="IConstructor.cs" />
     <Compile Include="IExceptionHandlingClause.cs" />
     <Compile Include="IField.cs" />

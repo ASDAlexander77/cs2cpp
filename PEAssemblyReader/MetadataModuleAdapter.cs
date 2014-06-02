@@ -22,7 +22,11 @@ namespace PEAssemblyReader
 
         public string ResolveString(int token)
         {
-            throw new NotImplementedException();
+            var peModuleSymbol = this.moduleDef as PEModuleSymbol;
+            var peModule = peModuleSymbol.Module;
+
+            var stringHandle = MetadataTokens.StringHandle((int)(token - 2013265920u));
+            return peModule.MetadataReader.GetString(stringHandle);
         }
 
         public IMember ResolveMember(int token, IType[] typeGenerics, IType[] methodGenerics)

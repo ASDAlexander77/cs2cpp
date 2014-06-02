@@ -263,33 +263,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Returns true if this type derives from a given type.
-        /// </summary>
-        internal bool IsDerivedFrom(TypeSymbol type)
-        {
-            Debug.Assert((object)type != null);
-            Debug.Assert(!type.IsTypeParameter());
-
-            if ((object)this == (object)type)
-            {
-                return false;
-            }
-
-            var t = this.BaseTypeNoUseSiteDiagnostics;
-            while ((object)t != null)
-            {
-                if (type.Equals(t, ignoreDynamic: true))
-                {
-                    return true;
-                }
-
-                t = t.BaseTypeNoUseSiteDiagnostics;
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Returns true if this type si equal or derives from a given type.
         /// </summary>
         internal bool IsEqualToOrDerivedFrom(TypeSymbol type, bool ignoreDynamic, ref HashSet<DiagnosticInfo> useSiteDiagnostics)

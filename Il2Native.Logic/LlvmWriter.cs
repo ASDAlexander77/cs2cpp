@@ -415,7 +415,7 @@
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
             {
-                CheckIfExternalDeclarationIsRequied(virtualOrAbstractMethod);
+                this.CheckIfExternalDeclarationIsRequired(virtualOrAbstractMethod);
 
                 if (virtualOrAbstractMethod.IsAbstract)
                 {
@@ -485,7 +485,7 @@
         {
             var baseType = this.ThisType.BaseType;
 
-            CheckIfExternalDeclarationIsRequied(baseType);
+            this.CheckIfExternalDeclarationIsRequired(baseType);
 
             this.Output.WriteLine("{");
             this.Output.Indent++;
@@ -508,12 +508,12 @@
             var index = 0;
             foreach (var @interface in this.ThisType.GetInterfaces())
             {
-                if (this.ThisType.BaseType.GetInterfaces().Contains(@interface))
+                if (this.ThisType.BaseType != null && this.ThisType.BaseType.GetInterfaces().Contains(@interface))
                 {
                     continue;
                 }
 
-                CheckIfExternalDeclarationIsRequied(@interface);
+                this.CheckIfExternalDeclarationIsRequired(@interface);
 
                 this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
                 WriteTypeWithoutModifiers(this.Output, @interface);
@@ -1211,7 +1211,7 @@
 
             foreach (var parameter in parameterInfos)
             {
-                CheckIfExternalDeclarationIsRequied(parameter.ParameterType);
+                this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
                 if (hasThis || index > 0 || returnIsStruct)
                 {
@@ -2444,7 +2444,7 @@
             var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
 
-            while (index < list.Count && list[index] != fieldInfo)
+            while (index < list.Count && list[index].NameNotEquals(fieldInfo))
             {
                 index++;
             }
@@ -2498,7 +2498,7 @@
 
             if (type.IsEnum)
             {
-                return GetTypeSize(type.GetFields(BindingFlags.Default).First().FieldType);
+                return GetTypeSize(type.GetEnumUnderlyingType());
             }
 
             var size = 0;
@@ -3132,7 +3132,7 @@
                 return;
             }
 
-            CheckIfExternalDeclarationIsRequied(methodBase);
+            this.CheckIfExternalDeclarationIsRequired(methodBase);
 
             var preProcessedOperandResults = new List<bool>();
 
@@ -3245,7 +3245,7 @@
             {
                 this.WriteTypePrefix(writer, methodInfo.ReturnType, false);
 
-                CheckIfExternalDeclarationIsRequied(methodInfo.ReturnType);
+                this.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
             }
             else
             {
@@ -3278,7 +3278,7 @@
                 methodInfo != null ? methodInfo.ReturnType : null);
         }
 
-        private void CheckIfExternalDeclarationIsRequied(IMethod methodBase)
+        private void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
         {
             var mi = methodBase as IMethod;
             if (mi != null)
@@ -3303,7 +3303,7 @@
             }
         }
 
-        private void CheckIfExternalDeclarationIsRequied(IType type)
+        private void CheckIfExternalDeclarationIsRequired(IType type)
         {
             if (type != null)
             {
@@ -3492,7 +3492,7 @@
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (type != classType)
+            while (type.TypeNotEquals(classType))
             {
                 type = type.BaseType;
                 if (type == null)

@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
 
@@ -182,6 +183,16 @@
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
+        public static bool NameEquals(this IName type, IName other)
+        {
+            return type != null && other.CompareTo(type) == 0;
+        }
+
+        public static bool NameNotEquals(this IName type, IName other)
+        {
+            return !type.NameEquals(other);
+        }
+
         public static bool TypeEquals(this IType type, IType other)
         {
             return type != null && other.CompareTo(type) == 0;
@@ -189,7 +200,7 @@
 
         public static bool TypeNotEquals(this IType type, IType other)
         {
-            return !type.Equals(other);
+            return !type.TypeEquals(other);
         }
 
         public static bool TypeEquals(this IType type, Type other)
@@ -200,6 +211,29 @@
         public static bool TypeNotEquals(this IType type, Type other)
         {
             return !type.Equals(other);
+        }
+
+        public static bool IsDerivedFrom(this IType thisType, IType type)
+        {
+            Debug.Assert((object)type != null);
+
+            if ((object)thisType == (object)type)
+            {
+                return false;
+            }
+
+            var t = thisType.BaseType;
+            while ((object)t != null)
+            {
+                if (type.TypeEquals(t))
+                {
+                    return true;
+                }
+
+                t = t.BaseType;
+            }
+
+            return false;
         }
 
         /// <summary>
