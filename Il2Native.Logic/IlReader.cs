@@ -677,6 +677,7 @@
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = "/optimize+ /unsafe+";
+            parameters.OutputAssembly = outDll;
 
             // parameters.CompilerOptions = "/optimize-";
             var results = icc.CompileAssemblyFromFile(parameters, source);
