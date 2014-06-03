@@ -703,6 +703,21 @@ namespace Il2Native.Logic
                 Code.Ldarga_S);
         }
 
+        private static bool IsOverrideForAnInterface(IMethod interfaceMember, IMethod publicMethod)
+        {
+            if (publicMethod.NameEquals(interfaceMember))
+            {
+                return true;
+            }
+
+            if (interfaceMember.FullName == publicMethod.Name)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="field">
@@ -2106,7 +2121,7 @@ namespace Il2Native.Logic
             // get all virtual methods in current type and replace or append
             virtualTable.AddRange(
                 IlReader.Methods(@interface)
-                        .Select(interfaceMember => allPublic.First(pub => pub.NameEquals(interfaceMember)))
+                        .Select(interfaceMember => allPublic.First(pub => IsOverrideForAnInterface(interfaceMember, pub)))
                         .Select(foundMethod => new Pair<string, IMethod> { Key = foundMethod.ToString(), Value = foundMethod }));
         }
 
@@ -3499,6 +3514,9 @@ namespace Il2Native.Logic
             // init all interfaces
             foreach (var @interface in declaringType.GetInterfaces())
             {
+                var opCodeResult = opCode.ResultNumber;
+                var opCodeType = opCode.ResultType;
+
                 writer.WriteLine("; set virtual interface table");
 
                 this.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
@@ -3514,6 +3532,10 @@ namespace Il2Native.Logic
                     this.GetVirtualInterfaceTableName(declaringType, @interface));
                 WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
+
+                // restore
+                opCode.ResultNumber = opCodeResult;
+                opCode.ResultType = opCodeType;
             }
         }
 
@@ -3584,7 +3606,7 @@ namespace Il2Native.Logic
             var found = false;
             foreach (var typeInterface in type.GetInterfaces())
             {
-                if (typeInterface == @interface)
+                if (typeInterface.NameEquals(@interface))
                 {
                     found = true;
                     break;

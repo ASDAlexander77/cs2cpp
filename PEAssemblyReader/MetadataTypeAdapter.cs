@@ -419,7 +419,7 @@ namespace PEAssemblyReader
         /// </returns>
         public bool IsAssignableFrom(IType type)
         {
-            return type.IsDerivedFrom(this);
+            return type.IsDerivedFrom(this) || type.GetInterfaces().Contains(this);
         }
 
         /// <summary>
