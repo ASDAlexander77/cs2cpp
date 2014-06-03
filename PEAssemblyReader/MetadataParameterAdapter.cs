@@ -46,7 +46,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.paramDef.Type, false, this.IsRef, this.IsOut);
+                return new MetadataTypeAdapter(this.paramDef.Type, this.IsRef || this.IsOut);
             }
         }
 

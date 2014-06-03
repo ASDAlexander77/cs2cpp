@@ -30,14 +30,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly bool isParamRef;
-        
-        /// <summary>
-        /// </summary>
-        private readonly bool isParamOut;
-
-        /// <summary>
-        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -46,14 +38,12 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isRef = false, bool isOut = false)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
         {
             Debug.Assert(typeDef != null);
 
             this.typeDef = typeDef;
             this.isByRef = isByRef;
-            this.isParamRef = isRef;
-            this.isParamOut = isOut;
         }
 
         /// <summary>

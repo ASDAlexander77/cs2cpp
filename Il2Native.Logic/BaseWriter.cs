@@ -463,7 +463,7 @@ namespace Il2Native.Logic
                     return new ReturnResult(typeof(double)) { IsIndirect = true };
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
-                    return new ReturnResult(resultType.IsArray ? resultType.GetElementType() : resultType) { IsIndirect = true, IsReference = true };
+                    return new ReturnResult(resultType.GetElementType()) { IsIndirect = true, IsReference = true };
                 case Code.Ldflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
