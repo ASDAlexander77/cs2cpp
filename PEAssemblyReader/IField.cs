@@ -1,12 +1,23 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IField.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
-    using System.Collections.Generic;
-    using System.Reflection;
-
+    /// <summary>
+    /// </summary>
     public interface IField : IMember
     {
+        /// <summary>
+        /// </summary>
         IType FieldType { get; }
 
+        /// <summary>
+        /// </summary>
         bool IsLiteral { get; }
     }
 }

@@ -1,28 +1,42 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataTypeAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
-    using System.Diagnostics;
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
+    /// <summary>
+    /// </summary>
     [DebuggerDisplay("Type = {FullName}")]
     public class MetadataTypeAdapter : IType
     {
-        #region Fields
+        /// <summary>
+        /// </summary>
+        private readonly bool isByRef;
 
-        private TypeSymbol typeDef;
-        private bool isByRef;
+        /// <summary>
+        /// </summary>
+        private readonly TypeSymbol typeDef;
 
-        #endregion
-
-        #region Constructors and Destructors
-
+        /// <summary>
+        /// </summary>
+        /// <param name="typeDef">
+        /// </param>
+        /// <param name="isByRef">
+        /// </param>
         internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
         {
             Debug.Assert(typeDef != null);
@@ -31,15 +45,13 @@
             this.isByRef = isByRef;
         }
 
-        #endregion
-
-        #region Public Properties
-
+        /// <summary>
+        /// </summary>
         public string AssemblyQualifiedName
         {
             get
             {
-                var effective = this.typeDef;
+                TypeSymbol effective = this.typeDef;
 
                 if (this.typeDef.TypeKind == TypeKind.ArrayType)
                 {
@@ -50,6 +62,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IType BaseType
         {
             get
@@ -58,6 +72,10 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public bool ContainsGenericParameters
         {
             get
@@ -66,6 +84,10 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public IType DeclaringType
         {
             get
@@ -74,15 +96,21 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string FullName
         {
             get
             {
-                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
+                MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
                 return metadataTypeName.FullName;
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public int GenericParameterPosition
         {
             get
@@ -91,6 +119,10 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public IEnumerable<IType> GenericTypeArguments
         {
             get
@@ -99,6 +131,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool HasElementType
         {
             get
@@ -107,6 +141,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsArray
         {
             get
@@ -115,6 +151,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsByRef
         {
             get
@@ -123,6 +161,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsClass
         {
             get
@@ -131,6 +171,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsEnum
         {
             get
@@ -139,6 +181,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericParameter
         {
             get
@@ -147,6 +191,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericType
         {
             get
@@ -155,6 +201,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericTypeDefinition
         {
             get
@@ -169,6 +217,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsInterface
         {
             get
@@ -177,6 +227,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsPointer
         {
             get
@@ -185,6 +237,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsPrimitive
         {
             get
@@ -193,6 +247,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsValueType
         {
             get
@@ -201,6 +257,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Name
         {
             get
@@ -209,18 +267,22 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Namespace
         {
             get
             {
-                return this.typeDef.ContainingNamespace.Name;
+                return this.typeDef.ContainingNamespace != null ? this.typeDef.ContainingNamespace.Name : string.Empty;
             }
         }
 
-        #endregion
-
-        #region Public Methods and Operators
-
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public int CompareTo(object obj)
         {
             var type = obj as IType;
@@ -229,7 +291,7 @@
                 return 1;
             }
 
-            var val = type.Name.CompareTo(this.Name);
+            int val = type.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -244,26 +306,35 @@
             return 0;
         }
 
-        private bool IsAny(MethodKind source, MethodKind methodKind1, MethodKind methodKind2)
+        /// <summary>
+        /// </summary>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public bool Equals(IType other)
         {
-            return source == methodKind1 || source == methodKind2;
+            return this.CompareTo(other) == 0;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor)).Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
+            return
+                this.typeDef.GetMembers()
+                    .Where(m => m is PEMethodSymbol && this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
         }
 
-        public IType GetEnumUnderlyingType()
-        {
-            if (this.typeDef.IsEnumType())
-            {
-                return new MetadataTypeAdapter(this.typeDef.EnumUnderlyingType());
-            }
-
-            return null;
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IType GetElementType()
         {
             if (this.IsArray)
@@ -281,10 +352,125 @@
                 return new MetadataTypeAdapter((this.typeDef as PointerTypeSymbol).PointedAtType);
             }
 
-            Debug.Fail("");
+            Debug.Fail(string.Empty);
             return null;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType GetEnumUnderlyingType()
+        {
+            if (this.typeDef.IsEnumType())
+            {
+                return new MetadataTypeAdapter(this.typeDef.EnumUnderlyingType());
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
+        {
+            return this.typeDef.GetMembers().Where(m => m is PEFieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> GetGenericArguments()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> GetInterfaces()
+        {
+            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
+        {
+            return
+                this.typeDef.GetMembers()
+                    .Where(m => m is PEMethodSymbol && !this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public bool IsAssignableFrom(IType type)
+        {
+            return type.IsDerivedFrom(this);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            var type = obj as IType;
+            if (type != null)
+            {
+                return this.Equals(type);
+            }
+
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            int result = this.Name.GetHashCode();
+            result = 29 * result + this.Namespace.GetHashCode();
+            return result;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
+        {
+            return this.typeDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private TypeSymbol GetElementTypeSymbol()
         {
             if (this.IsArray)
@@ -305,42 +491,19 @@
             return null;
         }
 
-        public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
+        /// <summary>
+        /// </summary>
+        /// <param name="source">
+        /// </param>
+        /// <param name="methodKind1">
+        /// </param>
+        /// <param name="methodKind2">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private bool IsAny(MethodKind source, MethodKind methodKind1, MethodKind methodKind2)
         {
-            return this.typeDef.GetMembers().Where(m => m is PEFieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            return source == methodKind1 || source == methodKind2;
         }
-
-        public IEnumerable<IType> GetGenericArguments()
-        {
-            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null)
-            {
-                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
-            }
-
-            return null;
-        }
-
-        public IEnumerable<IType> GetInterfaces()
-        {
-            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i));
-        }
-
-        public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
-        {
-            return this.typeDef.GetMembers().Where(m => m is PEMethodSymbol && !IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor)).Select(f => new MetadataMethodAdapter(f as MethodSymbol));
-        }
-
-        public bool IsAssignableFrom(IType type)
-        {
-            return type.IsDerivedFrom(this);
-        }
-
-        public override string ToString()
-        {
-            return this.typeDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
-
-        #endregion
     }
 }

@@ -1,7 +1,15 @@
-﻿namespace Il2Native.Logic
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="LlvmWriter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic
 {
     using System;
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -21,11 +29,17 @@
     /// </summary>
     public class LlvmWriter : BaseWriter, ICodeWriter
     {
-        #region Static Fields
+        /// <summary>
+        /// </summary>
+        private static readonly IDictionary<string, int> SystemTypeSizes = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
-        private static int methodNumberIncremental = 0;
+        private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
+
+        /// <summary>
+        /// </summary>
+        private static int methodNumberIncremental;
 
         /// <summary>
         /// </summary>
@@ -33,251 +47,149 @@
 
         /// <summary>
         /// </summary>
-        private static IDictionary<string, int> systemTypeSizes = new SortedDictionary<string, int>();
+        private readonly IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
-        private static IDictionary<string, string> systemTypesToCTypes = new SortedDictionary<string, string>();
-
-        private IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
-
-        private IDictionary<string, List<Pair<string, IMethod>>> virtualInterfaceTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
-
-        private HashSet<IType> typeDeclRequired = new HashSet<IType>();
-
-        private HashSet<IMethod> methodDeclRequired = new HashSet<IMethod>();
-
-        private HashSet<IType> processedTypes = new HashSet<IType>();
-
-        private HashSet<IMethod> processedMethods = new HashSet<IMethod>();
-
-        #endregion
-
-        #region Fields
+        private readonly HashSet<IMethod> methodDeclRequired = new HashSet<IMethod>();
 
         /// <summary>
         /// </summary>
-        private IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
+        private readonly HashSet<IMethod> processedMethods = new HashSet<IMethod>();
 
         /// <summary>
         /// </summary>
-        private int resultNumberIncremental = 0;
+        private readonly HashSet<IType> processedTypes = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
-        private IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
+        private readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
-        private IList<IField> staticFieldsInfo = new List<IField>();
+        private readonly IList<IField> staticFieldsInfo = new List<IField>();
 
         /// <summary>
         /// </summary>
-        private int stringIndexIncremental = 0;
+        private readonly IDictionary<int, string> stringStorage = new SortedDictionary<int, string>();
 
         /// <summary>
         /// </summary>
-        private IDictionary<int, string> stringStorage = new SortedDictionary<int, string>();
+        private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
 
-        #endregion
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualInterfaceTableByType =
+            new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
-        #region Constructors and Destructors
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
+
+        /// <summary>
+        /// </summary>
+        private int resultNumberIncremental;
+
+        /// <summary>
+        /// </summary>
+        private int stringIndexIncremental;
 
         /// <summary>
         /// </summary>
         static LlvmWriter()
         {
             // to be removed
-            systemTypesToCTypes["String"] = "i8";
-            systemTypesToCTypes["String&"] = "i8*";
+            SystemTypesToCTypes["String"] = "i8";
+            SystemTypesToCTypes["String&"] = "i8*";
 
-            systemTypesToCTypes["Void"] = "void";
-            systemTypesToCTypes["Byte"] = "i8";
-            systemTypesToCTypes["SByte"] = "i8";
-            systemTypesToCTypes["Char"] = "i16";
-            systemTypesToCTypes["Int16"] = "i16";
-            systemTypesToCTypes["Int32"] = "i32";
-            systemTypesToCTypes["Int64"] = "i64";
-            systemTypesToCTypes["UInt16"] = "i16";
-            systemTypesToCTypes["UInt32"] = "i32";
-            systemTypesToCTypes["UInt64"] = "i64";
-            systemTypesToCTypes["Float"] = "float";
-            systemTypesToCTypes["Single"] = "float";
-            systemTypesToCTypes["Double"] = "double";
-            systemTypesToCTypes["Boolean"] = "i1";
-            systemTypesToCTypes["Byte&"] = "i8*";
-            systemTypesToCTypes["SByte&"] = "i8*";
-            systemTypesToCTypes["Char&"] = "i8*";
-            systemTypesToCTypes["Int16&"] = "i16*";
-            systemTypesToCTypes["Int32&"] = "i32*";
-            systemTypesToCTypes["Int64&"] = "i64*";
-            systemTypesToCTypes["IntPtr"] = "i32*";
-            systemTypesToCTypes["UIntPtr"] = "i32*";
-            systemTypesToCTypes["UInt16&"] = "i16**";
-            systemTypesToCTypes["UInt32&"] = "i32**";
-            systemTypesToCTypes["UInt64&"] = "i64*";
-            systemTypesToCTypes["Float&"] = "float*";
-            systemTypesToCTypes["Single&"] = "float*";
-            systemTypesToCTypes["Double&"] = "double*";
-            systemTypesToCTypes["Boolean&"] = "i1*";
+            SystemTypesToCTypes["Void"] = "void";
+            SystemTypesToCTypes["Byte"] = "i8";
+            SystemTypesToCTypes["SByte"] = "i8";
+            SystemTypesToCTypes["Char"] = "i16";
+            SystemTypesToCTypes["Int16"] = "i16";
+            SystemTypesToCTypes["Int32"] = "i32";
+            SystemTypesToCTypes["Int64"] = "i64";
+            SystemTypesToCTypes["UInt16"] = "i16";
+            SystemTypesToCTypes["UInt32"] = "i32";
+            SystemTypesToCTypes["UInt64"] = "i64";
+            SystemTypesToCTypes["Float"] = "float";
+            SystemTypesToCTypes["Single"] = "float";
+            SystemTypesToCTypes["Double"] = "double";
+            SystemTypesToCTypes["Boolean"] = "i1";
+            SystemTypesToCTypes["Byte&"] = "i8*";
+            SystemTypesToCTypes["SByte&"] = "i8*";
+            SystemTypesToCTypes["Char&"] = "i8*";
+            SystemTypesToCTypes["Int16&"] = "i16*";
+            SystemTypesToCTypes["Int32&"] = "i32*";
+            SystemTypesToCTypes["Int64&"] = "i64*";
+            SystemTypesToCTypes["IntPtr"] = "i32*";
+            SystemTypesToCTypes["UIntPtr"] = "i32*";
+            SystemTypesToCTypes["UInt16&"] = "i16**";
+            SystemTypesToCTypes["UInt32&"] = "i32**";
+            SystemTypesToCTypes["UInt64&"] = "i64*";
+            SystemTypesToCTypes["Float&"] = "float*";
+            SystemTypesToCTypes["Single&"] = "float*";
+            SystemTypesToCTypes["Double&"] = "double*";
+            SystemTypesToCTypes["Boolean&"] = "i1*";
 
-            systemTypeSizes["Void"] = 0;
-            systemTypeSizes["Byte"] = 1;
-            systemTypeSizes["SByte"] = 1;
-            systemTypeSizes["Char"] = 2;
-            systemTypeSizes["Int16"] = 2;
-            systemTypeSizes["Int32"] = pointerSize;
-            systemTypeSizes["Int64"] = 8;
-            systemTypeSizes["UInt16"] = 2;
-            systemTypeSizes["UInt32"] = pointerSize;
-            systemTypeSizes["UInt64"] = 8;
-            systemTypeSizes["Float"] = pointerSize;
-            systemTypeSizes["Single"] = pointerSize;
-            systemTypeSizes["Double"] = 8;
-            systemTypeSizes["Boolean"] = 1;
-            systemTypeSizes["Byte&"] = pointerSize;
-            systemTypeSizes["SByte&"] = pointerSize;
-            systemTypeSizes["Char&"] = pointerSize;
-            systemTypeSizes["Int16&"] = pointerSize;
-            systemTypeSizes["Int32&"] = pointerSize;
-            systemTypeSizes["Int64&"] = pointerSize;
-            systemTypeSizes["IntPtr"] = pointerSize;
-            systemTypeSizes["UIntPtr"] = pointerSize;
-            systemTypeSizes["UInt16&"] = pointerSize;
-            systemTypeSizes["UInt32&"] = pointerSize;
-            systemTypeSizes["UInt64&"] = pointerSize;
-            systemTypeSizes["Float&"] = pointerSize;
-            systemTypeSizes["Single&"] = pointerSize;
-            systemTypeSizes["Double&"] = pointerSize;
-            systemTypeSizes["Boolean&"] = pointerSize;
+            SystemTypeSizes["Void"] = 0;
+            SystemTypeSizes["Byte"] = 1;
+            SystemTypeSizes["SByte"] = 1;
+            SystemTypeSizes["Char"] = 2;
+            SystemTypeSizes["Int16"] = 2;
+            SystemTypeSizes["Int32"] = pointerSize;
+            SystemTypeSizes["Int64"] = 8;
+            SystemTypeSizes["UInt16"] = 2;
+            SystemTypeSizes["UInt32"] = pointerSize;
+            SystemTypeSizes["UInt64"] = 8;
+            SystemTypeSizes["Float"] = pointerSize;
+            SystemTypeSizes["Single"] = pointerSize;
+            SystemTypeSizes["Double"] = 8;
+            SystemTypeSizes["Boolean"] = 1;
+            SystemTypeSizes["Byte&"] = pointerSize;
+            SystemTypeSizes["SByte&"] = pointerSize;
+            SystemTypeSizes["Char&"] = pointerSize;
+            SystemTypeSizes["Int16&"] = pointerSize;
+            SystemTypeSizes["Int32&"] = pointerSize;
+            SystemTypeSizes["Int64&"] = pointerSize;
+            SystemTypeSizes["IntPtr"] = pointerSize;
+            SystemTypeSizes["UIntPtr"] = pointerSize;
+            SystemTypeSizes["UInt16&"] = pointerSize;
+            SystemTypeSizes["UInt32&"] = pointerSize;
+            SystemTypeSizes["UInt64&"] = pointerSize;
+            SystemTypeSizes["Float&"] = pointerSize;
+            SystemTypeSizes["Single&"] = pointerSize;
+            SystemTypeSizes["Double&"] = pointerSize;
+            SystemTypeSizes["Boolean&"] = pointerSize;
         }
 
         /// <summary>
         /// </summary>
         /// <param name="fileName">
         /// </param>
+        /// <param name="args">
+        /// </param>
         public LlvmWriter(string fileName, string[] args)
         {
-            var extension = Path.GetExtension(fileName);
-            var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
+            string extension = Path.GetExtension(fileName);
+            string outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
             this.includeMiniCoreLib = args != null && args.Contains("includeMiniCore");
         }
 
-        #endregion
-
-        #region Enums
-
         /// <summary>
         /// </summary>
-        [Flags]
-        private enum OperandOptions
-        {
-            /// <summary>
-            /// </summary>
-            None = 0,
-
-            /// <summary>
-            /// </summary>
-            GenerateResult = 1,
-
-            /// <summary>
-            /// </summary>
-            ToFloat = 2,
-
-            /// <summary>
-            /// </summary>
-            ToInteger = 4,
-
-            /// <summary>
-            /// </summary>
-            TypeIsInSecondOperand = 8,
-
-            /// <summary>
-            /// </summary>
-            TypeIsInOperator = 16,
-
-            /// <summary>
-            /// </summary>
-            NoTypePrefix = 32,
-
-            /// <summary>
-            /// </summary>
-            AppendPointer = 64,
-
-            /// <summary>
-            /// </summary>
-            IgnoreOperand = 128,
-
-            /// <summary>
-            /// </summary>
-            DetectTypeInSecondOperand = 256,
-        }
-
-        #endregion
-
-        #region Properties
-
         public bool includeMiniCoreLib { get; set; }
 
         /// <summary>
         /// </summary>
         protected LlvmIndentedTextWriter Output { get; private set; }
 
-        #endregion
-
-        #region Public Methods and Operators
-
         /// <summary>
         /// </summary>
         public void Close()
         {
             this.Output.Close();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool IsDirectValue(OpCodePart opCode)
-        {
-            if (opCode is OpCodeBlock)
-            {
-                return false;
-            }
-
-            if (opCode.Any(Code.Dup))
-            {
-                return this.IsDirectValue(opCode.OpCodeOperands[0]);
-            }
-
-            // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
-            return opCode.Any(
-                Code.Ldc_I4_0,
-                Code.Ldc_I4_1,
-                Code.Ldc_I4_2,
-                Code.Ldc_I4_3,
-                Code.Ldc_I4_4,
-                Code.Ldc_I4_5,
-                Code.Ldc_I4_6,
-                Code.Ldc_I4_7,
-                Code.Ldc_I4_8,
-                Code.Ldc_I4_M1,
-                Code.Ldc_I4,
-                Code.Ldc_I4_S,
-                Code.Ldc_I8,
-                Code.Ldc_R4,
-                Code.Ldc_R8,
-                Code.Ldstr,
-                Code.Ldnull,
-                Code.Ldtoken,
-                Code.Ldsflda,
-                Code.Ldloca,
-                Code.Ldloca_S,
-                Code.Ldarga,
-                Code.Ldarga_S);
         }
 
         /// <summary>
@@ -305,16 +217,11 @@
         {
         }
 
-        public class Pair<K, V>
-        {
-            public K Key { get; set; }
-
-            public V Value { get; set; }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="count">
+        /// </param>
+        /// <param name="disablePostDeclarations">
         /// </param>
         public void WriteAfterFields(int count, bool disablePostDeclarations = false)
         {
@@ -325,142 +232,7 @@
 
             if (!disablePostDeclarations)
             {
-                WritePostDeclarations();
-            }
-        }
-
-        private void WritePostDeclarations()
-        {
-            // after writing type you need to generate static members
-            foreach (var field in this.staticFieldsInfo)
-            {
-                this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
-                this.WriteTypePrefix(this.Output, field.FieldType, false);
-                this.Output.WriteLine(" undef");
-            }
-
-            // write VirtualTable
-            if (!this.ThisType.IsInterface && this.ThisType.HasAnyVirtualMethod())
-            {
-                this.Output.WriteLine(string.Empty);
-                this.Output.Write(GetVirtualTableName(this.ThisType));
-                var virtualTable = GetVirtualTable(this.ThisType);
-                WriteTableOfMethods(virtualTable);
-            }
-
-            foreach (var @interface in this.ThisType.GetInterfaces())
-            {
-                this.Output.WriteLine(string.Empty);
-                this.Output.Write(GetVirtualInterfaceTableName(this.ThisType, @interface));
-                var virtualInterfaceTable = GetVirtualInterfaceTable(this.ThisType, @interface);
-                WriteTableOfMethods(virtualInterfaceTable);
-            }
-        }
-
-        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable)
-        {
-            this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
-
-            // define virtual table
-            foreach (var virtualMethod in virtualTable)
-            {
-                var method = virtualMethod.Value;
-                // write method pointer
-                this.Output.Write(", i8* bitcast (");
-                // write pointer to method
-                this.WriteMethodReturnType(this.Output, method);
-                this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
-                this.Output.Write("* ");
-                this.WriteMethodDefinitionName(this.Output, method);
-                this.Output.Write(" to i8*)");
-            }
-
-            this.Output.WriteLine("]");
-        }
-
-        public string GetVirtualTableName(IType type)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table\"");
-        }
-
-        public string GetVirtualInterfaceTableName(IType type, IType @interface)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
-        }
-
-        private List<Pair<string, IMethod>> GetVirtualTable(IType thisType)
-        {
-            List<Pair<string, IMethod>> virtualTable;
-
-            if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
-            {
-                return virtualTable;
-            }
-
-            virtualTable = new List<Pair<string, IMethod>>();
-            BuildVirtualTable(thisType, virtualTable);
-
-            virtualTableByType[thisType.FullName] = virtualTable;
-
-            return virtualTable;
-        }
-
-        private void BuildVirtualTable(IType thisType, List<Pair<string, IMethod>> virtualTable)
-        {
-            if (thisType.BaseType != null)
-            {
-                BuildVirtualTable(thisType.BaseType, virtualTable);
-            }
-
-            // get all virtual methods in current type and replace or append
-            foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
-            {
-                this.CheckIfExternalDeclarationIsRequired(virtualOrAbstractMethod);
-
-                if (virtualOrAbstractMethod.IsAbstract)
-                {
-                    virtualTable.Add(new Pair<string, IMethod>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
-                    continue;
-                }
-
-                // find method in virtual table
-                var baseMethod = virtualTable.FirstOrDefault(m => m.Key == virtualOrAbstractMethod.ToString());
-                if (baseMethod != null)
-                {
-                    baseMethod.Value = virtualOrAbstractMethod;
-                    continue;
-                }
-
-                virtualTable.Add(new Pair<string, IMethod>() { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
-            }
-        }
-
-        private List<Pair<string, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
-        {
-            List<Pair<string, IMethod>> virtualInterfaceTable;
-
-            if (virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
-            {
-                return virtualInterfaceTable;
-            }
-
-            virtualInterfaceTable = new List<Pair<string, IMethod>>();
-            BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
-
-            virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
-
-            return virtualInterfaceTable;
-        }
-
-        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<string, IMethod>> virtualTable)
-        {
-            var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
-
-            // get all virtual methods in current type and replace or append
-            foreach (var interfaceMember in IlReader.Methods(@interface))
-            {
-                var foundMethod = allPublic.First(pub => pub.NameEquals(interfaceMember));
-                virtualTable.Add(new Pair<string, IMethod>() { Key = foundMethod.ToString(), Value = foundMethod });
+                this.WritePostDeclarations();
             }
         }
 
@@ -483,7 +255,7 @@
         /// </param>
         public void WriteBeforeFields(int count)
         {
-            var baseType = this.ThisType.BaseType;
+            IType baseType = this.ThisType.BaseType;
 
             this.CheckIfExternalDeclarationIsRequired(baseType);
 
@@ -505,8 +277,8 @@
                 this.WriteTypeWithoutModifiers(this.Output, baseType);
             }
 
-            var index = 0;
-            foreach (var @interface in this.ThisType.GetInterfaces())
+            int index = 0;
+            foreach (IType @interface in this.ThisType.GetInterfaces())
             {
                 if (this.ThisType.BaseType != null && this.ThisType.BaseType.GetInterfaces().Contains(@interface))
                 {
@@ -516,7 +288,7 @@
                 this.CheckIfExternalDeclarationIsRequired(@interface);
 
                 this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
-                WriteTypeWithoutModifiers(this.Output, @interface);
+                this.WriteTypeWithoutModifiers(this.Output, @interface);
                 index++;
             }
         }
@@ -551,11 +323,11 @@
         /// </param>
         public void WriteConstructorStart(IConstructor ctor)
         {
-            processedMethods.Add(ctor);
+            this.processedMethods.Add(ctor);
 
             this.StartProcess();
 
-            ReadMethodInfo(ctor);
+            this.ReadMethodInfo(ctor);
 
             if (ctor.IsAbstract || ctor.GetMethodBody() == null)
             {
@@ -580,7 +352,7 @@
             this.WriteMethodNumber();
 
             // write local declarations
-            var methodBase = ctor.GetMethodBody();
+            IMethodBody methodBase = ctor.GetMethodBody();
             if (methodBase != null)
             {
                 this.Output.WriteLine(" {");
@@ -608,13 +380,13 @@
 
                 this.Output.Write("%1 = call i32 ");
 
-                var parameters = this.MainMethod.GetParameters();
+                IEnumerable<IParameter> parameters = this.MainMethod.GetParameters();
 
                 this.WriteMethodDefinitionName(this.Output, this.MainMethod);
                 this.Output.Write("(");
 
-                var index = 0;
-                foreach (var parameter in parameters)
+                int index = 0;
+                foreach (IParameter parameter in parameters)
                 {
                     if (index > 0)
                     {
@@ -638,7 +410,7 @@
             this.Output.WriteLine(string.Empty);
             this.Output.WriteLine("define internal void @_GLOBAL_CTORS_EXECUTE_() {");
             this.Output.Indent++;
-            foreach (var staticCtor in this.StaticConstructors)
+            foreach (IConstructor staticCtor in this.StaticConstructors)
             {
                 this.Output.WriteLine("call void {0}()", this.GetFullMethodName(staticCtor));
             }
@@ -649,61 +421,7 @@
 
             if (!this.includeMiniCoreLib)
             {
-                WriteRequiredDeclarations();
-            }
-        }
-
-        private void WriteRequiredDeclarations()
-        {
-            if (typeDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (var opaqueType in typeDeclRequired)
-                {
-                    if (processedTypes.Contains(opaqueType))
-                    {
-                        continue;
-                    }
-
-                    WriteTypeDeclarationStart(opaqueType);
-                    this.Output.WriteLine("opaque");
-                }
-            }
-
-            if (methodDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (var externalMethodDecl in methodDeclRequired)
-                {
-                    if (processedMethods.Contains(externalMethodDecl))
-                    {
-                        continue;
-                    }
-
-                    this.Output.Write("declare ");
-
-                    var method = externalMethodDecl as IMethod;
-                    if (method != null)
-                    {
-                        ReadMethodInfo(method);
-                        this.WriteMethodReturnType(this.Output, method);
-                        this.WriteMethodDefinitionName(this.Output, method);
-                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
-                        this.Output.WriteLine(string.Empty);
-                        continue;
-                    }
-
-                    var ctor = externalMethodDecl as IConstructor;
-                    if (ctor != null)
-                    {
-                        ReadMethodInfo(ctor);
-                        this.Output.Write("void ");
-                        this.WriteMethodDefinitionName(this.Output, ctor);
-                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, TypeAdapter.FromType(typeof(void)));
-                        this.Output.WriteLine(string.Empty);
-                        continue;
-                    }
-                }
+                this.WriteRequiredDeclarations();
             }
         }
 
@@ -797,12 +515,12 @@
         /// </param>
         public void WriteMethodStart(IMethod method)
         {
-            processedMethods.Add(method);
+            this.processedMethods.Add(method);
 
             this.StartProcess();
             this.resultNumberIncremental = 0;
 
-            var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
+            bool isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
 
             // check if main
             if (isMain)
@@ -826,7 +544,7 @@
                 this.Output.Write("define ");
             }
 
-            ReadMethodInfo(method);
+            this.ReadMethodInfo(method);
 
             this.WriteMethodReturnType(this.Output, method);
 
@@ -837,7 +555,7 @@
             this.WriteMethodNumber();
 
             // write local declarations
-            var methodBodyBytes = method.GetMethodBody();
+            IMethodBody methodBodyBytes = method.GetMethodBody();
             if (methodBodyBytes != null)
             {
                 this.Output.WriteLine(" {");
@@ -849,19 +567,6 @@
             }
 
             methodNumberIncremental++;
-        }
-
-        private void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
-        {
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
-            {
-                this.WriteTypePrefix(writer, method.ReturnType, false);
-                writer.Write(" ");
-            }
-            else
-            {
-                this.Output.Write("void ");
-            }
         }
 
         /// <summary>
@@ -881,13 +586,13 @@
             this.Output.WriteLine(string.Empty);
 
             // declarations
-            this.Output.WriteLine(new String(ASCIIEncoding.ASCII.GetChars(Resources.llvm_declarations)));
+            this.Output.WriteLine(new String(Encoding.ASCII.GetChars(Resources.llvm_declarations)));
             this.Output.WriteLine(string.Empty);
 
             if (this.includeMiniCoreLib)
             {
                 // mini core lib
-                this.Output.WriteLine(new String(ASCIIEncoding.ASCII.GetChars(Resources.llvm_mini_mscore_lib)));
+                this.Output.WriteLine(new String(Encoding.ASCII.GetChars(Resources.llvm_mini_mscore_lib)));
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -911,11 +616,11 @@
         /// </param>
         public void WriteTypeStart(IType type, IType genericType)
         {
-            processedTypes.Add(type);
+            this.processedTypes.Add(type);
 
             if (type.BaseType != null)
             {
-                WriteTypeDefinitionIfNotWrittenYet(type.BaseType);
+                this.WriteTypeDefinitionIfNotWrittenYet(type.BaseType);
             }
 
             this.staticFieldsInfo.Clear();
@@ -929,33 +634,77 @@
                 this.Output.Write("> ");
             }
 
-            WriteTypeDeclarationStart(type);
+            this.WriteTypeDeclarationStart(type);
         }
 
-        private void WriteTypeDefinitionIfNotWrittenYet(IType type)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public string GetVirtualInterfaceTableName(IType type, IType @interface)
         {
-            if (processedTypes.Contains(type))
+            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public string GetVirtualTableName(IType type)
+        {
+            return string.Concat("@\"", type.FullName, " Virtual Table\"");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public bool IsDirectValue(OpCodePart opCode)
+        {
+            if (opCode is OpCodeBlock)
             {
-                return;
+                return false;
             }
 
-            processedTypes.Add(type);
+            if (opCode.Any(Code.Dup))
+            {
+                return this.IsDirectValue(opCode.OpCodeOperands[0]);
+            }
 
-            Il2Converter.WriteTypeDefinition(this, type, null, true);
-            this.Output.WriteLine(string.Empty);
+            // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
+            return opCode.Any(
+                Code.Ldc_I4_0, 
+                Code.Ldc_I4_1, 
+                Code.Ldc_I4_2, 
+                Code.Ldc_I4_3, 
+                Code.Ldc_I4_4, 
+                Code.Ldc_I4_5, 
+                Code.Ldc_I4_6, 
+                Code.Ldc_I4_7, 
+                Code.Ldc_I4_8, 
+                Code.Ldc_I4_M1, 
+                Code.Ldc_I4, 
+                Code.Ldc_I4_S, 
+                Code.Ldc_I8, 
+                Code.Ldc_R4, 
+                Code.Ldc_R8, 
+                Code.Ldstr, 
+                Code.Ldnull, 
+                Code.Ldtoken, 
+                Code.Ldsflda, 
+                Code.Ldloca, 
+                Code.Ldloca_S, 
+                Code.Ldarga, 
+                Code.Ldarga_S);
         }
-
-        private void WriteTypeDeclarationStart(IType type)
-        {
-            this.Output.Write("%");
-            this.WriteTypeName(this.Output, type, true);
-
-            this.Output.Write(" = type ");
-        }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         /// </summary>
@@ -998,36 +747,6 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private IType GetTypeOfReference(OpCodePart opCode)
-        {
-            IType type = null;
-            if (opCode.ResultType != null)
-            {
-                type = opCode.ResultType;
-            }
-            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 && opCode.OpCodeOperands[0].ResultType != null)
-            {
-                type = opCode.OpCodeOperands[0].ResultType;
-            }
-            else
-            {
-                type = TypeAdapter.FromType(typeof(byte*));
-            }
-
-            if (type.IsArray || type.IsByRef)
-            {
-                return type.GetElementType();
-            }
-
-            return type;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="requiredType">
         /// </param>
         /// <param name="opCodePart">
@@ -1037,52 +756,6 @@
         private static bool IsClassCastRequired(IType requiredType, OpCodePart opCodePart)
         {
             return opCodePart.ResultNumber.HasValue && requiredType != opCodePart.ResultType && requiredType.IsAssignableFrom(opCodePart.ResultType);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private string TypeToCType(IType type, bool doNotConvert = false)
-        {
-            var effectiveType = type;
-
-            if (type.IsArray)
-            {
-                effectiveType = type.GetElementType();
-            }
-
-            if (!doNotConvert)
-            {
-                if (effectiveType.Namespace == "System")
-                {
-                    string ctype;
-                    if (systemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
-                    {
-                        return ctype;
-                    }
-                }
-
-                if (type.IsEnum)
-                {
-                    switch (GetTypeSize(type))
-                    {
-                        case 1: return "i8";
-                        case 2: return "i16";
-                        case 4: return "i32";
-                        case 8: return "i64";
-                    }
-                }
-
-                if (type.IsValueType && type.IsPrimitive)
-                {
-                    return type.Name.ToLowerInvariant();
-                }
-            }
-
-            return string.Concat('"', type.FullName, '"');
         }
 
         /// <summary>
@@ -1097,11 +770,11 @@
         /// </param>
         private static void WriteTypeModifiers(LlvmIndentedTextWriter writer, IType type, bool asReference, char refChar)
         {
-            var effectiveType = type;
+            IType effectiveType = type;
 
             do
             {
-                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
+                bool isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
                 if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
@@ -1154,23 +827,23 @@
         /// <param name="returnType">
         /// </param>
         private void ActualWrite(
-            LlvmIndentedTextWriter writer,
-            OpCodePart[] used,
-            IEnumerable<IParameter> parameterInfos,
-            bool @isVirtual,
-            bool hasThis,
-            bool isCtor,
-            IList<bool> isDirectValue,
-            int? resultNumberForThis,
-            IType thisType,
-            int? resultNumberForReturn,
+            LlvmIndentedTextWriter writer, 
+            OpCodePart[] used, 
+            IEnumerable<IParameter> parameterInfos, 
+            bool @isVirtual, 
+            bool hasThis, 
+            bool isCtor, 
+            IList<bool> isDirectValue, 
+            int? resultNumberForThis, 
+            IType thisType, 
+            int? resultNumberForReturn, 
             IType returnType)
         {
             writer.Write("(");
 
-            var index = 0;
+            int index = 0;
 
-            var returnIsStruct = returnType != null && returnType.IsStructureType();
+            bool returnIsStruct = returnType != null && returnType.IsStructureType();
 
             // allocate space for structure if return type is structure
             if (returnIsStruct)
@@ -1209,7 +882,7 @@
                 }
             }
 
-            foreach (var parameter in parameterInfos)
+            foreach (IParameter parameter in parameterInfos)
             {
                 this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
@@ -1218,9 +891,9 @@
                     writer.Write(", ");
                 }
 
-                var effectiveIndex = index + (@isVirtual || (hasThis && !isCtor) ? 1 : 0);
+                int effectiveIndex = index + (@isVirtual || (hasThis && !isCtor) ? 1 : 0);
 
-                var parameterInput = used[effectiveIndex];
+                OpCodePart parameterInput = used[effectiveIndex];
 
                 // detect if *(pointer) is required for example structure
                 // var parameterInputReturnResult = ResultOf(parameterInput);
@@ -1256,8 +929,6 @@
         /// </param>
         /// <param name="firstLevel">
         /// </param>
-        /// <returns>
-        /// </returns>
         private void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
             if (firstLevel)
@@ -1274,7 +945,7 @@
             }
             else
             {
-                var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.Skip);
+                bool skip = firstLevel && (this.IsDirectValue(opCode) || opCode.Skip);
                 if (!skip)
                 {
                     this.ActualWriteOpCode(writer, opCode);
@@ -1290,8 +961,6 @@
         /// </param>
         /// <param name="block">
         /// </param>
-        /// <returns>
-        /// </returns>
         private void ActualWriteBlock(LlvmIndentedTextWriter writer, OpCodeBlock block)
         {
             if (block.UseAsConditionalExpression)
@@ -1307,24 +976,24 @@
                     expressionPart = 2;
                 }
 
-                var lastCond = block.OpCodes.Length - expressionPart;
-                for (var i = 0; i < lastCond - 1; i++)
+                int lastCond = block.OpCodes.Length - expressionPart;
+                for (int i = 0; i < lastCond - 1; i++)
                 {
-                    var current = block.OpCodes[i];
+                    OpCodePart current = block.OpCodes[i];
                     this.ActualWrite(writer, current);
                 }
 
-                var opCode1 = block.OpCodes[lastCond - 1];
+                OpCodePart opCode1 = block.OpCodes[lastCond - 1];
                 opCode1.UseAsConditionalExpression = true;
-                var opCode2 = block.OpCodes[block.OpCodes.Length - 1];
-                var opCode3 = (expressionPart == 2)
-                                  ? block.OpCodes[block.OpCodes.Length - expressionPart].OpCodeOperands[0]
-                                  : block.OpCodes[block.OpCodes.Length - expressionPart];
+                OpCodePart opCode2 = block.OpCodes[block.OpCodes.Length - 1];
+                OpCodePart opCode3 = (expressionPart == 2)
+                                         ? block.OpCodes[block.OpCodes.Length - expressionPart].OpCodeOperands[0]
+                                         : block.OpCodes[block.OpCodes.Length - expressionPart];
 
                 // custom operand
-                var directResult1 = this.PreProcess(writer, opCode1, OperandOptions.None);
-                var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
-                var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
+                bool directResult1 = this.PreProcess(writer, opCode1, OperandOptions.None);
+                bool directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
+                bool directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
 
                 this.ProcessOperator(writer, block, "select", TypeAdapter.FromType(typeof(bool)), options: OperandOptions.GenerateResult);
 
@@ -1355,9 +1024,9 @@
         /// </param>
         private void ActualWriteBlockBody(LlvmIndentedTextWriter writer, OpCodeBlock block, int skip = 0, int? reduce = null)
         {
-            var query = reduce.HasValue ? block.OpCodes.Take(block.OpCodes.Length - reduce.Value).Skip(skip) : block.OpCodes.Skip(skip);
+            IEnumerable<OpCodePart> query = reduce.HasValue ? block.OpCodes.Take(block.OpCodes.Length - reduce.Value).Skip(skip) : block.OpCodes.Skip(skip);
 
-            foreach (var subOpCode in query)
+            foreach (OpCodePart subOpCode in query)
             {
                 this.ActualWrite(writer, subOpCode);
             }
@@ -1369,13 +1038,9 @@
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="endings">
-        /// </param>
-        /// <returns>
-        /// </returns>
         private void ActualWriteOpCode(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            var code = opCode.ToCode();
+            Code code = opCode.ToCode();
             switch (code)
             {
                 case Code.Ldc_I4_0:
@@ -1442,8 +1107,8 @@
                     var opCodeString = opCode as OpCodeStringPart;
                     writer.Write(
                         string.Format(
-                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)",
-                            this.GetStringIndex(opCodeString.Operand),
+                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)", 
+                            this.GetStringIndex(opCodeString.Operand), 
                             opCodeString.Operand.Length + 1));
                     break;
                 case Code.Ldnull:
@@ -1463,7 +1128,7 @@
                 case Code.Ldfld:
 
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.DestinationName == null;
+                    bool skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.DestinationName == null;
                     if (!skip)
                     {
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
@@ -1481,7 +1146,7 @@
                 case Code.Ldsfld:
 
                     IType castFrom;
-                    var operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
+                    IType operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     this.WriteLlvmLoad(writer, opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
 
@@ -1496,7 +1161,7 @@
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var directResult1 = this.PreProcessOperand(writer, opCode, 1);
+                    bool directResult1 = this.PreProcessOperand(writer, opCode, 1);
                     this.WriteFieldAccess(writer, opCodeFieldInfoPart);
                     writer.WriteLine(string.Empty);
 
@@ -1597,7 +1262,7 @@
                             type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Ldelem_Ref:
-                            type = GetTypeOfReference(opCode);
+                            type = this.GetTypeOfReference(opCode);
                             break;
                         case Code.Ldelema:
                             actualLoad = false;
@@ -1650,7 +1315,7 @@
                             type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Stelem_Ref:
-                            type = GetTypeOfReference(opCode);
+                            type = this.GetTypeOfReference(opCode);
                             break;
                     }
 
@@ -1702,7 +1367,7 @@
                             type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Ldind_Ref:
-                            type = GetTypeOfReference(opCode);
+                            type = this.GetTypeOfReference(opCode);
                             break;
                     }
 
@@ -1744,7 +1409,7 @@
                             type = TypeAdapter.FromType(typeof(double));
                             break;
                         case Code.Stind_Ref:
-                            type = GetTypeOfReference(opCode);
+                            type = this.GetTypeOfReference(opCode);
                             break;
                     }
 
@@ -1759,20 +1424,20 @@
                 case Code.Call:
                 case Code.Callvirt:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
-                    var methodBase = opCodeMethodInfoPart.Operand;
+                    IMethod methodBase = opCodeMethodInfoPart.Operand;
                     this.WriteCall(
-                        writer,
-                        opCodeMethodInfoPart,
-                        methodBase,
-                        code == Code.Callvirt,
-                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
-                        false,
+                        writer, 
+                        opCodeMethodInfoPart, 
+                        methodBase, 
+                        code == Code.Callvirt, 
+                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis), 
+                        false, 
                         null);
                     break;
                 case Code.Add:
                 case Code.Add_Ovf:
                 case Code.Add_Ovf_Un:
-                    var isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    bool isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fadd" : "add", GetOperandOptions(isFloatingPoint));
                     break;
                 case Code.Mul:
@@ -1814,7 +1479,7 @@
                     this.BinaryOper(writer, opCode, "shr");
                     break;
                 case Code.Not:
-                    var tempOper = opCode.OpCodeOperands;
+                    OpCodePart[] tempOper = opCode.OpCodeOperands;
                     opCode.OpCodeOperands = new[] { tempOper[0], new OpCodePart(OpCodesEmit.Ldc_I4_M1, 0, 0) };
                     this.BinaryOper(writer, opCode, "xor");
                     opCode.OpCodeOperands = tempOper;
@@ -1845,8 +1510,8 @@
 
                     if (this.MethodReturnType.IsStructureType())
                     {
-                        var operands = opCode.OpCodeOperands;
-                        var opCodeOperand = operands[0];
+                        OpCodePart[] operands = opCode.OpCodeOperands;
+                        OpCodePart opCodeOperand = operands[0];
                         opCodeOperand.DestinationName = "%agg.result";
                         opCodeOperand.DestinationType = this.MethodReturnType;
 
@@ -1869,8 +1534,8 @@
                 case Code.Stloc_S:
 
                     code = opCode.ToCode();
-                    var asString = code.ToString();
-                    var index = 0;
+                    string asString = code.ToString();
+                    int index = 0;
                     if (code == Code.Stloc_S || code == Code.Stloc)
                     {
                         index = (opCode as OpCodeInt32Part).Operand;
@@ -1880,7 +1545,7 @@
                         index = int.Parse(asString.Substring(asString.Length - 1));
                     }
 
-                    var localType = this.LocalInfo[index].LocalType;
+                    IType localType = this.LocalInfo[index].LocalType;
 
                     if (localType.IsStructureType())
                     {
@@ -1952,7 +1617,7 @@
                     }
                     else
                     {
-                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
+                        IParameter parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
 
                         skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
                         if (!skip)
@@ -1975,7 +1640,7 @@
                     }
                     else
                     {
-                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
+                        IParameter parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
                         writer.Write(string.Concat("%.", parameter.Name));
                     }
 
@@ -1986,7 +1651,7 @@
 
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
-                    var actualIndex = index - (this.HasMethodThis ? 1 : 0);
+                    int actualIndex = index - (this.HasMethodThis ? 1 : 0);
                     this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType);
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
@@ -2029,7 +1694,7 @@
 
                     // we need to invert all comare command
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    var oper = string.Empty;
+                    string oper = string.Empty;
                     switch (opCode.ToCode())
                     {
                         case Code.Beq:
@@ -2087,8 +1752,8 @@
                 case Code.Brfalse:
                 case Code.Brfalse_S:
 
-                    var forTure = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
-                    var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
+                    string forTure = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
+                    ReturnResult resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     this.UnaryOper(writer, opCode, "icmp " + forTure, options: OperandOptions.GenerateResult);
 
@@ -2149,7 +1814,7 @@
                     break;
 
                 case Code.Conv_R_Un:
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(double)))
                     {
                         this.UnaryOper(writer, opCode, "sitofp");
@@ -2165,7 +1830,7 @@
 
                 case Code.Conv_R4:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(float)) && resultOf.IType.TypeNotEquals(typeof(Single)))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
@@ -2180,7 +1845,7 @@
                     break;
                 case Code.Conv_R8:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(double)))
                     {
                         this.UnaryOper(writer, opCode, isFloatingPoint ? "fpext" : "sitofp");
@@ -2198,7 +1863,7 @@
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
 
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(byte)) && resultOf.IType.TypeNotEquals(typeof(SByte)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
@@ -2216,7 +1881,7 @@
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
 
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(short)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
@@ -2234,7 +1899,7 @@
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
 
-                    resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(int)))
                     {
                         this.UnaryOper(writer, opCode, "trunc");
@@ -2290,10 +1955,10 @@
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteCast(
-                        writer,
-                        opCodeTypePart,
-                        opCodeTypePart.OpCodeOperands[0].ResultType,
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
+                        writer, 
+                        opCodeTypePart, 
+                        opCodeTypePart.OpCodeOperands[0].ResultType, 
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
                         opCodeTypePart.Operand);
 
                     break;
@@ -2304,10 +1969,10 @@
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteCast(
-                        writer,
-                        opCodeTypePart,
-                        opCodeTypePart.OpCodeOperands[0].ResultType,
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
+                        writer, 
+                        opCodeTypePart, 
+                        opCodeTypePart.OpCodeOperands[0].ResultType, 
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
                         opCodeTypePart.Operand);
 
                     break;
@@ -2318,13 +1983,13 @@
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
 
-                    var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
+                    IType declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
                     this.WriteNew(writer, opCode, declaringType);
                     writer.WriteLine(string.Empty);
 
                     methodBase = opCodeConstructorInfoPart.Operand;
-                    var resAlloc = opCode.ResultNumber;
+                    int? resAlloc = opCode.ResultNumber;
                     opCode.ResultNumber = null;
                     this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, code == Code.Callvirt, true, true, resAlloc);
                     opCode.ResultNumber = resAlloc;
@@ -2380,12 +2045,12 @@
 
                     var opCodeLabels = opCode as OpCodeLabelsPart;
 
-                    UnaryOper(writer, opCode, "switch");
+                    this.UnaryOper(writer, opCode, "switch");
 
                     index = 0;
                     writer.Write(", label %.a{0} [ ", opCode.GroupAddressEnd);
 
-                    foreach (var label in opCodeLabels.Operand)
+                    foreach (int label in opCodeLabels.Operand)
                     {
                         writer.Write("i32 {0}, label %.a{1} ", index, opCodeLabels.JumpAddress(index++));
                     }
@@ -2419,14 +2084,69 @@
                 return;
             }
 
-            var directResult1 = this.PreProcessOperand(writer, opCode, 0, options);
-            var directResult2 = this.PreProcessOperand(writer, opCode, 1, options);
+            bool directResult1 = this.PreProcessOperand(writer, opCode, 0, options);
+            bool directResult2 = this.PreProcessOperand(writer, opCode, 1, options);
 
             this.ProcessOperator(writer, opCode, op, options: options);
 
             this.PostProcessOperand(writer, opCode, 0, directResult1);
             writer.Write(',');
             this.PostProcessOperand(writer, opCode, 1, directResult2, options.HasFlag(OperandOptions.DetectTypeInSecondOperand));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <param name="virtualTable">
+        /// </param>
+        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<string, IMethod>> virtualTable)
+        {
+            IEnumerable<IMethod> allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+
+            // get all virtual methods in current type and replace or append
+            virtualTable.AddRange(
+                IlReader.Methods(@interface)
+                        .Select(interfaceMember => allPublic.First(pub => pub.NameEquals(interfaceMember)))
+                        .Select(foundMethod => new Pair<string, IMethod> { Key = foundMethod.ToString(), Value = foundMethod }));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="virtualTable">
+        /// </param>
+        private void BuildVirtualTable(IType thisType, List<Pair<string, IMethod>> virtualTable)
+        {
+            if (thisType.BaseType != null)
+            {
+                this.BuildVirtualTable(thisType.BaseType, virtualTable);
+            }
+
+            // get all virtual methods in current type and replace or append
+            foreach (IMethod virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
+            {
+                this.CheckIfExternalDeclarationIsRequired(virtualOrAbstractMethod);
+
+                if (virtualOrAbstractMethod.IsAbstract)
+                {
+                    virtualTable.Add(new Pair<string, IMethod> { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                    continue;
+                }
+
+                // find method in virtual table
+                Pair<string, IMethod> baseMethod = virtualTable.FirstOrDefault(m => m.Key == virtualOrAbstractMethod.ToString());
+                if (baseMethod != null)
+                {
+                    baseMethod.Value = virtualOrAbstractMethod;
+                    continue;
+                }
+
+                virtualTable.Add(new Pair<string, IMethod> { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+            }
         }
 
         /// <summary>
@@ -2441,8 +2161,8 @@
         /// </exception>
         private int CalculateFieldIndex(IField fieldInfo, IType type)
         {
-            var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
-            var index = 0;
+            List<IField> list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            int index = 0;
 
             while (index < list.Count && list[index].NameNotEquals(fieldInfo))
             {
@@ -2473,7 +2193,7 @@
             }
             else
             {
-                var baseInterfaces = type.BaseType.GetInterfaces();
+                IEnumerable<IType> baseInterfaces = type.BaseType.GetInterfaces();
                 index += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i));
             }
 
@@ -2498,10 +2218,10 @@
 
             if (type.IsEnum)
             {
-                return GetTypeSize(type.GetEnumUnderlyingType());
+                return this.GetTypeSize(type.GetEnumUnderlyingType());
             }
 
-            var size = 0;
+            int size = 0;
 
             // add shift for virtual table
             if (type.IsRootOfVirtualTable())
@@ -2521,24 +2241,24 @@
             }
             else
             {
-                var baseInterfaces = type.BaseType.GetInterfaces();
+                IEnumerable<IType> baseInterfaces = type.BaseType.GetInterfaces();
                 size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * pointerSize;
             }
 
-            foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
+            foreach (IField field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
                 if (field.FieldType.IsStructureType())
                 {
                     size += this.GetTypeSize(field.FieldType);
                 }
 
-                var fieldSize = 0;
+                int fieldSize = 0;
                 if (field.FieldType.IsClass)
                 {
                     // pointer size
                     size += pointerSize;
                 }
-                else if (field.FieldType.Namespace == "System" && systemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
+                else if (field.FieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
                 {
                     size += fieldSize;
                 }
@@ -2551,6 +2271,50 @@
             this.sizeByType[type.FullName] = size;
 
             return size;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="methodBase">
+        /// </param>
+        private void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
+        {
+            IMethod mi = methodBase;
+            if (mi != null)
+            {
+                if (mi.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.methodDeclRequired.Add(methodBase);
+                }
+
+                return;
+            }
+
+            var ci = methodBase as IConstructor;
+            if (ci != null)
+            {
+                if (ci.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.methodDeclRequired.Add(methodBase);
+                }
+
+                return;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void CheckIfExternalDeclarationIsRequired(IType type)
+        {
+            if (type != null)
+            {
+                if (type.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+                {
+                    this.typeDeclRequired.Add(type);
+                }
+            }
         }
 
         /// <summary>
@@ -2569,14 +2333,14 @@
         {
             castFrom = null;
 
-            var res1 = options.HasFlag(OperandOptions.TypeIsInOperator)
-                           ? this.ResultOf(opCode)
-                           : opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? this.ResultOf(opCode.OpCodeOperands[0]) : null;
+            ReturnResult res1 = options.HasFlag(OperandOptions.TypeIsInOperator)
+                                    ? this.ResultOf(opCode)
+                                    : opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? this.ResultOf(opCode.OpCodeOperands[0]) : null;
 
-            var res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 1 ? this.ResultOf(opCode.OpCodeOperands[1]) : null;
+            ReturnResult res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 1 ? this.ResultOf(opCode.OpCodeOperands[1]) : null;
 
             // write type
-            var effectiveType = TypeAdapter.FromType(typeof(void));
+            IType effectiveType = TypeAdapter.FromType(typeof(void));
 
             if (requiredType != null)
             {
@@ -2623,7 +2387,7 @@
         {
             var sb = new StringBuilder();
             sb.Append("@\"");
-            var method = methodBase.ToString();
+            string method = methodBase.ToString();
             sb.Append(method.Insert(method.IndexOf(' ') + 1, string.Concat(methodBase.DeclaringType.FullName, '.')));
             sb.Append('"');
 
@@ -2660,9 +2424,39 @@
         /// </returns>
         private int GetStringIndex(string str)
         {
-            var idx = ++this.stringIndexIncremental;
+            int idx = ++this.stringIndexIncremental;
             this.stringStorage[idx] = str;
             return idx;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private IType GetTypeOfReference(OpCodePart opCode)
+        {
+            IType type = null;
+            if (opCode.ResultType != null)
+            {
+                type = opCode.ResultType;
+            }
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 && opCode.OpCodeOperands[0].ResultType != null)
+            {
+                type = opCode.OpCodeOperands[0].ResultType;
+            }
+            else
+            {
+                type = TypeAdapter.FromType(typeof(byte*));
+            }
+
+            if (type.IsArray || type.IsByRef)
+            {
+                return type.GetElementType();
+            }
+
+            return type;
         }
 
         /// <summary>
@@ -2685,6 +2479,82 @@
 
         /// <summary>
         /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private List<Pair<string, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
+        {
+            List<Pair<string, IMethod>> virtualInterfaceTable;
+
+            if (this.virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
+            {
+                return virtualInterfaceTable;
+            }
+
+            virtualInterfaceTable = new List<Pair<string, IMethod>>();
+            this.BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
+
+            this.virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
+
+            return virtualInterfaceTable;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
+        private int GetVirtualMethodIndex(IType thisType, IMethod methodInfo)
+        {
+            List<Pair<string, IMethod>> virtualTable = this.GetVirtualTable(thisType);
+
+            int index = 0;
+            foreach (IMethod virtualMethod in virtualTable.Select(v => v.Value))
+            {
+                if (virtualMethod.ToString() == methodInfo.ToString())
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            throw new KeyNotFoundException("virtual method could not be found");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private List<Pair<string, IMethod>> GetVirtualTable(IType thisType)
+        {
+            List<Pair<string, IMethod>> virtualTable;
+
+            if (this.virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
+            {
+                return virtualTable;
+            }
+
+            virtualTable = new List<Pair<string, IMethod>>();
+            this.BuildVirtualTable(thisType, virtualTable);
+
+            this.virtualTableByType[thisType.FullName] = virtualTable;
+
+            return virtualTable;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <returns>
@@ -2703,7 +2573,7 @@
         /// </returns>
         private bool IsFloatingPointOpOperand(OpCodePart opCode)
         {
-            var op1ReturnResult = this.ResultOf(opCode);
+            ReturnResult op1ReturnResult = this.ResultOf(opCode);
 
             // TODO: result of unbox is null, fix it
             if (op1ReturnResult == null || op1ReturnResult.IType == null)
@@ -2711,7 +2581,7 @@
                 return false;
             }
 
-            var op1IsReal = op1ReturnResult.IType.IsReal();
+            bool op1IsReal = op1ReturnResult.IType.IsReal();
             return op1IsReal;
         }
 
@@ -2734,7 +2604,7 @@
                 if (detectAndWriteTypePrefix)
                 {
                     IType castFrom;
-                    var effectiveType = this.DetectTypePrefix(operand, null, OperandOptions.TypeIsInOperator, out castFrom);
+                    IType effectiveType = this.DetectTypePrefix(operand, null, OperandOptions.TypeIsInOperator, out castFrom);
                     this.WriteTypePrefix(writer, effectiveType ?? TypeAdapter.FromType(typeof(void)));
                     writer.Write(' ');
                 }
@@ -2772,7 +2642,7 @@
                 return;
             }
 
-            var operand = opCode.OpCodeOperands[index];
+            OpCodePart operand = opCode.OpCodeOperands[index];
             this.PostProcess(writer, operand, directResult, detectAndWriteTypePrefix);
         }
 
@@ -2821,7 +2691,7 @@
                 return false;
             }
 
-            var operandOpCode = opCode.OpCodeOperands[index];
+            OpCodePart operandOpCode = opCode.OpCodeOperands[index];
             return this.PreProcess(writer, operandOpCode, options: options);
         }
 
@@ -2842,15 +2712,15 @@
         {
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
             {
-                var resultOf = this.ResultOf(opCode);
+                ReturnResult resultOf = this.ResultOf(opCode);
                 this.WriteSetResultNumber(opCode, resultOf != null ? resultOf.IType : null);
             }
 
             IType castFrom;
-            var effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
+            IType effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
             if (castFrom != null && opCode.OpCodeOperands[0].ResultNumber.HasValue)
             {
-                WriteCast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
+                this.WriteCast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
             }
 
             writer.Write(op);
@@ -2868,6 +2738,58 @@
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="doNotConvert">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private string TypeToCType(IType type, bool doNotConvert = false)
+        {
+            IType effectiveType = type;
+
+            if (type.IsArray)
+            {
+                effectiveType = type.GetElementType();
+            }
+
+            if (!doNotConvert)
+            {
+                if (effectiveType.Namespace == "System")
+                {
+                    string ctype;
+                    if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
+                    {
+                        return ctype;
+                    }
+                }
+
+                if (type.IsEnum)
+                {
+                    switch (this.GetTypeSize(type))
+                    {
+                        case 1:
+                            return "i8";
+                        case 2:
+                            return "i16";
+                        case 4:
+                            return "i32";
+                        case 8:
+                            return "i64";
+                    }
+                }
+
+                if (type.IsValueType && type.IsPrimitive)
+                {
+                    return type.Name.ToLowerInvariant();
+                }
+            }
+
+            return string.Concat('"', type.FullName, '"');
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
@@ -2878,7 +2800,8 @@
         /// </param>
         /// <param name="options">
         /// </param>
-        private void UnaryOper(LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType localType = null, OperandOptions options = OperandOptions.None)
+        private void UnaryOper(
+            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType localType = null, OperandOptions options = OperandOptions.None)
         {
             this.UnaryOper(writer, opCode, 0, op, localType, options);
         }
@@ -2898,9 +2821,14 @@
         /// <param name="options">
         /// </param>
         private void UnaryOper(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex, string op, IType requiredType = null, OperandOptions options = OperandOptions.None)
+            LlvmIndentedTextWriter writer, 
+            OpCodePart opCode, 
+            int operandIndex, 
+            string op, 
+            IType requiredType = null, 
+            OperandOptions options = OperandOptions.None)
         {
-            var directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
+            bool directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
 
             this.ProcessOperator(writer, opCode, op, requiredType, options);
 
@@ -2970,7 +2898,7 @@
                 this.WriteArgumentCopyDeclaration("this", this.ThisType, true);
             }
 
-            foreach (var parameterInfo in parametersInfo)
+            foreach (IParameter parameterInfo in parametersInfo)
             {
                 this.WriteArgumentCopyDeclaration(parameterInfo.Name, parameterInfo.ParameterType);
             }
@@ -2987,8 +2915,8 @@
             this.WriteBitcast(writer, opCode, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
-            var res = opCode.ResultNumber;
-            var resLen = WriteSetResultNumber(writer, opCode);
+            int? res = opCode.ResultNumber;
+            int resLen = WriteSetResultNumber(writer, opCode);
             writer.Write("getelementptr ");
             this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
             writer.Write("* ");
@@ -3042,46 +2970,6 @@
         /// </param>
         /// <param name="fromType">
         /// </param>
-        /// <param name="res">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <param name="noNewLine">
-        /// </param>
-        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
-        {
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                WriteInterfaceAccess(writer, opCode, fromType, toType);
-            }
-            else
-            {
-                WriteSetResultNumber(writer, opCode);
-                writer.Write("bitcast ");
-                this.WriteTypePrefix(writer, fromType, true);
-                writer.Write(' ');
-                WriteResultNumber(res);
-                writer.Write(" to ");
-                this.WriteTypePrefix(writer, toType, true);
-                if (appendReference)
-                {
-                    // result should be array
-                    writer.Write('*');
-                }
-            }
-
-            opCode.ResultType = toType;
-            writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
         /// <param name="name">
         /// </param>
         private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string name)
@@ -3095,6 +2983,18 @@
             opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="fromType">
+        /// </param>
+        /// <param name="res">
+        /// </param>
+        /// <param name="custom">
+        /// </param>
         private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, string custom)
         {
             WriteSetResultNumber(writer, opCode);
@@ -3138,19 +3038,19 @@
 
             if (opCodeMethodInfo.OpCodeOperands != null)
             {
-                var index = 0;
-                foreach (var operand in opCodeMethodInfo.OpCodeOperands)
+                int index = 0;
+                foreach (OpCodePart operand in opCodeMethodInfo.OpCodeOperands)
                 {
                     preProcessedOperandResults.Add(this.PreProcessOperand(writer, opCodeMethodInfo, index));
                     index++;
                 }
             }
 
-            var methodInfo = methodBase as IMethod;
-            var thisType = methodBase.DeclaringType;
+            IMethod methodInfo = methodBase;
+            IType thisType = methodBase.DeclaringType;
 
-            var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
-            var startsWithThis = hasThisArgument && opCodeMethodInfo.OpCodeOperands[0].Any(Code.Ldarg_0);
+            bool hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
+            bool startsWithThis = hasThisArgument && opCodeMethodInfo.OpCodeOperands[0].Any(Code.Ldarg_0);
 
             int? virtualMethodAddressResult = null;
             if (isVirtual && methodBase.IsVirtual)
@@ -3158,13 +3058,13 @@
                 // get pointer to Virtual Table and call method
                 // 1) get pointer to virtual table
                 writer.WriteLine("; Get Virtual Table");
-                UnaryOper(writer, opCodeMethodInfo, "bitcast");
+                this.UnaryOper(writer, opCodeMethodInfo, "bitcast");
                 writer.Write(" to ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.WriteLine("**");
 
                 // load pointer
-                var bitcastRes = opCodeMethodInfo.ResultNumber;
+                int? bitcastRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("load ");
                 this.WriteMethodPointerType(writer, methodInfo);
@@ -3173,16 +3073,16 @@
                 writer.WriteLine(string.Empty);
 
                 // get address of a function
-                var loadVTableRes = opCodeMethodInfo.ResultNumber;
+                int? loadVTableRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("getelementptr inbounds ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
                 WriteResultNumber(loadVTableRes ?? -1);
-                writer.WriteLine(", i64 {0}", GetVirtualMethodIndex(thisType, methodInfo));
+                writer.WriteLine(", i64 {0}", this.GetVirtualMethodIndex(thisType, methodInfo));
 
                 // load method address
-                var vtableRes = opCodeMethodInfo.ResultNumber;
+                int? vtableRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("load ");
                 this.WriteMethodPointerType(writer, methodInfo);
@@ -3197,7 +3097,7 @@
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                var used = opCodeMethodInfo.OpCodeOperands;
+                OpCodePart[] used = opCodeMethodInfo.OpCodeOperands;
                 if (used[0].ResultType == null)
                 {
                     used[0].ResultType = this.ResultOf(used[0]).IType;
@@ -3213,10 +3113,10 @@
             // check if you need to cast parameter
             if (opCodeMethodInfo.OpCodeOperands != null)
             {
-                var index = startsWithThis && !isCtor ? 1 : 0;
-                foreach (var parameter in methodBase.GetParameters())
+                int index = startsWithThis && !isCtor ? 1 : 0;
+                foreach (IParameter parameter in methodBase.GetParameters())
                 {
-                    var operand = opCodeMethodInfo.OpCodeOperands[index];
+                    OpCodePart operand = opCodeMethodInfo.OpCodeOperands[index];
 
                     if (IsClassCastRequired(parameter.ParameterType, operand))
                     {
@@ -3265,72 +3165,17 @@
             }
 
             this.ActualWrite(
-                writer,
-                opCodeMethodInfo.OpCodeOperands,
-                methodBase.GetParameters(),
-                isVirtual,
-                hasThis,
-                isCtor,
-                preProcessedOperandResults,
-                thisResultNumber,
-                thisType,
-                opCodeMethodInfo.ResultNumber,
+                writer, 
+                opCodeMethodInfo.OpCodeOperands, 
+                methodBase.GetParameters(), 
+                isVirtual, 
+                hasThis, 
+                isCtor, 
+                preProcessedOperandResults, 
+                thisResultNumber, 
+                thisType, 
+                opCodeMethodInfo.ResultNumber, 
                 methodInfo != null ? methodInfo.ReturnType : null);
-        }
-
-        private void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
-        {
-            var mi = methodBase as IMethod;
-            if (mi != null)
-            {
-                if (mi.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
-                {
-                    this.methodDeclRequired.Add(methodBase);
-                }
-
-                return;
-            }
-
-            var ci = methodBase as IConstructor;
-            if (ci != null)
-            {
-                if (ci.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
-                {
-                    this.methodDeclRequired.Add(methodBase);
-                }
-
-                return;
-            }
-        }
-
-        private void CheckIfExternalDeclarationIsRequired(IType type)
-        {
-            if (type != null)
-            {
-                if (type.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
-                {
-                    this.typeDeclRequired.Add(type);
-                }
-            }
-        }
-
-        // TODO: speed up the function
-        private int GetVirtualMethodIndex(IType thisType, IMethod methodInfo)
-        {
-            var virtualTable = GetVirtualTable(thisType);
-
-            var index = 0;
-            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
-            {
-                if (virtualMethod.ToString() == methodInfo.ToString())
-                {
-                    return index;
-                }
-
-                index++;
-            }
-
-            throw new KeyNotFoundException("virtual method could not be found");
         }
 
         /// <summary>
@@ -3343,13 +3188,12 @@
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0)
             {
-                var previousOpCode = opCode.PreviousOpCode(this);
-                var splitBlock = previousOpCode != null
-                                 && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call);
+                OpCodePart previousOpCode = opCode.PreviousOpCode(this);
+                bool splitBlock = previousOpCode != null
+                                  && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call);
                 if (splitBlock)
                 {
-                // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
-                http: // zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
+                    // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
                     writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));
                 }
 
@@ -3368,15 +3212,51 @@
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="endings">
+        /// <param name="fromType">
         /// </param>
-        /// <returns>
-        /// </returns>
+        /// <param name="res">
+        /// </param>
+        /// <param name="toType">
+        /// </param>
+        /// <param name="appendReference">
+        /// </param>
+        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
+        {
+            if (!fromType.IsInterface && toType.IsInterface)
+            {
+                this.WriteInterfaceAccess(writer, opCode, fromType, toType);
+            }
+            else
+            {
+                WriteSetResultNumber(writer, opCode);
+                writer.Write("bitcast ");
+                this.WriteTypePrefix(writer, fromType, true);
+                writer.Write(' ');
+                WriteResultNumber(res);
+                writer.Write(" to ");
+                this.WriteTypePrefix(writer, toType, true);
+                if (appendReference)
+                {
+                    // result should be array
+                    writer.Write('*');
+                }
+            }
+
+            opCode.ResultType = toType;
+            writer.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.EndOfTry != null && opCode.EndOfTry.Count > 0)
             {
-                foreach (var endOfTryId in opCode.EndOfTry)
+                foreach (int endOfTryId in opCode.EndOfTry)
                 {
                     writer.WriteLine(string.Empty);
                     writer.Indent--;
@@ -3386,7 +3266,7 @@
 
             if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
             {
-                foreach (var endOfCaluseId in opCode.EndOfClausesOrFinal)
+                foreach (int endOfCaluseId in opCode.EndOfClausesOrFinal)
                 {
                     // writer.WriteLine(string.Empty);
                     writer.Indent--;
@@ -3396,7 +3276,7 @@
 
             if (opCode.ExceptionHandlers != null)
             {
-                foreach (var exceptionHandler in opCode.ExceptionHandlers)
+                foreach (IExceptionHandlingClause exceptionHandler in opCode.ExceptionHandlers)
                 {
                     if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
                     {
@@ -3448,10 +3328,10 @@
         private void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string sourceVarName, string desctVarName)
         {
             WriteBitcast(writer, opCode, type, desctVarName);
-            var op1 = opCode.ResultNumber;
+            int? op1 = opCode.ResultNumber;
             writer.WriteLine(string.Empty);
             WriteBitcast(writer, opCode, type, sourceVarName);
-            var op2 = opCode.ResultNumber;
+            int? op2 = opCode.ResultNumber;
             writer.WriteLine(string.Empty);
 
             this.WriteMemCopy(writer, type, op1, op2);
@@ -3465,7 +3345,7 @@
         /// </param>
         private void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
-            var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
+            ReturnResult operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
             if (operand.IType.IsStructureType())
             {
@@ -3487,7 +3367,7 @@
         /// </param>
         private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
         {
-            var type = fieldInfo.DeclaringType;
+            IType type = fieldInfo.DeclaringType;
 
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
@@ -3515,71 +3395,6 @@
             writer.Write(index);
         }
 
-        private void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
-        {
-            var objectResult = opCode.ResultNumber;
-
-            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator);
-            writer.Write(' ');
-            writer.Write(this.GetResultNumber(objectResult ?? -1));
-            this.WriteInterfaceIndex(writer, declaringType, @interface);
-            writer.WriteLine(string.Empty);
-        }
-
-        private void WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface)
-        {
-            var type = classType;
-
-            // first element for pointer (IType* + 0)
-            writer.Write(", i32 0");
-
-            while (!type.GetInterfaces().Contains(@interface) || type.BaseType.GetInterfaces().Contains(@interface))
-            {
-                type = type.BaseType;
-                if (type == null)
-                {
-                    //break;
-                    return;
-                }
-
-                // first index is base type index
-                writer.Write(", i32 0");
-            }
-
-            // find index
-            int index = 0;
-
-            if (type.IsRootOfVirtualTable())
-            {
-                index++;
-            }
-
-            if (type.BaseType != null)
-            {
-                index++;
-            }
-
-            var found = false;
-            foreach (var typeInterface in type.GetInterfaces())
-            {
-                if (typeInterface == @interface)
-                {
-                    found = true;
-                    break;
-                }
-
-                index++;
-            }
-
-            if (!found)
-            {
-                throw new IndexOutOfRangeException("Could not find an interface");
-            }
-
-            writer.Write(", i32 ");
-            writer.Write(index);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3588,8 +3403,8 @@
         /// </param>
         private void WriteGenericParameters(LlvmIndentedTextWriter writer, IMethod method)
         {
-            var i = 0;
-            foreach (var generic in method.GetGenericArguments())
+            int i = 0;
+            foreach (IType generic in method.GetGenericArguments())
             {
                 if (i > 0)
                 {
@@ -3611,8 +3426,8 @@
         /// </param>
         private void WriteGenericParameters(LlvmIndentedTextWriter writer, IType type)
         {
-            var index = type.Name.IndexOf('`');
-            var level = int.Parse(type.Name.Substring(index + 1));
+            int index = type.Name.IndexOf('`');
+            int level = int.Parse(type.Name.Substring(index + 1));
 
             for (int i = 0; i < level; i++)
             {
@@ -3645,6 +3460,148 @@
                     writer.Write(i + 1);
                 }
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        private void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
+        {
+            // Init Object From Here
+            if (declaringType.HasAnyVirtualMethod())
+            {
+                int? opCodeResult = opCode.ResultNumber;
+                IType opCodeType = opCode.ResultType;
+
+                writer.WriteLine("; set virtual table");
+
+                // initializw virtual table
+                this.WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
+                writer.WriteLine(string.Empty);
+
+                List<Pair<string, IMethod>> virtualTable = this.GetVirtualTable(declaringType);
+
+                writer.Write(
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
+                    virtualTable.Count + 1, 
+                    this.GetVirtualTableName(declaringType));
+                WriteResultNumber(opCode.ResultNumber ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // restore
+                opCode.ResultNumber = opCodeResult;
+                opCode.ResultType = opCodeType;
+            }
+
+            // init all interfaces
+            foreach (IType @interface in declaringType.GetInterfaces())
+            {
+                writer.WriteLine("; set virtual interface table");
+
+                this.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
+
+                this.WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
+                writer.WriteLine(string.Empty);
+
+                List<Pair<string, IMethod>> virtualInterfaceTable = this.GetVirtualInterfaceTable(declaringType, @interface);
+
+                writer.Write(
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
+                    virtualInterfaceTable.Count + 1, 
+                    this.GetVirtualInterfaceTableName(declaringType, @interface));
+                WriteResultNumber(opCode.ResultNumber ?? -1);
+                writer.WriteLine(string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        private void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
+        {
+            int? objectResult = opCode.ResultNumber;
+
+            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator);
+            writer.Write(' ');
+            writer.Write(this.GetResultNumber(objectResult ?? -1));
+            this.WriteInterfaceIndex(writer, declaringType, @interface);
+            writer.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="classType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <exception cref="IndexOutOfRangeException">
+        /// </exception>
+        private void WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface)
+        {
+            IType type = classType;
+
+            // first element for pointer (IType* + 0)
+            writer.Write(", i32 0");
+
+            while (!type.GetInterfaces().Contains(@interface) || type.BaseType.GetInterfaces().Contains(@interface))
+            {
+                type = type.BaseType;
+                if (type == null)
+                {
+                    // break;
+                    return;
+                }
+
+                // first index is base type index
+                writer.Write(", i32 0");
+            }
+
+            // find index
+            int index = 0;
+
+            if (type.IsRootOfVirtualTable())
+            {
+                index++;
+            }
+
+            if (type.BaseType != null)
+            {
+                index++;
+            }
+
+            bool found = false;
+            foreach (IType typeInterface in type.GetInterfaces())
+            {
+                if (typeInterface == @interface)
+                {
+                    found = true;
+                    break;
+                }
+
+                index++;
+            }
+
+            if (!found)
+            {
+                throw new IndexOutOfRangeException("Could not find an interface");
+            }
+
+            writer.Write(", i32 ");
+            writer.Write(index);
         }
 
         /// <summary>
@@ -3742,7 +3699,7 @@
         /// </param>
         private void WriteLocalVariableDeclarations(IEnumerable<ILocalVariable> locals)
         {
-            foreach (var local in locals)
+            foreach (ILocalVariable local in locals)
             {
                 this.Output.Write(string.Format("%local{0} = ", local.LocalIndex));
                 this.WriteAlloca(this.Output, local.LocalType);
@@ -3763,10 +3720,10 @@
         private void WriteMemCopy(LlvmIndentedTextWriter writer, IType type, int? op1, int? op2)
         {
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                this.GetResultNumber(op1.Value),
-                this.GetResultNumber(op2.Value),
-                this.GetTypeSize(type),
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
+                this.GetResultNumber(op1.Value), 
+                this.GetResultNumber(op2.Value), 
+                this.GetTypeSize(type), 
                 pointerSize /*Align*/);
         }
 
@@ -3781,9 +3738,9 @@
         private void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
         {
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                this.GetResultNumber(op1.Value),
-                this.GetTypeSize(type),
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", 
+                this.GetResultNumber(op1.Value), 
+                this.GetTypeSize(type), 
                 pointerSize /*Align*/);
         }
 
@@ -3806,10 +3763,10 @@
         {
             this.Output.StartMethodBody();
 
-            var rest = this.PrepareWritingMethodBody();
+            OpCodePart[] rest = this.PrepareWritingMethodBody();
 
-            var i = 0;
-            foreach (var opCodePart in rest)
+            int i = 0;
+            foreach (OpCodePart opCodePart in rest)
             {
                 this.ActualWrite(this.Output, opCodePart, true);
                 i++;
@@ -3853,9 +3810,14 @@
         /// </param>
         /// <param name="hasThis">
         /// </param>
+        /// <param name="thisType">
+        /// </param>
         /// <param name="returnType">
         /// </param>
-        private void WriteMethodParamsDef(LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
+        /// <param name="noArgumentName">
+        /// </param>
+        private void WriteMethodParamsDef(
+            LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
         {
             writer.Write("(");
 
@@ -3865,7 +3827,7 @@
                 writer.Write(" noalias sret %agg.result");
             }
 
-            var start = hasThis ? 1 : 0;
+            int start = hasThis ? 1 : 0;
 
             if (hasThis)
             {
@@ -3881,8 +3843,8 @@
                 }
             }
 
-            var index = start;
-            foreach (var parameter in parameterInfos)
+            int index = start;
+            foreach (IParameter parameter in parameterInfos)
             {
                 if (hasThis || index > start || returnType.IsStructureType())
                 {
@@ -3922,13 +3884,13 @@
         /// </param>
         private void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
         {
-            var fullMethodName = this.GetFullMethodName(methodBase);
-            var methodInfo = methodBase as IMethod;
+            string fullMethodName = this.GetFullMethodName(methodBase);
+            IMethod methodInfo = methodBase;
             this.WriteTypePrefix(writer, methodInfo.ReturnType);
 
             writer.Write(" (");
 
-            var hasThis = !methodInfo.IsStatic;
+            bool hasThis = !methodInfo.IsStatic;
 
             if (hasThis)
             {
@@ -3936,7 +3898,7 @@
             }
 
             int index = 0;
-            foreach (var parameter in methodBase.GetParameters())
+            foreach (IParameter parameter in methodBase.GetParameters())
             {
                 if (index > 0 || hasThis)
                 {
@@ -3954,27 +3916,18 @@
         /// </summary>
         /// <param name="writer">
         /// </param>
-        /// <param name="type">
+        /// <param name="method">
         /// </param>
-        private void WriteTypeName(LlvmIndentedTextWriter writer, IType type, bool doNotConvert = false)
+        private void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
         {
-            var typeBaseName = TypeToCType(type, doNotConvert);
-
-            // clean name
-            if (typeBaseName.EndsWith("&"))
+            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
             {
-                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
-            }
-
-            var index = typeBaseName.IndexOf('`');
-            if (index >= 0)
-            {
-                var nameWithoutGeneric = typeBaseName.Substring(0, index);
-                writer.Write(nameWithoutGeneric);
+                this.WriteTypePrefix(writer, method.ReturnType, false);
+                writer.Write(" ");
             }
             else
             {
-                writer.Write(typeBaseName);
+                this.Output.Write("void ");
             }
         }
 
@@ -3988,8 +3941,8 @@
         /// </param>
         private void WriteNew(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
-            var mallocResult = WriteSetResultNumber(writer, opCode);
-            var size = this.GetTypeSize(declaringType);
+            int mallocResult = WriteSetResultNumber(writer, opCode);
+            int size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
             this.WriteMemSet(writer, declaringType, mallocResult);
             writer.WriteLine(string.Empty);
@@ -3997,58 +3950,15 @@
             WriteBitcast(writer, opCode, mallocResult, declaringType);
             writer.WriteLine(string.Empty);
 
-            var castResult = opCode.ResultNumber;
+            int? castResult = opCode.ResultNumber;
 
-            WriteInitObject(writer, opCode, declaringType);
+            this.WriteInitObject(writer, opCode, declaringType);
 
             // restore result and type
             opCode.ResultNumber = castResult;
             opCode.ResultType = declaringType;
 
             writer.WriteLine("; end of new obj");
-        }
-
-        private void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
-        {
-            // Init Object From Here
-            if (declaringType.HasAnyVirtualMethod())
-            {
-                var opCodeResult = opCode.ResultNumber;
-                var opCodeType = opCode.ResultType;
-
-                writer.WriteLine("; set virtual table");
-
-                // initializw virtual table
-                WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
-                writer.WriteLine(string.Empty);
-
-                var virtualTable = GetVirtualTable(declaringType);
-
-                writer.Write("store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", virtualTable.Count + 1, GetVirtualTableName(declaringType));
-                WriteResultNumber(opCode.ResultNumber ?? -1);
-                writer.WriteLine(string.Empty);
-
-                // restore
-                opCode.ResultNumber = opCodeResult;
-                opCode.ResultType = opCodeType;
-            }
-
-            // init all interfaces
-            foreach (var @interface in declaringType.GetInterfaces())
-            {
-                writer.WriteLine("; set virtual interface table");
-
-                WriteInterfaceAccess(writer, opCode, declaringType, @interface);
-
-                WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
-                writer.WriteLine(string.Empty);
-
-                var virtualInterfaceTable = GetVirtualInterfaceTable(declaringType, @interface);
-
-                writer.Write("store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", virtualInterfaceTable.Count + 1, GetVirtualInterfaceTableName(declaringType, @interface));
-                WriteResultNumber(opCode.ResultNumber ?? -1);
-                writer.WriteLine(string.Empty);
-            }
         }
 
         /// <summary>
@@ -4063,23 +3973,23 @@
         /// </param>
         private void WriteNewArray(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, OpCodePart length)
         {
-            var size = this.GetTypeSize(declaringType);
+            int size = this.GetTypeSize(declaringType);
             this.UnaryOper(writer, opCode, "mul");
             writer.WriteLine(string.Format(", {0}", size));
 
-            var resMul = opCode.ResultNumber;
+            int? resMul = opCode.ResultNumber;
 
             WriteSetResultNumber(writer, opCode);
             writer.Write("add i32 4, {0}", this.GetResultNumber(resMul ?? -1));
             writer.WriteLine(string.Empty);
 
-            var resAdd = opCode.ResultNumber;
+            int? resAdd = opCode.ResultNumber;
 
-            var resAlloc = WriteSetResultNumber(writer, opCode);
+            int resAlloc = WriteSetResultNumber(writer, opCode);
             writer.Write("call i8* @malloc(i32 {0})", this.GetResultNumber(resAdd ?? -1));
             writer.WriteLine(string.Empty);
 
-            WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
+            this.WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
             var opCodeTemp = new OpCodePart(OpCodesEmit.Nop, 0, 0);
@@ -4094,8 +4004,8 @@
             WriteResultNumber(opCode.ResultNumber ?? -1);
             writer.WriteLine(string.Empty);
 
-            var tempRes = opCode.ResultNumber.Value;
-            var resGetArr = WriteSetResultNumber(writer, opCode);
+            int tempRes = opCode.ResultNumber.Value;
+            int resGetArr = WriteSetResultNumber(writer, opCode);
             writer.Write("getelementptr ");
 
             // WriteTypePrefix(writer, declaringType);
@@ -4110,6 +4020,92 @@
             }
 
             writer.WriteLine("; end of new array");
+        }
+
+        /// <summary>
+        /// </summary>
+        private void WritePostDeclarations()
+        {
+            // after writing type you need to generate static members
+            foreach (IField field in this.staticFieldsInfo)
+            {
+                this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
+                this.WriteTypePrefix(this.Output, field.FieldType, false);
+                this.Output.WriteLine(" undef");
+            }
+
+            // write VirtualTable
+            if (!this.ThisType.IsInterface && this.ThisType.HasAnyVirtualMethod())
+            {
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write(this.GetVirtualTableName(this.ThisType));
+                List<Pair<string, IMethod>> virtualTable = this.GetVirtualTable(this.ThisType);
+                this.WriteTableOfMethods(virtualTable);
+            }
+
+            foreach (IType @interface in this.ThisType.GetInterfaces())
+            {
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
+                List<Pair<string, IMethod>> virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
+                this.WriteTableOfMethods(virtualInterfaceTable);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        private void WriteRequiredDeclarations()
+        {
+            if (this.typeDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (IType opaqueType in this.typeDeclRequired)
+                {
+                    if (this.processedTypes.Contains(opaqueType))
+                    {
+                        continue;
+                    }
+
+                    this.WriteTypeDeclarationStart(opaqueType);
+                    this.Output.WriteLine("opaque");
+                }
+            }
+
+            if (this.methodDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (IMethod externalMethodDecl in this.methodDeclRequired)
+                {
+                    if (this.processedMethods.Contains(externalMethodDecl))
+                    {
+                        continue;
+                    }
+
+                    this.Output.Write("declare ");
+
+                    IMethod method = externalMethodDecl;
+                    if (method != null)
+                    {
+                        this.ReadMethodInfo(method);
+                        this.WriteMethodReturnType(this.Output, method);
+                        this.WriteMethodDefinitionName(this.Output, method);
+                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+                        this.Output.WriteLine(string.Empty);
+                        continue;
+                    }
+
+                    var ctor = externalMethodDecl as IConstructor;
+                    if (ctor != null)
+                    {
+                        this.ReadMethodInfo(ctor);
+                        this.Output.Write("void ");
+                        this.WriteMethodDefinitionName(this.Output, ctor);
+                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, TypeAdapter.FromType(typeof(void)));
+                        this.Output.WriteLine(string.Empty);
+                        continue;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -4170,6 +4166,33 @@
 
         /// <summary>
         /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable)
+        {
+            this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
+
+            // define virtual table
+            foreach (var virtualMethod in virtualTable)
+            {
+                IMethod method = virtualMethod.Value;
+
+                // write method pointer
+                this.Output.Write(", i8* bitcast (");
+
+                // write pointer to method
+                this.WriteMethodReturnType(this.Output, method);
+                this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
+                this.Output.Write("* ");
+                this.WriteMethodDefinitionName(this.Output, method);
+                this.Output.Write(" to i8*)");
+            }
+
+            this.Output.WriteLine("]");
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
@@ -4178,12 +4201,71 @@
         {
             if (opCode.Try != null)
             {
-                foreach (var tryId in opCode.Try)
+                foreach (int tryId in opCode.Try)
                 {
                     writer.WriteLine("try");
                     writer.WriteLine('{');
                     writer.Indent++;
                 }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void WriteTypeDeclarationStart(IType type)
+        {
+            this.Output.Write("%");
+            this.WriteTypeName(this.Output, type, true);
+
+            this.Output.Write(" = type ");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void WriteTypeDefinitionIfNotWrittenYet(IType type)
+        {
+            if (this.processedTypes.Contains(type))
+            {
+                return;
+            }
+
+            this.processedTypes.Add(type);
+
+            Il2Converter.WriteTypeDefinition(this, type, null, true);
+            this.Output.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="doNotConvert">
+        /// </param>
+        private void WriteTypeName(LlvmIndentedTextWriter writer, IType type, bool doNotConvert = false)
+        {
+            string typeBaseName = this.TypeToCType(type, doNotConvert);
+
+            // clean name
+            if (typeBaseName.EndsWith("&"))
+            {
+                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
+            }
+
+            int index = typeBaseName.IndexOf('`');
+            if (index >= 0)
+            {
+                string nameWithoutGeneric = typeBaseName.Substring(0, index);
+                writer.Write(nameWithoutGeneric);
+            }
+            else
+            {
+                writer.Write(typeBaseName);
             }
         }
 
@@ -4199,7 +4281,8 @@
         /// </param>
         /// <param name="refChar">
         /// </param>
-        private void WriteTypePrefix(LlvmIndentedTextWriter writer, IType type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
+        private void WriteTypePrefix(
+            LlvmIndentedTextWriter writer, IType type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
         {
             this.WriteTypeWithoutModifiers(writer, type, doNotIncludeTypePrefixId);
             WriteTypeModifiers(writer, type, asReference, refChar);
@@ -4215,7 +4298,7 @@
         /// </param>
         private void WriteTypeWithoutModifiers(LlvmIndentedTextWriter writer, IType type, bool doNotIncludeTypePrefixId = false)
         {
-            var effectiveType = type;
+            IType effectiveType = type;
 
             while (effectiveType.HasElementType)
             {
@@ -4233,6 +4316,67 @@
             this.WriteTypeName(writer, effectiveType);
         }
 
-        #endregion
+        /// <summary>
+        /// </summary>
+        [Flags]
+        private enum OperandOptions
+        {
+            /// <summary>
+            /// </summary>
+            None = 0, 
+
+            /// <summary>
+            /// </summary>
+            GenerateResult = 1, 
+
+            /// <summary>
+            /// </summary>
+            ToFloat = 2, 
+
+            /// <summary>
+            /// </summary>
+            ToInteger = 4, 
+
+            /// <summary>
+            /// </summary>
+            TypeIsInSecondOperand = 8, 
+
+            /// <summary>
+            /// </summary>
+            TypeIsInOperator = 16, 
+
+            /// <summary>
+            /// </summary>
+            NoTypePrefix = 32, 
+
+            /// <summary>
+            /// </summary>
+            AppendPointer = 64, 
+
+            /// <summary>
+            /// </summary>
+            IgnoreOperand = 128, 
+
+            /// <summary>
+            /// </summary>
+            DetectTypeInSecondOperand = 256, 
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <typeparam name="K">
+        /// </typeparam>
+        /// <typeparam name="V">
+        /// </typeparam>
+        public class Pair<K, V>
+        {
+            /// <summary>
+            /// </summary>
+            public K Key { get; set; }
+
+            /// <summary>
+            /// </summary>
+            public V Value { get; set; }
+        }
     }
 }

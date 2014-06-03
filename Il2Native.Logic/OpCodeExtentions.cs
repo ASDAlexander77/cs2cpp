@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodeExtentions.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic
 {
     using System;
     using System.Diagnostics;
@@ -6,14 +15,13 @@
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public static class OpCodeExtentions
     {
-        #region Public Methods and Operators
-
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -24,8 +32,8 @@
         /// </returns>
         public static bool Any(this OpCodePart opCode, params Code[] codes)
         {
-            var code = opCode.ToCode();
-            foreach (var item in codes)
+            Code code = opCode.ToCode();
+            foreach (Code item in codes)
             {
                 if (item == code)
                 {
@@ -94,6 +102,12 @@
             return type != null && type.Name == "Float" && type.Namespace == "System";
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsSingle(this IType type)
         {
             return type != null && type.Name == "Single" && type.Namespace == "System";
@@ -154,11 +168,15 @@
         /// </summary>
         /// <param name="type">
         /// </param>
+        /// <param name="recurse">
+        /// </param>
         /// <returns>
         /// </returns>
         public static bool IsStructureType(this IType type, bool recurse = false)
         {
-            return type != null && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
+            return type != null
+                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid()
+                       || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
         /// <summary>
@@ -183,47 +201,103 @@
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool NameEquals(this IName type, IName other)
         {
             return type != null && other.CompareTo(type) == 0;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool NameNotEquals(this IName type, IName other)
         {
             return !type.NameEquals(other);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool TypeEquals(this IType type, IType other)
         {
             return type != null && other.CompareTo(type) == 0;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool TypeNotEquals(this IType type, IType other)
         {
             return !type.TypeEquals(other);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool TypeEquals(this IType type, Type other)
         {
             return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool TypeNotEquals(this IType type, Type other)
         {
             return !type.Equals(other);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsDerivedFrom(this IType thisType, IType type)
         {
-            Debug.Assert((object)type != null);
+            Debug.Assert(type != null);
 
-            if ((object)thisType == (object)type)
+            if (thisType == type)
             {
                 return false;
             }
 
-            var t = thisType.BaseType;
-            while ((object)t != null)
+            IType t = thisType.BaseType;
+            while (t != null)
             {
                 if (type.TypeEquals(t))
                 {
@@ -282,6 +356,14 @@
             return ret;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static OpCodePart NextOpCode(this OpCodePart opCode, BaseWriter baseWriter)
         {
             OpCodePart ret = null;
@@ -289,9 +371,17 @@
             return ret;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static OpCodePart JumpOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
-            var jumpAddress = opCode.JumpAddress();
+            int jumpAddress = opCode.JumpAddress();
             OpCodePart stopForBranch;
             if (baseWriter.OpsByGroupAddressStart.TryGetValue(jumpAddress, out stopForBranch))
             {
@@ -316,6 +406,14 @@
             return ret;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static OpCodePart PreviousOpCode(this OpCodePart opCode, BaseWriter baseWriter)
         {
             OpCodePart ret = null;
@@ -331,7 +429,7 @@
         /// </returns>
         public static Code ToCode(this OpCodePart opCode)
         {
-            var val = opCode.OpCode.Value;
+            short val = opCode.OpCode.Value;
             if (val < 0xE1 && val >= 0)
             {
                 return (Code)val;
@@ -340,6 +438,12 @@
             return (Code)(val - (val >> 8 << 8) + 0xE1);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool HasAnyVirtualMethod(this IType thisType)
         {
             if (thisType.HasAnyVirtualMethodInCurrentType())
@@ -350,6 +454,12 @@
             return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool HasAnyVirtualMethodInCurrentType(this IType thisType)
         {
             if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
@@ -360,12 +470,15 @@
             return false;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsRootOfVirtualTable(this IType type)
         {
             return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
         }
-
-
-        #endregion
     }
 }

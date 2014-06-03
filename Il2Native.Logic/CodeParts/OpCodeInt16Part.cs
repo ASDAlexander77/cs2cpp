@@ -1,11 +1,32 @@
-﻿namespace Il2Native.Logic.CodeParts
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodeInt16Part.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.CodeParts
 {
     using System;
     using System.Reflection.Emit;
 
-    public class OpCodeInt16Part : OpCodeParamPart<Int16>
+    /// <summary>
+    /// </summary>
+    public class OpCodeInt16Part : OpCodeParamPart<short>
     {
-        public OpCodeInt16Part(OpCode opcode, int addressStart, int addressEnd, Int16 param)
+        /// <summary>
+        /// </summary>
+        /// <param name="opcode">
+        /// </param>
+        /// <param name="addressStart">
+        /// </param>
+        /// <param name="addressEnd">
+        /// </param>
+        /// <param name="param">
+        /// </param>
+        public OpCodeInt16Part(OpCode opcode, int addressStart, int addressEnd, short param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

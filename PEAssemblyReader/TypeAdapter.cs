@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace PEAssemblyReader
 {
     using System;
@@ -19,15 +18,9 @@ namespace PEAssemblyReader
     /// </summary>
     public class TypeAdapter : IType
     {
-        #region Fields
-
         /// <summary>
         /// </summary>
-        private Type type;
-
-        #endregion
-
-        #region Constructors and Destructors
+        private readonly Type type;
 
         /// <summary>
         /// </summary>
@@ -38,10 +31,6 @@ namespace PEAssemblyReader
             Debug.Assert(type != null);
             this.type = type;
         }
-
-        #endregion
-
-        #region Public Properties
 
         /// <summary>
         /// </summary>
@@ -295,21 +284,6 @@ namespace PEAssemblyReader
             }
         }
 
-        #endregion
-
-        #region Public Methods and Operators
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IType FromType(Type type)
-        {
-            return new TypeAdapter(type);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="obj">
@@ -326,7 +300,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var val = type.Name.CompareTo(this.Name);
+            int val = type.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -343,6 +317,17 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public bool Equals(IType other)
+        {
+            return this.CompareTo(other) == 0;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="bindingFlags">
         /// </param>
         /// <returns>
@@ -354,17 +339,6 @@ namespace PEAssemblyReader
             throw new NotImplementedException();
         }
 
-        public IType GetEnumUnderlyingType()
-        {
-            if (this.type.IsEnum)
-            {
-                var firstEnumField = type.GetFields(BindingFlags.Default).First();
-                return new TypeAdapter(firstEnumField.FieldType);
-            }
-
-            return null;
-        }
-
         /// <summary>
         /// </summary>
         /// <returns>
@@ -374,6 +348,21 @@ namespace PEAssemblyReader
         public IType GetElementType()
         {
             return new TypeAdapter(this.type.GetElementType());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType GetEnumUnderlyingType()
+        {
+            if (this.type.IsEnum)
+            {
+                FieldInfo firstEnumField = this.type.GetFields(BindingFlags.Default).First();
+                return new TypeAdapter(firstEnumField.FieldType);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -437,6 +426,15 @@ namespace PEAssemblyReader
             throw new NotImplementedException();
         }
 
-        #endregion
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType FromType(Type type)
+        {
+            return new TypeAdapter(type);
+        }
     }
 }

@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IlReader.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
@@ -11,27 +20,23 @@
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
+
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CSharp;
+
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
     /// </summary>
     public class IlReader
     {
-        #region Static Fields
-
         /// <summary>
         /// </summary>
-        private static IDictionary<Code, OpCode> OpCodesMap = new SortedDictionary<Code, OpCode>();
-
-        #endregion
-
-        #region Constructors and Destructors
+        private static readonly IDictionary<Code, OpCode> OpCodesMap = new SortedDictionary<Code, OpCode>();
 
         /// <summary>
         /// </summary>
@@ -274,10 +279,6 @@
             this.Source = source;
         }
 
-        #endregion
-
-        #region Public Properties
-
         /// <summary>
         /// </summary>
         public string ModuleName
@@ -288,10 +289,6 @@
             }
         }
 
-        #endregion
-
-        #region Properties
-
         /// <summary>
         /// </summary>
         protected AssemblyMetadata Assembly { get; private set; }
@@ -299,10 +296,6 @@
         /// <summary>
         /// </summary>
         protected string Source { get; private set; }
-
-        #endregion
-
-        #region Public Methods and Operators
 
         /// <summary>
         /// </summary>
@@ -330,7 +323,9 @@
         /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase) ? Compile(this.Source) : AssemblyMetadata.CreateFromFile(this.Source);
+            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
+                                ? Compile(this.Source)
+                                : AssemblyMetadata.CreateFromFile(this.Source);
         }
 
         /// <summary>
@@ -370,7 +365,7 @@
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, typeGenerics, methodGenerics))
+            foreach (OpCodePart opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, typeGenerics, methodGenerics))
             {
                 yield return opCode;
             }
@@ -393,7 +388,7 @@
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, typeGenerics, methodGenerics))
+            foreach (OpCodePart opCode in this.OpCodes(method.GetMethodBody(), method.Module, typeGenerics, methodGenerics))
             {
                 yield return opCode;
             }
@@ -418,11 +413,11 @@
                 yield break;
             }
 
-            var extended = false;
+            bool extended = false;
             int startAddress = 0;
             int currentAddress = 0;
-            var ilAsByteArray = methodBody.GetILAsByteArray();
-            var enumerator = ilAsByteArray.GetEnumerator();
+            byte[] ilAsByteArray = methodBody.GetILAsByteArray();
+            IEnumerator enumerator = ilAsByteArray.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 var @byte = (byte)enumerator.Current;
@@ -435,7 +430,7 @@
                 var code = (Code)(extended ? (@byte + 0xE1) : @byte);
                 extended = false;
 
-                var opCode = OpCodesMap[code];
+                OpCode opCode = OpCodesMap[code];
 
                 startAddress = currentAddress;
                 currentAddress += opCode.Size;
@@ -465,8 +460,8 @@
                     case Code.Ldarga_S:
 
                         // read token, next 
-                        var token = ReadInt32ShortForm(enumerator, ref currentAddress);
-                        var @int32 = token;
+                        int token = ReadInt32ShortForm(enumerator, ref currentAddress);
+                        int @int32 = token;
                         yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, @int32);
                         continue;
                     case Code.Br:
@@ -496,29 +491,29 @@
                     case Code.Ldc_I8:
 
                         // read token, next 
-                        var bytes = ReadBytes(enumerator, 8, ref currentAddress);
-                        var @int64 = BitConverter.ToInt64(bytes, 0);
+                        byte[] bytes = ReadBytes(enumerator, 8, ref currentAddress);
+                        long @int64 = BitConverter.ToInt64(bytes, 0);
                         yield return new OpCodeInt64Part(opCode, startAddress, currentAddress, @int64);
                         continue;
                     case Code.Ldc_R4:
 
                         // read token, next 
                         bytes = ReadBytes(enumerator, 4, ref currentAddress);
-                        var @single = BitConverter.ToSingle(bytes, 0);
+                        float @single = BitConverter.ToSingle(bytes, 0);
                         yield return new OpCodeSinglePart(opCode, startAddress, currentAddress, @single);
                         continue;
                     case Code.Ldc_R8:
 
                         // read token, next 
                         bytes = ReadBytes(enumerator, 8, ref currentAddress);
-                        var @double = BitConverter.ToDouble(bytes, 0);
+                        double @double = BitConverter.ToDouble(bytes, 0);
                         yield return new OpCodeDoublePart(opCode, startAddress, currentAddress, @double);
                         continue;
                     case Code.Ldstr:
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var @string = module.ResolveString(token);
+                        string @string = module.ResolveString(token);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, @string);
                         continue;
                     case Code.Newobj:
@@ -535,7 +530,7 @@
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var member = module.ResolveMethod(token, typeGenerics, methodGenerics);
+                        IMethod member = module.ResolveMethod(token, typeGenerics, methodGenerics);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
                         continue;
                     case Code.Stfld:
@@ -547,7 +542,7 @@
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var field = module.ResolveField(token, typeGenerics, methodGenerics);
+                        IField field = module.ResolveField(token, typeGenerics, methodGenerics);
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
@@ -572,13 +567,13 @@
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var type = module.ResolveType(token, typeGenerics, methodGenerics);
+                        IType type = module.ResolveType(token, typeGenerics, methodGenerics);
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
                         var ints = new List<int>();
-                        var count = ReadInt32(enumerator, ref currentAddress);
-                        for (var i = 0; i < count; i++)
+                        int count = ReadInt32(enumerator, ref currentAddress);
+                        for (int i = 0; i < count; i++)
                         {
                             ints.Add(ReadInt32(enumerator, ref currentAddress));
                         }
@@ -592,6 +587,14 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="identity">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static AssemblySymbol MapAssemblyIdentityToResolvedSymbol(AssemblyIdentity identity, Dictionary<AssemblyIdentity, AssemblySymbol> map)
         {
             AssemblySymbol symbol;
@@ -604,23 +607,25 @@
         /// </returns>
         public IEnumerable<IType> Types()
         {
-            var assemblySymbol = new PEAssemblySymbol(this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+            var assemblySymbol = new PEAssemblySymbol(
+                this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
             // TODO: find mscorlib
             // 1) set corelib
             bool coreLibSet = false;
             var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-            foreach (var assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
+            foreach (AssemblyIdentity assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
             {
                 if (assemblyIdentity.Name == "mscorlib")
                 {
-                    var coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
-                    var coreAssemblySymbol = new PEAssemblySymbol(coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+                    AssemblyMetadata coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
+                    var coreAssemblySymbol = new PEAssemblySymbol(
+                        coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
                     coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
                     assemblySymbol.SetCorLibrary(coreAssemblySymbol);
-                    
+
                     referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
                     unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
                     coreLibSet = true;
@@ -636,28 +641,24 @@
             }
 
             // 2) set references
-            var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
+            ImmutableArray<AssemblySymbol> peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(
+                MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
             var moduleReferences = new ModuleReferences<AssemblySymbol>(
                 this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
 
             // 3) Load Types
-            foreach (var module in assemblySymbol.Modules)
+            foreach (ModuleSymbol module in assemblySymbol.Modules)
             {
-                
                 module.SetReferences(moduleReferences);
-                var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
+                KeyValuePair<string, string>[] typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
                 foreach (var typeWithNamespace in typeWithNamespaces)
                 {
-                    var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
-                    var symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
-                    yield return new MetadataTypeAdapter(symbol as TypeSymbol);
+                    MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
+                    NamedTypeSymbol symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
+                    yield return new MetadataTypeAdapter(symbol);
                 }
             }
         }
-
-        #endregion
-
-        #region Methods
 
         /// <summary>
         /// </summary>
@@ -670,8 +671,8 @@
         private static AssemblyMetadata Compile(string source)
         {
             var codeProvider = new CSharpCodeProvider();
-            var icc = codeProvider.CreateCompiler();
-            var outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
+            ICodeCompiler icc = codeProvider.CreateCompiler();
+            string outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
 
             var parameters = new CompilerParameters();
             parameters.GenerateExecutable = false;
@@ -680,7 +681,7 @@
             parameters.OutputAssembly = outDll;
 
             // parameters.CompilerOptions = "/optimize-";
-            var results = icc.CompileAssemblyFromFile(parameters, source);
+            CompilerResults results = icc.CompileAssemblyFromFile(parameters, source);
 
             if (results.Errors.Count > 0)
             {
@@ -709,7 +710,7 @@
         private static byte[] ReadBytes(IEnumerator source, int size, ref int shift)
         {
             var b = new byte[size];
-            for (var i = 0; i < size; i++)
+            for (int i = 0; i < size; i++)
             {
                 if (source.MoveNext())
                 {
@@ -754,12 +755,10 @@
             if (source.MoveNext())
             {
                 shift++;
-                return (int)(byte)source.Current;
+                return (byte)source.Current;
             }
 
             throw new InvalidOperationException("Could not read a short for of int32");
         }
-
-        #endregion
     }
 }

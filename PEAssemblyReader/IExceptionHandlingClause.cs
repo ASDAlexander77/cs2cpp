@@ -1,19 +1,41 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IExceptionHandlingClause.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System.Reflection;
 
+    /// <summary>
+    /// </summary>
     public interface IExceptionHandlingClause
     {
+        /// <summary>
+        /// </summary>
         IType CatchType { get; }
 
+        /// <summary>
+        /// </summary>
         ExceptionHandlingClauseOptions Flags { get; }
 
-        int TryOffset { get; }
+        /// <summary>
+        /// </summary>
+        int HandlerLength { get; }
 
-        int TryLength { get; }
-
+        /// <summary>
+        /// </summary>
         int HandlerOffset { get; }
 
-        int HandlerLength { get; }
+        /// <summary>
+        /// </summary>
+        int TryLength { get; }
+
+        /// <summary>
+        /// </summary>
+        int TryOffset { get; }
     }
 }

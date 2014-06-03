@@ -1,11 +1,32 @@
-﻿namespace Il2Native.Logic.CodeParts
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodeDoublePart.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.CodeParts
 {
     using System;
     using System.Reflection.Emit;
 
-    public class OpCodeDoublePart : OpCodeParamPart<Double>
+    /// <summary>
+    /// </summary>
+    public class OpCodeDoublePart : OpCodeParamPart<double>
     {
-        public OpCodeDoublePart(OpCode opcode, int addressStart, int addressEnd, Double param)
+        /// <summary>
+        /// </summary>
+        /// <param name="opcode">
+        /// </param>
+        /// <param name="addressStart">
+        /// </param>
+        /// <param name="addressEnd">
+        /// </param>
+        /// <param name="param">
+        /// </param>
+        public OpCodeDoublePart(OpCode opcode, int addressStart, int addressEnd, double param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

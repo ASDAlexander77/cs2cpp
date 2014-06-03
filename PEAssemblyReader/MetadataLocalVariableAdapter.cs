@@ -1,32 +1,63 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataLocalVariableAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System;
+
+    using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
+
+    /// <summary>
+    /// </summary>
     public class MetadataLocalVariableAdapter : ILocalVariable
     {
-        private MetadataDecoder.LocalInfo localInfo;
+        /// <summary>
+        /// </summary>
+        private MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo;
 
-        internal MetadataLocalVariableAdapter(MetadataDecoder.LocalInfo localInfo, int index)
+        /// <summary>
+        /// </summary>
+        /// <param name="localInfo">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        internal MetadataLocalVariableAdapter(MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo, int index)
         {
             this.localInfo = localInfo;
             this.LocalIndex = index;
         }
 
-        public string Name
-        {
-            get { throw new NotImplementedException(); }
-        }
-
+        /// <summary>
+        /// </summary>
         public int LocalIndex { get; protected set; }
 
+        /// <summary>
+        /// </summary>
         public IType LocalType
         {
-            get { return new MetadataTypeAdapter(this.localInfo.Type, this.localInfo.IsByRef); }
+            get
+            {
+                return new MetadataTypeAdapter(this.localInfo.Type, this.localInfo.IsByRef);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public string Name
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

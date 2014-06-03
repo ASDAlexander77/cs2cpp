@@ -1,14 +1,35 @@
-﻿namespace Il2Native.Logic
-{
-    using System.Linq;
-    using Il2Native.Logic.CodeParts;
-    
-    using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using System.Collections.Generic;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodeBlock.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
+namespace Il2Native.Logic
+{
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using Il2Native.Logic.CodeParts;
+
+    using OpCodesEmit = System.Reflection.Emit.OpCodes;
+
+    /// <summary>
+    /// </summary>
     public class OpCodeBlock : OpCodePart
     {
-        public OpCodeBlock(OpCodePart[] opCodes, bool runDetect = true, bool detectOnly = false) : base(OpCodesEmit.Nop, 0, 0)
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodes">
+        /// </param>
+        /// <param name="runDetect">
+        /// </param>
+        /// <param name="detectOnly">
+        /// </param>
+        public OpCodeBlock(OpCodePart[] opCodes, bool runDetect = true, bool detectOnly = false)
+            : base(OpCodesEmit.Nop, 0, 0)
         {
             this.OpCodes = opCodes;
 
@@ -17,7 +38,7 @@
                 if (this.DetectBlock() && !detectOnly)
                 {
                     // HACK: improve me by using Try/Catch blocks instead
-                    var first = OpCodes.First();
+                    OpCodePart first = this.OpCodes.First();
                     if (first.Try != null)
                     {
                         this.Try = first.Try;
@@ -39,8 +60,12 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public OpCodePart[] OpCodes { get; private set; }
 
+        /// <summary>
+        /// </summary>
         public override int GroupAddressStart
         {
             get
@@ -49,6 +74,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public override int GroupAddressEnd
         {
             get
@@ -57,36 +84,40 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private bool DetectBlock()
         {
             if (this.OpCodes == null || this.OpCodes.Length == 0)
             {
-                UseAsEmpty = true;              
+                this.UseAsEmpty = true;
                 return false;
             }
 
-            var first = this.OpCodes.First();
+            OpCodePart first = this.OpCodes.First();
 
             if (first.UseAsCaseCondition)
             {
-                UseAsSwitch = true;
-                UseAsIfElseSwitch = first.UseAsIfElseSwitch;
+                this.UseAsSwitch = true;
+                this.UseAsIfElseSwitch = first.UseAsIfElseSwitch;
                 return false;
             }
 
-            var last = this.OpCodes.Last();
+            OpCodePart last = this.OpCodes.Last();
 
             if (first.IsCondBranch() && !first.UseAsConditionalBreak && !first.UseAsConditionalContinue)
             {
                 // to inver condition
-                this.OpCodes[0].UseAsIf = true; 
+                this.OpCodes[0].UseAsIf = true;
 
                 // to write block as If
-                UseAsIf = true;
+                this.UseAsIf = true;
 
                 // build if conditions
                 var list = new List<OpCodePart>();
-                var count = 0;
+                int count = 0;
                 while (count < this.OpCodes.Length && this.OpCodes[count].UseAsIfWhileForSubCondition)
                 {
                     list.Add(this.OpCodes[count]);
@@ -101,21 +132,20 @@
                 return true;
             }
 
-            var beforeLastCondition = this.OpCodes.Where(op => !op.UseAsIfWhileForSubCondition).Last();
-            var hasContinue = beforeLastCondition != null
-                && beforeLastCondition.JumpDestination != null
-                && beforeLastCondition.JumpDestination.Any(j => j.UseAsConditionalContinue || j.UseAsContinue);
+            OpCodePart beforeLastCondition = this.OpCodes.Where(op => !op.UseAsIfWhileForSubCondition).Last();
+            bool hasContinue = beforeLastCondition != null && beforeLastCondition.JumpDestination != null
+                               && beforeLastCondition.JumpDestination.Any(j => j.UseAsConditionalContinue || j.UseAsContinue);
 
             if (first.IsBranch() && last.IsCondBranch() && !last.IsJumpForward() && last.JumpAddress() == first.GroupAddressEnd)
-            {               
+            {
                 // to write block as While or For
                 if (hasContinue)
                 {
-                    UseAsFor = true;
+                    this.UseAsFor = true;
                 }
                 else
                 {
-                    UseAsWhile = true;
+                    this.UseAsWhile = true;
                 }
 
                 return false;
@@ -124,13 +154,13 @@
             if (first.IsBranch() && first.IsJumpForward())
             {
                 // to write block as If
-                UseAsElse = true;
+                this.UseAsElse = true;
                 return false;
             }
 
             if (last.IsBranch() && !last.IsJumpForward())
             {
-                UseAsFor = true;
+                this.UseAsFor = true;
                 return true;
             }
 
@@ -138,11 +168,11 @@
             {
                 if (hasContinue)
                 {
-                    UseAsFor = true;
+                    this.UseAsFor = true;
                 }
                 else
                 {
-                    UseAsDoWhile = true;
+                    this.UseAsDoWhile = true;
                 }
 
                 return true;

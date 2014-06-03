@@ -1,12 +1,23 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IParameter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
-    using System.Collections.Generic;
-    using System.Reflection;
-
+    /// <summary>
+    /// </summary>
     public interface IParameter
     {
+        /// <summary>
+        /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// </summary>
         IType ParameterType { get; }
     }
 }

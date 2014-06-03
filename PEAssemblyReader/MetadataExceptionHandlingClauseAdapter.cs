@@ -1,52 +1,103 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataExceptionHandlingClauseAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
+    using System.Reflection;
     using System.Reflection.Metadata;
-    using System.Text;
-    using System.Threading.Tasks;
+
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
+    /// <summary>
+    /// </summary>
     public class MetadataExceptionHandlingClauseAdapter : IExceptionHandlingClause
     {
-        private ExceptionRegion exceptionRegion;
-        private TypeSymbol catchType;
+        /// <summary>
+        /// </summary>
+        private readonly TypeSymbol catchType;
 
+        /// <summary>
+        /// </summary>
+        private ExceptionRegion exceptionRegion;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="exceptionRegion">
+        /// </param>
+        /// <param name="catchType">
+        /// </param>
         internal MetadataExceptionHandlingClauseAdapter(ExceptionRegion exceptionRegion, TypeSymbol catchType)
         {
             this.exceptionRegion = exceptionRegion;
             this.catchType = catchType;
         }
 
+        /// <summary>
+        /// </summary>
         public IType CatchType
         {
-            get { return new MetadataTypeAdapter(this.catchType); }
+            get
+            {
+                return new MetadataTypeAdapter(this.catchType);
+            }
         }
 
-        public System.Reflection.ExceptionHandlingClauseOptions Flags
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public ExceptionHandlingClauseOptions Flags
         {
-            get { throw new NotImplementedException(); }
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public int TryOffset
-        {
-            get { return this.exceptionRegion.TryOffset; }
-        }
-
-        public int TryLength
-        {
-            get { return this.exceptionRegion.TryLength; }
-        }
-
-        public int HandlerOffset
-        {
-            get { return this.exceptionRegion.HandlerOffset; }
-        }
-
+        /// <summary>
+        /// </summary>
         public int HandlerLength
         {
-            get { return this.exceptionRegion.HandlerLength; }
+            get
+            {
+                return this.exceptionRegion.HandlerLength;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public int HandlerOffset
+        {
+            get
+            {
+                return this.exceptionRegion.HandlerOffset;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public int TryLength
+        {
+            get
+            {
+                return this.exceptionRegion.TryLength;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public int TryOffset
+        {
+            get
+            {
+                return this.exceptionRegion.TryOffset;
+            }
         }
     }
 }

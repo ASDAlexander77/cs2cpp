@@ -1,29 +1,50 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataParameterAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
+    /// <summary>
+    /// </summary>
     public class MetadataParameterAdapter : IParameter
     {
-        private ParameterSymbol paramDef;
+        /// <summary>
+        /// </summary>
+        private readonly ParameterSymbol paramDef;
 
+        /// <summary>
+        /// </summary>
+        /// <param name="paramDef">
+        /// </param>
         internal MetadataParameterAdapter(ParameterSymbol paramDef)
         {
             this.paramDef = paramDef;
         }
 
+        /// <summary>
+        /// </summary>
         public string Name
         {
-            get { return this.paramDef.Name; }
+            get
+            {
+                return this.paramDef.Name;
+            }
         }
 
+        /// <summary>
+        /// </summary>
         public IType ParameterType
         {
-            get { return new MetadataTypeAdapter(this.paramDef.Type); }
+            get
+            {
+                return new MetadataTypeAdapter(this.paramDef.Type);
+            }
         }
     }
 }

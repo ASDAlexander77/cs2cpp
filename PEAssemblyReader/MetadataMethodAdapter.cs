@@ -1,37 +1,48 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataMethodAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System;
-    using System.Linq;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
+    using System.Diagnostics;
+    using System.Linq;
     using System.Reflection;
+    using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
-    using System.Reflection.Metadata;
+    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using System.Collections.Immutable;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-    using System.Diagnostics;
 
+    /// <summary>
+    /// </summary>
     public class MetadataMethodAdapter : IMethod
     {
-        #region Fields
+        /// <summary>
+        /// </summary>
+        private readonly MethodSymbol methodDef;
 
-        private MethodSymbol methodDef;
-
-        #endregion
-
-        #region Constructors and Destructors
-
+        /// <summary>
+        /// </summary>
+        /// <param name="methodDef">
+        /// </param>
         internal MetadataMethodAdapter(MethodSymbol methodDef)
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
         }
 
-        #endregion
-
-        #region Public Properties
-
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public string AssemblyQualifiedName
         {
             get
@@ -40,47 +51,59 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public CallingConventions CallingConvention
         {
             get
             {
-                CallingConventions callConv = 0;
-                if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.Standard))
-                    callConv |= CallingConventions.Standard;
+                var callConv = CallingConventions.Standard;
                 if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.ExtraArguments))
+                {
                     callConv |= CallingConventions.VarArgs;
+                }
+
                 if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.HasThis))
+                {
                     callConv |= CallingConventions.HasThis;
+                }
+
                 if (this.methodDef.CallingConvention.HasFlag(Microsoft.Cci.CallingConvention.ExplicitThis))
+                {
                     callConv |= CallingConventions.ExplicitThis;
+                }
 
                 return callConv;
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IType DeclaringType
         {
             get
             {
-                return new MetadataTypeAdapter(methodDef.ContainingType);
+                return new MetadataTypeAdapter(this.methodDef.ContainingType);
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
         {
             get
             {
                 var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                var peModule = peModuleSymbol.Module;
+                PEModule peModule = peModuleSymbol.Module;
                 var peMethodSymbol = this.methodDef as PEMethodSymbol;
                 if (peMethodSymbol != null)
                 {
-                    var methodBodyBlock = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                    MethodBodyBlock methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                     if (methodBodyBlock != null)
                     {
-                        return methodBodyBlock
-                            .ExceptionRegions
-                            .Select(er => new MetadataExceptionHandlingClauseAdapter(er, new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType)));
+                        return
+                            methodBodyBlock.ExceptionRegions.Select(
+                                er => new MetadataExceptionHandlingClauseAdapter(er, new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType)));
                     }
                 }
 
@@ -88,6 +111,10 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public string FullName
         {
             get
@@ -96,6 +123,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsAbstract
         {
             get
@@ -104,12 +133,12 @@
             }
         }
 
-        public bool IsConstructor
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// </summary>
+        public bool IsConstructor { get; set; }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericMethod
         {
             get
@@ -118,6 +147,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsStatic
         {
             get
@@ -126,6 +157,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsVirtual
         {
             get
@@ -134,27 +167,30 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables
         {
             get
             {
-                var localInfo = default(ImmutableArray<MetadataDecoder.LocalInfo>);
+                ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo> localInfo =
+                    default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
                 try
                 {
                     var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                    var peModule = peModuleSymbol.Module;
+                    PEModule peModule = peModuleSymbol.Module;
                     var peMethodSymbol = this.methodDef as PEMethodSymbol;
                     if (peMethodSymbol != null)
                     {
-                        var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                        MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                         if (methodBody != null && !methodBody.LocalSignature.IsNil)
                         {
-                            var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                            BlobHandle signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
                         }
                         else
                         {
-                            localInfo = ImmutableArray<MetadataDecoder.LocalInfo>.Empty;
+                            localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
                         }
                     }
                 }
@@ -165,14 +201,16 @@
                 {
                 }
 
-                var index = 0;
-                foreach (var li in localInfo)
+                int index = 0;
+                foreach (MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo li in localInfo)
                 {
                     yield return new MetadataLocalVariableAdapter(li, index++);
                 }
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IModule Module
         {
             get
@@ -181,6 +219,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Name
         {
             get
@@ -189,6 +229,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Namespace
         {
             get
@@ -197,6 +239,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IType ReturnType
         {
             get
@@ -205,15 +249,12 @@
             }
         }
 
-        #endregion
-
-        public override string ToString()
-        {
-            return this.methodDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
-
-        #region Public Methods and Operators
-
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public int CompareTo(object obj)
         {
             var name = obj as IName;
@@ -222,7 +263,7 @@
                 return 1;
             }
 
-            var val = name.Name.CompareTo(this.Name);
+            int val = name.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -237,19 +278,27 @@
             return 0;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
             return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public byte[] GetILAsByteArray()
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peModule = peModuleSymbol.Module;
+            PEModule peModule = peModuleSymbol.Module;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
             {
-                var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null)
                 {
                     return methodBody.GetILBytes();
@@ -259,14 +308,18 @@
             return null;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IMethodBody GetMethodBody()
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peModule = peModuleSymbol.Module;
+            PEModule peModule = peModuleSymbol.Module;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
             {
-                var methodBody = GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null && methodBody.GetILBytes() != null)
                 {
                     return this;
@@ -276,23 +329,44 @@
             return null;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IParameter> GetParameters()
         {
             return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
+        {
+            return this.methodDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="peModuleSymbol">
+        /// </param>
+        /// <param name="peMethodSymbol">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private MethodBodyBlock GetMethodBodyBlock(PEModuleSymbol peModuleSymbol, PEMethodSymbol peMethodSymbol)
         {
-            var peModule = peModuleSymbol.Module;
+            PEModule peModule = peModuleSymbol.Module;
             if (peMethodSymbol != null)
             {
                 Debug.Assert(peModule.HasIL);
                 return peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
-            };
+            }
+
+            ;
 
             return null;
         }
-
-        #endregion
     }
 }

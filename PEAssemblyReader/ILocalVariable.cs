@@ -1,14 +1,27 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ILocalVariable.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
-    using System;
-    using System.Collections.Generic;
-
+    /// <summary>
+    /// </summary>
     public interface ILocalVariable
     {
-        string Name { get; }
-
+        /// <summary>
+        /// </summary>
         int LocalIndex { get; }
 
+        /// <summary>
+        /// </summary>
         IType LocalType { get; }
+
+        /// <summary>
+        /// </summary>
+        string Name { get; }
     }
 }

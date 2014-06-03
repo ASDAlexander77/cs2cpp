@@ -1,22 +1,52 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IMethod.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System.Collections.Generic;
     using System.Reflection;
 
+    /// <summary>
+    /// </summary>
     public interface IMethod : IMember, IMethodBody
     {
-        IType ReturnType { get; }
-
-        bool IsGenericMethod { get; }
-
-        bool IsConstructor { get; }
-
+        /// <summary>
+        /// </summary>
         CallingConventions CallingConvention { get; }
 
-        IEnumerable<IParameter> GetParameters();
+        /// <summary>
+        /// </summary>
+        bool IsConstructor { get; }
 
+        /// <summary>
+        /// </summary>
+        bool IsGenericMethod { get; }
+
+        /// <summary>
+        /// </summary>
+        IType ReturnType { get; }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetGenericArguments();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IMethodBody GetMethodBody();
 
-        IEnumerable<IType> GetGenericArguments();
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IParameter> GetParameters();
     }
 }

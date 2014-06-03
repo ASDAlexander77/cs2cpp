@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BaseWriter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -22,8 +24,6 @@ namespace Il2Native.Logic
     /// </summary>
     public class BaseWriter
     {
-        #region Constructors and Destructors
-
         /// <summary>
         /// </summary>
         public BaseWriter()
@@ -36,10 +36,6 @@ namespace Il2Native.Logic
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressEnd = new SortedDictionary<int, OpCodePart>();
         }
-
-        #endregion
-
-        #region Public Properties
 
         /// <summary>
         /// </summary>
@@ -56,10 +52,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public IDictionary<int, OpCodePart> OpsByGroupAddressStart { get; private set; }
-
-        #endregion
-
-        #region Properties
 
         /// <summary>
         /// </summary>
@@ -120,10 +112,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected IType[] TypeGenericArguments { get; private set; }
-
-        #endregion
-
-        #region Public Methods and Operators
 
         /// <summary>
         /// </summary>
@@ -278,14 +266,14 @@ namespace Il2Native.Logic
             {
                 case Code.Call:
                 case Code.Callvirt:
-                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    IMethod methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
                 case Code.Newobj:
-                    var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
+                    IConstructor ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
                 case Code.Ldfld:
                 case Code.Ldsfld:
-                    var fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
+                    IField fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
                     return new ReturnResult(fieldInfo.FieldType);
                 case Code.Add:
                 case Code.Add_Ovf:
@@ -512,10 +500,6 @@ namespace Il2Native.Logic
             return null;
         }
 
-        #endregion
-
-        #region Methods
-
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -585,7 +569,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            foreach (var exceptionHandlingClause in this.ExceptionHandlingClauses)
+            foreach (IExceptionHandlingClause exceptionHandlingClause in this.ExceptionHandlingClauses)
             {
                 OpCodePart opCodePart;
                 if (this.OpsByGroupAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
@@ -638,14 +622,14 @@ namespace Il2Native.Logic
         /// </param>
         protected void AssignJumpBlocks(OpCodePart[] opCodes)
         {
-            foreach (var opCodePart in opCodes)
+            foreach (OpCodePart opCodePart in opCodes)
             {
                 if (opCodePart.IsAnyBranch())
                 {
                     var jumpOp = opCodePart as OpCodeInt32Part;
                     if (jumpOp != null)
                     {
-                        var nextAddress = opCodePart.JumpAddress();
+                        int nextAddress = opCodePart.JumpAddress();
                         OpCodePart target = this.OpsByAddressStart[nextAddress];
                         if (target.JumpDestination == null)
                         {
@@ -660,11 +644,11 @@ namespace Il2Native.Logic
                     var switchOp = opCodePart as OpCodeLabelsPart;
                     if (switchOp != null)
                     {
-                        var index = 0;
-                        foreach (var jumpAddress in switchOp.Operand)
+                        int index = 0;
+                        foreach (int jumpAddress in switchOp.Operand)
                         {
-                            var nextAddress = switchOp.JumpAddress(index);
-                            var target = this.OpsByAddressStart[nextAddress];
+                            int nextAddress = switchOp.JumpAddress(index);
+                            OpCodePart target = this.OpsByAddressStart[nextAddress];
                             if (target.JumpDestination == null)
                             {
                                 target.JumpDestination = new List<OpCodePart>();
@@ -690,7 +674,7 @@ namespace Il2Native.Logic
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
-            foreach (var opCodePart in opCodes)
+            foreach (OpCodePart opCodePart in opCodes)
             {
                 if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
                 {
@@ -721,7 +705,7 @@ namespace Il2Native.Logic
 
             var opCodeParts = new OpCodePart[size];
 
-            for (var i = 1; i <= size; i++)
+            for (int i = 1; i <= size; i++)
             {
                 OpCodePart opCodePartUsed = this.Stack.Pop();
 
@@ -769,8 +753,8 @@ namespace Il2Native.Logic
                     opCodePartUsed = opCodeNope;
                 }
                 else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
-                          || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
-                          && (((OpCodeMethodInfoPart)opCodePartUsed).Operand as IMethod).ReturnType.IsVoid())
+                         || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
+                         && ((OpCodeMethodInfoPart)opCodePartUsed).Operand.ReturnType.IsVoid())
                 {
                     if (insertBack == null)
                     {
@@ -808,7 +792,7 @@ namespace Il2Native.Logic
                     }
 
                     // because it is used you do not need to process it twice
-                    foreach (var opCode in newBlockOps)
+                    foreach (OpCodePart opCode in newBlockOps)
                     {
                         opCode.Skip = true;
                     }
@@ -847,7 +831,7 @@ namespace Il2Native.Logic
             if (insertBack != null)
             {
                 insertBack.Reverse();
-                foreach (var pushBack in insertBack)
+                foreach (OpCodePart pushBack in insertBack)
                 {
                     this.Stack.Push(pushBack);
                 }
@@ -881,11 +865,11 @@ namespace Il2Native.Logic
 
             this.AddAddressIndex(opCode);
 
-            var code = opCode.ToCode();
+            Code code = opCode.ToCode();
             switch (code)
             {
                 case Code.Call:
-                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    IMethod methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
                         opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
                     break;
@@ -1102,7 +1086,7 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            var methodBody = methodInfo.GetMethodBody();
+            IMethodBody methodBody = methodInfo.GetMethodBody();
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {
@@ -1395,14 +1379,10 @@ namespace Il2Native.Logic
             return true;
         }
 
-        #endregion
-
         /// <summary>
         /// </summary>
         public class ReturnResult : IEquatable<ReturnResult>
         {
-            #region Constructors and Destructors
-
             /// <summary>
             /// </summary>
             /// <param name="type">
@@ -1424,6 +1404,10 @@ namespace Il2Native.Logic
                 this.IsReference = asReference;
             }
 
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
             public ReturnResult(Type type)
             {
                 this.IType = TypeAdapter.FromType(type);
@@ -1440,10 +1424,6 @@ namespace Il2Native.Logic
             {
                 this.IsReference = asReference;
             }
-
-            #endregion
-
-            #region Public Properties
 
             /// <summary>
             /// </summary>
@@ -1504,10 +1484,6 @@ namespace Il2Native.Logic
             /// </summary>
             public IType IType { get; set; }
 
-            #endregion
-
-            #region Public Methods and Operators
-
             /// <summary>
             /// </summary>
             /// <param name="other">
@@ -1535,6 +1511,12 @@ namespace Il2Native.Logic
                 return this.IType == type;
             }
 
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
             public bool IsTypeOf(Type type)
             {
                 if (this.IType == null || type == null)
@@ -1544,8 +1526,6 @@ namespace Il2Native.Logic
 
                 return this.IType == TypeAdapter.FromType(type);
             }
-
-            #endregion
         }
     }
 }

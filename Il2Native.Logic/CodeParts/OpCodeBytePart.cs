@@ -1,11 +1,32 @@
-﻿namespace Il2Native.Logic.CodeParts
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodeBytePart.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.CodeParts
 {
     using System;
     using System.Reflection.Emit;
 
-    public class OpCodeBytePart : OpCodeParamPart<Byte>
+    /// <summary>
+    /// </summary>
+    public class OpCodeBytePart : OpCodeParamPart<byte>
     {
-        public OpCodeBytePart(OpCode opcode, int addressStart, int addressEnd, Byte param)
+        /// <summary>
+        /// </summary>
+        /// <param name="opcode">
+        /// </param>
+        /// <param name="addressStart">
+        /// </param>
+        /// <param name="addressEnd">
+        /// </param>
+        /// <param name="param">
+        /// </param>
+        public OpCodeBytePart(OpCode opcode, int addressStart, int addressEnd, byte param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

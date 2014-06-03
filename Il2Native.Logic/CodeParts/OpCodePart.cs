@@ -1,10 +1,17 @@
-﻿namespace Il2Native.Logic.CodeParts
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="OpCodePart.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.CodeParts
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
     using System.Reflection.Emit;
 
     using PEAssemblyReader;
@@ -14,8 +21,6 @@
     [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
     public class OpCodePart
     {
-        #region Fields
-
         /// <summary>
         /// </summary>
         private int? resultNumber;
@@ -23,10 +28,6 @@
         /// <summary>
         /// </summary>
         private IType resultType;
-
-        #endregion
-
-        #region Constructors and Destructors
 
         /// <summary>
         /// </summary>
@@ -48,10 +49,6 @@
         protected OpCodePart()
         {
         }
-
-        #endregion
-
-        #region Public Properties
 
         /// <summary>
         /// </summary>
@@ -301,7 +298,5 @@
         /// <summary>
         /// </summary>
         public bool UseAsWhile { get; set; }
-
-        #endregion
     }
 }

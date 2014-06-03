@@ -1,57 +1,139 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IType.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
 
-    public interface IType : IName
+    /// <summary>
+    /// </summary>
+    public interface IType : IName, IEquatable<IType>
     {
-        bool HasElementType { get; }
-
-        bool IsGenericType { get; }
-
-        bool IsPointer { get; }
-
-        bool IsArray { get; }
-
-        bool IsByRef { get; }
-
-        bool IsValueType { get; }
-
-        bool IsGenericTypeDefinition { get; }
-
-        bool IsGenericParameter { get; }
-
-        bool ContainsGenericParameters { get; }
-
-        bool IsInterface { get; }
-
-        bool IsEnum { get; }
-        
-        bool IsPrimitive { get; }
-
-        bool IsClass { get; }
-
-        int GenericParameterPosition { get; }
-
-        IEnumerable<IType> GenericTypeArguments { get; }
-
+        /// <summary>
+        /// </summary>
         IType BaseType { get; }
 
-        IEnumerable<IField> GetFields(BindingFlags bindingFlags);
+        /// <summary>
+        /// </summary>
+        bool ContainsGenericParameters { get; }
 
-        IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags);
+        /// <summary>
+        /// </summary>
+        int GenericParameterPosition { get; }
 
+        /// <summary>
+        /// </summary>
+        IEnumerable<IType> GenericTypeArguments { get; }
+
+        /// <summary>
+        /// </summary>
+        bool HasElementType { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsArray { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsByRef { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsClass { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsEnum { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsGenericParameter { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsGenericType { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsGenericTypeDefinition { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsInterface { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsPointer { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsPrimitive { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsValueType { get; }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
         IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags);
 
-        IEnumerable<IType> GetInterfaces();
-
-        IEnumerable<IType> GetGenericArguments();
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType GetElementType();
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType GetEnumUnderlyingType();
 
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IField> GetFields(BindingFlags bindingFlags);
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetGenericArguments();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetInterfaces();
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         bool IsAssignableFrom(IType type);
     }
 }

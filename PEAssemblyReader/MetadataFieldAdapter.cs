@@ -1,32 +1,41 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataFieldAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+namespace PEAssemblyReader
 {
     using System;
     using System.Diagnostics;
-    using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
+    /// <summary>
+    /// </summary>
     [DebuggerDisplay("Name = {Name}, Type = {FieldType.FullName}")]
     public class MetadataFieldAdapter : IField
     {
-        #region Fields
+        /// <summary>
+        /// </summary>
+        private readonly FieldSymbol fieldDef;
 
-        private FieldSymbol fieldDef;
-
-        #endregion
-
-        #region Constructors and Destructors
-
+        /// <summary>
+        /// </summary>
+        /// <param name="fieldDef">
+        /// </param>
         internal MetadataFieldAdapter(FieldSymbol fieldDef)
         {
             this.fieldDef = fieldDef;
         }
 
-        #endregion
-
-        #region Public Properties
-
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public string AssemblyQualifiedName
         {
             get
@@ -35,6 +44,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IType DeclaringType
         {
             get
@@ -43,6 +54,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IType FieldType
         {
             get
@@ -51,15 +64,19 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string FullName
         {
             get
             {
-                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
+                MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
                 return metadataTypeName.FullName;
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsAbstract
         {
             get
@@ -68,6 +85,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsLiteral
         {
             get
@@ -76,6 +95,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsStatic
         {
             get
@@ -84,6 +105,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsVirtual
         {
             get
@@ -92,6 +115,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public IModule Module
         {
             get
@@ -100,6 +125,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Name
         {
             get
@@ -108,6 +135,8 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
         public string Namespace
         {
             get
@@ -116,15 +145,12 @@
             }
         }
 
-        #endregion
-
-        public override string ToString()
-        {
-            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        }
-
-        #region Public Methods and Operators
-
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public int CompareTo(object obj)
         {
             var name = obj as IName;
@@ -133,7 +159,7 @@
                 return 1;
             }
 
-            var val = name.Name.CompareTo(this.Name);
+            int val = name.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -148,6 +174,13 @@
             return 0;
         }
 
-        #endregion
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
+        {
+            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
     }
 }
