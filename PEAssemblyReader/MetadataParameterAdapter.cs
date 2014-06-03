@@ -8,6 +8,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System.Text;
+
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
@@ -43,7 +46,23 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.paramDef.Type);
+                return new MetadataTypeAdapter(this.paramDef.Type, false, this.IsRef, this.IsOut);
+            }
+        }
+
+        public bool IsRef 
+        {
+            get
+            {
+                return this.paramDef.RefKind == RefKind.Ref;
+            }
+        }
+
+        public bool IsOut
+        {
+            get
+            {
+                return this.paramDef.RefKind == RefKind.Out;
             }
         }
 
@@ -53,7 +72,20 @@ namespace PEAssemblyReader
         /// </returns>
         public override string ToString()
         {
-            return this.ParameterType.ToString();
+            var result = new StringBuilder();
+
+            if (this.IsRef)
+            {
+                result.Append("Ref ");
+            }
+
+            if (this.IsOut)
+            {
+                result.Append("Out ");
+            }
+
+            result.Append(this.ParameterType);
+            return result.ToString();
         }
     }
 }

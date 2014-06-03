@@ -19,5 +19,13 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         IType ParameterType { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsRef { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsOut { get; }
     }
 }

@@ -2877,6 +2877,7 @@ namespace Il2Native.Logic
             this.Output.Write(string.Format(" %{0}", name));
             this.Output.Write(", ");
             this.WriteTypePrefix(this.Output, type, type.IsStructureType());
+
             this.Output.Write(string.Format("* %.{0}", name));
             this.Output.Write(", align " + pointerSize);
             this.Output.WriteLine(string.Empty);
