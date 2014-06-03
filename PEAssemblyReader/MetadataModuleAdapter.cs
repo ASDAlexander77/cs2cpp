@@ -130,27 +130,18 @@ namespace PEAssemblyReader
         public string ResolveString(int token)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
-            PEModule peModule = peModuleSymbol.Module;
+            var peModule = peModuleSymbol.Module;
 
-            StringHandle stringHandle = MetadataTokens.StringHandle(token);
-            string stringValue = peModule.MetadataReader.GetString(stringHandle);
-            if (stringValue != null)
+            var stringHandle = MetadataTokens.Handle(token);
+
+            switch (stringHandle.HandleType)
             {
-                return stringValue;
+                case HandleType.UserString:
+                    return peModule.MetadataReader.GetUserString((UserStringHandle)stringHandle);
+                case HandleType.String:
+                    return peModule.MetadataReader.GetString((StringHandle)stringHandle);
             }
 
-            ////// try to resolve in other modules
-            ////foreach (var assemblySymbol in peModuleSymbol.GetReferencedAssemblySymbols())
-            ////{
-            ////    foreach (var moduleInAssemblySymbol in assemblySymbol.Modules)
-            ////    {
-            ////        stringValue = (moduleInAssemblySymbol as PEModuleSymbol).Module.MetadataReader.GetString(stringHandle);
-            ////        if (stringValue != null)
-            ////        {
-            ////            return stringValue;
-            ////        }
-            ////    }
-            ////}
             throw new NotImplementedException();
         }
 

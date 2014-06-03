@@ -13,6 +13,7 @@ namespace PEAssemblyReader
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using System.Text;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -102,7 +103,9 @@ namespace PEAssemblyReader
         {
             get
             {
-                MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name);
+                var metadataTypeName = this.typeDef.ContainingNamespace != null
+                                           ? MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name)
+                                           : MetadataTypeName.FromTypeName(this.typeDef.Name);
                 return metadataTypeName.FullName;
             }
         }
@@ -464,7 +467,41 @@ namespace PEAssemblyReader
         /// </returns>
         public override string ToString()
         {
-            return this.typeDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var result = new StringBuilder();
+
+            // write Full Name
+            if (this.HasElementType)
+            {
+                result.Append(this.GetElementType().ToString());
+                
+                if (this.IsPointer)
+                {
+                    result.Append('*');
+                }
+
+                if (this.IsByRef)
+                {
+                    result.Append('&');
+                }
+
+                if (this.IsArray)
+                {
+                    result.Append("[]");
+                }
+            }
+            else
+            {
+                if ((this.IsPrimitive || this.Name == "Void") && this.Namespace == "System")
+                {
+                    result.Append(this.Name);
+                }
+                else
+                {
+                    result.Append(this.FullName);
+                }
+            }
+
+            return result.ToString();
         }
 
         /// <summary>

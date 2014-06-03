@@ -46,5 +46,10 @@ namespace PEAssemblyReader
                 return new MetadataTypeAdapter(this.paramDef.Type);
             }
         }
+
+        public override string ToString()
+        {
+            return this.ParameterType.ToString();
+        }
     }
 }

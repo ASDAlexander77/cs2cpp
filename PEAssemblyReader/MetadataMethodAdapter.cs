@@ -15,6 +15,7 @@ namespace PEAssemblyReader
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Metadata;
+    using System.Text;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -119,7 +120,23 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                var result = new StringBuilder();
+
+                if (this.methodDef.ContainingNamespace != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingNamespace.Name))
+                {
+                    result.Append(this.methodDef.ContainingNamespace.Name);
+                    result.Append('.');
+                }
+
+                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
+                {
+                    result.Append(this.methodDef.ContainingType.Name);
+                    result.Append('.');
+                }
+
+                result.Append(this.methodDef.Name);
+
+                return result.ToString();
             }
         }
 
@@ -344,7 +361,35 @@ namespace PEAssemblyReader
         /// </returns>
         public override string ToString()
         {
-            return this.methodDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var result = new StringBuilder();
+
+            if (!IsConstructor)
+            {
+                // write return type
+                result.Append(this.ReturnType);
+                result.Append(' ');
+            }
+
+            // write Full Name
+            result.Append(this.Name);
+
+            // write Parameter Types
+            result.Append('(');
+            var index = 0;
+            foreach (var parameterType in this.GetParameters())
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(parameterType);
+                index++;
+            }
+
+            result.Append(')');
+
+            return result.ToString();
         }
 
         /// <summary>
