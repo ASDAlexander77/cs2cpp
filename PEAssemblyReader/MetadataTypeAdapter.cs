@@ -52,7 +52,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                TypeSymbol effective = this.typeDef;
+                var effective = this.typeDef;
 
                 if (this.typeDef.TypeKind == TypeKind.ArrayType)
                 {
@@ -294,7 +294,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            int val = type.Name.CompareTo(this.Name);
+            var val = type.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -307,17 +307,6 @@ namespace PEAssemblyReader
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool Equals(IType other)
-        {
-            return this.CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -444,7 +433,7 @@ namespace PEAssemblyReader
             var type = obj as IType;
             if (type != null)
             {
-                return this.Equals(type);
+                return this.CompareTo(type) == 0;
             }
 
             return base.Equals(obj);
@@ -456,9 +445,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            int result = this.Name.GetHashCode();
-            result = 29 * result + this.Namespace.GetHashCode();
-            return result;
+            return this.ToString().GetHashCode();
         }
 
         /// <summary>
@@ -472,8 +459,8 @@ namespace PEAssemblyReader
             // write Full Name
             if (this.HasElementType)
             {
-                result.Append(this.GetElementType().ToString());
-                
+                result.Append(this.GetElementType());
+
                 if (this.IsPointer)
                 {
                     result.Append('*');

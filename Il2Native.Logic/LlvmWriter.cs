@@ -4080,17 +4080,6 @@ namespace Il2Native.Logic
 
                     this.Output.Write("declare ");
 
-                    var method = externalMethodDecl;
-                    if (method != null)
-                    {
-                        this.ReadMethodInfo(method);
-                        this.WriteMethodReturnType(this.Output, method);
-                        this.WriteMethodDefinitionName(this.Output, method);
-                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
-                        this.Output.WriteLine(string.Empty);
-                        continue;
-                    }
-
                     var ctor = externalMethodDecl as IConstructor;
                     if (ctor != null)
                     {
@@ -4098,6 +4087,17 @@ namespace Il2Native.Logic
                         this.Output.Write("void ");
                         this.WriteMethodDefinitionName(this.Output, ctor);
                         this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, TypeAdapter.FromType(typeof(void)));
+                        this.Output.WriteLine(string.Empty);
+                        continue;
+                    }
+
+                    var method = externalMethodDecl;
+                    if (method != null)
+                    {
+                        this.ReadMethodInfo(method);
+                        this.WriteMethodReturnType(this.Output, method);
+                        this.WriteMethodDefinitionName(this.Output, method);
+                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }

@@ -8,13 +8,12 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
-    using System;
     using System.Collections.Generic;
     using System.Reflection;
 
     /// <summary>
     /// </summary>
-    public interface IType : IName, IEquatable<IType>
+    public interface IType : IName
     {
         /// <summary>
         /// </summary>

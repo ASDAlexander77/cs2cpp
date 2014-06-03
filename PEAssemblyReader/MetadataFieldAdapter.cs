@@ -70,7 +70,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
+                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
                 return metadataTypeName.FullName;
             }
         }
@@ -159,7 +159,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            int val = name.Name.CompareTo(this.Name);
+            var val = name.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;

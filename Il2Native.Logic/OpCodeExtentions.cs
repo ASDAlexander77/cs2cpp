@@ -276,7 +276,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool TypeNotEquals(this IType type, Type other)
         {
-            return !type.Equals(other);
+            return !type.TypeEquals(other);
         }
 
         /// <summary>

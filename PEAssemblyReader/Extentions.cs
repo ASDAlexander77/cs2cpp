@@ -31,7 +31,7 @@ namespace PEAssemblyReader
                 return false;
             }
 
-            IType t = thisType.BaseType;
+            var t = thisType.BaseType;
             while (t != null)
             {
                 if (type.TypeEquals(t))

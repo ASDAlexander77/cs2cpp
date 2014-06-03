@@ -95,11 +95,11 @@ namespace PEAssemblyReader
             get
             {
                 var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                PEModule peModule = peModuleSymbol.Module;
+                var peModule = peModuleSymbol.Module;
                 var peMethodSymbol = this.methodDef as PEMethodSymbol;
                 if (peMethodSymbol != null)
                 {
-                    MethodBodyBlock methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                    var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                     if (methodBodyBlock != null)
                     {
                         return
@@ -190,19 +190,18 @@ namespace PEAssemblyReader
         {
             get
             {
-                ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo> localInfo =
-                    default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
+                var localInfo = default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
                 try
                 {
                     var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                    PEModule peModule = peModuleSymbol.Module;
+                    var peModule = peModuleSymbol.Module;
                     var peMethodSymbol = this.methodDef as PEMethodSymbol;
                     if (peMethodSymbol != null)
                     {
-                        MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                        var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                         if (methodBody != null && !methodBody.LocalSignature.IsNil)
                         {
-                            BlobHandle signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                            var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
                         }
                         else
@@ -218,8 +217,8 @@ namespace PEAssemblyReader
                 {
                 }
 
-                int index = 0;
-                foreach (MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo li in localInfo)
+                var index = 0;
+                foreach (var li in localInfo)
                 {
                     yield return new MetadataLocalVariableAdapter(li, index++);
                 }
@@ -280,7 +279,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            int val = name.Name.CompareTo(this.Name);
+            var val = name.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -311,11 +310,11 @@ namespace PEAssemblyReader
         public byte[] GetILAsByteArray()
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            PEModule peModule = peModuleSymbol.Module;
+            var peModule = peModuleSymbol.Module;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
             {
-                MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null)
                 {
                     return methodBody.GetILBytes();
@@ -332,11 +331,11 @@ namespace PEAssemblyReader
         public IMethodBody GetMethodBody()
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            PEModule peModule = peModuleSymbol.Module;
+            var peModule = peModuleSymbol.Module;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
             {
-                MethodBodyBlock methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null && methodBody.GetILBytes() != null)
                 {
                     return this;
@@ -363,12 +362,9 @@ namespace PEAssemblyReader
         {
             var result = new StringBuilder();
 
-            if (!IsConstructor)
-            {
-                // write return type
-                result.Append(this.ReturnType);
-                result.Append(' ');
-            }
+            // write return type
+            result.Append(this.ReturnType);
+            result.Append(' ');
 
             // write Full Name
             result.Append(this.Name);
@@ -402,7 +398,7 @@ namespace PEAssemblyReader
         /// </returns>
         private MethodBodyBlock GetMethodBodyBlock(PEModuleSymbol peModuleSymbol, PEMethodSymbol peMethodSymbol)
         {
-            PEModule peModule = peModuleSymbol.Module;
+            var peModule = peModuleSymbol.Module;
             if (peMethodSymbol != null)
             {
                 Debug.Assert(peModule.HasIL);
@@ -412,6 +408,32 @@ namespace PEAssemblyReader
             ;
 
             return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            var type = obj as IName;
+            if (type != null)
+            {
+                return this.CompareTo(type) == 0;
+            }
+
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return this.ToString().GetHashCode();
         }
     }
 }

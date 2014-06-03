@@ -13,7 +13,6 @@ namespace PEAssemblyReader
     using System.Reflection.Metadata;
     using System.Reflection.Metadata.Ecma335;
 
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
@@ -50,7 +49,7 @@ namespace PEAssemblyReader
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            Handle fieldHandle = MetadataTokens.Handle(token);
+            var fieldHandle = MetadataTokens.Handle(token);
             var fieldSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken(fieldHandle) as FieldSymbol;
 
             if (fieldSymbol != null)
@@ -77,7 +76,7 @@ namespace PEAssemblyReader
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            Handle methodHandle = MetadataTokens.Handle(token);
+            var methodHandle = MetadataTokens.Handle(token);
             var methodSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken(methodHandle) as MethodSymbol;
             if (methodSymbol != null)
             {
@@ -108,11 +107,16 @@ namespace PEAssemblyReader
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            Handle methodHandle = MetadataTokens.Handle(token);
+            var methodHandle = MetadataTokens.Handle(token);
             var methodSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken(methodHandle) as MethodSymbol;
 
             if (methodSymbol != null)
             {
+                if (methodSymbol.HasSpecialName && (methodSymbol.Name == ".ctor" || methodSymbol.Name == "..ctor"))
+                {
+                    return new MetadataConstructorAdapter(methodSymbol);
+                }
+
                 return new MetadataMethodAdapter(methodSymbol);
             }
 
@@ -161,7 +165,7 @@ namespace PEAssemblyReader
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            Handle typedefHandle = MetadataTokens.Handle(token);
+            var typedefHandle = MetadataTokens.Handle(token);
             var typeSymbol = new MetadataDecoder(peModuleSymbol).GetSymbolForILToken(typedefHandle) as TypeSymbol;
 
             if (typeSymbol != null)

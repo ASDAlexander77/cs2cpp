@@ -300,7 +300,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            int val = type.Name.CompareTo(this.Name);
+            var val = type.Name.CompareTo(this.Name);
             if (val != 0)
             {
                 return val;
@@ -313,17 +313,6 @@ namespace PEAssemblyReader
             }
 
             return 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool Equals(IType other)
-        {
-            return this.CompareTo(other) == 0;
         }
 
         /// <summary>
@@ -358,7 +347,7 @@ namespace PEAssemblyReader
         {
             if (this.type.IsEnum)
             {
-                FieldInfo firstEnumField = this.type.GetFields(BindingFlags.Default).First();
+                var firstEnumField = this.type.GetFields(BindingFlags.Default).First();
                 return new TypeAdapter(firstEnumField.FieldType);
             }
 
