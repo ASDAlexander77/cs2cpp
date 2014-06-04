@@ -3079,7 +3079,7 @@ namespace Il2Native.Logic
             
             var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
-            int? virtualMethodAddressResult = null;
+            int? virtualMethodAddressResultNumber = null;
             var isInderectMethodCall = isVirtual && (methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
 
             var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
@@ -3104,36 +3104,83 @@ namespace Il2Native.Logic
                 writer.Write(" to ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.WriteLine("**");
+                var pointerToVirtualTablePointerResultNumber = opCodeMethodInfo.ResultNumber;
 
                 // load pointer
-                var bitcastRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("load ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("** ");
-                WriteResultNumber(bitcastRes ?? -1);
+                WriteResultNumber(pointerToVirtualTablePointerResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
+                var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.ResultNumber;
 
                 // get address of a function
-                var loadVTableRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("getelementptr inbounds ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
-                WriteResultNumber(loadVTableRes ?? -1);
+                WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
                 writer.WriteLine(", i64 {0}", this.GetVirtualMethodIndex(thisType, methodInfo));
+                var pointerToFunctionPointerResultNumber = opCodeMethodInfo.ResultNumber;
 
                 // load method address
-                var vtableRes = opCodeMethodInfo.ResultNumber;
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("load ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
-                WriteResultNumber(vtableRes ?? -1);
+                WriteResultNumber(pointerToFunctionPointerResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
-
                 // remember virtual method address result
-                virtualMethodAddressResult = opCodeMethodInfo.ResultNumber;
+                virtualMethodAddressResultNumber = opCodeMethodInfo.ResultNumber;
+
+                if (thisType.IsInterface)
+                {
+                    writer.WriteLine("; Get 'this' from Interface Virtual Table");
+
+                    // load offset address
+                    this.WriteSetResultNumber(opCodeMethodInfo);
+                    writer.Write("load ");
+                    this.WriteMethodPointerType(writer, methodInfo);
+                    writer.Write("* ");
+                    WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
+                    writer.WriteLine(string.Empty);
+                    // remember virtual method address result
+                    var offsetAddressResultNumber = opCodeMethodInfo.ResultNumber;
+
+                    // cast pointer to int
+                    WriteSetResultNumber(writer, opCodeMethodInfo);
+                    writer.Write("ptrtoint ");
+                    this.WriteMethodPointerType(writer, methodInfo);
+                    writer.Write(" ");
+                    WriteResultNumber(offsetAddressResultNumber ?? -1);
+                    writer.WriteLine(" to i32");
+                    var offsetAddressAsIntResultNumber = opCodeMethodInfo.ResultNumber;
+
+                    // get 'this' address
+                    var thisAddressFromInterfaceResultNumber = WriteSetResultNumber(writer, opCodeMethodInfo);
+                    writer.Write("getelementptr ");
+                    this.WriteMethodPointerType(writer, methodInfo);
+                    writer.Write("** ");
+                    WriteResultNumber(pointerToVirtualTablePointerResultNumber ?? -1);
+                    writer.Write(", i32 ");
+                    WriteResultNumber(offsetAddressAsIntResultNumber ?? -1);
+                    writer.WriteLine(string.Empty);
+
+                    // adjust 'this' pointer
+                    WriteSetResultNumber(writer, opCodeMethodInfo);
+                    writer.Write("bitcast ");
+                    this.WriteMethodPointerType(writer, methodInfo);
+                    writer.Write("** ");
+                    WriteResultNumber(thisAddressFromInterfaceResultNumber);
+                    writer.Write(" to ");
+                    this.WriteTypePrefix(writer, thisType);
+                    writer.WriteLine(string.Empty);
+
+                    var thisPointerResultNumber = opCodeMethodInfo.ResultNumber;
+                    // set ot for Call op code
+                    opCodeMethodInfo.OpCodeOperands[0].ResultNumber = thisPointerResultNumber;
+                }
             }
 
             // check if you need to cast this parameter
@@ -3190,7 +3237,7 @@ namespace Il2Native.Logic
 
             if (isInderectMethodCall)
             {
-                WriteResultNumber(virtualMethodAddressResult ?? -1);
+                WriteResultNumber(virtualMethodAddressResultNumber ?? -1);
             }
             else
             {
@@ -4217,7 +4264,7 @@ namespace Il2Native.Logic
             this.Output.Write(
                 " = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* {1}",
                 virtualTable.Count + 1,
-                interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex * pointerSize));
+                interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

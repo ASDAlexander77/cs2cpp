@@ -386,7 +386,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GetInterfaces()
         {
-            throw new NotImplementedException();
+            return this.type.GetInterfaces().Select(i => new TypeAdapter(i));
         }
 
         /// <summary>
