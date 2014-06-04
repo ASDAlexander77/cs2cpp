@@ -2395,12 +2395,23 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetFullMethodName(IMethod methodBase)
+        private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
+            var methodName = methodBase.ToString();
+
             var sb = new StringBuilder();
             sb.Append("@\"");
-            var method = methodBase.ToString();
-            sb.Append(method.Insert(method.IndexOf(' ') + 1, string.Concat(methodBase.DeclaringType.FullName, '.')));
+
+            if (ownerOfExplicitInterface != null)
+            {
+                var lookupTypeName = string.Concat(' ', methodBase.DeclaringType.Name, '.', methodBase.Name, '(');
+                sb.Append(methodName.Insert(methodName.IndexOf(lookupTypeName) + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
+            }
+            else
+            {
+                sb.Append(methodName);
+            }
+
             sb.Append('"');
 
             return sb.ToString();
@@ -2722,17 +2733,17 @@ namespace Il2Native.Logic
         private void ProcessOperator(
             LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType requiredType = null, OperandOptions options = OperandOptions.None)
         {
-            if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
-            {
-                var resultOf = this.ResultOf(opCode);
-                this.WriteSetResultNumber(opCode, resultOf != null ? resultOf.IType : null);
-            }
-
             IType castFrom;
             var effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
             if (castFrom != null && opCode.OpCodeOperands[0].ResultNumber.HasValue)
             {
                 this.WriteCast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
+            }
+
+            if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
+            {
+                var resultOf = this.ResultOf(opCode);
+                this.WriteSetResultNumber(opCode, resultOf != null ? resultOf.IType : null);
             }
 
             writer.Write(op);
@@ -3063,15 +3074,33 @@ namespace Il2Native.Logic
             var thisType = methodBase.DeclaringType;
 
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
-            var startsWithThis = hasThisArgument && opCodeMethodInfo.OpCodeOperands[0].Any(Code.Ldarg_0);
+            var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0 ? opCodeMethodInfo.OpCodeOperands[0] : null;
+            var resultOfirstOperand = opCodeFirstOperand != null ? this.ResultOf(opCodeFirstOperand) : null;
+            
+            var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
             int? virtualMethodAddressResult = null;
-            if (isVirtual && methodBase.IsVirtual)
+            var isInderectMethodCall = isVirtual && (methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
+
+            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
+            var requiredType = ownerOfExplicitInterface != null ? resultOfirstOperand.IType : null;
+            if (requiredType != null)
             {
+                thisType = requiredType;
+            }
+
+            if (isInderectMethodCall)
+            {
+                if (thisType.IsInterface && !resultOfirstOperand.IType.Equals(thisType))
+                {
+                    // we need to extract interface from an object
+                    requiredType = thisType;
+                }
+
                 // get pointer to Virtual Table and call method
                 // 1) get pointer to virtual table
                 writer.WriteLine("; Get Virtual Table");
-                this.UnaryOper(writer, opCodeMethodInfo, "bitcast");
+                this.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType);
                 writer.Write(" to ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.WriteLine("**");
@@ -3108,19 +3137,10 @@ namespace Il2Native.Logic
             }
 
             // check if you need to cast this parameter
-            if (hasThisArgument)
+            if (hasThisArgument && IsClassCastRequired(thisType, opCodeFirstOperand))
             {
-                var used = opCodeMethodInfo.OpCodeOperands;
-                if (used[0].ResultType == null)
-                {
-                    used[0].ResultType = this.ResultOf(used[0]).IType;
-                }
-
-                if (IsClassCastRequired(thisType, used[0]))
-                {
-                    this.WriteCast(writer, used[0], used[0].ResultType, used[0].ResultNumber.Value, thisType);
-                    writer.WriteLine(string.Empty);
-                }
+                this.WriteCast(writer, opCodeFirstOperand, opCodeFirstOperand.ResultType, opCodeFirstOperand.ResultNumber.Value, thisType);
+                writer.WriteLine(string.Empty);
             }
 
             // check if you need to cast parameter
@@ -3168,13 +3188,13 @@ namespace Il2Native.Logic
 
             writer.Write(' ');
 
-            if (isVirtual && methodBase.IsVirtual)
+            if (isInderectMethodCall)
             {
                 WriteResultNumber(virtualMethodAddressResult ?? -1);
             }
             else
             {
-                this.WriteMethodDefinitionName(writer, methodBase);
+                this.WriteMethodDefinitionName(writer, methodBase, ownerOfExplicitInterface);
             }
 
             this.ActualWrite(
@@ -3237,6 +3257,7 @@ namespace Il2Native.Logic
         {
             if (!fromType.IsInterface && toType.IsInterface)
             {
+                opCode.ResultNumber = res;
                 this.WriteInterfaceAccess(writer, opCode, fromType, toType);
             }
             else
@@ -3553,6 +3574,8 @@ namespace Il2Native.Logic
         {
             var objectResult = opCode.ResultNumber;
 
+            writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringType);
+
             this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator);
             writer.Write(' ');
             writer.Write(this.GetResultNumber(objectResult ?? -1));
@@ -3808,9 +3831,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        private void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, IMethod methodBase)
+        private void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
-            writer.Write(this.GetFullMethodName(methodBase));
+            writer.Write(this.GetFullMethodName(methodBase, ownerOfExplicitInterface));
         }
 
         /// <summary>
@@ -4063,12 +4086,13 @@ namespace Il2Native.Logic
                 this.WriteTableOfMethods(virtualTable);
             }
 
+            int index = 1;
             foreach (var @interface in this.ThisType.GetInterfaces())
             {
                 this.Output.WriteLine(string.Empty);
                 this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
                 var virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
-                this.WriteTableOfMethods(virtualInterfaceTable);
+                this.WriteTableOfMethods(virtualInterfaceTable, index++);
             }
         }
 
@@ -4188,9 +4212,12 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable)
+        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable, int interfaceIndex = 0)
         {
-            this.Output.Write(" = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* null", virtualTable.Count + 1);
+            this.Output.Write(
+                " = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* {1}",
+                virtualTable.Count + 1,
+                interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex * pointerSize));
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

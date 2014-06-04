@@ -367,7 +367,7 @@ namespace PEAssemblyReader
             result.Append(' ');
 
             // write Full Name
-            result.Append(this.Name);
+            result.Append(this.FullName);
 
             // write Parameter Types
             result.Append('(');
