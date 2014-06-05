@@ -508,12 +508,12 @@ namespace Il2Native.Logic
             var opCodeBlock = opCode as OpCodeBlock;
             if (opCodeBlock != null)
             {
-                if (opCodeBlock.UseAsIncDecExpression)
+                if (opCodeBlock.UseAsConditionalExpression)
                 {
-                    return this.ResultOf(opCodeBlock.OpCodes[0]);
+                    return this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
                 }
 
-                if (opCodeBlock.UseAsLeadingIncDecExpression)
+                if (opCodeBlock.UseAsNullCoalescingExpression)
                 {
                     return this.ResultOf(opCodeBlock.OpCodes[0]);
                 }
@@ -822,7 +822,7 @@ namespace Il2Native.Logic
                     newBlockOps.Reverse();
 
                     var opCodeBlock = new OpCodeBlock(
-                        this.ConditionalExpressionConditionsParse(newBlockOps.ToArray(), firstCondition, branchJumpCondition), false);
+                        this.ConditionalExpressionConditionsParse(newBlockOps.ToArray(), firstCondition, branchJumpCondition));
                     opCodeBlock.UseAsConditionalExpression = true;
                     opCodePartUsed = opCodeBlock;
                 }
@@ -839,7 +839,7 @@ namespace Il2Native.Logic
 
                     newBlockOps.Reverse();
 
-                    var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray(), false);
+                    var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray());
                     opCodeBlock.UseAsNullCoalescingExpression = true;
                     opCodePartUsed = opCodeBlock;
                 }

@@ -221,27 +221,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public bool UseAsEmpty { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool UseAsBoolean { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsBreak { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsCaseBreak { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsCaseCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsConditionalBreak { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsConditionalContinue { get; set; }
 
         /// <summary>
         /// </summary>
@@ -249,54 +233,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsContinue { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsDoWhile { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsElse { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsEmpty { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsFor { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsIf { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsIfElseSwitch { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsIfWhileForSubCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsIncDecExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsLeadingIncDecExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool UseAsNullCoalescingExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsSwitch { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool UseAsWhile { get; set; }
     }
 }
