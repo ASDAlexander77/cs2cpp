@@ -403,12 +403,30 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
+        // TODO: finish filter by public etc
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
-            return
+            var filterPublic = bindingFlags.HasFlag(BindingFlags.Public);
+
+            foreach (var method in
                 this.typeDef.GetMembers()
                     .Where(m => m is PEMethodSymbol && !this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol));
+                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
+            {
+                yield return method;
+            }
+
+            if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))
+            {
+                var baseType = this.BaseType;
+                if (baseType != null)
+                {
+                    foreach (var method in baseType.GetMethods(bindingFlags))
+                    {
+                        yield return method;
+                    }
+                }
+            }
         }
 
         /// <summary>
