@@ -2956,6 +2956,37 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
+        private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod method)
+        {
+            WriteSetResultNumber(writer, opCode);
+            writer.Write("bitcast ");
+            this.WriteMethodPointerType(writer, method);
+            writer.Write("* ");
+            WriteResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
+            writer.Write(" to ");
+            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int*)));
+            writer.WriteLine(string.Empty);
+            opCode.ResultType = TypeAdapter.FromType(typeof(int*));
+
+            writer.WriteLine(string.Empty);
+
+            var res = opCode.ResultNumber;
+            var offset = WriteSetResultNumber(writer, opCode);
+            writer.Write("getelementptr ");
+            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
+            writer.Write("* ");
+            WriteResultNumber(res ?? -1);
+            writer.WriteLine(", i32 -1");
+
+            this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(offset));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         /// <param name="res">
         /// </param>
         /// <param name="toType">
@@ -3104,14 +3135,14 @@ namespace Il2Native.Logic
                 writer.Write(" to ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.WriteLine("**");
-                var pointerToVirtualTablePointerResultNumber = opCodeMethodInfo.ResultNumber;
+                var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.ResultNumber;
 
                 // load pointer
                 this.WriteSetResultNumber(opCodeMethodInfo);
                 writer.Write("load ");
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("** ");
-                WriteResultNumber(pointerToVirtualTablePointerResultNumber ?? -1);
+                WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
                 var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.ResultNumber;
 
@@ -3136,46 +3167,10 @@ namespace Il2Native.Logic
 
                 if (thisType.IsInterface)
                 {
-                    writer.WriteLine("; Get 'this' from Interface Virtual Table");
+                    opCodeFirstOperand.ResultNumber = virtualTableOfMethodPointersResultNumber;
 
-                    // load offset address
-                    this.WriteSetResultNumber(opCodeMethodInfo);
-                    writer.Write("load ");
-                    this.WriteMethodPointerType(writer, methodInfo);
-                    writer.Write("* ");
-                    WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
-                    writer.WriteLine(string.Empty);
-                    // remember virtual method address result
-                    var offsetAddressResultNumber = opCodeMethodInfo.ResultNumber;
-
-                    // cast pointer to int
-                    WriteSetResultNumber(writer, opCodeMethodInfo);
-                    writer.Write("ptrtoint ");
-                    this.WriteMethodPointerType(writer, methodInfo);
-                    writer.Write(" ");
-                    WriteResultNumber(offsetAddressResultNumber ?? -1);
-                    writer.WriteLine(" to i32");
-                    var offsetAddressAsIntResultNumber = opCodeMethodInfo.ResultNumber;
-
-                    // get 'this' address
-                    var thisAddressFromInterfaceResultNumber = WriteSetResultNumber(writer, opCodeMethodInfo);
-                    writer.Write("getelementptr ");
-                    this.WriteMethodPointerType(writer, methodInfo);
-                    writer.Write("** ");
-                    WriteResultNumber(pointerToVirtualTablePointerResultNumber ?? -1);
-                    writer.Write(", i32 ");
-                    WriteResultNumber(offsetAddressAsIntResultNumber ?? -1);
-                    writer.WriteLine(string.Empty);
-
-                    // adjust 'this' pointer
-                    WriteSetResultNumber(writer, opCodeMethodInfo);
-                    writer.Write("bitcast ");
-                    this.WriteMethodPointerType(writer, methodInfo);
-                    writer.Write("** ");
-                    WriteResultNumber(thisAddressFromInterfaceResultNumber);
-                    writer.Write(" to ");
-                    this.WriteTypePrefix(writer, thisType);
-                    writer.WriteLine(string.Empty);
+                    this.WriteGetThisPointerFromInterfacePointer(
+                        writer, opCodeMethodInfo, methodInfo, thisType, pointerToInterfaceVirtualTablePointersResultNumber);
 
                     var thisPointerResultNumber = opCodeMethodInfo.ResultNumber;
                     // set ot for Call op code
@@ -3256,6 +3251,36 @@ namespace Il2Native.Logic
                 thisType, 
                 opCodeMethodInfo.ResultNumber, 
                 methodInfo != null ? methodInfo.ReturnType : null);
+        }
+
+        private void WriteGetThisPointerFromInterfacePointer(LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodInfo, IType thisType, int? pointerToInterfaceVirtualTablePointersResultNumber)
+        {
+            writer.WriteLine("; Get 'this' from Interface Virtual Table");
+
+            this.WriteGetInterfaceOffsetToObjectRootPointer(writer, opCodeMethodInfo, methodInfo);
+
+            writer.WriteLine(string.Empty);
+            var offsetAddressAsIntResultNumber = opCodeMethodInfo.ResultNumber;
+
+            // get 'this' address
+            var thisAddressFromInterfaceResultNumber = this.WriteSetResultNumber(writer, opCodeMethodInfo);
+            writer.Write("getelementptr ");
+            this.WriteMethodPointerType(writer, methodInfo);
+            writer.Write("** ");
+            this.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber ?? -1);
+            writer.Write(", i32 ");
+            this.WriteResultNumber(offsetAddressAsIntResultNumber ?? -1);
+            writer.WriteLine(string.Empty);
+
+            // adjust 'this' pointer
+            this.WriteSetResultNumber(writer, opCodeMethodInfo);
+            writer.Write("bitcast ");
+            this.WriteMethodPointerType(writer, methodInfo);
+            writer.Write("** ");
+            this.WriteResultNumber(thisAddressFromInterfaceResultNumber);
+            writer.Write(" to ");
+            this.WriteTypePrefix(writer, thisType);
+            writer.WriteLine(string.Empty);
         }
 
         /// <summary>
