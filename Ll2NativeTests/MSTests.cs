@@ -14,9 +14,9 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"C:\Temp\tests\";
-        private const string OutputPath = @"C:\Temp\IlCTests\";
+        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"D:\Temp\tests\";
+        private const string OutputPath = @"D:\Temp\IlCTests\";
 
         public MSTests()
         {

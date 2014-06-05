@@ -56,6 +56,14 @@ namespace PEAssemblyReader
         {
             get
             {
+                switch (this.exceptionRegion.Kind)
+                {
+                    case ExceptionRegionKind.Catch: return ExceptionHandlingClauseOptions.Clause;
+                    case ExceptionRegionKind.Filter: return ExceptionHandlingClauseOptions.Filter;
+                    case ExceptionRegionKind.Finally: return ExceptionHandlingClauseOptions.Finally;
+                    case ExceptionRegionKind.Fault: return ExceptionHandlingClauseOptions.Fault;
+                }
+
                 throw new NotImplementedException();
             }
         }

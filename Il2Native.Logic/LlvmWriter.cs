@@ -703,14 +703,15 @@ namespace Il2Native.Logic
                 Code.Ldarga_S);
         }
 
+        // TODO: you need to compare not only not but return type and parameters types
         private static bool IsOverrideForAnInterface(IMethod interfaceMember, IMethod publicMethod)
         {
-            if (publicMethod.NameEquals(interfaceMember))
+            if (interfaceMember.FullName == publicMethod.Name)
             {
                 return true;
             }
 
-            if (interfaceMember.FullName == publicMethod.Name)
+            if (interfaceMember.Name == publicMethod.Name)
             {
                 return true;
             }
@@ -4150,21 +4151,24 @@ namespace Il2Native.Logic
             }
 
             // write VirtualTable
-            if (!this.ThisType.IsInterface && this.ThisType.HasAnyVirtualMethod())
+            if (!this.ThisType.IsInterface)
             {
-                this.Output.WriteLine(string.Empty);
-                this.Output.Write(this.GetVirtualTableName(this.ThisType));
-                var virtualTable = this.GetVirtualTable(this.ThisType);
-                this.WriteTableOfMethods(virtualTable);
-            }
+                if (this.ThisType.HasAnyVirtualMethod())
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.Output.Write(this.GetVirtualTableName(this.ThisType));
+                    var virtualTable = this.GetVirtualTable(this.ThisType);
+                    this.WriteTableOfMethods(virtualTable);
+                }
 
-            int index = 1;
-            foreach (var @interface in this.ThisType.GetInterfaces())
-            {
-                this.Output.WriteLine(string.Empty);
-                this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
-                var virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
-                this.WriteTableOfMethods(virtualInterfaceTable, index++);
+                int index = 1;
+                foreach (var @interface in this.ThisType.GetInterfaces())
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
+                    var virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
+                    this.WriteTableOfMethods(virtualInterfaceTable, index++);
+                }
             }
         }
 

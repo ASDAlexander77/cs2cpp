@@ -298,6 +298,13 @@ namespace Il2Native.Logic
                 case Code.Bge_S:
                 case Code.Rem:
                 case Code.Rem_Un:
+                case Code.Shl:
+                case Code.Shr:
+                case Code.Shr_Un:
+                case Code.And:
+                case Code.Or:
+                case Code.Xor:
+                case Code.Isinst:
                     return this.ResultOf(opCode.OpCodeOperands[0]);
                 case Code.Ceq:
                 case Code.Cgt:
@@ -477,6 +484,20 @@ namespace Il2Native.Logic
                     if (res != null)
                     {
                         return new ReturnResult(res.IType) { Boxed = true };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                case Code.Unbox:
+                case Code.Unbox_Any:
+
+                    // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
+                    res = this.ResultOf(opCode.OpCodeOperands[0]);
+                    if (res != null)
+                    {
+                        return new ReturnResult(res.IType) { Unboxed = true };
                     }
                     else
                     {
@@ -1429,6 +1450,10 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             public bool? Boxed { get; set; }
+
+            /// <summary>
+            /// </summary>
+            public bool? Unboxed { get; set; }
 
             /// <summary>
             /// </summary>

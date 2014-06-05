@@ -122,9 +122,9 @@ namespace PEAssemblyReader
             {
                 var result = new StringBuilder();
 
-                if (this.methodDef.ContainingNamespace != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingNamespace.Name))
+                if (!string.IsNullOrWhiteSpace(this.Namespace))
                 {
-                    result.Append(this.methodDef.ContainingNamespace.Name);
+                    result.Append(this.Namespace);
                     result.Append('.');
                 }
 
@@ -251,7 +251,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.ContainingNamespace.Name;
+                return this.methodDef.ContainingNamespace.ToString();
             }
         }
 
