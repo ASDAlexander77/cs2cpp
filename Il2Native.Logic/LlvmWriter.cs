@@ -3474,12 +3474,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
         {
-            var type = fieldInfo.DeclaringType;
+            var targetType = fieldInfo.DeclaringType;
+            var type = classType;
 
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (type.TypeNotEquals(classType))
+            while (type.TypeNotEquals(targetType))
             {
                 type = type.BaseType;
                 if (type == null)

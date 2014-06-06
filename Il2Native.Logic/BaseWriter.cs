@@ -426,7 +426,7 @@ namespace Il2Native.Logic
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.IType.GetElementType()) { IsAddress = true };
+                    return new ReturnResult(result.IType.HasElementType ? result.IType.GetElementType() : result.IType) { IsAddress = true };
                 case Code.Ldc_I4_0:
                 case Code.Ldc_I4_1:
                 case Code.Ldc_I4_2:

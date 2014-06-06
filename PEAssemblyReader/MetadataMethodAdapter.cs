@@ -104,7 +104,9 @@ namespace PEAssemblyReader
                     {
                         return
                             methodBodyBlock.ExceptionRegions.Select(
-                                er => new MetadataExceptionHandlingClauseAdapter(er, new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType)));
+                                er =>
+                                new MetadataExceptionHandlingClauseAdapter(
+                                    er, !er.CatchType.IsNil ? new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType) : null));
                     }
                 }
 

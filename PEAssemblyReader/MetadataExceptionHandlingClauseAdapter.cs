@@ -44,7 +44,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.catchType);
+                return catchType != null ? new MetadataTypeAdapter(this.catchType) : null;
             }
         }
 
