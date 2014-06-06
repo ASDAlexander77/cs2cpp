@@ -155,7 +155,6 @@
 
             System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
 
-            // https://chromium.googlesource.com/chromiumos/third_party/llvm/+/master/test/MC/COFF/global_ctors_dtors.ll
             /*
                 call vcvars32.bat
                 llc -mtriple i686-pc-win32 -filetype=obj mscorlib.ll
@@ -163,6 +162,17 @@
                 link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib mscorlib.obj test-%1.obj /OUT:test-%1.exe
                 del test-%1.obj
             */
+
+            // to test working try/catch with g++ compilation
+            // http://mingw-w64.sourceforge.net/download.php
+            // Windows 32	DWARF	i686 - use this config to test exceptions on windows
+            /*
+                llc -mtriple i686-pc-mingw32 -filetype=obj mscorlib.ll
+                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
+                g++.exe -o test-%1.exe mscorlib.o test-%1.o -lstdc++ -march=i686
+                del test-%1.o
+            */
+
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";
