@@ -16,6 +16,7 @@ namespace Il2Native.Logic
     using System.Text;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Properties;
 
     using PEAssemblyReader;
@@ -230,6 +231,8 @@ namespace Il2Native.Logic
             if (!disablePostDeclarations)
             {
                 this.WritePostDeclarations();
+
+                this.ThisType.WriteRtti(this.Output);
             }
         }
 

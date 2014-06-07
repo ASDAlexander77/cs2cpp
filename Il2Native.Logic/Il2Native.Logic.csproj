@@ -58,6 +58,10 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="Gencode\RttiClassGen.cs" />
+    <Compile Include="Gencode\RttiGen.cs" />
+    <Compile Include="Gencode\RttiPointerGen.cs" />
+    <Compile Include="Gencode\TypeGen.cs" />
     <Compile Include="ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs" />
     <Compile Include="IlReader.cs" />
