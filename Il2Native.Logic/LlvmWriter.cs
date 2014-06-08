@@ -41,7 +41,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private static int pointerSize = 4;
+        public static int pointerSize = 4;
 
         /// <summary>
         /// </summary>
@@ -91,6 +91,14 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private int stringIndexIncremental;
+
+        /// <summary>
+        /// </summary>
+        public bool landingPadVariablesAreWritten;
+
+        /// <summary>
+        /// </summary>
+        public bool needToWriteUnexpectedCall;
 
         /// <summary>
         /// </summary>
@@ -326,6 +334,8 @@ namespace Il2Native.Logic
             this.processedMethods.Add(ctor);
 
             this.StartProcess();
+            this.resultNumberIncremental = 0;
+            this.landingPadVariablesAreWritten = false;
 
             this.ReadMethodInfo(ctor);
 
@@ -489,6 +499,21 @@ namespace Il2Native.Logic
             if (!this.NoBody)
             {
                 this.Output.Indent--;
+
+                if (this.needToWriteUnexpectedCall)
+                {
+                    this.needToWriteUnexpectedCall = false;
+                    this.WriteUnexpectedCall(this.Output);
+                }
+
+                if (method.ExceptionHandlingClauses.Count() > 0)
+                {
+                    this.Output.WriteLine(".unreachable:");
+                    this.Output.Indent++;
+                    this.Output.WriteLine("unreachable");
+                    this.Output.Indent--;
+                }
+
                 this.Output.WriteLine("}");
             }
 
@@ -519,6 +544,7 @@ namespace Il2Native.Logic
 
             this.StartProcess();
             this.resultNumberIncremental = 0;
+            this.landingPadVariablesAreWritten = false;
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
 
@@ -681,28 +707,28 @@ namespace Il2Native.Logic
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
-                Code.Ldc_I4_0, 
-                Code.Ldc_I4_1, 
-                Code.Ldc_I4_2, 
-                Code.Ldc_I4_3, 
-                Code.Ldc_I4_4, 
-                Code.Ldc_I4_5, 
-                Code.Ldc_I4_6, 
-                Code.Ldc_I4_7, 
-                Code.Ldc_I4_8, 
-                Code.Ldc_I4_M1, 
-                Code.Ldc_I4, 
-                Code.Ldc_I4_S, 
-                Code.Ldc_I8, 
-                Code.Ldc_R4, 
-                Code.Ldc_R8, 
-                Code.Ldstr, 
-                Code.Ldnull, 
-                Code.Ldtoken, 
-                Code.Ldsflda, 
-                Code.Ldloca, 
-                Code.Ldloca_S, 
-                Code.Ldarga, 
+                Code.Ldc_I4_0,
+                Code.Ldc_I4_1,
+                Code.Ldc_I4_2,
+                Code.Ldc_I4_3,
+                Code.Ldc_I4_4,
+                Code.Ldc_I4_5,
+                Code.Ldc_I4_6,
+                Code.Ldc_I4_7,
+                Code.Ldc_I4_8,
+                Code.Ldc_I4_M1,
+                Code.Ldc_I4,
+                Code.Ldc_I4_S,
+                Code.Ldc_I8,
+                Code.Ldc_R4,
+                Code.Ldc_R8,
+                Code.Ldstr,
+                Code.Ldnull,
+                Code.Ldtoken,
+                Code.Ldsflda,
+                Code.Ldloca,
+                Code.Ldloca_S,
+                Code.Ldarga,
                 Code.Ldarga_S);
         }
 
@@ -843,16 +869,16 @@ namespace Il2Native.Logic
         /// <param name="returnType">
         /// </param>
         private void ActualWrite(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart[] used, 
-            IEnumerable<IParameter> parameterInfos, 
-            bool @isVirtual, 
-            bool hasThis, 
-            bool isCtor, 
-            IList<bool> isDirectValue, 
-            int? resultNumberForThis, 
-            IType thisType, 
-            int? resultNumberForReturn, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart[] used,
+            IEnumerable<IParameter> parameterInfos,
+            bool @isVirtual,
+            bool hasThis,
+            bool isCtor,
+            IList<bool> isDirectValue,
+            int? resultNumberForThis,
+            IType thisType,
+            int? resultNumberForReturn,
             IType returnType)
         {
             writer.Write("(");
@@ -1123,8 +1149,8 @@ namespace Il2Native.Logic
                     var opCodeString = opCode as OpCodeStringPart;
                     writer.Write(
                         string.Format(
-                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)", 
-                            this.GetStringIndex(opCodeString.Operand), 
+                            "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)",
+                            this.GetStringIndex(opCodeString.Operand),
                             opCodeString.Operand.Length + 1));
                     break;
                 case Code.Ldnull:
@@ -1442,12 +1468,12 @@ namespace Il2Native.Logic
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
                     this.WriteCall(
-                        writer, 
-                        opCodeMethodInfoPart, 
-                        methodBase, 
-                        code == Code.Callvirt, 
-                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis), 
-                        false, 
+                        writer,
+                        opCodeMethodInfoPart,
+                        methodBase,
+                        code == Code.Callvirt,
+                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
+                        false,
                         null);
                     break;
                 case Code.Add:
@@ -1971,10 +1997,10 @@ namespace Il2Native.Logic
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteCast(
-                        writer, 
-                        opCodeTypePart, 
-                        opCodeTypePart.OpCodeOperands[0].ResultType, 
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        writer,
+                        opCodeTypePart,
+                        opCodeTypePart.OpCodeOperands[0].ResultType,
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
                         opCodeTypePart.Operand);
 
                     break;
@@ -1985,36 +2011,25 @@ namespace Il2Native.Logic
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteCast(
-                        writer, 
-                        opCodeTypePart, 
-                        opCodeTypePart.OpCodeOperands[0].ResultType, 
-                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1, 
+                        writer,
+                        opCodeTypePart,
+                        opCodeTypePart.OpCodeOperands[0].ResultType,
+                        opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
                         opCodeTypePart.Operand);
 
                     break;
 
                 case Code.Newobj:
 
-                    writer.WriteLine("; New obj");
-
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-
                     var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
                     this.WriteNew(writer, opCode, declaringType);
-                    writer.WriteLine(string.Empty);
-
-                    methodBase = opCodeConstructorInfoPart.Operand;
-                    var resAlloc = opCode.ResultNumber;
-                    opCode.ResultNumber = null;
-                    this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, code == Code.Callvirt, true, true, resAlloc);
-                    opCode.ResultNumber = resAlloc;
+                    this.WriteCallConstructor(writer, opCodeConstructorInfoPart);
 
                     break;
 
                 case Code.Newarr:
-
-                    writer.WriteLine("; New array");
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteNewArray(writer, opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
@@ -2032,8 +2047,9 @@ namespace Il2Native.Logic
 
                 case Code.Throw:
 
-                    writer.Write("throw ");
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    writer.WriteLine(string.Empty);
+                    this.WriteThrow(writer, opCode);
 
                     break;
 
@@ -2081,6 +2097,22 @@ namespace Il2Native.Logic
 
                     break;
             }
+        }
+
+        private void WriteCallConstructor(LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        {
+            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
+            {
+                return;
+            }
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; Call Constructor");
+            var methodBase = opCodeConstructorInfoPart.Operand;
+            var resAlloc = opCodeConstructorInfoPart.ResultNumber;
+            opCodeConstructorInfoPart.ResultNumber = null;
+            this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, opCodeConstructorInfoPart.ToCode() == Code.Callvirt, true, true, resAlloc);
+            opCodeConstructorInfoPart.ResultNumber = resAlloc;
         }
 
         /// <summary>
@@ -2438,7 +2470,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetResultNumber(int number)
+        public string GetResultNumber(int number)
         {
             return string.Concat("%.r", number);
         }
@@ -2827,7 +2859,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="options">
         /// </param>
-        private void UnaryOper(
+        public void UnaryOper(
             LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType localType = null, OperandOptions options = OperandOptions.None)
         {
             this.UnaryOper(writer, opCode, 0, op, localType, options);
@@ -2848,11 +2880,11 @@ namespace Il2Native.Logic
         /// <param name="options">
         /// </param>
         private void UnaryOper(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCode, 
-            int operandIndex, 
-            string op, 
-            IType requiredType = null, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode,
+            int operandIndex,
+            string op,
+            IType requiredType = null,
             OperandOptions options = OperandOptions.None)
         {
             var directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
@@ -3013,9 +3045,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="toType">
         /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType toType)
+        public void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType toType, OperandOptions options = OperandOptions.None)
         {
-            this.UnaryOper(writer, opCode, "bitcast");
+            this.UnaryOper(writer, opCode, "bitcast", options: options);
             writer.Write(" to ");
             this.WriteTypePrefix(writer, toType, true);
             opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
@@ -3111,7 +3143,7 @@ namespace Il2Native.Logic
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
             var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0 ? opCodeMethodInfo.OpCodeOperands[0] : null;
             var resultOfirstOperand = opCodeFirstOperand != null ? this.ResultOf(opCodeFirstOperand) : null;
-            
+
             var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
             int? virtualMethodAddressResultNumber = null;
@@ -3244,16 +3276,16 @@ namespace Il2Native.Logic
             }
 
             this.ActualWrite(
-                writer, 
-                opCodeMethodInfo.OpCodeOperands, 
-                methodBase.GetParameters(), 
-                isVirtual, 
-                hasThis, 
-                isCtor, 
-                preProcessedOperandResults, 
-                thisResultNumber, 
-                thisType, 
-                opCodeMethodInfo.ResultNumber, 
+                writer,
+                opCodeMethodInfo.OpCodeOperands,
+                methodBase.GetParameters(),
+                isVirtual,
+                hasThis,
+                isCtor,
+                preProcessedOperandResults,
+                thisResultNumber,
+                thisType,
+                opCodeMethodInfo.ResultNumber,
                 methodInfo != null ? methodInfo.ReturnType : null);
         }
 
@@ -3598,8 +3630,8 @@ namespace Il2Native.Logic
                 var virtualTable = this.GetVirtualTable(declaringType);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
-                    virtualTable.Count + 1, 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
+                    virtualTable.Count + 1,
                     this.GetVirtualTableName(declaringType));
                 WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
@@ -3625,8 +3657,8 @@ namespace Il2Native.Logic
                 var virtualInterfaceTable = this.GetVirtualInterfaceTable(declaringType, @interface);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
-                    virtualInterfaceTable.Count + 1, 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
+                    virtualInterfaceTable.Count + 1,
                     this.GetVirtualInterfaceTableName(declaringType, @interface));
                 WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
@@ -3840,10 +3872,10 @@ namespace Il2Native.Logic
         private void WriteMemCopy(LlvmIndentedTextWriter writer, IType type, int? op1, int? op2)
         {
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
-                this.GetResultNumber(op1.Value), 
-                this.GetResultNumber(op2.Value), 
-                this.GetTypeSize(type), 
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                this.GetResultNumber(op1.Value),
+                this.GetResultNumber(op2.Value),
+                this.GetTypeSize(type),
                 pointerSize /*Align*/);
         }
 
@@ -3858,9 +3890,9 @@ namespace Il2Native.Logic
         private void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
         {
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", 
-                this.GetResultNumber(op1.Value), 
-                this.GetTypeSize(type), 
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                this.GetResultNumber(op1.Value),
+                this.GetTypeSize(type),
                 pointerSize /*Align*/);
         }
 
@@ -4061,6 +4093,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteNew(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
+            if (opCode.ResultNumber.HasValue)
+            {
+                return;
+            }
+
+            writer.WriteLine("; New obj");
+
             var mallocResult = WriteSetResultNumber(writer, opCode);
             var size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
@@ -4093,6 +4132,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteNewArray(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, OpCodePart length)
         {
+            if (opCode.ResultNumber.HasValue)
+            {
+                return;
+            }
+
+            writer.WriteLine("; New array");
+
             var size = this.GetTypeSize(declaringType);
             this.UnaryOper(writer, opCode, "mul");
             writer.WriteLine(string.Format(", {0}", size));
@@ -4246,7 +4292,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="number">
         /// </param>
-        private void WriteResultNumber(int number)
+        public void WriteResultNumber(int number)
         {
             // write number of method
             this.Output.Write(this.GetResultNumber(number));
@@ -4275,15 +4321,18 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private int WriteSetResultNumber(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type = null)
+        public int WriteSetResultNumber(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type = null)
         {
             // write number of method
             writer.Write("%.r");
             writer.Write(++this.resultNumberIncremental);
             writer.Write(" = ");
 
-            opCode.ResultNumber = this.resultNumberIncremental;
-            opCode.ResultType = type;
+            if (opCode != null)
+            {
+                opCode.ResultNumber = this.resultNumberIncremental;
+                opCode.ResultType = type;
+            }
 
             return this.resultNumberIncremental;
         }
@@ -4408,7 +4457,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="refChar">
         /// </param>
-        private void WriteTypePrefix(
+        public void WriteTypePrefix(
             LlvmIndentedTextWriter writer, IType type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
         {
             this.WriteTypeWithoutModifiers(writer, type, doNotIncludeTypePrefixId);
@@ -4446,47 +4495,47 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         [Flags]
-        private enum OperandOptions
+        public enum OperandOptions
         {
             /// <summary>
             /// </summary>
-            None = 0, 
+            None = 0,
 
             /// <summary>
             /// </summary>
-            GenerateResult = 1, 
+            GenerateResult = 1,
 
             /// <summary>
             /// </summary>
-            ToFloat = 2, 
+            ToFloat = 2,
 
             /// <summary>
             /// </summary>
-            ToInteger = 4, 
+            ToInteger = 4,
 
             /// <summary>
             /// </summary>
-            TypeIsInSecondOperand = 8, 
+            TypeIsInSecondOperand = 8,
 
             /// <summary>
             /// </summary>
-            TypeIsInOperator = 16, 
+            TypeIsInOperator = 16,
 
             /// <summary>
             /// </summary>
-            NoTypePrefix = 32, 
+            NoTypePrefix = 32,
 
             /// <summary>
             /// </summary>
-            AppendPointer = 64, 
+            AppendPointer = 64,
 
             /// <summary>
             /// </summary>
-            IgnoreOperand = 128, 
+            IgnoreOperand = 128,
 
             /// <summary>
             /// </summary>
-            DetectTypeInSecondOperand = 256, 
+            DetectTypeInSecondOperand = 256,
         }
 
         /// <summary>

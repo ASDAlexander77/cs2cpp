@@ -58,6 +58,7 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="Gencode\ExceptionHandlingGen.cs" />
     <Compile Include="Gencode\RttiClassGen.cs" />
     <Compile Include="Gencode\RttiGen.cs" />
     <Compile Include="Gencode\RttiPointerGen.cs" />
