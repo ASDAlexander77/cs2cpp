@@ -5,6 +5,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection.Emit;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -37,11 +38,9 @@
             writer.Write("invoke void @__cxa_throw(i8* %8, i8* bitcast (");
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
-            writer.WriteLine("to label %.unreachable unwind label %{0}", string.Concat(".a", opCode.GroupAddressEnd));
+            writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
 
-            writer.Indent--;
-            writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
-            writer.Indent++;
+            llvmWriter.needToWriteUnwindException = true;
         }
 
         public static void WriteAllocateException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
@@ -69,10 +68,24 @@
             writer.WriteLine(string.Empty);
         }
 
+        public static void WriteUnwindException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        {
+            writer.Indent--;
+            writer.WriteLine(".unwind_exception:");
+            writer.Indent++;
+            llvmWriter.WriteLandingPad(writer, OpCodePart.Nop, LandingPadOptions.EmptyFilter);
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("br label %.unexpected");
+            llvmWriter.WriteUnexpectedCall(writer);
+        }
+
         public static void WriteUnexpectedCall(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
         {
+            writer.Indent--;
+            writer.WriteLine(".unexpected:");
+            writer.Indent++;
             var result = llvmWriter.WriteSetResultNumber(writer, null);
-            writer.Write("load i8** %2");
+            writer.WriteLine("load i8** %error_object");
             writer.WriteLine("call void @__cxa_call_unexpected(i8* {0})", llvmWriter.GetResultNumber(result));
             writer.WriteLine("unreachable");
         }
@@ -117,10 +130,10 @@
             }
 
             var getErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(writer, opCode);
-            writer.WriteLine("extractvalue { i8*, i32 } {0}, 0", llvmWriter.GetResultNumber(landingPadResult));
+            writer.WriteLine("extractvalue {1} {0}, 0", llvmWriter.GetResultNumber(landingPadResult), "{ i8*, i32 }");
             writer.WriteLine("store i8* {0}, i8** %.error_object", llvmWriter.GetResultNumber(getErrorObjectResultNumber));
             var getErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCode);
-            writer.WriteLine("extractvalue { i8*, i32 } {0}, 1", llvmWriter.GetResultNumber(landingPadResult));
+            writer.WriteLine("extractvalue {1} {0}, 1", llvmWriter.GetResultNumber(landingPadResult), "{ i8*, i32 }");
             writer.WriteLine("store i32 {0}, i32* %.error_typeid", llvmWriter.GetResultNumber(getErrorTypeIdResultNumber));
 
             if (exceptionAllocationResultNumber.HasValue)

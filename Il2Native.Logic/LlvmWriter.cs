@@ -98,7 +98,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool needToWriteUnexpectedCall;
+        public bool needToWriteUnwindException;
 
         /// <summary>
         /// </summary>
@@ -325,6 +325,14 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
         }
 
+        public void StartProcess()
+        {
+            base.StartProcess();
+            this.resultNumberIncremental = 0;
+            this.landingPadVariablesAreWritten = false;
+            this.needToWriteUnwindException = false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="ctor">
@@ -334,9 +342,6 @@ namespace Il2Native.Logic
             this.processedMethods.Add(ctor);
 
             this.StartProcess();
-            this.resultNumberIncremental = 0;
-            this.landingPadVariablesAreWritten = false;
-
             this.ReadMethodInfo(ctor);
 
             if (ctor.IsAbstract || ctor.GetMethodBody() == null)
@@ -500,10 +505,10 @@ namespace Il2Native.Logic
             {
                 this.Output.Indent--;
 
-                if (this.needToWriteUnexpectedCall)
+                if (this.needToWriteUnwindException)
                 {
-                    this.needToWriteUnexpectedCall = false;
-                    this.WriteUnexpectedCall(this.Output);
+                    this.needToWriteUnwindException = false;
+                    this.WriteUnwindException(this.Output);
                 }
 
                 if (method.ExceptionHandlingClauses.Count() > 0)
@@ -543,8 +548,6 @@ namespace Il2Native.Logic
             this.processedMethods.Add(method);
 
             this.StartProcess();
-            this.resultNumberIncremental = 0;
-            this.landingPadVariablesAreWritten = false;
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
 
@@ -4158,7 +4161,7 @@ namespace Il2Native.Logic
             this.WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
-            var opCodeTemp = new OpCodePart(OpCodesEmit.Nop, 0, 0);
+            var opCodeTemp = OpCodePart.Nop;
             opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
 
             // save array size

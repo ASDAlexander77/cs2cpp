@@ -16,11 +16,15 @@ namespace Il2Native.Logic.CodeParts
 
     using PEAssemblyReader;
 
+    using OpCodesEmit = System.Reflection.Emit.OpCodes;
+
     /// <summary>
     /// </summary>
     [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
     public class OpCodePart
     {
+        public static OpCodePart Nop = new OpCodePart(OpCodesEmit.Nop, 0, 0);
+
         /// <summary>
         /// </summary>
         private int? resultNumber;
