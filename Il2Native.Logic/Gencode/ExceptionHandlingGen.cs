@@ -41,10 +41,13 @@
             llvmWriter.needToWriteUnwindException = true;
         }
 
-        public static void WriteCatchTest(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
+        public static void WriteCatchTest(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause nextExceptionHandlingClause)
         {
-            var opCodeNone = OpCodePart.Nop;
             writer.WriteLine("; Test Exception type");
+
+            var catchType = exceptionHandlingClause.CatchType;
+
+            var opCodeNone = OpCodePart.Nop;
             var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("load i32* %error_typeid");
             var errorTypeIdOfExceptionResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
@@ -53,24 +56,68 @@
             writer.WriteLine("* @{0} to i8*))", catchType.GetRttiPointerInfoName());
             var compareResultResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("icmp eq i32 {0}, {1}", llvmWriter.GetResultNumber(errorTypeIdOfCatchResultNumber), llvmWriter.GetResultNumber(errorTypeIdOfExceptionResultNumber));
-            writer.WriteLine("br i1 {0}, label %41, label %47", llvmWriter.GetResultNumber(compareResultResultNumber));
+            writer.WriteLine(
+                "br i1 {0}, label %.exception_handler{1}, label %.{2}", 
+                llvmWriter.GetResultNumber(compareResultResultNumber), 
+                exceptionHandlingClause.HandlerOffset,
+                nextExceptionHandlingClause != null ? string.Concat("exception_handler", nextExceptionHandlingClause.HandlerOffset) : "resume");
+
+            writer.Indent--;
+            writer.WriteLine(".exception_handler{0}:", exceptionHandlingClause.HandlerOffset);
+            writer.Indent++;
         }
 
-        public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
+        public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause)
         {
             writer.WriteLine("; Begin of Catch or Finally");
-            writer.WriteLine("%42 = load i8** %2");
-            writer.WriteLine("%43 = call i8* @__cxa_begin_catch(i8* %42)");
-            writer.WriteLine("%44 = bitcast i8* %43 to %class.Exception*");
-            writer.WriteLine("store %class.Exception* %44, %class.Exception** %e1");
+
+            var catchType = exceptionHandlingClause.CatchType;
+
+            var opCodeNone = OpCodePart.Nop;
+            var errorObjectOfCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("load i8** %error_object");
+            writer.WriteLine("call i8* @__cxa_begin_catch(i8* {0})", llvmWriter.GetResultNumber(errorObjectOfCatchResultNumber));
+            llvmWriter.WriteBitcast(writer, opCodeNone, catchType);
+
+            writer.Write("%error{0} = ", exceptionHandlingClause.HandlerOffset);
+            writer.Write("alloca i8*, align " + LlvmWriter.pointerSize);
+            writer.WriteLine(string.Empty);
+            var exceptionCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.Write("store ");
+            llvmWriter.WriteTypePrefix(writer, catchType);
+            writer.WriteLine(" ");
+            llvmWriter.WriteResultNumber(opCodeNone); 
+            writer.WriteLine(", ");
+            llvmWriter.WriteTypePrefix(writer, catchType);
+            writer.WriteLine("* %error{0}", exceptionHandlingClause.HandlerOffset);
         }
 
         public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
         {
             writer.WriteLine("; End of Catch or Finally");
-            writer.WriteLine("store i32 0, i32* %1");
-            writer.WriteLine("store i32 1, i32* %4");
-            writer.WriteLine("call void @__cxa_end_catch() #3");
+            writer.WriteLine("store i32 0, i32* %error_typeid");
+            // TODO: I didn't find what is that
+            ////writer.WriteLine("store i32 1, i32* %-1");
+            writer.WriteLine("call void @__cxa_end_catch()");
+        }
+
+        public static void WriteResume(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        {
+            writer.Indent--;
+            writer.WriteLine(".resume:");
+            writer.Indent++;
+
+            writer.WriteLine("; Resume");
+
+            var opCodeNone = OpCodePart.Nop;
+            var getErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("load i8** %error_object");
+            var getErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("load i32* %error_typeid");
+            var insertedErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("insertvalue {1} undef, i8* {0}, 0", llvmWriter.GetResultNumber(getErrorObjectResultNumber), "{ i8*, i32 }");
+            var insertedErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("insertvalue {2} {0}, i32 {1}, 1", llvmWriter.GetResultNumber(insertedErrorObjectResultNumber), llvmWriter.GetResultNumber(getErrorTypeIdResultNumber), "{ i8*, i32 }");
         }
 
         public static void WriteAllocateException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
@@ -172,6 +219,18 @@
                 writer.Indent++;
                 writer.WriteLine("filter [0 x i8*] zeroinitializer");
                 writer.Indent--;
+            }
+
+            if (@catch != null)
+            {
+                foreach (var catchType in @catch)
+                {
+                    writer.Indent++;
+                    writer.Write("catch i8* bitcast (");
+                    catchType.WriteRttiPointerClassInfoDeclaration(writer);
+                    writer.WriteLine("* @{0} to i8*)", catchType.GetRttiPointerInfoName());
+                    writer.Indent--;
+                }
             }
 
             var getErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(writer, opCode);

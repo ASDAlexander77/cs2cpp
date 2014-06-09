@@ -516,6 +516,7 @@ namespace Il2Native.Logic
                 if (method.ExceptionHandlingClauses.Any())
                 {
                     this.WriteUnreachable(this.Output);
+                    this.WriteResume(this.Output);
                 }
 
                 this.Output.EndMethodBody();
@@ -3429,11 +3430,16 @@ namespace Il2Native.Logic
                     LandingPadOptions.None,
                     opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
 
-                foreach (var exceptionHandler in opCode.ExceptionHandlers)
+                var exceptionHandlers = opCode.ExceptionHandlers.ToArray();
+                var nextExceptionHandlerIndex = 1;
+                foreach (var exceptionHandler in exceptionHandlers)
                 {
                     if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
                     {
-                        this.WriteCatchTest(writer, exceptionHandler.CatchType);
+                        this.WriteCatchTest(
+                            writer,
+                            exceptionHandler,
+                            nextExceptionHandlerIndex < exceptionHandlers.Length ? exceptionHandlers[nextExceptionHandlerIndex] : null);
                     }
 
                     if (exceptionHandler.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
@@ -3444,7 +3450,9 @@ namespace Il2Native.Logic
 
                     writer.WriteLine(string.Empty);
 
-                    this.WriteCatchBegin(writer, exceptionHandler.CatchType);
+                    this.WriteCatchBegin(writer, exceptionHandler);
+
+                    nextExceptionHandlerIndex++;
                 }
             }
         }
@@ -4288,7 +4296,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        private void WriteResultNumber(OpCodePart opCode)
+        public void WriteResultNumber(OpCodePart opCode)
         {
             // write number of method
             this.Output.Write(this.GetResultNumber(opCode.ResultNumber ?? -1));
