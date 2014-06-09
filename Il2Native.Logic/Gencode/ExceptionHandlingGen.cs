@@ -43,11 +43,17 @@
 
         public static void WriteCatchTest(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
         {
+            var opCodeNone = OpCodePart.Nop;
             writer.WriteLine("; Test Exception type");
-            writer.WriteLine("writer.WriteLine(%38 = load i32* %3");
-            writer.WriteLine("%39 = call i32 @llvm.eh.typeid.for(i8* bitcast ({ i8*, i8*, i32, i8* }* @_ZTIP9Exception to i8*))");
-            writer.WriteLine("%40 = icmp eq i32 %38, %39");
-            writer.WriteLine("br i1 %40, label %41, label %47");
+            var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("load i32* %error_typeid");
+            var errorTypeIdOfExceptionResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.Write("call i32 @llvm.eh.typeid.for(i8* bitcast (");
+            catchType.WriteRttiPointerClassInfoDeclaration(writer);
+            writer.WriteLine("* @{0} to i8*))", catchType.GetRttiPointerInfoName());
+            var compareResultResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            writer.WriteLine("icmp eq i32 {0}, {1}", llvmWriter.GetResultNumber(errorTypeIdOfCatchResultNumber), llvmWriter.GetResultNumber(errorTypeIdOfExceptionResultNumber));
+            writer.WriteLine("br i1 {0}, label %41, label %47", llvmWriter.GetResultNumber(compareResultResultNumber));
         }
 
         public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
