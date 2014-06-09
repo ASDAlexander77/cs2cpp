@@ -76,8 +76,10 @@
             var opCodeNone = OpCodePart.Nop;
             var errorObjectOfCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("load i8** %error_object");
+            var beginCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("call i8* @__cxa_begin_catch(i8* {0})", llvmWriter.GetResultNumber(errorObjectOfCatchResultNumber));
-            llvmWriter.WriteBitcast(writer, opCodeNone, catchType);
+            llvmWriter.WriteBitcast(writer, opCodeNone, beginCatchResultNumber, catchType);
+            writer.WriteLine(string.Empty);
 
             writer.Write("%error{0} = ", exceptionHandlingClause.HandlerOffset);
             writer.Write("alloca i8*, align " + LlvmWriter.pointerSize);
@@ -85,9 +87,9 @@
             var exceptionCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.Write("store ");
             llvmWriter.WriteTypePrefix(writer, catchType);
-            writer.WriteLine(" ");
+            writer.Write(" ");
             llvmWriter.WriteResultNumber(opCodeNone); 
-            writer.WriteLine(", ");
+            writer.Write(", ");
             llvmWriter.WriteTypePrefix(writer, catchType);
             writer.WriteLine("* %error{0}", exceptionHandlingClause.HandlerOffset);
         }
@@ -118,6 +120,7 @@
             writer.WriteLine("insertvalue {1} undef, i8* {0}, 0", llvmWriter.GetResultNumber(getErrorObjectResultNumber), "{ i8*, i32 }");
             var insertedErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("insertvalue {2} {0}, i32 {1}, 1", llvmWriter.GetResultNumber(insertedErrorObjectResultNumber), llvmWriter.GetResultNumber(getErrorTypeIdResultNumber), "{ i8*, i32 }");
+            writer.WriteLine("resume {1} {0}", llvmWriter.GetResultNumber(insertedErrorTypeIdResultNumber), "{ i8*, i32 }");
         }
 
         public static void WriteAllocateException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)

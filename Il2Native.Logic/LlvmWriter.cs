@@ -3035,7 +3035,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="toType">
         /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, int res, IType toType)
+        public void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, int res, IType toType)
         {
             WriteSetResultNumber(writer, opCode);
             writer.Write("bitcast i8* ");
