@@ -1,12 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LlvmIndentedTextWriter.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
@@ -56,11 +53,11 @@ namespace Il2Native.Logic
         {
             this.sw.Close();
 
-            int savedIndent = this.Indent;
+            var savedIndent = this.Indent;
             this.Indent = 0;
 
-            string[] lines = this.sb.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string line in lines)
+            var lines = this.sb.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var line in lines)
             {
                 if (!line.Contains("alloca "))
                 {
@@ -70,7 +67,7 @@ namespace Il2Native.Logic
                 base.WriteLine(line);
             }
 
-            foreach (string line in lines)
+            foreach (var line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line) || line.Contains("alloca "))
                 {

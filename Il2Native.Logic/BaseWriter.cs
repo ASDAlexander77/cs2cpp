@@ -1,9 +1,7 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BaseWriter.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -121,14 +119,14 @@ namespace Il2Native.Logic
         /// </param>
         public static void ConditionsParseForConditionalExpression(OpCodePart[] conditions, int startOfTrueExpression)
         {
-            bool nextJoinAnd = true;
-            OpCodePart[][] groups = BuildConditionGroups(conditions);
+            var nextJoinAnd = true;
+            var groups = BuildConditionGroups(conditions);
             foreach (var group in groups)
             {
                 // all Or
                 if (group.Last().JumpAddress() == startOfTrueExpression && group.First().JumpAddress() == startOfTrueExpression)
                 {
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.ConjunctionOrCondition = true;
                     }
@@ -139,10 +137,10 @@ namespace Il2Native.Logic
 
                 // TODO: var r1 = ok == 1 && ok == 2 || error == 3 && error == 4 && (ok == 10 || ok == 11 || ok ==12) ? 1 : 0;
                 // in this expression last  OR chain is not detected
-                bool internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
+                var internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
                 if (internalAndJoin)
                 {
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.InvertCondition = true;
                         element.ConjunctionAndCondition = true;
@@ -154,7 +152,7 @@ namespace Il2Native.Logic
                 {
                     group[0].OpenRoundBrackets++;
 
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.ConjunctionOrCondition = true;
                     }
@@ -186,14 +184,14 @@ namespace Il2Native.Logic
         /// </param>
         public static void ConditionsParseForIf(OpCodePart[] conditions, int startOfTrueExpression)
         {
-            bool nextJoinAnd = true;
-            OpCodePart[][] groups = BuildConditionGroups(conditions);
+            var nextJoinAnd = true;
+            var groups = BuildConditionGroups(conditions);
             foreach (var group in groups)
             {
                 // all Or
                 if (group.Last().JumpAddress() != startOfTrueExpression && group.First().JumpAddress() != startOfTrueExpression)
                 {
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.InvertCondition = true;
                         element.ConjunctionAndCondition = true;
@@ -205,10 +203,10 @@ namespace Il2Native.Logic
 
                 // TODO: var r1 = ok == 1 && ok == 2 || error == 3 && error == 4 && (ok == 10 || ok == 11 || ok ==12) ? 1 : 0;
                 // in this expression last  OR chain is not detected
-                bool internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
+                var internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
                 if (internalAndJoin)
                 {
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.ConjunctionAndCondition = true;
                     }
@@ -217,7 +215,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    foreach (OpCodePart element in group)
+                    foreach (var element in group)
                     {
                         element.InvertCondition = false;
                         element.ConjunctionOrCondition = true;
@@ -249,7 +247,7 @@ namespace Il2Native.Logic
         /// </returns>
         public bool IsThis(OpCodePart oper1)
         {
-            bool isThis = oper1.Any(Code.Ldarg_0) && this.HasMethodThis;
+            var isThis = oper1.Any(Code.Ldarg_0) && this.HasMethodThis;
             return isThis;
         }
 
@@ -261,19 +259,19 @@ namespace Il2Native.Logic
         /// </returns>
         public ReturnResult ResultOf(OpCodePart opCode)
         {
-            Code code = opCode.ToCode();
+            var code = opCode.ToCode();
             switch (code)
             {
                 case Code.Call:
                 case Code.Callvirt:
-                    IMethod methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
                 case Code.Newobj:
-                    IConstructor ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
+                    var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
                 case Code.Ldfld:
                 case Code.Ldsfld:
-                    IField fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
+                    var fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
                     return new ReturnResult(fieldInfo.FieldType);
                 case Code.Add:
                 case Code.Add_Ovf:
@@ -368,7 +366,7 @@ namespace Il2Native.Logic
                     return new ReturnResult(typeof(int));
                 case Code.Ldloca:
                 case Code.Ldloca_S:
-                    IType localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
+                    var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
                     return new ReturnResult(localVarType) { IsAddress = true };
                 case Code.Ldloc:
                 case Code.Ldloc_S:
@@ -480,7 +478,7 @@ namespace Il2Native.Logic
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
-                    ReturnResult res = this.ResultOf(opCode.OpCodeOperands[0]);
+                    var res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
                         return new ReturnResult(res.IType) { Boxed = true };
@@ -533,7 +531,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            OpCodePart usedOpCode1 = opCode.OpCodeOperands[0];
+            var usedOpCode1 = opCode.OpCodeOperands[0];
             if (usedOpCode1 == null)
             {
                 // todo: should not be here
@@ -541,10 +539,10 @@ namespace Il2Native.Logic
             }
 
             // fix types
-            ReturnResult requiredType = this.RequiredType(opCode);
+            var requiredType = this.RequiredType(opCode);
             if (requiredType != null)
             {
-                ReturnResult receivingType = this.ResultOf(usedOpCode1);
+                var receivingType = this.ResultOf(usedOpCode1);
                 if (requiredType != receivingType)
                 {
                     if (requiredType.IsTypeOf(typeof(bool)) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
@@ -559,11 +557,11 @@ namespace Il2Native.Logic
                 && (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi))
             {
                 // types should be equal
-                OpCodePart usedOpCode2 = opCode.OpCodeOperands[1];
-                Code usedCode2 = usedOpCode2.ToCode();
+                var usedOpCode2 = opCode.OpCodeOperands[1];
+                var usedCode2 = usedOpCode2.ToCode();
 
-                ReturnResult type1 = this.ResultOf(usedOpCode1);
-                ReturnResult type2 = this.ResultOf(usedOpCode2);
+                var type1 = this.ResultOf(usedOpCode1);
+                var type2 = this.ResultOf(usedOpCode2);
 
                 if (type1 != null && type2 != null && type1 != type2)
                 {
@@ -591,10 +589,10 @@ namespace Il2Native.Logic
                 return;
             }
 
-            foreach (IExceptionHandlingClause exceptionHandlingClause in this.ExceptionHandlingClauses)
+            foreach (var exceptionHandlingClause in this.ExceptionHandlingClauses)
             {
                 OpCodePart opCodePart;
-                if (this.OpsByGroupAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
+                if (this.OpsByAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
                 {
                     if (opCodePart.Try == null)
                     {
@@ -604,7 +602,7 @@ namespace Il2Native.Logic
                     opCodePart.Try.Add(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength);
                 }
 
-                if (this.OpsByGroupAddressEnd.TryGetValue(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength, out opCodePart))
+                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength, out opCodePart))
                 {
                     if (opCodePart.EndOfTry == null)
                     {
@@ -614,7 +612,7 @@ namespace Il2Native.Logic
                     opCodePart.EndOfTry.Add(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength);
                 }
 
-                if (this.OpsByGroupAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, out opCodePart))
+                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, out opCodePart))
                 {
                     if (opCodePart.EndOfClausesOrFinal == null)
                     {
@@ -626,7 +624,7 @@ namespace Il2Native.Logic
                         + exceptionHandlingClause.HandlerLength);
                 }
 
-                if (this.OpsByGroupAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset, out opCodePart))
+                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset, out opCodePart))
                 {
                     if (opCodePart.ExceptionHandlers == null)
                     {
@@ -644,15 +642,15 @@ namespace Il2Native.Logic
         /// </param>
         protected void AssignJumpBlocks(OpCodePart[] opCodes)
         {
-            foreach (OpCodePart opCodePart in opCodes)
+            foreach (var opCodePart in opCodes)
             {
                 if (opCodePart.IsAnyBranch())
                 {
                     var jumpOp = opCodePart as OpCodeInt32Part;
                     if (jumpOp != null)
                     {
-                        int nextAddress = opCodePart.JumpAddress();
-                        OpCodePart target = this.OpsByAddressStart[nextAddress];
+                        var nextAddress = opCodePart.JumpAddress();
+                        var target = this.OpsByAddressStart[nextAddress];
                         if (target.JumpDestination == null)
                         {
                             target.JumpDestination = new List<OpCodePart>();
@@ -666,11 +664,11 @@ namespace Il2Native.Logic
                     var switchOp = opCodePart as OpCodeLabelsPart;
                     if (switchOp != null)
                     {
-                        int index = 0;
-                        foreach (int jumpAddress in switchOp.Operand)
+                        var index = 0;
+                        foreach (var jumpAddress in switchOp.Operand)
                         {
-                            int nextAddress = switchOp.JumpAddress(index);
-                            OpCodePart target = this.OpsByAddressStart[nextAddress];
+                            var nextAddress = switchOp.JumpAddress(index);
+                            var target = this.OpsByAddressStart[nextAddress];
                             if (target.JumpDestination == null)
                             {
                                 target.JumpDestination = new List<OpCodePart>();
@@ -696,7 +694,7 @@ namespace Il2Native.Logic
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
-            foreach (OpCodePart opCodePart in opCodes)
+            foreach (var opCodePart in opCodes)
             {
                 if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
                 {
@@ -727,10 +725,9 @@ namespace Il2Native.Logic
 
             var opCodeParts = new OpCodePart[size];
 
-            for (int i = 1; i <= size; i++)
+            for (var i = 1; i <= size; i++)
             {
-                OpCodePart opCodePartUsed = this.Stack.Pop();
-
+                var opCodePartUsed = this.Stack.Pop();
                 if (opCodePartUsed.ToCode() == Code.Nop)
                 {
                     if (insertBack == null)
@@ -801,28 +798,27 @@ namespace Il2Native.Logic
                 }
 
                 // check here if you have conditional argument (cond) ? a1 : b1;
-                int sizeOfCondition = 0;
+                var sizeOfCondition = 0;
                 OpCodePart firstCondition = null;
                 OpCodePart branchJumpCondition = null;
                 while (this.IsConditionalExpression(opCodePart, opCodePartUsed, this.Stack, out sizeOfCondition, out firstCondition, out branchJumpCondition))
                 {
                     var newBlockOps = new List<OpCodePart>();
                     newBlockOps.Add(opCodePartUsed);
-                    for (int k = 0; k < sizeOfCondition; k++)
+                    for (var k = 0; k < sizeOfCondition; k++)
                     {
                         newBlockOps.Add(this.Stack.Pop());
                     }
 
                     // because it is used you do not need to process it twice
-                    foreach (OpCodePart opCode in newBlockOps)
+                    foreach (var opCode in newBlockOps)
                     {
                         opCode.Skip = true;
                     }
 
                     newBlockOps.Reverse();
 
-                    var opCodeBlock = new OpCodeBlock(
-                        this.ConditionalExpressionConditionsParse(newBlockOps.ToArray(), firstCondition, branchJumpCondition));
+                    var opCodeBlock = new OpCodeBlock(this.ConditionalExpressionConditionsParse(newBlockOps.ToArray(), firstCondition, branchJumpCondition));
                     opCodeBlock.UseAsConditionalExpression = true;
                     opCodePartUsed = opCodeBlock;
                 }
@@ -832,7 +828,7 @@ namespace Il2Native.Logic
                 {
                     var newBlockOps = new List<OpCodePart>();
                     newBlockOps.Add(opCodePartUsed);
-                    for (int k = 0; k < 3; k++)
+                    for (var k = 0; k < 3; k++)
                     {
                         newBlockOps.Add(this.Stack.Pop());
                     }
@@ -853,7 +849,7 @@ namespace Il2Native.Logic
             if (insertBack != null)
             {
                 insertBack.Reverse();
-                foreach (OpCodePart pushBack in insertBack)
+                foreach (var pushBack in insertBack)
                 {
                     this.Stack.Push(pushBack);
                 }
@@ -868,7 +864,7 @@ namespace Il2Native.Logic
         /// </returns>
         protected OpCodePart[] PrepareWritingMethodBody()
         {
-            OpCodePart[] rest = this.Stack.Reverse().ToArray();
+            var rest = this.Stack.Reverse().ToArray();
 
             this.BuildGroupAddressIndexes(rest);
             this.AssignExceptionsToOpCodes();
@@ -887,11 +883,11 @@ namespace Il2Native.Logic
 
             this.AddAddressIndex(opCode);
 
-            Code code = opCode.ToCode();
+            var code = opCode.ToCode();
             switch (code)
             {
                 case Code.Call:
-                    IMethod methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
                         opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
                     break;
@@ -900,7 +896,7 @@ namespace Il2Native.Logic
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
                     break;
                 case Code.Newobj:
-                    IConstructor ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
+                    var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
                     break;
                 case Code.Stelem:
@@ -1108,7 +1104,7 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            IMethodBody methodBody = methodInfo.GetMethodBody();
+            var methodBody = methodInfo.GetMethodBody();
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {
@@ -1148,7 +1144,7 @@ namespace Il2Native.Logic
         protected OpCodePart[] RemoveUnusedOps(int size, OpCodePart[] opCodeParts, int i, OpCodePart opCodePartUsed)
         {
             var newOpCodeParts = new List<OpCodePart>(opCodeParts);
-            for (int j = 0; j <= size - i; j++)
+            for (var j = 0; j <= size - i; j++)
             {
                 newOpCodeParts.RemoveAt(0);
             }
@@ -1167,7 +1163,7 @@ namespace Il2Native.Logic
         /// </returns>
         protected ReturnResult RequiredType(OpCodePart opCodePart)
         {
-            Code code = opCodePart.ToCode();
+            var code = opCodePart.ToCode();
             if (code == Code.Ret)
             {
                 return new ReturnResult(this.MethodReturnType);
@@ -1198,19 +1194,19 @@ namespace Il2Native.Logic
         {
             var groups = new List<OpCodePart[]>();
 
-            for (int i = 0; i < conditions.Length;)
+            for (var i = 0; i < conditions.Length; )
             {
                 var group = new List<OpCodePart>();
 
-                OpCodePart firstOfGroup = conditions[i];
-                int stopAddress = firstOfGroup.JumpAddress();
+                var firstOfGroup = conditions[i];
+                var stopAddress = firstOfGroup.JumpAddress();
 
                 i++;
                 group.Add(firstOfGroup);
 
                 while (i < conditions.Length)
                 {
-                    OpCodePart element = conditions[i];
+                    var element = conditions[i];
                     if (element.GroupAddressStart < stopAddress)
                     {
                         group.Add(element);
@@ -1252,10 +1248,10 @@ namespace Il2Native.Logic
         private OpCodePart[] ConditionalExpressionConditionsParse(OpCodePart[] condExpBlock, OpCodePart firstCondition, OpCodePart branchJump)
         {
             // calculate all addresses
-            int startOfTrueExpression = branchJump.GroupAddressEnd;
+            var startOfTrueExpression = branchJump.GroupAddressEnd;
 
             OpCodePart lastCondition = null;
-            foreach (OpCodePart opCodePart in condExpBlock)
+            foreach (var opCodePart in condExpBlock)
             {
                 if (opCodePart.IsCondBranch())
                 {
@@ -1269,7 +1265,7 @@ namespace Il2Native.Logic
             var conditionsList = new List<OpCodePart>();
 
             // adjust all condition conjunctions
-            foreach (OpCodePart opCodePart in condExpBlock)
+            foreach (var opCodePart in condExpBlock)
             {
                 conditionsList.Add(opCodePart);
 
@@ -1301,40 +1297,40 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart, 
-            OpCodePart currentArgument, 
-            Stack<OpCodePart> stack, 
-            out int sizeOfCondition, 
-            out OpCodePart firstCondition, 
+            OpCodePart opCodePart,
+            OpCodePart currentArgument,
+            Stack<OpCodePart> stack,
+            out int sizeOfCondition,
+            out OpCodePart firstCondition,
             out OpCodePart lastCondition)
         {
             sizeOfCondition = 3;
             firstCondition = null;
             lastCondition = null;
 
-            for (;;)
+            for (; ; )
             {
-                IEnumerable<OpCodePart> subOpCodes = stack.Take(sizeOfCondition);
+                var subOpCodes = stack.Take(sizeOfCondition);
                 if (subOpCodes.Count() != sizeOfCondition)
                 {
                     break;
                 }
 
-                OpCodePart first = subOpCodes.First();
-                OpCodePart last = subOpCodes.Last();
+                var first = subOpCodes.First();
+                var last = subOpCodes.Last();
 
-                bool isFirstElementBranch = first.IsBranch() && first.IsJumpForward()
-                                            && first.JumpAddress().Equals(currentArgument.GroupAddressEnd /*opCodePart.GroupAddressStart*/);
+                var isFirstElementBranch = first.IsBranch() && first.IsJumpForward()
+                                           && first.JumpAddress().Equals(currentArgument.GroupAddressEnd /*opCodePart.GroupAddressStart*/);
 
                 // more checks need here. there should be second return
-                OpCodePart beforeFirst = first.PreviousOpCodeGroup(this);
+                var beforeFirst = first.PreviousOpCodeGroup(this);
                 if (first.IsReturn() && first.OpCodeOperands != null && first.OpCodeOperands.Length == 1 && beforeFirst != null && beforeFirst.IsReturn()
                     && beforeFirst.OpCodeOperands != null && beforeFirst.OpCodeOperands.Length == 1)
                 {
                     isFirstElementBranch = true;
                 }
 
-                bool isLastElementCondition = last.IsCondBranch() && last.IsJumpForward() && last.JumpAddress() <= first.GroupAddressEnd;
+                var isLastElementCondition = last.IsCondBranch() && last.IsJumpForward() && last.JumpAddress() <= first.GroupAddressEnd;
 
                 if (isFirstElementBranch && isLastElementCondition)
                 {
@@ -1381,7 +1377,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            OpCodePart second = stack.Skip(1).First();
+            var second = stack.Skip(1).First();
             if (!second.Any(Code.Brtrue, Code.Brtrue_S))
             {
                 return false;

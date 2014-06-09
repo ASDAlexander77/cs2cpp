@@ -1,13 +1,11 @@
 ﻿namespace Il2Native.Logic.Gencode
 {
-    using Il2Native.Logic.CodeParts;
-    using PEAssemblyReader;
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection.Emit;
-    using System.Text;
-    using System.Threading.Tasks;
+    using System.CodeDom.Compiler;
+
+    using Il2Native.Logic.CodeParts;
+
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -16,11 +14,11 @@
     {
         /// <summary>
         /// </summary>
-        None = 0,
+        None = 0, 
 
         /// <summary>
         /// </summary>
-        Cleanup = 1,
+        Cleanup = 1, 
 
         /// <summary>
         /// </summary>
@@ -41,6 +39,32 @@
             writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
 
             llvmWriter.needToWriteUnwindException = true;
+        }
+
+        public static void WriteCatchTest(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
+        {
+            writer.WriteLine("; Test Exception type");
+            writer.WriteLine("writer.WriteLine(%38 = load i32* %3");
+            writer.WriteLine("%39 = call i32 @llvm.eh.typeid.for(i8* bitcast ({ i8*, i8*, i32, i8* }* @_ZTIP9Exception to i8*))");
+            writer.WriteLine("%40 = icmp eq i32 %38, %39");
+            writer.WriteLine("br i1 %40, label %41, label %47");
+        }
+
+        public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType catchType)
+        {
+            writer.WriteLine("; Begin of Catch or Finally");
+            writer.WriteLine("%42 = load i8** %2");
+            writer.WriteLine("%43 = call i8* @__cxa_begin_catch(i8* %42)");
+            writer.WriteLine("%44 = bitcast i8* %43 to %class.Exception*");
+            writer.WriteLine("store %class.Exception* %44, %class.Exception** %e1");
+        }
+
+        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        {
+            writer.WriteLine("; End of Catch or Finally");
+            writer.WriteLine("store i32 0, i32* %1");
+            writer.WriteLine("store i32 1, i32* %4");
+            writer.WriteLine("call void @__cxa_end_catch() #3");
         }
 
         public static void WriteAllocateException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
@@ -66,6 +90,14 @@
             writer.Write("* ");
             llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
             writer.WriteLine(string.Empty);
+        }
+
+        public static void WriteUnreachable(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        {
+            writer.Indent--;
+            writer.WriteLine(".unreachable:");
+            writer.Indent++;
+            writer.WriteLine("unreachable");
         }
 
         public static void WriteUnwindException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
@@ -108,7 +140,14 @@
             writer.WriteLine(string.Empty);
         }
 
-        private static void WriteLandingPad(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, LandingPadOptions options, IType[] @catch = null, int[] filter = null, int? exceptionAllocationResultNumber = null)
+        public static void WriteLandingPad(
+            this LlvmWriter llvmWriter, 
+            LlvmIndentedTextWriter writer, 
+            OpCodePart opCode, 
+            LandingPadOptions options, 
+            IType[] @catch = null, 
+            int[] filter = null, 
+            int? exceptionAllocationResultNumber = null)
         {
             llvmWriter.WriteLandingPadVariables(writer);
 
@@ -134,11 +173,12 @@
             writer.WriteLine("store i8* {0}, i8** %.error_object", llvmWriter.GetResultNumber(getErrorObjectResultNumber));
             var getErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCode);
             writer.WriteLine("extractvalue {1} {0}, 1", llvmWriter.GetResultNumber(landingPadResult), "{ i8*, i32 }");
-            writer.WriteLine("store i32 {0}, i32* %.error_typeid", llvmWriter.GetResultNumber(getErrorTypeIdResultNumber));
+            writer.Write("store i32 {0}, i32* %.error_typeid", llvmWriter.GetResultNumber(getErrorTypeIdResultNumber));
 
             if (exceptionAllocationResultNumber.HasValue)
             {
-                writer.WriteLine("call void @__cxa_free_exception(i8* {0})", exceptionAllocationResultNumber.Value);
+                writer.WriteLine(string.Empty);
+                writer.Write("call void @__cxa_free_exception(i8* {0})", exceptionAllocationResultNumber.Value);
             }
 
             opCode.ResultNumber = landingPadResult;

@@ -317,6 +317,8 @@ namespace Il2Native.Logic
 
             if (!this.NoBody)
             {
+                this.Output.EndMethodBody();
+
                 this.Output.Indent--;
 
                 this.Output.WriteLine("}");
@@ -374,6 +376,8 @@ namespace Il2Native.Logic
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
                 this.WriteArgumentCopyDeclarations(ctor.GetParameters(), this.HasMethodThis);
+
+                this.Output.StartMethodBody();
             }
 
             methodNumberIncremental++;
@@ -503,22 +507,20 @@ namespace Il2Native.Logic
 
             if (!this.NoBody)
             {
-                this.Output.Indent--;
-
                 if (this.needToWriteUnwindException)
                 {
                     this.needToWriteUnwindException = false;
                     this.WriteUnwindException(this.Output);
                 }
 
-                if (method.ExceptionHandlingClauses.Count() > 0)
+                if (method.ExceptionHandlingClauses.Any())
                 {
-                    this.Output.WriteLine(".unreachable:");
-                    this.Output.Indent++;
-                    this.Output.WriteLine("unreachable");
-                    this.Output.Indent--;
+                    this.WriteUnreachable(this.Output);
                 }
 
+                this.Output.EndMethodBody();
+
+                this.Output.Indent--;
                 this.Output.WriteLine("}");
             }
 
@@ -593,6 +595,8 @@ namespace Il2Native.Logic
 
                 this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
                 this.WriteArgumentCopyDeclarations(method.GetParameters(), this.HasMethodThis);
+
+                this.Output.StartMethodBody();
             }
 
             methodNumberIncremental++;
@@ -3399,45 +3403,48 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.EndOfTry != null && opCode.EndOfTry.Count > 0)
-            {
-                foreach (var endOfTryId in opCode.EndOfTry)
-                {
-                    writer.WriteLine(string.Empty);
-                    writer.Indent--;
-                    writer.WriteLine("}");
-                }
-            }
+            ////if (opCode.EndOfTry != null && opCode.EndOfTry.Count > 0)
+            ////{
+            ////    foreach (var endOfTryId in opCode.EndOfTry)
+            ////    {
+            ////        writer.WriteLine(string.Empty);
+            ////        writer.Indent--;
+            ////        writer.WriteLine("}");
+            ////    }
+            ////}
 
             if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
             {
                 foreach (var endOfCaluseId in opCode.EndOfClausesOrFinal)
                 {
-                    // writer.WriteLine(string.Empty);
-                    writer.Indent--;
-                    writer.WriteLine("}");
+                    this.WriteCatchEnd(writer);
                 }
             }
 
             if (opCode.ExceptionHandlers != null)
             {
+                this.WriteLandingPad(
+                    writer,
+                    opCode,
+                    LandingPadOptions.None,
+                    opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
+
                 foreach (var exceptionHandler in opCode.ExceptionHandlers)
                 {
                     if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
                     {
-                        writer.Write("catch (");
-                        this.WriteTypePrefix(writer, exceptionHandler.CatchType);
-                        writer.Write(")");
+                        this.WriteCatchTest(writer, exceptionHandler.CatchType);
                     }
 
                     if (exceptionHandler.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                     {
+                        // TODO: finish it
                         writer.Write("catch (...) {}");
                     }
 
                     writer.WriteLine(string.Empty);
-                    writer.Write('{');
-                    writer.Indent++;
+
+                    this.WriteCatchBegin(writer, exceptionHandler.CatchType);
                 }
             }
         }
@@ -3916,8 +3923,6 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteMethodBody(string endPart = null)
         {
-            this.Output.StartMethodBody();
-
             var rest = this.PrepareWritingMethodBody();
 
             var i = 0;
@@ -3933,8 +3938,6 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(string.Empty);
             }
-
-            this.Output.EndMethodBody();
         }
 
         /// <summary>
@@ -4378,14 +4381,14 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTry(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.Try != null)
+            if (opCode.Try == null || opCode.ResultNumber.HasValue)
             {
-                foreach (var tryId in opCode.Try)
-                {
-                    writer.WriteLine("try");
-                    writer.WriteLine('{');
-                    writer.Indent++;
-                }
+                return;
+            }
+
+            foreach (var tryId in opCode.Try)
+            {
+                writer.WriteLine("; Try, start of scope");
             }
         }
 
