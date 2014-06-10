@@ -104,7 +104,7 @@ namespace PEAssemblyReader
             get
             {
                 var metadataTypeName = this.typeDef.ContainingNamespace != null
-                                           ? MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.Name, this.typeDef.Name)
+                                           ? MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.ToString(), this.typeDef.Name)
                                            : MetadataTypeName.FromTypeName(this.typeDef.Name);
                 return metadataTypeName.FullName;
             }

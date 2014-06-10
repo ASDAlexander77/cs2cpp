@@ -412,7 +412,7 @@ namespace PEAssemblyReader
         /// </exception>
         public bool IsAssignableFrom(IType type)
         {
-            throw new NotImplementedException();
+            return type.IsDerivedFrom(this);
         }
 
         /// <summary>
@@ -424,6 +424,20 @@ namespace PEAssemblyReader
         public static IType FromType(Type type)
         {
             return new TypeAdapter(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
+        {
+            if (type.IsValueType && type.Namespace == "System")
+            {
+                return type.Name;
+            }
+
+            return this.type.ToString();
         }
     }
 }

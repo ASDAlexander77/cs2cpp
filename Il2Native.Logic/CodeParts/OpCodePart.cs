@@ -1,12 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OpCodePart.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.CodeParts
 {
     using System.Collections.Generic;
@@ -23,8 +20,6 @@ namespace Il2Native.Logic.CodeParts
     [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
     public class OpCodePart
     {
-        public static OpCodePart Nop = new OpCodePart(OpCodesEmit.Nop, 0, 0);
-
         /// <summary>
         /// </summary>
         private int? resultNumber;
@@ -52,6 +47,14 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         protected OpCodePart()
         {
+        }
+
+        public static OpCodePart CreateNop
+        {
+            get
+            {
+                return new OpCodePart(OpCodesEmit.Nop, 0, 0);
+            }
         }
 
         /// <summary>

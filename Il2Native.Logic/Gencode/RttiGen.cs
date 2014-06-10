@@ -12,7 +12,6 @@
     {
         public static void WriteRtti(this IType type, IndentedTextWriter writer)
         {
-            writer.WriteLine(string.Empty);
             writer.WriteLine("; RTTI class");
             type.WriteRttiClassDefinition(writer);
             writer.WriteLine("; RTTI pointer");

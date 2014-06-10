@@ -40,6 +40,26 @@ define void @"Void System.ValueType.Finalize()"(%"System.ValueType"* %this) #4 {
     ret void
 }
 
+%"System.Exception" = type {
+    %"System.Object"
+}
+
+define i8* @"System.String System.Exception.ToString()"(%"System.Exception"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.Exception.Equals(System.Object)"(%"System.Exception"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.Exception.GetHashCode()"(%"System.Exception"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.Exception.Finalize()"(%"System.Exception"* %this) #4 {
+    ret void
+}
+
 %"System.Enum" = type {
     %"System.ValueType"
 }

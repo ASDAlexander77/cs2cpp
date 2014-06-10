@@ -240,7 +240,11 @@ namespace Il2Native.Logic
             {
                 this.WritePostDeclarations();
 
+                this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteRtti(this.Output);
+
+                this.Output.WriteLine(string.Empty);
+                this.ThisType.WriteInitObjectMethod(this.Output, this);
             }
         }
 
@@ -2032,6 +2036,8 @@ namespace Il2Native.Logic
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
+                    this.CheckIfExternalDeclarationIsRequired(declaringType);
+
                     this.WriteNew(writer, opCode, declaringType);
                     this.WriteCallConstructor(writer, opCodeConstructorInfoPart);
 
@@ -3055,7 +3061,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType toType, OperandOptions options = OperandOptions.None)
         {
-            this.UnaryOper(writer, opCode, "bitcast", options: options);
+            this.UnaryOper(writer, opCode, "bitcast", opCode.ResultType, options: options);
             writer.Write(" to ");
             this.WriteTypePrefix(writer, toType, true);
             opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
@@ -3123,7 +3129,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisResultNumber">
         /// </param>
-        private void WriteCall(
+        public void WriteCall(
             LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber)
         {
             if (opCodeMethodInfo.ResultNumber.HasValue)
@@ -3396,6 +3402,34 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
         }
 
+        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string custromName, IType toType, bool appendReference = false)
+        {
+            if (!fromType.IsInterface && toType.IsInterface)
+            {
+                throw new NotImplementedException();
+                ////opCode.ResultNumber = res;
+                ////this.WriteInterfaceAccess(writer, opCode, fromType, toType);
+            }
+            else
+            {
+                WriteSetResultNumber(writer, opCode);
+                writer.Write("bitcast ");
+                this.WriteTypePrefix(writer, fromType, true);
+                writer.Write(' ');
+                writer.Write(custromName);
+                writer.Write(" to ");
+                this.WriteTypePrefix(writer, toType, true);
+                if (appendReference)
+                {
+                    // result should be array
+                    writer.Write('*');
+                }
+            }
+
+            opCode.ResultType = toType;
+            writer.WriteLine(string.Empty);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3436,6 +3470,7 @@ namespace Il2Native.Logic
                 {
                     if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
                     {
+                        writer.WriteLine(string.Empty);
                         this.WriteCatchTest(
                             writer,
                             exceptionHandler,
@@ -3631,7 +3666,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        private void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
+        public void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
@@ -3642,7 +3677,15 @@ namespace Il2Native.Logic
                 writer.WriteLine("; set virtual table");
 
                 // initializw virtual table
-                this.WriteCast(writer, opCode, declaringType, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
+                if (opCode.ResultNumber.HasValue)
+                {
+                    this.WriteCast(writer, opCode, declaringType, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                }
+                else
+                {
+                    this.WriteCast(writer, opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
+                }
+
                 writer.WriteLine(string.Empty);
 
                 var virtualTable = this.GetVirtualTable(declaringType);
@@ -3651,7 +3694,14 @@ namespace Il2Native.Logic
                     "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
                     virtualTable.Count + 1,
                     this.GetVirtualTableName(declaringType));
-                WriteResultNumber(opCode.ResultNumber ?? -1);
+                if (opCode.ResultNumber.HasValue)
+                {
+                    WriteResultNumber(writer, opCode.ResultNumber ?? -1);
+                }
+                else
+                {
+
+                }
                 writer.WriteLine(string.Empty);
 
                 // restore
@@ -3669,7 +3719,15 @@ namespace Il2Native.Logic
 
                 this.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
 
-                this.WriteCast(writer, opCode, @interface, opCode.ResultNumber ?? -1, TypeAdapter.FromType(typeof(byte**)));
+                if (opCode.ResultNumber.HasValue)
+                {
+                    this.WriteCast(writer, opCode, @interface, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                }
+                else
+                {
+                    this.WriteCast(writer, opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
+                }
+
                 writer.WriteLine(string.Empty);
 
                 var virtualInterfaceTable = this.GetVirtualInterfaceTable(declaringType, @interface);
@@ -3811,7 +3869,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="structAsRef">
         /// </param>
-        private void WriteLlvmLoad(
+        public void WriteLlvmLoad(
             LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
         {
             if (!type.IsStructureType() || structAsRef)
@@ -4125,13 +4183,15 @@ namespace Il2Native.Logic
 
             var castResult = opCode.ResultNumber;
 
-            this.WriteInitObject(writer, opCode, declaringType);
+            //this.WriteInitObject(writer, opCode, declaringType);
+            declaringType.WriteCallInitObjectMethod(writer, this, opCode);
 
             // restore result and type
             opCode.ResultNumber = castResult;
             opCode.ResultType = declaringType;
 
-            writer.WriteLine("; end of new obj");
+            writer.WriteLine(string.Empty);
+            writer.Write("; end of new obj");
         }
 
         /// <summary>
@@ -4172,7 +4232,7 @@ namespace Il2Native.Logic
             this.WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
-            var opCodeTemp = OpCodePart.Nop;
+            var opCodeTemp = OpCodePart.CreateNop;
             opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
 
             // save array size
@@ -4310,6 +4370,12 @@ namespace Il2Native.Logic
         {
             // write number of method
             this.Output.Write(this.GetResultNumber(number));
+        }
+
+        public void WriteResultNumber(LlvmIndentedTextWriter writer, int number)
+        {
+            // write number of method
+            writer.Write(this.GetResultNumber(number));
         }
 
         /// <summary>
