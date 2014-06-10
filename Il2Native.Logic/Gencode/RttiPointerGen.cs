@@ -39,6 +39,12 @@
             type.WriteRttiPointerClassInfoDefinition(writer);
         }
 
+        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
+        {
+            writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
+            type.WriteRttiPointerClassInfoDeclaration(writer);
+        }
+
         public static void WriteRttiPointerClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
             writer.Write("{ i8*, i8*, i32, i8* }");

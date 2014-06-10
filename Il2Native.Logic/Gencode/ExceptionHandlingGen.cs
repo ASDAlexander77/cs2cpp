@@ -39,6 +39,8 @@
             writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
 
             llvmWriter.needToWriteUnwindException = true;
+            llvmWriter.typeRttiPointerDeclRequired.Add(exceptionPointerType);
+            llvmWriter.CheckIfExternalDeclarationIsRequired(exceptionPointerType);
         }
 
         public static void WriteCatchTest(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause nextExceptionHandlingClause)
@@ -239,6 +241,9 @@
                     catchType.WriteRttiPointerClassInfoDeclaration(writer);
                     writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
                     writer.Indent--;
+
+                    llvmWriter.typeRttiPointerDeclRequired.Add(catchType);
+                    llvmWriter.CheckIfExternalDeclarationIsRequired(catchType);
                 }
             }
 

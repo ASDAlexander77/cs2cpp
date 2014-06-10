@@ -20,6 +20,32 @@ define void @"Void System.Object.Finalize()"(%"System.Object"* %this) #4 {
     ret void
 }
 
+; RTTI class
+@"System.Object String Name" = linkonce_odr constant [16 x i8] c"14System.Object\00"
+@"System.Object Info" = linkonce_odr unnamed_addr constant { i8*, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv117__class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([16 x i8]* @"System.Object String Name", i32 0, i32 0)
+}
+; RTTI pointer
+@"System.Object Pointer String Name" = linkonce_odr constant [17 x i8] c"P14System.Object\00"
+@"System.Object Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([17 x i8]* @"System.Object Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
+}
+
+; Init Object method
+define void @"Void System.Object..init()"(%"System.Object"* %this) #1 {
+    %.this = alloca %"System.Object"*, align 4
+    store %"System.Object"* %this, %"System.Object"** %.this, align 4
+    %.r1 = load %"System.Object"** %.this, align 4
+    ; set virtual table
+    %.r2 = bitcast %"System.Object"* %.r1 to i8***
+    store i8** getelementptr inbounds ([5 x i8*]* @"System.Object Virtual Table", i64 0, i64 1), i8*** %.r2
+    ret void
+}
+
 %"System.ValueType" = type {
     %"System.Object"
 }
@@ -57,6 +83,34 @@ define i32 @"Int32 System.Exception.GetHashCode()"(%"System.Exception"* %this) #
 }
 
 define void @"Void System.Exception.Finalize()"(%"System.Exception"* %this) #4 {
+    ret void
+}
+
+@"System.Exception Virtual Table" = linkonce_odr unnamed_addr constant [5 x i8*] [i8* null, i8* bitcast (i8* (%"System.Object"*)* @"System.String System.Object.ToString()" to i8*), i8* bitcast (i1 (%"System.Object"*, %"System.Object"*)* @"Boolean System.Object.Equals(System.Object)" to i8*), i8* bitcast (i32 (%"System.Object"*)* @"Int32 System.Object.GetHashCode()" to i8*), i8* bitcast (void (%"System.Object"*)* @"Void System.Object.Finalize()" to i8*)]
+
+; RTTI class
+@"System.Exception String Name" = linkonce_odr constant [19 x i8] c"16System.Exception\00"
+@"System.Exception Info" = linkonce_odr unnamed_addr constant { i8*, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv117__class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([19 x i8]* @"System.Exception String Name", i32 0, i32 0)
+}
+; RTTI pointer
+@"System.Exception Pointer String Name" = linkonce_odr constant [20 x i8] c"P16System.Exception\00"
+@"System.Exception Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([20 x i8]* @"System.Exception Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8* }* @"System.Exception Info" to i8*)
+}
+
+; Init Object method
+define void @"Void System.Exception..init()"(%"System.Exception"* %this) #23 {
+    %.this = alloca %"System.Exception"*, align 4
+    store %"System.Exception"* %this, %"System.Exception"** %.this, align 4
+    %.r1 = load %"System.Exception"** %.this, align 4
+    ; set virtual table
+    %.r2 = bitcast %"System.Exception"* %.r1 to i8***
+    store i8** getelementptr inbounds ([5 x i8*]* @"System.Exception Virtual Table", i64 0, i64 1), i8*** %.r2
     ret void
 }
 

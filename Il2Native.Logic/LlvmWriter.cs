@@ -61,6 +61,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> processedRttiPointerTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
         /// <summary>
@@ -74,6 +78,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
+        public readonly HashSet<IType> typeRttiPointerDeclRequired = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
@@ -242,6 +250,8 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteRtti(this.Output);
+
+                processedRttiPointerTypes.Add(this.ThisType);
 
                 this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteInitObjectMethod(this.Output, this);
@@ -2368,7 +2378,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void CheckIfExternalDeclarationIsRequired(IType type)
+        public void CheckIfExternalDeclarationIsRequired(IType type)
         {
             if (type != null)
             {
@@ -2376,6 +2386,14 @@ namespace Il2Native.Logic
                 {
                     this.typeDeclRequired.Add(type);
                 }
+            }
+        }
+
+        private void AddExternalRttiPointerDeclaration(IType type)
+        {
+            if (type != null)
+            {
+                this.typeRttiPointerDeclRequired.Add(type);
             }
         }
 
@@ -4300,6 +4318,21 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteRequiredDeclarations()
         {
+            if (this.typeRttiPointerDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (var rttiPointerDecl in this.typeRttiPointerDeclRequired)
+                {
+                    if (this.processedRttiPointerTypes.Contains(rttiPointerDecl))
+                    {
+                        continue;
+                    }
+
+                    rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
+                    this.Output.WriteLine(string.Empty);
+                }
+            }
+
             if (this.typeDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
