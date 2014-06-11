@@ -2075,7 +2075,7 @@ namespace Il2Native.Logic
 
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    this.WriteThrow(writer, opCode);
+                    this.WriteThrow(writer, opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
 

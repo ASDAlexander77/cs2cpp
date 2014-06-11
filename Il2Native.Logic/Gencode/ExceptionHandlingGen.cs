@@ -29,7 +29,7 @@
 
     public static class ExceptionHandlingGen
     {
-        public static void WriteThrow(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public static void WriteThrow(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
             writer.WriteLine("; Throw");
             var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
@@ -38,9 +38,16 @@
             writer.Write("invoke void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
-            writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
+            if (exceptionHandlingClause != null)
+            {
+                writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.HandlerOffset);
+            }
+            else
+            {
+                writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
+                llvmWriter.needToWriteUnwindException = true;
+            }
 
-            llvmWriter.needToWriteUnwindException = true;
             llvmWriter.typeRttiPointerDeclRequired.Add(exceptionPointerType);
             llvmWriter.CheckIfExternalDeclarationIsRequired(exceptionPointerType);
         }
