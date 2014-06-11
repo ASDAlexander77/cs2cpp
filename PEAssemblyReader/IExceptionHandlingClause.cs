@@ -8,11 +8,12 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System;
     using System.Reflection;
 
     /// <summary>
     /// </summary>
-    public interface IExceptionHandlingClause
+    public interface IExceptionHandlingClause : IComparable
     {
         /// <summary>
         /// </summary>

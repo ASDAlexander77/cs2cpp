@@ -92,6 +92,8 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
+        private Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>(); 
+
         /// <summary>
         /// </summary>
         private int resultNumberIncremental;
@@ -3456,31 +3458,19 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            ////if (opCode.EndOfTry != null && opCode.EndOfTry.Count > 0)
-            ////{
-            ////    foreach (var endOfTryId in opCode.EndOfTry)
-            ////    {
-            ////        writer.WriteLine(string.Empty);
-            ////        writer.Indent--;
-            ////        writer.WriteLine("}");
-            ////    }
-            ////}
-
             if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
             {
-                foreach (var endOfCaluseId in opCode.EndOfClausesOrFinal)
+                foreach (var eh in opCode.EndOfClausesOrFinal)
                 {
                     this.WriteCatchEnd(writer);
+                    var ehPopped = this.tryScopes.Pop();
+                    Debug.Assert(ehPopped == eh, "Mismatch in Exception handler");
                 }
             }
 
             if (opCode.ExceptionHandlers != null)
             {
-                this.WriteLandingPad(
-                    writer,
-                    opCode,
-                    LandingPadOptions.None,
-                    opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
+                this.WriteCatchProlog(writer, opCode);
 
                 var exceptionHandlers = opCode.ExceptionHandlers.ToArray();
                 var nextExceptionHandlerIndex = 1;
@@ -4493,9 +4483,12 @@ namespace Il2Native.Logic
                 return;
             }
 
-            foreach (var tryId in opCode.Try)
+            var ehs = opCode.Try.ToArray();
+            Array.Sort(ehs);
+            foreach (var eh in ehs)
             {
                 writer.WriteLine("; Try, start of scope");
+                this.tryScopes.Push(eh);
             }
         }
 

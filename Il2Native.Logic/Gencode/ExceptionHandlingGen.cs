@@ -2,6 +2,8 @@
 {
     using System;
     using System.CodeDom.Compiler;
+    using System.Linq;
+    using System.Reflection;
 
     using Il2Native.Logic.CodeParts;
 
@@ -202,6 +204,21 @@
             writer.Write("%.error_typeid = ");
             writer.Write("alloca i32, align " + LlvmWriter.pointerSize);
             writer.WriteLine(string.Empty);
+        }
+
+        public static void WriteCatchProlog(this LlvmWriter llvmWriter,
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode)
+        {
+            writer.Indent--;
+            writer.WriteLine(".catch{0}:", opCode.ExceptionHandlers.First().HandlerOffset);
+            writer.Indent++;
+
+            llvmWriter.WriteLandingPad(
+                writer,
+                opCode,
+                LandingPadOptions.None,
+                opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
         }
 
         public static void WriteLandingPad(

@@ -99,11 +99,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public HashSet<int> EndOfClausesOrFinal { get; set; }
+        public HashSet<IExceptionHandlingClause> EndOfClausesOrFinal { get; set; }
 
         /// <summary>
         /// </summary>
-        public HashSet<int> EndOfTry { get; set; }
+        public HashSet<IExceptionHandlingClause> EndOfTry { get; set; }
 
         /// <summary>
         /// </summary>
@@ -224,7 +224,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public HashSet<int> Try { get; set; }
+        public HashSet<IExceptionHandlingClause> Try { get; set; }
 
         /// <summary>
         /// </summary>

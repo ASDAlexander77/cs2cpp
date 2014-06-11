@@ -596,32 +596,30 @@ namespace Il2Native.Logic
                 {
                     if (opCodePart.Try == null)
                     {
-                        opCodePart.Try = new HashSet<int>();
+                        opCodePart.Try = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.Try.Add(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength);
+                    opCodePart.Try.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength, out opCodePart))
                 {
                     if (opCodePart.EndOfTry == null)
                     {
-                        opCodePart.EndOfTry = new HashSet<int>();
+                        opCodePart.EndOfTry = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.EndOfTry.Add(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength);
+                    opCodePart.EndOfTry.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, out opCodePart))
                 {
                     if (opCodePart.EndOfClausesOrFinal == null)
                     {
-                        opCodePart.EndOfClausesOrFinal = new HashSet<int>();
+                        opCodePart.EndOfClausesOrFinal = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.EndOfClausesOrFinal.Add(
-                        exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength + exceptionHandlingClause.HandlerOffset
-                        + exceptionHandlingClause.HandlerLength);
+                    opCodePart.EndOfClausesOrFinal.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset, out opCodePart))
