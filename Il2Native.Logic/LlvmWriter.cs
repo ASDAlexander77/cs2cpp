@@ -246,8 +246,8 @@ namespace Il2Native.Logic
 
             if (!disablePostDeclarations)
             {
-                this.WritePostDeclarations();
-
+                this.WritePostDeclarations();   
+                    
                 this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteRtti(this.Output);
 
