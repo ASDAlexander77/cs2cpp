@@ -49,7 +49,15 @@ namespace Il2Native.Logic.Gencode
         {
             var method = new SynthesizedInitMethod(type);
             writer.WriteLine("; call Init Object method");
-            llvmWriter.WriteCall(writer, OpCodePart.CreateNop, method, false, true, false, opCode.ResultNumber);
+            llvmWriter.WriteCall(
+                writer, 
+                OpCodePart.CreateNop, 
+                method, 
+                false, 
+                true, 
+                false, 
+                opCode.ResultNumber,
+                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
         }
 
         /// <summary>

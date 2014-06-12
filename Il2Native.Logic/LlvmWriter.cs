@@ -92,7 +92,7 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
-        private Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>(); 
+        public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>(); 
 
         /// <summary>
         /// </summary>
@@ -1512,7 +1512,8 @@ namespace Il2Native.Logic
                         code == Code.Callvirt,
                         methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
                         false,
-                        null);
+                        null,
+                        this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
                     break;
                 case Code.Add:
                 case Code.Add_Ovf:
@@ -2156,7 +2157,15 @@ namespace Il2Native.Logic
             var methodBase = opCodeConstructorInfoPart.Operand;
             var resAlloc = opCodeConstructorInfoPart.ResultNumber;
             opCodeConstructorInfoPart.ResultNumber = null;
-            this.WriteCall(writer, opCodeConstructorInfoPart, methodBase, opCodeConstructorInfoPart.ToCode() == Code.Callvirt, true, true, resAlloc);
+            this.WriteCall(
+                writer, 
+                opCodeConstructorInfoPart, 
+                methodBase, 
+                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
+                true, 
+                true, 
+                resAlloc, 
+                this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
             opCodeConstructorInfoPart.ResultNumber = resAlloc;
         }
 
@@ -3169,7 +3178,7 @@ namespace Il2Native.Logic
         /// <param name="thisResultNumber">
         /// </param>
         public void WriteCall(
-            LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber)
+            LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber, IExceptionHandlingClause exceptionHandlingClause)
         {
             if (opCodeMethodInfo.ResultNumber.HasValue)
             {
@@ -3303,7 +3312,14 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            writer.Write("call ");
+            if (exceptionHandlingClause != null)
+            {
+                writer.Write("invoke ");
+            }
+            else
+            {
+                writer.Write("call ");
+            }
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
@@ -3340,6 +3356,25 @@ namespace Il2Native.Logic
                 thisType,
                 opCodeMethodInfo.ResultNumber,
                 methodInfo != null ? methodInfo.ReturnType : null);
+
+            if (exceptionHandlingClause != null)
+            {
+                var nextOpCode = opCodeMethodInfo.NextOpCode(this);
+                var nextIsBrunch = nextOpCode.Any(Code.Br, Code.Br_S, Code.Leave, Code.Leave_S);
+                var nextAddress = nextIsBrunch ? nextOpCode.JumpAddress() : opCodeMethodInfo.AddressEnd;
+
+                writer.WriteLine(string.Empty);
+                writer.Indent++;
+                writer.WriteLine("to label %.a{0} unwind label %.catch{1}", nextAddress, exceptionHandlingClause.HandlerOffset);
+                writer.Indent--;
+                if (!nextIsBrunch)
+                {
+                    writer.Indent--;
+                    writer.WriteLine(".a{0}:", opCodeMethodInfo.GroupAddressEnd);
+                    writer.Indent++;
+                    opCodeMethodInfo.NextOpCode(this).JumpProcessed = true;
+                }
+            }
         }
 
         private void WriteGetThisPointerFromInterfacePointer(LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodInfo, IType thisType, int? pointerToInterfaceVirtualTablePointersResultNumber)
