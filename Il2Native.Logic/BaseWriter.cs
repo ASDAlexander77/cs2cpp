@@ -594,32 +594,32 @@ namespace Il2Native.Logic
                 OpCodePart opCodePart;
                 if (this.OpsByAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
                 {
-                    if (opCodePart.Try == null)
+                    if (opCodePart.TryBegin == null)
                     {
-                        opCodePart.Try = new HashSet<IExceptionHandlingClause>();
+                        opCodePart.TryBegin = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.Try.Add(exceptionHandlingClause);
+                    opCodePart.TryBegin.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength, out opCodePart))
                 {
-                    if (opCodePart.EndOfTry == null)
+                    if (opCodePart.TryEnd == null)
                     {
-                        opCodePart.EndOfTry = new HashSet<IExceptionHandlingClause>();
+                        opCodePart.TryEnd = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.EndOfTry.Add(exceptionHandlingClause);
+                    opCodePart.TryEnd.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, out opCodePart))
                 {
-                    if (opCodePart.EndOfClausesOrFinal == null)
+                    if (opCodePart.CatchOrFinallyEnd == null)
                     {
-                        opCodePart.EndOfClausesOrFinal = new HashSet<IExceptionHandlingClause>();
+                        opCodePart.CatchOrFinallyEnd = new HashSet<IExceptionHandlingClause>();
                     }
 
-                    opCodePart.EndOfClausesOrFinal.Add(exceptionHandlingClause);
+                    opCodePart.CatchOrFinallyEnd.Add(exceptionHandlingClause);
                 }
 
                 if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset, out opCodePart))

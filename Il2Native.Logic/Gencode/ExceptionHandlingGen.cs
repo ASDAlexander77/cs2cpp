@@ -139,20 +139,6 @@
             llvmWriter.WriteBitcast(writer, opCodeNone, beginCatchResultNumber, catchType);
             writer.WriteLine(string.Empty);
 
-            writer.Write("%.error{0} = ", exceptionHandlingClause.HandlerOffset);
-            writer.Write("alloca ");
-            llvmWriter.WriteTypePrefix(writer, catchType);
-            writer.Write(", align " + LlvmWriter.pointerSize);
-            writer.WriteLine(string.Empty);
-
-            writer.Write("store ");
-            llvmWriter.WriteTypePrefix(writer, catchType);
-            writer.Write(" ");
-            llvmWriter.WriteResultNumber(opCodeNone);
-            writer.Write(", ");
-            llvmWriter.WriteTypePrefix(writer, catchType);
-            writer.WriteLine("* %.error{0}", exceptionHandlingClause.HandlerOffset);
-
             writer.WriteLine("; ==== ");
         }
 

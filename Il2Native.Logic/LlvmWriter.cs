@@ -92,7 +92,7 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
 
-        public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>(); 
+        public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
 
         /// <summary>
         /// </summary>
@@ -252,8 +252,8 @@ namespace Il2Native.Logic
 
             if (!disablePostDeclarations)
             {
-                this.WritePostDeclarations();   
-                    
+                this.WritePostDeclarations();
+
                 this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteRtti(this.Output);
 
@@ -1012,7 +1012,7 @@ namespace Il2Native.Logic
                 this.WriteCaseAndLabels(writer, opCode);
             }
 
-            this.WriteTry(writer, opCode);
+            this.WriteTryBegins(writer, opCode);
             if (opCode.Any(Code.Leave, Code.Leave_S))
             {
                 this.WriteCatchFinnally(writer, opCode);
@@ -1032,6 +1032,7 @@ namespace Il2Native.Logic
                 }
             }
 
+            this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlers(writer, opCode);
         }
 
@@ -2142,6 +2143,16 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
+
+                case Code.Nop:
+
+                    // to support settings exceptions
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        opCode.ResultNumber = this.resultNumberIncremental;
+                    }
+
+                    break;
             }
         }
 
@@ -2158,13 +2169,13 @@ namespace Il2Native.Logic
             var resAlloc = opCodeConstructorInfoPart.ResultNumber;
             opCodeConstructorInfoPart.ResultNumber = null;
             this.WriteCall(
-                writer, 
-                opCodeConstructorInfoPart, 
-                methodBase, 
-                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
-                true, 
-                true, 
-                resAlloc, 
+                writer,
+                opCodeConstructorInfoPart,
+                methodBase,
+                opCodeConstructorInfoPart.ToCode() == Code.Callvirt,
+                true,
+                true,
+                resAlloc,
                 this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
             opCodeConstructorInfoPart.ResultNumber = resAlloc;
         }
@@ -3506,12 +3517,22 @@ namespace Il2Native.Logic
 
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
+            if (opCode.CatchOrFinallyEnd != null && opCode.CatchOrFinallyEnd.Count > 0)
             {
-                foreach (var eh in opCode.EndOfClausesOrFinal)
+                foreach (var eh in opCode.CatchOrFinallyEnd)
                 {
                     writer.WriteLine(string.Empty);
                     this.WriteCatchEnd(writer);
+                }
+            }
+        }
+
+        private void WriteTryEnds(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            if (opCode.TryEnd != null && opCode.TryEnd.Count > 0)
+            {
+                foreach (var eh in opCode.TryEnd)
+                {
                     var ehPopped = this.tryScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch in Exception handler");
                 }
@@ -3525,7 +3546,7 @@ namespace Il2Native.Logic
         /// <param name="opCode">
         /// </param>
         private void WriteExceptionHandlers(LlvmIndentedTextWriter writer, OpCodePart opCode)
-        {            
+        {
             if (opCode.ExceptionHandlers != null)
             {
                 writer.WriteLine(string.Empty);
@@ -4535,14 +4556,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteTry(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteTryBegins(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.Try == null || opCode.ResultNumber.HasValue)
+            if (opCode.TryBegin == null || opCode.ResultNumber.HasValue)
             {
                 return;
             }
 
-            var ehs = opCode.Try.ToArray();
+            var ehs = opCode.TryBegin.ToArray();
             Array.Sort(ehs);
             foreach (var eh in ehs)
             {
