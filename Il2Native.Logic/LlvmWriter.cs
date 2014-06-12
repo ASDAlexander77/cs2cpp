@@ -112,6 +112,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool needToWriteUnreachable;
+
+        /// <summary>
+        /// </summary>
         static LlvmWriter()
         {
             // to be removed
@@ -349,6 +353,7 @@ namespace Il2Native.Logic
             this.resultNumberIncremental = 0;
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
+            this.needToWriteUnreachable = false;
         }
 
         /// <summary>
@@ -529,9 +534,14 @@ namespace Il2Native.Logic
                     this.WriteUnwindException(this.Output);
                 }
 
+                if (this.needToWriteUnreachable)
+                {
+                    this.needToWriteUnreachable = false;
+                    this.WriteUnreachable(this.Output);
+                }
+
                 if (method.ExceptionHandlingClauses.Any())
                 {
-                    this.WriteUnreachable(this.Output);
                     this.WriteResume(this.Output);
                 }
 
@@ -1003,6 +1013,10 @@ namespace Il2Native.Logic
             }
 
             this.WriteTry(writer, opCode);
+            if (opCode.Any(Code.Leave, Code.Leave_S))
+            {
+                this.WriteCatchFinnally(writer, opCode);
+            }
 
             var block = opCode as OpCodeBlock;
             if (block != null)
@@ -1018,7 +1032,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.WriteCatchFinnally(writer, opCode);
+            this.WriteExceptionHandlers(writer, opCode);
         }
 
         /// <summary>
@@ -1844,6 +1858,13 @@ namespace Il2Native.Logic
                     writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
 
                     break;
+                case Code.Leave:
+                case Code.Leave_S:
+
+                    writer.WriteLine("; Leave ");
+                    writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+
+                    break;
                 case Code.Ceq:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp oeq" : "icmp eq", GetOperandOptions(isFloatingPoint));
@@ -2085,8 +2106,6 @@ namespace Il2Native.Logic
 
                     break;
 
-                case Code.Leave:
-                case Code.Leave_S:
                 case Code.Endfilter:
                 case Code.Endfinally:
                     break;
@@ -3450,26 +3469,31 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.EndOfClausesOrFinal != null && opCode.EndOfClausesOrFinal.Count > 0)
             {
                 foreach (var eh in opCode.EndOfClausesOrFinal)
                 {
+                    writer.WriteLine(string.Empty);
                     this.WriteCatchEnd(writer);
                     var ehPopped = this.tryScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch in Exception handler");
                 }
             }
+        }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        private void WriteExceptionHandlers(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {            
             if (opCode.ExceptionHandlers != null)
             {
+                writer.WriteLine(string.Empty);
                 this.WriteCatchProlog(writer, opCode);
 
                 var exceptionHandlers = opCode.ExceptionHandlers.ToArray();

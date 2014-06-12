@@ -113,25 +113,7 @@ namespace PEAssemblyReader
             var eh = obj as IExceptionHandlingClause;
             if (eh != null)
             {
-                var thisStartAddress = this.TryOffset;
-                var thisEndAddress = this.HandlerOffset + this.HandlerLength;
-
-                var otherStartAddress = eh.TryOffset;
-                var otherEndAddress = eh.HandlerOffset + eh.HandlerLength;
-
-                var cmp = thisStartAddress.CompareTo(otherStartAddress);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                cmp = otherEndAddress.CompareTo(thisEndAddress);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                return 0;
+                return this.HandlerOffset.CompareTo(eh.HandlerOffset);
             }
 
             return -1;

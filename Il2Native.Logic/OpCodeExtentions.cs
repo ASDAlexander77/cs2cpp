@@ -52,8 +52,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsAnyBranch(this OpCodePart opCodePart)
         {
-            return (opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch)
-                   && opCodePart.ToCode() != Code.Leave && opCodePart.ToCode() != Code.Leave_S;
+            return (opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch);
         }
 
         /// <summary>
@@ -64,8 +63,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsBranch(this OpCodePart opCodePart)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Branch && opCodePart.ToCode() != Code.Switch && opCodePart.ToCode() != Code.Leave
-                   && opCodePart.ToCode() != Code.Leave_S;
+            return opCodePart.OpCode.FlowControl == FlowControl.Branch && opCodePart.ToCode() != Code.Switch;
         }
 
         /// <summary>

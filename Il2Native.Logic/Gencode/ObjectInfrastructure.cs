@@ -252,6 +252,16 @@ namespace Il2Native.Logic.Gencode
 
                 return result.ToString();
             }
+
+            public override bool Equals(object obj)
+            {
+                return this.ToString().Equals(obj.ToString());
+            }
+
+            public override int GetHashCode()
+            {
+                return this.ToString().GetHashCode();
+            }
         }
 
         /// <summary>
