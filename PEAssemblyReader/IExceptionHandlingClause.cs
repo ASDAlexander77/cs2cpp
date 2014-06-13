@@ -38,5 +38,9 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         int TryOffset { get; }
+
+        /// <summary>
+        /// </summary>
+        bool CleanUpRequired { get; set; }
     }
 }

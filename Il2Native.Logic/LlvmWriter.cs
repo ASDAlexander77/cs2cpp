@@ -94,6 +94,9 @@ namespace Il2Native.Logic
 
         public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
 
+        public Stack<IExceptionHandlingClause> catchScopes = new Stack<IExceptionHandlingClause>();
+       
+
         /// <summary>
         /// </summary>
         private int resultNumberIncremental;
@@ -2104,7 +2107,7 @@ namespace Il2Native.Logic
 
                 case Code.Rethrow:
 
-                    writer.Write("throw");
+                    this.WriteRethrow(writer, opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null);
 
                     break;
 
@@ -3522,7 +3525,9 @@ namespace Il2Native.Logic
                 foreach (var eh in opCode.CatchOrFinallyEnd)
                 {
                     writer.WriteLine(string.Empty);
-                    this.WriteCatchEnd(writer);
+                    this.WriteCatchEnd(writer, eh);
+                    var ehPopped = this.catchScopes.Pop();
+                    Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
                 }
             }
         }
@@ -3534,7 +3539,8 @@ namespace Il2Native.Logic
                 foreach (var eh in opCode.TryEnd)
                 {
                     var ehPopped = this.tryScopes.Pop();
-                    Debug.Assert(ehPopped == eh, "Mismatch in Exception handler");
+                    Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
+                    this.catchScopes.Push(ehPopped);
                 }
             }
         }

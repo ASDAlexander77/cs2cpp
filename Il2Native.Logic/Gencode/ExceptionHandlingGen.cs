@@ -41,6 +41,13 @@
             llvmWriter.CheckIfExternalDeclarationIsRequired(exceptionPointerType);
         }
 
+        public static void WriteRethrow(
+            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        {
+            writer.WriteLine("; Rethrow");
+            WriteRethrowInvoke(llvmWriter, writer, opCode, exceptionHandlingClause);
+        }
+
         private static IType WriteThrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
             var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
@@ -52,6 +59,28 @@
             if (exceptionHandlingClause != null)
             {
                 writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.HandlerOffset);
+            }
+            else
+            {
+                writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
+                llvmWriter.needToWriteUnwindException = true;
+            }
+
+            llvmWriter.needToWriteUnreachable = true;
+
+            return exceptionPointerType;
+        }
+
+        private static IType WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        {
+            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
+
+            var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
+            writer.Write("invoke void @__cxa_rethrow()");
+            if (exceptionHandlingClause != null)
+            {
+                writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                exceptionHandlingClause.CleanUpRequired = true;
             }
             else
             {
@@ -142,9 +171,20 @@
             writer.WriteLine("; ==== ");
         }
 
-        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause)
         {
             writer.WriteLine("; End of Catch or Finally");
+
+            if (exceptionHandlingClause.CleanUpRequired)
+            {
+                writer.Indent--;
+                writer.WriteLine(".catch_with_cleanup{0}:", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                writer.Indent++;
+
+                var opCodeNop = OpCodePart.CreateNop;
+                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup);
+            }
+
             writer.WriteLine("store i32 0, i32* %.error_typeid");
 
             // TODO: I didn't find what is that

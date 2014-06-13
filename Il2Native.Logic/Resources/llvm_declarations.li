@@ -20,6 +20,7 @@ declare i32 @llvm.eh.typeid.for(i8*) #78805
 declare i8* @__cxa_begin_catch(i8*) #78806
 declare void @__cxa_end_catch() #78807
 declare void @__cxa_call_unexpected(i8*) #78808
+declare void @__cxa_rethrow() #78809
 
 attributes #78805 = { nounwind readnone }
 
