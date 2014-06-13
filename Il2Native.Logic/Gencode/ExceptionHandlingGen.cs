@@ -71,11 +71,8 @@
             return exceptionPointerType;
         }
 
-        private static IType WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
-            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
-
-            var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
             writer.Write("invoke void @__cxa_rethrow()");
             if (exceptionHandlingClause != null)
             {
@@ -89,8 +86,6 @@
             }
 
             llvmWriter.needToWriteUnreachable = true;
-
-            return exceptionPointerType;
         }
 
         private static IType WriteThrowCall(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
@@ -171,7 +166,7 @@
             writer.WriteLine("; ==== ");
         }
 
-        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause)
+        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
             writer.WriteLine("; End of Catch or Finally");
 
@@ -183,6 +178,7 @@
 
                 var opCodeNop = OpCodePart.CreateNop;
                 llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup);
+                writer.WriteLine(string.Empty);
             }
 
             writer.WriteLine("store i32 0, i32* %.error_typeid");
@@ -190,6 +186,14 @@
             // TODO: I didn't find what is that
             ////writer.WriteLine("store i32 1, i32* %-1");
             writer.WriteLine("call void @__cxa_end_catch()");
+
+            writer.WriteLine("br label %.a{0}", opCode.GroupAddressEnd);
+
+            writer.Indent--;
+            writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+            writer.Indent++;
+
+            opCode.NextOpCode(llvmWriter).JumpProcessed = true;
         }
 
         public static void WriteResume(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)

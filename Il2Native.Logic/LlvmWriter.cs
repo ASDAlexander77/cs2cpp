@@ -1037,6 +1037,10 @@ namespace Il2Native.Logic
 
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlers(writer, opCode);
+            if (!opCode.Any(Code.Leave, Code.Leave_S))
+            {
+                this.WriteCatchFinnally(writer, opCode);
+            }
         }
 
         /// <summary>
@@ -3525,7 +3529,7 @@ namespace Il2Native.Logic
                 foreach (var eh in opCode.CatchOrFinallyEnd)
                 {
                     writer.WriteLine(string.Empty);
-                    this.WriteCatchEnd(writer, eh);
+                    this.WriteCatchEnd(writer, opCode, eh);
                     var ehPopped = this.catchScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
                 }
