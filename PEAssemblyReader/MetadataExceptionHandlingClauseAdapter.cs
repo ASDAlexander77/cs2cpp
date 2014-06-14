@@ -40,7 +40,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool CleanUpRequired { get; set; }
+        public bool CatchWithCleanUpRequired { get; set; }
 
         /// <summary>
         /// </summary>

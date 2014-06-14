@@ -95,7 +95,7 @@ namespace Il2Native.Logic
         public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
 
         public Stack<IExceptionHandlingClause> catchScopes = new Stack<IExceptionHandlingClause>();
-       
+
 
         /// <summary>
         /// </summary>
@@ -3526,10 +3526,12 @@ namespace Il2Native.Logic
         {
             if (opCode.CatchOrFinallyEnd != null && opCode.CatchOrFinallyEnd.Count > 0)
             {
-                foreach (var eh in opCode.CatchOrFinallyEnd)
+                var ehs = opCode.CatchOrFinallyEnd.ToArray();
+                Array.Sort(ehs);
+                foreach (var eh in ehs)
                 {
                     writer.WriteLine(string.Empty);
-                    this.WriteCatchEnd(writer, opCode, eh);
+                    this.WriteCatchEnd(writer, opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
                     var ehPopped = this.catchScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
                 }
@@ -3540,7 +3542,9 @@ namespace Il2Native.Logic
         {
             if (opCode.TryEnd != null && opCode.TryEnd.Count > 0)
             {
-                foreach (var eh in opCode.TryEnd)
+                var ehs = opCode.TryEnd.ToArray();
+                Array.Sort(ehs);
+                foreach (var eh in ehs)
                 {
                     var ehPopped = this.tryScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
@@ -4575,7 +4579,7 @@ namespace Il2Native.Logic
 
             var ehs = opCode.TryBegin.ToArray();
             Array.Sort(ehs);
-            foreach (var eh in ehs)
+            foreach (var eh in ehs.Reverse())
             {
                 writer.WriteLine("; Try, start of scope");
                 this.tryScopes.Push(eh);

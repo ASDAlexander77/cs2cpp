@@ -73,15 +73,19 @@
 
         private static void WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
-            writer.Write("invoke void @__cxa_rethrow()");
+            writer.WriteLine("invoke void @__cxa_rethrow()");
             if (exceptionHandlingClause != null)
             {
+                writer.Indent++;
                 writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
-                exceptionHandlingClause.CleanUpRequired = true;
+                writer.Indent--;
+                exceptionHandlingClause.CatchWithCleanUpRequired = true;
             }
             else
             {
+                writer.Indent++;
                 writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
+                writer.Indent--;
                 llvmWriter.needToWriteUnwindException = true;
             }
 
@@ -114,6 +118,14 @@
                 opCode,
                 LandingPadOptions.None,
                 opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
+
+            writer.WriteLine(string.Empty);
+
+            writer.WriteLine("br label %.exceptions_switch{0}", handlerOffset);
+
+            writer.Indent--;
+            writer.WriteLine(".exceptions_switch{0}:", handlerOffset);
+            writer.Indent++;
         }
 
         public static void WriteCatchTest(
@@ -166,34 +178,43 @@
             writer.WriteLine("; ==== ");
         }
 
-        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
             writer.WriteLine("; End of Catch or Finally");
 
-            if (exceptionHandlingClause.CleanUpRequired)
+            if (exceptionHandlingClause.CatchWithCleanUpRequired)
             {
                 writer.Indent--;
                 writer.WriteLine(".catch_with_cleanup{0}:", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
-                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup);
+                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup, new[] { exceptionHandlingClause.CatchType });
                 writer.WriteLine(string.Empty);
             }
-
-            writer.WriteLine("store i32 0, i32* %.error_typeid");
+            else
+            {
+                writer.WriteLine("store i32 0, i32* %.error_typeid");
+            }
 
             // TODO: I didn't find what is that
             ////writer.WriteLine("store i32 1, i32* %-1");
             writer.WriteLine("call void @__cxa_end_catch()");
 
-            writer.WriteLine("br label %.a{0}", opCode.GroupAddressEnd);
+            if (!exceptionHandlingClause.CatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
+            {
+                writer.WriteLine("br label %.a{0}", opCode.GroupAddressEnd);
 
-            writer.Indent--;
-            writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
-            writer.Indent++;
+                writer.Indent--;
+                writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+                writer.Indent++;
 
-            opCode.NextOpCode(llvmWriter).JumpProcessed = true;
+                opCode.NextOpCode(llvmWriter).JumpProcessed = true;
+            }
+            else
+            {
+                writer.WriteLine("br label %.exceptions_switch{0}", upperLevelExceptionHandlingClause.HandlerOffset);
+            }
         }
 
         public static void WriteResume(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
