@@ -302,10 +302,15 @@ namespace Il2Native.Logic
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
+            var interfacesList = this.ThisType.GetInterfaces();
+
             // put virtual root table if type has no any base with virtual types
             if (this.ThisType.IsInterface)
             {
-                this.Output.WriteLine("i32 (...)**");
+                if (!interfacesList.Any())
+                {
+                    this.Output.WriteLine("i32 (...)**");
+                }
             }
             else if (this.ThisType.IsRootOfVirtualTable())
             {
@@ -318,7 +323,7 @@ namespace Il2Native.Logic
             }
 
             var index = 0;
-            foreach (var @interface in this.ThisType.GetInterfaces())
+            foreach (var @interface in interfacesList)
             {
                 if (this.ThisType.BaseType != null && this.ThisType.BaseType.GetInterfaces().Contains(@interface))
                 {
@@ -430,7 +435,14 @@ namespace Il2Native.Logic
 
                 this.Output.Indent++;
 
-                this.Output.Write("%1 = call i32 ");
+                if (!this.MainMethod.ReturnType.IsVoid())
+                {
+                    this.Output.Write("%1 = call i32 ");
+                }
+                else
+                {
+                    this.Output.Write("call void ");
+                }
 
                 var parameters = this.MainMethod.GetParameters();
 
@@ -452,7 +464,14 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(");");
 
-                this.Output.WriteLine("ret i32 %1");
+                if (!this.MainMethod.ReturnType.IsVoid())
+                {
+                    this.Output.WriteLine("ret i32 %1");
+                }
+                else
+                {
+                    this.Output.WriteLine("ret i32 0");
+                }
 
                 this.Output.Indent--;
                 this.Output.WriteLine("}");
@@ -2073,11 +2092,32 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
+
                     this.WriteCast(
                         writer,
                         opCodeTypePart,
                         opCodeTypePart.OpCodeOperands[0].ResultType,
                         opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
+                        TypeAdapter.FromType(typeof(byte)));
+
+                    var firstCastToBytes = opCodeTypePart.ResultNumber;
+
+                    var dynamicCastResultNumber = WriteSetResultNumber(opCode);
+
+                    var fromType = opCodeTypePart.OpCodeOperands[0].ResultType;
+                    var toType = opCodeTypePart.Operand;
+
+                    writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", GetResultNumber(firstCastToBytes ?? -1));
+                    fromType.WriteRttiClassInfoDeclaration(writer);
+                    writer.Write("* @\"{0}\" to i8*), i8* bitcast (", fromType.GetRttiInfoName());
+                    toType.WriteRttiClassInfoDeclaration(writer);
+                    writer.WriteLine("* @\"{0}\" to i8*), i32 0)", toType.GetRttiInfoName());
+                    writer.WriteLine(string.Empty);
+
+                    this.WriteBitcast(
+                        writer,
+                        opCodeTypePart,
+                        dynamicCastResultNumber,
                         opCodeTypePart.Operand);
 
                     break;
@@ -2522,7 +2562,15 @@ namespace Il2Native.Logic
             if (ownerOfExplicitInterface != null)
             {
                 var lookupTypeName = string.Concat(' ', methodBase.DeclaringType.Name, '.', methodBase.Name, '(');
-                sb.Append(methodName.Insert(methodName.IndexOf(lookupTypeName) + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
+                var index = methodName.IndexOf(lookupTypeName);
+                if (index >= 0)
+                {
+                    sb.Append(methodName.Insert(index + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
+                }
+                else
+                {
+                    sb.Append(methodName);
+                }
             }
             else
             {
@@ -3771,6 +3819,11 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
         {
+            if (declaringType.IsInterface)
+            {
+                return;
+            }
+
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
             {
@@ -3864,7 +3917,7 @@ namespace Il2Native.Logic
 
             writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringType);
 
-            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator);
+            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
             writer.Write(' ');
             writer.Write(this.GetResultNumber(objectResult ?? -1));
             this.WriteInterfaceIndex(writer, declaringType, @interface);
@@ -3888,7 +3941,7 @@ namespace Il2Native.Logic
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (!type.GetInterfaces().Contains(@interface) || type.BaseType.GetInterfaces().Contains(@interface))
+            while (!type.GetInterfaces().Contains(@interface) || type.BaseType != null && type.BaseType.GetInterfaces().Contains(@interface))
             {
                 type = type.BaseType;
                 if (type == null)
@@ -3975,6 +4028,11 @@ namespace Il2Native.Logic
         public void WriteLlvmLoad(
             LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
         {
+            if (opCode.ResultNumber.HasValue)
+            {
+                return;
+            }
+
             if (!type.IsStructureType() || structAsRef)
             {
                 WriteSetResultNumber(opCode, type);
