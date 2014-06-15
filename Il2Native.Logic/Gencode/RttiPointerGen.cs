@@ -39,6 +39,12 @@
             type.WriteRttiPointerClassInfoDefinition(writer);
         }
 
+        public static void WriteRttiClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
+        {
+            writer.Write("@\"{0}\" = external global ", type.GetRttiInfoName());
+            type.WriteRttiClassInfoDeclaration(writer);
+        }
+
         public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
         {
             writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());

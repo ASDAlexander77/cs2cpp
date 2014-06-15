@@ -90,9 +90,11 @@ define void @"Void System.Exception.Finalize()"(%"System.Exception"* %this) #4 {
 
 ; RTTI class
 @"System.Exception String Name" = linkonce_odr constant [19 x i8] c"16System.Exception\00"
-@"System.Exception Info" = linkonce_odr unnamed_addr constant { i8*, i8* } {
-    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv117__class_type_infoE, i32 2) to i8*),
-    i8* getelementptr inbounds ([19 x i8]* @"System.Exception String Name", i32 0, i32 0)
+@"System.Exception Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i8* } 
+{
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([19 x i8]* @"System.Exception String Name", i32 0, i32 0),
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
 }
 ; RTTI pointer
 @"System.Exception Pointer String Name" = linkonce_odr constant [20 x i8] c"P16System.Exception\00"
@@ -100,7 +102,7 @@ define void @"Void System.Exception.Finalize()"(%"System.Exception"* %this) #4 {
     i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
     i8* getelementptr inbounds ([20 x i8]* @"System.Exception Pointer String Name", i32 0, i32 0),
     i32 0,
-    i8* bitcast ({ i8*, i8* }* @"System.Exception Info" to i8*)
+    i8* bitcast ({ i8*, i8*, i8* }* @"System.Exception Info" to i8*)
 }
 
 ; Init Object method

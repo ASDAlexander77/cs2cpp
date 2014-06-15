@@ -203,13 +203,12 @@
 
             if (!exceptionHandlingClause.CatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
-                writer.WriteLine("br label %.a{0}", opCode.GroupAddressEnd);
+                writer.WriteLine("br label %.exit{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
 
                 writer.Indent--;
-                writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+                writer.Write(string.Concat(".exit", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, ':'));
                 writer.Indent++;
-
-                opCode.NextOpCode(llvmWriter).JumpProcessed = true;
+                writer.WriteLine(string.Empty);
             }
             else
             {

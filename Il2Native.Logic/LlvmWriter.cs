@@ -61,6 +61,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> processedRttiTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         private readonly HashSet<IType> processedRttiPointerTypes = new HashSet<IType>();
 
         /// <summary>
@@ -78,6 +82,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
+        public readonly HashSet<IType> typeRttiDeclRequired = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
@@ -258,8 +266,9 @@ namespace Il2Native.Logic
                 this.WritePostDeclarations();
 
                 this.Output.WriteLine(string.Empty);
-                this.ThisType.WriteRtti(this.Output);
+                this.ThisType.WriteRtti(this, this.Output);
 
+                processedTypes.Add(this.ThisType);
                 processedRttiPointerTypes.Add(this.ThisType);
 
                 this.Output.WriteLine(string.Empty);
@@ -2437,14 +2446,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private void AddExternalRttiPointerDeclaration(IType type)
-        {
-            if (type != null)
-            {
-                this.typeRttiPointerDeclRequired.Add(type);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -4402,6 +4403,21 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteRequiredDeclarations()
         {
+            if (this.typeRttiDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (var rttiDecl in this.typeRttiDeclRequired)
+                {
+                    if (this.processedRttiTypes.Contains(rttiDecl))
+                    {
+                        continue;
+                    }
+
+                    rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
+                    this.Output.WriteLine(string.Empty);
+                }
+            }
+
             if (this.typeRttiPointerDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
