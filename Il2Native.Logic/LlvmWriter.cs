@@ -657,6 +657,10 @@ namespace Il2Native.Logic
 
                 this.Output.StartMethodBody();
             }
+            else
+            {
+                this.Output.WriteLine(string.Empty);
+            }
 
             methodNumberIncremental++;
         }
@@ -2710,6 +2714,7 @@ namespace Il2Native.Logic
             {
                 if (virtualMethod.ToString() == methodInfo.ToString())
                 {
+                    // + RTTI info shift
                     return index;
                 }
 
@@ -3281,7 +3286,7 @@ namespace Il2Native.Logic
             var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
             int? virtualMethodAddressResultNumber = null;
-            var isInderectMethodCall = isVirtual && (methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
+            var isInderectMethodCall = isVirtual && (methodBase.IsAbstract || methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
 
             var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
             var requiredType = ownerOfExplicitInterface != null ? resultOfirstOperand.IType : null;
@@ -3852,9 +3857,9 @@ namespace Il2Native.Logic
                 var virtualTable = this.GetVirtualTable(declaringType);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
-                    virtualTable.Count + 1,
-                    this.GetVirtualTableName(declaringType));
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
+                    GetVirtualTableSize(virtualTable),
+                    GetVirtualTableName(declaringType));
                 if (opCode.ResultNumber.HasValue)
                 {
                     WriteResultNumber(writer, opCode.ResultNumber ?? -1);
@@ -3895,7 +3900,7 @@ namespace Il2Native.Logic
 
                 writer.Write(
                     "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
-                    virtualInterfaceTable.Count + 1,
+                    GetVirtualTableSize(virtualInterfaceTable),
                     this.GetVirtualInterfaceTableName(declaringType, @interface));
                 WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
@@ -3904,6 +3909,11 @@ namespace Il2Native.Logic
                 opCode.ResultNumber = opCodeResult;
                 opCode.ResultType = opCodeType;
             }
+        }
+
+        private static int GetVirtualTableSize(List<Pair<string, IMethod>> virtualTable)
+        {
+            return virtualTable.Count + 2;
         }
 
         /// <summary>
@@ -4450,7 +4460,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(this.GetVirtualTableName(this.ThisType));
                     var virtualTable = this.GetVirtualTable(this.ThisType);
-                    this.WriteTableOfMethods(virtualTable);
+                    this.WriteTableOfMethods(this.ThisType, virtualTable);
                 }
 
                 int index = 1;
@@ -4459,7 +4469,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
                     var virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
-                    this.WriteTableOfMethods(virtualInterfaceTable, index++);
+                    this.WriteTableOfMethods(this.ThisType, virtualInterfaceTable, index++);
                 }
             }
         }
@@ -4619,12 +4629,19 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        private void WriteTableOfMethods(List<Pair<string, IMethod>> virtualTable, int interfaceIndex = 0)
+        private void WriteTableOfMethods(IType type, List<Pair<string, IMethod>> virtualTable, int interfaceIndex = 0)
         {
-            this.Output.Write(
-                " = linkonce_odr unnamed_addr constant [{0} x i8*] [i8* {1}",
-                virtualTable.Count + 1,
-                interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
+            this.Output.WriteLine(
+                " = linkonce_odr unnamed_addr constant [{0} x i8*] [", GetVirtualTableSize(virtualTable));
+
+            this.Output.Indent++;
+            this.Output.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
+
+            // RTTI info class
+            this.Output.Write("i8* bitcast (");
+            type.WriteRttiClassInfoDeclaration(this.Output);
+            this.Output.Write("* @\"{0}\" to i8*)", type.GetRttiInfoName());
+
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)
@@ -4632,16 +4649,27 @@ namespace Il2Native.Logic
                 var method = virtualMethod.Value;
 
                 // write method pointer
-                this.Output.Write(", i8* bitcast (");
+                this.Output.WriteLine(",");
 
-                // write pointer to method
-                this.WriteMethodReturnType(this.Output, method);
-                this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
-                this.Output.Write("* ");
-                this.WriteMethodDefinitionName(this.Output, method);
+                this.Output.Write("i8* bitcast (");
+                if (virtualMethod.Value.IsAbstract)
+                {
+                    this.Output.Write("void ()* @__cxa_pure_virtual");
+                }
+                else
+                {
+                    // write pointer to method
+                    this.WriteMethodReturnType(this.Output, method);
+                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
+                    this.Output.Write("* ");
+                    this.WriteMethodDefinitionName(this.Output, method);
+                }
+                
                 this.Output.Write(" to i8*)");
             }
 
+            this.Output.WriteLine(string.Empty);
+            this.Output.Indent--;
             this.Output.WriteLine("]");
         }
 

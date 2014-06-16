@@ -302,8 +302,9 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-                case Code.Isinst:
                     return this.ResultOf(opCode.OpCodeOperands[0]);
+                case Code.Isinst:
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ceq:
                 case Code.Cgt:
                 case Code.Cgt_Un:
