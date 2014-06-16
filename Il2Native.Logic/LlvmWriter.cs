@@ -4340,7 +4340,7 @@ namespace Il2Native.Logic
 
             var mallocResult = WriteSetResultNumber(writer, opCodeConstructorInfoPart);
             var size = this.GetTypeSize(declaringType);
-            writer.WriteLine("call i8* @malloc(i32 {0})", size);
+            writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
             this.WriteMemSet(writer, declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 

@@ -23,9 +23,15 @@ declare void @__cxa_call_unexpected(i8*) #78808
 declare void @__cxa_rethrow() #78809
 ; Function Attrs: nounwind readonly
 declare i8* @__dynamic_cast(i8*, i8*, i8*, i32) #78810
+; 'c++ new' Function Attrs: nobuiltin
+declare noalias i8* @_Znwj(i32) #78811
+; 'c++ delete' Function Attrs: nobuiltin nounwind
+declare void @_ZdlPv(i8*) #78812
 
 attributes #78805 = { nounwind readnone }
 attributes #78810 = { nounwind readonly }
+attributes #78811 = { nobuiltin }
+attributes #78812 = { nobuiltin nounwind }
 
 ; RTTI externals
 @_ZTVN10__cxxabiv116__enum_type_infoE = external global i8*
