@@ -50,6 +50,23 @@ define void @"Void System.Object..init()"(%"System.Object"* %this) #1 {
     %"System.Object"
 }
 
+; RTTI class
+@"System.ValueType String Name" = linkonce_odr constant [19 x i8] c"16System.ValueType\00"
+@"System.ValueType Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i8* } 
+{
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([19 x i8]* @"System.ValueType String Name", i32 0, i32 0),
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
+}
+; RTTI pointer
+@"System.ValueType Pointer String Name" = linkonce_odr constant [20 x i8] c"P16System.ValueType\00"
+@"System.ValueType Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([20 x i8]* @"System.ValueType Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8*, i8* }* @"System.ValueType Info" to i8*)
+}
+
 define i8* @"System.String System.ValueType.ToString()"(%"System.ValueType"* %this) #1 {
     ret i8* null
 }
@@ -158,6 +175,10 @@ define void @"Void System.Console.WriteLine(System.String)"(i8* %str) #99005 {
 
 define void @"Void System.Console.Write(System.String)"(i8* %str) #99006 {
     %1 = call i32 (...)* @puts(i8* %str)
+    ret void
+}
+
+define void @"Void System.Exception..ctor()"(%"System.Exception"* %.this) #99003 {
     ret void
 }
 

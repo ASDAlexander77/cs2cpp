@@ -38,7 +38,7 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method);
-            llvmWriter.WriteLlvmLoad(writer, opCode, type, "%.this");
+            llvmWriter.WriteLlvmLoad(writer, opCode, type, "%.this", structAsRef: true);
             writer.WriteLine(string.Empty);
             llvmWriter.WriteInitObject(writer, opCode, type);
             writer.WriteLine("ret void");

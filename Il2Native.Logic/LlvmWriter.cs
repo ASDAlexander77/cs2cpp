@@ -269,6 +269,7 @@ namespace Il2Native.Logic
                 this.ThisType.WriteRtti(this, this.Output);
 
                 processedTypes.Add(this.ThisType);
+                processedRttiTypes.Add(this.ThisType);
                 processedRttiPointerTypes.Add(this.ThisType);
 
                 this.Output.WriteLine(string.Empty);
@@ -1249,7 +1250,10 @@ namespace Il2Native.Logic
                     {
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
                         writer.WriteLine(string.Empty);
-                        this.WriteLlvmLoad(writer, opCode, opCode.ResultType, string.Format("%.r{0}", opCode.ResultNumber ?? -1));
+
+                        var memberAccessResultNumber = opCode.ResultNumber;
+                        opCode.ResultNumber = null;
+                        this.WriteLlvmLoad(writer, opCode, opCode.ResultType, string.Format("%.r{0}", memberAccessResultNumber));
                     }
 
                     break;
@@ -1388,6 +1392,9 @@ namespace Il2Native.Logic
                     if (actualLoad)
                     {
                         writer.WriteLine(string.Empty);
+
+                        opCode.ResultNumber = null;
+                        opCode.ResultType = null;
                         this.WriteLlvmLoad(writer, opCode, type, this.GetResultNumber(opCode.ResultNumber ?? -1));
                     }
 
@@ -2129,8 +2136,7 @@ namespace Il2Native.Logic
 
                     this.CheckIfExternalDeclarationIsRequired(declaringType);
 
-                    this.WriteNew(writer, opCode, declaringType);
-                    this.WriteCallConstructor(writer, opCodeConstructorInfoPart);
+                    this.WriteNew(writer, opCodeConstructorInfoPart, declaringType);
 
                     break;
 
@@ -2214,11 +2220,6 @@ namespace Il2Native.Logic
 
         private void WriteCallConstructor(LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
-            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
-            {
-                return;
-            }
-
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
             var methodBase = opCodeConstructorInfoPart.Operand;
@@ -3112,6 +3113,8 @@ namespace Il2Native.Logic
             WriteResultNumber(res ?? -1);
             writer.WriteLine(", i32 -1");
 
+            opCode.ResultNumber = null;
+            opCode.ResultType = null;
             this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(resLen));
         }
 
@@ -3143,6 +3146,8 @@ namespace Il2Native.Logic
             WriteResultNumber(res ?? -1);
             writer.WriteLine(", i32 -1");
 
+            opCode.ResultNumber = null;
+            opCode.ResultType = null;
             this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(offset));
         }
 
@@ -4320,39 +4325,41 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="writer">
         /// </param>
-        /// <param name="opCode">
+        /// <param name="opCodeConstructorInfoPart">
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        private void WriteNew(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
+        private void WriteNew(LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
         {
-            if (opCode.ResultNumber.HasValue)
+            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
             {
                 return;
             }
 
             writer.WriteLine("; New obj");
 
-            var mallocResult = WriteSetResultNumber(writer, opCode);
+            var mallocResult = WriteSetResultNumber(writer, opCodeConstructorInfoPart);
             var size = this.GetTypeSize(declaringType);
             writer.WriteLine("call i8* @malloc(i32 {0})", size);
             this.WriteMemSet(writer, declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
-            WriteBitcast(writer, opCode, mallocResult, declaringType);
+            WriteBitcast(writer, opCodeConstructorInfoPart, mallocResult, declaringType);
             writer.WriteLine(string.Empty);
 
-            var castResult = opCode.ResultNumber;
+            var castResult = opCodeConstructorInfoPart.ResultNumber;
 
             //this.WriteInitObject(writer, opCode, declaringType);
-            declaringType.WriteCallInitObjectMethod(writer, this, opCode);
+            declaringType.WriteCallInitObjectMethod(writer, this, opCodeConstructorInfoPart);
 
             // restore result and type
-            opCode.ResultNumber = castResult;
-            opCode.ResultType = declaringType;
+            opCodeConstructorInfoPart.ResultNumber = castResult;
+            opCodeConstructorInfoPart.ResultType = declaringType;
 
             writer.WriteLine(string.Empty);
             writer.Write("; end of new obj");
+
+            this.WriteCallConstructor(writer, opCodeConstructorInfoPart);
         }
 
         /// <summary>
