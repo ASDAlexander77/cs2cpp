@@ -1926,8 +1926,26 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
-                    writer.Write(" to i32");
+                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
+                    if (resultOf.IType.TypeNotEquals(typeof(int)))
+                    {
+                        if (resultOf.IType.IsReal())
+                        {
+                            this.UnaryOper(writer, opCode, "fptosi");
+                        }
+                        else
+                        {
+                            this.UnaryOper(writer, opCode, "trunc");
+                        }
+
+                        writer.Write(" to i32");
+                    }
+                    else
+                    {
+                        opCode.ResultNumber = opCode.OpCodeOperands[0].ResultNumber;
+                        opCode.ResultType = opCode.OpCodeOperands[0].ResultType;
+                    }
+
                     break;
 
                 case Code.Conv_U:
@@ -2026,7 +2044,15 @@ namespace Il2Native.Logic
                     resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (resultOf.IType.TypeNotEquals(typeof(int)))
                     {
-                        this.UnaryOper(writer, opCode, "trunc");
+                        if (resultOf.IType.IsReal())
+                        {
+                            this.UnaryOper(writer, opCode, "fptosi");
+                        }
+                        else
+                        {
+                            this.UnaryOper(writer, opCode, "trunc");
+                        }
+
                         writer.Write(" to i32");
                     }
                     else
