@@ -263,6 +263,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsNested
+        {
+            get
+            {
+                return this.type.IsNested;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <exception cref="NotImplementedException">
         /// </exception>
         public string Name
@@ -399,6 +409,11 @@ namespace PEAssemblyReader
         /// <exception cref="NotImplementedException">
         /// </exception>
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IType> GetNestedTypes()
         {
             throw new NotImplementedException();
         }

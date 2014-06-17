@@ -238,6 +238,11 @@ namespace Il2Native.Logic
                     continue;
                 }
 
+                if (type.Name == "<Module>")
+                {
+                    continue;
+                }
+
                 if (!type.IsInterface && type.IsGenericTypeDefinition)
                 {
                     ////foreach (var genericSpecialization in genericSpecializations.Where(g => g.GUID == type.GUID))
@@ -254,6 +259,11 @@ namespace Il2Native.Logic
                 }
 
                 ConvertIType(ilReader, codeWriter, type, genDef);
+
+                foreach (var nestedType in type.GetNestedTypes())
+                {
+                    ConvertIType(ilReader, codeWriter, nestedType, genDef);
+                }
             }
 
             codeWriter.WriteEnd();

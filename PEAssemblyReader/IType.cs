@@ -81,6 +81,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsNested { get; }
+
+        /// <summary>
+        /// </summary>
         /// <param name="bindingFlags">
         /// </param>
         /// <returns>
@@ -126,6 +130,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags);
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetNestedTypes();
 
         /// <summary>
         /// </summary>

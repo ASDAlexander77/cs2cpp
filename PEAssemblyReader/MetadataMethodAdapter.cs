@@ -132,6 +132,12 @@ namespace PEAssemblyReader
 
                 if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
                 {
+                    if (this.methodDef.ContainingType.IsNestedType())
+                    {
+                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
+                        result.Append('+');
+                    }
+
                     result.Append(this.methodDef.ContainingType.Name);
                     result.Append('.');
                 }
@@ -263,6 +269,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.methodDef.ContainingType.IsNestedType())
+                {
+                    return this.methodDef.ContainingType.ContainingNamespace.ToString();
+                }
+
                 return this.methodDef.ContainingNamespace.ToString();
             }
         }

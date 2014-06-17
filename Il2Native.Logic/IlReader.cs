@@ -655,6 +655,12 @@ namespace Il2Native.Logic
                 {
                     MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
                     NamedTypeSymbol symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
+
+                    if (symbol.TypeKind == TypeKind.Error)
+                    {
+                        continue;
+                    }
+
                     yield return new MetadataTypeAdapter(symbol);
                 }
             }

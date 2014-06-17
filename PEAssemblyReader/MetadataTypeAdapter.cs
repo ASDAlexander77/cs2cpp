@@ -103,10 +103,20 @@ namespace PEAssemblyReader
         {
             get
             {
-                var metadataTypeName = this.typeDef.ContainingNamespace != null
+                if (this.typeDef.IsNestedType())
+                {
+                    var metadataTypeName = this.typeDef.ContainingType.ContainingNamespace != null
+                                               ? MetadataTypeName.FromNamespaceAndTypeName(
+                                                        this.typeDef.ContainingType.ContainingNamespace.ToString(),
+                                                        string.Concat(this.typeDef.ContainingType.Name, '+', this.typeDef.Name))
+                                               : MetadataTypeName.FromTypeName(this.typeDef.Name);
+                    return metadataTypeName.FullName;
+                }
+
+                var metadataTypeNameOfType = this.typeDef.ContainingNamespace != null
                                            ? MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.ToString(), this.typeDef.Name)
                                            : MetadataTypeName.FromTypeName(this.typeDef.Name);
-                return metadataTypeName.FullName;
+                return metadataTypeNameOfType.FullName;
             }
         }
 
@@ -258,6 +268,27 @@ namespace PEAssemblyReader
             {
                 return this.typeDef.IsValueType;
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsNested
+        {
+            get
+            {
+                return this.typeDef.IsNestedType();
+            }
+        }
+
+        public IEnumerable<IType> GetNestedTypes()
+        {
+            var peType = this.typeDef as PENamedTypeSymbol;
+            if (peType != null)
+            {
+                return peType.GetTypeMembers().Select(t => new MetadataTypeAdapter(t));
+            }
+
+            throw new NotImplementedException();
         }
 
         /// <summary>
