@@ -93,12 +93,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualInterfaceTableByType =
-            new SortedDictionary<string, List<Pair<string, IMethod>>>();
+        private readonly IDictionary<string, List<Pair<IMethod, IMethod>>> virtualInterfaceTableByType =
+            new SortedDictionary<string, List<Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<string, List<Pair<string, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<string, IMethod>>>();
+        private readonly IDictionary<string, List<Pair<IMethod, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<IMethod, IMethod>>>();
 
         public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
 
@@ -610,6 +610,8 @@ namespace Il2Native.Logic
 
             this.StartProcess();
 
+            this.ReadMethodInfo(method);
+
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
 
             // check if main
@@ -625,6 +627,11 @@ namespace Il2Native.Logic
                 ////this.Output.Write("> ");
             }
 
+            if (method.IsAbstract)
+            {
+                return;
+            }
+
             if (method.IsAbstract || method.GetMethodBody() == null)
             {
                 this.Output.Write("declare ");
@@ -633,8 +640,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("define ");
             }
-
-            this.ReadMethodInfo(method);
 
             this.WriteMethodReturnType(this.Output, method);
 
@@ -800,22 +805,6 @@ namespace Il2Native.Logic
                 Code.Ldloca_S,
                 Code.Ldarga,
                 Code.Ldarga_S);
-        }
-
-        // TODO: you need to compare not only not but return type and parameters types
-        private static bool IsOverrideForAnInterface(IMethod interfaceMember, IMethod publicMethod)
-        {
-            if (interfaceMember.FullName == publicMethod.Name)
-            {
-                return true;
-            }
-
-            if (interfaceMember.Name == publicMethod.Name)
-            {
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -2276,15 +2265,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="virtualTable">
         /// </param>
-        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<string, IMethod>> virtualTable)
+        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<IMethod, IMethod>> virtualTable)
         {
             var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
 
             // get all virtual methods in current type and replace or append
             virtualTable.AddRange(
                 IlReader.Methods(@interface)
-                        .Select(interfaceMember => allPublic.First(pub => IsOverrideForAnInterface(interfaceMember, pub)))
-                        .Select(foundMethod => new Pair<string, IMethod> { Key = foundMethod.ToString(), Value = foundMethod }));
+                        .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
+                        .Select(foundMethod => new Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
         }
 
         /// <summary>
@@ -2293,7 +2282,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="virtualTable">
         /// </param>
-        private void BuildVirtualTable(IType thisType, List<Pair<string, IMethod>> virtualTable)
+        private void BuildVirtualTable(IType thisType, List<Pair<IMethod, IMethod>> virtualTable)
         {
             if (thisType.BaseType != null)
             {
@@ -2301,25 +2290,19 @@ namespace Il2Native.Logic
             }
 
             // get all virtual methods in current type and replace or append
-            foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract))
+            foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
                 this.CheckIfExternalDeclarationIsRequired(virtualOrAbstractMethod);
 
-                if (virtualOrAbstractMethod.IsAbstract)
+                if ((virtualOrAbstractMethod.IsAbstract || virtualOrAbstractMethod.IsVirtual) && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
-                    virtualTable.Add(new Pair<string, IMethod> { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                    virtualTable.Add(new Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
                     continue;
                 }
 
                 // find method in virtual table
-                var baseMethod = virtualTable.FirstOrDefault(m => m.Key == virtualOrAbstractMethod.ToString());
-                if (baseMethod != null)
-                {
-                    baseMethod.Value = virtualOrAbstractMethod;
-                    continue;
-                }
-
-                virtualTable.Add(new Pair<string, IMethod> { Key = virtualOrAbstractMethod.ToString(), Value = virtualOrAbstractMethod });
+                var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+                baseMethod.Value = virtualOrAbstractMethod;
             }
         }
 
@@ -2678,16 +2661,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private List<Pair<string, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
+        private List<Pair<IMethod, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
         {
-            List<Pair<string, IMethod>> virtualInterfaceTable;
+            List<Pair<IMethod, IMethod>> virtualInterfaceTable;
 
             if (this.virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
             {
                 return virtualInterfaceTable;
             }
 
-            virtualInterfaceTable = new List<Pair<string, IMethod>>();
+            virtualInterfaceTable = new List<Pair<IMethod, IMethod>>();
             this.BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
 
             this.virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
@@ -2730,16 +2713,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private List<Pair<string, IMethod>> GetVirtualTable(IType thisType)
+        private List<Pair<IMethod, IMethod>> GetVirtualTable(IType thisType)
         {
-            List<Pair<string, IMethod>> virtualTable;
+            List<Pair<IMethod, IMethod>> virtualTable;
 
             if (this.virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
             {
                 return virtualTable;
             }
 
-            virtualTable = new List<Pair<string, IMethod>>();
+            virtualTable = new List<Pair<IMethod, IMethod>>();
             this.BuildVirtualTable(thisType, virtualTable);
 
             this.virtualTableByType[thisType.FullName] = virtualTable;
@@ -3911,7 +3894,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static int GetVirtualTableSize(List<Pair<string, IMethod>> virtualTable)
+        private static int GetVirtualTableSize(List<Pair<IMethod, IMethod>> virtualTable)
         {
             return virtualTable.Count + 2;
         }
@@ -4629,7 +4612,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        private void WriteTableOfMethods(IType type, List<Pair<string, IMethod>> virtualTable, int interfaceIndex = 0)
+        private void WriteTableOfMethods(IType type, List<Pair<IMethod, IMethod>> virtualTable, int interfaceIndex = 0)
         {
             this.Output.WriteLine(
                 " = linkonce_odr unnamed_addr constant [{0} x i8*] [", GetVirtualTableSize(virtualTable));

@@ -117,6 +117,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsOverride
+        {
+            get
+            {
+                return this.fieldDef.IsOverride;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public IModule Module
         {
             get

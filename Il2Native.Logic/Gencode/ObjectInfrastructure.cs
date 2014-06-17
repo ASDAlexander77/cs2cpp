@@ -142,6 +142,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsOverride { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public IModule Module { get; private set; }
 
             /// <summary>

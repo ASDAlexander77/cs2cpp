@@ -188,6 +188,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsOverride
+        {
+            get
+            {
+                return this.methodDef.IsOverride;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables
         {
             get

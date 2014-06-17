@@ -26,6 +26,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsOverride { get; }
+
+        /// <summary>
+        /// </summary>
         IModule Module { get; }
     }
 }

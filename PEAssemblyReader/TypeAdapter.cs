@@ -16,6 +16,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
+    // TODO: should not be used (get rid of it)
     public class TypeAdapter : IType
     {
         /// <summary>
