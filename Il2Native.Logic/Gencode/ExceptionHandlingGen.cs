@@ -56,6 +56,7 @@
             writer.Write("invoke void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
+            writer.Indent++;
             if (exceptionHandlingClause != null)
             {
                 writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.HandlerOffset);
@@ -66,6 +67,7 @@
                 llvmWriter.needToWriteUnwindException = true;
             }
 
+            writer.Indent--;
             llvmWriter.needToWriteUnreachable = true;
 
             return exceptionPointerType;
@@ -163,7 +165,15 @@
 
         public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause)
         {
-            writer.WriteLine("; Begin of Catch or Finally");
+            var isFinally = exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
+            if (isFinally)
+            {
+                writer.WriteLine("; Begin of Finally");
+            }
+            else
+            {
+                writer.WriteLine("; Begin of Catch");
+            }
 
             var catchType = exceptionHandlingClause.CatchType;
 
@@ -178,12 +188,60 @@
                 writer.WriteLine(string.Empty);
             }
 
-            writer.WriteLine("; ==== ");
+            if (isFinally)
+            {
+                // set default error handler jump to carry on try/catch execution
+                writer.WriteLine("store i32 0, i32* %.finally_jump{0}", exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("br label %.finally_no_error_entry{0}", exceptionHandlingClause.HandlerOffset);
+                writer.Indent--;
+                writer.WriteLine(".finally_no_error_entry{0}:", exceptionHandlingClause.HandlerOffset);
+                writer.Indent++;
+            }
+
+            if (isFinally)
+            {
+                writer.WriteLine("; Begin of Finally Handler Body");
+            }
+            else
+            {
+                writer.WriteLine("; Begin of Catch Handler Body");
+            }
         }
 
         public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
-            writer.WriteLine("; End of Catch or Finally");
+            var isFinally = exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
+            if (isFinally)
+            {
+                writer.WriteLine("; End of Finally Handler Body");
+            }
+            else
+            {
+                writer.WriteLine("; End of Catch Handler Body");
+            }
+
+            if (isFinally)
+            {
+                // process Leave jumps
+                int index = 0;
+                var opCodeNope = OpCodePart.CreateNop;
+                llvmWriter.WriteLlvmLoad(writer, opCodeNope, TypeAdapter.FromType(typeof(int)), string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset));
+                writer.WriteLine(string.Empty);
+                writer.WriteLine("switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.HandlerOffset, llvmWriter.GetResultNumber(opCodeNope.ResultNumber ?? -1));
+                writer.Indent++;
+                writer.WriteLine("i32 {0}, label %.finally_exit{1}", index++, exceptionHandlingClause.HandlerOffset);
+                foreach (var leave in exceptionHandlingClause.FinallyJumps)
+                {
+                    writer.WriteLine("i32 {0}, label %{1}", index++, leave);
+                }
+
+                writer.Indent--;
+                writer.WriteLine("]");
+
+                writer.Indent--;
+                writer.WriteLine(".finally_exit{0}:", exceptionHandlingClause.HandlerOffset);
+                writer.Indent++;
+            }
 
             var endOfHandlerAddress = exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength;
 
@@ -226,6 +284,15 @@
             else
             {
                 writer.WriteLine("br label %.exceptions_switch{0}", upperLevelExceptionHandlingClause.HandlerOffset);
+            }
+
+            if (isFinally)
+            {
+                writer.WriteLine("; End of Finally");
+            }
+            else
+            {
+                writer.WriteLine("; End of Catch");
             }
         }
 
@@ -328,6 +395,28 @@
             writer.Write("%.error_typeid = ");
             writer.Write("alloca i32, align " + LlvmWriter.pointerSize);
             writer.WriteLine(string.Empty);
+        }
+
+        public static void WriteFinallyVariables(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause finallyClause)
+        {
+            if (finallyClause.FinallyVariablesAreWritten)
+            {
+                return;
+            }
+
+            finallyClause.FinallyVariablesAreWritten = true;
+
+            writer.Write("%.finally_jump{0} = ", finallyClause.HandlerOffset);
+            writer.Write("alloca i32, align " + LlvmWriter.pointerSize);
+            writer.WriteLine(string.Empty);
+        }
+
+        public static void WriteFinallyLeave(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause finallyClause)
+        {
+            llvmWriter.WriteFinallyVariables(writer, finallyClause);
+
+            writer.WriteLine("store i32 {0}, i32* %.finally_jump{1}", finallyClause.FinallyJumps.Count, finallyClause.HandlerOffset);
+            writer.WriteLine("br label %.finally_no_error_entry{0}", finallyClause.HandlerOffset);
         }
 
         public static void WriteLandingPad(

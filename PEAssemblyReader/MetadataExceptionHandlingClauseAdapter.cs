@@ -13,6 +13,7 @@ namespace PEAssemblyReader
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -26,6 +27,8 @@ namespace PEAssemblyReader
         /// </summary>
         private ExceptionRegion exceptionRegion;
 
+        private Lazy<IList<string>> lazyFinallyJumps;
+
         /// <summary>
         /// </summary>
         /// <param name="exceptionRegion">
@@ -36,6 +39,7 @@ namespace PEAssemblyReader
         {
             this.exceptionRegion = exceptionRegion;
             this.catchType = catchType;
+            this.lazyFinallyJumps = new Lazy<IList<string>>(() => new List<string>());
         }
 
         /// <summary>
@@ -111,6 +115,16 @@ namespace PEAssemblyReader
                 return this.exceptionRegion.TryOffset;
             }
         }
+
+        public IList<string> FinallyJumps
+        {
+            get
+            {
+                return lazyFinallyJumps.Value;
+            }
+        }
+
+        public bool FinallyVariablesAreWritten { get; set; }
 
         public int CompareTo(object obj)
         {

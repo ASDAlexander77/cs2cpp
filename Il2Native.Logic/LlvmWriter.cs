@@ -1902,7 +1902,17 @@ namespace Il2Native.Logic
                 case Code.Leave_S:
 
                     writer.WriteLine("; Leave ");
-                    writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                    var tryClause = this.tryScopes.Peek();
+                    var isFinally = tryClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
+                    if (isFinally)
+                    {
+                        tryClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
+                        this.WriteFinallyLeave(writer, tryClause);
+                    }
+                    else
+                    {
+                        writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                    }
 
                     break;
                 case Code.Ceq:
@@ -4682,7 +4692,7 @@ namespace Il2Native.Logic
                     this.Output.Write("* ");
                     this.WriteMethodDefinitionName(this.Output, method);
                 }
-                
+
                 this.Output.Write(" to i8*)");
             }
 

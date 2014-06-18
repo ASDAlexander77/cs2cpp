@@ -9,6 +9,7 @@
 namespace PEAssemblyReader
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
 
     /// <summary>
@@ -42,5 +43,11 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool RethrowCatchWithCleanUpRequired { get; set; }
+
+        /// <summary>
+        /// </summary>
+        IList<string> FinallyJumps { get; }
+
+        bool FinallyVariablesAreWritten { get; set; }
     }
 }
