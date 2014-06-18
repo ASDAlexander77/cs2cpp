@@ -185,10 +185,12 @@
         {
             writer.WriteLine("; End of Catch or Finally");
 
+            var endOfHandlerAddress = exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength;
+
             if (exceptionHandlingClause.RethrowCatchWithCleanUpRequired)
             {
                 writer.Indent--;
-                writer.WriteLine(".catch_with_cleanup{0}:", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                writer.WriteLine(".catch_with_cleanup{0}:", endOfHandlerAddress);
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
@@ -206,12 +208,20 @@
 
             if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
-                writer.WriteLine("br label %.exit{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                var nextOp = opCode.NextOpCode(llvmWriter);
+                if (!nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
+                {
+                    writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
 
-                writer.Indent--;
-                writer.Write(string.Concat(".exit", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, ':'));
-                writer.Indent++;
-                writer.WriteLine(string.Empty);
+                    writer.Indent--;
+                    writer.Write(string.Concat(".exit", endOfHandlerAddress, ':'));
+                    writer.Indent++;
+                    writer.WriteLine(string.Empty);
+                }
+                else
+                {
+                    writer.WriteLine("br label %.a{0}", nextOp.GroupAddressStart);
+                }
             }
             else
             {
