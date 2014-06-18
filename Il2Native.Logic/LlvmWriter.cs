@@ -1902,12 +1902,19 @@ namespace Il2Native.Logic
                 case Code.Leave_S:
 
                     writer.WriteLine("; Leave ");
-                    var tryClause = this.tryScopes.Peek();
-                    var isFinally = tryClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
-                    if (isFinally)
+                    if (this.tryScopes.Count > 0)
                     {
-                        tryClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                        this.WriteFinallyLeave(writer, tryClause);
+                        var tryClause = this.tryScopes.Peek();
+                        var isFinally = tryClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
+                        if (isFinally)
+                        {
+                            tryClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
+                            this.WriteFinallyLeave(writer, tryClause);
+                        }
+                        else
+                        {
+                            writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                        }
                     }
                     else
                     {
