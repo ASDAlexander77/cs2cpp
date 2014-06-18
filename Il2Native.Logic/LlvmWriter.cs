@@ -3662,12 +3662,6 @@ namespace Il2Native.Logic
                             nextExceptionHandlerIndex < exceptionHandlers.Length ? exceptionHandlers[nextExceptionHandlerIndex] : null);
                     }
 
-                    if (exceptionHandler.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
-                    {
-                        // TODO: finish it
-                        writer.Write("catch (...) {}");
-                    }
-
                     writer.WriteLine(string.Empty);
 
                     this.WriteCatchBegin(writer, exceptionHandler);

@@ -116,7 +116,7 @@
             llvmWriter.WriteLandingPad(
                 writer,
                 opCode,
-                LandingPadOptions.None,
+                opCode.ExceptionHandlers.Any(eh => eh.Flags == ExceptionHandlingClauseOptions.Finally) ? LandingPadOptions.Cleanup : LandingPadOptions.None,
                 opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
 
             writer.WriteLine(string.Empty);
@@ -172,8 +172,11 @@
             writer.WriteLine("load i8** %.error_object");
             var beginCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine("call i8* @__cxa_begin_catch(i8* {0})", llvmWriter.GetResultNumber(errorObjectOfCatchResultNumber));
-            llvmWriter.WriteBitcast(writer, opCodeNone, beginCatchResultNumber, catchType);
-            writer.WriteLine(string.Empty);
+            if (catchType != null)
+            {
+                llvmWriter.WriteBitcast(writer, opCodeNone, beginCatchResultNumber, catchType);
+                writer.WriteLine(string.Empty);
+            }
 
             writer.WriteLine("; ==== ");
         }
