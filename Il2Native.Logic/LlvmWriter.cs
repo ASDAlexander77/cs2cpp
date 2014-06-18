@@ -1037,11 +1037,12 @@ namespace Il2Native.Logic
                 this.WriteCaseAndLabels(writer, opCode);
             }
 
-            this.WriteTryBegins(writer, opCode);
             if (opCode.Any(Code.Leave, Code.Leave_S))
             {
                 this.WriteCatchFinnally(writer, opCode);
             }
+
+            this.WriteTryBegins(writer, opCode);
 
             var block = opCode as OpCodeBlock;
             if (block != null)
@@ -1057,12 +1058,14 @@ namespace Il2Native.Logic
                 }
             }
 
-            this.WriteTryEnds(writer, opCode);
-            this.WriteExceptionHandlers(writer, opCode);
             if (!opCode.Any(Code.Leave, Code.Leave_S))
             {
                 this.WriteCatchFinnally(writer, opCode);
             }
+
+            this.WriteCatchFinnallyCleanUp(opCode);
+            this.WriteTryEnds(writer, opCode);
+            this.WriteExceptionHandlers(writer, opCode);
         }
 
         /// <summary>
@@ -2185,7 +2188,7 @@ namespace Il2Native.Logic
 
                 case Code.Rethrow:
 
-                    this.WriteRethrow(writer, opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null);
+                    this.WriteRethrow(writer, opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
 
@@ -3600,6 +3603,18 @@ namespace Il2Native.Logic
                 {
                     writer.WriteLine(string.Empty);
                     this.WriteCatchEnd(writer, opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                }
+            }
+        }
+
+        private void WriteCatchFinnallyCleanUp(OpCodePart opCode)
+        {
+            if (opCode.CatchOrFinallyEnd != null && opCode.CatchOrFinallyEnd.Count > 0)
+            {
+                var ehs = opCode.CatchOrFinallyEnd.ToArray();
+                Array.Sort(ehs);
+                foreach (var eh in ehs)
+                {
                     var ehPopped = this.catchScopes.Pop();
                     Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
                 }

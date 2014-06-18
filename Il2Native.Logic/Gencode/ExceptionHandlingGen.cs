@@ -42,10 +42,10 @@
         }
 
         public static void WriteRethrow(
-            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
             writer.WriteLine("; Rethrow");
-            WriteRethrowInvoke(llvmWriter, writer, opCode, exceptionHandlingClause);
+            WriteRethrowInvoke(llvmWriter, writer, opCode, exceptionHandlingClause, upperLevelExceptionHandlingClause);
         }
 
         private static IType WriteThrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
@@ -71,7 +71,7 @@
             return exceptionPointerType;
         }
 
-        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
             writer.WriteLine("invoke void @__cxa_rethrow()");
             if (exceptionHandlingClause != null)
@@ -79,7 +79,7 @@
                 writer.Indent++;
                 writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
                 writer.Indent--;
-                exceptionHandlingClause.CatchWithCleanUpRequired = true;
+                exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;
             }
             else
             {
@@ -182,14 +182,14 @@
         {
             writer.WriteLine("; End of Catch or Finally");
 
-            if (exceptionHandlingClause.CatchWithCleanUpRequired)
+            if (exceptionHandlingClause.RethrowCatchWithCleanUpRequired)
             {
                 writer.Indent--;
                 writer.WriteLine(".catch_with_cleanup{0}:", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
-                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup, new[] { exceptionHandlingClause.CatchType });
+                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.CatchType });
                 writer.WriteLine(string.Empty);
             }
             else
@@ -201,7 +201,7 @@
             ////writer.WriteLine("store i32 1, i32* %-1");
             writer.WriteLine("call void @__cxa_end_catch()");
 
-            if (!exceptionHandlingClause.CatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
+            if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
                 writer.WriteLine("br label %.exit{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
 
