@@ -167,7 +167,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
+            llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast i8* ");
             llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");

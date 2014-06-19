@@ -1080,7 +1080,7 @@ namespace Il2Native.Logic
 
                         var memberAccessResultNumber = opCode.Result;
                         opCode.Result = null;
-                        this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, string.Format("%.r{0}", memberAccessResultNumber));
+                        this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, GetResultNumber(memberAccessResultNumber));
                     }
 
                     break;
@@ -1704,10 +1704,10 @@ namespace Il2Native.Logic
                 case Code.Brfalse:
                 case Code.Brfalse_S:
 
-                    var forTure = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
+                    var forTrue = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
                     var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
 
-                    this.UnaryOper(writer, opCode, "icmp " + forTure, options: OperandOptions.GenerateResult);
+                    this.UnaryOper(writer, opCode, "icmp " + forTrue, options: OperandOptions.GenerateResult);
 
                     if (resultOf.IType.IsValueType())
                     {
@@ -2533,7 +2533,7 @@ namespace Il2Native.Logic
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
             {
                 var resultOf = this.ResultOf(opCode);
-                this.WriteSetResultNumber(opCode, resultType != null ? resultType : (resultOf != null ? resultOf.IType : null));
+                this.WriteSetResultNumber(opCode, resultType != null ? resultType : (resultOf != null ? resultOf.IType : requiredType));
             }
 
             writer.Write(op);
@@ -2872,7 +2872,7 @@ namespace Il2Native.Logic
                 opts |= OperandOptions.AppendPointer;
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", opCodeFieldInfoPart.Operand.FieldType, options: opts);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
             this.WriteFieldIndex(writer, operand.IType, opCodeFieldInfoPart.Operand);
         }
 
@@ -2975,7 +2975,7 @@ namespace Il2Native.Logic
 
             writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringType);
 
-            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, options: OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
+            this.ProcessOperator(writer, opCode, "getelementptr inbounds", declaringType, @interface, options: OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
             writer.Write(' ');
             writer.Write(this.GetResultNumber(objectResult));
             this.WriteInterfaceIndex(writer, declaringType, @interface);
