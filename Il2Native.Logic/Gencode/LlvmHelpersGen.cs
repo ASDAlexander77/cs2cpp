@@ -23,6 +23,47 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="op1">
+        /// </param>
+        /// <param name="op2">
+        /// </param>
+        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, int? op1, int? op2)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                llvmWriter.GetResultNumber(op1.Value),
+                llvmWriter.GetResultNumber(op2.Value),
+                type.GetTypeSize(),
+                LlvmWriter.pointerSize /*Align*/);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="op1">
+        /// </param>
+        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, int? op1)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.Write(
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                llvmWriter.GetResultNumber(op1.Value),
+                type.GetTypeSize(),
+                LlvmWriter.pointerSize /*Align*/);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">

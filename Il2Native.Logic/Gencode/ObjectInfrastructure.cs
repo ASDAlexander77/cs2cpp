@@ -137,7 +137,7 @@ namespace Il2Native.Logic.Gencode
             var mallocResult = llvmWriter.WriteSetResultNumber(writer, opCodeConstructorInfoPart);
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
-            llvmWriter.WriteMemSet(writer, declaringType, mallocResult);
+            llvmWriter.WriteMemSet(declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
             llvmWriter.WriteBitcast(opCodeConstructorInfoPart, mallocResult, declaringType);

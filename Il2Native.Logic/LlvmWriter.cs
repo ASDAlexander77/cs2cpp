@@ -2860,7 +2860,7 @@ namespace Il2Native.Logic
             var op2 = opCode.ResultNumber;
             writer.WriteLine(string.Empty);
 
-            this.WriteMemCopy(writer, type, op1, op2);
+            this.WriteMemCopy(type, op1, op2);
         }
 
         /// <summary>
@@ -3111,54 +3111,6 @@ namespace Il2Native.Logic
                 this.WriteAlloca(local.LocalType);
                 this.Output.WriteLine(string.Empty);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="op1">
-        /// </param>
-        /// <param name="op2">
-        /// </param>
-        private void WriteMemCopy(LlvmIndentedTextWriter writer, IType type, int? op1, int? op2)
-        {
-            writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                this.GetResultNumber(op1.Value),
-                this.GetResultNumber(op2.Value),
-                type.GetTypeSize(),
-                pointerSize /*Align*/);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="op1">
-        /// </param>
-        public void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
-        {
-            writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                this.GetResultNumber(op1.Value),
-                type.GetTypeSize(),
-                pointerSize /*Align*/);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="memberInfo">
-        /// </param>
-        private void WriteMemberName(LlvmIndentedTextWriter writer, MemberInfo memberInfo)
-        {
-            writer.Write(string.Concat(memberInfo.DeclaringType.FullName + '.' + memberInfo.Name));
         }
 
         /// <summary>
