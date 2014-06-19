@@ -69,7 +69,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected ILocalVariable[] LocalInfo { get; private set; }
+        public ILocalVariable[] LocalInfo { get; private set; }
 
         /// <summary>
         /// </summary>

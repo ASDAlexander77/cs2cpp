@@ -27,9 +27,6 @@ namespace Il2Native.Logic
     /// </summary>
     public class LlvmWriter : BaseWriter, ICodeWriter
     {
-        /// <summary>
-        /// </summary>
-        private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
 
         /// <summary>
         /// </summary>
@@ -107,45 +104,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool needToWriteUnreachable;
-
-        /// <summary>
-        /// </summary>
-        static LlvmWriter()
-        {
-            // to be removed
-            SystemTypesToCTypes["String"] = "i8";
-            SystemTypesToCTypes["String&"] = "i8*";
-
-            SystemTypesToCTypes["Void"] = "void";
-            SystemTypesToCTypes["Byte"] = "i8";
-            SystemTypesToCTypes["SByte"] = "i8";
-            SystemTypesToCTypes["Char"] = "i16";
-            SystemTypesToCTypes["Int16"] = "i16";
-            SystemTypesToCTypes["Int32"] = "i32";
-            SystemTypesToCTypes["Int64"] = "i64";
-            SystemTypesToCTypes["UInt16"] = "i16";
-            SystemTypesToCTypes["UInt32"] = "i32";
-            SystemTypesToCTypes["UInt64"] = "i64";
-            SystemTypesToCTypes["Float"] = "float";
-            SystemTypesToCTypes["Single"] = "float";
-            SystemTypesToCTypes["Double"] = "double";
-            SystemTypesToCTypes["Boolean"] = "i1";
-            SystemTypesToCTypes["Byte&"] = "i8*";
-            SystemTypesToCTypes["SByte&"] = "i8*";
-            SystemTypesToCTypes["Char&"] = "i8*";
-            SystemTypesToCTypes["Int16&"] = "i16*";
-            SystemTypesToCTypes["Int32&"] = "i32*";
-            SystemTypesToCTypes["Int64&"] = "i64*";
-            SystemTypesToCTypes["IntPtr"] = "i32*";
-            SystemTypesToCTypes["UIntPtr"] = "i32*";
-            SystemTypesToCTypes["UInt16&"] = "i16**";
-            SystemTypesToCTypes["UInt32&"] = "i32**";
-            SystemTypesToCTypes["UInt64&"] = "i64*";
-            SystemTypesToCTypes["Float&"] = "float*";
-            SystemTypesToCTypes["Single&"] = "float*";
-            SystemTypesToCTypes["Double&"] = "double*";
-            SystemTypesToCTypes["Boolean&"] = "i1*";
-        }
 
         /// <summary>
         /// </summary>
@@ -273,7 +231,7 @@ namespace Il2Native.Logic
 
             if (baseType != null)
             {
-                this.WriteTypeWithoutModifiers(this.Output, baseType);
+                baseType.WriteTypeWithoutModifiers(this.Output);
             }
 
             var index = 0;
@@ -287,7 +245,7 @@ namespace Il2Native.Logic
                 this.CheckIfExternalDeclarationIsRequired(@interface);
 
                 this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
-                this.WriteTypeWithoutModifiers(this.Output, @interface);
+                @interface.WriteTypeWithoutModifiers(this.Output);
                 index++;
             }
         }
@@ -484,7 +442,7 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(',');
 
-            this.WriteTypePrefix(this.Output, field.FieldType, false);
+            field.FieldType.WriteTypePrefix(this.Output, false);
 
             // this.Output.Write(' ');
             // this.Output.Write(field.Name);
@@ -793,50 +751,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="writer">
         /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        /// <param name="refChar">
-        /// </param>
-        private static void WriteTypeModifiers(LlvmIndentedTextWriter writer, IType type, bool asReference, char refChar)
-        {
-            var effectiveType = type;
-
-            do
-            {
-                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
-                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsArray)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsByRef)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.HasElementType)
-                {
-                    effectiveType = effectiveType.GetElementType();
-                }
-                else
-                {
-                    break;
-                }
-            }
-            while (effectiveType != null);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
         /// <param name="used">
         /// </param>
         /// <param name="parameterInfos">
@@ -879,7 +793,7 @@ namespace Il2Native.Logic
             // allocate space for structure if return type is structure
             if (returnIsStruct)
             {
-                this.WriteTypePrefix(writer, returnType, returnType.IsStructureType());
+                returnType.WriteTypePrefix(writer, returnType.IsStructureType());
                 writer.Write(' ');
                 if (resultNumberForReturn.HasValue)
                 {
@@ -894,7 +808,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                this.WriteTypePrefix(writer, thisType, thisType.IsStructureType());
+                thisType.WriteTypePrefix(writer, thisType.IsStructureType());
                 writer.Write(' ');
                 if (resultNumberForThis.HasValue)
                 {
@@ -928,7 +842,7 @@ namespace Il2Native.Logic
 
                 // detect if *(pointer) is required for example structure
                 // var parameterInputReturnResult = ResultOf(parameterInput);
-                this.WriteTypePrefix(writer, parameter.ParameterType);
+                parameter.ParameterType.WriteTypePrefix(writer);
                 if (parameter.ParameterType.IsStructureType())
                 {
                     writer.Write(" byval align " + pointerSize);
@@ -1179,7 +1093,7 @@ namespace Il2Native.Logic
 
                         var memberAccessResultNumber = opCode.ResultNumber;
                         opCode.ResultNumber = null;
-                        this.WriteLlvmLoad(writer, opCode, opCode.ResultType, string.Format("%.r{0}", memberAccessResultNumber));
+                        this.WriteLlvmLoad(opCode, opCode.ResultType, string.Format("%.r{0}", memberAccessResultNumber));
                     }
 
                     break;
@@ -1194,7 +1108,7 @@ namespace Il2Native.Logic
                     IType castFrom;
                     var operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteLlvmLoad(writer, opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
+                    this.WriteLlvmLoad(opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
 
                     break;
                 case Code.Ldsflda:
@@ -1216,7 +1130,7 @@ namespace Il2Native.Logic
                     this.PostProcessOperand(writer, opCode, 1, directResult1);
                     writer.Write(", ");
 
-                    this.WriteTypePrefix(writer, opCode.ResultType);
+                    opCode.ResultType.WriteTypePrefix(writer);
 
                     // add reference
                     writer.Write("* ");
@@ -1237,7 +1151,7 @@ namespace Il2Native.Logic
                     this.PostProcessOperand(writer, opCode, 0, directResult1);
                     writer.Write(", ");
 
-                    this.WriteTypePrefix(writer, operandType);
+                    operandType.WriteTypePrefix(writer);
 
                     // add reference
                     writer.Write("* ");
@@ -1252,7 +1166,7 @@ namespace Il2Native.Logic
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
                     // opCode.OpCodeOperands[0].DestinationName = this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
-                    this.WriteLlvmLoad(writer, opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
+                    this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
 
                     break;
 
@@ -1266,7 +1180,7 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldlen:
-                    this.WriteArrayGetLength(writer, opCode);
+                    this.WriteArrayGetLength(opCode);
                     break;
                 case Code.Ldelem:
                 case Code.Ldelem_I:
@@ -1321,7 +1235,7 @@ namespace Il2Native.Logic
 
                         opCode.ResultNumber = null;
                         opCode.ResultType = null;
-                        this.WriteLlvmLoad(writer, opCode, type, this.GetResultNumber(opCode.ResultNumber ?? -1));
+                        this.WriteLlvmLoad(opCode, type, this.GetResultNumber(opCode.ResultNumber ?? -1));
                     }
 
                     break;
@@ -1372,7 +1286,7 @@ namespace Il2Native.Logic
                     this.ProcessOperator(writer, opCode, "store", type);
                     this.PostProcessOperand(writer, opCode, 2, directResult1);
                     writer.Write(", ");
-                    this.WriteTypePrefix(writer, type, type.IsStructureType());
+                    type.WriteTypePrefix(writer, type.IsStructureType());
                     writer.Write(string.Format("* {0}", this.GetResultNumber(opCode.ResultNumber ?? -1)));
 
                     break;
@@ -1421,7 +1335,7 @@ namespace Il2Native.Logic
                     }
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
-                    this.WriteLlvmLoad(writer, opCode, type, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
+                    this.WriteLlvmLoad(opCode, type, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
 
                     break;
                 case Code.Stind_I:
@@ -1466,7 +1380,7 @@ namespace Il2Native.Logic
 
                     this.UnaryOper(writer, opCode, 1, "store", type);
                     writer.Write(", ");
-                    this.WriteTypePrefix(writer, opCode.OpCodeOperands[0].ResultType);
+                    opCode.OpCodeOperands[0].ResultType.WriteTypePrefix(writer);
                     this.PostProcessOperand(writer, opCode, 0, directResult1);
 
                     break;
@@ -1606,7 +1520,7 @@ namespace Il2Native.Logic
                     {
                         this.UnaryOper(writer, opCode, "store", localType);
                         writer.Write(", ");
-                        this.WriteLlvmLocalVarAccess(writer, index, true);
+                        this.WriteLlvmLocalVarAccess(index, true);
                     }
 
                     break;
@@ -1630,7 +1544,7 @@ namespace Il2Native.Logic
                     skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
                     if (!skip)
                     {
-                        this.WriteLlvmLoad(writer, opCode, this.LocalInfo[index].LocalType, string.Concat("%local", index));
+                        this.WriteLlvmLoad(opCode, this.LocalInfo[index].LocalType, string.Concat("%local", index));
                     }
 
                     break;
@@ -1663,7 +1577,7 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(writer, opCode, this.ThisType, "%.this", structAsRef: this.ThisType.IsStructureType());
+                        this.WriteLlvmLoad(opCode, this.ThisType, "%.this", structAsRef: this.ThisType.IsStructureType());
                     }
                     else
                     {
@@ -1672,7 +1586,7 @@ namespace Il2Native.Logic
                         skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
                         if (!skip)
                         {
-                            this.WriteLlvmLoad(writer, opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));
+                            this.WriteLlvmLoad(opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));
                         }
                     }
 
@@ -2055,7 +1969,6 @@ namespace Il2Native.Logic
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
                     this.WriteCast(
-                        writer,
                         opCodeTypePart,
                         opCodeTypePart.OpCodeOperands[0].ResultType,
                         opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
@@ -2070,7 +1983,6 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Empty);
 
                     this.WriteCast(
-                        writer,
                         opCodeTypePart,
                         opCodeTypePart.OpCodeOperands[0].ResultType,
                         opCodeTypePart.OpCodeOperands[0].ResultNumber ?? -1,
@@ -2091,7 +2003,6 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Empty);
 
                     this.WriteBitcast(
-                        writer,
                         opCodeTypePart,
                         dynamicCastResultNumber,
                         opCodeTypePart.Operand);
@@ -2413,7 +2324,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetLocalVarName(int index)
+        public string GetLocalVarName(int index)
         {
             return string.Concat("%local", index);
         }
@@ -2524,7 +2435,7 @@ namespace Il2Native.Logic
                 {
                     IType castFrom;
                     var effectiveType = this.DetectTypePrefix(operand, null, OperandOptions.TypeIsInOperator, out castFrom);
-                    this.WriteTypePrefix(writer, effectiveType ?? TypeAdapter.FromType(typeof(void)));
+                    (effectiveType ?? TypeAdapter.FromType(typeof(void))).WriteTypePrefix(writer);
                     writer.Write(' ');
                 }
 
@@ -2534,7 +2445,7 @@ namespace Il2Native.Logic
             {
                 if (detectAndWriteTypePrefix)
                 {
-                    this.WriteTypePrefix(writer, operand.ResultType ?? TypeAdapter.FromType(typeof(void)));
+                    (operand.ResultType ?? TypeAdapter.FromType(typeof(void))).WriteTypePrefix(writer);
                     writer.Write(' ');
                 }
 
@@ -2633,7 +2544,7 @@ namespace Il2Native.Logic
             var effectiveType = this.DetectTypePrefix(opCode, requiredType, options, out castFrom);
             if (castFrom != null && opCode.OpCodeOperands[0].ResultNumber.HasValue)
             {
-                this.WriteCast(writer, opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
+                this.WriteCast(opCode.OpCodeOperands[0], castFrom, opCode.OpCodeOperands[0].ResultNumber.Value, effectiveType);
             }
 
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
@@ -2647,64 +2558,12 @@ namespace Il2Native.Logic
 
             if (!options.HasFlag(OperandOptions.NoTypePrefix) && !options.HasFlag(OperandOptions.IgnoreOperand))
             {
-                this.WriteTypePrefix(writer, effectiveType ?? TypeAdapter.FromType(typeof(void)));
+                (effectiveType ?? TypeAdapter.FromType(typeof(void))).WriteTypePrefix(writer);
                 if (options.HasFlag(OperandOptions.AppendPointer))
                 {
                     writer.Write('*');
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="doNotConvert">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private string TypeToCType(IType type, bool doNotConvert = false)
-        {
-            var effectiveType = type;
-
-            if (type.IsArray)
-            {
-                effectiveType = type.GetElementType();
-            }
-
-            if (!doNotConvert)
-            {
-                if (effectiveType.Namespace == "System")
-                {
-                    string ctype;
-                    if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
-                    {
-                        return ctype;
-                    }
-                }
-
-                if (type.IsEnum)
-                {
-                    switch (type.GetTypeSize())
-                    {
-                        case 1:
-                            return "i8";
-                        case 2:
-                            return "i16";
-                        case 4:
-                            return "i32";
-                        case 8:
-                            return "i64";
-                    }
-                }
-
-                if (type.IsValueType && type.IsPrimitive)
-                {
-                    return type.Name.ToLowerInvariant();
-                }
-            }
-
-            return string.Concat('"', type.FullName, '"');
         }
 
         /// <summary>
@@ -2759,20 +2618,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        private void WriteAlloca(LlvmIndentedTextWriter writer, IType type)
-        {
-            // for value types
-            writer.Write("alloca ");
-            this.WriteTypePrefix(writer, type);
-            writer.Write(", align " + pointerSize);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="name">
         /// </param>
         /// <param name="type">
@@ -2790,15 +2635,15 @@ namespace Il2Native.Logic
 
             // for value types
             this.Output.Write("alloca ");
-            this.WriteTypePrefix(this.Output, type, type.IsStructureType());
+            type.WriteTypePrefix(this.Output, type.IsStructureType());
             this.Output.Write(", align " + pointerSize);
             this.Output.WriteLine(string.Empty);
 
             this.Output.Write("store ");
-            this.WriteTypePrefix(this.Output, type, type.IsStructureType());
+            type.WriteTypePrefix(this.Output, type.IsStructureType());
             this.Output.Write(string.Format(" %{0}", name));
             this.Output.Write(", ");
-            this.WriteTypePrefix(this.Output, type, type.IsStructureType());
+            type.WriteTypePrefix(this.Output, type.IsStructureType());
 
             this.Output.Write(string.Format("* %.{0}", name));
             this.Output.Write(", align " + pointerSize);
@@ -2830,30 +2675,6 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteArrayGetLength(LlvmIndentedTextWriter writer, OpCodePart opCode)
-        {
-            this.WriteBitcast(writer, opCode, TypeAdapter.FromType(typeof(int)));
-            writer.WriteLine(string.Empty);
-
-            var res = opCode.ResultNumber;
-            var resLen = WriteSetResultNumber(writer, opCode);
-            writer.Write("getelementptr ");
-            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
-            writer.Write("* ");
-            WriteResultNumber(res ?? -1);
-            writer.WriteLine(", i32 -1");
-
-            opCode.ResultNumber = null;
-            opCode.ResultType = null;
-            this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(resLen));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod method)
         {
             WriteSetResultNumber(writer, opCode);
@@ -2862,7 +2683,7 @@ namespace Il2Native.Logic
             writer.Write("* ");
             WriteResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1);
             writer.Write(" to ");
-            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int*)));
+            TypeAdapter.FromType(typeof(int*)).WriteTypePrefix(writer);
             writer.WriteLine(string.Empty);
             opCode.ResultType = TypeAdapter.FromType(typeof(int*));
 
@@ -2871,97 +2692,16 @@ namespace Il2Native.Logic
             var res = opCode.ResultNumber;
             var offset = WriteSetResultNumber(writer, opCode);
             writer.Write("getelementptr ");
-            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
+            TypeAdapter.FromType(typeof(int)).WriteTypePrefix(writer);
             writer.Write("* ");
             WriteResultNumber(res ?? -1);
             writer.WriteLine(", i32 -1");
 
             opCode.ResultNumber = null;
             opCode.ResultType = null;
-            this.WriteLlvmLoad(writer, opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(offset));
+            this.WriteLlvmLoad(opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(offset));
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="res">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, int res, IType toType)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast i8* ");
-            WriteResultNumber(res);
-            writer.Write(" to ");
-            this.WriteTypePrefix(writer, toType, true);
-            opCode.ResultType = toType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType toType, OperandOptions options = OperandOptions.None)
-        {
-            this.UnaryOper(writer, opCode, "bitcast", opCode.ResultType, options: options);
-            writer.Write(" to ");
-            this.WriteTypePrefix(writer, toType, true);
-            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="name">
-        /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string name)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast ");
-            this.WriteTypePrefix(writer, fromType, true);
-            writer.Write(" ");
-            writer.Write(name);
-            writer.Write(" to i8*");
-            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="res">
-        /// </param>
-        /// <param name="custom">
-        /// </param>
-        private void WriteBitcast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, string custom)
-        {
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("bitcast ");
-            this.WriteTypePrefix(writer, fromType, true);
-            writer.Write(' ');
-            WriteResultNumber(res);
-            writer.Write(" to ");
-            writer.Write(custom);
-
-            writer.WriteLine(string.Empty);
-        }
 
         /// <summary>
         /// </summary>
@@ -3086,7 +2826,7 @@ namespace Il2Native.Logic
             // check if you need to cast this parameter
             if (hasThisArgument && IsClassCastRequired(thisType, opCodeFirstOperand))
             {
-                this.WriteCast(writer, opCodeFirstOperand, opCodeFirstOperand.ResultType, opCodeFirstOperand.ResultNumber.Value, thisType);
+                this.WriteCast(opCodeFirstOperand, opCodeFirstOperand.ResultType, opCodeFirstOperand.ResultNumber.Value, thisType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -3100,7 +2840,7 @@ namespace Il2Native.Logic
 
                     if (IsClassCastRequired(parameter.ParameterType, operand))
                     {
-                        this.WriteCast(writer, operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
+                        this.WriteCast(operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
                     }
 
                     index++;
@@ -3115,7 +2855,7 @@ namespace Il2Native.Logic
             // allocate space for structure if return type is structure
             if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
             {
-                this.WriteAlloca(writer, methodInfo.ReturnType);
+                this.WriteAlloca(methodInfo.ReturnType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -3130,7 +2870,7 @@ namespace Il2Native.Logic
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
-                this.WriteTypePrefix(writer, methodInfo.ReturnType, false);
+                methodInfo.ReturnType.WriteTypePrefix(writer, false);
 
                 this.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
             }
@@ -3210,7 +2950,7 @@ namespace Il2Native.Logic
             writer.Write("** ");
             this.WriteResultNumber(thisAddressFromInterfaceResultNumber);
             writer.Write(" to ");
-            this.WriteTypePrefix(writer, thisType);
+            thisType.WriteTypePrefix(writer);
             writer.WriteLine(string.Empty);
         }
 
@@ -3240,75 +2980,6 @@ namespace Il2Native.Logic
                     writer.Indent++;
                 }
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="res">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        public void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
-        {
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                opCode.ResultNumber = res;
-                this.WriteInterfaceAccess(writer, opCode, fromType, toType);
-            }
-            else
-            {
-                WriteSetResultNumber(writer, opCode);
-                writer.Write("bitcast ");
-                this.WriteTypePrefix(writer, fromType, true);
-                writer.Write(' ');
-                WriteResultNumber(res);
-                writer.Write(" to ");
-                this.WriteTypePrefix(writer, toType, true);
-                if (appendReference)
-                {
-                    // result should be array
-                    writer.Write('*');
-                }
-            }
-
-            opCode.ResultType = toType;
-            writer.WriteLine(string.Empty);
-        }
-
-        public void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string custromName, IType toType, bool appendReference = false)
-        {
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                throw new NotImplementedException();
-                ////opCode.ResultNumber = res;
-                ////this.WriteInterfaceAccess(writer, opCode, fromType, toType);
-            }
-            else
-            {
-                WriteSetResultNumber(writer, opCode);
-                writer.Write("bitcast ");
-                this.WriteTypePrefix(writer, fromType, true);
-                writer.Write(' ');
-                writer.Write(custromName);
-                writer.Write(" to ");
-                this.WriteTypePrefix(writer, toType, true);
-                if (appendReference)
-                {
-                    // result should be array
-                    writer.Write('*');
-                }
-            }
-
-            opCode.ResultType = toType;
-            writer.WriteLine(string.Empty);
         }
 
         private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
@@ -3416,12 +3087,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="desctVarName">
         /// </param>
-        private void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string sourceVarName, string desctVarName)
+        public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string sourceVarName, string desctVarName)
         {
-            WriteBitcast(writer, opCode, type, desctVarName);
+            this.WriteBitcast(opCode, type, desctVarName);
             var op1 = opCode.ResultNumber;
             writer.WriteLine(string.Empty);
-            WriteBitcast(writer, opCode, type, sourceVarName);
+            this.WriteBitcast(opCode, type, sourceVarName);
             var op2 = opCode.ResultNumber;
             writer.WriteLine(string.Empty);
 
@@ -3651,7 +3322,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteLlvmArgVarAccess(LlvmIndentedTextWriter writer, int index, bool asReference = false)
         {
-            this.WriteTypePrefix(writer, this.Parameters[index].ParameterType, false);
+            this.Parameters[index].ParameterType.WriteTypePrefix(writer, false);
             if (asReference)
             {
                 writer.Write('*');
@@ -3666,77 +3337,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="localVarName">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        public void WriteLlvmLoad(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
-        {
-            if (opCode.ResultNumber.HasValue)
-            {
-                return;
-            }
-
-            if (!type.IsStructureType() || structAsRef)
-            {
-                WriteSetResultNumber(opCode, type);
-
-                // last part
-                writer.Write("load ");
-                this.WriteTypePrefix(writer, type, structAsRef);
-                if (appendReference)
-                {
-                    // add reference to type
-                    writer.Write('*');
-                }
-
-                writer.Write(' ');
-                writer.Write(localVarName);
-
-                // TODO: optional do we need to calculate it propertly?
-                writer.Write(", align " + pointerSize);
-            }
-            else
-            {
-                Debug.Assert(opCode.DestinationName != null);
-                this.WriteCopyStruct(writer, opCode, type, localVarName, opCode.DestinationName);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        private void WriteLlvmLocalVarAccess(LlvmIndentedTextWriter writer, int index, bool asReference = false)
-        {
-            this.WriteTypePrefix(writer, this.LocalInfo[index].LocalType, false);
-            if (asReference)
-            {
-                writer.Write('*');
-            }
-
-            writer.Write(' ');
-            writer.Write(this.GetLocalVarName(index));
-
-            // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + pointerSize);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="locals">
         /// </param>
         private void WriteLocalVariableDeclarations(IEnumerable<ILocalVariable> locals)
@@ -3744,7 +3344,7 @@ namespace Il2Native.Logic
             foreach (var local in locals)
             {
                 this.Output.Write(string.Format("%local{0} = ", local.LocalIndex));
-                this.WriteAlloca(this.Output, local.LocalType);
+                this.WriteAlloca(local.LocalType);
                 this.Output.WriteLine(string.Empty);
             }
         }
@@ -3861,7 +3461,7 @@ namespace Il2Native.Logic
 
             if (returnType.IsStructureType())
             {
-                this.WriteTypePrefix(writer, returnType, true);
+                returnType.WriteTypePrefix(writer, true);
                 writer.Write(" noalias sret %agg.result");
             }
 
@@ -3874,7 +3474,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                this.WriteTypePrefix(writer, thisType, thisType.IsStructureType());
+                thisType.WriteTypePrefix(writer, thisType.IsStructureType());
                 if (!noArgumentName)
                 {
                     writer.Write(" %this");
@@ -3889,7 +3489,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                this.WriteTypePrefix(writer, parameter.ParameterType, false);
+                parameter.ParameterType.WriteTypePrefix(writer, false);
                 if (parameter.ParameterType.IsStructureType())
                 {
                     writer.Write(" byval align " + pointerSize);
@@ -3924,7 +3524,7 @@ namespace Il2Native.Logic
         {
             var fullMethodName = this.GetFullMethodName(methodBase);
             var methodInfo = methodBase;
-            this.WriteTypePrefix(writer, methodInfo.ReturnType);
+            methodInfo.ReturnType.WriteTypePrefix(writer);
 
             writer.Write(" (");
 
@@ -3932,7 +3532,7 @@ namespace Il2Native.Logic
 
             if (hasThis)
             {
-                this.WriteTypePrefix(writer, methodInfo.DeclaringType);
+                methodInfo.DeclaringType.WriteTypePrefix(writer);
             }
 
             var index = 0;
@@ -3943,7 +3543,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                this.WriteTypePrefix(writer, parameter.ParameterType);
+                parameter.ParameterType.WriteTypePrefix(writer);
                 index++;
             }
 
@@ -3960,7 +3560,7 @@ namespace Il2Native.Logic
         {
             if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
             {
-                this.WriteTypePrefix(writer, method.ReturnType, false);
+                method.ReturnType.WriteTypePrefix(writer, false);
                 writer.Write(" ");
             }
             else
@@ -3977,7 +3577,7 @@ namespace Il2Native.Logic
             foreach (var field in this.staticFieldsInfo)
             {
                 this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
-                this.WriteTypePrefix(this.Output, field.FieldType, false);
+                field.FieldType.WriteTypePrefix(this.Output, false);
                 this.Output.WriteLine(" undef");
             }
 
@@ -4188,7 +3788,7 @@ namespace Il2Native.Logic
         private void WriteTypeDeclarationStart(IType type)
         {
             this.Output.Write("%");
-            this.WriteTypeName(this.Output, type, true);
+            type.WriteTypeName(this.Output, true);
 
             this.Output.Write(" = type ");
         }
@@ -4208,83 +3808,6 @@ namespace Il2Native.Logic
 
             Il2Converter.WriteTypeDefinition(this, type, null, true);
             this.Output.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="doNotConvert">
-        /// </param>
-        private void WriteTypeName(LlvmIndentedTextWriter writer, IType type, bool doNotConvert = false)
-        {
-            var typeBaseName = this.TypeToCType(type, doNotConvert);
-
-            // clean name
-            if (typeBaseName.EndsWith("&"))
-            {
-                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
-            }
-
-            var index = typeBaseName.IndexOf('`');
-            if (index >= 0)
-            {
-                var nameWithoutGeneric = typeBaseName.Substring(0, index);
-                writer.Write(nameWithoutGeneric);
-            }
-            else
-            {
-                writer.Write(typeBaseName);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
-        /// </param>
-        /// <param name="refChar">
-        /// </param>
-        public void WriteTypePrefix(
-            LlvmIndentedTextWriter writer, IType type, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
-        {
-            this.WriteTypeWithoutModifiers(writer, type, doNotIncludeTypePrefixId);
-            WriteTypeModifiers(writer, type, asReference, refChar);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
-        /// </param>
-        private void WriteTypeWithoutModifiers(LlvmIndentedTextWriter writer, IType type, bool doNotIncludeTypePrefixId = false)
-        {
-            var effectiveType = type;
-
-            while (effectiveType.HasElementType)
-            {
-                effectiveType = effectiveType.GetElementType();
-            }
-
-            // TODO: remove String test when you use real string class
-            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum
-                && !(effectiveType.Namespace == "System" && effectiveType.Name == "String"))
-            {
-                writer.Write('%');
-            }
-
-            // write base name
-            this.WriteTypeName(writer, effectiveType);
         }
 
         /// <summary>

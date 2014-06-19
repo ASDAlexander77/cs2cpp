@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
@@ -29,6 +28,8 @@ namespace Il2Native.Logic.Gencode
         private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualInterfaceTableByType =
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
+        /// <summary>
+        /// </summary>
         public static void ClearVirtualTables()
         {
             virtualTableByType.Clear();
@@ -171,21 +172,21 @@ namespace Il2Native.Logic.Gencode
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
-                if ((virtualOrAbstractMethod.IsAbstract) && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
+                if (virtualOrAbstractMethod.IsAbstract && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
                     virtualTable.Add(new LlvmWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
                     continue;
                 }
 
                 // find method in virtual table
-                var baseMethod = virtualOrAbstractMethod.IsOverride 
-                        ? virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
-                        : virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+                var baseMethod = virtualOrAbstractMethod.IsOverride
+                                     ? virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
+                                     : virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
 
                 if (baseMethod == null)
                 {
                     virtualTable.Add(new LlvmWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
-                    continue;                    
+                    continue;
                 }
 
                 baseMethod.Value = virtualOrAbstractMethod;

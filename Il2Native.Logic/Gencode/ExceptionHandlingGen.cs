@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.Gencode
 {
     using System;
@@ -272,7 +271,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("call i8* @__cxa_begin_catch(i8* {0})", llvmWriter.GetResultNumber(errorObjectOfCatchResultNumber));
             if (catchType != null)
             {
-                llvmWriter.WriteBitcast(writer, opCodeNone, beginCatchResultNumber, catchType);
+                llvmWriter.WriteBitcast(opCodeNone, beginCatchResultNumber, catchType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -329,8 +328,7 @@ namespace Il2Native.Logic.Gencode
                 // process Leave jumps
                 var index = 0;
                 var opCodeNope = OpCodePart.CreateNop;
-                llvmWriter.WriteLlvmLoad(
-                    writer, opCodeNope, TypeAdapter.FromType(typeof(int)), string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset));
+                llvmWriter.WriteLlvmLoad(opCodeNope, TypeAdapter.FromType(typeof(int)), string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset));
                 writer.WriteLine(string.Empty);
                 writer.WriteLine(
                     "switch i32 {1}, label %.finally_exit{0} [", 
@@ -457,7 +455,7 @@ namespace Il2Native.Logic.Gencode
             opCode.OpCodeOperands[0].ResultNumber = opCode.ResultNumber;
             opCode.OpCodeOperands[0].ResultType = opCode.ResultType;
 
-            llvmWriter.WriteBitcast(writer, opCode, newExceptionResultType, options: LlvmWriter.OperandOptions.GenerateResult);
+            llvmWriter.WriteBitcast(opCode, newExceptionResultType, options: LlvmWriter.OperandOptions.GenerateResult);
             writer.WriteLine("*");
 
             opCode.OpCodeOperands[0].ResultNumber = newExceptionResult;
@@ -465,7 +463,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.UnaryOper(writer, opCode, "store");
             writer.Write(", ");
-            llvmWriter.WriteTypePrefix(writer, opCode.OpCodeOperands[0].ResultType);
+            opCode.OpCodeOperands[0].ResultType.WriteTypePrefix(writer);
             writer.Write("* ");
             llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
             writer.WriteLine(string.Empty);

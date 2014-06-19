@@ -22,6 +22,32 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
+        public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteBitcast(opCode, TypeAdapter.FromType(typeof(int)));
+            writer.WriteLine(string.Empty);
+
+            var res = opCode.ResultNumber;
+            var resLen = llvmWriter.WriteSetResultNumber(writer, opCode);
+            writer.Write("getelementptr ");
+            TypeAdapter.FromType(typeof(int)).WriteTypePrefix(writer);
+            writer.Write("* ");
+            llvmWriter.WriteResultNumber(res ?? -1);
+            writer.WriteLine(", i32 -1");
+
+            opCode.ResultNumber = null;
+            opCode.ResultType = null;
+            llvmWriter.WriteLlvmLoad(opCode, TypeAdapter.FromType(typeof(int)), llvmWriter.GetResultNumber(resLen));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         /// <param name="declaringType">
         /// </param>
         /// <param name="length">
@@ -53,7 +79,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("call i8* @malloc(i32 {0})", llvmWriter.GetResultNumber(resAdd ?? -1));
             writer.WriteLine(string.Empty);
 
-            llvmWriter.WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
+            llvmWriter.WriteBitcast(opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
             var opCodeTemp = OpCodePart.CreateNop;
@@ -63,7 +89,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.ProcessOperator(writer, opCodeTemp, "store");
             llvmWriter.PostProcessOperand(writer, opCode, 0, !opCode.OpCodeOperands[0].ResultNumber.HasValue);
             writer.Write(", ");
-            llvmWriter.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
+            TypeAdapter.FromType(typeof(int)).WriteTypePrefix(writer);
             writer.Write("* ");
             llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
             writer.WriteLine(string.Empty);
@@ -75,12 +101,12 @@ namespace Il2Native.Logic.Gencode
             // WriteTypePrefix(writer, declaringType);
             writer.Write("i32* ");
             llvmWriter.WriteResultNumber(tempRes);
-            writer.Write(", i32 1");
+            writer.WriteLine(", i32 1");
 
-            if (declaringType != TypeAdapter.FromType(typeof(int)))
+            if (declaringType.TypeNotEquals(TypeAdapter.FromType(typeof(int))))
             {
+                llvmWriter.WriteCast(opCode, TypeAdapter.FromType(typeof(int)), resGetArr, declaringType, true);
                 writer.WriteLine(string.Empty);
-                llvmWriter.WriteCast(writer, opCode, TypeAdapter.FromType(typeof(int)), resGetArr, declaringType, true);
             }
 
             writer.WriteLine("; end of new array");
