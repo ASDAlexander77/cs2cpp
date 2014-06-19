@@ -29,10 +29,6 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, int> SystemTypeSizes = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
         private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
 
         /// <summary>
@@ -69,10 +65,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
         private readonly IList<IField> staticFieldsInfo = new List<IField>();
 
         /// <summary>
@@ -90,15 +82,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public readonly HashSet<IType> typeRttiPointerDeclRequired = new HashSet<IType>();
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<string, List<Pair<IMethod, IMethod>>> virtualInterfaceTableByType =
-            new SortedDictionary<string, List<Pair<IMethod, IMethod>>>();
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<string, List<Pair<IMethod, IMethod>>> virtualTableByType = new SortedDictionary<string, List<Pair<IMethod, IMethod>>>();
 
         public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
 
@@ -162,36 +145,6 @@ namespace Il2Native.Logic
             SystemTypesToCTypes["Single&"] = "float*";
             SystemTypesToCTypes["Double&"] = "double*";
             SystemTypesToCTypes["Boolean&"] = "i1*";
-
-            SystemTypeSizes["Void"] = 0;
-            SystemTypeSizes["Byte"] = 1;
-            SystemTypeSizes["SByte"] = 1;
-            SystemTypeSizes["Char"] = 2;
-            SystemTypeSizes["Int16"] = 2;
-            SystemTypeSizes["Int32"] = pointerSize;
-            SystemTypeSizes["Int64"] = 8;
-            SystemTypeSizes["UInt16"] = 2;
-            SystemTypeSizes["UInt32"] = pointerSize;
-            SystemTypeSizes["UInt64"] = 8;
-            SystemTypeSizes["Float"] = pointerSize;
-            SystemTypeSizes["Single"] = pointerSize;
-            SystemTypeSizes["Double"] = 8;
-            SystemTypeSizes["Boolean"] = 1;
-            SystemTypeSizes["Byte&"] = pointerSize;
-            SystemTypeSizes["SByte&"] = pointerSize;
-            SystemTypeSizes["Char&"] = pointerSize;
-            SystemTypeSizes["Int16&"] = pointerSize;
-            SystemTypeSizes["Int32&"] = pointerSize;
-            SystemTypeSizes["Int64&"] = pointerSize;
-            SystemTypeSizes["IntPtr"] = pointerSize;
-            SystemTypeSizes["UIntPtr"] = pointerSize;
-            SystemTypeSizes["UInt16&"] = pointerSize;
-            SystemTypeSizes["UInt32&"] = pointerSize;
-            SystemTypeSizes["UInt64&"] = pointerSize;
-            SystemTypeSizes["Float&"] = pointerSize;
-            SystemTypeSizes["Single&"] = pointerSize;
-            SystemTypeSizes["Double&"] = pointerSize;
-            SystemTypeSizes["Boolean&"] = pointerSize;
         }
 
         /// <summary>
@@ -736,30 +689,6 @@ namespace Il2Native.Logic
             }
 
             this.WriteTypeDeclarationStart(type);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public string GetVirtualInterfaceTableName(IType type, IType @interface)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public string GetVirtualTableName(IType type)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table\"");
         }
 
         /// <summary>
@@ -2257,25 +2186,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteCallConstructor(LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
-        {
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; Call Constructor");
-            var methodBase = opCodeConstructorInfoPart.Operand;
-            var resAlloc = opCodeConstructorInfoPart.ResultNumber;
-            opCodeConstructorInfoPart.ResultNumber = null;
-            this.WriteCall(
-                writer,
-                opCodeConstructorInfoPart,
-                methodBase,
-                opCodeConstructorInfoPart.ToCode() == Code.Callvirt,
-                true,
-                true,
-                resAlloc,
-                this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
-            opCodeConstructorInfoPart.ResultNumber = resAlloc;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2301,55 +2211,6 @@ namespace Il2Native.Logic
             this.PostProcessOperand(writer, opCode, 0, directResult1);
             writer.Write(',');
             this.PostProcessOperand(writer, opCode, 1, directResult2, options.HasFlag(OperandOptions.DetectTypeInSecondOperand));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <param name="virtualTable">
-        /// </param>
-        private void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<Pair<IMethod, IMethod>> virtualTable)
-        {
-            var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
-
-            // get all virtual methods in current type and replace or append
-            virtualTable.AddRange(
-                IlReader.Methods(@interface)
-                        .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
-                        .Select(foundMethod => new Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="virtualTable">
-        /// </param>
-        private void BuildVirtualTable(IType thisType, List<Pair<IMethod, IMethod>> virtualTable)
-        {
-            if (thisType.BaseType != null)
-            {
-                this.BuildVirtualTable(thisType.BaseType, virtualTable);
-            }
-
-            // get all virtual methods in current type and replace or append
-            foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
-            {
-                this.CheckIfExternalDeclarationIsRequired(virtualOrAbstractMethod);
-
-                if ((virtualOrAbstractMethod.IsAbstract || virtualOrAbstractMethod.IsVirtual) && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
-                {
-                    virtualTable.Add(new Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
-                    continue;
-                }
-
-                // find method in virtual table
-                var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
-                baseMethod.Value = virtualOrAbstractMethod;
-            }
         }
 
         /// <summary>
@@ -2407,80 +2268,9 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private int CalculateSize(IType type)
-        {
-            if (type.IsInterface)
-            {
-                // i8** (...)
-                return pointerSize;
-            }
-
-            if (type.IsEnum)
-            {
-                return this.GetTypeSize(type.GetEnumUnderlyingType());
-            }
-
-            var size = 0;
-
-            // add shift for virtual table
-            if (type.IsRootOfVirtualTable())
-            {
-                size += pointerSize;
-            }
-
-            if (type.BaseType != null)
-            {
-                size += this.GetTypeSize(type.BaseType);
-            }
-
-            // add shift for interfaces
-            if (type.BaseType == null)
-            {
-                size += type.GetInterfaces().Count() * pointerSize;
-            }
-            else
-            {
-                var baseInterfaces = type.BaseType.GetInterfaces();
-                size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * pointerSize;
-            }
-
-            foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
-            {
-                if (field.FieldType.IsStructureType())
-                {
-                    size += this.GetTypeSize(field.FieldType);
-                }
-
-                var fieldSize = 0;
-                if (field.FieldType.IsClass)
-                {
-                    // pointer size
-                    size += pointerSize;
-                }
-                else if (field.FieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
-                {
-                    size += fieldSize;
-                }
-                else
-                {
-                    size += this.GetTypeSize(field.FieldType);
-                }
-            }
-
-            this.sizeByType[type.FullName] = size;
-
-            return size;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="methodBase">
         /// </param>
-        private void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
+        public void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
         {
             var mi = methodBase;
             if (mi != null)
@@ -2683,101 +2473,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private int GetTypeSize(IType type)
-        {
-            // find index
-            int size;
-            if (!this.sizeByType.TryGetValue(type.FullName, out size))
-            {
-                size = this.CalculateSize(type);
-            }
-
-            return size;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private List<Pair<IMethod, IMethod>> GetVirtualInterfaceTable(IType thisType, IType @interface)
-        {
-            List<Pair<IMethod, IMethod>> virtualInterfaceTable;
-
-            if (this.virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
-            {
-                return virtualInterfaceTable;
-            }
-
-            virtualInterfaceTable = new List<Pair<IMethod, IMethod>>();
-            this.BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
-
-            this.virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
-
-            return virtualInterfaceTable;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        private int GetVirtualMethodIndex(IType thisType, IMethod methodInfo)
-        {
-            var virtualTable = this.GetVirtualTable(thisType);
-
-            var index = 0;
-            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
-            {
-                if (virtualMethod.ToString() == methodInfo.ToString())
-                {
-                    // + RTTI info shift
-                    return index;
-                }
-
-                index++;
-            }
-
-            throw new KeyNotFoundException("virtual method could not be found");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private List<Pair<IMethod, IMethod>> GetVirtualTable(IType thisType)
-        {
-            List<Pair<IMethod, IMethod>> virtualTable;
-
-            if (this.virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
-            {
-                return virtualTable;
-            }
-
-            virtualTable = new List<Pair<IMethod, IMethod>>();
-            this.BuildVirtualTable(thisType, virtualTable);
-
-            this.virtualTableByType[thisType.FullName] = virtualTable;
-
-            return virtualTable;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <returns>
@@ -2858,7 +2553,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="detectAndWriteTypePrefix">
         /// </param>
-        private void PostProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool directResult, bool detectAndWriteTypePrefix = false)
+        public void PostProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool directResult, bool detectAndWriteTypePrefix = false)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
@@ -2930,7 +2625,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="options">
         /// </param>
-        private void ProcessOperator(
+        public void ProcessOperator(
             LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType requiredType = null, OperandOptions options = OperandOptions.None)
         {
             IType castFrom;
@@ -2989,7 +2684,7 @@ namespace Il2Native.Logic
 
                 if (type.IsEnum)
                 {
-                    switch (this.GetTypeSize(type))
+                    switch (type.GetTypeSize())
                     {
                         case 1:
                             return "i8";
@@ -3331,6 +3026,11 @@ namespace Il2Native.Logic
                     // we need to extract interface from an object
                     requiredType = thisType;
                 }
+                else if (!methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
+                {
+                    // we need to extract interface from an object
+                    requiredType = methodBase.DeclaringType;
+                }
 
                 // get pointer to Virtual Table and call method
                 // 1) get pointer to virtual table
@@ -3356,7 +3056,7 @@ namespace Il2Native.Logic
                 this.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
                 WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
-                writer.WriteLine(", i64 {0}", this.GetVirtualMethodIndex(thisType, methodInfo));
+                writer.WriteLine(", i64 {0}", (requiredType ?? thisType).GetVirtualMethodIndex(methodInfo));
                 var pointerToFunctionPointerResultNumber = opCodeMethodInfo.ResultNumber;
 
                 // load method address
@@ -3555,7 +3255,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="appendReference">
         /// </param>
-        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
+        public void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
         {
             if (!fromType.IsInterface && toType.IsInterface)
             {
@@ -3582,7 +3282,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
         }
 
-        private void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string custromName, IType toType, bool appendReference = false)
+        public void WriteCast(LlvmIndentedTextWriter writer, OpCodePart opCode, IType fromType, string custromName, IType toType, bool appendReference = false)
         {
             if (!fromType.IsInterface && toType.IsInterface)
             {
@@ -3862,106 +3562,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public void WriteInitObject(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
-        {
-            if (declaringType.IsInterface)
-            {
-                return;
-            }
-
-            // Init Object From Here
-            if (declaringType.HasAnyVirtualMethod())
-            {
-                var opCodeResult = opCode.ResultNumber;
-                var opCodeType = opCode.ResultType;
-
-                writer.WriteLine("; set virtual table");
-
-                // initializw virtual table
-                if (opCode.ResultNumber.HasValue)
-                {
-                    this.WriteCast(writer, opCode, declaringType, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
-                }
-                else
-                {
-                    this.WriteCast(writer, opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
-                }
-
-                writer.WriteLine(string.Empty);
-
-                var virtualTable = this.GetVirtualTable(declaringType);
-
-                writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
-                    GetVirtualTableSize(virtualTable),
-                    GetVirtualTableName(declaringType));
-                if (opCode.ResultNumber.HasValue)
-                {
-                    WriteResultNumber(writer, opCode.ResultNumber ?? -1);
-                }
-                else
-                {
-
-                }
-                writer.WriteLine(string.Empty);
-
-                // restore
-                opCode.ResultNumber = opCodeResult;
-                opCode.ResultType = opCodeType;
-            }
-
-            // init all interfaces
-            foreach (var @interface in declaringType.GetInterfaces())
-            {
-                var opCodeResult = opCode.ResultNumber;
-                var opCodeType = opCode.ResultType;
-
-                writer.WriteLine("; set virtual interface table");
-
-                this.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
-
-                if (opCode.ResultNumber.HasValue)
-                {
-                    this.WriteCast(writer, opCode, @interface, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
-                }
-                else
-                {
-                    this.WriteCast(writer, opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
-                }
-
-                writer.WriteLine(string.Empty);
-
-                var virtualInterfaceTable = this.GetVirtualInterfaceTable(declaringType, @interface);
-
-                writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
-                    GetVirtualTableSize(virtualInterfaceTable),
-                    this.GetVirtualInterfaceTableName(declaringType, @interface));
-                WriteResultNumber(opCode.ResultNumber ?? -1);
-                writer.WriteLine(string.Empty);
-
-                // restore
-                opCode.ResultNumber = opCodeResult;
-                opCode.ResultType = opCodeType;
-            }
-        }
-
-        private static int GetVirtualTableSize(List<Pair<IMethod, IMethod>> virtualTable)
-        {
-            return virtualTable.Count + 2;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
         /// <param name="interface">
         /// </param>
-        private void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
+        public void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
         {
             var objectResult = opCode.ResultNumber;
 
@@ -4162,7 +3765,7 @@ namespace Il2Native.Logic
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
                 this.GetResultNumber(op1.Value),
                 this.GetResultNumber(op2.Value),
-                this.GetTypeSize(type),
+                type.GetTypeSize(),
                 pointerSize /*Align*/);
         }
 
@@ -4174,12 +3777,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="op1">
         /// </param>
-        private void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
+        public void WriteMemSet(LlvmIndentedTextWriter writer, IType type, int? op1)
         {
             writer.Write(
                 "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
                 this.GetResultNumber(op1.Value),
-                this.GetTypeSize(type),
+                type.GetTypeSize(),
                 pointerSize /*Align*/);
         }
 
@@ -4223,7 +3826,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        private void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null)
+        public void WriteMethodDefinitionName(LlvmIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
             writer.Write(this.GetFullMethodName(methodBase, ownerOfExplicitInterface));
         }
@@ -4251,7 +3854,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="noArgumentName">
         /// </param>
-        private void WriteMethodParamsDef(
+        public void WriteMethodParamsDef(
             LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
         {
             writer.Write("(");
@@ -4353,7 +3956,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="method">
         /// </param>
-        private void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
+        public void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
         {
             if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
             {
@@ -4364,115 +3967,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("void ");
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCodeConstructorInfoPart">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        private void WriteNew(LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
-        {
-            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
-            {
-                return;
-            }
-
-            writer.WriteLine("; New obj");
-
-            var mallocResult = WriteSetResultNumber(writer, opCodeConstructorInfoPart);
-            var size = this.GetTypeSize(declaringType);
-            writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
-            this.WriteMemSet(writer, declaringType, mallocResult);
-            writer.WriteLine(string.Empty);
-
-            WriteBitcast(writer, opCodeConstructorInfoPart, mallocResult, declaringType);
-            writer.WriteLine(string.Empty);
-
-            var castResult = opCodeConstructorInfoPart.ResultNumber;
-
-            //this.WriteInitObject(writer, opCode, declaringType);
-            declaringType.WriteCallInitObjectMethod(writer, this, opCodeConstructorInfoPart);
-
-            // restore result and type
-            opCodeConstructorInfoPart.ResultNumber = castResult;
-            opCodeConstructorInfoPart.ResultType = declaringType;
-
-            writer.WriteLine(string.Empty);
-            writer.Write("; end of new obj");
-
-            this.WriteCallConstructor(writer, opCodeConstructorInfoPart);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        private void WriteNewArray(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, OpCodePart length)
-        {
-            if (opCode.ResultNumber.HasValue)
-            {
-                return;
-            }
-
-            writer.WriteLine("; New array");
-
-            var size = this.GetTypeSize(declaringType);
-            this.UnaryOper(writer, opCode, "mul");
-            writer.WriteLine(string.Format(", {0}", size));
-
-            var resMul = opCode.ResultNumber;
-
-            WriteSetResultNumber(writer, opCode);
-            writer.Write("add i32 4, {0}", this.GetResultNumber(resMul ?? -1));
-            writer.WriteLine(string.Empty);
-
-            var resAdd = opCode.ResultNumber;
-
-            var resAlloc = WriteSetResultNumber(writer, opCode);
-            writer.Write("call i8* @malloc(i32 {0})", this.GetResultNumber(resAdd ?? -1));
-            writer.WriteLine(string.Empty);
-
-            this.WriteBitcast(writer, opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
-            writer.WriteLine(string.Empty);
-
-            var opCodeTemp = OpCodePart.CreateNop;
-            opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
-
-            // save array size
-            this.ProcessOperator(writer, opCodeTemp, "store");
-            this.PostProcessOperand(writer, opCode, 0, !opCode.OpCodeOperands[0].ResultNumber.HasValue);
-            writer.Write(", ");
-            this.WriteTypePrefix(writer, TypeAdapter.FromType(typeof(int)));
-            writer.Write("* ");
-            WriteResultNumber(opCode.ResultNumber ?? -1);
-            writer.WriteLine(string.Empty);
-
-            var tempRes = opCode.ResultNumber.Value;
-            var resGetArr = WriteSetResultNumber(writer, opCode);
-            writer.Write("getelementptr ");
-
-            // WriteTypePrefix(writer, declaringType);
-            writer.Write("i32* ");
-            WriteResultNumber(tempRes);
-            writer.Write(", i32 1");
-
-            if (declaringType != TypeAdapter.FromType(typeof(int)))
-            {
-                writer.WriteLine(string.Empty);
-                this.WriteCast(writer, opCode, TypeAdapter.FromType(typeof(int)), resGetArr, declaringType, true);
-            }
-
-            writer.WriteLine("; end of new array");
         }
 
         /// <summary>
@@ -4493,18 +3987,23 @@ namespace Il2Native.Logic
                 if (this.ThisType.HasAnyVirtualMethod())
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.GetVirtualTableName(this.ThisType));
-                    var virtualTable = this.GetVirtualTable(this.ThisType);
-                    this.WriteTableOfMethods(this.ThisType, virtualTable);
+                    this.Output.Write(this.ThisType.GetVirtualTableName());
+                    var virtualTable = this.ThisType.GetVirtualTable();
+                    virtualTable.WriteTableOfMethods(this, this.Output, this.ThisType);
+
+                    foreach (var methodInVirtualTable in virtualTable)
+                    {
+                        CheckIfExternalDeclarationIsRequired(methodInVirtualTable.Value);
+                    }
                 }
 
-                int index = 1;
+                var index = 1;
                 foreach (var @interface in this.ThisType.GetInterfaces())
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.GetVirtualInterfaceTableName(this.ThisType, @interface));
-                    var virtualInterfaceTable = this.GetVirtualInterfaceTable(this.ThisType, @interface);
-                    this.WriteTableOfMethods(this.ThisType, virtualInterfaceTable, index++);
+                    this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));
+                    var virtualInterfaceTable = this.ThisType.GetVirtualInterfaceTable(@interface);
+                    virtualInterfaceTable.WriteTableOfMethods(this, this.Output, this.ThisType, index++);
                 }
             }
         }
@@ -4658,54 +4157,6 @@ namespace Il2Native.Logic
             }
 
             return this.resultNumberIncremental;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="virtualTable">
-        /// </param>
-        private void WriteTableOfMethods(IType type, List<Pair<IMethod, IMethod>> virtualTable, int interfaceIndex = 0)
-        {
-            this.Output.WriteLine(
-                " = linkonce_odr unnamed_addr constant [{0} x i8*] [", GetVirtualTableSize(virtualTable));
-
-            this.Output.Indent++;
-            this.Output.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
-
-            // RTTI info class
-            this.Output.Write("i8* bitcast (");
-            type.WriteRttiClassInfoDeclaration(this.Output);
-            this.Output.Write("* @\"{0}\" to i8*)", type.GetRttiInfoName());
-
-
-            // define virtual table
-            foreach (var virtualMethod in virtualTable)
-            {
-                var method = virtualMethod.Value;
-
-                // write method pointer
-                this.Output.WriteLine(",");
-
-                this.Output.Write("i8* bitcast (");
-                if (virtualMethod.Value.IsAbstract)
-                {
-                    this.Output.Write("void ()* @__cxa_pure_virtual");
-                }
-                else
-                {
-                    // write pointer to method
-                    this.WriteMethodReturnType(this.Output, method);
-                    this.WriteMethodParamsDef(this.Output, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
-                    this.Output.Write("* ");
-                    this.WriteMethodDefinitionName(this.Output, method);
-                }
-
-                this.Output.Write(" to i8*)");
-            }
-
-            this.Output.WriteLine(string.Empty);
-            this.Output.Indent--;
-            this.Output.WriteLine("]");
         }
 
         /// <summary>

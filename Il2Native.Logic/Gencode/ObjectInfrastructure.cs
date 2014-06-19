@@ -1,16 +1,12 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ObjectInfrastructure.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.Gencode
 {
     using System;
-    using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Reflection;
     using System.Text;
@@ -23,6 +19,169 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ObjectInfrastructure
     {
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        public static void WriteInitObject(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
+        {
+            if (declaringType.IsInterface)
+            {
+                return;
+            }
+
+            // Init Object From Here
+            if (declaringType.HasAnyVirtualMethod())
+            {
+                var opCodeResult = opCode.ResultNumber;
+                var opCodeType = opCode.ResultType;
+
+                writer.WriteLine("; set virtual table");
+
+                // initializw virtual table
+                if (opCode.ResultNumber.HasValue)
+                {
+                    llvmWriter.WriteCast(writer, opCode, declaringType, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                }
+                else
+                {
+                    llvmWriter.WriteCast(writer, opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
+                }
+
+                writer.WriteLine(string.Empty);
+
+                var virtualTable = declaringType.GetVirtualTable();
+
+                writer.Write(
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
+                    virtualTable.GetVirtualTableSize(),
+                    declaringType.GetVirtualTableName());
+                if (opCode.ResultNumber.HasValue)
+                {
+                    llvmWriter.WriteResultNumber(writer, opCode.ResultNumber ?? -1);
+                }
+                else
+                {
+
+                }
+                writer.WriteLine(string.Empty);
+
+                // restore
+                opCode.ResultNumber = opCodeResult;
+                opCode.ResultType = opCodeType;
+            }
+
+            // init all interfaces
+            foreach (var @interface in declaringType.GetInterfaces())
+            {
+                var opCodeResult = opCode.ResultNumber;
+                var opCodeType = opCode.ResultType;
+
+                writer.WriteLine("; set virtual interface table");
+
+                llvmWriter.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
+
+                if (opCode.ResultNumber.HasValue)
+                {
+                    llvmWriter.WriteCast(writer, opCode, @interface, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                }
+                else
+                {
+                    llvmWriter.WriteCast(writer, opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
+                }
+
+                writer.WriteLine(string.Empty);
+
+                var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
+
+                writer.Write(
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
+                    virtualInterfaceTable.GetVirtualTableSize(),
+                    declaringType.GetVirtualInterfaceTableName(@interface));
+                llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
+                writer.WriteLine(string.Empty);
+
+                // restore
+                opCode.ResultNumber = opCodeResult;
+                opCode.ResultType = opCodeType;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCodeConstructorInfoPart">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        public static void WriteNew(
+            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
+        {
+            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
+            {
+                return;
+            }
+
+            writer.WriteLine("; New obj");
+
+            var mallocResult = llvmWriter.WriteSetResultNumber(writer, opCodeConstructorInfoPart);
+            var size = declaringType.GetTypeSize();
+            writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
+            llvmWriter.WriteMemSet(writer, declaringType, mallocResult);
+            writer.WriteLine(string.Empty);
+
+            llvmWriter.WriteBitcast(writer, opCodeConstructorInfoPart, mallocResult, declaringType);
+            writer.WriteLine(string.Empty);
+
+            var castResult = opCodeConstructorInfoPart.ResultNumber;
+
+            // this.WriteInitObject(writer, opCode, declaringType);
+            declaringType.WriteCallInitObjectMethod(writer, llvmWriter, opCodeConstructorInfoPart);
+
+            // restore result and type
+            opCodeConstructorInfoPart.ResultNumber = castResult;
+            opCodeConstructorInfoPart.ResultType = declaringType;
+
+            writer.WriteLine(string.Empty);
+            writer.Write("; end of new obj");
+
+            llvmWriter.WriteCallConstructor(writer, opCodeConstructorInfoPart);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCodeConstructorInfoPart">
+        /// </param>
+        public static void WriteCallConstructor(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        {
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; Call Constructor");
+            var methodBase = opCodeConstructorInfoPart.Operand;
+            var resAlloc = opCodeConstructorInfoPart.ResultNumber;
+            opCodeConstructorInfoPart.ResultNumber = null;
+            llvmWriter.WriteCall(
+                writer, 
+                opCodeConstructorInfoPart, 
+                methodBase, 
+                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
+                true, 
+                true, 
+                resAlloc, 
+                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCodeConstructorInfoPart.ResultNumber = resAlloc;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -45,6 +204,16 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMethodEnd(method);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         public static void WriteCallInitObjectMethod(this IType type, LlvmIndentedTextWriter writer, LlvmWriter llvmWriter, OpCodePart opCode)
         {
             var method = new SynthesizedInitMethod(type);
@@ -56,7 +225,7 @@ namespace Il2Native.Logic.Gencode
                 false, 
                 true, 
                 false, 
-                opCode.ResultNumber,
+                opCode.ResultNumber, 
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
         }
 
@@ -76,19 +245,6 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// </summary>
             public IType Type { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public int CompareTo(object obj)
-            {
-                throw new NotImplementedException();
-            }
 
             /// <summary>
             /// </summary>
@@ -170,16 +326,8 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
+            public CallingConventions CallingConvention
             {
-                return new byte[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            public CallingConventions CallingConvention {
                 get
                 {
                     return CallingConventions.HasThis;
@@ -202,6 +350,28 @@ namespace Il2Native.Logic.Gencode
                 {
                     return TypeAdapter.FromType(typeof(void));
                 }
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="obj">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public int CompareTo(object obj)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public byte[] GetILAsByteArray()
+            {
+                return new byte[0];
             }
 
             /// <summary>
@@ -265,11 +435,21 @@ namespace Il2Native.Logic.Gencode
                 return result.ToString();
             }
 
+            /// <summary>
+            /// </summary>
+            /// <param name="obj">
+            /// </param>
+            /// <returns>
+            /// </returns>
             public override bool Equals(object obj)
             {
                 return this.ToString().Equals(obj.ToString());
             }
 
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();

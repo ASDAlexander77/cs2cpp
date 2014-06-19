@@ -481,40 +481,53 @@ namespace Il2Native.Logic
 
         public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
         {
-            return interfaceMember.IsMatchingOverride(publicMethod);
+            if (interfaceMember.Name == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            if (interfaceMember.FullName == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            return false;
         }
 
         public static bool IsMatchingOverride(this IMethod method, IMethod overridingMethod)
         {
             if (method.Name == overridingMethod.Name)
             {
-                var params1 = method.GetParameters().ToArray();
-                var params2 = overridingMethod.GetParameters().ToArray();
-
-                if (params1.Length != params2.Length)
-                {
-                    return false;
-                }
-
-                var count = params1.Length;
-                for (var index = 0; index < count; index++)
-                {
-                    if (!params1[index].ParameterType.Equals(params2[index].ParameterType))
-                    {
-                        return false;
-                    }
-                }
-
-                if (!method.ReturnType.Equals(overridingMethod.ReturnType))
-                {
-                    return false;
-                }
-
-                return true;
+                return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
 
             return false;
         }
 
+        private static bool IsMatchingParamsAndReturnType(this IMethod method, IMethod overridingMethod)
+        {
+            var params1 = method.GetParameters().ToArray();
+            var params2 = overridingMethod.GetParameters().ToArray();
+
+            if (params1.Length != params2.Length)
+            {
+                return false;
+            }
+
+            var count = params1.Length;
+            for (var index = 0; index < count; index++)
+            {
+                if (!params1[index].ParameterType.Equals(params2[index].ParameterType))
+                {
+                    return false;
+                }
+            }
+
+            if (!method.ReturnType.Equals(overridingMethod.ReturnType))
+            {
+                return false;
+            }
+            return true;
+        }
     }
 }
