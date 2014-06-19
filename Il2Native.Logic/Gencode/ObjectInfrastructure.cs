@@ -174,7 +174,6 @@ namespace Il2Native.Logic.Gencode
             var resAlloc = opCodeConstructorInfoPart.ResultNumber;
             opCodeConstructorInfoPart.ResultNumber = null;
             llvmWriter.WriteCall(
-                writer, 
                 opCodeConstructorInfoPart, 
                 methodBase, 
                 opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
@@ -221,9 +220,9 @@ namespace Il2Native.Logic.Gencode
 
             var method = new SynthesizedInitMethod(type);
             writer.WriteLine("; call Init Object method");
+            var opCodeNope = OpCodePart.CreateNop;
             llvmWriter.WriteCall(
-                writer, 
-                OpCodePart.CreateNop, 
+                opCodeNope, 
                 method, 
                 false, 
                 true, 

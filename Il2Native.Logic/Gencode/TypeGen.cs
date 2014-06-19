@@ -13,6 +13,7 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
 
     using PEAssemblyReader;
+    using Il2Native.Logic.CodeParts;
 
     /// <summary>
     /// </summary>
@@ -359,6 +360,19 @@ namespace Il2Native.Logic.Gencode
             sizeByType[type.FullName] = size;
 
             return size;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="requiredType">
+        /// </param>
+        /// <param name="opCodePart">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart)
+        {
+            return opCodePart.ResultNumber.HasValue && requiredType != opCodePart.ResultType && requiredType.IsAssignableFrom(opCodePart.ResultType);
         }
     }
 }

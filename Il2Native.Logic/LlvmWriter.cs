@@ -736,19 +736,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="requiredType">
-        /// </param>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static bool IsClassCastRequired(IType requiredType, OpCodePart opCodePart)
-        {
-            return opCodePart.ResultNumber.HasValue && requiredType != opCodePart.ResultType && requiredType.IsAssignableFrom(opCodePart.ResultType);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="used">
@@ -771,7 +758,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="returnType">
         /// </param>
-        private void ActualWrite(
+        public void ActualWrite(
             LlvmIndentedTextWriter writer,
             OpCodePart[] used,
             IEnumerable<IParameter> parameterInfos,
@@ -1389,7 +1376,6 @@ namespace Il2Native.Logic
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
                     this.WriteCall(
-                        writer,
                         opCodeMethodInfoPart,
                         methodBase,
                         code == Code.Callvirt,
@@ -2514,7 +2500,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private bool PreProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, OperandOptions options = OperandOptions.None)
+        public bool PreProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, OperandOptions options = OperandOptions.None)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
@@ -2702,229 +2688,7 @@ namespace Il2Native.Logic
             this.WriteLlvmLoad(opCode, TypeAdapter.FromType(typeof(int)), this.GetResultNumber(offset));
         }
 
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="methodBase">
-        /// </param>
-        /// <param name="isVirtual">
-        /// </param>
-        /// <param name="hasThis">
-        /// </param>
-        /// <param name="isCtor">
-        /// </param>
-        /// <param name="thisResultNumber">
-        /// </param>
-        public void WriteCall(
-            LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber, IExceptionHandlingClause exceptionHandlingClause)
-        {
-            if (opCodeMethodInfo.ResultNumber.HasValue)
-            {
-                return;
-            }
-
-            this.CheckIfExternalDeclarationIsRequired(methodBase);
-
-            var preProcessedOperandResults = new List<bool>();
-
-            if (opCodeMethodInfo.OpCodeOperands != null)
-            {
-                var index = 0;
-                foreach (var operand in opCodeMethodInfo.OpCodeOperands)
-                {
-                    preProcessedOperandResults.Add(this.PreProcessOperand(writer, opCodeMethodInfo, index));
-                    index++;
-                }
-            }
-
-            var methodInfo = methodBase;
-            var thisType = methodBase.DeclaringType;
-
-            var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
-            var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0 ? opCodeMethodInfo.OpCodeOperands[0] : null;
-            var resultOfirstOperand = opCodeFirstOperand != null ? this.ResultOf(opCodeFirstOperand) : null;
-
-            var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
-
-            int? virtualMethodAddressResultNumber = null;
-            var isInderectMethodCall = isVirtual && (methodBase.IsAbstract || methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
-
-            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
-            var requiredType = ownerOfExplicitInterface != null ? resultOfirstOperand.IType : null;
-            if (requiredType != null)
-            {
-                thisType = requiredType;
-            }
-
-            if (isInderectMethodCall)
-            {
-                if (thisType.IsInterface && !resultOfirstOperand.IType.Equals(thisType))
-                {
-                    // we need to extract interface from an object
-                    requiredType = thisType;
-                }
-                else if (!methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
-                {
-                    // we need to extract interface from an object
-                    requiredType = methodBase.DeclaringType;
-                }
-
-                // get pointer to Virtual Table and call method
-                // 1) get pointer to virtual table
-                writer.WriteLine("; Get Virtual Table");
-                this.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType);
-                writer.Write(" to ");
-                this.WriteMethodPointerType(writer, methodInfo);
-                writer.WriteLine("**");
-                var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.ResultNumber;
-
-                // load pointer
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("load ");
-                this.WriteMethodPointerType(writer, methodInfo);
-                writer.Write("** ");
-                WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber ?? -1);
-                writer.WriteLine(string.Empty);
-                var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.ResultNumber;
-
-                // get address of a function
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("getelementptr inbounds ");
-                this.WriteMethodPointerType(writer, methodInfo);
-                writer.Write("* ");
-                WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
-                writer.WriteLine(", i64 {0}", (requiredType ?? thisType).GetVirtualMethodIndex(methodInfo));
-                var pointerToFunctionPointerResultNumber = opCodeMethodInfo.ResultNumber;
-
-                // load method address
-                this.WriteSetResultNumber(opCodeMethodInfo);
-                writer.Write("load ");
-                this.WriteMethodPointerType(writer, methodInfo);
-                writer.Write("* ");
-                WriteResultNumber(pointerToFunctionPointerResultNumber ?? -1);
-                writer.WriteLine(string.Empty);
-                // remember virtual method address result
-                virtualMethodAddressResultNumber = opCodeMethodInfo.ResultNumber;
-
-                if (thisType.IsInterface)
-                {
-                    opCodeFirstOperand.ResultNumber = virtualTableOfMethodPointersResultNumber;
-
-                    this.WriteGetThisPointerFromInterfacePointer(
-                        writer, opCodeMethodInfo, methodInfo, thisType, pointerToInterfaceVirtualTablePointersResultNumber);
-
-                    var thisPointerResultNumber = opCodeMethodInfo.ResultNumber;
-                    // set ot for Call op code
-                    opCodeMethodInfo.OpCodeOperands[0].ResultNumber = thisPointerResultNumber;
-                }
-            }
-
-            // check if you need to cast this parameter
-            if (hasThisArgument && IsClassCastRequired(thisType, opCodeFirstOperand))
-            {
-                this.WriteCast(opCodeFirstOperand, opCodeFirstOperand.ResultType, opCodeFirstOperand.ResultNumber.Value, thisType);
-                writer.WriteLine(string.Empty);
-            }
-
-            // check if you need to cast parameter
-            if (opCodeMethodInfo.OpCodeOperands != null)
-            {
-                var index = startsWithThis && !isCtor ? 1 : 0;
-                foreach (var parameter in methodBase.GetParameters())
-                {
-                    var operand = opCodeMethodInfo.OpCodeOperands[index];
-
-                    if (IsClassCastRequired(parameter.ParameterType, operand))
-                    {
-                        this.WriteCast(operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
-                    }
-
-                    index++;
-                }
-            }
-
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid())
-            {
-                this.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
-            }
-
-            // allocate space for structure if return type is structure
-            if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
-            {
-                this.WriteAlloca(methodInfo.ReturnType);
-                writer.WriteLine(string.Empty);
-            }
-
-            if (exceptionHandlingClause != null)
-            {
-                writer.Write("invoke ");
-            }
-            else
-            {
-                writer.Write("call ");
-            }
-
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
-            {
-                methodInfo.ReturnType.WriteTypePrefix(writer, false);
-
-                this.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
-            }
-            else
-            {
-                // this is constructor
-                writer.Write("void");
-            }
-
-            writer.Write(' ');
-
-            if (isInderectMethodCall)
-            {
-                WriteResultNumber(virtualMethodAddressResultNumber ?? -1);
-            }
-            else
-            {
-                this.WriteMethodDefinitionName(writer, methodBase, ownerOfExplicitInterface);
-            }
-
-            this.ActualWrite(
-                writer,
-                opCodeMethodInfo.OpCodeOperands,
-                methodBase.GetParameters(),
-                isVirtual,
-                hasThis,
-                isCtor,
-                preProcessedOperandResults,
-                thisResultNumber,
-                thisType,
-                opCodeMethodInfo.ResultNumber,
-                methodInfo != null ? methodInfo.ReturnType : null);
-
-            if (exceptionHandlingClause != null)
-            {
-                var nextOpCode = opCodeMethodInfo.NextOpCode(this);
-                var nextIsBrunch = nextOpCode.Any(Code.Br, Code.Br_S, Code.Leave, Code.Leave_S);
-                var nextAddress = nextIsBrunch ? nextOpCode.JumpAddress() : opCodeMethodInfo.AddressEnd;
-
-                writer.WriteLine(string.Empty);
-                writer.Indent++;
-                writer.WriteLine("to label %.a{0} unwind label %.catch{1}", nextAddress, exceptionHandlingClause.HandlerOffset);
-                writer.Indent--;
-                if (!nextIsBrunch)
-                {
-                    writer.Indent--;
-                    writer.WriteLine(".a{0}:", opCodeMethodInfo.GroupAddressEnd);
-                    writer.Indent++;
-                    opCodeMethodInfo.NextOpCode(this).JumpProcessed = true;
-                }
-            }
-        }
-
-        private void WriteGetThisPointerFromInterfacePointer(LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodInfo, IType thisType, int? pointerToInterfaceVirtualTablePointersResultNumber)
+        public void WriteGetThisPointerFromInterfacePointer(LlvmIndentedTextWriter writer, OpCodePart opCodeMethodInfo, IMethod methodInfo, IType thisType, int? pointerToInterfaceVirtualTablePointersResultNumber)
         {
             writer.WriteLine("; Get 'this' from Interface Virtual Table");
 
@@ -3520,7 +3284,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        private void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
+        public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
         {
             var fullMethodName = this.GetFullMethodName(methodBase);
             var methodInfo = methodBase;
@@ -3728,7 +3492,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private int WriteSetResultNumber(OpCodePart opCode, IType type = null)
+        public int WriteSetResultNumber(OpCodePart opCode, IType type = null)
         {
             return this.WriteSetResultNumber(this.Output, opCode, type);
         }
