@@ -1220,9 +1220,10 @@ namespace Il2Native.Logic
                     {
                         writer.WriteLine(string.Empty);
 
+                        var accessIndexResultNumber = opCode.ResultNumber ?? -1;
                         opCode.ResultNumber = null;
                         opCode.ResultType = null;
-                        this.WriteLlvmLoad(opCode, type, this.GetResultNumber(opCode.ResultNumber ?? -1));
+                        this.WriteLlvmLoad(opCode, type, this.GetResultNumber(accessIndexResultNumber));
                     }
 
                     break;
@@ -1274,7 +1275,7 @@ namespace Il2Native.Logic
                     this.PostProcessOperand(writer, opCode, 2, directResult1);
                     writer.Write(", ");
                     type.WriteTypePrefix(writer, type.IsStructureType());
-                    writer.Write(string.Format("* {0}", this.GetResultNumber(opCode.ResultNumber ?? -1)));
+                    writer.Write("* {0}", this.GetResultNumber(opCode.ResultNumber ?? -1));
 
                     break;
                 case Code.Ldind_I:
@@ -1322,7 +1323,11 @@ namespace Il2Native.Logic
                     }
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
-                    this.WriteLlvmLoad(opCode, type, this.GetResultNumber(opCode.OpCodeOperands[0].ResultNumber ?? -1));
+                    
+                    var accessIndexResultNumber2 = opCode.OpCodeOperands[0].ResultNumber ?? -1;
+                    opCode.ResultNumber = null;
+                    opCode.ResultType = null;
+                    this.WriteLlvmLoad(opCode, type, this.GetResultNumber(accessIndexResultNumber2));
 
                     break;
                 case Code.Stind_I:
@@ -2920,29 +2925,6 @@ namespace Il2Native.Logic
 
             writer.Write(", i32 ");
             writer.Write(index);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="method">
-        /// </param>
-        private void WriteGenericParameters(LlvmIndentedTextWriter writer, IMethod method)
-        {
-            var i = 0;
-            foreach (var generic in method.GetGenericArguments())
-            {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                writer.Write("typename ");
-                writer.Write(generic.Name);
-
-                i++;
-            }
         }
 
         /// <summary>
