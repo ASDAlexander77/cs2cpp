@@ -1440,7 +1440,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
-                    this.BinaryOper(writer, opCode, "shr");
+                    this.BinaryOper(writer, opCode, "lshr");
                     break;
                 case Code.Not:
                     var tempOper = opCode.OpCodeOperands;

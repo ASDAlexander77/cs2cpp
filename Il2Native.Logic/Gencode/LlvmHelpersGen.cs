@@ -301,6 +301,12 @@ namespace Il2Native.Logic.Gencode
                 thisType = requiredType;
             }
 
+            if (isInderectMethodCall && !methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
+            {
+                // this is explicit call of interface
+                isInderectMethodCall = false;
+            }
+
             if (isInderectMethodCall)
             {
                 if (thisType.IsInterface && !resultOfirstOperand.IType.Equals(thisType))
@@ -308,11 +314,11 @@ namespace Il2Native.Logic.Gencode
                     // we need to extract interface from an object
                     requiredType = thisType;
                 }
-                else if (!methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
-                {
-                    // we need to extract interface from an object
-                    requiredType = methodBase.DeclaringType;
-                }
+                ////else if (!methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
+                ////{
+                ////    // we need to extract interface from an object
+                ////    requiredType = methodBase.DeclaringType;
+                ////}
 
                 // get pointer to Virtual Table and call method
                 // 1) get pointer to virtual table
