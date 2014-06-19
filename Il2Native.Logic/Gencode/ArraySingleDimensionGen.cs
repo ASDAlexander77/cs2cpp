@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.Gencode
 {
     using Il2Native.Logic.CodeParts;
@@ -21,20 +20,20 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="llvmWriter">
         /// </param>
-        /// <param name="writer">
-        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="declaringType">
         /// </param>
         /// <param name="length">
         /// </param>
-        public static void WriteNewArray(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, OpCodePart length)
+        public static void WriteNewArray(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType, OpCodePart length)
         {
             if (opCode.ResultNumber.HasValue)
             {
                 return;
             }
+
+            var writer = llvmWriter.Output;
 
             writer.WriteLine("; New array");
 

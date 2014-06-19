@@ -1,12 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Il2Converter.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
@@ -14,8 +11,6 @@ namespace Il2Native.Logic
     using System.IO;
     using System.Linq;
     using System.Reflection;
-
-    using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
 
@@ -50,7 +45,7 @@ namespace Il2Native.Logic
         {
             var ilReader = new IlReader();
             ilReader.Load(type);
-            string name = type.Module.Name.Replace(".dll", string.Empty);
+            var name = type.Module.Name.Replace(".dll", string.Empty);
             GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
         }
 
@@ -64,7 +59,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void AddRequiredIType(IType type, List<IType> requiredITypesToAdd, HashSet<IType> typesAdded)
         {
-            IType effectiveIType = type;
+            var effectiveIType = type;
             while (effectiveIType.HasElementType)
             {
                 effectiveIType = effectiveIType.GetElementType();
@@ -95,10 +90,10 @@ namespace Il2Native.Logic
 
             codeWriter.WriteBeforeConstructors();
 
-            foreach (IConstructor ctor in IlReader.Constructors(type))
+            foreach (var ctor in IlReader.Constructors(type))
             {
                 codeWriter.WriteConstructorStart(ctor);
-                foreach (OpCodePart ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
+                foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
                 {
                     codeWriter.Write(ilCode);
                 }
@@ -109,10 +104,10 @@ namespace Il2Native.Logic
             codeWriter.WriteAfterConstructors();
             codeWriter.WriteBeforeMethods();
 
-            foreach (IMethod method in IlReader.Methods(type))
+            foreach (var method in IlReader.Methods(type))
             {
                 codeWriter.WriteMethodStart(method);
-                foreach (OpCodePart ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
                 {
                     codeWriter.Write(ilCode);
                 }
@@ -138,13 +133,13 @@ namespace Il2Native.Logic
         {
             codeWriter.WriteTypeStart(type, genericDefinition);
 
-            IEnumerable<IField> fields = IlReader.Fields(type);
-            int count = fields.Count();
-            int number = 1;
+            var fields = IlReader.Fields(type);
+            var count = fields.Count();
+            var number = 1;
 
             codeWriter.WriteBeforeFields(count);
 
-            foreach (IField field in fields)
+            foreach (var field in fields)
             {
                 codeWriter.WriteFieldStart(field, number, count);
                 codeWriter.WriteFieldEnd(field, number, count);
@@ -198,7 +193,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
         {
-            ICodeWriter codeWriter = GetLlvmWriter(fileName, outputFolder, args);
+            var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
 
@@ -215,23 +210,23 @@ namespace Il2Native.Logic
             codeWriter.WriteStart(ilReader.ModuleName);
 
             var genericSpecializations = new HashSet<IType>();
-            List<IType> newListOfITypes = ResortITypes(ilReader.Types().ToList(), genericSpecializations);
+            var newListOfITypes = ResortITypes(ilReader.Types().ToList(), genericSpecializations);
 
             // build quick access array for Generic Definitions
             var genDefinitionsByGuid = new SortedDictionary<string, IType>();
-            foreach (IType genDef in newListOfITypes.Where(t => t.IsGenericTypeDefinition))
+            foreach (var genDef in newListOfITypes.Where(t => t.IsGenericTypeDefinition))
             {
                 genDefinitionsByGuid[genDef.Name] = genDef;
             }
 
-            for (int index = 0; index < newListOfITypes.Count; index++)
+            for (var index = 0; index < newListOfITypes.Count; index++)
             {
-                IType type = newListOfITypes[index];
+                var type = newListOfITypes[index];
                 codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
             // enumarte all types
-            foreach (IType type in newListOfITypes)
+            foreach (var type in newListOfITypes)
             {
                 if (filter != null && !filter.Contains(type.FullName))
                 {
@@ -298,21 +293,20 @@ namespace Il2Native.Logic
                 yield return type.BaseType;
             }
 
-            IEnumerable<IType> interfaces = type.GetInterfaces();
+            var interfaces = type.GetInterfaces();
             if (interfaces != null)
             {
-                foreach (IType @interface in interfaces)
+                foreach (var @interface in interfaces)
                 {
                     DicoverGenericSpecializedIType(@interface, genericSpecializations);
                     yield return @interface;
                 }
             }
 
-            IEnumerable<IField> fields =
-                type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            var fields = type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             if (fields != null)
             {
-                foreach (IField field in fields)
+                foreach (var field in fields)
                 {
                     if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
                     {
@@ -322,23 +316,23 @@ namespace Il2Native.Logic
                 }
             }
 
-            IEnumerable<IMethod> methods =
-                type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            var methods = type.GetMethods(
+                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             if (methods != null)
             {
-                foreach (IMethod method in methods)
+                foreach (var method in methods)
                 {
                     DicoverGenericSpecializedIType(method.ReturnType, genericSpecializations);
 
-                    foreach (IParameter param in method.GetParameters())
+                    foreach (var param in method.GetParameters())
                     {
                         DicoverGenericSpecializedIType(param.ParameterType, genericSpecializations);
                     }
 
-                    IMethodBody methodBody = method.GetMethodBody();
+                    var methodBody = method.GetMethodBody();
                     if (methodBody != null)
                     {
-                        foreach (ILocalVariable localVar in methodBody.LocalVariables)
+                        foreach (var localVar in methodBody.LocalVariables)
                         {
                             DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
                         }
@@ -377,8 +371,8 @@ namespace Il2Native.Logic
         private static void ProcessNextRequiredITypes(
             IType type, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericSpecializations)
         {
-            List<IType> requiredITypes = GetAllRequiredITypesForIType(type, allITypes, genericSpecializations).ToList();
-            foreach (IType requiredIType in requiredITypes)
+            var requiredITypes = GetAllRequiredITypesForIType(type, allITypes, genericSpecializations).ToList();
+            foreach (var requiredIType in requiredITypes)
             {
                 if (type != requiredIType)
                 {
@@ -402,7 +396,7 @@ namespace Il2Native.Logic
         private static void ProcessRequiredITypesForITypes(
             List<IType> types, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
         {
-            foreach (IType type in types)
+            foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, allITypes, typesAdded, requiredITypesToAdd, genericSpecializations);
@@ -429,7 +423,7 @@ namespace Il2Native.Logic
             var newOrder = new List<IType>();
 
             var typesWithRequired = new List<Tuple<IType, List<IType>>>();
-            foreach (IType type in types)
+            foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, genericSpecializations);
@@ -437,23 +431,23 @@ namespace Il2Native.Logic
             }
 
             // the same for generic specialized types
-            foreach (IType type in genericSpecializations)
+            foreach (var type in genericSpecializations)
             {
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, null);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
-            bool strictMode = true;
+            var strictMode = true;
             while (typesWithRequired.Count > 0)
             {
-                int before = typesWithRequired.Count;
+                var before = typesWithRequired.Count;
                 var toRemove = new List<Tuple<IType, List<IType>>>();
 
                 // step 1 find Root;
                 foreach (var type in typesWithRequired)
                 {
-                    List<IType> requiredITypes = type.Item2;
+                    var requiredITypes = type.Item2;
                     requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
                     if (requiredITypes.Count == 0)
                     {
@@ -467,7 +461,7 @@ namespace Il2Native.Logic
                     typesWithRequired.Remove(type);
                 }
 
-                int after = typesWithRequired.Count;
+                var after = typesWithRequired.Count;
                 if (before == after)
                 {
                     if (strictMode)
@@ -534,10 +528,10 @@ namespace Il2Native.Logic
             /// </returns>
             public int Compare(IType x, IType y)
             {
-                int lvlX = InheritanceLevel(x);
-                int lvlY = InheritanceLevel(y);
+                var lvlX = InheritanceLevel(x);
+                var lvlY = InheritanceLevel(y);
 
-                int cmp = lvlX.CompareTo(lvlY);
+                var cmp = lvlX.CompareTo(lvlY);
                 if (cmp != 0)
                 {
                     return cmp;
@@ -592,11 +586,11 @@ namespace Il2Native.Logic
                     return false;
                 }
 
-                IEnumerable<IField> fields =
+                var fields =
                     type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
                 if (fields != null)
                 {
-                    foreach (IField field in fields)
+                    foreach (var field in fields)
                     {
                         if (field.FieldType.TypeEquals(valueIType))
                         {
@@ -618,10 +612,10 @@ namespace Il2Native.Logic
             /// </returns>
             public static bool HasInterface(IType type, IType baseInterface)
             {
-                IEnumerable<IType> interfaces = type.GetInterfaces();
+                var interfaces = type.GetInterfaces();
                 if (interfaces != null)
                 {
-                    foreach (IType @interface in interfaces)
+                    foreach (var @interface in interfaces)
                     {
                         if (@interface.TypeEquals(baseInterface) || HasInterface(@interface, baseInterface))
                         {

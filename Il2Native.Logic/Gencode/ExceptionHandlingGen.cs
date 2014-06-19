@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic.Gencode
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ExceptionHandlingGen.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Linq;
@@ -15,42 +24,80 @@
     {
         /// <summary>
         /// </summary>
-        None = 0,
+        None = 0, 
 
         /// <summary>
         /// </summary>
-        Cleanup = 1,
+        Cleanup = 1, 
 
         /// <summary>
         /// </summary>
         EmptyFilter = 2
     }
 
+    /// <summary>
+    /// </summary>
     public static class ExceptionHandlingGen
     {
-        public static void WriteThrow(
-            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        public static void WriteThrow(this LlvmWriter llvmWriter, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; Throw");
 
             var exceptionPointerType = exceptionHandlingClause != null
-                                           ? WriteThrowInvoke(llvmWriter, writer, opCode, exceptionHandlingClause)
-                                           : WriteThrowCall(llvmWriter, writer, opCode, exceptionHandlingClause);
+                                           ? WriteThrowInvoke(llvmWriter, opCode, exceptionHandlingClause)
+                                           : WriteThrowCall(llvmWriter, opCode);
 
             llvmWriter.typeRttiPointerDeclRequired.Add(exceptionPointerType);
             llvmWriter.CheckIfExternalDeclarationIsRequired(exceptionPointerType);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        /// <param name="upperLevelExceptionHandlingClause">
+        /// </param>
         public static void WriteRethrow(
-            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCode, 
+            IExceptionHandlingClause exceptionHandlingClause, 
+            IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; Rethrow");
-            WriteRethrowInvoke(llvmWriter, writer, opCode, exceptionHandlingClause, upperLevelExceptionHandlingClause);
+            WriteRethrowInvoke(llvmWriter, exceptionHandlingClause);
         }
 
-        private static IType WriteThrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static IType WriteThrowInvoke(LlvmWriter llvmWriter, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
         {
-            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
+            var writer = llvmWriter.Output;
+
+            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(opCode);
 
             var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
             writer.Write("invoke void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
@@ -73,13 +120,22 @@
             return exceptionPointerType;
         }
 
-        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("invoke void @__cxa_rethrow()");
             if (exceptionHandlingClause != null)
             {
                 writer.Indent++;
-                writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                writer.WriteLine(
+                    "to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
                 writer.Indent--;
                 exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;
             }
@@ -94,9 +150,19 @@
             llvmWriter.needToWriteUnreachable = true;
         }
 
-        private static IType WriteThrowCall(LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static IType WriteThrowCall(LlvmWriter llvmWriter, OpCodePart opCode)
         {
-            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(writer, opCode);
+            var writer = llvmWriter.Output;
+
+            var errorAllocationResultNumber = llvmWriter.WriteAllocateException(opCode);
 
             var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
             writer.Write("call void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
@@ -106,19 +172,26 @@
             return exceptionPointerType;
         }
 
-        public static void WriteCatchProlog(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        public static void WriteCatchProlog(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; Cacth Clauses - Prolog");
 
-            int handlerOffset = opCode.ExceptionHandlers.First().HandlerOffset;
+            var handlerOffset = opCode.ExceptionHandlers.First().HandlerOffset;
             writer.Indent--;
             writer.WriteLine(".catch{0}:", handlerOffset);
             writer.Indent++;
 
             llvmWriter.WriteLandingPad(
-                writer,
-                opCode,
-                opCode.ExceptionHandlers.Any(eh => eh.Flags == ExceptionHandlingClauseOptions.Finally) ? LandingPadOptions.Cleanup : LandingPadOptions.None,
+                opCode, 
+                opCode.ExceptionHandlers.Any(eh => eh.Flags == ExceptionHandlingClauseOptions.Finally) ? LandingPadOptions.Cleanup : LandingPadOptions.None, 
                 opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
 
             writer.WriteLine(string.Empty);
@@ -130,12 +203,19 @@
             writer.Indent++;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        /// <param name="nextExceptionHandlingClause">
+        /// </param>
         public static void WriteCatchTest(
-            this LlvmWriter llvmWriter,
-            LlvmIndentedTextWriter writer,
-            IExceptionHandlingClause exceptionHandlingClause,
-            IExceptionHandlingClause nextExceptionHandlingClause)
+            this LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause nextExceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; Test Exception type");
 
             var catchType = exceptionHandlingClause.CatchType;
@@ -149,13 +229,13 @@
             writer.WriteLine("* @\"{0}\" to i8*))", catchType.GetRttiPointerInfoName());
             var compareResultResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine(
-                "icmp eq i32 {0}, {1}",
-                llvmWriter.GetResultNumber(errorTypeIdOfCatchResultNumber),
+                "icmp eq i32 {0}, {1}", 
+                llvmWriter.GetResultNumber(errorTypeIdOfCatchResultNumber), 
                 llvmWriter.GetResultNumber(errorTypeIdOfExceptionResultNumber));
             writer.WriteLine(
-                "br i1 {0}, label %.exception_handler{1}, label %.{2}",
-                llvmWriter.GetResultNumber(compareResultResultNumber),
-                exceptionHandlingClause.HandlerOffset,
+                "br i1 {0}, label %.exception_handler{1}, label %.{2}", 
+                llvmWriter.GetResultNumber(compareResultResultNumber), 
+                exceptionHandlingClause.HandlerOffset, 
                 nextExceptionHandlingClause != null ? string.Concat("exception_handler", nextExceptionHandlingClause.HandlerOffset) : "resume");
 
             writer.Indent--;
@@ -163,8 +243,16 @@
             writer.Indent++;
         }
 
-        public static void WriteCatchBegin(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause exceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        public static void WriteCatchBegin(this LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             var isFinally = exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
             if (isFinally)
             {
@@ -208,8 +296,24 @@
             }
         }
 
-        public static void WriteCatchEnd(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause upperLevelExceptionHandlingClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        /// <param name="upperLevelExceptionHandlingClause">
+        /// </param>
+        public static void WriteCatchEnd(
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCode, 
+            IExceptionHandlingClause exceptionHandlingClause, 
+            IExceptionHandlingClause upperLevelExceptionHandlingClause)
         {
+            var writer = llvmWriter.Output;
+
             var isFinally = exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
             if (isFinally)
             {
@@ -223,11 +327,15 @@
             if (isFinally)
             {
                 // process Leave jumps
-                int index = 0;
+                var index = 0;
                 var opCodeNope = OpCodePart.CreateNop;
-                llvmWriter.WriteLlvmLoad(writer, opCodeNope, TypeAdapter.FromType(typeof(int)), string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset));
+                llvmWriter.WriteLlvmLoad(
+                    writer, opCodeNope, TypeAdapter.FromType(typeof(int)), string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset));
                 writer.WriteLine(string.Empty);
-                writer.WriteLine("switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.HandlerOffset, llvmWriter.GetResultNumber(opCodeNope.ResultNumber ?? -1));
+                writer.WriteLine(
+                    "switch i32 {1}, label %.finally_exit{0} [", 
+                    exceptionHandlingClause.HandlerOffset, 
+                    llvmWriter.GetResultNumber(opCodeNope.ResultNumber ?? -1));
                 writer.Indent++;
                 writer.WriteLine("i32 {0}, label %.finally_exit{1}", index++, exceptionHandlingClause.HandlerOffset);
                 foreach (var leave in exceptionHandlingClause.FinallyJumps)
@@ -252,7 +360,7 @@
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
-                llvmWriter.WriteLandingPad(writer, opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.CatchType });
+                llvmWriter.WriteLandingPad(opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.CatchType });
                 writer.WriteLine(string.Empty);
             }
             else
@@ -296,8 +404,14 @@
             }
         }
 
-        public static void WriteResume(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteResume(this LlvmWriter llvmWriter)
         {
+            var writer = llvmWriter.Output;
+
             writer.Indent--;
             writer.WriteLine(".resume:");
             writer.Indent++;
@@ -313,15 +427,25 @@
             writer.WriteLine("insertvalue {1} undef, i8* {0}, 0", llvmWriter.GetResultNumber(getErrorObjectResultNumber), "{ i8*, i32 }");
             var insertedErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
             writer.WriteLine(
-                "insertvalue {2} {0}, i32 {1}, 1",
-                llvmWriter.GetResultNumber(insertedErrorObjectResultNumber),
-                llvmWriter.GetResultNumber(getErrorTypeIdResultNumber),
+                "insertvalue {2} {0}, i32 {1}, 1", 
+                llvmWriter.GetResultNumber(insertedErrorObjectResultNumber), 
+                llvmWriter.GetResultNumber(getErrorTypeIdResultNumber), 
                 "{ i8*, i32 }");
             writer.WriteLine("resume {1} {0}", llvmWriter.GetResultNumber(insertedErrorTypeIdResultNumber), "{ i8*, i32 }");
         }
 
-        public static int WriteAllocateException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int WriteAllocateException(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; Allocate exception");
             var errorAllocationResultNumber = llvmWriter.WriteSetResultNumber(writer, opCode, TypeAdapter.FromType(typeof(byte*)));
             writer.Write("call i8* @__cxa_allocate_exception(i32 {0})", LlvmWriter.pointerSize);
@@ -349,27 +473,45 @@
             return errorAllocationResultNumber;
         }
 
-        public static void WriteUnreachable(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteUnreachable(this LlvmWriter llvmWriter)
         {
+            var writer = llvmWriter.Output;
+
             writer.Indent--;
             writer.WriteLine(".unreachable:");
             writer.Indent++;
             writer.WriteLine("unreachable");
         }
 
-        public static void WriteUnwindException(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteUnwindException(this LlvmWriter llvmWriter)
         {
+            var writer = llvmWriter.Output;
+
             writer.Indent--;
             writer.WriteLine(".unwind_exception:");
             writer.Indent++;
-            llvmWriter.WriteLandingPad(writer, OpCodePart.CreateNop, LandingPadOptions.EmptyFilter);
+            llvmWriter.WriteLandingPad(OpCodePart.CreateNop, LandingPadOptions.EmptyFilter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("br label %.unexpected");
-            llvmWriter.WriteUnexpectedCall(writer);
+            llvmWriter.WriteUnexpectedCall();
         }
 
-        public static void WriteUnexpectedCall(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteUnexpectedCall(this LlvmWriter llvmWriter)
         {
+            var writer = llvmWriter.Output;
+
             writer.Indent--;
             writer.WriteLine(".unexpected:");
             writer.Indent++;
@@ -379,7 +521,11 @@
             writer.WriteLine("unreachable");
         }
 
-        public static void WriteLandingPadVariables(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteLandingPadVariables(this LlvmWriter llvmWriter)
         {
             if (llvmWriter.landingPadVariablesAreWritten)
             {
@@ -387,6 +533,8 @@
             }
 
             llvmWriter.landingPadVariablesAreWritten = true;
+
+            var writer = llvmWriter.Output;
 
             writer.Write("%.error_object = ");
             writer.Write("alloca i8*, align " + LlvmWriter.pointerSize);
@@ -397,7 +545,13 @@
             writer.WriteLine(string.Empty);
         }
 
-        public static void WriteFinallyVariables(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause finallyClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="finallyClause">
+        /// </param>
+        public static void WriteFinallyVariables(this LlvmWriter llvmWriter, IExceptionHandlingClause finallyClause)
         {
             if (finallyClause.FinallyVariablesAreWritten)
             {
@@ -406,29 +560,54 @@
 
             finallyClause.FinallyVariablesAreWritten = true;
 
+            var writer = llvmWriter.Output;
+
             writer.Write("%.finally_jump{0} = ", finallyClause.HandlerOffset);
             writer.Write("alloca i32, align " + LlvmWriter.pointerSize);
             writer.WriteLine(string.Empty);
         }
 
-        public static void WriteFinallyLeave(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IExceptionHandlingClause finallyClause)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="finallyClause">
+        /// </param>
+        public static void WriteFinallyLeave(this LlvmWriter llvmWriter, IExceptionHandlingClause finallyClause)
         {
-            llvmWriter.WriteFinallyVariables(writer, finallyClause);
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteFinallyVariables(finallyClause);
 
             writer.WriteLine("store i32 {0}, i32* %.finally_jump{1}", finallyClause.FinallyJumps.Count, finallyClause.HandlerOffset);
             writer.WriteLine("br label %.finally_no_error_entry{0}", finallyClause.HandlerOffset);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="options">
+        /// </param>
+        /// <param name="catch">
+        /// </param>
+        /// <param name="filter">
+        /// </param>
+        /// <param name="exceptionAllocationResultNumber">
+        /// </param>
         public static void WriteLandingPad(
-            this LlvmWriter llvmWriter,
-            LlvmIndentedTextWriter writer,
-            OpCodePart opCode,
-            LandingPadOptions options,
-            IType[] @catch = null,
-            int[] filter = null,
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCode, 
+            LandingPadOptions options, 
+            IType[] @catch = null, 
+            int[] filter = null, 
             int? exceptionAllocationResultNumber = null)
         {
-            llvmWriter.WriteLandingPadVariables(writer);
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteLandingPadVariables();
 
             var landingPadResult = llvmWriter.WriteSetResultNumber(writer, opCode);
 

@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ObjectInfrastructure.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.Gencode
@@ -21,18 +23,20 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        /// <param name="writer">
+        /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteInitObject(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType)
+        public static void WriteInitObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
         {
             if (declaringType.IsInterface)
             {
                 return;
             }
+
+            var writer = llvmWriter.Output;
 
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
@@ -57,8 +61,8 @@ namespace Il2Native.Logic.Gencode
                 var virtualTable = declaringType.GetVirtualTable();
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
-                    virtualTable.GetVirtualTableSize(),
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ", 
+                    virtualTable.GetVirtualTableSize(), 
                     declaringType.GetVirtualTableName());
                 if (opCode.ResultNumber.HasValue)
                 {
@@ -66,8 +70,8 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-
                 }
+
                 writer.WriteLine(string.Empty);
 
                 // restore
@@ -99,8 +103,8 @@ namespace Il2Native.Logic.Gencode
                 var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
-                    virtualInterfaceTable.GetVirtualTableSize(),
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
+                    virtualInterfaceTable.GetVirtualTableSize(), 
                     declaringType.GetVirtualInterfaceTableName(@interface));
                 llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
                 writer.WriteLine(string.Empty);
@@ -115,19 +119,18 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="llvmWriter">
         /// </param>
-        /// <param name="writer">
-        /// </param>
         /// <param name="opCodeConstructorInfoPart">
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteNew(
-            this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
+        public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
         {
             if (opCodeConstructorInfoPart.ResultNumber.HasValue)
             {
                 return;
             }
+
+            var writer = llvmWriter.Output;
 
             writer.WriteLine("; New obj");
 
@@ -143,7 +146,7 @@ namespace Il2Native.Logic.Gencode
             var castResult = opCodeConstructorInfoPart.ResultNumber;
 
             // this.WriteInitObject(writer, opCode, declaringType);
-            declaringType.WriteCallInitObjectMethod(writer, llvmWriter, opCodeConstructorInfoPart);
+            declaringType.WriteCallInitObjectMethod(llvmWriter, opCodeConstructorInfoPart);
 
             // restore result and type
             opCodeConstructorInfoPart.ResultNumber = castResult;
@@ -152,19 +155,19 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.Write("; end of new obj");
 
-            llvmWriter.WriteCallConstructor(writer, opCodeConstructorInfoPart);
+            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
         /// </param>
-        /// <param name="writer">
-        /// </param>
         /// <param name="opCodeConstructorInfoPart">
         /// </param>
-        public static void WriteCallConstructor(this LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        public static void WriteCallConstructor(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
+            var writer = llvmWriter.Output;
+
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
             var methodBase = opCodeConstructorInfoPart.Operand;
@@ -186,12 +189,12 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
-        /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteInitObjectMethod(this IType type, LlvmIndentedTextWriter writer, LlvmWriter llvmWriter)
+        public static void WriteInitObjectMethod(this IType type, LlvmWriter llvmWriter)
         {
+            var writer = llvmWriter.Output;
+
             var method = new SynthesizedInitMethod(type);
             writer.WriteLine("; Init Object method");
 
@@ -199,7 +202,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMethodStart(method);
             llvmWriter.WriteLlvmLoad(writer, opCode, type, "%.this", structAsRef: true);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(writer, opCode, type);
+            llvmWriter.WriteInitObject(opCode, type);
             writer.WriteLine("ret void");
             llvmWriter.WriteMethodEnd(method);
         }
@@ -208,14 +211,14 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
-        /// </param>
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallInitObjectMethod(this IType type, LlvmIndentedTextWriter writer, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallInitObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
         {
+            var writer = llvmWriter.Output;
+
             var method = new SynthesizedInitMethod(type);
             writer.WriteLine("; call Init Object method");
             llvmWriter.WriteCall(

@@ -1,10 +1,21 @@
-﻿namespace Il2Native.Logic.Gencode
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="TypeGen.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
     using System.Linq;
 
     using PEAssemblyReader;
 
+    /// <summary>
+    /// </summary>
     public static class TypeGen
     {
         /// <summary>
@@ -15,6 +26,8 @@
         /// </summary>
         private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
+        /// <summary>
+        /// </summary>
         static TypeGen()
         {
             SystemTypeSizes["Void"] = 0;

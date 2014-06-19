@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic.Gencode
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="VirtualTableGen.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -6,16 +15,25 @@
 
     using PEAssemblyReader;
 
+    /// <summary>
+    /// </summary>
     public static class VirtualTableGen
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType = new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
+        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType =
+            new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
         private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualInterfaceTableByType =
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
+
+        public static void ClearVirtualTables()
+        {
+            virtualTableByType.Clear();
+            virtualInterfaceTableByType.Clear();
+        }
 
         /// <summary>
         /// </summary>
@@ -63,8 +81,6 @@
         {
             return string.Concat("@\"", type.FullName, " Virtual Table\"");
         }
-
-
 
         /// <summary>
         /// </summary>
@@ -141,9 +157,9 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="thisType">
-        /// </param>
         /// <param name="virtualTable">
+        /// </param>
+        /// <param name="thisType">
         /// </param>
         public static void BuildVirtualTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType)
         {
@@ -155,28 +171,43 @@
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
-                if ((virtualOrAbstractMethod.IsAbstract || virtualOrAbstractMethod.IsVirtual) && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
+                if ((virtualOrAbstractMethod.IsAbstract) && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
                     virtualTable.Add(new LlvmWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
                     continue;
                 }
 
                 // find method in virtual table
-                var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+                var baseMethod = virtualOrAbstractMethod.IsOverride 
+                        ? virtualTable.First(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod))
+                        : virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(virtualOrAbstractMethod));
+
+                if (baseMethod == null)
+                {
+                    virtualTable.Add(new LlvmWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });
+                    continue;                    
+                }
+
                 baseMethod.Value = virtualOrAbstractMethod;
             }
         }
-
 
         /// <summary>
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        // TODO: create object to join Type and List<LlvmWriter.Pair<IMethod, IMethod>>
-        public static void WriteTableOfMethods(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, LlvmWriter llvmWriter, LlvmIndentedTextWriter writer, IType type, int interfaceIndex = 0)
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interfaceIndex">
+        /// </param>
+        public static void WriteTableOfMethods(
+            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, LlvmWriter llvmWriter, IType type, int interfaceIndex = 0)
         {
-            writer.WriteLine(
-                " = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine(" = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
             writer.Indent++;
             writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
@@ -185,7 +216,6 @@
             writer.Write("i8* bitcast (");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write("* @\"{0}\" to i8*)", type.GetRttiInfoName());
-
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)
@@ -217,6 +247,12 @@
             writer.WriteLine("]");
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static int GetVirtualTableSize(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable)
         {
             return virtualTable.Count + 2;

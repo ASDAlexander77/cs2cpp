@@ -167,7 +167,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected LlvmIndentedTextWriter Output { get; private set; }
+        public LlvmIndentedTextWriter Output { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -219,14 +219,14 @@ namespace Il2Native.Logic
                 this.WritePostDeclarations();
 
                 this.Output.WriteLine(string.Empty);
-                this.ThisType.WriteRtti(this, this.Output);
+                this.ThisType.WriteRtti(this);
 
                 processedTypes.Add(this.ThisType);
                 processedRttiTypes.Add(this.ThisType);
                 processedRttiPointerTypes.Add(this.ThisType);
 
                 this.Output.WriteLine(string.Empty);
-                this.ThisType.WriteInitObjectMethod(this.Output, this);
+                this.ThisType.WriteInitObjectMethod(this);
             }
         }
 
@@ -516,18 +516,18 @@ namespace Il2Native.Logic
                 if (this.needToWriteUnwindException)
                 {
                     this.needToWriteUnwindException = false;
-                    this.WriteUnwindException(this.Output);
+                    this.WriteUnwindException();
                 }
 
                 if (this.needToWriteUnreachable)
                 {
                     this.needToWriteUnreachable = false;
-                    this.WriteUnreachable(this.Output);
+                    this.WriteUnreachable();
                 }
 
                 if (method.ExceptionHandlingClauses.Any())
                 {
-                    this.WriteResume(this.Output);
+                    this.WriteResume();
                 }
 
                 this.Output.EndMethodBody();
@@ -651,6 +651,7 @@ namespace Il2Native.Logic
             }
 
             this.StaticConstructors.Clear();
+            VirtualTableGen.ClearVirtualTables();
         }
 
         /// <summary>
@@ -1838,7 +1839,7 @@ namespace Il2Native.Logic
                         if (isFinally)
                         {
                             tryClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                            this.WriteFinallyLeave(writer, tryClause);
+                            this.WriteFinallyLeave(tryClause);
                         }
                         else
                         {
@@ -2104,14 +2105,14 @@ namespace Il2Native.Logic
 
                     this.CheckIfExternalDeclarationIsRequired(declaringType);
 
-                    this.WriteNew(writer, opCodeConstructorInfoPart, declaringType);
+                    this.WriteNew(opCodeConstructorInfoPart, declaringType);
 
                     break;
 
                 case Code.Newarr:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.WriteNewArray(writer, opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
+                    this.WriteNewArray(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
 
                     break;
 
@@ -2128,13 +2129,13 @@ namespace Il2Native.Logic
 
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    this.WriteThrow(writer, opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                    this.WriteThrow(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
 
                 case Code.Rethrow:
 
-                    this.WriteRethrow(writer, opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                    this.WriteRethrow(opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
 
@@ -3319,7 +3320,7 @@ namespace Il2Native.Logic
                 foreach (var eh in ehs)
                 {
                     writer.WriteLine(string.Empty);
-                    this.WriteCatchEnd(writer, opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                    this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
                 }
             }
         }
@@ -3364,7 +3365,7 @@ namespace Il2Native.Logic
             if (opCode.ExceptionHandlers != null)
             {
                 writer.WriteLine(string.Empty);
-                this.WriteCatchProlog(writer, opCode);
+                this.WriteCatchProlog(opCode);
 
                 var exceptionHandlers = opCode.ExceptionHandlers.ToArray();
                 var nextExceptionHandlerIndex = 1;
@@ -3374,14 +3375,13 @@ namespace Il2Native.Logic
                     {
                         writer.WriteLine(string.Empty);
                         this.WriteCatchTest(
-                            writer,
                             exceptionHandler,
                             nextExceptionHandlerIndex < exceptionHandlers.Length ? exceptionHandlers[nextExceptionHandlerIndex] : null);
                     }
 
                     writer.WriteLine(string.Empty);
 
-                    this.WriteCatchBegin(writer, exceptionHandler);
+                    this.WriteCatchBegin(exceptionHandler);
 
                     nextExceptionHandlerIndex++;
                 }
@@ -3989,7 +3989,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(this.ThisType.GetVirtualTableName());
                     var virtualTable = this.ThisType.GetVirtualTable();
-                    virtualTable.WriteTableOfMethods(this, this.Output, this.ThisType);
+                    virtualTable.WriteTableOfMethods(this, this.ThisType);
 
                     foreach (var methodInVirtualTable in virtualTable)
                     {
@@ -4003,7 +4003,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));
                     var virtualInterfaceTable = this.ThisType.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, this.Output, this.ThisType, index++);
+                    virtualInterfaceTable.WriteTableOfMethods(this, this.ThisType, index++);
                 }
             }
         }
