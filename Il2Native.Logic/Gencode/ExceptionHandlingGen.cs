@@ -98,7 +98,7 @@ namespace Il2Native.Logic.Gencode
 
             var errorAllocationResultNumber = llvmWriter.WriteAllocateException(opCode);
 
-            var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
+            var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
             writer.Write("invoke void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
@@ -163,7 +163,7 @@ namespace Il2Native.Logic.Gencode
 
             var errorAllocationResultNumber = llvmWriter.WriteAllocateException(opCode);
 
-            var exceptionPointerType = opCode.OpCodeOperands[0].ResultType;
+            var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
             writer.Write("call void @__cxa_throw(i8* {0}, i8* bitcast (", llvmWriter.GetResultNumber(errorAllocationResultNumber));
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
@@ -220,13 +220,13 @@ namespace Il2Native.Logic.Gencode
             var catchType = exceptionHandlingClause.CatchType;
 
             var opCodeNone = OpCodePart.CreateNop;
-            var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone);
             writer.WriteLine("load i32* %.error_typeid");
-            var errorTypeIdOfExceptionResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            var errorTypeIdOfExceptionResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone);
             writer.Write("call i32 @llvm.eh.typeid.for(i8* bitcast (");
             catchType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*))", catchType.GetRttiPointerInfoName());
-            var compareResultResultNumber = llvmWriter.WriteSetResultNumber(writer, opCodeNone);
+            var compareResultResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone);
             writer.WriteLine(
                 "icmp eq i32 {0}, {1}", 
                 llvmWriter.GetResultNumber(errorTypeIdOfCatchResultNumber), 

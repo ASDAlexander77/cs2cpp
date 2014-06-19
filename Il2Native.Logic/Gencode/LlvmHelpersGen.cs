@@ -31,14 +31,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="op2">
         /// </param>
-        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, int? op1, int? op2)
+        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, LlvmResult op1, LlvmResult op2)
         {
             var writer = llvmWriter.Output;
 
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                llvmWriter.GetResultNumber(op1.Value),
-                llvmWriter.GetResultNumber(op2.Value),
+                llvmWriter.GetResultNumber(op1),
+                llvmWriter.GetResultNumber(op2),
                 type.GetTypeSize(),
                 LlvmWriter.pointerSize /*Align*/);
         }
@@ -51,13 +51,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="op1">
         /// </param>
-        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, int? op1)
+        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, LlvmResult op1)
         {
             var writer = llvmWriter.Output;
 
             writer.Write(
                 "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                llvmWriter.GetResultNumber(op1.Value),
+                llvmWriter.GetResultNumber(op1),
                 type.GetTypeSize(),
                 LlvmWriter.pointerSize /*Align*/);
         }
@@ -79,7 +79,7 @@ namespace Il2Native.Logic.Gencode
         public static void WriteLlvmLoad(
             this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
         {
-            if (opCode.ResultNumber.HasValue)
+            if (opCode.HasResult)
             {
                 return;
             }
@@ -88,7 +88,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!type.IsStructureType() || structAsRef)
             {
-                llvmWriter.WriteSetResultNumber(writer, opCode, type);
+                llvmWriter.WriteSetResultNumber(opCode, type);
 
                 // last part
                 writer.Write("load ");
@@ -159,20 +159,19 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="res">
+        /// <param name="result">
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, int res, IType toType)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType)
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(writer, opCode);
+            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
             writer.Write("bitcast i8* ");
-            llvmWriter.WriteResultNumber(res);
+            llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
-            opCode.ResultType = toType;
         }
 
         /// <summary>
@@ -189,10 +188,9 @@ namespace Il2Native.Logic.Gencode
             this LlvmWriter llvmWriter, OpCodePart opCode, IType toType, LlvmWriter.OperandOptions options = LlvmWriter.OperandOptions.None)
         {
             var writer = llvmWriter.Output;
-            llvmWriter.UnaryOper(writer, opCode, "bitcast", opCode.ResultType, options: options);
+            llvmWriter.UnaryOper(writer, opCode, "bitcast", opCode.Result.Type, TypeAdapter.FromType(typeof(byte*)), options: options);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
-            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
         }
 
         /// <summary>
@@ -209,13 +207,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(writer, opCode);
+            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(writer, true);
             writer.Write(" ");
             writer.Write(name);
             writer.Write(" to i8*");
-            opCode.ResultType = TypeAdapter.FromType(typeof(byte*));
         }
 
         /// <summary>
@@ -226,19 +223,19 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="fromType">
         /// </param>
-        /// <param name="res">
+        /// <param name="result">
         /// </param>
         /// <param name="custom">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, int res, string custom)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, LlvmResult result, string custom)
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(writer, opCode);
+            llvmWriter.WriteSetResultNumber(opCode, null);
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(writer, true);
             writer.Write(' ');
-            llvmWriter.WriteResultNumber(res);
+            llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");
             writer.Write(custom);
 
@@ -262,9 +259,9 @@ namespace Il2Native.Logic.Gencode
         /// <param name="thisResultNumber">
         /// </param>
         public static void WriteCall(this LlvmWriter llvmWriter,
-                OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, int? thisResultNumber, IExceptionHandlingClause exceptionHandlingClause)
+                OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, LlvmResult thisResultNumber, IExceptionHandlingClause exceptionHandlingClause)
         {
-            if (opCodeMethodInfo.ResultNumber.HasValue)
+            if (opCodeMethodInfo.HasResult)
             {
                 return;
             }
@@ -294,7 +291,7 @@ namespace Il2Native.Logic.Gencode
 
             var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
-            int? virtualMethodAddressResultNumber = null;
+            LlvmResult virtualMethodAddressResultNumber = null;
             var isInderectMethodCall = isVirtual && (methodBase.IsAbstract || methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
 
             var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
@@ -324,53 +321,53 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(" to ");
                 llvmWriter.WriteMethodPointerType(writer, methodInfo);
                 writer.WriteLine("**");
-                var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.ResultNumber;
+                var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
 
                 // load pointer
-                llvmWriter.WriteSetResultNumber(opCodeMethodInfo);
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte**)));
                 writer.Write("load ");
                 llvmWriter.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("** ");
-                llvmWriter.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber ?? -1);
+                llvmWriter.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber);
                 writer.WriteLine(string.Empty);
-                var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.ResultNumber;
+                var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
                 // get address of a function
-                llvmWriter.WriteSetResultNumber(opCodeMethodInfo);
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte*)));
                 writer.Write("getelementptr inbounds ");
                 llvmWriter.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
-                llvmWriter.WriteResultNumber(virtualTableOfMethodPointersResultNumber ?? -1);
+                llvmWriter.WriteResultNumber(virtualTableOfMethodPointersResultNumber);
                 writer.WriteLine(", i64 {0}", (requiredType ?? thisType).GetVirtualMethodIndex(methodInfo));
-                var pointerToFunctionPointerResultNumber = opCodeMethodInfo.ResultNumber;
+                var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
                 // load method address
-                llvmWriter.WriteSetResultNumber(opCodeMethodInfo);
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte*)));
                 writer.Write("load ");
                 llvmWriter.WriteMethodPointerType(writer, methodInfo);
                 writer.Write("* ");
-                llvmWriter.WriteResultNumber(pointerToFunctionPointerResultNumber ?? -1);
+                llvmWriter.WriteResultNumber(pointerToFunctionPointerResultNumber);
                 writer.WriteLine(string.Empty);
                 // remember virtual method address result
-                virtualMethodAddressResultNumber = opCodeMethodInfo.ResultNumber;
+                virtualMethodAddressResultNumber = opCodeMethodInfo.Result;
 
                 if (thisType.IsInterface)
                 {
-                    opCodeFirstOperand.ResultNumber = virtualTableOfMethodPointersResultNumber;
+                    opCodeFirstOperand.Result = virtualTableOfMethodPointersResultNumber;
 
                     llvmWriter.WriteGetThisPointerFromInterfacePointer(
                         writer, opCodeMethodInfo, methodInfo, thisType, pointerToInterfaceVirtualTablePointersResultNumber);
 
-                    var thisPointerResultNumber = opCodeMethodInfo.ResultNumber;
+                    var thisPointerResultNumber = opCodeMethodInfo.Result;
                     // set ot for Call op code
-                    opCodeMethodInfo.OpCodeOperands[0].ResultNumber = thisPointerResultNumber;
+                    opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
                 }
             }
 
             // check if you need to cast this parameter
             if (hasThisArgument && thisType.IsClassCastRequired(opCodeFirstOperand))
             {
-                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.ResultType, opCodeFirstOperand.ResultNumber.Value, thisType);
+                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -384,7 +381,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (parameter.ParameterType.IsClassCastRequired(operand))
                     {
-                        llvmWriter.WriteCast(operand, operand.ResultType, operand.ResultNumber.Value, parameter.ParameterType);
+                        llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
                     }
 
                     index++;
@@ -428,7 +425,7 @@ namespace Il2Native.Logic.Gencode
 
             if (isInderectMethodCall)
             {
-                llvmWriter.WriteResultNumber(virtualMethodAddressResultNumber ?? -1);
+                llvmWriter.WriteResultNumber(virtualMethodAddressResultNumber);
             }
             else
             {
@@ -445,7 +442,7 @@ namespace Il2Native.Logic.Gencode
                 preProcessedOperandResults,
                 thisResultNumber,
                 thisType,
-                opCodeMethodInfo.ResultNumber,
+                opCodeMethodInfo.Result,
                 methodInfo != null ? methodInfo.ReturnType : null);
 
             if (exceptionHandlingClause != null)
@@ -476,28 +473,28 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="fromType">
         /// </param>
-        /// <param name="res">
+        /// <param name="fromResult">
         /// </param>
         /// <param name="toType">
         /// </param>
         /// <param name="appendReference">
         /// </param>
-        public static void WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, int res, IType toType, bool appendReference = false)
+        public static void WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false)
         {
             var writer = llvmWriter.Output;
 
-            if (!fromType.IsInterface && toType.IsInterface)
+            if (!fromResult.Type.IsInterface && toType.IsInterface)
             {
-                opCode.ResultNumber = res;
-                llvmWriter.WriteInterfaceAccess(writer, opCode, fromType, toType);
+                opCode.Result = fromResult;
+                llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
             }
             else
             {
-                llvmWriter.WriteSetResultNumber(writer, opCode);
+                llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
-                fromType.WriteTypePrefix(writer, true);
+                fromResult.Type.WriteTypePrefix(writer, true);
                 writer.Write(' ');
-                llvmWriter.WriteResultNumber(res);
+                llvmWriter.WriteResultNumber(fromResult);
                 writer.Write(" to ");
                 toType.WriteTypePrefix(writer, true);
                 if (appendReference)
@@ -507,7 +504,6 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            opCode.ResultType = toType;
             writer.WriteLine(string.Empty);
         }
 
@@ -536,12 +532,12 @@ namespace Il2Native.Logic.Gencode
             {
                 throw new NotImplementedException();
 
-                ////opCode.ResultNumber = res;
+                ////opCode.Result = res;
                 ////this.WriteInterfaceAccess(writer, opCode, fromType, toType);
             }
             else
             {
-                llvmWriter.WriteSetResultNumber(writer, opCode);
+                llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
                 fromType.WriteTypePrefix(writer, true);
                 writer.Write(' ');
@@ -555,7 +551,6 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            opCode.ResultType = toType;
             writer.WriteLine(string.Empty);
         }
     }

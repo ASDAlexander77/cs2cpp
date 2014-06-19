@@ -372,7 +372,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart)
         {
-            return opCodePart.ResultNumber.HasValue && requiredType != opCodePart.ResultType && requiredType.IsAssignableFrom(opCodePart.ResultType);
+            return opCodePart.Result != null && requiredType != opCodePart.Result.Type && requiredType.IsAssignableFrom(opCodePart.Result.Type);
         }
     }
 }

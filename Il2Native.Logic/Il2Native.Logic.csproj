@@ -70,6 +70,7 @@
     <Compile Include="Il2Converter.cs" />
     <Compile Include="IlReader.cs" />
     <Compile Include="LlvmIndentedTextWriter.cs" />
+    <Compile Include="LlvmResult.cs" />
     <Compile Include="LlvmWriter.cs" />
     <Compile Include="OpCodeBlock.cs" />
     <Compile Include="OpCodeExtentions.cs" />

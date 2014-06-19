@@ -29,8 +29,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteInitObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static void WriteInitObject(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
+            var declaringType = opCode.Result.Type;
             if (declaringType.IsInterface)
             {
                 return;
@@ -41,15 +42,14 @@ namespace Il2Native.Logic.Gencode
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod())
             {
-                var opCodeResult = opCode.ResultNumber;
-                var opCodeType = opCode.ResultType;
+                var opCodeResult = opCode.Result;
 
                 writer.WriteLine("; set virtual table");
 
                 // initializw virtual table
-                if (opCode.ResultNumber.HasValue)
+                if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, declaringType, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
                 }
                 else
                 {
@@ -64,9 +64,9 @@ namespace Il2Native.Logic.Gencode
                     "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ", 
                     virtualTable.GetVirtualTableSize(), 
                     declaringType.GetVirtualTableName());
-                if (opCode.ResultNumber.HasValue)
+                if (opCode.HasResult)
                 {
-                    llvmWriter.WriteResultNumber(writer, opCode.ResultNumber ?? -1);
+                    llvmWriter.WriteResultNumber(opCode.Result);
                 }
                 else
                 {
@@ -75,23 +75,21 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
 
                 // restore
-                opCode.ResultNumber = opCodeResult;
-                opCode.ResultType = opCodeType;
+                opCode.Result = opCodeResult;
             }
 
             // init all interfaces
             foreach (var @interface in declaringType.GetInterfaces())
             {
-                var opCodeResult = opCode.ResultNumber;
-                var opCodeType = opCode.ResultType;
+                var opCodeResult = opCode.Result;
 
                 writer.WriteLine("; set virtual interface table");
 
                 llvmWriter.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
 
-                if (opCode.ResultNumber.HasValue)
+                if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, @interface, opCode.ResultNumber.Value, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
                 }
                 else
                 {
@@ -106,12 +104,11 @@ namespace Il2Native.Logic.Gencode
                     "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
                     virtualInterfaceTable.GetVirtualTableSize(), 
                     declaringType.GetVirtualInterfaceTableName(@interface));
-                llvmWriter.WriteResultNumber(opCode.ResultNumber ?? -1);
+                llvmWriter.WriteResultNumber(opCode.Result);
                 writer.WriteLine(string.Empty);
 
                 // restore
-                opCode.ResultNumber = opCodeResult;
-                opCode.ResultType = opCodeType;
+                opCode.Result = opCodeResult;
             }
         }
 
@@ -125,7 +122,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
         {
-            if (opCodeConstructorInfoPart.ResultNumber.HasValue)
+            if (opCodeConstructorInfoPart.HasResult)
             {
                 return;
             }
@@ -134,7 +131,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New obj");
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(writer, opCodeConstructorInfoPart);
+            var mallocResult = llvmWriter.WriteSetResultNumber(opCodeConstructorInfoPart, TypeAdapter.FromType(typeof(byte*)));
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
             llvmWriter.WriteMemSet(declaringType, mallocResult);
@@ -143,14 +140,13 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteBitcast(opCodeConstructorInfoPart, mallocResult, declaringType);
             writer.WriteLine(string.Empty);
 
-            var castResult = opCodeConstructorInfoPart.ResultNumber;
+            var castResult = opCodeConstructorInfoPart.Result;
 
             // this.WriteInitObject(writer, opCode, declaringType);
             declaringType.WriteCallInitObjectMethod(llvmWriter, opCodeConstructorInfoPart);
 
             // restore result and type
-            opCodeConstructorInfoPart.ResultNumber = castResult;
-            opCodeConstructorInfoPart.ResultType = declaringType;
+            opCodeConstructorInfoPart.Result = castResult;
 
             writer.WriteLine(string.Empty);
             writer.Write("; end of new obj");
@@ -171,8 +167,8 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
             var methodBase = opCodeConstructorInfoPart.Operand;
-            var resAlloc = opCodeConstructorInfoPart.ResultNumber;
-            opCodeConstructorInfoPart.ResultNumber = null;
+            var resAlloc = opCodeConstructorInfoPart.Result;
+            opCodeConstructorInfoPart.Result = null;
             llvmWriter.WriteCall(
                 opCodeConstructorInfoPart, 
                 methodBase, 
@@ -181,7 +177,7 @@ namespace Il2Native.Logic.Gencode
                 true, 
                 resAlloc, 
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            opCodeConstructorInfoPart.ResultNumber = resAlloc;
+            opCodeConstructorInfoPart.Result = resAlloc;
         }
 
         /// <summary>
@@ -201,7 +197,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMethodStart(method);
             llvmWriter.WriteLlvmLoad(opCode, type, "%.this", structAsRef: true);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(opCode, type);
+            llvmWriter.WriteInitObject(opCode);
             writer.WriteLine("ret void");
             llvmWriter.WriteMethodEnd(method);
         }
@@ -227,7 +223,7 @@ namespace Il2Native.Logic.Gencode
                 false, 
                 true, 
                 false, 
-                opCode.ResultNumber, 
+                opCode.Result, 
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
         }
 

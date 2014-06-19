@@ -22,11 +22,7 @@ namespace Il2Native.Logic.CodeParts
     {
         /// <summary>
         /// </summary>
-        private int? resultNumber;
-
-        /// <summary>
-        /// </summary>
-        private IType resultType;
+        private LlvmResult result;
 
         /// <summary>
         /// </summary>
@@ -184,41 +180,31 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public int? ResultNumber
+        public bool HasResult
         {
             get
             {
-                if (this.Any(Code.Dup))
-                {
-                    return this.OpCodeOperands[0].ResultNumber;
-                }
-
-                return this.resultNumber;
-            }
-
-            set
-            {
-                this.resultNumber = value;
+                return this.Result != null;
             }
         }
 
         /// <summary>
         /// </summary>
-        public IType ResultType
+        public LlvmResult Result
         {
             get
             {
                 if (this.Any(Code.Dup))
                 {
-                    return this.OpCodeOperands[0].ResultType;
+                    return this.OpCodeOperands[0].Result;
                 }
 
-                return this.resultType;
+                return this.result;
             }
 
             set
             {
-                this.resultType = value;
+                this.result = value;
             }
         }
 
