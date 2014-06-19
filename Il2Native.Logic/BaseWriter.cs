@@ -316,6 +316,12 @@ namespace Il2Native.Logic
                 case Code.Brtrue_S:
                 case Code.Bne_Un:
                 case Code.Bne_Un_S:
+                case Code.Bge_Un:
+                case Code.Bge_Un_S:
+                case Code.Ble_Un:
+                case Code.Ble_Un_S:
+                case Code.Bgt_Un:
+                case Code.Bgt_Un_S:
                     return new ReturnResult(typeof(bool));
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
@@ -364,6 +370,8 @@ namespace Il2Native.Logic
                     return new ReturnResult(typeof(ulong));
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
+                case Code.Newarr:
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand) { IsArray = true };
                 case Code.Ret:
                 case Code.Neg:
                 case Code.Not:
@@ -1459,6 +1467,10 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             public bool? IsAddress { get; set; }
+
+            /// <summary>
+            /// </summary>
+            public bool? IsArray { get; set; }
 
             /// <summary>
             /// </summary>

@@ -1177,6 +1177,9 @@ namespace Il2Native.Logic
                 case Code.Ldelem_R4:
                 case Code.Ldelem_R8:
                 case Code.Ldelem_Ref:
+                case Code.Ldelem_U1:
+                case Code.Ldelem_U2:
+                case Code.Ldelem_U4:
                 case Code.Ldelema:
 
                     this.BinaryOper(writer, opCode, "getelementptr inbounds", options: OperandOptions.DetectTypeInSecondOperand);
@@ -1190,13 +1193,22 @@ namespace Il2Native.Logic
                             type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldelem_I1:
-                            type = TypeAdapter.FromType(typeof(byte));
+                            type = TypeAdapter.FromType(typeof(sbyte));
                             break;
                         case Code.Ldelem_I2:
                             type = TypeAdapter.FromType(typeof(short));
                             break;
                         case Code.Ldelem_I4:
                             type = TypeAdapter.FromType(typeof(int));
+                            break;
+                        case Code.Ldelem_U1:
+                            type = TypeAdapter.FromType(typeof(sbyte));
+                            break;
+                        case Code.Ldelem_U2:
+                            type = TypeAdapter.FromType(typeof(ushort));
+                            break;
+                        case Code.Ldelem_U4:
+                            type = TypeAdapter.FromType(typeof(uint));
                             break;
                         case Code.Ldelem_I8:
                             type = TypeAdapter.FromType(typeof(long));
@@ -2532,7 +2544,7 @@ namespace Il2Native.Logic
 
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
             {
-                var resultOf = this.ResultOf(opCode);
+                var resultOf = this.ResultOf(options.HasFlag(OperandOptions.DetectTypeInSecondOperand) ? opCode.OpCodeOperands[1] : opCode);
                 this.WriteSetResultNumber(opCode, resultType != null ? resultType : (resultOf != null ? resultOf.IType : requiredType));
             }
 
