@@ -39,6 +39,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string AssemblyQualifiedName { get; protected set; }
+
+        /// <summary>
+        /// </summary>
         public ILocalVariable[] LocalInfo { get; private set; }
 
         /// <summary>

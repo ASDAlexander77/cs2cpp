@@ -286,6 +286,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string AssemblyQualifiedName
+        {
+            get
+            {
+                return this.Assembly.Assembly.Identity.Name;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string ModuleName
         {
             get

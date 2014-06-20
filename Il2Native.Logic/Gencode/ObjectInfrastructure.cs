@@ -37,12 +37,12 @@ namespace Il2Native.Logic.Gencode
             var resAlloc = opCodeConstructorInfoPart.Result;
             opCodeConstructorInfoPart.Result = null;
             llvmWriter.WriteCall(
-                opCodeConstructorInfoPart, 
-                methodBase, 
-                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
-                true, 
-                true, 
-                resAlloc, 
+                opCodeConstructorInfoPart,
+                methodBase,
+                opCodeConstructorInfoPart.ToCode() == Code.Callvirt,
+                true,
+                true,
+                resAlloc,
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             opCodeConstructorInfoPart.Result = resAlloc;
         }
@@ -91,11 +91,11 @@ namespace Il2Native.Logic.Gencode
                 // initializw virtual table
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
                 }
 
                 writer.WriteLine(string.Empty);
@@ -103,8 +103,8 @@ namespace Il2Native.Logic.Gencode
                 var virtualTable = declaringType.GetVirtualTable();
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ", 
-                    virtualTable.GetVirtualTableSize(), 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
+                    virtualTable.GetVirtualTableSize(),
                     declaringType.GetVirtualTableName());
                 if (opCode.HasResult)
                 {
@@ -131,11 +131,11 @@ namespace Il2Native.Logic.Gencode
 
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert:true);
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
                 }
 
                 writer.WriteLine(string.Empty);
@@ -143,8 +143,8 @@ namespace Il2Native.Logic.Gencode
                 var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ", 
-                    virtualInterfaceTable.GetVirtualTableSize(), 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
+                    virtualInterfaceTable.GetVirtualTableSize(),
                     declaringType.GetVirtualInterfaceTableName(@interface));
                 llvmWriter.WriteResultNumber(opCode.Result);
                 writer.WriteLine(string.Empty);
@@ -169,7 +169,7 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method);
-            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", structAsRef: true);
+            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", true, true, true);
             writer.WriteLine(string.Empty);
             llvmWriter.WriteInitObject(opCode);
             writer.WriteLine("ret void");

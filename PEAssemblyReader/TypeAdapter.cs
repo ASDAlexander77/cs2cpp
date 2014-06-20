@@ -41,7 +41,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.AssemblyQualifiedName;
             }
         }
 
@@ -89,7 +89,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.type.FullName;
             }
         }
 
@@ -270,6 +270,8 @@ namespace PEAssemblyReader
                 return this.type.IsNested;
             }
         }
+
+        public bool UseAsClass { get; set; }
 
         /// <summary>
         /// </summary>

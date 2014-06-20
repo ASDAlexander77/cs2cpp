@@ -36,10 +36,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         static TypeGen()
         {
-            // to be removed
-            SystemTypesToCTypes["String"] = "i8";
-            SystemTypesToCTypes["String&"] = "i8*";
-
             SystemTypesToCTypes["Void"] = "void";
             SystemTypesToCTypes["Byte"] = "i8";
             SystemTypesToCTypes["SByte"] = "i8";
@@ -233,15 +229,15 @@ namespace Il2Native.Logic.Gencode
 
                 if (type.IsEnum)
                 {
-                    switch (type.GetTypeSize())
+                    switch (type.GetEnumUnderlyingType().FullName)
                     {
-                        case 1:
+                        case "System.SByte":
                             return "i8";
-                        case 2:
+                        case "System.Int16":
                             return "i16";
-                        case 4:
+                        case "System.Int32":
                             return "i32";
-                        case 8:
+                        case "System.Int64":
                             return "i64";
                     }
                 }
@@ -265,8 +261,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="refChar">
         /// </param>
-        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference, char refChar)
+        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference)
         {
+            var refChar = '*';
             var effectiveType = type;
 
             do
@@ -337,15 +334,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
-        /// </param>
         /// <param name="refChar">
         /// </param>
         public static void WriteTypePrefix(
-            this IType type, LlvmIndentedTextWriter writer, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
+            this IType type, LlvmIndentedTextWriter writer, bool asReference = false, bool doNotConvert = false)
         {
-            type.WriteTypeWithoutModifiers(writer, doNotIncludeTypePrefixId);
-            type.WriteTypeModifiers(writer, asReference, refChar);
+            type.WriteTypeWithoutModifiers(writer, doNotConvert);
+            type.WriteTypeModifiers(writer, asReference);
         }
 
         /// <summary>
@@ -356,7 +351,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotIncludeTypePrefixId">
         /// </param>
-        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool doNotIncludeTypePrefixId = false)
+        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool doNotConvert = false)
         {
             var effectiveType = type;
 
@@ -365,15 +360,13 @@ namespace Il2Native.Logic.Gencode
                 effectiveType = effectiveType.GetElementType();
             }
 
-            // TODO: remove String test when you use real string class
-            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum
-                && !(effectiveType.Namespace == "System" && effectiveType.Name == "String"))
+            if (doNotConvert || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
             {
                 writer.Write('%');
             }
 
             // write base name
-            effectiveType.WriteTypeName(writer);
+            effectiveType.WriteTypeName(writer, doNotConvert);
         }
     }
 }

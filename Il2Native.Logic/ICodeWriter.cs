@@ -124,7 +124,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="moduleName">
         /// </param>
-        void WriteStart(string moduleName);
+        /// <param name="assemblyName">
+        /// </param>/// 
+        void WriteStart(string moduleName, string assemblyName);
 
         /// <summary>
         /// </summary>
