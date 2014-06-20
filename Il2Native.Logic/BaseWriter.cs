@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BaseWriter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -37,6 +39,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public ILocalVariable[] LocalInfo { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public IDictionary<int, OpCodePart> OpsByAddressEnd { get; private set; }
 
         /// <summary>
@@ -66,10 +72,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected bool IsInterface { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public ILocalVariable[] LocalInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -1207,7 +1209,7 @@ namespace Il2Native.Logic
         {
             var groups = new List<OpCodePart[]>();
 
-            for (var i = 0; i < conditions.Length; )
+            for (var i = 0; i < conditions.Length;)
             {
                 var group = new List<OpCodePart>();
 
@@ -1310,18 +1312,18 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart,
-            OpCodePart currentArgument,
-            Stack<OpCodePart> stack,
-            out int sizeOfCondition,
-            out OpCodePart firstCondition,
+            OpCodePart opCodePart, 
+            OpCodePart currentArgument, 
+            Stack<OpCodePart> stack, 
+            out int sizeOfCondition, 
+            out OpCodePart firstCondition, 
             out OpCodePart lastCondition)
         {
             sizeOfCondition = 3;
             firstCondition = null;
             lastCondition = null;
 
-            for (; ; )
+            for (;;)
             {
                 var subOpCodes = stack.Take(sizeOfCondition);
                 if (subOpCodes.Count() != sizeOfCondition)
@@ -1462,7 +1464,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public bool? Unboxed { get; set; }
+            public IType IType { get; set; }
 
             /// <summary>
             /// </summary>
@@ -1521,7 +1523,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public IType IType { get; set; }
+            public bool? Unboxed { get; set; }
 
             /// <summary>
             /// </summary>

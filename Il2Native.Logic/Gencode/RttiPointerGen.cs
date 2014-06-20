@@ -20,45 +20,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassDefinition(this IType type, IndentedTextWriter writer)
-        {
-            type.WriteRttiPointerClassName(writer);
-            type.WriteRttiPointerClassInfo(writer);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassName(this IType type, IndentedTextWriter writer)
-        {
-            writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"P{2}{1}\\00\"", 
-                type.GetRttiPointerStringName(), 
-                type.FullName, 
-                type.FullName.Length, 
-                type.StringLength(1));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetRttiPointerStringName(this IType type)
-        {
-            return string.Concat(type.FullName, " Pointer String Name");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
         /// <returns>
         /// </returns>
         public static string GetRttiPointerInfoName(this IType type)
@@ -70,14 +31,11 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
+        /// <returns>
+        /// </returns>
+        public static string GetRttiPointerStringName(this IType type)
         {
-            writer.Write("@\"{0}\" = linkonce_odr unnamed_addr constant ", type.GetRttiPointerInfoName());
-            type.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.Write(' ');
-            type.WriteRttiPointerClassInfoDefinition(writer);
+            return string.Concat(type.FullName, " Pointer String Name");
         }
 
         /// <summary>
@@ -98,10 +56,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiPointerClassDefinition(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
+            type.WriteRttiPointerClassName(writer);
+            type.WriteRttiPointerClassInfo(writer);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
+        {
+            writer.Write("@\"{0}\" = linkonce_odr unnamed_addr constant ", type.GetRttiPointerInfoName());
             type.WriteRttiPointerClassInfoDeclaration(writer);
+            writer.Write(' ');
+            type.WriteRttiPointerClassInfoDefinition(writer);
         }
 
         /// <summary>
@@ -133,6 +105,34 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("* @\"{0}\" to i8*)", type.GetRttiInfoName());
             writer.Indent--;
             writer.WriteLine("}");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
+        {
+            writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
+            type.WriteRttiPointerClassInfoDeclaration(writer);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        public static void WriteRttiPointerClassName(this IType type, IndentedTextWriter writer)
+        {
+            writer.WriteLine(
+                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"P{2}{1}\\00\"", 
+                type.GetRttiPointerStringName(), 
+                type.FullName, 
+                type.FullName.Length, 
+                type.StringLength(1));
         }
     }
 }

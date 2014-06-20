@@ -25,9 +25,51 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="llvmWriter">
         /// </param>
+        /// <param name="opCodeConstructorInfoPart">
+        /// </param>
+        public static void WriteCallConstructor(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; Call Constructor");
+            var methodBase = opCodeConstructorInfoPart.Operand;
+            var resAlloc = opCodeConstructorInfoPart.Result;
+            opCodeConstructorInfoPart.Result = null;
+            llvmWriter.WriteCall(
+                opCodeConstructorInfoPart, 
+                methodBase, 
+                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
+                true, 
+                true, 
+                resAlloc, 
+                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCodeConstructorInfoPart.Result = resAlloc;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="declaringType">
+        public static void WriteCallInitObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedInitMethod(type);
+            writer.WriteLine("; call Init Object method");
+            var opCodeNope = OpCodePart.CreateNop;
+            llvmWriter.WriteCall(opCodeNope, method, false, true, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
         /// </param>
         public static void WriteInitObject(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
@@ -114,6 +156,28 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteInitObjectMethod(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedInitMethod(type);
+            writer.WriteLine("; Init Object method");
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method);
+            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", structAsRef: true);
+            writer.WriteLine(string.Empty);
+            llvmWriter.WriteInitObject(opCode);
+            writer.WriteLine("ret void");
+            llvmWriter.WriteMethodEnd(method);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCodeConstructorInfoPart">
@@ -156,79 +220,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCodeConstructorInfoPart">
-        /// </param>
-        public static void WriteCallConstructor(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; Call Constructor");
-            var methodBase = opCodeConstructorInfoPart.Operand;
-            var resAlloc = opCodeConstructorInfoPart.Result;
-            opCodeConstructorInfoPart.Result = null;
-            llvmWriter.WriteCall(
-                opCodeConstructorInfoPart, 
-                methodBase, 
-                opCodeConstructorInfoPart.ToCode() == Code.Callvirt, 
-                true, 
-                true, 
-                resAlloc, 
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            opCodeConstructorInfoPart.Result = resAlloc;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="llvmWriter">
-        /// </param>
-        public static void WriteInitObjectMethod(this IType type, LlvmWriter llvmWriter)
-        {
-            var writer = llvmWriter.Output;
-
-            var method = new SynthesizedInitMethod(type);
-            writer.WriteLine("; Init Object method");
-
-            var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method);
-            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", structAsRef: true);
-            writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(opCode);
-            writer.WriteLine("ret void");
-            llvmWriter.WriteMethodEnd(method);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        public static void WriteCallInitObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
-        {
-            var writer = llvmWriter.Output;
-
-            var method = new SynthesizedInitMethod(type);
-            writer.WriteLine("; call Init Object method");
-            var opCodeNope = OpCodePart.CreateNop;
-            llvmWriter.WriteCall(
-                opCodeNope, 
-                method, 
-                false, 
-                true, 
-                false, 
-                opCode.Result, 
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-        }
-
-        /// <summary>
-        /// </summary>
         private class SynthesizedInitMethod : IMethod
         {
             /// <summary>
@@ -242,11 +233,17 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public IType Type { get; private set; }
+            public string AssemblyQualifiedName { get; private set; }
 
             /// <summary>
             /// </summary>
-            public string AssemblyQualifiedName { get; private set; }
+            public CallingConventions CallingConvention
+            {
+                get
+                {
+                    return CallingConventions.HasThis;
+                }
+            }
 
             /// <summary>
             /// </summary>
@@ -260,6 +257,16 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
+            {
+                get
+                {
+                    return new IExceptionHandlingClause[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
             public string FullName
             {
                 get
@@ -267,6 +274,44 @@ namespace Il2Native.Logic.Gencode
                     return string.Concat(this.Type.FullName, "..init");
                 }
             }
+
+            /// <summary>
+            /// </summary>
+            public bool IsAbstract { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsConstructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsGenericMethod { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsOverride { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsStatic { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsVirtual { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public IEnumerable<ILocalVariable> LocalVariables
+            {
+                get
+                {
+                    return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IModule Module { get; private set; }
 
             /// <summary>
             /// </summary>
@@ -284,64 +329,6 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public bool IsAbstract { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsStatic { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsVirtual { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOverride { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IModule Module { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public CallingConventions CallingConvention
-            {
-                get
-                {
-                    return CallingConventions.HasThis;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsConstructor { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsGenericMethod { get; private set; }
-
-            /// <summary>
-            /// </summary>
             public IType ReturnType
             {
                 get
@@ -349,6 +336,10 @@ namespace Il2Native.Logic.Gencode
                     return TypeAdapter.FromType(typeof(void));
                 }
             }
+
+            /// <summary>
+            /// </summary>
+            public IType Type { get; private set; }
 
             /// <summary>
             /// </summary>
@@ -365,11 +356,13 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            /// <param name="obj">
+            /// </param>
             /// <returns>
             /// </returns>
-            public byte[] GetILAsByteArray()
+            public override bool Equals(object obj)
             {
-                return new byte[0];
+                return this.ToString().Equals(obj.ToString());
             }
 
             /// <summary>
@@ -379,6 +372,24 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IType> GetGenericArguments()
             {
                 return null;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public override int GetHashCode()
+            {
+                return this.ToString().GetHashCode();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public byte[] GetILAsByteArray()
+            {
+                return new byte[0];
             }
 
             /// <summary>
@@ -431,26 +442,6 @@ namespace Il2Native.Logic.Gencode
                 result.Append(')');
 
                 return result.ToString();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public override bool Equals(object obj)
-            {
-                return this.ToString().Equals(obj.ToString());
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override int GetHashCode()
-            {
-                return this.ToString().GetHashCode();
             }
         }
 

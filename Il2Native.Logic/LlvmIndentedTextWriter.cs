@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LlvmIndentedTextWriter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -38,17 +40,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public void StartMethodBody()
-        {
-            this.isMethod = true;
-            this.sb = new StringBuilder();
-            this.sw = new IndentedTextWriter(new StringWriter(this.sb));
-            this.sw.Indent = this.Indent;
-            this.sw.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
         public void EndMethodBody()
         {
             this.sw.Close();
@@ -80,6 +71,17 @@ namespace Il2Native.Logic
             this.isMethod = false;
 
             this.Indent = savedIndent;
+        }
+
+        /// <summary>
+        /// </summary>
+        public void StartMethodBody()
+        {
+            this.isMethod = true;
+            this.sb = new StringBuilder();
+            this.sw = new IndentedTextWriter(new StringWriter(this.sb));
+            this.sw.Indent = this.Indent;
+            this.sw.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -130,23 +132,6 @@ namespace Il2Native.Logic
             {
                 this.sw.Indent = this.Indent;
                 this.sw.Write(s);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="s">
-        /// </param>
-        public override void WriteLine(string s)
-        {
-            if (!this.isMethod)
-            {
-                base.WriteLine(s);
-            }
-            else
-            {
-                this.sw.Indent = this.Indent;
-                this.sw.WriteLine(s);
             }
         }
 
@@ -229,6 +214,23 @@ namespace Il2Native.Logic
             {
                 this.sw.Indent = this.Indent;
                 this.sw.Write(format, arg);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="s">
+        /// </param>
+        public override void WriteLine(string s)
+        {
+            if (!this.isMethod)
+            {
+                base.WriteLine(s);
+            }
+            else
+            {
+                this.sw.Indent = this.Indent;
+                this.sw.WriteLine(s);
             }
         }
 

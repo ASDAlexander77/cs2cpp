@@ -6,10 +6,8 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.CodeParts
 {
-    using System;
     using System.Reflection.Emit;
 
     /// <summary>

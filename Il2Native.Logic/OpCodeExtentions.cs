@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
@@ -32,13 +31,45 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool Any(this OpCodePart opCode, params Code[] codes)
         {
-            Code code = opCode.ToCode();
-            foreach (Code item in codes)
+            var code = opCode.ToCode();
+            foreach (var item in codes)
             {
                 if (item == code)
                 {
                     return true;
                 }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool HasAnyVirtualMethod(this IType thisType)
+        {
+            if (thisType.HasAnyVirtualMethodInCurrentType())
+            {
+                return true;
+            }
+
+            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType)
+        {
+            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
+            {
+                return true;
             }
 
             return false;
@@ -52,7 +83,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsAnyBranch(this OpCodePart opCodePart)
         {
-            return (opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch);
+            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch;
         }
 
         /// <summary>
@@ -80,6 +111,37 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsDerivedFrom(this IType thisType, IType type)
+        {
+            Debug.Assert(type != null);
+
+            if (thisType == type)
+            {
+                return false;
+            }
+
+            var t = thisType.BaseType;
+            while (t != null)
+            {
+                if (type.TypeEquals(t))
+                {
+                    return true;
+                }
+
+                t = t.BaseType;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -102,17 +164,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsSingle(this IType type)
-        {
-            return type != null && type.Name == "Single" && type.Namespace == "System";
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
@@ -127,6 +178,47 @@ namespace Il2Native.Logic
             }
 
             return opCode.Operand > 0;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="interfaceMember">
+        /// </param>
+        /// <param name="publicMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
+        {
+            if (interfaceMember.Name == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            if (interfaceMember.FullName == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="overridingMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsMatchingOverride(this IMethod method, IMethod overridingMethod)
+        {
+            if (method.Name == overridingMethod.Name)
+            {
+                return method.IsMatchingParamsAndReturnType(overridingMethod);
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -160,6 +252,28 @@ namespace Il2Native.Logic
         public static bool IsReturn(this OpCodePart opCodePart)
         {
             return opCodePart.OpCode.FlowControl == FlowControl.Return && opCodePart.ToCode() != Code.Endfinally;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsRootOfVirtualTable(this IType type)
+        {
+            return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsSingle(this IType type)
+        {
+            return type != null && type.Name == "Single" && type.Namespace == "System";
         }
 
         /// <summary>
@@ -201,115 +315,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool NameEquals(this IName type, IName other)
-        {
-            return type != null && other.CompareTo(type) == 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool NameNotEquals(this IName type, IName other)
-        {
-            return !type.NameEquals(other);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool TypeEquals(this IType type, IType other)
-        {
-            return type != null && other.CompareTo(type) == 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool TypeNotEquals(this IType type, IType other)
-        {
-            return !type.TypeEquals(other);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool TypeEquals(this IType type, Type other)
-        {
-            return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool TypeNotEquals(this IType type, Type other)
-        {
-            return !type.TypeEquals(other);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsDerivedFrom(this IType thisType, IType type)
-        {
-            Debug.Assert(type != null);
-
-            if (thisType == type)
-            {
-                return false;
-            }
-
-            IType t = thisType.BaseType;
-            while (t != null)
-            {
-                if (type.TypeEquals(t))
-                {
-                    return true;
-                }
-
-                t = t.BaseType;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
@@ -347,11 +352,42 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static OpCodePart NextOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
+        public static OpCodePart JumpOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
-            OpCodePart ret = null;
-            baseWriter.OpsByGroupAddressStart.TryGetValue(opCode.GroupAddressEnd, out ret);
-            return ret;
+            var jumpAddress = opCode.JumpAddress();
+            OpCodePart stopForBranch;
+            if (baseWriter.OpsByGroupAddressStart.TryGetValue(jumpAddress, out stopForBranch))
+            {
+                return stopForBranch;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool NameEquals(this IName type, IName other)
+        {
+            return type != null && other.CompareTo(type) == 0;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool NameNotEquals(this IName type, IName other)
+        {
+            return !type.NameEquals(other);
         }
 
         /// <summary>
@@ -377,30 +413,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static OpCodePart JumpOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            int jumpAddress = opCode.JumpAddress();
-            OpCodePart stopForBranch;
-            if (baseWriter.OpsByGroupAddressStart.TryGetValue(jumpAddress, out stopForBranch))
-            {
-                return stopForBranch;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="baseWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static OpCodePart PreviousOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
+        public static OpCodePart NextOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
             OpCodePart ret = null;
-            baseWriter.OpsByGroupAddressEnd.TryGetValue(opCode.GroupAddressStart, out ret);
+            baseWriter.OpsByGroupAddressStart.TryGetValue(opCode.GroupAddressEnd, out ret);
             return ret;
         }
 
@@ -423,11 +439,26 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static OpCodePart PreviousOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
+        {
+            OpCodePart ret = null;
+            baseWriter.OpsByGroupAddressEnd.TryGetValue(opCode.GroupAddressStart, out ret);
+            return ret;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
         /// <returns>
         /// </returns>
         public static Code ToCode(this OpCodePart opCode)
         {
-            short val = opCode.OpCode.Value;
+            var val = opCode.OpCode.Value;
             if (val < 0xE1 && val >= 0)
             {
                 return (Code)val;
@@ -438,72 +469,64 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="thisType">
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasAnyVirtualMethod(this IType thisType)
+        public static bool TypeEquals(this IType type, IType other)
         {
-            if (thisType.HasAnyVirtualMethodInCurrentType())
-            {
-                return true;
-            }
-
-            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType)
-        {
-            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
-            {
-                return true;
-            }
-
-            return false;
+            return type != null && other.CompareTo(type) == 0;
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
+        /// <param name="other">
+        /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsRootOfVirtualTable(this IType type)
+        public static bool TypeEquals(this IType type, Type other)
         {
-            return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+            return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
         }
 
-        public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool TypeNotEquals(this IType type, IType other)
         {
-            if (interfaceMember.Name == publicMethod.Name)
-            {
-                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
-            }
-
-            if (interfaceMember.FullName == publicMethod.Name)
-            {
-                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
-            }
-
-            return false;
+            return !type.TypeEquals(other);
         }
 
-        public static bool IsMatchingOverride(this IMethod method, IMethod overridingMethod)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool TypeNotEquals(this IType type, Type other)
         {
-            if (method.Name == overridingMethod.Name)
-            {
-                return method.IsMatchingParamsAndReturnType(overridingMethod);
-            }
-
-            return false;
+            return !type.TypeEquals(other);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="overridingMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static bool IsMatchingParamsAndReturnType(this IMethod method, IMethod overridingMethod)
         {
             var params1 = method.GetParameters().ToArray();
@@ -527,6 +550,7 @@ namespace Il2Native.Logic
             {
                 return false;
             }
+
             return true;
         }
     }

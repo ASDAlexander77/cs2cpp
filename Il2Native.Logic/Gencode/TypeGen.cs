@@ -12,8 +12,9 @@ namespace Il2Native.Logic.Gencode
     using System.Collections.Generic;
     using System.Linq;
 
-    using PEAssemblyReader;
     using Il2Native.Logic.CodeParts;
+
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -25,11 +26,11 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
+        private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
+        private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
@@ -98,197 +99,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Single&"] = LlvmWriter.pointerSize;
             SystemTypeSizes["Double&"] = LlvmWriter.pointerSize;
             SystemTypeSizes["Boolean&"] = LlvmWriter.pointerSize;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
-        /// </param>
-        /// <param name="refChar">
-        /// </param>
-        public static void WriteTypePrefix(
-            this IType type, LlvmIndentedTextWriter writer, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
-        {
-            type.WriteTypeWithoutModifiers(writer, doNotIncludeTypePrefixId);
-            type.WriteTypeModifiers(writer, asReference, refChar);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="doNotConvert">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string TypeToCType(this IType type, bool doNotConvert = false)
-        {
-            var effectiveType = type;
-
-            if (type.IsArray)
-            {
-                effectiveType = type.GetElementType();
-            }
-
-            if (!doNotConvert)
-            {
-                if (effectiveType.Namespace == "System")
-                {
-                    string ctype;
-                    if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
-                    {
-                        return ctype;
-                    }
-                }
-
-                if (type.IsEnum)
-                {
-                    switch (type.GetTypeSize())
-                    {
-                        case 1:
-                            return "i8";
-                        case 2:
-                            return "i16";
-                        case 4:
-                            return "i32";
-                        case 8:
-                            return "i64";
-                    }
-                }
-
-                if (type.IsValueType && type.IsPrimitive)
-                {
-                    return type.Name.ToLowerInvariant();
-                }
-            }
-
-            return string.Concat('"', type.FullName, '"');
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
-        /// </param>
-        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool doNotIncludeTypePrefixId = false)
-        {
-            var effectiveType = type;
-
-            while (effectiveType.HasElementType)
-            {
-                effectiveType = effectiveType.GetElementType();
-            }
-
-            // TODO: remove String test when you use real string class
-            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum
-                && !(effectiveType.Namespace == "System" && effectiveType.Name == "String"))
-            {
-                writer.Write('%');
-            }
-
-            // write base name
-            effectiveType.WriteTypeName(writer);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="doNotConvert">
-        /// </param>
-        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool doNotConvert = false)
-        {
-            var typeBaseName = type.TypeToCType(doNotConvert);
-
-            // clean name
-            if (typeBaseName.EndsWith("&"))
-            {
-                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
-            }
-
-            var index = typeBaseName.IndexOf('`');
-            if (index >= 0)
-            {
-                var nameWithoutGeneric = typeBaseName.Substring(0, index);
-                writer.Write(nameWithoutGeneric);
-            }
-            else
-            {
-                writer.Write(typeBaseName);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        /// <param name="refChar">
-        /// </param>
-        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference, char refChar)
-        {
-            var effectiveType = type;
-
-            do
-            {
-                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
-                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsArray)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsByRef)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.HasElementType)
-                {
-                    effectiveType = effectiveType.GetElementType();
-                }
-                else
-                {
-                    break;
-                }
-            }
-            while (effectiveType != null);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int GetTypeSize(this IType type)
-        {
-            // find index
-            int size;
-            if (!sizeByType.TryGetValue(type.FullName, out size))
-            {
-                size = type.CalculateSize();
-            }
-
-            return size;
         }
 
         /// <summary>
@@ -364,6 +174,24 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetTypeSize(this IType type)
+        {
+            // find index
+            int size;
+            if (!sizeByType.TryGetValue(type.FullName, out size))
+            {
+                size = type.CalculateSize();
+            }
+
+            return size;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="requiredType">
         /// </param>
         /// <param name="opCodePart">
@@ -373,6 +201,179 @@ namespace Il2Native.Logic.Gencode
         public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart)
         {
             return opCodePart.Result != null && requiredType != opCodePart.Result.Type && requiredType.IsAssignableFrom(opCodePart.Result.Type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="doNotConvert">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string TypeToCType(this IType type, bool doNotConvert = false)
+        {
+            var effectiveType = type;
+
+            if (type.IsArray)
+            {
+                effectiveType = type.GetElementType();
+            }
+
+            if (!doNotConvert)
+            {
+                if (effectiveType.Namespace == "System")
+                {
+                    string ctype;
+                    if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
+                    {
+                        return ctype;
+                    }
+                }
+
+                if (type.IsEnum)
+                {
+                    switch (type.GetTypeSize())
+                    {
+                        case 1:
+                            return "i8";
+                        case 2:
+                            return "i16";
+                        case 4:
+                            return "i32";
+                        case 8:
+                            return "i64";
+                    }
+                }
+
+                if (type.IsValueType && type.IsPrimitive)
+                {
+                    return type.Name.ToLowerInvariant();
+                }
+            }
+
+            return string.Concat('"', type.FullName, '"');
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="asReference">
+        /// </param>
+        /// <param name="refChar">
+        /// </param>
+        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference, char refChar)
+        {
+            var effectiveType = type;
+
+            do
+            {
+                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
+                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.IsArray)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.IsByRef)
+                {
+                    writer.Write(refChar);
+                }
+
+                if (effectiveType.HasElementType)
+                {
+                    effectiveType = effectiveType.GetElementType();
+                }
+                else
+                {
+                    break;
+                }
+            }
+            while (effectiveType != null);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="doNotConvert">
+        /// </param>
+        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool doNotConvert = false)
+        {
+            var typeBaseName = type.TypeToCType(doNotConvert);
+
+            // clean name
+            if (typeBaseName.EndsWith("&"))
+            {
+                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
+            }
+
+            var index = typeBaseName.IndexOf('`');
+            if (index >= 0)
+            {
+                var nameWithoutGeneric = typeBaseName.Substring(0, index);
+                writer.Write(nameWithoutGeneric);
+            }
+            else
+            {
+                writer.Write(typeBaseName);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="asReference">
+        /// </param>
+        /// <param name="doNotIncludeTypePrefixId">
+        /// </param>
+        /// <param name="refChar">
+        /// </param>
+        public static void WriteTypePrefix(
+            this IType type, LlvmIndentedTextWriter writer, bool asReference = false, bool doNotIncludeTypePrefixId = false, char refChar = '*')
+        {
+            type.WriteTypeWithoutModifiers(writer, doNotIncludeTypePrefixId);
+            type.WriteTypeModifiers(writer, asReference, refChar);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="doNotIncludeTypePrefixId">
+        /// </param>
+        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool doNotIncludeTypePrefixId = false)
+        {
+            var effectiveType = type;
+
+            while (effectiveType.HasElementType)
+            {
+                effectiveType = effectiveType.GetElementType();
+            }
+
+            // TODO: remove String test when you use real string class
+            if (!doNotIncludeTypePrefixId && !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum
+                && !(effectiveType.Namespace == "System" && effectiveType.Name == "String"))
+            {
+                writer.Write('%');
+            }
+
+            // write base name
+            effectiveType.WriteTypeName(writer);
         }
     }
 }

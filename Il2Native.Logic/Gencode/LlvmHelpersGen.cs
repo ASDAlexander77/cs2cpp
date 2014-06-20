@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic.Gencode
 {
     using System;
@@ -21,122 +20,6 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class LlvmHelpersGen
     {
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="op1">
-        /// </param>
-        /// <param name="op2">
-        /// </param>
-        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, LlvmResult op1, LlvmResult op2)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                llvmWriter.GetResultNumber(op1),
-                llvmWriter.GetResultNumber(op2),
-                type.GetTypeSize(),
-                LlvmWriter.pointerSize /*Align*/);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="op1">
-        /// </param>
-        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, LlvmResult op1)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                llvmWriter.GetResultNumber(op1),
-                type.GetTypeSize(),
-                LlvmWriter.pointerSize /*Align*/);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="localVarName">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
-        {
-            if (opCode.HasResult)
-            {
-                return;
-            }
-
-            var writer = llvmWriter.Output;
-
-            if (!type.IsStructureType() || structAsRef)
-            {
-                llvmWriter.WriteSetResultNumber(opCode, type);
-
-                // last part
-                writer.Write("load ");
-                type.WriteTypePrefix(writer, structAsRef);
-                if (appendReference)
-                {
-                    // add reference to type
-                    writer.Write('*');
-                }
-
-                writer.Write(' ');
-                writer.Write(localVarName);
-
-                // TODO: optional do we need to calculate it propertly?
-                writer.Write(", align " + LlvmWriter.pointerSize);
-            }
-            else
-            {
-                Debug.Assert(opCode.DestinationName != null);
-                llvmWriter.WriteCopyStruct(writer, opCode, type, localVarName, opCode.DestinationName);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        public static void WriteLlvmLocalVarAccess(this LlvmWriter llvmWriter, int index, bool asReference = false)
-        {
-            var writer = llvmWriter.Output;
-
-            llvmWriter.LocalInfo[index].LocalType.WriteTypePrefix(writer, false);
-            if (asReference)
-            {
-                writer.Write('*');
-            }
-
-            writer.Write(' ');
-            writer.Write(llvmWriter.GetLocalVarName(index));
-
-            // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + LlvmWriter.pointerSize);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -244,7 +127,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
+        /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCodeMethodInfo">
         /// </param>
@@ -258,8 +141,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="thisResultNumber">
         /// </param>
-        public static void WriteCall(this LlvmWriter llvmWriter,
-                OpCodePart opCodeMethodInfo, IMethod methodBase, bool isVirtual, bool hasThis, bool isCtor, LlvmResult thisResultNumber, IExceptionHandlingClause exceptionHandlingClause)
+        /// <param name="exceptionHandlingClause">
+        /// </param>
+        public static void WriteCall(
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCodeMethodInfo, 
+            IMethod methodBase, 
+            bool isVirtual, 
+            bool hasThis, 
+            bool isCtor, 
+            LlvmResult thisResultNumber, 
+            IExceptionHandlingClause exceptionHandlingClause)
         {
             if (opCodeMethodInfo.HasResult)
             {
@@ -286,15 +178,21 @@ namespace Il2Native.Logic.Gencode
             var thisType = methodBase.DeclaringType;
 
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
-            var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0 ? opCodeMethodInfo.OpCodeOperands[0] : null;
+            var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
+                                         ? opCodeMethodInfo.OpCodeOperands[0]
+                                         : null;
             var resultOfirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
 
             var startsWithThis = hasThisArgument && opCodeFirstOperand.Any(Code.Ldarg_0);
 
             LlvmResult virtualMethodAddressResultNumber = null;
-            var isInderectMethodCall = isVirtual && (methodBase.IsAbstract || methodBase.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
+            var isInderectMethodCall = isVirtual
+                                       && (methodBase.IsAbstract || methodBase.IsVirtual
+                                           || (thisType.IsInterface && thisType.TypeEquals(resultOfirstOperand.IType)));
 
-            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType) ? resultOfirstOperand.IType : null;
+            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfirstOperand.IType)
+                                               ? resultOfirstOperand.IType
+                                               : null;
             var requiredType = ownerOfExplicitInterface != null ? resultOfirstOperand.IType : null;
             if (requiredType != null)
             {
@@ -314,6 +212,7 @@ namespace Il2Native.Logic.Gencode
                     // we need to extract interface from an object
                     requiredType = thisType;
                 }
+
                 ////else if (!methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
                 ////{
                 ////    // we need to extract interface from an object
@@ -354,6 +253,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("* ");
                 llvmWriter.WriteResultNumber(pointerToFunctionPointerResultNumber);
                 writer.WriteLine(string.Empty);
+
                 // remember virtual method address result
                 virtualMethodAddressResultNumber = opCodeMethodInfo.Result;
 
@@ -365,6 +265,7 @@ namespace Il2Native.Logic.Gencode
                         writer, opCodeMethodInfo, methodInfo, thisType, pointerToInterfaceVirtualTablePointersResultNumber);
 
                     var thisPointerResultNumber = opCodeMethodInfo.Result;
+
                     // set ot for Call op code
                     opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
                 }
@@ -439,16 +340,16 @@ namespace Il2Native.Logic.Gencode
             }
 
             llvmWriter.ActualWrite(
-                writer,
-                opCodeMethodInfo.OpCodeOperands,
-                methodBase.GetParameters(),
-                isVirtual,
-                hasThis,
-                isCtor,
-                preProcessedOperandResults,
-                thisResultNumber,
-                thisType,
-                opCodeMethodInfo.Result,
+                writer, 
+                opCodeMethodInfo.OpCodeOperands, 
+                methodBase.GetParameters(), 
+                isVirtual, 
+                hasThis, 
+                isCtor, 
+                preProcessedOperandResults, 
+                thisResultNumber, 
+                thisType, 
+                opCodeMethodInfo.Result, 
                 methodInfo != null ? methodInfo.ReturnType : null);
 
             if (exceptionHandlingClause != null)
@@ -476,8 +377,6 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
         /// </param>
         /// <param name="fromResult">
         /// </param>
@@ -558,6 +457,122 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="localVarName">
+        /// </param>
+        /// <param name="appendReference">
+        /// </param>
+        /// <param name="structAsRef">
+        /// </param>
+        public static void WriteLlvmLoad(
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
+        {
+            if (opCode.HasResult)
+            {
+                return;
+            }
+
+            var writer = llvmWriter.Output;
+
+            if (!type.IsStructureType() || structAsRef)
+            {
+                llvmWriter.WriteSetResultNumber(opCode, type);
+
+                // last part
+                writer.Write("load ");
+                type.WriteTypePrefix(writer, structAsRef);
+                if (appendReference)
+                {
+                    // add reference to type
+                    writer.Write('*');
+                }
+
+                writer.Write(' ');
+                writer.Write(localVarName);
+
+                // TODO: optional do we need to calculate it propertly?
+                writer.Write(", align " + LlvmWriter.pointerSize);
+            }
+            else
+            {
+                Debug.Assert(opCode.DestinationName != null);
+                llvmWriter.WriteCopyStruct(writer, opCode, type, localVarName, opCode.DestinationName);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <param name="asReference">
+        /// </param>
+        public static void WriteLlvmLocalVarAccess(this LlvmWriter llvmWriter, int index, bool asReference = false)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.LocalInfo[index].LocalType.WriteTypePrefix(writer, false);
+            if (asReference)
+            {
+                writer.Write('*');
+            }
+
+            writer.Write(' ');
+            writer.Write(llvmWriter.GetLocalVarName(index));
+
+            // TODO: optional do we need to calculate it propertly?
+            writer.Write(", align " + LlvmWriter.pointerSize);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="op1">
+        /// </param>
+        /// <param name="op2">
+        /// </param>
+        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, LlvmResult op1, LlvmResult op2)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
+                llvmWriter.GetResultNumber(op1), 
+                llvmWriter.GetResultNumber(op2), 
+                type.GetTypeSize(), 
+                LlvmWriter.pointerSize /*Align*/);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="op1">
+        /// </param>
+        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, LlvmResult op1)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.Write(
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", 
+                llvmWriter.GetResultNumber(op1), 
+                type.GetTypeSize(), 
+                LlvmWriter.pointerSize /*Align*/);
         }
     }
 }

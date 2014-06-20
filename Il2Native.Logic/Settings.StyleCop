@@ -218,7 +218,10 @@
     <Analyzer AnalyzerId="StyleCop.CSharp.NamingRules">
       <AnalyzerSettings>
         <CollectionProperty Name="Hungarian">
+          <Value>il</Value>
+          <Value>Il</Value>
           <Value>op</Value>
+          <Value>pe</Value>
         </CollectionProperty>
       </AnalyzerSettings>
     </Analyzer>

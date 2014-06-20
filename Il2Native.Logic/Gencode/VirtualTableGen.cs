@@ -20,122 +20,13 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType =
-            new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
-
-        /// <summary>
-        /// </summary>
         private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualInterfaceTableByType =
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
-        public static void ClearVirtualTables()
-        {
-            virtualTableByType.Clear();
-            virtualInterfaceTableByType.Clear();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(this IType thisType)
-        {
-            List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
-
-            if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
-            {
-                return virtualTable;
-            }
-
-            virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
-            virtualTable.BuildVirtualTable(thisType);
-
-            virtualTableByType[thisType.FullName] = virtualTable;
-
-            return virtualTable;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetVirtualInterfaceTableName(this IType type, IType @interface)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetVirtualTableName(this IType type)
-        {
-            return string.Concat("@\"", type.FullName, " Virtual Table\"");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="KeyNotFoundException">
-        /// </exception>
-        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo)
-        {
-            var virtualTable = thisType.GetVirtualTable();
-
-            var index = 0;
-            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
-            {
-                if (virtualMethod.IsMatchingOverride(methodInfo))
-                {
-                    // + RTTI info shift
-                    return index;
-                }
-
-                index++;
-            }
-
-            throw new KeyNotFoundException("virtual method could not be found");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualInterfaceTable(this IType thisType, IType @interface)
-        {
-            List<LlvmWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
-
-            if (virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
-            {
-                return virtualInterfaceTable;
-            }
-
-            virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
-            BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
-
-            virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
-
-            return virtualInterfaceTable;
-        }
+        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType =
+            new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
@@ -195,6 +86,126 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        public static void ClearVirtualTables()
+        {
+            virtualTableByType.Clear();
+            virtualInterfaceTableByType.Clear();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualInterfaceTable(this IType thisType, IType @interface)
+        {
+            List<LlvmWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
+
+            if (virtualInterfaceTableByType.TryGetValue(string.Concat(thisType.FullName, '+', @interface.FullName), out virtualInterfaceTable))
+            {
+                return virtualInterfaceTable;
+            }
+
+            virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
+            BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
+
+            virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
+
+            return virtualInterfaceTable;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetVirtualInterfaceTableName(this IType type, IType @interface)
+        {
+            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
+        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo)
+        {
+            var virtualTable = thisType.GetVirtualTable();
+
+            var index = 0;
+            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
+            {
+                if (virtualMethod.IsMatchingOverride(methodInfo))
+                {
+                    // + RTTI info shift
+                    return index;
+                }
+
+                index++;
+            }
+
+            throw new KeyNotFoundException("virtual method could not be found");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(this IType thisType)
+        {
+            List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
+
+            if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
+            {
+                return virtualTable;
+            }
+
+            virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
+            virtualTable.BuildVirtualTable(thisType);
+
+            virtualTableByType[thisType.FullName] = virtualTable;
+
+            return virtualTable;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetVirtualTableName(this IType type)
+        {
+            return string.Concat("@\"", type.FullName, " Virtual Table\"");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetVirtualTableSize(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable)
+        {
+            return virtualTable.Count + 2;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="virtualTable">
         /// </param>
         /// <param name="llvmWriter">
@@ -246,17 +257,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.Indent--;
             writer.WriteLine("]");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="virtualTable">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int GetVirtualTableSize(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable)
-        {
-            return virtualTable.Count + 2;
         }
     }
 }

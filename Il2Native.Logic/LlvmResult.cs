@@ -1,15 +1,41 @@
-﻿namespace Il2Native.Logic
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="LlvmResult.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic
 {
     using System;
 
     using PEAssemblyReader;
 
+    /// <summary>
+    /// </summary>
     public class LlvmResult
     {
-        public LlvmResult(LlvmResult result) : this(result.Number, result.Type)
+        /// <summary>
+        /// </summary>
+        /// <param name="result">
+        /// </param>
+        public LlvmResult(LlvmResult result)
+            : this(result.Number, result.Type)
         {
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="number">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// </exception>
         public LlvmResult(int number, IType type)
         {
             if (number <= 0)
@@ -26,6 +52,8 @@
             this.Type = type;
         }
 
+        /// <summary>
+        /// </summary>
         protected LlvmResult()
         {
         }

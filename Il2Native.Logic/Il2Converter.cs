@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Il2Converter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -47,6 +49,37 @@ namespace Il2Native.Logic
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
             GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="codeWriter">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <param name="genericDefinition">
+        /// </param>
+        /// <param name="disablePostDeclarations">
+        /// </param>
+        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IType genericDefinition, bool disablePostDeclarations = false)
+        {
+            codeWriter.WriteTypeStart(type, genericDefinition);
+
+            var fields = IlReader.Fields(type);
+            var count = fields.Count();
+            var number = 1;
+
+            codeWriter.WriteBeforeFields(count);
+
+            foreach (var field in fields)
+            {
+                codeWriter.WriteFieldStart(field, number, count);
+                codeWriter.WriteFieldEnd(field, number, count);
+
+                number++;
+            }
+
+            codeWriter.WriteAfterFields(count, disablePostDeclarations);
         }
 
         /// <summary>
@@ -117,37 +150,6 @@ namespace Il2Native.Logic
 
             codeWriter.WriteAfterMethods();
             codeWriter.WriteTypeEnd(type);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="codeWriter">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        /// <param name="genericDefinition">
-        /// </param>
-        /// <param name="disablePostDeclarations">
-        /// </param>
-        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IType genericDefinition, bool disablePostDeclarations = false)
-        {
-            codeWriter.WriteTypeStart(type, genericDefinition);
-
-            var fields = IlReader.Fields(type);
-            var count = fields.Count();
-            var number = 1;
-
-            codeWriter.WriteBeforeFields(count);
-
-            foreach (var field in fields)
-            {
-                codeWriter.WriteFieldStart(field, number, count);
-                codeWriter.WriteFieldEnd(field, number, count);
-
-                number++;
-            }
-
-            codeWriter.WriteAfterFields(count, disablePostDeclarations);
         }
 
         /// <summary>
@@ -254,11 +256,6 @@ namespace Il2Native.Logic
                 }
 
                 ConvertIType(ilReader, codeWriter, type, genDef);
-
-                foreach (var nestedType in type.GetNestedTypes())
-                {
-                    ConvertIType(ilReader, codeWriter, nestedType, genDef);
-                }
             }
 
             codeWriter.WriteEnd();
@@ -374,7 +371,7 @@ namespace Il2Native.Logic
             var requiredITypes = GetAllRequiredITypesForIType(type, allITypes, genericSpecializations).ToList();
             foreach (var requiredIType in requiredITypes)
             {
-                if (type != requiredIType)
+                if (type.TypeNotEquals(requiredIType))
                 {
                     AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
                 }
@@ -520,38 +517,6 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            /// <param name="x">
-            /// </param>
-            /// <param name="y">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public int Compare(IType x, IType y)
-            {
-                var lvlX = InheritanceLevel(x);
-                var lvlY = InheritanceLevel(y);
-
-                var cmp = lvlX.CompareTo(lvlY);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                if (DependsOn(x, y) || HasInterface(x, y) || HasAsValueType(x, y))
-                {
-                    return 1;
-                }
-
-                if (DependsOn(y, x) || HasInterface(y, x) || HasAsValueType(y, x))
-                {
-                    return -1;
-                }
-
-                return x.FullName.CompareTo(y.FullName);
-            }
-
-            /// <summary>
-            /// </summary>
             /// <param name="type">
             /// </param>
             /// <param name="baseIType">
@@ -641,6 +606,38 @@ namespace Il2Native.Logic
                 }
 
                 return 1 + InheritanceLevel(t.BaseType);
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="x">
+            /// </param>
+            /// <param name="y">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            public int Compare(IType x, IType y)
+            {
+                var lvlX = InheritanceLevel(x);
+                var lvlY = InheritanceLevel(y);
+
+                var cmp = lvlX.CompareTo(lvlY);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                if (DependsOn(x, y) || HasInterface(x, y) || HasAsValueType(x, y))
+                {
+                    return 1;
+                }
+
+                if (DependsOn(y, x) || HasInterface(y, x) || HasAsValueType(y, x))
+                {
+                    return -1;
+                }
+
+                return x.FullName.CompareTo(y.FullName);
             }
         }
     }

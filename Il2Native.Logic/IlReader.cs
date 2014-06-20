@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
@@ -37,6 +36,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private static readonly IDictionary<Code, OpCode> OpCodesMap = new SortedDictionary<Code, OpCode>();
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyTypes;
 
         /// <summary>
         /// </summary>
@@ -268,6 +271,7 @@ namespace Il2Native.Logic
         /// </summary>
         public IlReader()
         {
+            this.lazyTypes = new Lazy<IEnumerable<IType>>(this.ReadTypes);
         }
 
         /// <summary>
@@ -275,6 +279,7 @@ namespace Il2Native.Logic
         /// <param name="source">
         /// </param>
         public IlReader(string source)
+            : this()
         {
             this.Source = source;
         }
@@ -321,6 +326,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IMethod> Methods(IType type)
+        {
+            return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+        }
+
+        /// <summary>
+        /// </summary>
         public void Load()
         {
             this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
@@ -335,17 +351,6 @@ namespace Il2Native.Logic
         public void Load(Type type)
         {
             this.Assembly = AssemblyMetadata.CreateFromFile(type.Module.Assembly.Location);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type)
-        {
-            return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
 
         /// <summary>
@@ -365,7 +370,7 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            foreach (OpCodePart opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, typeGenerics, methodGenerics))
+            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, typeGenerics, methodGenerics))
             {
                 yield return opCode;
             }
@@ -388,7 +393,7 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            foreach (OpCodePart opCode in this.OpCodes(method.GetMethodBody(), method.Module, typeGenerics, methodGenerics))
+            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, typeGenerics, methodGenerics))
             {
                 yield return opCode;
             }
@@ -413,11 +418,11 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            bool extended = false;
-            int startAddress = 0;
-            int currentAddress = 0;
-            byte[] ilAsByteArray = methodBody.GetILAsByteArray();
-            IEnumerator enumerator = ilAsByteArray.GetEnumerator();
+            var extended = false;
+            var startAddress = 0;
+            var currentAddress = 0;
+            var ilAsByteArray = methodBody.GetILAsByteArray();
+            var enumerator = ilAsByteArray.GetEnumerator();
             while (enumerator.MoveNext())
             {
                 var @byte = (byte)enumerator.Current;
@@ -430,7 +435,7 @@ namespace Il2Native.Logic
                 var code = (Code)(extended ? (@byte + 0xE1) : @byte);
                 extended = false;
 
-                OpCode opCode = OpCodesMap[code];
+                var opCode = OpCodesMap[code];
 
                 startAddress = currentAddress;
                 currentAddress += opCode.Size;
@@ -460,8 +465,8 @@ namespace Il2Native.Logic
                     case Code.Ldarga_S:
 
                         // read token, next 
-                        int token = ReadInt32ShortForm(enumerator, ref currentAddress);
-                        int @int32 = token;
+                        var token = ReadInt32ShortForm(enumerator, ref currentAddress);
+                        var @int32 = token;
                         yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, @int32);
                         continue;
                     case Code.Br:
@@ -491,29 +496,29 @@ namespace Il2Native.Logic
                     case Code.Ldc_I8:
 
                         // read token, next 
-                        byte[] bytes = ReadBytes(enumerator, 8, ref currentAddress);
-                        long @int64 = BitConverter.ToInt64(bytes, 0);
+                        var bytes = ReadBytes(enumerator, 8, ref currentAddress);
+                        var @int64 = BitConverter.ToInt64(bytes, 0);
                         yield return new OpCodeInt64Part(opCode, startAddress, currentAddress, @int64);
                         continue;
                     case Code.Ldc_R4:
 
                         // read token, next 
                         bytes = ReadBytes(enumerator, 4, ref currentAddress);
-                        float @single = BitConverter.ToSingle(bytes, 0);
+                        var @single = BitConverter.ToSingle(bytes, 0);
                         yield return new OpCodeSinglePart(opCode, startAddress, currentAddress, @single);
                         continue;
                     case Code.Ldc_R8:
 
                         // read token, next 
                         bytes = ReadBytes(enumerator, 8, ref currentAddress);
-                        double @double = BitConverter.ToDouble(bytes, 0);
+                        var @double = BitConverter.ToDouble(bytes, 0);
                         yield return new OpCodeDoublePart(opCode, startAddress, currentAddress, @double);
                         continue;
                     case Code.Ldstr:
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        string @string = module.ResolveString(token);
+                        var @string = module.ResolveString(token);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, @string);
                         continue;
                     case Code.Newobj:
@@ -530,7 +535,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        IMethod member = module.ResolveMethod(token, typeGenerics, methodGenerics);
+                        var member = module.ResolveMethod(token, typeGenerics, methodGenerics);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
                         continue;
                     case Code.Stfld:
@@ -542,7 +547,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        IField field = module.ResolveField(token, typeGenerics, methodGenerics);
+                        var field = module.ResolveField(token, typeGenerics, methodGenerics);
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
@@ -567,13 +572,13 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        IType type = module.ResolveType(token, typeGenerics, methodGenerics);
+                        var type = module.ResolveType(token, typeGenerics, methodGenerics);
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
                         var ints = new List<int>();
-                        int count = ReadInt32(enumerator, ref currentAddress);
-                        for (int i = 0; i < count; i++)
+                        var count = ReadInt32(enumerator, ref currentAddress);
+                        for (var i = 0; i < count; i++)
                         {
                             ints.Add(ReadInt32(enumerator, ref currentAddress));
                         }
@@ -585,6 +590,50 @@ namespace Il2Native.Logic
                         continue;
                 }
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> Types()
+        {
+            return this.lazyTypes.Value;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="source">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="Exception">
+        /// </exception>
+        private static AssemblyMetadata Compile(string source)
+        {
+            var codeProvider = new CSharpCodeProvider();
+            var icc = codeProvider.CreateCompiler();
+            var outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
+
+            var parameters = new CompilerParameters();
+            parameters.GenerateExecutable = false;
+            parameters.GenerateInMemory = false;
+            parameters.CompilerOptions = "/optimize+ /unsafe+";
+            parameters.OutputAssembly = outDll;
+
+            // parameters.CompilerOptions = "/optimize-";
+            var results = icc.CompileAssemblyFromFile(parameters, source);
+
+            if (results.Errors.Count > 0)
+            {
+                foreach (CompilerError compilerError in results.Errors)
+                {
+                    throw new Exception(compilerError.ErrorText);
+                }
+            }
+
+            // Successful Compile
+            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
         }
 
         /// <summary>
@@ -603,106 +652,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<IType> Types()
-        {
-            var assemblySymbol = new PEAssemblySymbol(
-                this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-
-            // TODO: find mscorlib
-            // 1) set corelib
-            bool coreLibSet = false;
-            var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
-            var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-            foreach (AssemblyIdentity assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
-            {
-                if (assemblyIdentity.Name == "mscorlib")
-                {
-                    AssemblyMetadata coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
-                    var coreAssemblySymbol = new PEAssemblySymbol(
-                        coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-                    coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
-
-                    assemblySymbol.SetCorLibrary(coreAssemblySymbol);
-
-                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
-                    unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
-                    coreLibSet = true;
-                    continue;
-                }
-
-                // TODO: finish it, loading Assebly (find it by DLL name etc)
-            }
-
-            if (!coreLibSet)
-            {
-                assemblySymbol.SetCorLibrary(assemblySymbol);
-            }
-
-            // 2) set references
-            ImmutableArray<AssemblySymbol> peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(
-                MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
-            var moduleReferences = new ModuleReferences<AssemblySymbol>(
-                this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
-
-            // 3) Load Types
-            foreach (ModuleSymbol module in assemblySymbol.Modules)
-            {
-                module.SetReferences(moduleReferences);
-                KeyValuePair<string, string>[] typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
-                foreach (var typeWithNamespace in typeWithNamespaces)
-                {
-                    MetadataTypeName metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
-                    NamedTypeSymbol symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
-
-                    if (symbol.TypeKind == TypeKind.Error)
-                    {
-                        continue;
-                    }
-
-                    yield return new MetadataTypeAdapter(symbol);
-                }
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="source">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="Exception">
-        /// </exception>
-        private static AssemblyMetadata Compile(string source)
-        {
-            var codeProvider = new CSharpCodeProvider();
-            ICodeCompiler icc = codeProvider.CreateCompiler();
-            string outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
-
-            var parameters = new CompilerParameters();
-            parameters.GenerateExecutable = false;
-            parameters.GenerateInMemory = false;
-            parameters.CompilerOptions = "/optimize+ /unsafe+";
-            parameters.OutputAssembly = outDll;
-
-            // parameters.CompilerOptions = "/optimize-";
-            CompilerResults results = icc.CompileAssemblyFromFile(parameters, source);
-
-            if (results.Errors.Count > 0)
-            {
-                foreach (CompilerError compilerError in results.Errors)
-                {
-                    throw new Exception(compilerError.ErrorText);
-                }
-            }
-
-            // Successful Compile
-            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="source">
         /// </param>
         /// <param name="size">
@@ -716,7 +665,7 @@ namespace Il2Native.Logic
         private static byte[] ReadBytes(IEnumerator source, int size, ref int shift)
         {
             var b = new byte[size];
-            for (int i = 0; i < size; i++)
+            for (var i = 0; i < size; i++)
             {
                 if (source.MoveNext())
                 {
@@ -765,6 +714,70 @@ namespace Il2Native.Logic
             }
 
             throw new InvalidOperationException("Could not read a short for of int32");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IType> ReadTypes()
+        {
+            var assemblySymbol = new PEAssemblySymbol(
+                this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+
+            // TODO: find mscorlib
+            // 1) set corelib
+            var coreLibSet = false;
+            var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+            var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+            foreach (var assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
+            {
+                if (assemblyIdentity.Name == "mscorlib")
+                {
+                    var coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
+                    var coreAssemblySymbol = new PEAssemblySymbol(
+                        coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+                    coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
+
+                    assemblySymbol.SetCorLibrary(coreAssemblySymbol);
+
+                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
+                    unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
+                    coreLibSet = true;
+                    continue;
+                }
+
+                // TODO: finish it, loading Assebly (find it by DLL name etc)
+            }
+
+            if (!coreLibSet)
+            {
+                assemblySymbol.SetCorLibrary(assemblySymbol);
+            }
+
+            // 2) set references
+            var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
+            var moduleReferences = new ModuleReferences<AssemblySymbol>(
+                this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
+
+            // 3) Load Types
+            foreach (var module in assemblySymbol.Modules)
+            {
+                module.SetReferences(moduleReferences);
+                var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
+                foreach (var typeWithNamespace in typeWithNamespaces)
+                {
+                    var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
+                    var symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
+
+                    if (symbol.TypeKind == TypeKind.Error)
+                    {
+                        continue;
+                    }
+
+                    yield return new MetadataTypeAdapter(symbol);
+                }
+            }
         }
     }
 }

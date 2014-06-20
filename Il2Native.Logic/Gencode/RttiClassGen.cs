@@ -24,16 +24,22 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
-        /// </param>
-        public static void WriteRtti(this IType type, LlvmWriter llvmWriter)
+        /// <returns>
+        /// </returns>
+        public static string GetRttiInfoName(this IType type)
         {
-            var writer = llvmWriter.Output;
+            return string.Concat(type.FullName, " Info");
+        }
 
-            writer.WriteLine("; RTTI class");
-            type.WriteRttiClassDefinition(llvmWriter);
-            writer.WriteLine("; RTTI pointer");
-            type.WriteRttiPointerClassDefinition(writer);
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetRttiStringName(this IType type)
+        {
+            return string.Concat(type.FullName, " String Name");
         }
 
         /// <summary>
@@ -55,50 +61,28 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
+        public static void WriteRtti(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; RTTI class");
+            type.WriteRttiClassDefinition(llvmWriter);
+            writer.WriteLine("; RTTI pointer");
+            type.WriteRttiPointerClassDefinition(writer);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         public static void WriteRttiClassDefinition(this IType type, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
             type.WriteRttiClassName(writer);
             type.WriteRttiClassInfo(llvmWriter);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
-        {
-            writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"", 
-                type.GetRttiStringName(), 
-                type.FullName, 
-                type.FullName.Length, 
-                type.StringLength());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetRttiStringName(this IType type)
-        {
-            return string.Concat(type.FullName, " String Name");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetRttiInfoName(this IType type)
-        {
-            return string.Concat(type.FullName, " Info");
         }
 
         /// <summary>
@@ -194,6 +178,22 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent--;
                 writer.WriteLine("}");
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
+        {
+            writer.WriteLine(
+                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"", 
+                type.GetRttiStringName(), 
+                type.FullName, 
+                type.FullName.Length, 
+                type.StringLength());
         }
     }
 }

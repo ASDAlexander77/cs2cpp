@@ -6,12 +6,8 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
-    using System.Collections.Generic;
-    using System.Linq;
-
     using Il2Native.Logic.CodeParts;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -24,10 +20,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCodes">
         /// </param>
-        /// <param name="runDetect">
-        /// </param>
-        /// <param name="detectOnly">
-        /// </param>
         public OpCodeBlock(OpCodePart[] opCodes)
             : base(OpCodesEmit.Nop, 0, 0)
         {
@@ -36,7 +28,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public OpCodePart[] OpCodes { get; private set; }
+        public override int GroupAddressEnd
+        {
+            get
+            {
+                return this.OpCodes[this.OpCodes.Length - 1].GroupAddressEnd;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -50,12 +48,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public override int GroupAddressEnd
-        {
-            get
-            {
-                return this.OpCodes[this.OpCodes.Length - 1].GroupAddressEnd;
-            }
-        }
+        public OpCodePart[] OpCodes { get; private set; }
     }
 }

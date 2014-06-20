@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OpCodePart.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.CodeParts
@@ -45,6 +47,8 @@ namespace Il2Native.Logic.CodeParts
         {
         }
 
+        /// <summary>
+        /// </summary>
         public static OpCodePart CreateNop
         {
             get
@@ -64,6 +68,10 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public List<OpCodePart> Cases { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<IExceptionHandlingClause> CatchOrFinallyEnd { get; set; }
 
         /// <summary>
         /// </summary>
@@ -92,18 +100,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public bool DupProcessedOnce { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public HashSet<IExceptionHandlingClause> CatchOrFinallyEnd { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public HashSet<IExceptionHandlingClause> TryBegin { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public HashSet<IExceptionHandlingClause> TryEnd { get; set; }
 
         /// <summary>
         /// </summary>
@@ -152,6 +148,16 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public bool HasResult
+        {
+            get
+            {
+                return this.Result != null;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool InvertCondition { get; set; }
 
         /// <summary>
@@ -180,16 +186,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool HasResult
-        {
-            get
-            {
-                return this.Result != null;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public LlvmResult Result
         {
             get
@@ -214,7 +210,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsEmpty { get; set; }
+        public HashSet<IExceptionHandlingClause> TryBegin { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<IExceptionHandlingClause> TryEnd { get; set; }
 
         /// <summary>
         /// </summary>
@@ -223,6 +223,10 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public bool UseAsConditionalExpression { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsEmpty { get; set; }
 
         /// <summary>
         /// </summary>
