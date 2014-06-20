@@ -476,7 +476,7 @@ namespace Il2Native.Logic
         /// </summary>
         public void StartProcess()
         {
-            this.StartProcess();
+            base.StartProcess();
             this.resultNumberIncremental = 0;
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;

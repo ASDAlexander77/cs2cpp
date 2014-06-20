@@ -775,7 +775,12 @@ namespace Il2Native.Logic
                         continue;
                     }
 
-                    yield return new MetadataTypeAdapter(symbol);
+                    var metadataTypeAdapter = new MetadataTypeAdapter(symbol);
+                    yield return metadataTypeAdapter;
+                    foreach (var nestedType in metadataTypeAdapter.GetNestedTypes())
+                    {
+                        yield return nestedType;
+                    }
                 }
             }
         }

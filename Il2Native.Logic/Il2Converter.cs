@@ -1,9 +1,7 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Il2Converter.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -107,6 +105,45 @@ namespace Il2Native.Logic
             requiredITypesToAdd.Add(effectiveIType);
         }
 
+        private static void ConvertAllTypes(
+            IlReader ilReader,
+            string[] filter,
+            ICodeWriter codeWriter,
+            List<IType> newListOfITypes,
+            SortedDictionary<string, IType> genDefinitionsByGuid,
+            ConvertingMode mode)
+        {
+            foreach (var type in newListOfITypes)
+            {
+                if (filter != null && !filter.Contains(type.FullName))
+                {
+                    continue;
+                }
+
+                if (type.Name == "<Module>")
+                {
+                    continue;
+                }
+
+                if (!type.IsInterface && type.IsGenericTypeDefinition)
+                {
+                    ////foreach (var genericSpecialization in genericSpecializations.Where(g => g.GUID == type.GUID))
+                    ////{
+                    ////    ConvertIType(ilReader, codeWriter, genericSpecialization);
+                    ////}
+                    continue;
+                }
+
+                IType genDef = null;
+                if (type.IsGenericType)
+                {
+                    genDefinitionsByGuid.TryGetValue(type.Name, out genDef);
+                }
+
+                ConvertIType(ilReader, codeWriter, type, genDef, mode);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="ilReader">
@@ -117,39 +154,54 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericDefinition">
         /// </param>
-        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition)
+        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, ConvertingMode mode)
         {
-            WriteTypeDefinition(codeWriter, type, genericDefinition);
-
-            codeWriter.WriteBeforeConstructors();
-
-            foreach (var ctor in IlReader.Constructors(type))
+            if (mode == ConvertingMode.Declaration)
             {
-                codeWriter.WriteConstructorStart(ctor);
-                foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
-                {
-                    codeWriter.Write(ilCode);
-                }
+                WriteTypeDefinition(codeWriter, type, genericDefinition);
 
-                codeWriter.WriteConstructorEnd(ctor);
+                codeWriter.WriteBeforeConstructors();
             }
 
-            codeWriter.WriteAfterConstructors();
-            codeWriter.WriteBeforeMethods();
-
-            foreach (var method in IlReader.Methods(type))
+            if (mode == ConvertingMode.Definition)
             {
-                codeWriter.WriteMethodStart(method);
-                foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                foreach (var ctor in IlReader.Constructors(type))
                 {
-                    codeWriter.Write(ilCode);
-                }
+                    codeWriter.WriteConstructorStart(ctor);
+                    foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
+                    {
+                        codeWriter.Write(ilCode);
+                    }
 
-                codeWriter.WriteMethodEnd(method);
+                    codeWriter.WriteConstructorEnd(ctor);
+                }
             }
 
-            codeWriter.WriteAfterMethods();
-            codeWriter.WriteTypeEnd(type);
+            if (mode == ConvertingMode.Declaration)
+            {
+                codeWriter.WriteAfterConstructors();
+                codeWriter.WriteBeforeMethods();
+            }
+
+            if (mode == ConvertingMode.Definition)
+            {
+                foreach (var method in IlReader.Methods(type))
+                {
+                    codeWriter.WriteMethodStart(method);
+                    foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                    {
+                        codeWriter.Write(ilCode);
+                    }
+
+                    codeWriter.WriteMethodEnd(method);
+                }
+            }
+
+            if (mode == ConvertingMode.Declaration)
+            {
+                codeWriter.WriteAfterMethods();
+                codeWriter.WriteTypeEnd(type);
+            }
         }
 
         /// <summary>
@@ -227,36 +279,8 @@ namespace Il2Native.Logic
                 codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
-            // enumarte all types
-            foreach (var type in newListOfITypes)
-            {
-                if (filter != null && !filter.Contains(type.FullName))
-                {
-                    continue;
-                }
-
-                if (type.Name == "<Module>")
-                {
-                    continue;
-                }
-
-                if (!type.IsInterface && type.IsGenericTypeDefinition)
-                {
-                    ////foreach (var genericSpecialization in genericSpecializations.Where(g => g.GUID == type.GUID))
-                    ////{
-                    ////    ConvertIType(ilReader, codeWriter, genericSpecialization);
-                    ////}
-                    continue;
-                }
-
-                IType genDef = null;
-                if (type.IsGenericType)
-                {
-                    genDefinitionsByGuid.TryGetValue(type.Name, out genDef);
-                }
-
-                ConvertIType(ilReader, codeWriter, type, genDef);
-            }
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByGuid, ConvertingMode.Declaration);
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByGuid, ConvertingMode.Definition);
 
             codeWriter.WriteEnd();
 
@@ -509,6 +533,13 @@ namespace Il2Native.Logic
                               t =>
                               t.IsGenericParameter || t.ContainsGenericParameters && TypeHasGenericParameterInGenericArguments(t)
                               || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
+        }
+
+        public enum ConvertingMode
+        {
+            Declaration,
+
+            Definition
         }
 
         /// <summary>
