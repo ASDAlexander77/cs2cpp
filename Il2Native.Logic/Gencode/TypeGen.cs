@@ -207,7 +207,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type, bool doNotConvert = false)
+        public static string TypeToCType(this IType type)
         {
             var effectiveType = type;
 
@@ -216,7 +216,7 @@ namespace Il2Native.Logic.Gencode
                 effectiveType = type.GetElementType();
             }
 
-            if (!doNotConvert)
+            if (!type.UseAsClass)
             {
                 if (effectiveType.Namespace == "System")
                 {
@@ -304,9 +304,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotConvert">
         /// </param>
-        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool doNotConvert = false)
+        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer)
         {
-            var typeBaseName = type.TypeToCType(doNotConvert);
+            var typeBaseName = type.TypeToCType();
 
             // clean name
             if (typeBaseName.EndsWith("&"))
@@ -337,9 +337,9 @@ namespace Il2Native.Logic.Gencode
         /// <param name="refChar">
         /// </param>
         public static void WriteTypePrefix(
-            this IType type, LlvmIndentedTextWriter writer, bool asReference = false, bool doNotConvert = false)
+            this IType type, LlvmIndentedTextWriter writer, bool asReference = false)
         {
-            type.WriteTypeWithoutModifiers(writer, doNotConvert);
+            type.WriteTypeWithoutModifiers(writer);
             type.WriteTypeModifiers(writer, asReference);
         }
 
@@ -351,7 +351,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotIncludeTypePrefixId">
         /// </param>
-        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool doNotConvert = false)
+        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer)
         {
             var effectiveType = type;
 
@@ -360,13 +360,13 @@ namespace Il2Native.Logic.Gencode
                 effectiveType = effectiveType.GetElementType();
             }
 
-            if (doNotConvert || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+            if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
             {
                 writer.Write('%');
             }
 
             // write base name
-            effectiveType.WriteTypeName(writer, doNotConvert);
+            effectiveType.WriteTypeName(writer);
         }
     }
 }

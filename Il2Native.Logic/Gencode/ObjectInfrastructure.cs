@@ -91,11 +91,13 @@ namespace Il2Native.Logic.Gencode
                 // initializw virtual table
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
+                    opCode.Result.Type.UseAsClass = true;
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
+                    declaringType.UseAsClass = true;
+                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
                 }
 
                 writer.WriteLine(string.Empty);
@@ -131,11 +133,12 @@ namespace Il2Native.Logic.Gencode
 
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
+                    opCode.Result.Type.UseAsClass = true;
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
+                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
                 }
 
                 writer.WriteLine(string.Empty);
@@ -167,9 +170,11 @@ namespace Il2Native.Logic.Gencode
             var method = new SynthesizedInitMethod(type);
             writer.WriteLine("; Init Object method");
 
+            type.UseAsClass = true;
+
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method);
-            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", true, true, true);
+            llvmWriter.WriteLlvmLoad(opCode, type, "%.this", true, true);
             writer.WriteLine(string.Empty);
             llvmWriter.WriteInitObject(opCode);
             writer.WriteLine("ret void");
@@ -204,6 +209,8 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            declaringType.UseAsClass = true;
+
             var writer = llvmWriter.Output;
 
             writer.WriteLine("; New obj");
@@ -214,7 +221,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMemSet(declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
-            llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringType, true);
+            llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringType);
             writer.WriteLine(string.Empty);
 
             var castResult = opCodePart.Result;

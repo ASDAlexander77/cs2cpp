@@ -47,7 +47,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType, bool doNotConvert = false)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType)
         {
             var writer = llvmWriter.Output;
 
@@ -55,7 +55,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast i8* ");
             llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true, doNotConvert);
+            toType.WriteTypePrefix(writer, true);
         }
 
         /// <summary>
@@ -177,6 +177,7 @@ namespace Il2Native.Logic.Gencode
 
             var methodInfo = methodBase;
             var thisType = methodBase.DeclaringType;
+            thisType.UseAsClass = true;
 
             var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
             var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
@@ -268,7 +269,7 @@ namespace Il2Native.Logic.Gencode
             if (hasThisArgument && thisType.IsClassCastRequired(opCodeFirstOperand))
             {
                 writer.WriteLine("; Cast of 'This' parameter");
-                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType, doNotConvert: true);
+                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -380,7 +381,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="appendReference">
         /// </param>
-        public static void WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false, bool doNotConvert = false)
+        public static void WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false)
         {
             var writer = llvmWriter.Output;
 
@@ -393,7 +394,7 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(writer, true, doNotConvert);
+                fromResult.Type.WriteTypePrefix(writer, true);
                 writer.Write(' ');
                 llvmWriter.WriteResultNumber(fromResult);
                 writer.Write(" to ");
@@ -440,7 +441,7 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
-                fromType.WriteTypePrefix(writer, true, doNotConvert);
+                fromType.WriteTypePrefix(writer, true);
                 writer.Write(' ');
                 writer.Write(custromName);
                 writer.Write(" to ");
@@ -470,7 +471,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false, bool doNotConvert = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
         {
             if (opCode.HasResult)
             {
@@ -485,7 +486,7 @@ namespace Il2Native.Logic.Gencode
 
                 // last part
                 writer.Write("load ");
-                type.WriteTypePrefix(writer, structAsRef || doNotConvert, doNotConvert);
+                type.WriteTypePrefix(writer, structAsRef);
                 if (appendReference)
                 {
                     // add reference to type

@@ -192,7 +192,9 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                thisType.WriteTypePrefix(writer, thisType.IsStructureType(), true);
+                thisType.UseAsClass = true;
+
+                thisType.WriteTypePrefix(writer, thisType.IsStructureType());
                 writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
@@ -467,8 +469,7 @@ namespace Il2Native.Logic
             if (!options.HasFlag(OperandOptions.NoTypePrefix) && !options.HasFlag(OperandOptions.IgnoreOperand))
             {
                 var type = effectiveType ?? TypeAdapter.FromType(typeof(void));
-                type.WriteTypePrefix(
-                    writer, type.IsEnum && options.HasFlag(OperandOptions.DoNotConvertType), options.HasFlag(OperandOptions.DoNotConvertType));
+                type.WriteTypePrefix(writer);
                 if (options.HasFlag(OperandOptions.AppendPointer))
                 {
                     writer.Write('*');
@@ -918,13 +919,15 @@ namespace Il2Native.Logic
 
             writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringType);
 
+            declaringType.UseAsClass = true;
+
             this.ProcessOperator(
                 writer,
                 opCode,
                 "getelementptr inbounds",
                 declaringType,
                 @interface,
-                OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult | OperandOptions.DoNotConvertType);
+                OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
             writer.Write(' ');
             writer.Write(this.GetResultNumber(objectResult));
             this.WriteInterfaceIndex(writer, declaringType, @interface);
@@ -1031,7 +1034,9 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                thisType.WriteTypePrefix(writer, true, true);
+                thisType.UseAsClass = true;
+
+                thisType.WriteTypePrefix(writer, true);
                 if (!noArgumentName)
                 {
                     writer.Write(" %this");
@@ -2111,7 +2116,8 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(opCode, this.ThisType, "%.this", true, this.ThisType.IsStructureType(), true);
+                        this.ThisType.UseAsClass = true;
+                        this.WriteLlvmLoad(opCode, this.ThisType, "%.this", true, this.ThisType.IsStructureType());
                     }
                     else
                     {
@@ -2989,19 +2995,24 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (isThis)
+            {
+                type.UseAsClass = true;
+            }
+
             this.Output.Write("%.{0} = ", name);
 
             // for value types
             this.Output.Write("alloca ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
             this.Output.Write(", align " + pointerSize);
             this.Output.WriteLine(string.Empty);
 
             this.Output.Write("store ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
             this.Output.Write(" %{0}", name);
             this.Output.Write(", ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
 
             this.Output.Write("* %.{0}", name);
             this.Output.Write(", align " + pointerSize);
@@ -3157,7 +3168,9 @@ namespace Il2Native.Logic
                 opts |= OperandOptions.AppendPointer;
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts | OperandOptions.DoNotConvertType);
+            operand.IType.UseAsClass = true;
+
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
             this.WriteFieldIndex(writer, operand.IType, opCodeFieldInfoPart.Operand);
         }
 
@@ -3179,7 +3192,9 @@ namespace Il2Native.Logic
 
             var field = IlReader.Fields(operand.IType).Where(t => !t.IsStatic).Skip(index - 1).First();
 
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", operand.IType, field.FieldType, options: opts | OperandOptions.DoNotConvertType);
+            operand.IType.UseAsClass = true;
+
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", operand.IType, field.FieldType, options: opts);
             this.WriteFieldIndex(writer, operand.IType, index);
         }
 
@@ -3614,7 +3629,7 @@ namespace Il2Native.Logic
         {
             this.Output.Write("%");
 
-            type.WriteTypeName(this.Output, true);
+            type.WriteTypeName(this.Output);
 
             this.Output.Write(" = type ");
         }
@@ -3680,10 +3695,6 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             DetectTypeInSecondOperand = 256,
-
-            /// <summary>
-            /// </summary>
-            DoNotConvertType = 512,
         }
 
         /// <summary>

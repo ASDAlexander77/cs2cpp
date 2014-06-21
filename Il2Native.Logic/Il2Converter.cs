@@ -140,6 +140,7 @@ namespace Il2Native.Logic
                     genDefinitionsByGuid.TryGetValue(type.Name, out genDef);
                 }
 
+                type.UseAsClass = true;
                 ConvertIType(ilReader, codeWriter, type, genDef, mode);
             }
         }
