@@ -263,8 +263,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public ReturnResult ResultOf(OpCodePart opCode)
+        public ReturnResult ResultOf(OpCodePart opCode, bool doNotUseCachedResult = false)
         {
+            if (!doNotUseCachedResult && opCode.HasResult)
+            {
+                return new ReturnResult(opCode.Result.Type);
+            }
+
             var code = opCode.ToCode();
             switch (code)
             {

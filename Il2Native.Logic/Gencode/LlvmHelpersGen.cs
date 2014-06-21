@@ -47,7 +47,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType, bool doNotConvert = false)
         {
             var writer = llvmWriter.Output;
 
@@ -55,7 +55,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast i8* ");
             llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
+            toType.WriteTypePrefix(writer, true, doNotConvert);
         }
 
         /// <summary>
@@ -267,7 +267,8 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument && thisType.IsClassCastRequired(opCodeFirstOperand))
             {
-                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                writer.WriteLine("; Cast of 'This' parameter");
+                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType, doNotConvert: true);
                 writer.WriteLine(string.Empty);
             }
 
@@ -282,6 +283,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (parameter.ParameterType.IsClassCastRequired(operand))
                     {
+                        writer.WriteLine("; Cast of '{0}' parameter", parameter.Name);
                         llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
                     }
 
@@ -468,7 +470,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false, bool enumAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false, bool doNotConvert = false)
         {
             if (opCode.HasResult)
             {
@@ -483,7 +485,7 @@ namespace Il2Native.Logic.Gencode
 
                 // last part
                 writer.Write("load ");
-                type.WriteTypePrefix(writer, structAsRef || enumAsRef, enumAsRef);
+                type.WriteTypePrefix(writer, structAsRef || doNotConvert, doNotConvert);
                 if (appendReference)
                 {
                     // add reference to type

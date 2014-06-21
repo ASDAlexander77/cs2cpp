@@ -131,7 +131,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert:true);
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), doNotConvert: true);
                 }
                 else
                 {
@@ -193,29 +193,40 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
+            llvmWriter.WriteNewWithoutCallingConstructor(opCodeConstructorInfoPart, declaringType);
+            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+        }
+
+        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType)
+        {
+            if (opCodePart.HasResult)
+            {
+                return;
+            }
+
+            var writer = llvmWriter.Output;
+
             writer.WriteLine("; New obj");
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(opCodeConstructorInfoPart, TypeAdapter.FromType(typeof(byte*)));
+            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, TypeAdapter.FromType(typeof(byte*)));
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
             llvmWriter.WriteMemSet(declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
-            llvmWriter.WriteBitcast(opCodeConstructorInfoPart, mallocResult, declaringType);
+            llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringType, true);
             writer.WriteLine(string.Empty);
 
-            var castResult = opCodeConstructorInfoPart.Result;
+            var castResult = opCodePart.Result;
 
             // this.WriteInitObject(writer, opCode, declaringType);
-            declaringType.WriteCallInitObjectMethod(llvmWriter, opCodeConstructorInfoPart);
+            declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
 
             // restore result and type
-            opCodeConstructorInfoPart.Result = castResult;
+            opCodePart.Result = castResult;
 
             writer.WriteLine(string.Empty);
             writer.Write("; end of new obj");
-
-            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
         /// <summary>

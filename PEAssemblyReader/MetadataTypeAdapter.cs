@@ -180,7 +180,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsClassType();
+                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType();
             }
         }
 
@@ -190,8 +190,18 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsEnumType();
+                return this.typeDef.IsEnumType() || this.IsDerivedFromEnum();
             }
+        }
+
+        private bool IsDerivedFromEnum()
+        {
+            return this.BaseType != null && this.BaseType.FullName == "System.Enum";
+        }
+
+        private bool IsDerivedFromValueType()
+        {
+            return this.BaseType != null && this.BaseType.FullName == "System.ValueType";
         }
 
         /// <summary>
@@ -266,7 +276,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsValueType;
+                return this.typeDef.IsValueType || this.IsDerivedFromEnum() || this.IsDerivedFromValueType();
             }
         }
 
@@ -392,6 +402,11 @@ namespace PEAssemblyReader
                 return new MetadataTypeAdapter(this.typeDef.EnumUnderlyingType());
             }
 
+            if (this.IsDerivedFromEnum())
+            {
+                return this.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).First().FieldType;
+            }
+
             return null;
         }
 
@@ -496,7 +511,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().GetHashCode();
+            return this.FullName.GetHashCode();
         }
 
         /// <summary>

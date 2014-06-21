@@ -457,5 +457,31 @@ namespace PEAssemblyReader
 
             return this.type.ToString();
         }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            var type = obj as IType;
+            if (type != null)
+            {
+                return this.CompareTo(type) == 0;
+            }
+
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return this.FullName.GetHashCode();
+        }
     }
 }

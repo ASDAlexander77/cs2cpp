@@ -84,6 +84,11 @@ namespace PEAssemblyReader
         bool IsNested { get; }
 
         /// <summary>
+        /// to disable optimazing for the type
+        /// </summary>
+        bool UseAsClass { get; set; }
+
+        /// <summary>
         /// </summary>
         /// <param name="bindingFlags">
         /// </param>

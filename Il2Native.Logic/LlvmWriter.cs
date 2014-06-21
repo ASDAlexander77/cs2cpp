@@ -192,7 +192,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                thisType.WriteTypePrefix(writer, thisType.IsStructureType());
+                thisType.WriteTypePrefix(writer, thisType.IsStructureType(), true);
                 writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
@@ -1031,7 +1031,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                thisType.WriteTypePrefix(writer, thisType.IsStructureType() || thisType.IsEnum, thisType.IsEnum);
+                thisType.WriteTypePrefix(writer, true, true);
                 if (!noArgumentName)
                 {
                     writer.Write(" %this");
@@ -1051,9 +1051,9 @@ namespace Il2Native.Logic
                 parameter.ParameterType.WriteTypePrefix(writer, false);
                 if (parameter.ParameterType.IsStructureType())
                 {
-                    writer.Write(" byval align " + pointerSize);
                     if (!noArgumentName)
                     {
+                        writer.Write(" byval align " + pointerSize);
                         writer.Write(" %.");
                     }
                 }
@@ -1844,9 +1844,23 @@ namespace Il2Native.Logic
                             break;
                     }
 
-                    directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                    LlvmResult accessIndexResultNumber2;
 
-                    var accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
+                    // next code fixing issue with using Code.Ldind to load first value in value types
+                    if (opCode.OpCodeOperands[0].HasResult && opCode.OpCodeOperands[0].Result.Type.IsValueType)
+                    {
+                        // write first field access
+                        this.WriteFieldAccess(writer, opCode, 1);
+                        writer.WriteLine(string.Empty);
+                        accessIndexResultNumber2 = opCode.Result;
+                        type = opCode.Result.Type;
+                    }
+                    else
+                    {
+                        directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                        accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
+                    }
+
                     opCode.Result = null;
                     this.WriteLlvmLoad(opCode, type, this.GetResultNumber(accessIndexResultNumber2));
 
@@ -1973,7 +1987,16 @@ namespace Il2Native.Logic
                     break;
                 case Code.Box:
                     writer.WriteLine("; Boxing");
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    opCodeTypePart = opCode as OpCodeTypePart;
+                    var declaringType = opCodeTypePart.Operand;
+
+                    this.CheckIfExternalDeclarationIsRequired(declaringType);
+
+                    this.WriteNewWithoutCallingConstructor(opCodeTypePart, declaringType);
+
+                    writer.WriteLine("; Boxing - Copy data");
+                    ////this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+
                     break;
                 case Code.Unbox:
                 case Code.Unbox_Any:
@@ -2088,7 +2111,7 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(opCode, this.ThisType, "%.this", true, this.ThisType.IsStructureType(), this.ThisType.IsEnum);
+                        this.WriteLlvmLoad(opCode, this.ThisType, "%.this", true, this.ThisType.IsStructureType(), true);
                     }
                     else
                     {
@@ -2504,7 +2527,7 @@ namespace Il2Native.Logic
                 case Code.Newobj:
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
+                    declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
                     this.CheckIfExternalDeclarationIsRequired(declaringType);
 
@@ -2643,6 +2666,16 @@ namespace Il2Native.Logic
                 throw new KeyNotFoundException();
             }
 
+            index += CalculateFirstFieldIndex(type);
+
+            this.indexByFieldInfo[GetFullFieldName(fieldInfo)] = index;
+
+            return index;
+        }
+
+        private int CalculateFirstFieldIndex(IType type)
+        {
+            var index = 0;
             // add shift for virtual table
             if (type.IsRootOfVirtualTable())
             {
@@ -2665,8 +2698,6 @@ namespace Il2Native.Logic
                 var baseInterfaces = type.BaseType.GetInterfaces();
                 index += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i));
             }
-
-            this.indexByFieldInfo[GetFullFieldName(fieldInfo)] = index;
 
             return index;
         }
@@ -2958,21 +2989,19 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var isEnum = isThis && type.IsEnum;
-
             this.Output.Write("%.{0} = ", name);
 
             // for value types
             this.Output.Write("alloca ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isEnum, isEnum);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
             this.Output.Write(", align " + pointerSize);
             this.Output.WriteLine(string.Empty);
 
             this.Output.Write("store ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isEnum, isEnum);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
             this.Output.Write(" %{0}", name);
             this.Output.Write(", ");
-            type.WriteTypePrefix(this.Output, type.IsStructureType() || isEnum, isEnum);
+            type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis, isThis);
 
             this.Output.Write("* %.{0}", name);
             this.Output.Write(", align " + pointerSize);
@@ -3128,8 +3157,30 @@ namespace Il2Native.Logic
                 opts |= OperandOptions.AppendPointer;
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts | OperandOptions.DoNotConvertType);
             this.WriteFieldIndex(writer, operand.IType, opCodeFieldInfoPart.Operand);
+        }
+
+        /// <summary>
+        /// fixing issue with Code.Ldind when you need to load first field value
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="OpCodePart">
+        /// </param>
+        private void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index)
+        {
+            var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
+            var opts = OperandOptions.GenerateResult;
+            if (operand.IType.IsStructureType())
+            {
+                opts |= OperandOptions.AppendPointer;
+            }
+
+            var field = IlReader.Fields(operand.IType).Where(t => !t.IsStatic).Skip(index - 1).First();
+
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", operand.IType, field.FieldType, options: opts | OperandOptions.DoNotConvertType);
+            this.WriteFieldIndex(writer, operand.IType, index);
         }
 
         /// <summary>
@@ -3167,6 +3218,14 @@ namespace Il2Native.Logic
                 index = this.CalculateFieldIndex(fieldInfo, type);
             }
 
+            writer.Write(", i32 ");
+            writer.Write(index);
+        }
+
+        private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, int index)
+        {
+            // first element for pointer (IType* + 0)
+            writer.Write(", i32 0");
             writer.Write(", i32 ");
             writer.Write(index);
         }
