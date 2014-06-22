@@ -180,6 +180,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.UseAsClass)
+                {
+                    return true;
+                }
+
                 return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType();
             }
         }
@@ -190,6 +195,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.UseAsClass)
+                {
+                    return false;
+                }
+
                 return this.typeDef.IsEnumType() || this.IsDerivedFromEnum();
             }
         }
@@ -266,7 +276,36 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsPrimitiveRecursiveStruct();
+                if (this.UseAsClass)
+                {
+                    return false;
+                }
+
+                if (this.typeDef.IsPrimitiveRecursiveStruct())
+                {
+                    return true;
+                }
+
+                switch (this.FullName)
+                {
+                    case "System.Boolean":
+                    case "System.Byte":
+                    case "System.Char":
+                    case "System.Double":
+                    case "System.Int16":
+                    case "System.Int32":
+                    case "System.Int64":
+                    case "System.UInt16":
+                    case "System.UInt32":
+                    case "System.UInt64":
+                    case "System.IntPtr":
+                    case "System.UIntPtr":
+                    case "System.SByte":
+                    case "System.Single":
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
 
@@ -276,6 +315,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.UseAsClass)
+                {
+                    return false;
+                }
+
                 return this.typeDef.IsValueType || this.IsDerivedFromEnum() || this.IsDerivedFromValueType();
             }
         }
@@ -321,6 +365,11 @@ namespace PEAssemblyReader
             {
                 return this.typeDef.ContainingNamespace != null ? this.typeDef.ContainingNamespace.Name : string.Empty;
             }
+        }
+
+        public IType CreateArray(int rank)
+        {
+            return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
         }
 
         /// <summary>

@@ -190,6 +190,11 @@ namespace Il2Native.Logic.CodeParts
         {
             get
             {
+                if (this.result != null)
+                {
+                    return this.result;
+                }
+
                 if (this.Any(Code.Dup))
                 {
                     return this.OpCodeOperands[0].Result;

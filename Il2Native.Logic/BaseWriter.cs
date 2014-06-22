@@ -382,7 +382,7 @@ namespace Il2Native.Logic
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Newarr:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand) { IsArray = true };
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand.CreateArray(1));
                 case Code.Ret:
                 case Code.Neg:
                 case Code.Not:
@@ -770,6 +770,7 @@ namespace Il2Native.Logic
                     break;
                 }
 
+                var secondDup = false;
                 if (opCodePartUsed.ToCode() == Code.Dup && !opCodePartUsed.DupProcessedOnce)
                 {
                     opCodePartUsed.DupProcessedOnce = true;
@@ -780,6 +781,10 @@ namespace Il2Native.Logic
                     }
 
                     insertBack.Add(opCodePartUsed);
+                }
+                else if (opCodePartUsed.ToCode() == Code.Dup)
+                {
+                    secondDup = true;
                 }
 
                 if (opCodePartUsed.Any(Code.Leave, Code.Leave_S))
@@ -864,7 +869,8 @@ namespace Il2Native.Logic
                     opCodePartUsed = opCodeBlock;
                 }
 
-                opCodeParts[size - i] = opCodePartUsed;
+                // use Dup only once
+                opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
@@ -1423,6 +1429,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        // TODO: you need to get rid of using it
         public class ReturnResult : IEquatable<ReturnResult>
         {
             /// <summary>

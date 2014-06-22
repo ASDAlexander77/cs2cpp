@@ -92,12 +92,12 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), true);
                 }
                 else
                 {
                     declaringType.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, declaringType, "%this", TypeAdapter.FromType(typeof(byte**)), true);
                 }
 
                 writer.WriteLine(string.Empty);
@@ -134,11 +134,11 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, opCode.Result, TypeAdapter.FromType(typeof(byte**)), true);
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)));
+                    llvmWriter.WriteCast(opCode, @interface, "%this", TypeAdapter.FromType(typeof(byte**)), true);
                 }
 
                 writer.WriteLine(string.Empty);

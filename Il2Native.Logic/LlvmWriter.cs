@@ -1852,8 +1852,21 @@ namespace Il2Native.Logic
                     LlvmResult accessIndexResultNumber2;
 
                     // next code fixing issue with using Code.Ldind to load first value in value types
-                    if (opCode.OpCodeOperands[0].HasResult && opCode.OpCodeOperands[0].Result.Type.IsValueType)
+                    var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
+                    var isUsedAsClass = resultOfOperand0 != null && resultOfOperand0.Type.UseAsClass;
+                    if (isUsedAsClass)
                     {
+                        resultOfOperand0.Type.UseAsClass = false;
+                    }
+
+                    var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
+                    if (isValueType)
+                    {
+                        if (isUsedAsClass)
+                        {
+                            resultOfOperand0.Type.UseAsClass = true;
+                        }
+
                         // write first field access
                         this.WriteFieldAccess(writer, opCode, 1);
                         writer.WriteLine(string.Empty);
@@ -1862,6 +1875,11 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        if (isUsedAsClass)
+                        {
+                            resultOfOperand0.Type.UseAsClass = true;
+                        }
+
                         directResult1 = this.PreProcessOperand(writer, opCode, 0);
                         accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
                     }
@@ -2243,7 +2261,7 @@ namespace Il2Native.Logic
                             break;
                     }
 
-                    this.BinaryOper(writer, opCode, oper, GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, oper, GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     if (!opCode.UseAsConditionalExpression)
                     {
                         writer.WriteLine(string.Empty);
@@ -2259,7 +2277,7 @@ namespace Il2Native.Logic
                     var forTrue = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
                     var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
 
-                    this.UnaryOper(writer, opCode, "icmp " + forTrue, options: OperandOptions.GenerateResult);
+                    this.UnaryOper(writer, opCode, "icmp " + forTrue, options: OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer);
 
                     if (resultOf.IType.IsValueType())
                     {
@@ -2308,23 +2326,23 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ceq:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp oeq" : "icmp eq", GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp oeq" : "icmp eq", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
                 case Code.Clt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp olt" : "icmp slt", GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp olt" : "icmp slt", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
                 case Code.Clt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ult" : "icmp ult", GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ult" : "icmp ult", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
                 case Code.Cgt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ogt" : "icmp sgt", GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ogt" : "icmp sgt", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
                 case Code.Cgt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ugt" : "icmp ugt", GetOperandOptions(isFloatingPoint));
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ugt" : "icmp ugt", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
 
                 case Code.Conv_I:
@@ -2733,13 +2751,18 @@ namespace Il2Native.Logic
             // write type
             var effectiveType = TypeAdapter.FromType(typeof(void));
 
-            if (requiredType != null)
+            if (options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res2 != null && res1.IsPointerAccessRequired && res2.IsPointerAccessRequired)
+            {
+                castFrom = res1.IType;
+                effectiveType = res2.IType;
+            }
+            else if (requiredType != null)
             {
                 effectiveType = requiredType;
             }
             else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
             {
-                if (!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || res2 == null || (res2.IsConst ?? false))
+                if ((!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || (res2.IsConst ?? false)) && !(res1.IsConst ?? false) || res2 == null)
                 {
                     effectiveType = res1.IType;
                 }
@@ -2749,7 +2772,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (res1 != null && res1.IType != effectiveType && res1.IType.IsClass && effectiveType.IsAssignableFrom(res1.IType))
+            if (res1 != null && res1.IType != effectiveType && (res1.IType.IsClass || res1.IType.IsArray) && effectiveType.IsAssignableFrom(res1.IType))
             {
                 castFrom = res1.IType;
             }
@@ -3695,6 +3718,10 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             DetectTypeInSecondOperand = 256,
+
+            /// <summary>
+            /// </summary>
+            CastPointersToBytePointer = 512,
         }
 
         /// <summary>

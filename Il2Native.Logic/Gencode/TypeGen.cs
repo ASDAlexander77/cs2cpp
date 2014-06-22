@@ -194,9 +194,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
+        // TODO: finish converting array data into array class
         public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart)
         {
-            return opCodePart.Result != null && requiredType != opCodePart.Result.Type && requiredType.IsAssignableFrom(opCodePart.Result.Type);
+            if (opCodePart.HasResult && requiredType.TypeNotEquals(opCodePart.Result.Type))
+            {
+                return requiredType.IsAssignableFrom(opCodePart.Result.Type) 
+                    || opCodePart.Result.Type.IsArray && requiredType.FullName == "System.Array";
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -266,10 +273,11 @@ namespace Il2Native.Logic.Gencode
             var refChar = '*';
             var effectiveType = type;
 
+            var level = 0;
             do
             {
-                var isReference = !effectiveType.IsPrimitive && !effectiveType.IsValueType;
-                if ((isReference || asReference) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
+                var isReference = !effectiveType.IsValueType;
+                if ((isReference || (!isReference && asReference && level == 0)) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
@@ -287,6 +295,7 @@ namespace Il2Native.Logic.Gencode
                 if (effectiveType.HasElementType)
                 {
                     effectiveType = effectiveType.GetElementType();
+                    level++;
                 }
                 else
                 {

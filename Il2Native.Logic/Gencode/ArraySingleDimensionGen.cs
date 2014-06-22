@@ -104,9 +104,11 @@ namespace Il2Native.Logic.Gencode
 
             if (declaringType.TypeNotEquals(TypeAdapter.FromType(typeof(int))))
             {
-                llvmWriter.WriteCast(opCode, resGetArr, declaringType, true);
+                llvmWriter.WriteCast(opCode, resGetArr, declaringType, !declaringType.IsValueType);
                 writer.WriteLine(string.Empty);
             }
+
+            opCode.Result = new LlvmResult(opCode.Result.Number, declaringType.CreateArray(1));
 
             writer.WriteLine("; end of new array");
         }

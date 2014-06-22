@@ -483,5 +483,10 @@ namespace PEAssemblyReader
         {
             return this.FullName.GetHashCode();
         }
+
+        public IType CreateArray(int rank)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

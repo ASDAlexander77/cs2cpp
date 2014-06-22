@@ -149,5 +149,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         bool IsAssignableFrom(IType type);
+
+        IType CreateArray(int rank);
     }
 }
