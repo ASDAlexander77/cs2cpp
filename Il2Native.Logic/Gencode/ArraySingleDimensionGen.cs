@@ -26,7 +26,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], TypeAdapter.FromType(typeof(int)));
+            llvmWriter.WriteBitcast(opCode, opCode.OpCodeOperands[0].Result, TypeAdapter.FromType(typeof(int)));
             writer.WriteLine(string.Empty);
 
             var res = opCode.Result;

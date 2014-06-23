@@ -2535,7 +2535,7 @@ namespace Il2Native.Logic
                     var fromType = opCodeTypePart.OpCodeOperands[0].Result;
                     var toType = opCodeTypePart.Operand;
 
-                    var dynamicCastResultNumber = this.WriteSetResultNumber(opCode, toType);
+                    var dynamicCastResultNumber = this.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
 
                     writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", GetResultNumber(firstCastToBytesResult));
                     fromType.Type.WriteRttiClassInfoDeclaration(writer);
@@ -2619,7 +2619,7 @@ namespace Il2Native.Logic
                     writer.WriteLine("]", opCode.GroupAddressEnd);
 
                     writer.Indent--;
-                    writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+                    writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
                     writer.Indent++;
 
                     opCode.NextOpCode(this).JumpProcessed = true;
@@ -3137,7 +3137,7 @@ namespace Il2Native.Logic
         {
             writer.WriteLine("br i1 {0}, label %.a{1}, label %.a{2}", GetResultNumber(opCode.Result), opCode.JumpAddress(), opCode.GroupAddressEnd);
             writer.Indent--;
-            writer.Write(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+            writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
             writer.Indent++;
 
             opCode.NextOpCode(this).JumpProcessed = true;

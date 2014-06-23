@@ -37,6 +37,19 @@ namespace Il2Native.Logic.Gencode
             writer.Write(", align " + LlvmWriter.pointerSize);
         }
 
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType toType)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteSetResultNumber(opCode, toType);
+            writer.Write("bitcast ");
+            opCode.Result.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResultNumber(opCode.Result);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer, true);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -52,29 +65,24 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
-            writer.Write("bitcast i8* ");
+            writer.Write("bitcast ");
+            result.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
             llvmWriter.WriteResultNumber(result);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        public static void WriteBitcast(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType toType, LlvmWriter.OperandOptions options = LlvmWriter.OperandOptions.None)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result)
         {
             var writer = llvmWriter.Output;
-            llvmWriter.UnaryOper(writer, opCode, "bitcast", opCode.Result.Type, TypeAdapter.FromType(typeof(byte*)), options: options);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
+
+            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
+            writer.Write("bitcast ");
+            result.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResultNumber(result);
+            writer.Write(" to i8*");
         }
 
         /// <summary>

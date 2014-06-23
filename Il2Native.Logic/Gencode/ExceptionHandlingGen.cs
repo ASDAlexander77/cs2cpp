@@ -59,7 +59,7 @@ namespace Il2Native.Logic.Gencode
 
             opCode.OpCodeOperands[0].Result = opCode.Result;
 
-            llvmWriter.WriteBitcast(opCode, newExceptionResult.Type, options: LlvmWriter.OperandOptions.GenerateResult);
+            llvmWriter.WriteBitcast(opCode, opCode.Result, newExceptionResult.Type);
             writer.WriteLine("*");
 
             opCode.OpCodeOperands[0].Result = newExceptionResult;

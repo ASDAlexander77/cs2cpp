@@ -105,7 +105,75 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="i">
         /// </param>
+        public override void Write(object i)
+        {
+            if (!this.isMethod)
+            {
+                base.Write(i);
+            }
+            else
+            {
+                this.sw.Indent = this.Indent;
+                this.sw.Write(i);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="i">
+        /// </param>
+        public override void Write(float i)
+        {
+            if (!this.isMethod)
+            {
+                base.Write(i);
+            }
+            else
+            {
+                this.sw.Indent = this.Indent;
+                this.sw.Write(i);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="i">
+        /// </param>
+        public override void Write(double i)
+        {
+            if (!this.isMethod)
+            {
+                base.Write(i);
+            }
+            else
+            {
+                this.sw.Indent = this.Indent;
+                this.sw.Write(i);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="i">
+        /// </param>
         public override void Write(int i)
+        {
+            if (!this.isMethod)
+            {
+                base.Write(i);
+            }
+            else
+            {
+                this.sw.Indent = this.Indent;
+                this.sw.Write(i);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="i">
+        /// </param>
+        public override void Write(long i)
         {
             if (!this.isMethod)
             {
