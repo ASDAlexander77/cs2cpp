@@ -503,7 +503,9 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            if (!type.IsStructureType() || structAsRef)
+            Debug.Assert(!type.IsStructureType() || type.IsStructureType() && opCode.DestinationName != null);
+
+            if (!type.IsStructureType() || structAsRef || opCode.DestinationName == null)
             {
                 llvmWriter.WriteSetResultNumber(opCode, type);
 
@@ -524,7 +526,6 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                Debug.Assert(opCode.DestinationName != null);
                 llvmWriter.WriteCopyStruct(writer, opCode, type, localVarName, opCode.DestinationName);
             }
         }
@@ -593,6 +594,30 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.GetResultNumber(op1), 
                 type.GetTypeSize(), 
                 LlvmWriter.pointerSize /*Align*/);
+        }
+
+        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, IType type1, IType type2, string realConvert, string intConvert, string toType)
+        {
+            var writer = llvmWriter.Output;
+
+            var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
+            if (resultOf.IType.TypeNotEquals(type1) && resultOf.IType.TypeNotEquals(type2))
+            {
+                if (resultOf.IType.IsReal())
+                {
+                    llvmWriter.UnaryOper(writer, opCode, realConvert);
+                }
+                else
+                {
+                    llvmWriter.UnaryOper(writer, opCode, intConvert);
+                }
+
+                writer.Write(" to {0}", toType);
+            }
+            else
+            {
+                opCode.Result = opCode.OpCodeOperands[0].Result;
+            }
         }
     }
 }

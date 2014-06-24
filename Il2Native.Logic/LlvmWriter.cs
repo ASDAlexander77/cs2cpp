@@ -228,9 +228,7 @@ namespace Il2Native.Logic
 
                 var parameterInput = used[effectiveIndex];
 
-                // detect if *(pointer) is required for example structure
-                // var parameterInputReturnResult = ResultOf(parameterInput);
-                parameter.ParameterType.WriteTypePrefix(writer);
+                parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
                 if (parameter.ParameterType.IsStructureType())
                 {
                     writer.Write(" byval align " + pointerSize);
@@ -353,6 +351,11 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Dup))
             {
                 return this.IsDirectValue(opCode.OpCodeOperands[0]);
+            }
+
+            if (opCode.Any(Code.Ldsfld) && (opCode as OpCodeFieldInfoPart).Operand.FieldType.IsStructureType())
+            {
+                return true;
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
@@ -1053,7 +1056,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                parameter.ParameterType.WriteTypePrefix(writer, false);
+                parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
                 if (parameter.ParameterType.IsStructureType())
                 {
                     if (!noArgumentName)
@@ -1446,7 +1449,7 @@ namespace Il2Native.Logic
                     writer.Indent++;
                 }
 
-                var lastCond = block.OpCodes.Length - expressionPart;               
+                var lastCond = block.OpCodes.Length - expressionPart;
                 for (var i = 0; i < lastCond - 1; i++)
                 {
                     var current = block.OpCodes[i];
@@ -1481,7 +1484,7 @@ namespace Il2Native.Logic
                     writer.Indent--;
                     writer.WriteLine(".a{0}:", block.OpCodes[lastCond].GroupAddressStart);
                     writer.Indent++;
-                   
+
                     // apply PHI is condition is complex
                     this.ProcessOperator(writer, block, "phi", TypeAdapter.FromType(typeof(bool)), options: OperandOptions.GenerateResult);
                     var phiResult = block.Result;
@@ -1503,18 +1506,21 @@ namespace Il2Native.Logic
 
                     // hack
                     block.OpCodes[lastCond - 1].Result = block.Result;
-                }                
-                
+                }
+
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
+
+                IType castFrom;
+                var effectiveType = this.DetectTypePrefix(opCode2, opCode3, out castFrom);
 
                 this.ProcessOperator(writer, block, "select", TypeAdapter.FromType(typeof(bool)), options: OperandOptions.GenerateResult);
 
                 this.PostProcess(writer, opCode1, directResult1);
                 writer.Write(',');
-                this.PostProcess(writer, opCode2, directResult2, true);
+                this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
                 writer.Write(',');
-                this.PostProcess(writer, opCode3, directResult3, true);
+                this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
 
                 block.Result = block.Result;
 
@@ -1610,11 +1616,37 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldc_R4:
                     var opCodeSingle = opCode as OpCodeSinglePart;
-                    writer.Write(opCodeSingle.Operand.ToString("F"));
+
+                    if (opCodeSingle.Operand == float.PositiveInfinity)
+                    {
+                        writer.Write("0x7FF00000");
+                    }
+                    else if (opCodeSingle.Operand == float.NegativeInfinity)
+                    {
+                        writer.Write("0xFFF00000");
+                    }
+                    else
+                    {
+                        writer.Write(opCodeSingle.Operand.ToString("F"));
+                    }
+
                     break;
                 case Code.Ldc_R8:
                     var opCodeDouble = opCode as OpCodeDoublePart;
-                    writer.Write(opCodeDouble.Operand.ToString("F"));
+
+                    if (opCodeDouble.Operand == double.PositiveInfinity)
+                    {
+                        writer.Write("0x7FF0000000000000");
+                    }
+                    else if (opCodeDouble.Operand == double.NegativeInfinity)
+                    {
+                        writer.Write("0xFFF0000000000000");
+                    }
+                    else
+                    {
+                        writer.Write(opCodeDouble.Operand.ToString("F"));
+                    }
+
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
@@ -1666,7 +1698,16 @@ namespace Il2Native.Logic
                     IType castFrom;
                     var operandType = this.DetectTypePrefix(opCode, null, OperandOptions.TypeIsInOperator, out castFrom);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteLlvmLoad(opCode, operandType, string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
+
+                    var destinationName = string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"');
+                    if (operandType.IsStructureType())
+                    {
+                        writer.Write(destinationName);
+                    }
+                    else
+                    {
+                        this.WriteLlvmLoad(opCode, operandType, destinationName);
+                    }
 
                     break;
                 case Code.Ldsflda:
@@ -1683,17 +1724,22 @@ namespace Il2Native.Logic
                     this.WriteFieldAccess(writer, opCodeFieldInfoPart);
                     writer.WriteLine(string.Empty);
 
-                    this.ProcessOperator(writer, opCode, "store", opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.TypeIsInSecondOperand);
+                    operandType = opCodeFieldInfoPart.Operand.FieldType;
 
-                    this.PostProcessOperand(writer, opCode, 1, directResult1);
-                    writer.Write(", ");
-
-                    opCode.Result.Type.WriteTypePrefix(writer);
-
-                    // add reference
-                    writer.Write("* ");
-
-                    WriteResultNumber(opCode.Result);
+                    if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
+                    {
+                        opCode.DestinationName = GetResultNumber(opCode.Result); ;
+                        this.WriteLlvmLoad(opCode, operandType, GetResultNumber(opCode.OpCodeOperands[0].Result));
+                    }
+                    else
+                    {
+                        this.ProcessOperator(writer, opCode, "store", opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.TypeIsInSecondOperand);
+                        this.PostProcessOperand(writer, opCode, 1, directResult1);
+                        writer.Write(", ");
+                        opCode.Result.Type.WriteTypePrefix(writer);
+                        writer.Write("* ");
+                        WriteResultNumber(opCode.Result);
+                    }
 
                     break;
                 case Code.Stsfld:
@@ -1702,19 +1748,24 @@ namespace Il2Native.Logic
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
+                    destinationName = string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
 
-                    this.ProcessOperator(writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand);
+                    if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
+                    {
+                        opCode.DestinationName = destinationName;
+                        this.WriteLlvmLoad(opCode, operandType, GetResultNumber(opCode.OpCodeOperands[0].Result));
+                    }
+                    else
+                    {
+                        this.ProcessOperator(writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand);
+                        this.PostProcessOperand(writer, opCode, 0, directResult1);
+                        writer.Write(", ");
+                        operandType.WriteTypePrefix(writer);
+                        writer.Write("* ");
+                        writer.Write(destinationName);
+                    }
 
-                    this.PostProcessOperand(writer, opCode, 0, directResult1);
-                    writer.Write(", ");
-
-                    operandType.WriteTypePrefix(writer);
-
-                    // add reference
-                    writer.Write("* ");
-
-                    writer.Write(string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
                     break;
 
                 case Code.Ldobj:
@@ -1914,12 +1965,9 @@ namespace Il2Native.Logic
                     }
 
                     var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
-                    if (isValueType)
+                    if (isValueType && isUsedAsClass)
                     {
-                        if (isUsedAsClass)
-                        {
-                            resultOfOperand0.Type.UseAsClass = true;
-                        }
+                        resultOfOperand0.Type.UseAsClass = true;
 
                         // write first field access
                         this.WriteFieldAccess(writer, opCode, 1);
@@ -1940,6 +1988,11 @@ namespace Il2Native.Logic
 
                     opCode.Result = null;
                     this.WriteLlvmLoad(opCode, type, this.GetResultNumber(accessIndexResultNumber2));
+
+                    if (!isUsedAsClass)
+                    {
+                        resultOfOperand0.Type.UseAsClass = false;
+                    }
 
                     break;
                 case Code.Stind_I:
@@ -2054,7 +2107,7 @@ namespace Il2Native.Logic
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     tempOper = opCode.OpCodeOperands;
-                    opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0), tempOper[0] };
+                    opCode.OpCodeOperands = new[] { isFloatingPoint ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0) : new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0), tempOper[0] };
                     this.BinaryOper(
                         writer, opCode, isFloatingPoint ? "fsub" : "sub", options: GetOperandOptions(isFloatingPoint) | OperandOptions.TypeIsInSecondOperand);
                     opCode.OpCodeOperands = tempOper;
@@ -2399,173 +2452,64 @@ namespace Il2Native.Logic
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fcmp ugt" : "icmp ugt", GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer);
                     break;
 
-                case Code.Conv_I:
-                case Code.Conv_Ovf_I:
-                case Code.Conv_Ovf_I_Un:
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(int)))
-                    {
-                        if (resultOf.IType.IsReal())
-                        {
-                            this.UnaryOper(writer, opCode, "fptosi");
-                        }
-                        else
-                        {
-                            this.UnaryOper(writer, opCode, "trunc");
-                        }
-
-                        writer.Write(" to i32");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
-                    break;
-
-                case Code.Conv_U:
-                case Code.Conv_Ovf_U:
-                case Code.Conv_Ovf_U_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
-                    writer.Write(" to u32");
-                    break;
-
-                case Code.Conv_R_Un:
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(double)))
-                    {
-                        this.UnaryOper(writer, opCode, "sitofp");
-                        writer.Write(" to double");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
-                    break;
-
                 case Code.Conv_R4:
-                    isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(float)) && resultOf.IType.TypeNotEquals(typeof(Single)))
-                    {
-                        this.UnaryOper(writer, opCode, isFloatingPoint ? "fptrunc" : "sitofp");
-                        writer.Write(" to float");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(float)), TypeAdapter.FromType(typeof(float)), "fptrunc", "sitofp", "float");
                     break;
-                case Code.Conv_R8:
-                    isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(double)))
-                    {
-                        this.UnaryOper(writer, opCode, isFloatingPoint ? "fpext" : "sitofp");
-                        writer.Write(" to double");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
 
+                case Code.Conv_R8:
+                case Code.Conv_R_Un:
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(double)), TypeAdapter.FromType(typeof(double)), "fpext", "sitofp", "double");
                     break;
 
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(byte)) && resultOf.IType.TypeNotEquals(typeof(SByte)))
-                    {
-                        this.UnaryOper(writer, opCode, "trunc");
-                        writer.Write(" to i8");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
+                case Code.Conv_U1:
+                case Code.Conv_Ovf_U1:
+                case Code.Conv_Ovf_U1_Un:
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(sbyte)), TypeAdapter.FromType(typeof(byte)), "fptosi", "trunc", "i8");
                     break;
 
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(short)))
-                    {
-                        this.UnaryOper(writer, opCode, "trunc");
-                        writer.Write(" to i16");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
-                    break;
-
-                case Code.Conv_I4:
-                case Code.Conv_Ovf_I4:
-                case Code.Conv_Ovf_I4_Un:
-
-                    resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (resultOf.IType.TypeNotEquals(typeof(int)))
-                    {
-                        if (resultOf.IType.IsReal())
-                        {
-                            this.UnaryOper(writer, opCode, "fptosi");
-                        }
-                        else
-                        {
-                            this.UnaryOper(writer, opCode, "trunc");
-                        }
-
-                        writer.Write(" to i32");
-                    }
-                    else
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-
-                    break;
-
-                case Code.Conv_I8:
-                case Code.Conv_Ovf_I8:
-                case Code.Conv_Ovf_I8_Un:
-                    this.UnaryOper(writer, opCode, "zext");
-                    writer.Write(" to i64");
-                    break;
-
-                case Code.Conv_U1:
-                case Code.Conv_Ovf_U1:
-                case Code.Conv_Ovf_U1_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
-                    writer.Write(" to i8");
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(short)), TypeAdapter.FromType(typeof(ushort)), "fptosi", "trunc", "i16");
                     break;
 
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
-                    writer.Write(" to i16");
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(short)), TypeAdapter.FromType(typeof(ushort)), "fptoui", "trunc", "i16");
                     break;
 
+                case Code.Conv_I:
+                case Code.Conv_Ovf_I:
+                case Code.Conv_Ovf_I_Un:
+                case Code.Conv_I4:
+                case Code.Conv_Ovf_I4:
+                case Code.Conv_Ovf_I4_Un:
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(int)), TypeAdapter.FromType(typeof(uint)), "fptoui", "trunc", "i32");
+                    break;
+
+                case Code.Conv_U:
+                case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U_Un:
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    this.UnaryOper(writer, opCode, "trunc");
-                    writer.Write(" to i32");
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(int)), TypeAdapter.FromType(typeof(uint)), "fptosi", "trunc", "i32");
+                    break;
+
+                case Code.Conv_I8:
+                case Code.Conv_Ovf_I8:
+                case Code.Conv_Ovf_I8_Un:
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(long)), TypeAdapter.FromType(typeof(ulong)), "fptosi", "zext", "i64");
                     break;
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-
-                    this.UnaryOper(writer, opCode, "zext");
-                    writer.Write(" to i64");
+                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(long)), TypeAdapter.FromType(typeof(ulong)), "fptoui", "zext", "i64");
                     break;
 
                 case Code.Castclass:
@@ -2792,15 +2736,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IType DetectTypePrefix(OpCodePart opCode, IType requiredType, OperandOptions options, out IType castFrom)
+        private IType DetectTypePrefix(OpCodePart opCode, IType requiredType, OperandOptions options, out IType castFrom, int operand1 = 0, int operand2 = 1)
         {
             castFrom = null;
 
             var res1 = options.HasFlag(OperandOptions.TypeIsInOperator)
                            ? this.ResultOf(opCode)
-                           : opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? this.ResultOf(opCode.OpCodeOperands[0]) : null;
+                           : opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1 ? this.ResultOf(opCode.OpCodeOperands[operand1]) : null;
 
-            var res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 1 ? this.ResultOf(opCode.OpCodeOperands[1]) : null;
+            var res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand2 ? this.ResultOf(opCode.OpCodeOperands[operand2]) : null;
 
             // write type
             var effectiveType = TypeAdapter.FromType(typeof(void));
@@ -2814,7 +2758,7 @@ namespace Il2Native.Logic
             {
                 effectiveType = requiredType;
             }
-            else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
+            else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1)
             {
                 if ((!options.HasFlag(OperandOptions.TypeIsInSecondOperand) || (res2.IsConst ?? false)) && !(res1.IsConst ?? false) || res2 == null)
                 {
@@ -2824,6 +2768,33 @@ namespace Il2Native.Logic
                 {
                     effectiveType = res2.IType;
                 }
+            }
+
+            if (res1 != null && res1.IType != effectiveType && (res1.IType.IsClass || res1.IType.IsArray) && effectiveType.IsAssignableFrom(res1.IType))
+            {
+                castFrom = res1.IType;
+            }
+
+            return effectiveType;
+        }
+
+        private IType DetectTypePrefix(OpCodePart operand1, OpCodePart operand2, out IType castFrom)
+        {
+            castFrom = null;
+
+            var res1 = this.ResultOf(operand1);
+            var res2 = this.ResultOf(operand2);
+
+            // write type
+            var effectiveType = TypeAdapter.FromType(typeof(void));
+
+            if ((res2.IsConst ?? false) && !(res1.IsConst ?? false) || res2 == null)
+            {
+                effectiveType = res1.IType;
+            }
+            else
+            {
+                effectiveType = res2.IType;
             }
 
             if (res1 != null && res1.IType != effectiveType && (res1.IType.IsClass || res1.IType.IsArray) && effectiveType.IsAssignableFrom(res1.IType))
@@ -2968,13 +2939,18 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="detectAndWriteTypePrefix">
         /// </param>
-        private void PostProcess(LlvmIndentedTextWriter writer, OpCodePart operand, bool directResult, bool detectAndWriteTypePrefix = false)
+        private void PostProcess(LlvmIndentedTextWriter writer, OpCodePart operand, bool directResult, bool detectAndWriteTypePrefix = false, IType forcedType = null)
         {
             writer.Write(' ');
 
             if (directResult)
             {
-                if (detectAndWriteTypePrefix)
+                if (forcedType != null)
+                {
+                    forcedType.WriteTypePrefix(writer);
+                    writer.Write(' ');
+                }
+                else if (detectAndWriteTypePrefix)
                 {
                     IType castFrom;
                     var effectiveType = this.DetectTypePrefix(operand, null, OperandOptions.TypeIsInOperator, out castFrom);
@@ -2986,7 +2962,12 @@ namespace Il2Native.Logic
             }
             else
             {
-                if (detectAndWriteTypePrefix)
+                if (forcedType != null)
+                {
+                    forcedType.WriteTypePrefix(writer);
+                    writer.Write(' ');
+                }
+                else if (detectAndWriteTypePrefix)
                 {
                     (operand.Result.Type ?? TypeAdapter.FromType(typeof(void))).WriteTypePrefix(writer);
                     writer.Write(' ');
@@ -3240,10 +3221,6 @@ namespace Il2Native.Logic
         {
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
-            if (operand.IType.IsStructureType())
-            {
-                opts |= OperandOptions.AppendPointer;
-            }
 
             operand.IType.UseAsClass = true;
 
@@ -3262,10 +3239,6 @@ namespace Il2Native.Logic
         {
             var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
-            if (operand.IType.IsStructureType())
-            {
-                opts |= OperandOptions.AppendPointer;
-            }
 
             var field = IlReader.Fields(operand.IType).Where(t => !t.IsStatic).Skip(index - 1).First();
 
@@ -3539,7 +3512,14 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
                 field.FieldType.WriteTypePrefix(this.Output, false);
-                this.Output.WriteLine(" undef");
+                if (field.FieldType.IsStructureType())
+                {
+                    this.Output.WriteLine(" zeroinitializer, align 4");
+                }
+                else
+                {
+                    this.Output.WriteLine(" undef");
+                }
             }
 
             // write VirtualTable

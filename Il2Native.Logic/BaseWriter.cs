@@ -496,6 +496,7 @@ namespace Il2Native.Logic
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
                     return new ReturnResult(resultType.GetElementType()) { IsIndirect = true, IsReference = true };
                 case Code.Ldflda:
+                case Code.Ldsflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
                 case Code.Ldobj:
