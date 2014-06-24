@@ -1435,7 +1435,16 @@ namespace Il2Native.Logic
                     expressionPart = 2;
                 }
 
-                var lastCond = block.OpCodes.Length - expressionPart;
+                // to support PHI
+                if (block.OpCodes.Length > 4)
+                {
+                    writer.WriteLine("br label %.a{0}", block.OpCodes[0].GroupAddressStart);
+                    writer.Indent--;
+                    writer.WriteLine(".a{0}:", block.OpCodes[0].GroupAddressStart);
+                    writer.Indent++;
+                }
+
+                var lastCond = block.OpCodes.Length - expressionPart;               
                 for (var i = 0; i < lastCond - 1; i++)
                 {
                     var current = block.OpCodes[i];
@@ -1451,6 +1460,38 @@ namespace Il2Native.Logic
 
                 // custom operand
                 var directResult1 = this.PreProcess(writer, opCode1, OperandOptions.None);
+
+                // check if PHI is required
+                if (block.OpCodes.Length > 4)
+                {
+                    writer.WriteLine("br label %.a{0}", block.OpCodes[lastCond].GroupAddressStart);
+                    writer.Indent--;
+                    writer.WriteLine(".a{0}:", block.OpCodes[lastCond].GroupAddressStart);
+                    writer.Indent++;
+                   
+                    // apply PHI is condition is complex
+                    this.ProcessOperator(writer, block, "phi", TypeAdapter.FromType(typeof(bool)), options: OperandOptions.GenerateResult);
+                    var phiResult = block.Result;
+
+                    // write labels
+                    for (var i = lastCond - 2; i >= 0; i--)
+                    {
+                        if (i != (lastCond - 2))
+                        {
+                            writer.Write(",");
+                        }
+
+                        // true. false, %result
+                        var phiValue = "false";
+                        writer.Write(" [ {0}, %.a{1} ]", phiValue, block.OpCodes[i].GroupAddressStart);
+                    }
+
+                    writer.WriteLine(", [ {0}, %.a{1} ]", GetResultNumber(block.OpCodes[lastCond - 1].Result), block.OpCodes[lastCond - 1].GroupAddressStart);
+
+                    // hack
+                    block.OpCodes[lastCond - 1].Result = block.Result;
+                }                
+                
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
 
