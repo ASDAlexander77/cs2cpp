@@ -1424,6 +1424,8 @@ namespace Il2Native.Logic
         {
             if (block.UseAsConditionalExpression)
             {
+                var usePhi = block.OpCodes.Length > 4;
+
                 // thos os a hack for return () ? a : b; expressions
                 var expressionPart = -1;
                 if (block.OpCodes[block.OpCodes.Length - 2].OpCode.FlowControl == FlowControl.Branch)
@@ -1435,8 +1437,8 @@ namespace Il2Native.Logic
                     expressionPart = 2;
                 }
 
-                // to support PHI
-                if (block.OpCodes.Length > 4)
+                // to support PHI                          
+                if (usePhi)
                 {
                     writer.WriteLine("br label %.a{0}", block.OpCodes[0].GroupAddressStart);
                     writer.Indent--;
@@ -1462,7 +1464,7 @@ namespace Il2Native.Logic
                 var directResult1 = this.PreProcess(writer, opCode1, OperandOptions.None);
 
                 // check if PHI is required
-                if (block.OpCodes.Length > 4)
+                if (usePhi)
                 {
                     writer.WriteLine("br label %.a{0}", block.OpCodes[lastCond].GroupAddressStart);
                     writer.Indent--;
@@ -1482,7 +1484,7 @@ namespace Il2Native.Logic
                         }
 
                         // true. false, %result
-                        var phiValue = "false";
+                        var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
                         writer.Write(" [ {0}, %.a{1} ]", phiValue, block.OpCodes[i].GroupAddressStart);
                     }
 
