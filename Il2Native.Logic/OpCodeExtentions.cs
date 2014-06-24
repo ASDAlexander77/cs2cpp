@@ -323,6 +323,11 @@ namespace Il2Native.Logic
         {
             var opCode = opCodePart as OpCodeInt32Part;
 
+            if (opCode.CustomJumpAddress.HasValue)
+            {
+                return opCode.CustomJumpAddress.Value;
+            }
+
             if (opCode.OpCode.OperandType == OperandType.ShortInlineBrTarget && (opCode.Operand & 0x80) == 0x80)
             {
                 return opCode.AddressEnd - (255 - (short)opCode.Operand + 1);

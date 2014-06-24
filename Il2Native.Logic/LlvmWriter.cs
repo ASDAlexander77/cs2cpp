@@ -1450,7 +1450,18 @@ namespace Il2Native.Logic
                 for (var i = 0; i < lastCond - 1; i++)
                 {
                     var current = block.OpCodes[i];
+
+                    if (usePhi)
+                    {
+                        current.CustomJumpAddress = block.OpCodes[lastCond].GroupAddressStart;
+                    }
+
                     this.ActualWrite(writer, current);
+
+                    if (usePhi)
+                    {
+                        current.CustomJumpAddress = null;
+                    }
                 }
 
                 var opCode1 = block.OpCodes[lastCond - 1];
