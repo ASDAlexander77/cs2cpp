@@ -358,6 +358,59 @@ namespace Il2Native.Logic
                 return true;
             }
 
+            if (opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
+            {
+                var asString = opCode.ToCode().ToString();
+                var index = -1;
+                if (opCode.Any(Code.Ldloc_S, Code.Ldloc))
+                {
+                    index = (opCode as OpCodeInt32Part).Operand;
+                }
+                else
+                {
+                    index = int.Parse(asString.Substring(asString.Length - 1));
+                }
+
+                var destinationName = string.Concat("%local", index);
+
+                var skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
+                if (skip)
+                {
+                    // it means that we are working with a Struct and are going to pass it as an address
+                    return true;
+                }
+            }
+
+
+            if (opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
+            {
+                var asString = opCode.ToCode().ToString();
+                var index = -1;
+                if (opCode.Any(Code.Ldarg_S, Code.Ldarg))
+                {
+                    var opCodeInt32 = opCode as OpCodeInt32Part;
+                    index = opCodeInt32.Operand;
+                }
+                else
+                {
+                    index = int.Parse(asString.Substring(asString.Length - 1));
+                }
+
+                if (!(this.HasMethodThis && index == 0))
+                {
+                    var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
+
+                    var destinationName = string.Concat("%.", parameter.Name);
+
+                    var skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
+                    if (skip)
+                    {
+                        // it means that we are working with a Struct and are going to pass it as an address
+                        return true;
+                    }
+                }
+            }
+
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
                 Code.Ldc_I4_0,
@@ -1774,7 +1827,14 @@ namespace Il2Native.Logic
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-                    this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].Result));
+                    if (opCode.DestinationName != null)
+                    {
+                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].Result));
+                    }
+                    else
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                    }
 
                     break;
 
@@ -2131,7 +2191,13 @@ namespace Il2Native.Logic
                 case Code.Unbox:
                 case Code.Unbox_Any:
                     writer.WriteLine("; Unboxing");
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    opCodeTypePart = opCode as OpCodeTypePart;
+                    //this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+
+                    // for now we need to create empty var
+                    this.WriteSetResultNumber(opCodeTypePart, opCodeTypePart.Operand);
+                    this.WriteAlloca(opCodeTypePart.Operand);
+
                     break;
                 case Code.Ret:
 
@@ -2197,7 +2263,7 @@ namespace Il2Native.Logic
                 case Code.Ldloc_S:
                     asString = code.ToString();
 
-                    if (code == Code.Ldloc_S || code == Code.Ldloc)
+                    if (opCode.Any(Code.Ldloc_S, Code.Ldloc))
                     {
                         index = (opCode as OpCodeInt32Part).Operand;
                     }
@@ -2206,10 +2272,16 @@ namespace Il2Native.Logic
                         index = int.Parse(asString.Substring(asString.Length - 1));
                     }
 
+                    destinationName = string.Concat("%local", index);
+
                     skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
                     if (!skip)
                     {
-                        this.WriteLlvmLoad(opCode, this.LocalInfo[index].LocalType, string.Concat("%local", index));
+                        this.WriteLlvmLoad(opCode, this.LocalInfo[index].LocalType, destinationName);
+                    }
+                    else
+                    {
+                        writer.Write(destinationName);
                     }
 
                     break;
@@ -2248,10 +2320,16 @@ namespace Il2Native.Logic
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
 
+                        destinationName = string.Concat("%.", parameter.Name);
+
                         skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
                         if (!skip)
                         {
-                            this.WriteLlvmLoad(opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));
+                            this.WriteLlvmLoad(opCode, parameter.ParameterType, destinationName);
+                        }
+                        else
+                        {
+                            writer.Write(destinationName);
                         }
                     }
 
@@ -2384,9 +2462,10 @@ namespace Il2Native.Logic
                     var forTrue = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
                     var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
 
-                    this.UnaryOper(writer, opCode, "icmp " + forTrue, options: OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer);
+                    opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
+                    this.UnaryOper(writer, opCode, "icmp " + forTrue, options: opts);
 
-                    if (resultOf.IType.IsValueType())
+                    if (resultOf.IType.IsValueType() && !resultOf.IType.UseAsClass)
                     {
                         writer.WriteLine(", 0");
                     }
@@ -2543,6 +2622,8 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Empty);
 
                     this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, opCodeTypePart.Operand);
+
+                    opCodeTypePart.Result.Type.UseAsClass = true;
 
                     break;
 
