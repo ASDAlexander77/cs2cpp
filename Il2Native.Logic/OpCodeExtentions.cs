@@ -9,11 +9,13 @@
 namespace Il2Native.Logic
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode;
 
     using PEAssemblyReader;
 
@@ -557,6 +559,39 @@ namespace Il2Native.Logic
             }
 
             return true;
+        }
+
+        public static bool IsIntValueTypeCastRequired(this IType thisType, IType type)
+        {
+            var thisTypeString = thisType.TypeToCType();
+            var typeString = type.TypeToCType();
+
+            var thisTypeSize = GetIntSize(thisTypeString);
+            var typeSize = GetIntSize(typeString);
+
+            if (thisTypeSize == 0 || typeSize == 0)
+            {
+                return false;
+            }
+
+            return thisTypeSize > typeSize;
+        }
+
+        public static int IntTypeBitSize(this IType thisType)
+        {
+            var thisTypeString = thisType.TypeToCType();
+            return GetIntSize(thisTypeString);
+        }
+
+        private static int GetIntSize(string thisTypeString)
+        {
+            if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
+            {
+                return 0;
+            }
+
+            int size;
+            return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
         }
     }
 }
