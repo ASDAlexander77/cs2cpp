@@ -411,12 +411,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (Code.Ldloca,
-                Code.Ldloca_S,
-                Code.Ldarga,
-                Code.Ldarga_S
-            !parameter.ParameterType.IsValueType() || parameter.ParameterType.UseAsClass
-
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
                 Code.Ldc_I4_0,
@@ -438,10 +432,10 @@ namespace Il2Native.Logic
                 Code.Ldnull,
                 Code.Ldtoken,
                 Code.Ldsflda,
-                Code.Ldloca,
-                Code.Ldloca_S,
-                Code.Ldarga,
-                Code.Ldarga_S);
+                Code.Ldarga, 
+                Code.Ldarga_S,
+                Code.Ldloca, 
+                Code.Ldloca_S);
         }
 
         /// <summary>
@@ -2215,9 +2209,19 @@ namespace Il2Native.Logic
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     tempOper = opCode.OpCodeOperands;
-                    opCode.OpCodeOperands = new[] { isFloatingPoint ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0) : new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0), tempOper[0] };
+                    opCode.OpCodeOperands = new[] 
+                    { 
+                        isFloatingPoint 
+                            ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0) 
+                            : GetTypedIntZeroCode(opCode.OpCodeOperands[0].Result.Type), 
+                        tempOper[0] 
+                    };
+
                     this.BinaryOper(
-                        writer, opCode, isFloatingPoint ? "fsub" : "sub", options: GetOperandOptions(isFloatingPoint) | OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
+                        writer, 
+                        opCode, 
+                        isFloatingPoint ? "fsub" : "sub", 
+                        options: GetOperandOptions(isFloatingPoint) | OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
                     opCode.OpCodeOperands = tempOper;
                     break;
                 case Code.Dup:
@@ -2332,9 +2336,10 @@ namespace Il2Native.Logic
                 case Code.Ldloca:
                 case Code.Ldloca_S:
 
-                    index = (opCode as OpCodeInt32Part).Operand;
-
+                    opCodeInt32 = opCode as OpCodeInt32Part;
+                    index = opCodeInt32.Operand;
                     // alloca generate pointer so we do not need to load value from pointer
+                    localType = this.LocalInfo[index].LocalType;
                     writer.Write(string.Concat("%local", index));
 
                     break;
@@ -2392,14 +2397,7 @@ namespace Il2Native.Logic
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        if (!parameter.ParameterType.IsValueType() || parameter.ParameterType.UseAsClass)
-                        {
-                            writer.Write(string.Concat("%.", parameter.Name));
-                        }
-                        else
-                        {
-                            this.WriteConvertValueTypeToReferenceType(writer, opCodeInt32, parameter.ParameterType);
-                        }
+                        writer.Write(string.Concat("%.", parameter.Name));
                     }
 
                     break;
@@ -2767,8 +2765,21 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteConvertValueTypeToReferenceType(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType declaringType)
+        private static OpCodePart GetTypedIntZeroCode(IType intType)
         {
+            switch (intType.IntTypeBitSize())
+            {
+                case 64:
+                    return new OpCodeInt64Part(OpCodesEmit.Ldc_I8, 0, 0, 0);
+                default:
+                    return new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
+            }
+
+        }
+
+        public void WriteConvertValueTypeToReferenceType(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType declaringType)
+        {
+            writer.WriteLine(string.Empty);
             this.CheckIfExternalDeclarationIsRequired(declaringType);
             this.WriteNewWithoutCallingConstructor(opCodePart, declaringType);
             writer.WriteLine("; Copy data");

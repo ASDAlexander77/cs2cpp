@@ -219,11 +219,24 @@ namespace Il2Native.Logic.Gencode
             }
 
             // check if you need to cast this parameter
-            if (hasThisArgument && thisType.IsClassCastRequired(opCodeFirstOperand))
+            if (hasThisArgument)
             {
-                writer.WriteLine("; Cast of 'This' parameter");
-                llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
-                writer.WriteLine(string.Empty);
+                if (thisType.IsClassCastRequired(opCodeFirstOperand))
+                {
+                    writer.WriteLine("; Cast of 'This' parameter");
+                    llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                    writer.WriteLine(string.Empty);
+                }
+
+                thisType.UseAsClass = false;
+                var isPrimitive = thisType.IsPrimitiveType();
+                thisType.UseAsClass = true;
+                if (isPrimitive)
+                {
+                    writer.WriteLine("; Box Primitive type for 'This' parameter");
+                    llvmWriter.WriteConvertValueTypeToReferenceType(writer, opCodeFirstOperand, thisType);
+                }
+
             }
 
             // check if you need to cast parameter
