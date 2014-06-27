@@ -194,7 +194,7 @@ namespace Il2Native.Logic.Gencode
             var resultOfFirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
 
             LlvmResult virtualMethodAddressResultNumber = null;
-            var isInderectMethodCall = isVirtual
+            var isIndirectMethodCall = isVirtual
                                        && (methodBase.IsAbstract || methodBase.IsVirtual
                                            || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.IType)));
 
@@ -207,13 +207,13 @@ namespace Il2Native.Logic.Gencode
                 thisType = requiredType;
             }
 
-            if (isInderectMethodCall && !methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
+            if (isIndirectMethodCall && !methodBase.DeclaringType.Equals(thisType) && methodBase.DeclaringType.IsInterface)
             {
                 // this is explicit call of interface
-                isInderectMethodCall = false;
+                isIndirectMethodCall = false;
             }
 
-            if (isInderectMethodCall)
+            if (isIndirectMethodCall)
             {
                 llvmWriter.GenerateVirtualCall(opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref virtualMethodAddressResultNumber, ref requiredType);
             }
@@ -280,7 +280,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(' ');
 
-            if (isInderectMethodCall)
+            if (isIndirectMethodCall)
             {
                 llvmWriter.WriteResultNumber(virtualMethodAddressResultNumber);
             }

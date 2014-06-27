@@ -3048,7 +3048,17 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    sb.Append(methodName);
+                    lookupTypeName = string.Concat(' ', methodBase.DeclaringType.FullName, '.', methodBase.Name, '(');
+                    index = methodName.IndexOf(lookupTypeName);
+                    if (index >= 0)
+                    {
+                        sb.Append(methodName.Insert(index + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "Could not find interface name");
+                        sb.Append(methodName);
+                    }
                 }
             }
             else
