@@ -7,6 +7,7 @@
     using System.Collections.Generic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Il2Native.Logic;
+    using System.IO;
 
     /// <summary>
     /// Summary description for MSTests
@@ -14,9 +15,9 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"C:\Temp\tests\";
-        private const string OutputPath = @"C:\Temp\IlCTests\";
+        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"D:\Temp\tests\";
+        private const string OutputPath = @"D:\Temp\IlCTests\";
 
         public MSTests()
         {
@@ -98,7 +99,7 @@
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(@"C:\Temp\CoreLib\obj\Release\CoreLib.dll", OutputPath);
+            Il2Converter.Convert(Path.GetFullPath(@"..\..\..\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
         }
 
         [TestMethod]

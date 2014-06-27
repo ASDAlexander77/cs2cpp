@@ -28,6 +28,7 @@ namespace Il2Native.Logic
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -536,6 +537,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, typeGenerics, methodGenerics) as IConstructor;
+                        Debug.Assert(constructor != null);
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
                     case Code.Call:
