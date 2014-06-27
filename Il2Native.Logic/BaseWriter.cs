@@ -580,17 +580,16 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.OpCodeOperands.Length == 2 && opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1
-                && (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi))
+            if (opCode.OpCodeOperands.Length == 2 && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
+                /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
             {
                 // types should be equal
                 var usedOpCode2 = opCode.OpCodeOperands[1];
-                var usedCode2 = usedOpCode2.ToCode();
 
                 var type1 = this.ResultOf(usedOpCode1);
                 var type2 = this.ResultOf(usedOpCode2);
 
-                if (type1 != null && type2 != null && type1 != type2)
+                if (type1 != null && type2 != null && !type1.Equals(type2))
                 {
                     if (type1.IsTypeOf(typeof(bool)) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
@@ -1225,7 +1224,7 @@ namespace Il2Native.Logic
         {
             var groups = new List<OpCodePart[]>();
 
-            for (var i = 0; i < conditions.Length;)
+            for (var i = 0; i < conditions.Length; )
             {
                 var group = new List<OpCodePart>();
 
@@ -1328,18 +1327,18 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart, 
-            OpCodePart currentArgument, 
-            Stack<OpCodePart> stack, 
-            out int sizeOfCondition, 
-            out OpCodePart firstCondition, 
+            OpCodePart opCodePart,
+            OpCodePart currentArgument,
+            Stack<OpCodePart> stack,
+            out int sizeOfCondition,
+            out OpCodePart firstCondition,
             out OpCodePart lastCondition)
         {
             sizeOfCondition = 3;
             firstCondition = null;
             lastCondition = null;
 
-            for (;;)
+            for (; ; )
             {
                 var subOpCodes = stack.Take(sizeOfCondition);
                 if (subOpCodes.Count() != sizeOfCondition)
@@ -1550,7 +1549,7 @@ namespace Il2Native.Logic
             /// </returns>
             public bool Equals(ReturnResult other)
             {
-                return this.IType == other.IType && this.IsReference == other.IsReference && this.IsField == other.IsField && this.Boxed == other.Boxed;
+                return this.IType.TypeEquals(other.IType) && this.IsReference == other.IsReference && this.IsField == other.IsField && this.Boxed == other.Boxed;
             }
 
             /// <summary>
@@ -1582,7 +1581,7 @@ namespace Il2Native.Logic
                     return false;
                 }
 
-                return this.IType == TypeAdapter.FromType(type);
+                return this.IType.TypeEquals(TypeAdapter.FromType(type));
             }
         }
     }

@@ -514,7 +514,11 @@ namespace Il2Native.Logic
 
             if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
             {
-                this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[intAdjustSecondOperand ? operand2 : operand1], false, intAdjustment);
+                this.AdjustIntConvertableTypes(
+                    writer,
+                    opCode.OpCodeOperands[intAdjustSecondOperand || options.HasFlag(OperandOptions.TypeIsInSecondOperand) ? operand2 : operand1],
+                    false,
+                    intAdjustment);
             }
 
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
@@ -1620,10 +1624,10 @@ namespace Il2Native.Logic
             switch (code)
             {
                 case Code.Ldc_I4_0:
-                    writer.Write("0");
+                    writer.Write(opCode.UseAsBoolean ? "false" : "0");
                     break;
                 case Code.Ldc_I4_1:
-                    writer.Write("1");
+                    writer.Write(opCode.UseAsBoolean ? "true" : "1");
                     break;
                 case Code.Ldc_I4_2:
                     writer.Write("2");
@@ -1792,7 +1796,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.ProcessOperator(writer, opCode, "store", opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.TypeIsInSecondOperand);
+                        this.ProcessOperator(writer, opCode, "store", opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
                         this.PostProcessOperand(writer, opCode, 1, directResult1);
                         writer.Write(", ");
                         opCode.Result.Type.WriteTypePrefix(writer);
@@ -1817,7 +1821,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.ProcessOperator(writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand);
+                        this.ProcessOperator(writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
                         this.PostProcessOperand(writer, opCode, 0, directResult1);
                         writer.Write(", ");
                         operandType.WriteTypePrefix(writer);
@@ -2132,7 +2136,7 @@ namespace Il2Native.Logic
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-                    this.UnaryOper(writer, opCode, 1, "store", type);
+                    this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
                     opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(writer);
                     this.PostProcessOperand(writer, opCode, 0, directResult1);
@@ -2256,7 +2260,7 @@ namespace Il2Native.Logic
                         opts |= OperandOptions.IgnoreOperand;
                     }
 
-                    this.UnaryOper(writer, opCode, "ret", this.MethodReturnType, options: opts);
+                    this.UnaryOper(writer, opCode, "ret", this.MethodReturnType, options: opts | OperandOptions.AdjustIntTypes);
 
                     if (this.MethodReturnType.IsStructureType())
                     {
@@ -2292,7 +2296,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.UnaryOper(writer, opCode, "store", localType);
+                        this.UnaryOper(writer, opCode, "store", localType, options: OperandOptions.AdjustIntTypes);
                         writer.Write(", ");
                         this.WriteLlvmLocalVarAccess(index, true);
                     }
@@ -2403,7 +2407,7 @@ namespace Il2Native.Logic
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
-                    this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType);
+                    this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType, options: OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
 
@@ -2914,7 +2918,16 @@ namespace Il2Native.Logic
             }
             else if (requiredType != null)
             {
-                effectiveType = requiredType;
+                if (options.HasFlag(OperandOptions.AdjustIntTypes) && res1 != null && res1.IType != null && res2 != null && res2.IType != null
+                    && res1.IType.TypeEquals(res2.IType) && res1.IType.TypeNotEquals(requiredType) && res1.IType.TypeEquals(TypeAdapter.FromType(typeof(bool)))
+                    && requiredType.TypeEquals(TypeAdapter.FromType(typeof(byte))))
+                {
+                    effectiveType = res1.IType;
+                }
+                else
+                {
+                    effectiveType = requiredType;
+                }
             }
             else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1)
             {
@@ -2935,18 +2948,36 @@ namespace Il2Native.Logic
 
             if (options.HasFlag(OperandOptions.AdjustIntTypes))
             {
-                if (res1 != null && res1.IType != null && !(res1.IsConst ?? false) && res2 != null && res2.IType != null && !(res2.IsConst ?? false))
+                var firstType = res1 != null && res1.IType != null && !(res1.IsConst ?? false) && !options.HasFlag(OperandOptions.TypeIsInSecondOperand)
+                                    ? res1.IType
+                                    : res2 != null && res2.IType != null && !(res2.IsConst ?? false) ? res2.IType : null;
+
+                IType secondType = null;
+                if (firstType != null)
                 {
-                    if (res1.IType.IsIntValueTypeCastRequired(res2.IType))
+                    if (res2 != null && res2.IType != null && !(res2.IsConst ?? false))
                     {
-                        intAdjustSecondOperand = true;
-                        intAdjustment = res1.IType;
+                        secondType = res2.IType;
                     }
 
-                    if (res2.IType.IsIntValueTypeCastRequired(res1.IType))
+                    if (requiredType != null)
                     {
-                        intAdjustSecondOperand = false;
-                        intAdjustment = res2.IType;
+                        secondType = requiredType;
+                    }
+
+                    if (secondType != null)
+                    {
+                        if (firstType.IsIntValueTypeCastRequired(secondType))
+                        {
+                            intAdjustSecondOperand = true;
+                            intAdjustment = firstType;
+                        }
+
+                        if (secondType.IsIntValueTypeCastRequired(firstType))
+                        {
+                            intAdjustSecondOperand = false;
+                            intAdjustment = secondType;
+                        }
                     }
                 }
             }
@@ -3285,8 +3316,9 @@ namespace Il2Native.Logic
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0)
             {
                 var previousOpCode = opCode.PreviousOpCode(this);
-                var splitBlock = previousOpCode != null
-                                 && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call);
+                var splitBlock = previousOpCode == null
+                                 || (previousOpCode != null
+                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call));
                 if (splitBlock)
                 {
                     // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
