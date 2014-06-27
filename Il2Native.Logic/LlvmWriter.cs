@@ -286,7 +286,7 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfExternalDeclarationIsRequired(IType type)
         {
-            if (type != null && !type.IsVoid())
+            if (type != null && !type.IsVoid() && !type.IsPrimitiveType())
             {
                 if (type.AssemblyQualifiedName != this.AssemblyQualifiedName)
                 {
@@ -3798,12 +3798,15 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
                 foreach (var opaqueType in this.typeDeclRequired)
                 {
-                    if (this.processedTypes.Contains(opaqueType))
+                    if (this.processedTypes.Contains(opaqueType) || opaqueType.IsArray)
                     {
                         continue;
                     }
 
+                    opaqueType.UseAsClass = true;
                     this.WriteTypeDeclarationStart(opaqueType);
+                    opaqueType.UseAsClass = false;
+
                     this.Output.WriteLine("opaque");
                 }
             }
