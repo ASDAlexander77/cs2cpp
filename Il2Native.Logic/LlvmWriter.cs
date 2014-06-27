@@ -2580,33 +2580,36 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Conv_R4:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(float)), TypeAdapter.FromType(typeof(float)), "fptrunc", "sitofp", "float");
+                    this.LlvmConvert(opCode, "fptrunc", "sitofp", "float", typeof(float));
                     break;
 
                 case Code.Conv_R8:
                 case Code.Conv_R_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(double)), TypeAdapter.FromType(typeof(double)), "fpext", "sitofp", "double");
+                    this.LlvmConvert(opCode, "fpext", "sitofp", "double", typeof(double));
                     break;
 
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i8", typeof(sbyte), typeof(byte));
+                    break;
+
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(sbyte)), TypeAdapter.FromType(typeof(byte)), "fptosi", "trunc", "i8");
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i8", typeof(sbyte), typeof(byte));
                     break;
 
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(short)), TypeAdapter.FromType(typeof(ushort)), "fptosi", "trunc", "i16");
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i16", typeof(short), typeof(ushort), typeof(char));
                     break;
 
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(short)), TypeAdapter.FromType(typeof(ushort)), "fptoui", "trunc", "i16");
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i16", typeof(short), typeof(ushort), typeof(char));
                     break;
 
                 case Code.Conv_I:
@@ -2615,7 +2618,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(int)), TypeAdapter.FromType(typeof(uint)), "fptoui", "trunc", "i32");
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", typeof(int), typeof(uint));
                     break;
 
                 case Code.Conv_U:
@@ -2624,19 +2627,19 @@ namespace Il2Native.Logic
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(int)), TypeAdapter.FromType(typeof(uint)), "fptosi", "trunc", "i32");
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", typeof(int), typeof(uint));
                     break;
 
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(long)), TypeAdapter.FromType(typeof(ulong)), "fptosi", "zext", "i64");
+                    this.LlvmConvert(opCode, "fptosi", "zext", "i64", typeof(long), typeof(ulong));
                     break;
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    this.LlvmConvert(opCode, TypeAdapter.FromType(typeof(long)), TypeAdapter.FromType(typeof(ulong)), "fptoui", "zext", "i64");
+                    this.LlvmConvert(opCode, "fptoui", "zext", "i64", typeof(long), typeof(ulong));
                     break;
 
                 case Code.Castclass:
@@ -2734,12 +2737,15 @@ namespace Il2Native.Logic
 
                     this.UnaryOper(writer, opCode, "switch");
 
+                    var switchValueType = opCodeLabels.OpCodeOperands[0].Result.Type;
+
                     index = 0;
                     writer.Write(", label %.a{0} [ ", opCode.GroupAddressEnd);
 
                     foreach (var label in opCodeLabels.Operand)
                     {
-                        writer.Write("i32 {0}, label %.a{1} ", index, opCodeLabels.JumpAddress(index++));
+                        switchValueType.WriteTypePrefix(writer);
+                        writer.Write(" {0}, label %.a{1} ", index, opCodeLabels.JumpAddress(index++));
                     }
 
                     writer.WriteLine("]");

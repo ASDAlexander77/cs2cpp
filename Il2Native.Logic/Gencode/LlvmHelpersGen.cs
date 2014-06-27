@@ -614,12 +614,12 @@ namespace Il2Native.Logic.Gencode
                 LlvmWriter.pointerSize /*Align*/);
         }
 
-        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, IType type1, IType type2, string realConvert, string intConvert, string toType)
+        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, params Type[] typesToExclude)
         {
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
-            if (resultOf.IType.TypeNotEquals(type1) && resultOf.IType.TypeNotEquals(type2))
+            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))))
             {
                 if (resultOf.IType.IsReal())
                 {
