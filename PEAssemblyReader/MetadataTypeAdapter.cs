@@ -421,14 +421,14 @@ namespace PEAssemblyReader
         /// </returns>
         public IType GetElementType()
         {
-            if (this.IsArray)
-            {
-                return new MetadataTypeAdapter((this.typeDef as ArrayTypeSymbol).ElementType);
-            }
-
             if (this.IsByRef)
             {
                 return new MetadataTypeAdapter(this.typeDef);
+            }
+
+            if (this.IsArray)
+            {
+                return new MetadataTypeAdapter((this.typeDef as ArrayTypeSymbol).ElementType);
             }
 
             if (this.IsPointer)
@@ -437,6 +437,7 @@ namespace PEAssemblyReader
             }
 
             Debug.Fail(string.Empty);
+
             return null;
         }
 
@@ -576,19 +577,21 @@ namespace PEAssemblyReader
             {
                 result.Append(this.GetElementType());
 
-                if (this.IsPointer)
+                if (!this.IsByRef)
                 {
-                    result.Append('*');
-                }
+                    if (this.IsPointer)
+                    {
+                        result.Append('*');
+                    }
 
-                if (this.IsByRef)
+                    if (this.IsArray)
+                    {
+                        result.Append("[]");
+                    }
+                }
+                else
                 {
                     result.Append('&');
-                }
-
-                if (this.IsArray)
-                {
-                    result.Append("[]");
                 }
             }
             else

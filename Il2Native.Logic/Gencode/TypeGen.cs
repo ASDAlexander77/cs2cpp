@@ -282,12 +282,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(refChar);
                 }
 
-                if (effectiveType.IsArray)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsByRef)
+                if (effectiveType.IsByRef || effectiveType.IsArray)
                 {
                     writer.Write(refChar);
                 }

@@ -371,8 +371,6 @@ namespace Il2Native.Logic
                     index = int.Parse(asString.Substring(asString.Length - 1));
                 }
 
-                var destinationName = string.Concat("%local", index);
-
                 var skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
                 if (skip)
                 {
@@ -380,7 +378,6 @@ namespace Il2Native.Logic
                     return true;
                 }
             }
-
 
             if (opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
             {
@@ -399,8 +396,6 @@ namespace Il2Native.Logic
                 if (!(this.HasMethodThis && index == 0))
                 {
                     var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-
-                    var destinationName = string.Concat("%.", parameter.Name);
 
                     var skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
                     if (skip)
