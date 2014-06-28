@@ -202,6 +202,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsInternalCall
+        {
+            get 
+            {
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.InternalCall);
+            }
+        }
+
         /// <summary>
         /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables

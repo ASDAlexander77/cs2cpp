@@ -17,7 +17,7 @@ namespace System.Reflection
             get { return System.Reflection.MemberTypes.Constructor; }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public Object Invoke(Object[] parameters)
         {
             throw new NotImplementedException();

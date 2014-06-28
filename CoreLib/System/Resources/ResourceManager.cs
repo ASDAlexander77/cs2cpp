@@ -24,19 +24,19 @@ namespace System.Resources
         internal string m_cultureName;
         private ResourceManager m_rmFallback;
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private int FindResource(string baseName, Assembly assembly)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private object GetObjectInternal(short id)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private object GetObjectInternal(short id, int offset, int length)
         {
             throw new NotImplementedException();
@@ -237,7 +237,7 @@ namespace System.Resources
             throw new ArgumentException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         internal static object GetObject(System.Resources.ResourceManager rm, Enum id)
         {
             throw new NotImplementedException();

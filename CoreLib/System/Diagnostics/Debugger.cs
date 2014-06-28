@@ -6,11 +6,11 @@ namespace System.DiagnosticsX
     {
         public static extern bool IsAttached
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern void Break();
     }
 }

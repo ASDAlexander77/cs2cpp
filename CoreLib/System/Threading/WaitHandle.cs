@@ -9,14 +9,18 @@ namespace System.Threading
     public abstract class WaitHandle : MarshalByRefObject
     {
         public const int WaitTimeout = 0x102;
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public virtual bool WaitOne(int millisecondsTimeout, bool exitContext);
+        
+        public virtual bool WaitOne(int millisecondsTimeout, bool exitContext)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual bool WaitOne()
         {
             return WaitOne(Timeout.Infinite, false);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static int WaitMultiple(WaitHandle[] waitHandles, int millisecondsTimeout, bool exitContext, bool WaitAll)
         {
             throw new NotImplementedException();

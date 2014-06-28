@@ -10,7 +10,7 @@ namespace System
     [Serializable]
     public abstract class Array : ICloneable, IList
     {
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static Array CreateInstance(Type elementType, int length)
         {
             throw new NotImplementedException();
@@ -21,13 +21,13 @@ namespace System
             Copy(sourceArray, 0, destinationArray, 0, length);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static void Copy(Array sourceArray, int sourceIndex, Array destinationArray, int destinationIndex, int length)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static void Clear(Array array, int index, int length)
         {
             throw new NotImplementedException();
@@ -40,7 +40,7 @@ namespace System
 
         public int Length
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 throw new NotImplementedException();
@@ -77,13 +77,13 @@ namespace System
 
         Object IList.this[int index]
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 throw new NotImplementedException();
             }
 
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             set
             {
                 throw new NotImplementedException();
@@ -204,7 +204,7 @@ namespace System
             return -1;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static bool TrySZIndexOf(Array sourceArray, int sourceIndex, int count, Object value, out int retVal)
         {
             throw new NotImplementedException();

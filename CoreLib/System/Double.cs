@@ -63,7 +63,7 @@ namespace System
         //     a number (System.Double.NaN), System.Double.PositiveInfinity, or System.Double.NegativeInfinity.
         //     Greater than zero This instance is greater than value.-or- This instance
         //     is a number and value is not a number (System.Double.NaN).
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int CompareTo(double d, double value);
         //
         // Summary:
@@ -77,7 +77,7 @@ namespace System
         // Returns:
         //     true if d evaluates to System.Double.PositiveInfinity or System.Double.NegativeInfinity;
         //     otherwise, false.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern bool IsInfinity(double d);
         //
         // Summary:
@@ -90,7 +90,7 @@ namespace System
         //
         // Returns:
         //     true if d evaluates to System.Double.NaN; otherwise, false.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool IsNaN(double d)
         {
             throw new NotImplementedException();
@@ -107,7 +107,7 @@ namespace System
         //
         // Returns:
         //     true if d evaluates to System.Double.NegativeInfinity; otherwise, false.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool IsNegativeInfinity(double d)
         {
             throw new NotImplementedException();
@@ -124,7 +124,7 @@ namespace System
         //
         // Returns:
         //     true if d evaluates to System.Double.PositiveInfinity; otherwise, false.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool IsPositiveInfinity(double d)
         {
             throw new NotImplementedException();

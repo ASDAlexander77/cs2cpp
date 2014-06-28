@@ -11,10 +11,10 @@ namespace System
     public abstract class MulticastDelegate : Delegate
     {
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern static bool operator ==(MulticastDelegate d1, MulticastDelegate d2);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern static bool operator !=(MulticastDelegate d1, MulticastDelegate d2);
 
     }

@@ -20,7 +20,7 @@ namespace System
             throw new Exception();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern static AppDomain CreateDomain(String friendlyName);
 
         public Object CreateInstanceAndUnwrap(String assemblyName, String typeName)
@@ -58,19 +58,19 @@ namespace System
 
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public Assembly[] GetAssemblies()
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private Assembly LoadInternal(String assemblyString, bool fVersion, int maj, int min, int build, int rev)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern void Unload(AppDomain domain);
     }
 }

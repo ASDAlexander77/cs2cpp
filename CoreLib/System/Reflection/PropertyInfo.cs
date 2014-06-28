@@ -14,10 +14,16 @@ namespace System.Reflection
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Object GetValue(Object obj, Object[] index);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void SetValue(Object obj, Object value, Object[] index);
+        
+        public virtual Object GetValue(Object obj, Object[] index)
+        {
+            throw new NotImplementedException();
+        }
+        
+        public virtual void SetValue(Object obj, Object value, Object[] index)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

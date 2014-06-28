@@ -26,8 +26,11 @@ namespace System
             return GetType().FullName;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual bool Equals(Object obj);
+
+        public virtual bool Equals(Object obj)
+        {
+            throw new NotImplementedException();
+        }
 
         public static bool Equals(Object objA, Object objB)
         {
@@ -44,13 +47,17 @@ namespace System
             return objA.Equals(objB);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern static bool ReferenceEquals(Object objA, Object objB);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual int GetHashCode();
+        public static bool ReferenceEquals(Object objA, Object objB)
+        {
+            return objA == objB;
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public virtual int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
+
         public Type GetType()
         {
             throw new NotImplementedException();
@@ -60,7 +67,7 @@ namespace System
         {
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         protected extern Object MemberwiseClone();
 
     }

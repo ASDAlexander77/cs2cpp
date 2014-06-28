@@ -20,22 +20,31 @@ namespace System
             }
         }
 
-        public extern override Assembly Assembly
+        public override Assembly Assembly
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public extern override String Name
+        public override String Name
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public extern override String FullName
+        public override String FullName
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public override String AssemblyQualifiedName
@@ -46,26 +55,41 @@ namespace System
             }
         }
 
-        public extern override Type BaseType
+        public override Type BaseType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override MethodInfo[] GetMethods(BindingFlags bindingAttr);
+        
+        public override MethodInfo[] GetMethods(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override FieldInfo GetField(String name, BindingFlags bindingAttr);
+        
+        public override FieldInfo GetField(String name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override FieldInfo[] GetFields(BindingFlags bindingAttr);
+        
+        public override FieldInfo[] GetFields(BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
 
         // GetInterfaces
         // This method will return all of the interfaces implemented by a
         //  class
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override Type[] GetInterfaces();
+        
+        public override Type[] GetInterfaces()
+        {
+            throw new NotImplementedException();
+        }
         ////////////////////////////////////////////////////////////////////////////////////
         //////
         ////// Attributes
@@ -77,9 +101,11 @@ namespace System
         //////  class inside the runtime.
         //////
         ////////////////////////////////////////////////////////////////////////////////////
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public override Type GetElementType();
-
+        
+        public override Type GetElementType()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

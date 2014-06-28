@@ -27,8 +27,11 @@ namespace System.Reflection
         }
 
         public abstract object GetValue(object obj);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void SetValue(Object obj, Object value);
+        
+        public virtual void SetValue(Object obj, Object value)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

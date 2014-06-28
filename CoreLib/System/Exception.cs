@@ -50,10 +50,12 @@ namespace System
             get { return m_innerException; }
         }
 
-        public extern virtual String StackTrace
+        public virtual String StackTrace
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            get
+            {
+                throw new Exception();
+            }
         }
 
         public override String ToString()

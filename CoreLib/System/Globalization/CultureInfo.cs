@@ -74,13 +74,13 @@ namespace System.Globalization
 
         private static CultureInfo CurrentUICultureInternal
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 throw new NotImplementedException();
             }
 
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             set
             {
                 throw new NotImplementedException();

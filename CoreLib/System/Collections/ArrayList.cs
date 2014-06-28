@@ -30,7 +30,7 @@ namespace System.Collections
             }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private void SetCapacity(int capacity)
         {
             throw new NotImplementedException();
@@ -61,25 +61,36 @@ namespace System.Collections
             get { return this; }
         }
 
-        public extern virtual Object this[int index]
+        public virtual Object this[int index]
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
-
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            set;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+            
+            set
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual int Add(Object value);
+        
+        public virtual int Add(Object value)
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual int BinarySearch(Object value, IComparer comparer)
         {
             return Array.BinarySearch(_items, 0, _size, value, comparer);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Clear();
+        
+        public virtual void Clear()
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual Object Clone()
         {
@@ -132,8 +143,11 @@ namespace System.Collections
             return Array.IndexOf(_items, value, startIndex, count);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Insert(int index, Object value);
+        
+        public virtual void Insert(int index, Object value)
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual void Remove(Object obj)
         {
@@ -144,8 +158,11 @@ namespace System.Collections
             }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void RemoveAt(int index);
+        
+        public virtual void RemoveAt(int index)
+        {
+            throw new NotImplementedException();
+        }
 
         public virtual Object[] ToArray()
         {

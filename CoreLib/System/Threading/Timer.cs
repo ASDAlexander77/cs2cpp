@@ -15,17 +15,20 @@ namespace System.Threading
         private object m_timer;
         private object m_state;
         private TimerCallback m_callback;
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public Timer(TimerCallback callback, Object state, int dueTime, int period);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public Timer(TimerCallback callback, Object state, TimeSpan dueTime, TimeSpan period);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public bool Change(int dueTime, int period);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public bool Change(TimeSpan dueTime, TimeSpan period);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public void Dispose();
+        
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

@@ -51,16 +51,21 @@ namespace System.Reflection
     [Serializable()]
     public class Assembly
     {
-        public extern virtual String FullName
+        public virtual String FullName
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern static Assembly GetExecutingAssembly();
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static Assembly GetExecutingAssembly()
+        {
+            throw new NotImplementedException();
+        }
+        
         internal void GetVersion(ref int major, ref int minor, ref int build, ref int revision)
         {
             throw new NotImplementedException();
@@ -76,8 +81,12 @@ namespace System.Reflection
             return type.Assembly;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Type GetType(String name);
+        
+        public virtual Type GetType(String name)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual Type GetType(String name, bool throwOnError)
         {
             Type type = GetType(name);
@@ -90,8 +99,12 @@ namespace System.Reflection
             return type;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Type[] GetTypes();
+        
+        public virtual Type[] GetTypes()
+        {
+            throw new NotImplementedException();
+        }
+
         public Assembly GetSatelliteAssembly(CultureInfo culture)
         {
             if (culture == null)
@@ -221,16 +234,16 @@ namespace System.Reflection
             return assm;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         internal static Assembly LoadInternal(String assemblyString, bool fVersion, int maj, int min, int build, int rev)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         static extern public Assembly Load(byte[] rawAssembly);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         internal String[] GetManifestResourceNames()
         {
             throw new NotImplementedException();

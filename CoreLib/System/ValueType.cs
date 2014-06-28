@@ -11,8 +11,11 @@ namespace System
     public abstract class ValueType
     {
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override bool Equals(Object obj);
+
+        public override bool Equals(Object obj)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

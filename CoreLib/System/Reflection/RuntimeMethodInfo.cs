@@ -12,10 +12,13 @@ namespace System.Reflection
     [Serializable()]
     internal sealed class RuntimeMethodInfo : MethodInfo
     {
-        public extern override Type ReturnType
+        public override Type ReturnType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }   // Namespace

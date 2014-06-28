@@ -27,6 +27,9 @@ namespace System
     public sealed class String : IComparable
     {
         public static readonly String Empty = "";
+
+        private char[] chars;
+
         public override bool Equals(object obj)
         {
             String s = obj as String;
@@ -38,19 +41,19 @@ namespace System
             return false;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool Equals(String a, String b)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool operator ==(String a, String b)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static bool operator !=(String a, String b)
         {
             throw new NotImplementedException();
@@ -59,167 +62,182 @@ namespace System
         [System.Runtime.CompilerServices.IndexerName("Chars")]
         public char this[int index]
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 throw new NotImplementedException();
             }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public char[] ToCharArray()
+        {
+            return this.chars;
+        }
+
+        
+        public char[] ToCharArray(int startIndex, int length)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern char[] ToCharArray(int startIndex, int length);
-
         public int Length
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 throw new NotImplementedException();
             }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern String[] Split(params char[] separator);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public String[] Split(params char[] separator)
+        {
+            throw new NotImplementedException();
+        }
+        
         public String[] Split(char[] separator, int count)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String Substring(int startIndex)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String Substring(int startIndex, int length)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String Trim(params char[] trimChars)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern String TrimStart(params char[] trimChars);
+        
+        public String TrimStart(params char[] trimChars)
+        {
+            throw new NotImplementedException();
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern String TrimEnd(params char[] trimChars);
+        public String TrimEnd(params char[] trimChars)
+        {
+            throw new NotImplementedException();
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String(char[] value, int startIndex, int length)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String(char[] value)
         {
-            throw new NotImplementedException();
+            this.chars = value;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String(char c, int count)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern static int Compare(String strA, String strB);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern int CompareTo(Object value);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern int CompareTo(String strB);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
+        public static int Compare(String strA, String strB)
+        {
+            throw new NotImplementedException();
+        }
+        
+        public int CompareTo(Object value)
+        {
+            throw new NotImplementedException();
+        }
+        
+        public int CompareTo(String strB)
+        {
+            throw new NotImplementedException();
+        }
+        
         public int IndexOf(char value)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public int IndexOf(char value, int startIndex)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public int IndexOf(char value, int startIndex, int count)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int IndexOfAny(char[] anyOf);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int IndexOfAny(char[] anyOf, int startIndex);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int IndexOfAny(char[] anyOf, int startIndex, int count);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public int IndexOf(String value)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int IndexOf(String value, int startIndex);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int IndexOf(String value, int startIndex, int count);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public int LastIndexOf(char value)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOf(char value, int startIndex);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOf(char value, int startIndex, int count);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOfAny(char[] anyOf);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOfAny(char[] anyOf, int startIndex);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOfAny(char[] anyOf, int startIndex, int count);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOf(String value);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOf(String value, int startIndex);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern int LastIndexOf(String value, int startIndex, int count);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String ToLower()
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String ToUpper()
         {
             throw new NotImplementedException();
@@ -230,7 +248,7 @@ namespace System
             return this;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public String Trim()
         {
             throw new NotImplementedException();
@@ -303,25 +321,25 @@ namespace System
             return String.Concat(sArgs);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static String Concat(String str0, String str1)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static String Concat(String str0, String str1, String str2)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static String Concat(String str0, String str1, String str2, String str3)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static String Concat(params String[] values)
         {
             throw new NotImplementedException();

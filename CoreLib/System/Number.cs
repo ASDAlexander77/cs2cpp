@@ -297,7 +297,7 @@ namespace System
             }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static String FormatNative(Object value, char format, int precision)
         {
             throw new NotImplementedException();

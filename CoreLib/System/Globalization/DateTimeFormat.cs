@@ -135,7 +135,7 @@ namespace System.Globalization
         //  The function can format to Int32.MaxValue.
         //
         ////////////////////////////////////////////////////////////////////////////
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static String FormatDigits(int value, int len)
         {
             throw new NotImplementedException();

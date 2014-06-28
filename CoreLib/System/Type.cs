@@ -12,10 +12,13 @@ namespace System
     public abstract class Type : MemberInfo, IReflect
     {
 
-        public extern override Type DeclaringType
+        public override Type DeclaringType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public static Type GetType(String typeName)
@@ -35,21 +38,24 @@ namespace System
             return GetTypeInternal(name, assemblyName, fVersion, ver);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static Type GetTypeInternal(String typeName, string assemblyName, bool fVersion, int[] ver)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern Object InvokeMember(String name, BindingFlags invokeAttr, Binder binder, Object target, Object[] args);
+        
+        public Object InvokeMember(String name, BindingFlags invokeAttr, Binder binder, Object target, Object[] args)
+        {
+            throw new NotImplementedException();
+        }
 
         public abstract Assembly Assembly
         {
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static Type GetTypeFromHandle(RuntimeTypeHandle handle)
         {
             throw new NotImplementedException();
@@ -70,20 +76,28 @@ namespace System
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public ConstructorInfo GetConstructor(Type[] types)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern MethodInfo GetMethod(String name, Type[] types);
+        
+        public MethodInfo GetMethod(String name, Type[] types)
+        {
+            throw new NotImplementedException();
+        }
+        
+        public MethodInfo GetMethod(String name, BindingFlags bindingAttr)
+        {
+            throw new NotImplementedException();
+        }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern MethodInfo GetMethod(String name, BindingFlags bindingAttr);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern MethodInfo GetMethod(String name);
+        
+        public MethodInfo GetMethod(String name)
+        {
+            throw new NotImplementedException();
+        }
 
         // GetMethods
         // This routine will return all the methods implemented by the class
@@ -123,58 +137,94 @@ namespace System
         //////  class inside the runtime.
         //////
         ////////////////////////////////////////////////////////////////////////////////////
-        public extern bool IsNotPublic
+        public bool IsNotPublic
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsPublic
+        public bool IsPublic
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsClass
+        public bool IsClass
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsInterface
+        public bool IsInterface
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsValueType
+        public bool IsValueType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsAbstract
+        public bool IsAbstract
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsEnum
+        public bool IsEnum
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsSerializable
+        public bool IsSerializable
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsArray
+        public bool IsArray
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
         abstract public Type GetElementType();
@@ -194,8 +244,11 @@ namespace System
             return false;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual bool IsInstanceOfType(Object o);
+        
+        public virtual bool IsInstanceOfType(Object o)
+        {
+            throw new NotImplementedException();
+        }
 
         public override String ToString()
         {

@@ -1205,6 +1205,11 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodStart(IMethod method)
         {
+            if (method.IsInternalCall && this.processedMethods.Any(m => m.Name == method.Name))
+            {
+                return;
+            }
+
             this.processedMethods.Add(method);
 
             this.StartProcess();
@@ -1243,8 +1248,16 @@ namespace Il2Native.Logic
             this.WriteMethodReturnType(this.Output, method);
 
             this.WriteMethodDefinitionName(this.Output, method);
+            if (method.IsInternalCall)
+            {
 
-            this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+                this.Output.Write("(...)");
+            }
+            else
+            {
+                this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+            }
+
 
             this.WriteMethodNumber();
 
@@ -3040,6 +3053,11 @@ namespace Il2Native.Logic
         private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
             var methodName = methodBase.ToString();
+
+            if (methodBase.IsInternalCall)
+            {
+                return string.Concat('@', methodBase.Name);
+            }
 
             var sb = new StringBuilder();
             sb.Append("@\"");

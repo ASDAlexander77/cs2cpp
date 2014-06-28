@@ -52,6 +52,7 @@
     <Compile Include="System\Byte.cs" />
     <Compile Include="System\Char.cs" />
     <Compile Include="System\ComponentModel\EditorBrowsableAttribute.cs" />
+    <Compile Include="System\Console.cs" />
     <Compile Include="System\Convert.cs" />
     <Compile Include="System\CLSCompliantAttribute.cs" />
     <Compile Include="System\DateTime.cs" />
@@ -203,6 +204,9 @@
     <Compile Include="System\Threading\Timer.cs" />
     <Compile Include="System\Threading\Timeout.cs" />
     <Compile Include="System\Threading\WaitHandle.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

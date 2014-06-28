@@ -9,10 +9,11 @@ namespace System.Runtime.CompilerServices
     [Serializable]
     public static class RuntimeHelpers
     {
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static void InitializeArray(Array array, RuntimeFieldHandle fldHandle)
         {
-            throw new NotImplementedException();
+            // TODO: Not Implemented
+            ////throw new NotImplementedException();
         }
 
         /**
@@ -32,7 +33,7 @@ namespace System.Runtime.CompilerServices
          * @param obj The object that is about to be assigned.
          * @return a shallow copy of 'obj' if it is a value class, 'obj' itself otherwise
          */
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern Object GetObjectValue(Object obj);
 
         /**
@@ -45,12 +46,12 @@ namespace System.Runtime.CompilerServices
          * exception when it ran.
          */
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern void RunClassConstructor(RuntimeTypeHandle type);
 
         extern public static int OffsetToStringData
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
     }

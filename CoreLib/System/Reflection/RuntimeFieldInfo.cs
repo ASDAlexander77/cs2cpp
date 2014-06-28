@@ -10,26 +10,38 @@ namespace System.Reflection
     [Serializable()]
     internal sealed class RuntimeFieldInfo : FieldInfo
     {
-        public extern override String Name
+        public override String Name
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public extern override Type DeclaringType
+        public override Type DeclaringType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        public extern override Type FieldType
+        public override Type FieldType
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override Object GetValue(Object obj);
+        
+        public override Object GetValue(Object obj)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

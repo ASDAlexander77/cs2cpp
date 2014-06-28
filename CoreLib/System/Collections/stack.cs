@@ -55,8 +55,11 @@ namespace System.Collections
         /// <summary>
         /// Removes all Objects from the Stack.
         /// </summary>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Clear();
+
+        public virtual void Clear()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Creates a shallow copy of the Stack.
@@ -114,22 +117,31 @@ namespace System.Collections
         /// Returns the object at the top of the Stack without removing it.
         /// </summary>
         /// <returns>The Object at the top of the Stack.</returns>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Object Peek();
+
+        public virtual Object Peek()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Removes and returns the object at the top of the Stack.
         /// </summary>
         /// <returns>The Object removed from the top of the Stack.</returns>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Object Pop();
+        
+        public virtual Object Pop()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Inserts an object at the top of the Stack.
         /// </summary>
         /// <param name="obj">The Object to push onto the Stack.</param>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Push(Object obj);
+        
+        public virtual void Push(Object obj)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Copies the Stack to a new array, in the same order Pop would return the items.

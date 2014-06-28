@@ -88,8 +88,11 @@ namespace System.Collections
         /// <summary>
         /// Removes all objects from the Queue.
         /// </summary>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Clear();
+        
+        public virtual void Clear()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Copies the Queue elements to an existing one-dimensional Array, starting at
@@ -97,15 +100,21 @@ namespace System.Collections
         /// </summary>
         /// <param name="array">The one-dimensional Array that is the destination of the elements copied from Queue.</param>
         /// <param name="index">The zero-based index in array at which copying begins.</param>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void CopyTo(Array array, int index);
+        
+        public virtual void CopyTo(Array array, int index)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Adds an object to the end of the Queue.
         /// </summary>
         /// <param name="obj">The object to add to the Queue.</param>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual void Enqueue(Object obj);
+        
+        public virtual void Enqueue(Object obj)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Returns an enumerator that iterates through the Queue.
@@ -124,15 +133,21 @@ namespace System.Collections
         /// Removes and returns the object at the beginning of the Queue.
         /// </summary>
         /// <returns>The object that is removed from the beginning of the Queue.</returns>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Object Dequeue();
+        
+        public virtual Object Dequeue()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Returns the object at the beginning of the Queue without removing it.
         /// </summary>
         /// <returns>The object at the beginning of the Queue.</returns>
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern virtual Object Peek();
+        
+        public virtual Object Peek()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Determines whether an element is in the Queue.

@@ -14,48 +14,78 @@ namespace System.Reflection
     [Serializable()]
     public abstract class MethodBase : MemberInfo
     {
-        public extern bool IsPublic
+        public bool IsPublic
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsStatic
+        public bool IsStatic
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsFinal
+        public bool IsFinal
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsVirtual
+        public bool IsVirtual
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        public extern bool IsAbstract
+        public bool IsAbstract
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern Object Invoke(Object obj, Object[] parameters);
-        public extern override String Name
+        
+        public Object Invoke(Object obj, Object[] parameters)
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            throw new NotImplementedException();
         }
 
-        public extern override Type DeclaringType
+        public override String Name
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public override Type DeclaringType
+        {
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

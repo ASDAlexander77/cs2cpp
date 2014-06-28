@@ -94,7 +94,7 @@ namespace System
         // Returns:
         //     An angle, ?, measured in radians, such that 0 =?=p -or- System.Double.NaN
         //     if d < -1 or d > 1.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Acos(double d);
         //
         // Summary:
@@ -107,7 +107,7 @@ namespace System
         // Returns:
         //     An angle, ?, measured in radians, such that -p/2 =?=p/2 -or- System.Double.NaN
         //     if d < -1 or d > 1.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Asin(double d);
         //
         // Summary:
@@ -122,7 +122,7 @@ namespace System
         //     if d equals System.Double.NaN, -p/2 rounded to double precision (-1.5707963267949)
         //     if d equals System.Double.NegativeInfinity, or p/2 rounded to double precision
         //     (1.5707963267949) if d equals System.Double.PositiveInfinity.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Atan(double d);
         //
         // Summary:
@@ -144,7 +144,7 @@ namespace System
         //     the following: If y is 0 and x is not negative, ? = 0.  If y is 0 and x is
         //     negative, ? = p.  If y is positive and x is 0, ? = p/2.  If y is negative
         //     and x is 0, ? = -p/2.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Atan2(double y, double x);        //
         // Summary:
         //     Returns the smallest integer greater than or equal to the specified double-precision
@@ -158,7 +158,7 @@ namespace System
         //     The smallest integer greater than or equal to a. If a is equal to System.Double.NaN,
         //     System.Double.NegativeInfinity, or System.Double.PositiveInfinity, that value
         //     is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Ceiling(double d);        //
         // Summary:
         //     Returns the cosine of the specified angle.
@@ -169,7 +169,7 @@ namespace System
         //
         // Returns:
         //     The cosine of d.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Cos(double a);
         //
         // Summary:
@@ -183,7 +183,7 @@ namespace System
         //     The hyperbolic cosine of value. If value is equal to System.Double.NegativeInfinity
         //     or System.Double.PositiveInfinity, System.Double.PositiveInfinity is returned.
         //     If value is equal to System.Double.NaN, System.Double.NaN is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Cosh(double a);
         //
         // Summary:
@@ -203,7 +203,7 @@ namespace System
         //     integer is returned).  If x - (y Q) is zero, the value +0 is returned if
         //     x is positive, or -0 if x is negative.  If y = 0, System.Double.NaN (Not-A-Number)
         //     is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double IEEERemainder(double x, double y);
          //
         // Summary:
@@ -217,7 +217,7 @@ namespace System
         //     The number e raised to the power d. If d equals System.Double.NaN or System.Double.PositiveInfinity,
         //     that value is returned. If d equals System.Double.NegativeInfinity, 0 is
         //     returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Exp(double d);
         //
         // Summary:
@@ -232,7 +232,7 @@ namespace System
         //     The largest integer less than or equal to d. If d is equal to System.Double.NaN,
         //     System.Double.NegativeInfinity, or System.Double.PositiveInfinity, that value
         //     is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Floor(double d);
         
         //
@@ -248,7 +248,7 @@ namespace System
         //     log ed Zero System.Double.NegativeInfinity Negative System.Double.NaN If
         //     d is equal to System.Double.NaN, returns System.Double.NaN. If d is equal
         //     to System.Double.PositiveInfinity, returns System.Double.PositiveInfinity.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Log(double d);
         //
         // Summary:
@@ -263,7 +263,7 @@ namespace System
         //     Negative System.Double.NaN If d is equal to System.Double.NaN, this method
         //     returns System.Double.NaN. If d is equal to System.Double.PositiveInfinity,
         //     this method returns System.Double.PositiveInfinity.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Log10(double d);
         //
         // Summary:
@@ -314,7 +314,7 @@ namespace System
         //
         // Returns:
         //     The number x raised to the power y.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static double Pow(double x, double y)
         {
             throw new NotImplementedException();
@@ -332,7 +332,7 @@ namespace System
         //     The integer nearest a. If the fractional component of a is halfway between
         //     two integers, one of which is even and the other odd, then the even number
         //     is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Round(double d);        //
         //
         // Summary:
@@ -351,7 +351,7 @@ namespace System
         //   System.ArithmeticException:
         //     value is equal to System.Double.NaN.
         //     is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int Sign(double value);
         // Summary:
         //     Returns the sine of the specified angle.
@@ -363,7 +363,7 @@ namespace System
         // Returns:
         //     The sine of a. If a is equal to System.Double.NaN, System.Double.NegativeInfinity,
         //     or System.Double.PositiveInfinity, this method returns System.Double.NaN.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Sin(double a);
         //
         // Summary:
@@ -377,7 +377,7 @@ namespace System
         //     The hyperbolic sine of value. If value is equal to System.Double.NegativeInfinity,
         //     System.Double.PositiveInfinity, or System.Double.NaN, this method returns
         //     a System.Double equal to value.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Sinh(double value);
         //
         // Summary:
@@ -391,7 +391,7 @@ namespace System
         //     Value of d Returns Zero, or positive The positive square root of d. Negative
         //     System.Double.NaN If d is equal to System.Double.NaN or System.Double.PositiveInfinity,
         //     that value is returned.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Sqrt(double d);
         //
         // Summary:
@@ -404,7 +404,7 @@ namespace System
         // Returns:
         //     The tangent of a. If a is equal to System.Double.NaN, System.Double.NegativeInfinity,
         //     or System.Double.PositiveInfinity, this method returns System.Double.NaN.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Tan(double a);
         //
         // Summary:
@@ -419,7 +419,7 @@ namespace System
         //     this method returns -1. If value is equal to System.Double.PositiveInfinity,
         //     this method returns 1. If value is equal to System.Double.NaN, this method
         //     returns System.Double.NaN.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Tanh(double value);
         //
         // Summary:
@@ -433,7 +433,7 @@ namespace System
         // Returns:
         //     The integral part of d; that is, the number that remains after any fractional
         //     digits have been discarded.
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern double Truncate(double d);
     }
 }

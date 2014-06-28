@@ -284,6 +284,11 @@ namespace Il2Native.Logic.Gencode
             }
 
             /// <summary>
+            /// custom field
+            /// </summary>
+            public bool IsInternalCall { get { return false; } }
+
+            /// <summary>
             /// </summary>
             public string FullName
             {

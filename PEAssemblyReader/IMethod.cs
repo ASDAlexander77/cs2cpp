@@ -32,6 +32,11 @@ namespace PEAssemblyReader
         IType ReturnType { get; }
 
         /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsInternalCall { get; }
+
+        /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>

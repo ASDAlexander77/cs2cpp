@@ -11,22 +11,33 @@ namespace System
     public class WeakReference
     {
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern WeakReference(Object target);
-
-        public extern virtual bool IsAlive
+        
+        public WeakReference(Object target)
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            throw new NotImplementedException();
         }
 
-        public extern virtual Object Target
+        public virtual bool IsAlive
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            get;
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
-            set;
+        public virtual Object Target
+        {
+            
+            get
+            {
+                throw new NotImplementedException();
+            }
+            
+            set
+            {
+                throw new NotImplementedException();
+            }
         }
 
     }

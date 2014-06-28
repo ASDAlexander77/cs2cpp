@@ -286,6 +286,11 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
+                if (methodBase.IsInternalCall)
+                {
+                    writer.Write("(...)* ");
+                }
+
                 llvmWriter.WriteMethodDefinitionName(writer, methodBase, ownerOfExplicitInterface);
             }
 

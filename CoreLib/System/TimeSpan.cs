@@ -41,13 +41,13 @@ namespace System
             m_ticks = ticks;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public TimeSpan(int hours, int minutes, int seconds);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public TimeSpan(int days, int hours, int minutes, int seconds);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public TimeSpan(int days, int hours, int minutes, int seconds, int milliseconds);
 
         public long Ticks
@@ -103,10 +103,10 @@ namespace System
             return new TimeSpan(m_ticks + ts.m_ticks);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public static int Compare(TimeSpan t1, TimeSpan t2);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public int CompareTo(Object value);
 
         public TimeSpan Duration()
@@ -114,10 +114,13 @@ namespace System
             return new TimeSpan(m_ticks >= 0 ? m_ticks : -m_ticks);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public override bool Equals(Object value);
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public override bool Equals(Object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        
         extern public static bool Equals(TimeSpan t1, TimeSpan t2);
 
         public TimeSpan Negate()
@@ -135,8 +138,11 @@ namespace System
             return new TimeSpan(val);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public override String ToString();
+        
+        public override String ToString()
+        {
+            throw new NotImplementedException();
+        }
 
         public static TimeSpan operator -(TimeSpan t)
         {

@@ -18,44 +18,47 @@ namespace System.Threading
         [System.Reflection.FieldNoReflection]
         private object m_AppDomain;
         private int    m_Id;
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        extern public Thread(ThreadStart start);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
+        public Thread(ThreadStart start)
+        {
+            throw new NotImplementedException();
+        }
+        
         extern public void Start();
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public void Abort();
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public void Suspend();
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public void Resume();
         extern public ThreadPriority Priority
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
 
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             set;
         }
 
         extern public int ManagedThreadId
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
 
         extern public bool IsAlive
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public void Join();
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public bool Join(int millisecondsTimeout);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         extern public bool Join(TimeSpan timeout);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static void Sleep(int millisecondsTimeout)
         {
             throw new NotImplementedException();
@@ -63,17 +66,17 @@ namespace System.Threading
 
         extern public static Thread CurrentThread
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
 
         extern public ThreadState ThreadState
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static AppDomain GetDomain()
         {
             throw new NotImplementedException();

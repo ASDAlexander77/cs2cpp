@@ -131,7 +131,7 @@ namespace System
         {
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public DateTime(int year, int month, int day, int hour, int minute, int second, int millisecond)
         {
             throw new NotImplementedException();
@@ -205,7 +205,7 @@ namespace System
             return DateTime.Compare(this, (DateTime)val);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern static int DaysInMonth(int year, int month);
 
         public override bool Equals(Object val)
@@ -247,7 +247,7 @@ namespace System
 
         public int Day
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -256,7 +256,7 @@ namespace System
 
         public DayOfWeek DayOfWeek
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return DayOfWeek.Monday;
@@ -265,7 +265,7 @@ namespace System
 
         public int DayOfYear
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -275,7 +275,7 @@ namespace System
         /// Reduce size by calling a single method?
         public int Hour
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -311,7 +311,7 @@ namespace System
 
         public int Millisecond
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -320,7 +320,7 @@ namespace System
 
         public int Minute
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -329,7 +329,7 @@ namespace System
 
         public int Month
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -338,7 +338,7 @@ namespace System
 
         public static DateTime Now
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return new DateTime();
@@ -347,7 +347,7 @@ namespace System
 
         public static DateTime UtcNow
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return new DateTime();
@@ -356,7 +356,7 @@ namespace System
 
         public int Second
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -388,7 +388,7 @@ namespace System
 
         public static DateTime Today
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return new DateTime();
@@ -397,7 +397,7 @@ namespace System
 
         public int Year
         {
-            [MethodImplAttribute(MethodImplOptions.InternalCall)]
+            
             get
             {
                 return 0;
@@ -414,7 +414,7 @@ namespace System
             return new DateTime((long)(m_ticks - (ulong)val.m_ticks));
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern DateTime ToLocalTime();
 
         public override String ToString()
@@ -427,7 +427,7 @@ namespace System
             return DateTimeFormat.Format(this, format, DateTimeFormatInfo.CurrentInfo);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public extern DateTime ToUniversalTime();
 
         public static DateTime operator +(DateTime d, TimeSpan t)

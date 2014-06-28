@@ -11,7 +11,7 @@ namespace System
     public static class GC
     {
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         private static bool AnyPendingFinalizers()
         {
             throw new NotImplementedException();
@@ -22,13 +22,13 @@ namespace System
             while (AnyPendingFinalizers()) System.Threading.Thread.Sleep(10);
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static void SuppressFinalize(Object obj)
         {
             throw new NotImplementedException();
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern void ReRegisterForFinalize(Object obj);
 
     }

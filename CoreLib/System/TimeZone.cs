@@ -57,7 +57,7 @@ namespace System
             return false;
         }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         internal static long GetTimeZoneOffset()
         {
             throw new NotImplementedException();

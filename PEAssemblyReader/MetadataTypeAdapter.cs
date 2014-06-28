@@ -336,6 +336,8 @@ namespace PEAssemblyReader
 
         public bool UseAsClass { get; set; }
 
+        public bool IsCCall { get { return false; } }
+
         public IEnumerable<IType> GetNestedTypes()
         {
             var peType = this.typeDef as PENamedTypeSymbol;

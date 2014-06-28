@@ -18,7 +18,7 @@ namespace System.Threading
          *                        long
          *****************************/
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int Increment(ref int location);
         /******************************
          * Decrement
@@ -26,7 +26,7 @@ namespace System.Threading
          *                        long
          *****************************/
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int Decrement(ref int location);
         //public static extern long Decrement(ref long location);
 
@@ -40,7 +40,7 @@ namespace System.Threading
          *                        IntPtr
          *****************************/
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int Exchange(ref int location1, int value);
         /******************************
          * CompareExchange
@@ -52,7 +52,7 @@ namespace System.Threading
          *                         IntPtr
          *****************************/
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        
         public static extern int CompareExchange(ref int location1, int value, int comparand);
     }
 }
