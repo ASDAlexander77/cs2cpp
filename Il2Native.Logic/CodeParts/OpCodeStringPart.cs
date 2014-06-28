@@ -28,5 +28,7 @@ namespace Il2Native.Logic.CodeParts
             : base(opcode, addressStart, addressEnd, param)
         {
         }
+
+        public int StringIndex { get; set; }
     }
 }

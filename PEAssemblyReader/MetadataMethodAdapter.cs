@@ -206,7 +206,7 @@ namespace PEAssemblyReader
         {
             get 
             {
-                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.InternalCall);
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ManagedMask);
             }
         }
 

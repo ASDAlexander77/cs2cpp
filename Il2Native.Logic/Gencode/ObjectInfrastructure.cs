@@ -29,22 +29,26 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallConstructor(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
+            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Operand);
+        }
+
+        public static void WriteCallConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IConstructor methodBase)
+        {
             var writer = llvmWriter.Output;
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
-            var methodBase = opCodeConstructorInfoPart.Operand;
-            var resAlloc = opCodeConstructorInfoPart.Result;
-            opCodeConstructorInfoPart.Result = null;
+            var resAlloc = opCodePart.Result;
+            opCodePart.Result = null;
             llvmWriter.WriteCall(
-                opCodeConstructorInfoPart,
+                opCodePart,
                 methodBase,
-                opCodeConstructorInfoPart.ToCode() == Code.Callvirt,
+                opCodePart.ToCode() == Code.Callvirt,
                 true,
                 true,
                 resAlloc,
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            opCodeConstructorInfoPart.Result = resAlloc;
+            opCodePart.Result = resAlloc;
         }
 
         /// <summary>

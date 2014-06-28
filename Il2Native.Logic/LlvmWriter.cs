@@ -406,6 +406,12 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (opCode.Any(Code.Ldstr))
+            {
+                var opCodeString = opCode as OpCodeStringPart;
+                return opCodeString.StringIndex > 0;
+            }
+
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
                 Code.Ldc_I4_0,
@@ -423,7 +429,6 @@ namespace Il2Native.Logic
                 Code.Ldc_I8,
                 Code.Ldc_R4,
                 Code.Ldc_R8,
-                Code.Ldstr,
                 Code.Ldnull,
                 Code.Ldtoken,
                 Code.Ldsflda,
@@ -1049,8 +1054,7 @@ namespace Il2Native.Logic
             // write set of strings
             foreach (var pair in this.stringStorage)
             {
-                this.Output.WriteLine(
-                    string.Format("@.s{0} = private unnamed_addr constant [{2} x i8] c\"{1}\\00\", align 1", pair.Key, pair.Value, pair.Value.Length + 1));
+                WriteUnicodeString(pair);
             }
 
             if (this.stringStorage.Count > 0)
@@ -1059,6 +1063,36 @@ namespace Il2Native.Logic
             }
 
             this.stringStorage.Clear();
+        }
+
+        private void WriteAnsiString(KeyValuePair<int, string> pair)
+        {
+            this.Output.WriteLine(
+                string.Format("@.s{0} = private unnamed_addr constant [{2} x i8] c\"{1}\\00\", align 1", pair.Key, pair.Value, pair.Value.Length + 1));
+        }
+
+        private void WriteUnicodeString(KeyValuePair<int, string> pair)
+        {
+            this.Output.Write("@.s{0} = private unnamed_addr constant [{2} x i16] [", pair.Key, pair.Value, pair.Value.Length + 1);
+
+            var index = 0;
+            foreach (var c in pair.Value.ToCharArray())
+            {
+                if (index > 0)
+                {
+                    this.Output.Write(", ");
+                }
+
+                this.Output.Write("i16 {0}", (int)c);
+                index++;
+            }
+
+            if (index > 0)
+            {
+                this.Output.Write(", ");
+            }
+
+            this.Output.WriteLine("i16 0], align 2", pair.Key, pair.Value, pair.Value.Length + 1);
         }
 
         /// <summary>
@@ -1724,13 +1758,29 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
+                    if (opCodeString != null)
+                    {
+                        if (opCodeString.StringIndex == 0)
+                        {
+                            var stringType = ThisType.Module.ResolveType("System.String", null, null);
 
-                    // TODO: finish loading a string
-                    writer.Write("null");
-                    ////writer.Write(
-                    ////    "getelementptr inbounds ([{1} x i8]* @.s{0}, i32 0, i32 0)",
-                    ////    this.GetStringIndex(opCodeString.Operand),
-                    ////    opCodeString.Operand.Length + 1);
+                            // find constructor
+                            var constructorInfo = IlReader.Constructors(stringType).First(
+                                c => c.GetParameters().Count() == 1 
+                                     && c.GetParameters().First().ParameterType.ToString() == "Char[]");
+
+                            this.WriteNewWithoutCallingConstructor(opCode, stringType);
+                            opCodeString.StringIndex = this.GetStringIndex(opCodeString.Operand);
+                            opCode.OpCodeOperands = new OpCodePart[] { opCode };
+                            this.WriteCallConstructor(opCode, constructorInfo);
+                            opCodeString.StringIndex = 0;
+                        }
+                        else
+                        {
+                            writer.Write("bitcast ([{1} x i16]* @.s{0} to i16*)", opCodeString.StringIndex, opCodeString.Operand.Length + 1);
+                        }
+                    }
+
                     break;
                 case Code.Ldnull:
                     writer.Write("null");

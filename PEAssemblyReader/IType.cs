@@ -84,6 +84,10 @@ namespace PEAssemblyReader
         bool IsNested { get; }
 
         /// <summary>
+        /// </summary>
+        IModule Module { get; }
+
+        /// <summary>
         /// to disable optimazing for the type
         /// </summary>
         bool UseAsClass { get; set; }

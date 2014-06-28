@@ -6,7 +6,7 @@
 
     public static class Console
     {
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern int puts(char[] chars);
 
         public static int Read()

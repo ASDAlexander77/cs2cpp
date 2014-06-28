@@ -54,9 +54,23 @@ namespace PEAssemblyReader
             {
                 var effective = this.typeDef;
 
-                if (this.typeDef.TypeKind == TypeKind.ArrayType)
+                while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
                 {
-                    effective = this.GetElementTypeSymbol();
+                    var arrayType = effective as ArrayTypeSymbol;
+                    if (arrayType != null)
+                    {
+                        effective = arrayType.ElementType;
+                        continue;
+                    }
+
+                    var pointerType = effective as PointerTypeSymbol;
+                    if (pointerType != null)
+                    {
+                        effective = pointerType.PointedAtType;
+                        continue;
+                    }
+
+                    break;
                 }
 
                 return effective.ContainingAssembly.Identity.ToAssemblyName().FullName;
@@ -366,6 +380,16 @@ namespace PEAssemblyReader
             get
             {
                 return this.typeDef.ContainingNamespace != null ? this.typeDef.ContainingNamespace.Name : string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IModule Module
+        {
+            get
+            {
+                return new MetadataModuleAdapter(this.typeDef.ContainingModule);
             }
         }
 

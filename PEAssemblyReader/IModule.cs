@@ -67,5 +67,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ResolveType(int token, IType[] typeGenerics, IType[] methodGenerics);
+
+        IType ResolveType(string s, IType[] typeGenerics, IType[] methodGenerics);
     }
 }

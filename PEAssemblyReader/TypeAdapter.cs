@@ -117,6 +117,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public IModule Module
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <exception cref="NotImplementedException">

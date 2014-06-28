@@ -175,5 +175,25 @@ namespace PEAssemblyReader
 
             throw new KeyNotFoundException();
         }
+
+        public IType ResolveType(string fullName, IType[] typeGenerics, IType[] methodGenerics)
+        {
+            var peModuleSymbol = this.moduleDef as PEModuleSymbol;
+
+            var typeSymbol = new MetadataDecoder(peModuleSymbol).GetTypeSymbolForSerializedType(fullName) as TypeSymbol;
+
+            if (typeSymbol.TypeKind == Microsoft.CodeAnalysis.TypeKind.Error)
+            {
+                // try to find it in CoreLib
+                typeSymbol = new MetadataDecoder(peModuleSymbol.ContainingAssembly.CorLibrary.Modules[0] as PEModuleSymbol).GetTypeSymbolForSerializedType(fullName) as TypeSymbol;
+            }
+
+            if (typeSymbol != null && typeSymbol.TypeKind != Microsoft.CodeAnalysis.TypeKind.Error)
+            {
+                return new MetadataTypeAdapter(typeSymbol);
+            }
+
+            throw new KeyNotFoundException();
+        }
     }
 }
