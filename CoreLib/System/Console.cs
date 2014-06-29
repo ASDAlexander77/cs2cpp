@@ -6,8 +6,21 @@
 
     public static class Console
     {
+        private static string NewLine = "\r\n";
+        private static string PrintDouble = "%f";
+        private static string PrintInt = "%i";
+
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int puts(char[] chars);
+        public static extern int wprintf(char[] chars);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int wprintf(char[] chars, double d);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int wprintf(char[] chars, int t);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int wcsncmp (char[] chars1, char[] chars2, int size);
 
         public static int Read()
         {
@@ -51,7 +64,8 @@
 
         public static void WriteLine(double value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintDouble.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(float value)
@@ -61,7 +75,8 @@
 
         public static void WriteLine(int value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         [CLSCompliant(false)]
@@ -88,7 +103,8 @@
 
         public static void WriteLine(String value)
         {
-            puts(value.ToCharArray());
+            wprintf(value.ToCharArray());
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(String format, Object arg0)
@@ -153,7 +169,7 @@
 
         public static void Write(double value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintDouble.ToCharArray(), value);
         }
 
         public static void Write(decimal value)
@@ -168,7 +184,7 @@
 
         public static void Write(int value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
         }
 
         [CLSCompliant(false)]

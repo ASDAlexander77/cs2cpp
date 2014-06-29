@@ -1392,7 +1392,8 @@ namespace Il2Native.Logic
             }
 
             this.StaticConstructors.Clear();
-            VirtualTableGen.ClearVirtualTables();
+            VirtualTableGen.Clear();
+            TypeGen.Clear();
         }
 
         /// <summary>

@@ -86,7 +86,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        public static void ClearVirtualTables()
+        public static void Clear()
         {
             virtualTableByType.Clear();
             virtualInterfaceTableByType.Clear();

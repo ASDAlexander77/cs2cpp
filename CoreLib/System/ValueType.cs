@@ -10,13 +10,20 @@ namespace System
     [Serializable]
     public abstract class ValueType
     {
-
-
         public override bool Equals(Object obj)
         {
             throw new NotImplementedException();
         }
 
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string ToString()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

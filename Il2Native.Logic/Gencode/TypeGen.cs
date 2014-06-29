@@ -97,6 +97,11 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Boolean&"] = LlvmWriter.pointerSize;
         }
 
+        public static void Clear()
+        {
+            sizeByType.Clear();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

@@ -44,19 +44,53 @@ namespace System
         
         public static bool Equals(String a, String b)
         {
-            throw new NotImplementedException();
-        }
+            var charsA = a.ToCharArray();
+            var charsB = b.ToCharArray();
 
+            if (charsA == null && charsB == null)
+            {
+                return true;
+            }
+
+            if (charsA == null || charsB == null)
+            {
+                return false;
+            }
+
+            var index = 0;
+            while (true)
+            {
+                var cA = charsA[index];
+                var cB = charsB[index];
+
+                if (cA == cB)
+                {
+                    index++;
+                }
+
+                var cmpA = cA == '\0';
+                var cmpB = cB == '\0';
+                if (cmpA && cmpB)
+                {
+                    return true;
+                }
+
+                if (cmpA || cmpB)
+                {
+                    return false;
+                }
+            }
+        }
         
         public static bool operator ==(String a, String b)
         {
-            throw new NotImplementedException();
+            return a.Equals(b);
         }
 
         
         public static bool operator !=(String a, String b)
         {
-            throw new NotImplementedException();
+            return !a.Equals(b);
         }
 
         [System.Runtime.CompilerServices.IndexerName("Chars")]
@@ -83,10 +117,17 @@ namespace System
 
         public int Length
         {
-            
             get
             {
-                throw new NotImplementedException();
+                if (chars == null)
+                {
+                    return 0;
+                }
+
+                var size = 0;
+                while (chars[size++] != '\0');
+
+                return size + 1;
             }
         }
 
