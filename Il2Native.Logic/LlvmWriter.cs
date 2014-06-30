@@ -1270,7 +1270,8 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (method.IsAbstract || method.GetMethodBody() == null)
+            var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
+            if ((method.IsAbstract || method.GetMethodBody() == null) && !isDelegateBodyFunctions)
             {
                 this.Output.Write("declare ");
             }
@@ -1284,7 +1285,6 @@ namespace Il2Native.Logic
             this.WriteMethodDefinitionName(this.Output, method);
             if (method.IsInternalCall)
             {
-
                 this.Output.Write("(...)");
             }
             else
@@ -1310,6 +1310,11 @@ namespace Il2Native.Logic
             }
             else
             {
+                if (isDelegateBodyFunctions)
+                {
+                    this.WriteDelegateFunctionBody(method);
+                }
+
                 this.Output.WriteLine(string.Empty);
             }
 

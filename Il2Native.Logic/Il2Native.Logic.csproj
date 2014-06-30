@@ -59,6 +59,7 @@
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
     <Compile Include="Gencode\ArraySingleDimensionGen.cs" />
+    <Compile Include="Gencode\DelegateGen.cs" />
     <Compile Include="Gencode\ExceptionHandlingGen.cs" />
     <Compile Include="Gencode\LlvmHelpersGen.cs" />
     <Compile Include="Gencode\ObjectInfrastructure.cs" />
