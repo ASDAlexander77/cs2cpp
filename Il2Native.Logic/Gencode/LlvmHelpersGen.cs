@@ -619,22 +619,22 @@ namespace Il2Native.Logic.Gencode
                 LlvmWriter.pointerSize /*Align*/);
         }
 
-        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, params Type[] typesToExclude)
+        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, bool toAddress, params Type[] typesToExclude)
         {
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
-            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))))
+            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))) && ((resultOf.IType.IsPointer || resultOf.IType.IsByRef) && !toAddress))
             {
                 if (resultOf.IType.IsReal())
                 {
                     llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
-                else if (resultOf.IType.IsPointer)
+                else if (resultOf.IType.IsPointer || resultOf.IType.IsByRef)
                 {
                     llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
                 }
-                else if (toType.EndsWith("*"))
+                else if (toType.EndsWith("*") || toType.EndsWith("&"))
                 {
                     llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
                 }

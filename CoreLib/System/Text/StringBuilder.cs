@@ -1,5 +1,5 @@
 namespace System.Text
-{   
+{
     /// <summary>
     /// A Micro Framework port of the Full Framework StringBuilder. Contributed by Julius Friedman.
     /// </summary>
@@ -81,7 +81,7 @@ namespace System.Text
                 }
             }
         }
- 
+
         /// <summary>
         /// Gets or sets the maximum number of characters that can be contained in the memory allocated by the current instance. 
         /// </summary>
@@ -213,7 +213,7 @@ namespace System.Text
             //Set the length of the chunk
             this.m_ChunkLength = length;
             //Copy the value to the chunkChars
-            {                
+            {
                 value.ToCharArray().CopyTo(this.m_ChunkChars, 0);
             }
         }
@@ -434,9 +434,9 @@ namespace System.Text
                         if (length > 1) chunkChars[chunkLength + 1] = value[1];
                     }
                     else
-                    {                        
+                    {
                         char[] tmp = value.ToCharArray();
-                        System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);                       
+                        System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);
                     }
                     this.m_ChunkLength = num3;
                 }
@@ -565,14 +565,14 @@ namespace System.Text
             }
             if (charCount != 0)
             {
-                for(int i = startIndex; i < startIndex + charCount; ++i)
+                for (int i = startIndex; i < startIndex + charCount; ++i)
                 {
                     this.Append(value[i], 1);
                 }
             }
             return this;
         }
-        
+
         /// <summary>
         /// Appends a specified number of copies of the string representation of a Unicode character to this instance. 
         /// </summary>
@@ -656,12 +656,38 @@ namespace System.Text
                     char[] chunkChars = chunkPrevious.m_ChunkChars;
                     int chunkOffset = chunkPrevious.m_ChunkOffset;
                     int chunkLength = chunkPrevious.m_ChunkLength;
-                    System.Array.Copy(chunkChars, 0, result, chunkOffset, chunkLength);
+                    wstrcpy(result, chunkOffset, chunkChars, chunkLength);
                 }
                 chunkPrevious = chunkPrevious.m_ChunkPrevious;
             }
             while (chunkPrevious != null);
             return new string(result);
+        }
+
+        private static unsafe void wstrcpy(char[] d, int doffset, char[] s, int charCount)
+        {
+            if (charCount > 0)
+            {
+                fixed (char* dmem_fixed = d)
+                fixed (char* smem_fixed = s)
+                {
+                    char* dmem = dmem_fixed;
+                    char* smem = smem_fixed;
+
+                    dmem += doffset;
+
+                    // This is rare case where at least one of the pointers is only byte aligned.
+                    do
+                    {
+                        ((byte*)dmem)[0] = ((byte*)smem)[0];
+                        ((byte*)dmem)[1] = ((byte*)smem)[1];
+                        charCount -= 1;
+                        dmem += 1;
+                        smem += 1;
+                    }
+                    while (charCount > 0);
+                }
+            }
         }
 
         /// <summary>
@@ -717,7 +743,7 @@ namespace System.Text
                         if ((((charCount + num3)) > length) || ((charCount + index) > chunkChars.Length))
                         {
                             throw new ArgumentOutOfRangeException("chunkCount");
-                        }                       
+                        }
                         System.Array.Copy(chunkChars, index, result, 0, charCount);
                     }
                 }
@@ -757,7 +783,7 @@ namespace System.Text
                 char[] chars = value.ToCharArray();
                 int charLength = chars.Length;
                 while (count > 0)
-                {                    
+                {
                     int cindex = 0;
                     this.ReplaceInPlaceAtChunk(ref builder, ref num3, chars, ref cindex, charLength);
                     --count;
@@ -802,9 +828,186 @@ namespace System.Text
                 throw new ArgumentOutOfRangeException("startIndex");
             }
             if (charCount > 0)
-            {                
+            {
                 this.Insert(index, new string(value, startIndex, charCount), 1);
             }
+            return this;
+        }
+
+        public StringBuilder AppendFormat(String format, Object arg0)
+        {
+            return AppendFormat(null, format, new Object[] { arg0 });
+        }
+
+        public StringBuilder AppendFormat(String format, Object arg0, Object arg1)
+        {
+            return AppendFormat(null, format, new Object[] { arg0, arg1 });
+        }
+
+        public StringBuilder AppendFormat(String format, Object arg0, Object arg1, Object arg2)
+        {
+            return AppendFormat(null, format, new Object[] { arg0, arg1, arg2 });
+        }
+
+        public StringBuilder AppendFormat(String format, params Object[] args)
+        {
+            return AppendFormat(null, format, args);
+        }
+
+        private static void FormatError()
+        {
+            throw new Exception("Invalid String");
+        }
+
+        public StringBuilder AppendFormat(IFormatProvider provider, String format, params Object[] args)
+        {
+            if (format == null || args == null)
+            {
+                throw new ArgumentNullException((format == null) ? "format" : "args");
+            }
+            char[] chars = format.ToCharArray(0, format.Length);
+            int pos = 0;
+            int len = chars.Length;
+            char ch = '\x0';
+
+            ICustomFormatter cf = null;
+            if (provider != null)
+            {
+                cf = (ICustomFormatter)provider.GetFormat(typeof(ICustomFormatter));
+            }
+
+            while (true)
+            {
+                int p = pos;
+                int i = pos;
+                while (pos < len)
+                {
+                    ch = chars[pos];
+
+                    pos++;
+                    if (ch == '}')
+                    {
+                        if (pos < len && chars[pos] == '}') // Treat as escape character for }}
+                            pos++;
+                        else
+                            FormatError();
+                    }
+
+                    if (ch == '{')
+                    {
+                        if (pos < len && chars[pos] == '{') // Treat as escape character for {{
+                            pos++;
+                        else
+                        {
+                            pos--;
+                            break;
+                        }
+                    }
+
+                    chars[i++] = ch;
+                }
+                if (i > p) Append(chars, p, i - p);
+                if (pos == len) break;
+                pos++;
+                if (pos == len || (ch = chars[pos]) < '0' || ch > '9') FormatError();
+                int index = 0;
+                do
+                {
+                    index = index * 10 + ch - '0';
+                    pos++;
+                    if (pos == len) FormatError();
+                    ch = chars[pos];
+                } while (ch >= '0' && ch <= '9' && index < 1000000);
+                if (index >= args.Length) throw new Exception("IndexOutOfRange");
+                while (pos < len && (ch = chars[pos]) == ' ') pos++;
+                bool leftJustify = false;
+                int width = 0;
+                if (ch == ',')
+                {
+                    pos++;
+                    while (pos < len && chars[pos] == ' ') pos++;
+
+                    if (pos == len) FormatError();
+                    ch = chars[pos];
+                    if (ch == '-')
+                    {
+                        leftJustify = true;
+                        pos++;
+                        if (pos == len) FormatError();
+                        ch = chars[pos];
+                    }
+                    if (ch < '0' || ch > '9') FormatError();
+                    do
+                    {
+                        width = width * 10 + ch - '0';
+                        pos++;
+                        if (pos == len) FormatError();
+                        ch = chars[pos];
+                    } while (ch >= '0' && ch <= '9' && width < 1000000);
+                }
+
+                while (pos < len && (ch = chars[pos]) == ' ') pos++;
+                Object arg = args[index];
+                String fmt = null;
+                if (ch == ':')
+                {
+                    pos++;
+                    p = pos;
+                    i = pos;
+                    while (true)
+                    {
+                        if (pos == len) FormatError();
+                        ch = chars[pos];
+                        pos++;
+                        if (ch == '{')
+                        {
+                            if (pos < len && chars[pos] == '{')  // Treat as escape character for {{
+                                pos++;
+                            else
+                                FormatError();
+                        }
+                        else if (ch == '}')
+                        {
+                            if (pos < len && chars[pos] == '}')  // Treat as escape character for }}
+                                pos++;
+                            else
+                            {
+                                pos--;
+                                break;
+                            }
+                        }
+
+                        chars[i++] = ch;
+                    }
+                    if (i > p) fmt = new String(chars, p, i - p);
+                }
+                if (ch != '}') FormatError();
+                pos++;
+                String s = null;
+                if (cf != null)
+                {
+                    s = cf.Format(fmt, arg, provider);
+                }
+
+                if (s == null)
+                {
+                    if (arg is IFormattable)
+                    {
+                        s = ((IFormattable)arg).ToString(fmt, provider);
+                    }
+                    else if (arg != null)
+                    {
+                        s = arg.ToString();
+                    }
+                }
+
+                if (s == null) s = String.Empty;
+                int pad = width - s.Length;
+                if (!leftJustify && pad > 0) Append(' ', pad);
+                Append(s);
+                if (leftJustify && pad > 0) Append(' ', pad);
+            }
+
             return this;
         }
 
@@ -904,7 +1107,7 @@ namespace System.Text
             int indexInChunk = startIndex - chunk.m_ChunkOffset;
             //While there is a replacement remaining
             while (count > 0)
-            {                
+            {
                 //If the old value if found in the chunk at the index
                 if (this.StartsWith(chunk, indexInChunk, count, oldValue))
                 {
@@ -1163,7 +1366,7 @@ namespace System.Text
         }
 
         internal void AppendHelper(ref string value)
-        {            
+        {
             if (value == null || value == string.Empty) return;
             this.Append(value.ToCharArray(), value.Length);
         }
@@ -1177,7 +1380,7 @@ namespace System.Text
             this.m_ChunkLength = 0;
             //If Allocated does not match required storage
             if ((this.m_ChunkOffset + num) < num)
-            {                
+            {
                 this.m_ChunkChars = null;
                 throw new OutOfMemoryException();
             }
@@ -1257,7 +1460,7 @@ namespace System.Text
             return;
         }
 
-        #endregion        
+        #endregion
     }
 }
 

@@ -593,5 +593,47 @@ namespace Il2Native.Logic
             int size;
             return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
         }
+
+        public static IType GetLocalType(this OpCodePart opCode, BaseWriter baseWriter)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldloc_S, Code.Ldloc, Code.Ldloca_S, Code.Ldloca) || opCode.Any(Code.Stloc_S, Code.Stloc))
+            {
+                index = (opCode as OpCodeInt32Part).Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+
+            IType localType = baseWriter.LocalInfo[index].LocalType;
+            return localType;
+        }
+
+        public static IType GetArgType(this BaseWriter baseWriter, int index)
+        {
+            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
+            var parameterType = parameter.ParameterType;
+            return parameterType;
+        }
+
+        public static int GetArgIndex(this OpCodePart opCode)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldarg_S, Code.Ldarg, Code.Ldarga_S, Code.Ldarga, Code.Starg_S, Code.Starg))
+            {
+                var opCodeInt32 = opCode as OpCodeInt32Part;
+                index = opCodeInt32.Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+
+            return index;
+        }
+
     }
 }

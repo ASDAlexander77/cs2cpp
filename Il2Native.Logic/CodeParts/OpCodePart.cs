@@ -231,7 +231,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsEmpty { get; set; }
+        public bool UseAsNull { get; set; }
 
         /// <summary>
         /// </summary>

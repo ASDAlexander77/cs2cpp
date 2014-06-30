@@ -71,7 +71,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected bool HasMethodThis { get; private set; }
+        public bool HasMethodThis { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -99,7 +99,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IParameter[] Parameters { get; private set; }
+        public IParameter[] Parameters { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -577,6 +577,11 @@ namespace Il2Native.Logic
                         usedOpCode1.UseAsBoolean = true;
                         return;
                     }
+                }
+
+                if ((requiredType.IType.IsPointer || requiredType.IType.IsByRef) && usedOpCode1.Any(Code.Conv_U) && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
+                {
+                    usedOpCode1.OpCodeOperands[0].UseAsNull = true;
                 }
             }
 
@@ -1193,10 +1198,26 @@ namespace Il2Native.Logic
         /// </returns>
         protected ReturnResult RequiredType(OpCodePart opCodePart)
         {
-            var code = opCodePart.ToCode();
-            if (code == Code.Ret)
+            if (opCodePart.Any(Code.Ret))
             {
                 return new ReturnResult(this.MethodReturnType);
+            }
+
+            if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
+            {
+                return new ReturnResult(opCodePart.GetLocalType(this));
+            }
+
+            if (opCodePart.Any(Code.Starg, Code.Starg_S))
+            {
+                var index = opCodePart.GetArgIndex();
+                if (this.HasMethodThis && index == 0)
+                {
+                    return new ReturnResult(this.ThisType);
+                }
+
+                var parameterType = this.GetArgType(index);
+                return new ReturnResult(parameterType);
             }
 
             return null;

@@ -286,7 +286,7 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfExternalDeclarationIsRequired(IType type)
         {
-            if (type != null && !type.IsVoid() && !type.IsPrimitiveType())
+            if (type != null)
             {
                 if (type.AssemblyQualifiedName != this.AssemblyQualifiedName)
                 {
@@ -360,7 +360,7 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
             {
-                var localType = this.GetLocalType(opCode);
+                var localType = opCode.GetLocalType(this);
                 var skip = localType.IsStructureType() && opCode.DestinationName == null;
                 if (skip)
                 {
@@ -371,7 +371,7 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
             {
-                var index = GetArgIndex(opCode);
+                var index = opCode.GetArgIndex();
 
                 if (!(this.HasMethodThis && index == 0))
                 {
@@ -393,13 +393,13 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldloca, Code.Ldloca_S))
             {
-                var localType = this.GetLocalType(opCode);
+                var localType = opCode.GetLocalType(this);
                 return !localType.IsPointer;
             }
 
             if (opCode.Any(Code.Ldarga, Code.Ldarga_S))
             {
-                var index = GetArgIndex(opCode);
+                var index = opCode.GetArgIndex();
                 if (this.HasMethodThis && index == 0)
                 {
                     return true;
@@ -429,46 +429,6 @@ namespace Il2Native.Logic
                 Code.Ldnull,
                 Code.Ldtoken,
                 Code.Ldsflda);
-        }
-
-        private IType GetArgType(int index)
-        {
-            var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-            var parameterType = parameter.ParameterType;
-            return parameterType;
-        }
-
-        private static int GetArgIndex(OpCodePart opCode)
-        {
-            var asString = opCode.ToCode().ToString();
-            var index = -1;
-            if (opCode.Any(Code.Ldarg_S, Code.Ldarg, Code.Ldarga_S, Code.Ldarga))
-            {
-                var opCodeInt32 = opCode as OpCodeInt32Part;
-                index = opCodeInt32.Operand;
-            }
-            else
-            {
-                index = int.Parse(asString.Substring(asString.Length - 1));
-            }
-            return index;
-        }
-
-        private IType GetLocalType(OpCodePart opCode)
-        {
-            var asString = opCode.ToCode().ToString();
-            var index = -1;
-            if (opCode.Any(Code.Ldloc_S, Code.Ldloc, Code.Ldloca_S, Code.Ldloca))
-            {
-                index = (opCode as OpCodeInt32Part).Operand;
-            }
-            else
-            {
-                index = int.Parse(asString.Substring(asString.Length - 1));
-            }
-
-            IType localType = this.LocalInfo[index].LocalType;
-            return localType;
         }
 
         /// <summary>
@@ -554,7 +514,10 @@ namespace Il2Native.Logic
             {
                 this.AdjustIntConvertableTypes(
                     writer,
-                    opCode.OpCodeOperands[intAdjustSecondOperand || options.HasFlag(OperandOptions.TypeIsInSecondOperand) ? operand2 : operand1],
+                    opCode.OpCodeOperands[
+                        opCode.OpCodeOperands.Length > operand2 && (intAdjustSecondOperand || options.HasFlag(OperandOptions.TypeIsInSecondOperand))
+                            ? operand2
+                            : operand1],
                     false,
                     intAdjustment);
             }
@@ -1710,7 +1673,7 @@ namespace Il2Native.Logic
             switch (code)
             {
                 case Code.Ldc_I4_0:
-                    writer.Write(opCode.UseAsBoolean ? "false" : "0");
+                    writer.Write(opCode.UseAsBoolean ? "false" : opCode.UseAsNull ? "null" : "0");
                     break;
                 case Code.Ldc_I4_1:
                     writer.Write(opCode.UseAsBoolean ? "true" : "1");
@@ -2696,66 +2659,72 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Conv_R4:
-                    this.LlvmConvert(opCode, "fptrunc", "sitofp", "float", typeof(float));
+                    this.LlvmConvert(opCode, "fptrunc", "sitofp", "float", false, typeof(float));
                     break;
 
                 case Code.Conv_R8:
                 case Code.Conv_R_Un:
-                    this.LlvmConvert(opCode, "fpext", "sitofp", "double", typeof(double));
+                    this.LlvmConvert(opCode, "fpext", "sitofp", "double", false, typeof(double));
                     break;
 
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i8", typeof(sbyte), typeof(byte));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i8", false, typeof(sbyte), typeof(byte));
                     break;
 
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i8", typeof(sbyte), typeof(byte));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i8", false, typeof(sbyte), typeof(byte));
                     break;
 
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i16", typeof(short), typeof(ushort), typeof(char));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i16", false, typeof(short), typeof(ushort), typeof(char));
                     break;
 
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i16", typeof(short), typeof(ushort), typeof(char));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i16", false, typeof(short), typeof(ushort), typeof(char));
                     break;
 
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", true, typeof(int), typeof(uint));
+                    break;
+
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", typeof(int), typeof(uint));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", false, typeof(int), typeof(uint));
                     break;
 
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", true, typeof(int), typeof(uint));
+                    break;
+
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", typeof(int), typeof(uint));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", false, typeof(int), typeof(uint));
                     break;
 
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.LlvmConvert(opCode, "fptosi", "zext", "i64", typeof(long), typeof(ulong));
+                    this.LlvmConvert(opCode, "fptosi", "zext", "i64", false, typeof(long), typeof(ulong));
                     break;
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    this.LlvmConvert(opCode, "fptoui", "zext", "i64", typeof(long), typeof(ulong));
+                    this.LlvmConvert(opCode, "fptoui", "zext", "i64", false, typeof(long), typeof(ulong));
                     break;
 
                 case Code.Castclass:
@@ -2909,13 +2878,31 @@ namespace Il2Native.Logic
 
         public void AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, bool isDirectResult, IType destType)
         {
-            if (isDirectResult || !destType.IsIntValueTypeCastRequired(opCode.Result.Type))
+            if (isDirectResult)
             {
                 return;
             }
 
-            this.LlvmIntConvert(opCode, "zext", "i" + destType.IntTypeBitSize());
-            writer.WriteLine(string.Empty);
+            if (destType.IsIntValueTypeCastRequired(opCode.Result.Type))
+            {
+                this.LlvmIntConvert(opCode, "zext", "i" + destType.IntTypeBitSize());
+                writer.WriteLine(string.Empty);
+                return;
+            }
+
+            // pointer to int, int to pointer
+            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer)
+            {
+                this.LlvmIntConvert(opCode, "ptrtoint", "i" + destType.IntTypeBitSize());
+                writer.WriteLine(string.Empty);
+                return;                
+            }
+            else
+            {
+                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.IntTypeBitSize() + "*");
+                writer.WriteLine(string.Empty);
+                return;                  
+            }
         }
 
         /// <summary>
@@ -3096,6 +3083,19 @@ namespace Il2Native.Logic
                         }
 
                         if (secondType.IsIntValueTypeCastRequired(firstType))
+                        {
+                            intAdjustSecondOperand = false;
+                            intAdjustment = secondType;
+                        }
+
+                        // pointer to int, int to pointer
+                        if (!firstType.IsByRef && !firstType.IsPointer && firstType.IntTypeBitSize() > 0 && secondType.IsPointer)
+                        {
+                            intAdjustSecondOperand = true;
+                            intAdjustment = firstType;                           
+                        }
+
+                        if (!secondType.IsByRef && !secondType.IsPointer && secondType.IntTypeBitSize() > 0 && firstType.IsPointer)
                         {
                             intAdjustSecondOperand = false;
                             intAdjustment = secondType;
