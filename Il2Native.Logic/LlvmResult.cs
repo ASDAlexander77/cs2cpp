@@ -11,6 +11,8 @@ namespace Il2Native.Logic
 {
     using System;
 
+    using Il2Native.Logic.CodeParts;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -52,6 +54,22 @@ namespace Il2Native.Logic
             this.Type = type;
         }
 
+        public LlvmResult(OpCodePart directValue, IType type)
+        {
+            if (directValue == null)
+            {
+                throw new ArgumentException("directValue");
+            }
+
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            this.DirectValue = directValue;
+            this.Type = type;
+        }
+
         /// <summary>
         /// </summary>
         protected LlvmResult()
@@ -65,5 +83,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public IType Type { get; private set; }
+
+        /// <summary>
+        /// temp solution to fix issue with converting data where conversion is not required and operand is direct value
+        /// </summary>
+        public OpCodePart DirectValue { get; private set; }
     }
 }

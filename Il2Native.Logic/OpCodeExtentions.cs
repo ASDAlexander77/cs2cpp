@@ -289,7 +289,7 @@ namespace Il2Native.Logic
         public static bool IsStructureType(this IType type, bool recurse = false)
         {
             return type != null
-                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid()
+                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer
                        || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 

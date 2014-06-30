@@ -40,8 +40,7 @@ namespace System
 
             return false;
         }
-
-        
+       
         public static bool Equals(String a, String b)
         {
             var charsA = a.ToCharArray();
@@ -176,18 +175,15 @@ namespace System
             throw new NotImplementedException();
         }
 
-        
         public String(char[] value)
         {
             this.chars = value;
         }
-
         
         public String(char c, int count)
         {
             throw new NotImplementedException();
         }
-
         
         public static int Compare(String strA, String strB)
         {

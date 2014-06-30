@@ -19,9 +19,6 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern int wprintf(char[] chars, int t);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wcsncmp (char[] chars1, char[] chars2, int size);
-
         public static int Read()
         {
             throw new NotImplementedException();
@@ -34,7 +31,7 @@
 
         public static void WriteLine()
         {
-            throw new NotImplementedException();
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(bool value)
@@ -211,7 +208,7 @@
 
         public static void Write(String value)
         {
-            throw new NotImplementedException();
+            wprintf(value.ToCharArray());
         }
     }
 }

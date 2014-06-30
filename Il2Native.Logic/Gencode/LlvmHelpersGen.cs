@@ -510,14 +510,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="type">
         /// </param>
-        /// <param name="localVarName">
+        /// <param name="sourceName">
         /// </param>
         /// <param name="appendReference">
         /// </param>
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string localVarName, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string sourceName, bool appendReference = true, bool structAsRef = false)
         {
             if (opCode.HasResult)
             {
@@ -542,14 +542,14 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 writer.Write(' ');
-                writer.Write(localVarName);
+                writer.Write(sourceName);
 
                 // TODO: optional do we need to calculate it propertly?
                 writer.Write(", align " + LlvmWriter.pointerSize);
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, type, localVarName, opCode.DestinationName);
+                llvmWriter.WriteCopyStruct(writer, opCode, type, sourceName, opCode.DestinationName);
             }
         }
 
@@ -630,6 +630,14 @@ namespace Il2Native.Logic.Gencode
                 {
                     llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
+                else if (resultOf.IType.IsPointer)
+                {
+                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
+                }
+                else if (toType.EndsWith("*"))
+                {
+                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
+                }
                 else
                 {
                     llvmWriter.UnaryOper(writer, opCode, intConvert, options: LlvmWriter.OperandOptions.GenerateResult);
@@ -639,7 +647,16 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                opCode.Result = opCode.OpCodeOperands[0].Result;
+                var isDirectValue = llvmWriter.IsDirectValue(opCode.OpCodeOperands[0]);
+                if (!isDirectValue)
+                {
+                    Debug.Assert(opCode.OpCodeOperands[0].Result != null);
+                    opCode.Result = opCode.OpCodeOperands[0].Result;
+                }
+                else
+                {
+                    opCode.Result = new LlvmResult(opCode.OpCodeOperands[0], resultOf.IType);
+                }
             }
         }
 

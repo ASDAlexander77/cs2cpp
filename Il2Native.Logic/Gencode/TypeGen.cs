@@ -282,7 +282,7 @@ namespace Il2Native.Logic.Gencode
             do
             {
                 var isReference = !effectiveType.IsValueType;
-                if ((isReference || (!isReference && asReference && level == 0)) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
+                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }

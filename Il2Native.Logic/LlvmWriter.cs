@@ -315,23 +315,23 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="number">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public string GetResultNumber(int number)
-        {
-            return string.Concat("%.r", number);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="result">
         /// </param>
         /// <returns>
         /// </returns>
         public string GetResultNumber(LlvmResult result)
         {
+            // TODO: this is a hack
+            if (result.DirectValue != null)
+            {
+                var output = this.Output;
+                var sb = new StringBuilder();
+                this.Output = new LlvmIndentedTextWriter(new StringWriter(sb));
+                ActualWrite(this.Output, result.DirectValue);
+                this.Output = output;
+                return sb.ToString();
+            }
+
             return string.Concat("%.r", result != null ? result.Number : -1);
         }
 
@@ -360,18 +360,8 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
             {
-                var asString = opCode.ToCode().ToString();
-                var index = -1;
-                if (opCode.Any(Code.Ldloc_S, Code.Ldloc))
-                {
-                    index = (opCode as OpCodeInt32Part).Operand;
-                }
-                else
-                {
-                    index = int.Parse(asString.Substring(asString.Length - 1));
-                }
-
-                var skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
+                var localType = this.GetLocalType(opCode);
+                var skip = localType.IsStructureType() && opCode.DestinationName == null;
                 if (skip)
                 {
                     // it means that we are working with a Struct and are going to pass it as an address
@@ -381,23 +371,12 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
             {
-                var asString = opCode.ToCode().ToString();
-                var index = -1;
-                if (opCode.Any(Code.Ldarg_S, Code.Ldarg))
-                {
-                    var opCodeInt32 = opCode as OpCodeInt32Part;
-                    index = opCodeInt32.Operand;
-                }
-                else
-                {
-                    index = int.Parse(asString.Substring(asString.Length - 1));
-                }
+                var index = GetArgIndex(opCode);
 
                 if (!(this.HasMethodThis && index == 0))
                 {
-                    var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-
-                    var skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
+                    var parameterType = this.GetArgType(index);
+                    var skip = parameterType.IsStructureType() && opCode.DestinationName == null;
                     if (skip)
                     {
                         // it means that we are working with a Struct and are going to pass it as an address
@@ -410,6 +389,24 @@ namespace Il2Native.Logic
             {
                 var opCodeString = opCode as OpCodeStringPart;
                 return opCodeString.StringIndex > 0;
+            }
+
+            if (opCode.Any(Code.Ldloca, Code.Ldloca_S))
+            {
+                var localType = this.GetLocalType(opCode);
+                return !localType.IsPointer;
+            }
+
+            if (opCode.Any(Code.Ldarga, Code.Ldarga_S))
+            {
+                var index = GetArgIndex(opCode);
+                if (this.HasMethodThis && index == 0)
+                {
+                    return true;
+                }
+
+                var parameterType = this.GetArgType(index);
+                return !parameterType.IsPointer;
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
@@ -431,11 +428,47 @@ namespace Il2Native.Logic
                 Code.Ldc_R8,
                 Code.Ldnull,
                 Code.Ldtoken,
-                Code.Ldsflda,
-                Code.Ldarga, 
-                Code.Ldarga_S,
-                Code.Ldloca, 
-                Code.Ldloca_S);
+                Code.Ldsflda);
+        }
+
+        private IType GetArgType(int index)
+        {
+            var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
+            var parameterType = parameter.ParameterType;
+            return parameterType;
+        }
+
+        private static int GetArgIndex(OpCodePart opCode)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldarg_S, Code.Ldarg, Code.Ldarga_S, Code.Ldarga))
+            {
+                var opCodeInt32 = opCode as OpCodeInt32Part;
+                index = opCodeInt32.Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+            return index;
+        }
+
+        private IType GetLocalType(OpCodePart opCode)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldloc_S, Code.Ldloc, Code.Ldloca_S, Code.Ldloca))
+            {
+                index = (opCode as OpCodeInt32Part).Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+
+            IType localType = this.LocalInfo[index].LocalType;
+            return localType;
         }
 
         /// <summary>
@@ -1493,7 +1526,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="firstLevel">
         /// </param>
-        private void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
+        public void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
             if (firstLevel)
             {
@@ -2159,7 +2192,7 @@ namespace Il2Native.Logic
                     opCode.Result = null;
                     this.WriteLlvmLoad(opCode, type, this.GetResultNumber(accessIndexResultNumber2));
 
-                    if (!isUsedAsClass)
+                    if (!isUsedAsClass && resultOfOperand0 != null)
                     {
                         resultOfOperand0.Type.UseAsClass = false;
                     }
@@ -2308,7 +2341,7 @@ namespace Il2Native.Logic
                 case Code.Unbox_Any:
                     writer.WriteLine("; Unboxing");
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    //this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    ////this.ActualWrite(writer, opCode.OpCodeOperands[0]);
 
                     // for now we need to create empty var
                     this.WriteSetResultNumber(opCodeTypePart, opCodeTypePart.Operand);
@@ -2408,7 +2441,14 @@ namespace Il2Native.Logic
                     index = opCodeInt32.Operand;
                     // alloca generate pointer so we do not need to load value from pointer
                     localType = this.LocalInfo[index].LocalType;
-                    writer.Write(string.Concat("%local", index));
+                    if (localType.IsPointer)
+                    {
+                        this.WriteLlvmLoad(opCode, localType, string.Concat("%local", index));                        
+                    }
+                    else
+                    {
+                        writer.Write(string.Concat("%local", index));
+                    }
 
                     break;
                 case Code.Ldarg:
@@ -2465,7 +2505,14 @@ namespace Il2Native.Logic
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        writer.Write(string.Concat("%.", parameter.Name));
+                        if (parameter.ParameterType.IsPointer)
+                        {
+                            this.WriteLlvmLoad(opCode, parameter.ParameterType, string.Concat("%.", parameter.Name));                            
+                        }
+                        else
+                        {
+                            writer.Write(string.Concat("%.", parameter.Name));
+                        }
                     }
 
                     break;
