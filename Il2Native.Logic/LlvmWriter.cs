@@ -322,7 +322,7 @@ namespace Il2Native.Logic
         public string GetResultNumber(LlvmResult result)
         {
             // TODO: this is a hack
-            if (result.DirectValue != null)
+            if (result != null && result.DirectValue != null)
             {
                 var output = this.Output;
                 var sb = new StringBuilder();
@@ -407,6 +407,11 @@ namespace Il2Native.Logic
 
                 var parameterType = this.GetArgType(index);
                 return !parameterType.IsPointer;
+            }
+
+            if (opCode.Any(Code.Conv_U))
+            {
+                return opCode.OpCodeOperands[0].UseAsNull;
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
@@ -3079,13 +3084,13 @@ namespace Il2Native.Logic
                         if (firstType.IsIntValueTypeCastRequired(secondType))
                         {
                             intAdjustSecondOperand = true;
-                            intAdjustment = firstType;
+                            intAdjustment = secondType;
                         }
 
                         if (secondType.IsIntValueTypeCastRequired(firstType))
                         {
                             intAdjustSecondOperand = false;
-                            intAdjustment = secondType;
+                            intAdjustment = firstType;
                         }
 
                         // pointer to int, int to pointer

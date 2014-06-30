@@ -70,6 +70,9 @@
     <Compile Include="ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs" />
     <Compile Include="IlReader.cs" />
+    <Compile Include="Instructions\AllocaInstruction.cs" />
+    <Compile Include="Instructions\Base\BaseInstruction.cs" />
+    <Compile Include="Instructions\Base\BaseInstructionWithResult.cs" />
     <Compile Include="LlvmIndentedTextWriter.cs" />
     <Compile Include="LlvmResult.cs" />
     <Compile Include="LlvmWriter.cs" />
@@ -111,6 +114,7 @@
       <Name>PEAssemblyReader</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
