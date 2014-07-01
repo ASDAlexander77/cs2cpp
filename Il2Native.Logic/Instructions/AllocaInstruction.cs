@@ -5,7 +5,9 @@
 
     public class AllocaInstruction : BaseInstructionWithResult
     {
-
+        public AllocaInstruction()
+        {
+        }
 
         public override void WriteTo(LlvmIndentedTextWriter writer)
         {

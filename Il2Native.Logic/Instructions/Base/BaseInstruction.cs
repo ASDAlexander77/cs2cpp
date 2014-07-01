@@ -8,6 +8,8 @@
 
     public abstract class BaseInstruction
     {
+        public string Command { get; protected set; }
+
         public abstract void WriteTo(LlvmIndentedTextWriter writer);
     }
 }

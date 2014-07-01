@@ -321,17 +321,6 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetResultNumber(LlvmResult result)
         {
-            // TODO: this is a hack
-            if (result != null && result.DirectValue != null)
-            {
-                var output = this.Output;
-                var sb = new StringBuilder();
-                this.Output = new LlvmIndentedTextWriter(new StringWriter(sb));
-                ActualWrite(this.Output, result.DirectValue);
-                this.Output = output;
-                return sb.ToString();
-            }
-
             return string.Concat("%.r", result != null ? result.Number : -1);
         }
 
@@ -412,6 +401,11 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Conv_U))
             {
                 return opCode.OpCodeOperands[0].UseAsNull;
+            }
+
+            if (opCode.Any(Code.Conv_I))
+            {
+                return this.IsDirectValue(opCode.OpCodeOperands[0]);
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
@@ -517,7 +511,7 @@ namespace Il2Native.Logic
 
             if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
             {
-                this.AdjustIntConvertableTypes(
+                var changeType = this.AdjustIntConvertableTypes(
                     writer,
                     opCode.OpCodeOperands[
                         opCode.OpCodeOperands.Length > operand2 && (intAdjustSecondOperand || options.HasFlag(OperandOptions.TypeIsInSecondOperand))
@@ -525,6 +519,12 @@ namespace Il2Native.Logic
                             : operand1],
                     false,
                     intAdjustment);
+
+                if (changeType && resultType == null)
+                {
+                    resultType = intAdjustment;
+                    effectiveType = intAdjustment;
+                }
             }
 
             if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
@@ -2881,33 +2881,37 @@ namespace Il2Native.Logic
             ////this.ActualWrite(writer, opCode.OpCodeOperands[0]);
         }
 
-        public void AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, bool isDirectResult, IType destType)
+        // returns true if destination type should be changed
+        public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, bool isDirectResult, IType destType)
         {
             if (isDirectResult)
             {
-                return;
+                return false;
             }
 
-            if (destType.IsIntValueTypeCastRequired(opCode.Result.Type))
+            if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeCastRequired(opCode.Result.Type))
             {
                 this.LlvmIntConvert(opCode, "zext", "i" + destType.IntTypeBitSize());
                 writer.WriteLine(string.Empty);
-                return;
+                return false;
             }
 
             // pointer to int, int to pointer
-            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer)
+            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && opCode.Result.Type.IsPointer)
             {
                 this.LlvmIntConvert(opCode, "ptrtoint", "i" + destType.IntTypeBitSize());
                 writer.WriteLine(string.Empty);
-                return;                
+                return true;                
             }
-            else
+
+            if (opCode.Result.Type.IntTypeBitSize() > 0 && destType.IsPointer && !opCode.Result.Type.IsPointer)
             {
-                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.IntTypeBitSize() + "*");
+                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.GetElementType().IntTypeBitSize() + "*");
                 writer.WriteLine(string.Empty);
-                return;                  
+                return true;                  
             }
+
+            return false;
         }
 
         /// <summary>
@@ -3084,26 +3088,36 @@ namespace Il2Native.Logic
                         if (firstType.IsIntValueTypeCastRequired(secondType))
                         {
                             intAdjustSecondOperand = true;
-                            intAdjustment = secondType;
+                            intAdjustment = firstType;
                         }
 
                         if (secondType.IsIntValueTypeCastRequired(firstType))
                         {
                             intAdjustSecondOperand = false;
-                            intAdjustment = firstType;
+                            intAdjustment = secondType;
                         }
 
                         // pointer to int, int to pointer
                         if (!firstType.IsByRef && !firstType.IsPointer && firstType.IntTypeBitSize() > 0 && secondType.IsPointer)
                         {
                             intAdjustSecondOperand = true;
-                            intAdjustment = firstType;                           
+                            intAdjustment = firstType;
+
+                            if (requiredType != null && requiredType.IsPointer)
+                            {
+                                intAdjustment = secondType;
+                            }
                         }
 
                         if (!secondType.IsByRef && !secondType.IsPointer && secondType.IntTypeBitSize() > 0 && firstType.IsPointer)
                         {
                             intAdjustSecondOperand = false;
                             intAdjustment = secondType;
+
+                            if (requiredType != null && requiredType.IsPointer)
+                            {
+                                intAdjustment = firstType;
+                            }
                         }
                     }
                 }

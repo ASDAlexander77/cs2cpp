@@ -624,7 +624,8 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
-            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))) && ((resultOf.IType.IsPointer || resultOf.IType.IsByRef) && !toAddress))
+            var areBothPointers = ((resultOf.IType.IsPointer || resultOf.IType.IsByRef) && toAddress);
+            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))) && !areBothPointers)
             {
                 if (resultOf.IType.IsReal())
                 {
@@ -650,12 +651,18 @@ namespace Il2Native.Logic.Gencode
                 var isDirectValue = llvmWriter.IsDirectValue(opCode.OpCodeOperands[0]);
                 if (!isDirectValue)
                 {
-                    Debug.Assert(opCode.OpCodeOperands[0].Result != null);
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
+                    if (opCode.OpCodeOperands[0].Result != null)
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                    }
+                    else
+                    {
+                        llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    }
                 }
                 else
                 {
-                    opCode.Result = new LlvmResult(opCode.OpCodeOperands[0], resultOf.IType);
+                    llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
                 }
             }
         }
