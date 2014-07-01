@@ -502,6 +502,12 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
         }
 
+        public static void WriteLlvmLoad(
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, LlvmResult source, bool appendReference = true, bool structAsRef = false)
+        {
+            llvmWriter.WriteLlvmLoad(opCode, type, llvmWriter.GetResultNumber(), 
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -517,7 +523,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string sourceName, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string sourceName, IType sourceType, bool appendReference = true, bool structAsRef = false)
         {
             if (opCode.HasResult)
             {
@@ -594,8 +600,8 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                llvmWriter.GetResultNumber(op1),
-                llvmWriter.GetResultNumber(op2),
+                op1,
+                op2,
                 type.GetTypeSize(),
                 LlvmWriter.pointerSize /*Align*/);
         }
@@ -614,7 +620,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(
                 "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                llvmWriter.GetResultNumber(op1),
+                op1,
                 type.GetTypeSize(),
                 LlvmWriter.pointerSize /*Align*/);
         }

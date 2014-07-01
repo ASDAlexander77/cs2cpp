@@ -60,6 +60,11 @@ namespace Il2Native.Logic
         {
         }
 
+        public override string ToString()
+        {
+            return string.Concat("%.r", this.Number);
+        }
+
         /// <summary>
         /// </summary>
         public int Number { get; private set; }

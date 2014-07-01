@@ -315,17 +315,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="result">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public string GetResultNumber(LlvmResult result)
-        {
-            return string.Concat("%.r", result != null ? result.Number : -1);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <returns>
@@ -999,7 +988,7 @@ namespace Il2Native.Logic
                 @interface,
                 OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
             writer.Write(' ');
-            writer.Write(this.GetResultNumber(objectResult));
+            writer.Write(objectResult);
             this.WriteInterfaceIndex(writer, declaringType, @interface);
             writer.WriteLine(string.Empty);
         }
@@ -1329,7 +1318,7 @@ namespace Il2Native.Logic
         public void WriteResultNumber(OpCodePart opCode)
         {
             // write number of method
-            this.Output.Write(this.GetResultNumber(opCode.Result));
+            this.Output.Write(opCode.Result);
         }
 
         /// <summary>
@@ -1339,7 +1328,7 @@ namespace Il2Native.Logic
         public void WriteResultNumber(LlvmResult result)
         {
             // write number of method
-            this.Output.Write(this.GetResultNumber(result));
+            this.Output.Write(result);
         }
 
         /// <summary>
@@ -1909,7 +1898,7 @@ namespace Il2Native.Logic
 
                     if (opCode.DestinationName != null || !opCode.OpCodeOperands[0].Result.Type.UseAsClass)
                     {
-                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, this.GetResultNumber(opCode.OpCodeOperands[0].Result));
+                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
                     else
                     {
@@ -1927,7 +1916,7 @@ namespace Il2Native.Logic
                     if (!opCode.OpCodeOperands[1].HasResult)
                     {
                         // we expect to see Ldobj here, so we set DestinationName to copy it into reserved stack
-                        opCode.OpCodeOperands[1].DestinationName = this.GetResultNumber(opCode.OpCodeOperands[0].Result);
+                        opCode.OpCodeOperands[1].DestinationName = opCode.OpCodeOperands[0].Result;
                         this.ActualWrite(writer, opCode.OpCodeOperands[1]);
                     }
                     else
@@ -1977,7 +1966,7 @@ namespace Il2Native.Logic
                             type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldelem_U1:
-                            type = TypeAdapter.FromType(typeof(sbyte));
+                            type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Ldelem_U2:
                             type = TypeAdapter.FromType(typeof(ushort));
@@ -2100,16 +2089,22 @@ namespace Il2Native.Logic
                             type = TypeAdapter.FromType(typeof(int));
                             break;
                         case Code.Ldind_I1:
+                            type = TypeAdapter.FromType(typeof(sbyte));
+                            break;
                         case Code.Ldind_U1:
                             type = TypeAdapter.FromType(typeof(byte));
                             break;
                         case Code.Ldind_I2:
-                        case Code.Ldind_U2:
                             type = TypeAdapter.FromType(typeof(short));
                             break;
+                        case Code.Ldind_U2:
+                            type = TypeAdapter.FromType(typeof(ushort));
+                            break;
                         case Code.Ldind_I4:
-                        case Code.Ldind_U4:
                             type = TypeAdapter.FromType(typeof(int));
+                            break;
+                        case Code.Ldind_U4:
+                            type = TypeAdapter.FromType(typeof(uint));
                             break;
                         case Code.Ldind_I8:
                             type = TypeAdapter.FromType(typeof(long));
@@ -2896,7 +2891,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            // pointer to int, int to pointer
+            // pointer to int, int to pointerf
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && opCode.Result.Type.IsPointer)
             {
                 this.LlvmIntConvert(opCode, "ptrtoint", "i" + destType.IntTypeBitSize());

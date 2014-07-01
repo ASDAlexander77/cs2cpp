@@ -38,7 +38,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(", i32 -1");
 
             opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, TypeAdapter.FromType(typeof(int)), llvmWriter.GetResultNumber(resLen));
+            llvmWriter.WriteLlvmLoad(opCode, TypeAdapter.FromType(typeof(int)), resLen);
         }
 
         /// <summary>
@@ -69,13 +69,13 @@ namespace Il2Native.Logic.Gencode
             var resMul = opCode.Result;
 
             llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(int)));
-            writer.Write("add i32 4, {0}", llvmWriter.GetResultNumber(resMul));
+            writer.Write("add i32 4, {0}", resMul);
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;
 
             var resAlloc = llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
-            writer.Write("call i8* @malloc(i32 {0})", llvmWriter.GetResultNumber(resAdd));
+            writer.Write("call i8* @malloc(i32 {0})", resAdd);
             writer.WriteLine(string.Empty);
 
             llvmWriter.WriteBitcast(opCode, resAlloc, TypeAdapter.FromType(typeof(int)));
