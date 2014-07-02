@@ -495,33 +495,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool TypeEquals(this IType type, Type other)
-        {
-            return type != null && TypeAdapter.FromType(other).CompareTo(type) == 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static bool TypeNotEquals(this IType type, IType other)
-        {
-            return !type.TypeEquals(other);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool TypeNotEquals(this IType type, Type other)
         {
             return !type.TypeEquals(other);
         }

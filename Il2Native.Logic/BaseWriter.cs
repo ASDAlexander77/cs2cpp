@@ -257,6 +257,11 @@ namespace Il2Native.Logic
             return isThis;
         }
 
+        public IType ResolveType(string fullTypeName)
+        {
+            return this.ThisType.Module.ResolveType(fullTypeName, null, null);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -333,52 +338,52 @@ namespace Il2Native.Logic
                 case Code.Ble_Un_S:
                 case Code.Bgt_Un:
                 case Code.Bgt_Un_S:
-                    return new ReturnResult(typeof(bool));
+                    return new ReturnResult(ResolveType("System.Boolean"));
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    return new ReturnResult(typeof(int));
+                    return new ReturnResult(ResolveType("System.Int32"));
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    return new ReturnResult(typeof(uint));
+                    return new ReturnResult(ResolveType("System.UInt32"));
                 case Code.Conv_R_Un:
                 case Code.Conv_R4:
-                    return new ReturnResult(typeof(float));
+                    return new ReturnResult(ResolveType("System.Single"));
                 case Code.Conv_R8:
-                    return new ReturnResult(typeof(double));
+                    return new ReturnResult(ResolveType("System.Double"));
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-                    return new ReturnResult(typeof(sbyte));
+                    return new ReturnResult(ResolveType("System.SByte"));
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    return new ReturnResult(typeof(short));
+                    return new ReturnResult(ResolveType("System.Int16"));
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    return new ReturnResult(typeof(int));
+                    return new ReturnResult(ResolveType("System.Int32"));
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    return new ReturnResult(typeof(long));
+                    return new ReturnResult(ResolveType("System.Int64"));
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    return new ReturnResult(typeof(byte));
+                    return new ReturnResult(ResolveType("System.Byte"));
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    return new ReturnResult(typeof(ushort));
+                    return new ReturnResult(ResolveType("System.UInt16"));
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    return new ReturnResult(typeof(uint));
+                    return new ReturnResult(ResolveType("System.UInt32"));
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    return new ReturnResult(typeof(ulong));
+                    return new ReturnResult(ResolveType("System.UInt64"));
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Newarr:
@@ -389,7 +394,7 @@ namespace Il2Native.Logic
                 case Code.Dup:
                     return this.ResultOf(opCode.OpCodeOperands[0]);
                 case Code.Ldlen:
-                    return new ReturnResult(typeof(int));
+                    return new ReturnResult(ResolveType("System.Int32"));
                 case Code.Ldloca:
                 case Code.Ldloca_S:
                     var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
@@ -463,35 +468,35 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_M1:
                 case Code.Ldc_I4:
                 case Code.Ldc_I4_S:
-                    return new ReturnResult(opCode.UseAsBoolean ? typeof(bool) : typeof(int)) { IsConst = true };
+                    return new ReturnResult(opCode.UseAsBoolean ? ResolveType("System.Boolean") : ResolveType("System.Int32")) { IsConst = true };
                 case Code.Ldc_I8:
-                    return new ReturnResult(typeof(long)) { IsConst = true };
+                    return new ReturnResult(ResolveType("System.Int64")) { IsConst = true };
                 case Code.Ldc_R4:
-                    return new ReturnResult(typeof(float)) { IsConst = true };
+                    return new ReturnResult(ResolveType("System.Single")) { IsConst = true };
                 case Code.Ldc_R8:
-                    return new ReturnResult(typeof(double)) { IsConst = true };
+                    return new ReturnResult(ResolveType("System.Double")) { IsConst = true };
                 case Code.Ldstr:
-                    return new ReturnResult(typeof(string));
+                    return new ReturnResult(ResolveType("System.String"));
                 case Code.Ldind_I:
-                    return new ReturnResult(typeof(int)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Int32")) { IsIndirect = true };
                 case Code.Ldind_I1:
-                    return new ReturnResult(typeof(byte)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Byte")) { IsIndirect = true };
                 case Code.Ldind_I2:
-                    return new ReturnResult(typeof(short)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Int16")) { IsIndirect = true };
                 case Code.Ldind_I4:
-                    return new ReturnResult(typeof(int)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Int32")) { IsIndirect = true };
                 case Code.Ldind_I8:
-                    return new ReturnResult(typeof(long)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Int64")) { IsIndirect = true };
                 case Code.Ldind_U1:
-                    return new ReturnResult(typeof(byte)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Byte")) { IsIndirect = true };
                 case Code.Ldind_U2:
-                    return new ReturnResult(typeof(ushort)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.UInt16")) { IsIndirect = true };
                 case Code.Ldind_U4:
-                    return new ReturnResult(typeof(uint)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.UInt32")) { IsIndirect = true };
                 case Code.Ldind_R4:
-                    return new ReturnResult(typeof(float)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Single")) { IsIndirect = true };
                 case Code.Ldind_R8:
-                    return new ReturnResult(typeof(double)) { IsIndirect = true };
+                    return new ReturnResult(ResolveType("System.Double")) { IsIndirect = true };
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
                     return new ReturnResult(resultType.GetElementType()) { IsIndirect = true, IsReference = true };
@@ -572,7 +577,7 @@ namespace Il2Native.Logic
                 var receivingType = this.ResultOf(usedOpCode1);
                 if (requiredType != receivingType)
                 {
-                    if (requiredType.IsTypeOf(typeof(bool)) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (requiredType.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode1.UseAsBoolean = true;
                         return;
@@ -596,13 +601,13 @@ namespace Il2Native.Logic
 
                 if (type1 != null && type2 != null && !type1.Equals(type2))
                 {
-                    if (type1.IsTypeOf(typeof(bool)) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (type1.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode2.UseAsBoolean = true;
                         return;
                     }
 
-                    if (type2.IsTypeOf(typeof(bool)) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (type2.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode1.UseAsBoolean = true;
                         return;
@@ -1476,27 +1481,6 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            /// <param name="type">
-            /// </param>
-            public ReturnResult(Type type)
-            {
-                this.IType = TypeAdapter.FromType(type);
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="asReference">
-            /// </param>
-            public ReturnResult(Type type, bool asReference)
-                : this(type)
-            {
-                this.IsReference = asReference;
-            }
-
-            /// <summary>
-            /// </summary>
             public bool? Boxed { get; set; }
 
             /// <summary>
@@ -1586,23 +1570,7 @@ namespace Il2Native.Logic
                     return false;
                 }
 
-                return this.IType == type;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public bool IsTypeOf(Type type)
-            {
-                if (this.IType == null || type == null)
-                {
-                    return false;
-                }
-
-                return this.IType.TypeEquals(TypeAdapter.FromType(type));
+                return this.IType.TypeEquals(type);
             }
         }
     }
