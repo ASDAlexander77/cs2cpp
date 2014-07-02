@@ -155,5 +155,7 @@ namespace PEAssemblyReader
         bool IsAssignableFrom(IType type);
 
         IType CreateArray(int rank);
+
+        IType CreatePointer();
     }
 }

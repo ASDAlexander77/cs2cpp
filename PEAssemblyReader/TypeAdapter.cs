@@ -496,5 +496,10 @@ namespace PEAssemblyReader
         {
             throw new NotImplementedException();
         }
+
+        public IType CreatePointer()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

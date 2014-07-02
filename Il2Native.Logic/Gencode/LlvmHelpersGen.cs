@@ -34,7 +34,7 @@ namespace Il2Native.Logic.Gencode
             // for value types
             writer.Write("alloca ");
             type.WriteTypePrefix(writer);
-            writer.Write(", align " + LlvmWriter.pointerSize);
+            writer.Write(", align " + LlvmWriter.PointerSize);
         }
 
         public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType toType)
@@ -73,11 +73,37 @@ namespace Il2Native.Logic.Gencode
             toType.WriteTypePrefix(writer, true);
         }
 
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteSetResultNumber(opCode, toType);
+            writer.Write("bitcast ");
+            source.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResultNumber(source);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer, true);
+        }
+
+        public static void WriteIntToPtr(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteSetResultNumber(opCode, toType);
+            writer.Write("inttoptr ");
+            source.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResultNumber(source);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer, true);
+        }
+
         public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result)
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
+            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").CreatePointer());
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
@@ -99,7 +125,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, TypeAdapter.FromType(typeof(byte*)));
+            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").CreatePointer());
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(writer, true);
             writer.Write(" ");
@@ -347,7 +373,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
 
             // load pointer
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte**)));
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("** ");
@@ -356,7 +382,7 @@ namespace Il2Native.Logic.Gencode
             var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
             // get address of a function
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte*)));
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer());
             writer.Write("getelementptr inbounds ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("* ");
@@ -365,7 +391,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
             // load method address
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, TypeAdapter.FromType(typeof(byte*)));
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("* ");
@@ -427,14 +453,21 @@ namespace Il2Native.Logic.Gencode
         /// <param name="appendReference">
         /// </param>
         // TODO: fix WriteCast, you should not use explicit appending of reference
-        public static void WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false)
+        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false)
         {
             var writer = llvmWriter.Output;
 
             if (!fromResult.Type.IsInterface && toType.IsInterface)
             {
-                opCode.Result = fromResult;
-                llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
+                if (fromResult.Type.HasInterface(toType))
+                {
+                    opCode.Result = fromResult;
+                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
+                }
+                else
+                {
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType);
+                }
             }
             else
             {
@@ -453,6 +486,8 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.WriteLine(string.Empty);
+
+            return true;
         }
 
         /// <summary>
@@ -503,9 +538,15 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, LlvmResult source, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, LlvmResult source, bool appendReference = true, bool structAsRef = false)
         {
-            llvmWriter.WriteLlvmLoad(opCode, type, llvmWriter.GetResultNumber(), 
+            llvmWriter.WriteLlvmLoad(opCode, typeToLoad, new FullyDefinedReference(source.ToString(), source.Type), appendReference, structAsRef);
+        }
+
+        public static void WriteLlvmLoad(
+            this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
+        {
+            llvmWriter.WriteLlvmLoad(opCode, source.Type, source, appendReference, structAsRef);
         }
 
         /// <summary>
@@ -514,16 +555,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="type">
+        /// <param name="typeToLoad">
         /// </param>
-        /// <param name="sourceName">
+        /// <param name="source">
         /// </param>
         /// <param name="appendReference">
         /// </param>
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType type, string sourceName, IType sourceType, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
         {
             if (opCode.HasResult)
             {
@@ -532,15 +573,37 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!type.IsStructureType() || type.IsStructureType() && opCode.DestinationName != null);
+            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.DestinationName != null);
 
-            if (!type.IsStructureType() || structAsRef || opCode.DestinationName == null)
+            if (!typeToLoad.IsStructureType() || structAsRef || opCode.DestinationName == null)
             {
-                llvmWriter.WriteSetResultNumber(opCode, type);
+                ////Debug.Assert(source.Type.IsPointer);
+                var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
+
+                var effectiveSource = source;
+
+                // check if you need bitcast pointer type
+                if (!typeToLoad.IsPointer && dereferencedType != null && typeToLoad.TypeNotEquals(dereferencedType))
+                {
+                    // check if you need cast here
+                    llvmWriter.WriteBitcast(opCode, source, typeToLoad);
+                    writer.WriteLine(string.Empty);
+                    effectiveSource = opCode.Result.ToFullyDefinedReference();
+                }
+
+                if (dereferencedType == null && typeToLoad.TypeNotEquals(source.Type) && typeToLoad.IntTypeBitSize() > 0)
+                {
+                    // check if you need cast here
+                    llvmWriter.WriteIntToPtr(opCode, source, typeToLoad);
+                    writer.WriteLine(string.Empty);
+                    effectiveSource = opCode.Result.ToFullyDefinedReference();
+                }
+
+                llvmWriter.WriteSetResultNumber(opCode, typeToLoad);
 
                 // last part
                 writer.Write("load ");
-                type.WriteTypePrefix(writer, structAsRef);
+                typeToLoad.WriteTypePrefix(writer, structAsRef);
                 if (appendReference)
                 {
                     // add reference to type
@@ -548,14 +611,14 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 writer.Write(' ');
-                writer.Write(sourceName);
+                writer.Write(effectiveSource.ToString());
 
                 // TODO: optional do we need to calculate it propertly?
-                writer.Write(", align " + LlvmWriter.pointerSize);
+                writer.Write(", align " + LlvmWriter.PointerSize);
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, type, sourceName, opCode.DestinationName);
+                llvmWriter.WriteCopyStruct(writer, opCode, typeToLoad, source.Name, opCode.DestinationName);
             }
         }
 
@@ -571,7 +634,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.LocalInfo[index].LocalType.WriteTypePrefix(writer, false);
+            var localType = llvmWriter.LocalInfo[index].LocalType;
+
+            localType.WriteTypePrefix(writer, false);
             if (asReference)
             {
                 writer.Write('*');
@@ -581,7 +646,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(llvmWriter.GetLocalVarName(index));
 
             // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + LlvmWriter.pointerSize);
+            writer.Write(", align " + LlvmWriter.PointerSize);
         }
 
         /// <summary>
@@ -603,7 +668,7 @@ namespace Il2Native.Logic.Gencode
                 op1,
                 op2,
                 type.GetTypeSize(),
-                LlvmWriter.pointerSize /*Align*/);
+                LlvmWriter.PointerSize /*Align*/);
         }
 
         /// <summary>
@@ -622,16 +687,16 @@ namespace Il2Native.Logic.Gencode
                 "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
                 op1,
                 type.GetTypeSize(),
-                LlvmWriter.pointerSize /*Align*/);
+                LlvmWriter.PointerSize /*Align*/);
         }
 
-        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, bool toAddress, params Type[] typesToExclude)
+        public static void LlvmConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, bool toAddress, params IType[] typesToExclude)
         {
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
             var areBothPointers = ((resultOf.IType.IsPointer || resultOf.IType.IsByRef) && toAddress);
-            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(TypeAdapter.FromType(t))) && !areBothPointers)
+            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(t)) && !areBothPointers)
             {
                 if (resultOf.IType.IsReal())
                 {

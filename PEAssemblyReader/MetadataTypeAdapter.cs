@@ -398,6 +398,11 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
         }
 
+        public IType CreatePointer()
+        {
+            return new MetadataTypeAdapter(new PointerTypeSymbol(this.typeDef));
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="obj">

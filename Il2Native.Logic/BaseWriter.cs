@@ -111,7 +111,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IType ThisType { get; private set; }
+        public IType ThisType { get; private set; }
 
         /// <summary>
         /// </summary>

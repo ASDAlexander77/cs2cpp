@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LlvmResult.cs" company="">
+// <copyright file="FullyDefinedReference.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -11,26 +11,15 @@ namespace Il2Native.Logic
 {
     using System;
 
-    using Il2Native.Logic.CodeParts;
-
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class LlvmResult
+    public class FullyDefinedReference
     {
         /// <summary>
         /// </summary>
-        /// <param name="result">
-        /// </param>
-        public LlvmResult(LlvmResult result)
-            : this(result.Number, result.Type)
-        {
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="number">
+        /// <param name="name">
         /// </param>
         /// <param name="type">
         /// </param>
@@ -38,11 +27,11 @@ namespace Il2Native.Logic
         /// </exception>
         /// <exception cref="ArgumentNullException">
         /// </exception>
-        public LlvmResult(int number, IType type)
+        public FullyDefinedReference(string name, IType type)
         {
-            if (number <= 0)
+            if (string.IsNullOrWhiteSpace(name))
             {
-                throw new ArgumentException("number");
+                throw new ArgumentException("name");
             }
 
             if (type == null)
@@ -50,19 +39,13 @@ namespace Il2Native.Logic
                 throw new ArgumentNullException("type");
             }
 
-            this.Number = number;
+            this.Name = name;
             this.Type = type;
         }
 
         /// <summary>
         /// </summary>
-        protected LlvmResult()
-        {
-        }
-
-        /// <summary>
-        /// </summary>
-        public int Number { get; private set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -70,12 +53,7 @@ namespace Il2Native.Logic
 
         public override string ToString()
         {
-            return string.Concat("%.r", this.Number);
-        }
-
-        public FullyDefinedReference ToFullyDefinedReference()
-        {
-            return new FullyDefinedReference(this.ToString(), this.Type);
+            return this.Name;
         }
     }
 }

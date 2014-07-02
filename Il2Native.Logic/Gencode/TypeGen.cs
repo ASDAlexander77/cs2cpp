@@ -71,30 +71,30 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["SByte"] = 1;
             SystemTypeSizes["Char"] = 2;
             SystemTypeSizes["Int16"] = 2;
-            SystemTypeSizes["Int32"] = LlvmWriter.pointerSize;
+            SystemTypeSizes["Int32"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Int64"] = 8;
             SystemTypeSizes["UInt16"] = 2;
-            SystemTypeSizes["UInt32"] = LlvmWriter.pointerSize;
+            SystemTypeSizes["UInt32"] = LlvmWriter.PointerSize;
             SystemTypeSizes["UInt64"] = 8;
-            SystemTypeSizes["Float"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Single"] = LlvmWriter.pointerSize;
+            SystemTypeSizes["Float"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Single"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Double"] = 8;
             SystemTypeSizes["Boolean"] = 1;
-            SystemTypeSizes["Byte&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["SByte&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Char&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Int16&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Int32&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Int64&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["IntPtr"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["UIntPtr"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["UInt16&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["UInt32&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["UInt64&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Float&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Single&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Double&"] = LlvmWriter.pointerSize;
-            SystemTypeSizes["Boolean&"] = LlvmWriter.pointerSize;
+            SystemTypeSizes["Byte&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["SByte&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Char&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Int16&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Int32&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Int64&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["IntPtr"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["UIntPtr"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["UInt16&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["UInt32&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["UInt64&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Float&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Single&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Double&"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
         public static void Clear()
@@ -113,7 +113,7 @@ namespace Il2Native.Logic.Gencode
             if (type.IsInterface)
             {
                 // i8** (...)
-                return LlvmWriter.pointerSize;
+                return LlvmWriter.PointerSize;
             }
 
             if (type.IsEnum)
@@ -126,7 +126,7 @@ namespace Il2Native.Logic.Gencode
             // add shift for virtual table
             if (type.IsRootOfVirtualTable())
             {
-                size += LlvmWriter.pointerSize;
+                size += LlvmWriter.PointerSize;
             }
 
             if (type.BaseType != null)
@@ -137,12 +137,12 @@ namespace Il2Native.Logic.Gencode
             // add shift for interfaces
             if (type.BaseType == null)
             {
-                size += type.GetInterfaces().Count() * LlvmWriter.pointerSize;
+                size += type.GetInterfaces().Count() * LlvmWriter.PointerSize;
             }
             else
             {
                 var baseInterfaces = type.BaseType.GetInterfaces();
-                size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * LlvmWriter.pointerSize;
+                size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * LlvmWriter.PointerSize;
             }
 
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
@@ -156,7 +156,7 @@ namespace Il2Native.Logic.Gencode
                 if (field.FieldType.IsClass)
                 {
                     // pointer size
-                    size += LlvmWriter.pointerSize;
+                    size += LlvmWriter.PointerSize;
                 }
                 else if (field.FieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
                 {
