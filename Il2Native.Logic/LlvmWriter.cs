@@ -389,7 +389,7 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Conv_U))
             {
-                return opCode.OpCodeOperands[0].UseAsNull;
+                return opCode.OpCodeOperands[0].UseAsNull || opCode.OpCodeOperands[0].Any(Code.Ldloca, Code.Ldloca_S, Code.Ldarga, Code.Ldarga_S, Code.Ldflda);
             }
 
             if (opCode.Any(Code.Conv_I))

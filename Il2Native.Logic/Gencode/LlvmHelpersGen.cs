@@ -706,6 +706,14 @@ namespace Il2Native.Logic.Gencode
                 {
                     llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
+                else if (resultOf.IType.IsPointer || resultOf.IType.IsByRef)
+                {
+                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
+                }
+                else if (toType.EndsWith("*") || toType.EndsWith("&"))
+                {
+                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
+                }
                 else
                 {
                     llvmWriter.UnaryOper(writer, opCode, intConvert, options: LlvmWriter.OperandOptions.GenerateResult);
