@@ -23,6 +23,8 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ObjectInfrastructure
     {
+        public const int FunctionsOffsetInVirtualTable = 2;
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -111,9 +113,10 @@ namespace Il2Native.Logic.Gencode
                 var virtualTable = declaringType.GetVirtualTable();
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 2), i8*** ",
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
                     virtualTable.GetVirtualTableSize(),
-                    declaringType.GetVirtualTableName());
+                    declaringType.GetVirtualTableName(),
+                    FunctionsOffsetInVirtualTable);
                 if (opCode.HasResult)
                 {
                     llvmWriter.WriteResultNumber(opCode.Result);
@@ -149,9 +152,10 @@ namespace Il2Native.Logic.Gencode
                 var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 1), i8*** ",
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
                     virtualInterfaceTable.GetVirtualTableSize(),
-                    declaringType.GetVirtualInterfaceTableName(@interface));
+                    declaringType.GetVirtualInterfaceTableName(@interface),
+                    FunctionsOffsetInVirtualTable);
                 llvmWriter.WriteResultNumber(opCode.Result);
                 writer.WriteLine(String.Empty);
 

@@ -2947,6 +2947,9 @@ namespace Il2Native.Logic
 
             toType.UseAsClass = true;
             this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toType);
+
+            this.typeRttiDeclRequired.Add(fromType.Type);
+            this.typeRttiDeclRequired.Add(toType);
         }
 
         private static OpCodePart GetTypedIntZeroCode(IType intType)
