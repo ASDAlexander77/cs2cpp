@@ -2800,7 +2800,11 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            if (!destinationType.IsPointer && destinationType.IntTypeBitSize() >= (LlvmWriter.PointerSize * 8) && destinationType.TypeNotEquals(type))
+            if (!destinationType.IsPointer 
+                && destinationType.IntTypeBitSize() >= (LlvmWriter.PointerSize * 8) 
+                && destinationType.IntTypeBitSize() != type.IntTypeBitSize()
+                && !opCode.OpCodeOperands[0].Result.Type.IsPointer
+                && !opCode.OpCodeOperands[0].Result.Type.IsByRef)
             {
                 // adjust destination type, cast pointer to pointer of type
                 this.WriteIntToPtr(opCode, opCode.OpCodeOperands[0].Result.ToFullyDefinedReference(), type);
