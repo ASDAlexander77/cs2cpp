@@ -18,6 +18,7 @@
         private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
         private const string SourcePathCustom = @"C:\Temp\tests\";
         private const string OutputPath = @"C:\Temp\IlCTests\";
+        private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
 
         public MSTests()
         {
@@ -99,7 +100,7 @@
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(@"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
+            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath);
             //Il2Converter.Convert(Path.GetFullPath(@"..\..\..\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
         }
 
@@ -131,7 +132,7 @@
         {
             System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Test(index, true);
+            Test(index);
 
             System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
 
@@ -151,7 +152,7 @@
         {
             System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Test(index, false);
+            Test(index);
 
             System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
 
@@ -196,24 +197,24 @@
 
         }
 
-        private void Test(int number, bool includeMiniCore = true)
+        private void Test(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath, includeMiniCore ? new [] { "includeMiniCore" } : null);
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath, new [] { "corelib:" + Path.GetFullPath(CoreLibPath) });
         }
 
-        private void TestCustom(int number, bool includeMiniCore = true)
+        private void TestCustom(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, includeMiniCore ? new[] { "includeMiniCore" } : null);
+            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
         }
 
-        private void TestCustomCompileAndRun(int number, bool includeMiniCore = true)
+        private void TestCustomCompileAndRun(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath);
+            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
         }
 
-        private void TestGen(int number, bool includeMiniCore = true)
+        private void TestGen(int number)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath, includeMiniCore ? new[] { "includeMiniCore" } : null);
+            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
         }
     }
 }

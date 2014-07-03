@@ -279,11 +279,18 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="source">
         /// </param>
-        public IlReader(string source)
+        public IlReader(string source, string[] args)
             : this()
         {
             this.Source = source;
+
+            var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
+            this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
         }
+
+        /// <summary>
+        /// </summary>
+        public string CoreLibPath { get; set; }
 
         /// <summary>
         /// </summary>
@@ -621,7 +628,7 @@ namespace Il2Native.Logic
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
-        private static AssemblyMetadata Compile(string source)
+        private AssemblyMetadata Compile(string source)
         {
             var codeProvider = new CSharpCodeProvider();
             var icc = codeProvider.CreateCompiler();
@@ -630,7 +637,8 @@ namespace Il2Native.Logic
             var parameters = new CompilerParameters();
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
-            parameters.CompilerOptions = "/optimize+ /unsafe+";
+            parameters.CompilerOptions = string.Concat(
+                "/optimize+ /unsafe+", string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 
             // parameters.CompilerOptions = "/optimize-";
@@ -744,9 +752,9 @@ namespace Il2Native.Logic
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
             foreach (var assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
             {
-                if (assemblyIdentity.Name == "mscorlib")
+                if (assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib")
                 {
-                    var coreAssembly = AssemblyMetadata.CreateFromFile(typeof(int).Assembly.Location);
+                    var coreAssembly = AssemblyMetadata.CreateFromFile(assemblyIdentity.Name == "CoreLib" ? this.CoreLibPath : typeof(int).Assembly.Location);
                     var coreAssemblySymbol = new PEAssemblySymbol(
                         coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
                     coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);

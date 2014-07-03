@@ -884,6 +884,10 @@ namespace Il2Native.Logic
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
+            foreach (var childCodePart in opCodeParts)
+            {
+                childCodePart.UsedBy = opCodePart;
+            }
 
             // respore stack for not used OpCodes
             if (insertBack != null)

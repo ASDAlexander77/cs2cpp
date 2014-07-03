@@ -23,6 +23,8 @@ namespace Il2Native.Logic
 
     using PEAssemblyReader;
 
+    using Roslyn.Utilities;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
@@ -120,7 +122,7 @@ namespace Il2Native.Logic
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
-            this.includeMiniCoreLib = args != null && args.Contains("includeMiniCore");
+            this.IncludeMiniCoreLib = args != null && args.Contains("includeMiniCore");
         }
 
         /// <summary>
@@ -129,7 +131,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool includeMiniCoreLib { get; set; }
+        public bool IncludeMiniCoreLib { get; set; }
 
         /// <summary>
         /// </summary>
@@ -165,7 +167,7 @@ namespace Il2Native.Logic
             IList<bool> isDirectValue,
             LlvmResult resultNumberForThis,
             IType thisType,
-            LlvmResult resultNumberForReturn,
+            FullyDefinedReference resultNumberForReturn,
             IType returnType)
         {
             writer.Write("(");
@@ -856,7 +858,7 @@ namespace Il2Native.Logic
             this.Output.Indent--;
             this.Output.WriteLine("}");
 
-            if (!this.includeMiniCoreLib)
+            if (!this.IncludeMiniCoreLib)
             {
                 this.WriteRequiredDeclarations();
             }
@@ -1055,36 +1057,6 @@ namespace Il2Native.Logic
             }
 
             this.stringStorage.Clear();
-        }
-
-        private void WriteAnsiString(KeyValuePair<int, string> pair)
-        {
-            this.Output.WriteLine(
-                string.Format("@.s{0} = private unnamed_addr constant [{2} x i8] c\"{1}\\00\", align 1", pair.Key, pair.Value, pair.Value.Length + 1));
-        }
-
-        private void WriteUnicodeString(KeyValuePair<int, string> pair)
-        {
-            this.Output.Write("@.s{0} = private unnamed_addr constant [{2} x i16] [", pair.Key, pair.Value, pair.Value.Length + 1);
-
-            var index = 0;
-            foreach (var c in pair.Value.ToCharArray())
-            {
-                if (index > 0)
-                {
-                    this.Output.Write(", ");
-                }
-
-                this.Output.Write("i16 {0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                this.Output.Write(", ");
-            }
-
-            this.Output.WriteLine("i16 0], align 2", pair.Key, pair.Value, pair.Value.Length + 1);
         }
 
         /// <summary>
@@ -1387,7 +1359,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(new String(Encoding.ASCII.GetChars(Resources.llvm_declarations)));
             this.Output.WriteLine(string.Empty);
 
-            if (this.includeMiniCoreLib)
+            if (this.IncludeMiniCoreLib)
             {
                 // mini core lib
                 this.Output.WriteLine(new String(Encoding.ASCII.GetChars(Resources.llvm_mini_mscore_lib)));
@@ -1418,9 +1390,17 @@ namespace Il2Native.Logic
         {
             this.processedTypes.Add(type);
 
-            if (type.BaseType != null)
+            // get all required types
+            ////if (type.BaseType != null)
+            ////{
+            ////    this.WriteTypeDefinitionIfNotWrittenYet(type.BaseType);
+            ////}
+
+            var requiredTypes = new List<IType>();
+            Il2Converter.ProcessRequiredITypesForITypes(new [] { type }, new HashSet<IType>(), requiredTypes, null);
+            foreach (var requiredType in requiredTypes)
             {
-                this.WriteTypeDefinitionIfNotWrittenYet(type.BaseType);
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
 
             var interfacesList = type.GetInterfaces();
@@ -1800,6 +1780,8 @@ namespace Il2Native.Logic
                 case Code.Ldfld:
 
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+
+                    // we wait when opCode.DestinationName is set;
                     var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.DestinationName == null;
                     if (!skip)
                     {
@@ -2549,6 +2531,14 @@ namespace Il2Native.Logic
                     this.CheckIfExternalDeclarationIsRequired(declaringType);
 
                     this.WriteNew(opCodeConstructorInfoPart, declaringType);
+
+                    if (!string.IsNullOrWhiteSpace(opCode.DestinationName))
+                    {
+                        var newObjResult = opCode.Result;
+                        opCode.Result = null;
+                        newObjResult.Type.UseAsClass = false;
+                        this.WriteLlvmLoad(opCode, newObjResult.ToFullyDefinedReference());
+                    }
 
                     break;
 
@@ -4075,6 +4065,36 @@ namespace Il2Native.Logic
                     }
                 }
             }
+        }
+
+        private void WriteAnsiString(KeyValuePair<int, string> pair)
+        {
+            this.Output.WriteLine(
+                string.Format("@.s{0} = private unnamed_addr constant [{2} x i8] c\"{1}\\00\", align 1", pair.Key, pair.Value, pair.Value.Length + 1));
+        }
+
+        private void WriteUnicodeString(KeyValuePair<int, string> pair)
+        {
+            this.Output.Write("@.s{0} = private unnamed_addr constant [{2} x i16] [", pair.Key, pair.Value, pair.Value.Length + 1);
+
+            var index = 0;
+            foreach (var c in pair.Value.ToCharArray())
+            {
+                if (index > 0)
+                {
+                    this.Output.Write(", ");
+                }
+
+                this.Output.Write("i16 {0}", (int)c);
+                index++;
+            }
+
+            if (index > 0)
+            {
+                this.Output.Write(", ");
+            }
+
+            this.Output.WriteLine("i16 0], align 2", pair.Key, pair.Value, pair.Value.Length + 1);
         }
 
         /// <summary>

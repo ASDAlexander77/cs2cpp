@@ -28,7 +28,7 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(string source, string outputFolder, string[] args = null)
         {
-            var ilReader = new IlReader(source);
+            var ilReader = new IlReader(source, args);
             ilReader.Load();
             GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder, args);
         }
@@ -230,7 +230,7 @@ namespace Il2Native.Logic
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                GetAllRequiredITypesForIType(type, null, genericSpecializations).ToArray();
+                GetAllRequiredITypesForIType(type, genericSpecializations).ToArray();
             }
         }
 
@@ -298,7 +298,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, List<IType> allITypes, HashSet<IType> genericSpecializations)
+        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, HashSet<IType> genericSpecializations)
         {
             // if (type.FullName == "System.Object")
             // {
@@ -356,7 +356,11 @@ namespace Il2Native.Logic
                     {
                         foreach (var localVar in methodBody.LocalVariables)
                         {
-                            DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
+                            if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
+                            {
+                                DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
+                                yield return localVar.LocalType;
+                            }
                         }
                     }
                 }
@@ -391,9 +395,9 @@ namespace Il2Native.Logic
         /// <param name="genericSpecializations">
         /// </param>
         private static void ProcessNextRequiredITypes(
-            IType type, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericSpecializations)
+            IType type, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericSpecializations)
         {
-            var requiredITypes = GetAllRequiredITypesForIType(type, allITypes, genericSpecializations).ToList();
+            var requiredITypes = GetAllRequiredITypesForIType(type, genericSpecializations).ToList();
             foreach (var requiredIType in requiredITypes)
             {
                 if (type.TypeNotEquals(requiredIType))
@@ -415,13 +419,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
-        private static void ProcessRequiredITypesForITypes(
-            List<IType> types, List<IType> allITypes, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
+        public static void ProcessRequiredITypesForITypes(
+            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
         {
             foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, allITypes, typesAdded, requiredITypesToAdd, genericSpecializations);
+                ProcessNextRequiredITypes(type, typesAdded, requiredITypesToAdd, genericSpecializations);
                 newListOfITypes.AddRange(requiredITypesToAdd);
 
                 if (!typesAdded.Contains(type))
@@ -448,7 +452,7 @@ namespace Il2Native.Logic
             foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, genericSpecializations);
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, genericSpecializations);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
@@ -456,7 +460,7 @@ namespace Il2Native.Logic
             foreach (var type in genericSpecializations)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, types, new HashSet<IType>(), requiredITypesToAdd, null);
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, null);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
