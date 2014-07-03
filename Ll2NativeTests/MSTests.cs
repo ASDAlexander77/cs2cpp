@@ -15,9 +15,9 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"D:\Temp\tests\";
-        private const string OutputPath = @"D:\Temp\IlCTests\";
+        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"C:\Temp\tests\";
+        private const string OutputPath = @"C:\Temp\IlCTests\";
 
         public MSTests()
         {
@@ -99,8 +99,8 @@
         [TestMethod]
         public void TestCoreLib()
         {
-            //Il2Converter.Convert(Path.GetFullPath(@"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
-            Il2Converter.Convert(Path.GetFullPath(@"..\..\..\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
+            Il2Converter.Convert(Path.GetFullPath(@"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
+            //Il2Converter.Convert(Path.GetFullPath(@"..\..\..\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
         }
 
         [TestMethod]

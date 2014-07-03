@@ -591,7 +591,11 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result.ToFullyDefinedReference();
                 }
 
-                if (dereferencedType == null && typeToLoad.TypeNotEquals(source.Type) && typeToLoad.IntTypeBitSize() > 0)
+                if (dereferencedType == null 
+                    && !source.Type.IsPointer 
+                    && !source.Type.IsByRef 
+                    && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize() 
+                    && typeToLoad.IntTypeBitSize() > 0)
                 {
                     // check if you need cast here
                     llvmWriter.WriteIntToPtr(opCode, source, typeToLoad);
@@ -701,14 +705,6 @@ namespace Il2Native.Logic.Gencode
                 if (resultOf.IType.IsReal())
                 {
                     llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
-                }
-                else if (resultOf.IType.IsPointer || resultOf.IType.IsByRef)
-                {
-                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
-                }
-                else if (toType.EndsWith("*") || toType.EndsWith("&"))
-                {
-                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else
                 {
