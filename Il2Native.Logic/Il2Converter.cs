@@ -475,6 +475,8 @@ namespace Il2Native.Logic
                 {
                     var requiredITypes = type.Item2;
                     requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
+                    // remove not used types, for example System.Object which maybe not in current assembly
+                    requiredITypes.RemoveAll(r => !types.Any(n => n.TypeEquals(r)));
                     if (requiredITypes.Count == 0)
                     {
                         toRemove.Add(type);

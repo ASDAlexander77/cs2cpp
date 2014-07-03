@@ -1391,11 +1391,6 @@ namespace Il2Native.Logic
             this.processedTypes.Add(type);
 
             // get all required types
-            ////if (type.BaseType != null)
-            ////{
-            ////    this.WriteTypeDefinitionIfNotWrittenYet(type.BaseType);
-            ////}
-
             var requiredTypes = new List<IType>();
             Il2Converter.ProcessRequiredITypesForITypes(new [] { type }, new HashSet<IType>(), requiredTypes, null);
             foreach (var requiredType in requiredTypes)
@@ -4163,8 +4158,6 @@ namespace Il2Native.Logic
             {
                 return;
             }
-
-            this.processedTypes.Add(type);
 
             Il2Converter.WriteTypeDefinition(this, type, null, true);
             this.Output.WriteLine(string.Empty);
