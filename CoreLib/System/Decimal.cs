@@ -210,15 +210,8 @@ namespace System
         public static int ToInt32(Decimal d)
         {
             //if ((d.flags & ScaleMask) != 0) d = Truncate(d);
-            
-            Console.WriteLine(d.flags);
-            Console.WriteLine(d.hi);
-            Console.WriteLine(d.lo);
-            Console.WriteLine(d.mid);
-
             if (d.hi == 0 && d.mid == 0)
             {
-                Console.WriteLine("hi mid = 0");
                 var i = d.lo;
                 if (d.flags >= 0)
                 {
@@ -229,11 +222,7 @@ namespace System
                     i = -i;
                     if (i <= 0) return i;
                 }
-
-                Console.WriteLine("??");
             }
-
-            Console.WriteLine("error");
 
             throw new Exception("Overflow_Int32");
         }

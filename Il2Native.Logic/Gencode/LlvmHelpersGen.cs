@@ -588,17 +588,17 @@ namespace Il2Native.Logic.Gencode
         public static void WriteLlvmLoad(
             this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
         {
-            if (opCode.HasResult)
-            {
-                return;
-            }
-
             var writer = llvmWriter.Output;
 
             Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.DestinationName != null);
 
             if (!typeToLoad.IsStructureType() || structAsRef || opCode.DestinationName == null)
             {
+                if (opCode.HasResult)
+                {
+                    return;
+                }
+
                 ////Debug.Assert(source.Type.IsPointer);
                 var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
 

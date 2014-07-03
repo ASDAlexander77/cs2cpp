@@ -15,10 +15,11 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"C:\Temp\tests\";
-        private const string OutputPath = @"C:\Temp\IlCTests\";
-        private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"D:\Temp\tests\";
+        private const string OutputPath = @"D:\Temp\IlCTests\";
+        //private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
 
         public MSTests()
         {
@@ -101,14 +102,13 @@
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath);
-            //Il2Converter.Convert(Path.GetFullPath(@"..\..\..\CoreLib\bin\Release\CoreLib.dll"), OutputPath);
         }
 
         [TestMethod]
         public void TestRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
+            var skip = new int[] { 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
 
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
@@ -120,8 +120,7 @@
         public void TestCompileAndRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 9, 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
-
+            var skip = new int[] { 10, 12, 14, 15, 16, 18, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
