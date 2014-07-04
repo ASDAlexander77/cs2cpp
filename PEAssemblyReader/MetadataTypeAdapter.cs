@@ -203,6 +203,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsDelegate
+        {
+            get
+            {
+                return this.typeDef.IsDelegateType();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public bool IsEnum

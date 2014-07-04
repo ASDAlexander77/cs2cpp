@@ -3163,7 +3163,10 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (res1 != null && res1.IType != effectiveType && (res1.IType.IsClass || res1.IType.IsArray) && effectiveType.IsAssignableFrom(res1.IType))
+            if (res1 != null 
+                && res1.IType.TypeNotEquals(effectiveType) 
+                && (res1.IType.IsClass || res1.IType.IsArray || res1.IType.IsInterface || res1.IType.IsDelegate) 
+                && effectiveType.IsAssignableFrom(res1.IType))
             {
                 castFrom = res1.IType;
             }

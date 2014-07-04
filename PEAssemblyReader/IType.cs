@@ -69,6 +69,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsDelegate { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsPointer { get; }
 
         /// <summary>
