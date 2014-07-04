@@ -2437,7 +2437,7 @@ namespace Il2Native.Logic
                     if (this.tryScopes.Count > 0)
                     {
                         var tryClause = this.tryScopes.Peek();
-                        var finallyClause = tryClause.Catches.First(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                        var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
                         if (finallyClause != null)
                         {
                             finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
