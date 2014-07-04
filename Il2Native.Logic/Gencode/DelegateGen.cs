@@ -34,13 +34,16 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(" {");
             writer.Indent++;
 
-            if (method.Name == "BeginInvoke")
+            writer.Write("ret ");
+
+            if (method.ReturnType.IsVoid())
             {
-                writer.WriteLine("ret %\"System.IAsyncResult\"* null");
+                writer.WriteLine("void");
             }
             else
             {
-                writer.WriteLine("ret void");
+                method.ReturnType.WriteTypePrefix(writer);
+                writer.WriteLine(" undef");
             }
 
             writer.Indent--;

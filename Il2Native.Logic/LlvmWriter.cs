@@ -423,7 +423,8 @@ namespace Il2Native.Logic
                 Code.Ldc_R8,
                 Code.Ldnull,
                 Code.Ldtoken,
-                Code.Ldsflda);
+                Code.Ldsflda,
+                Code.Ldftn);
         }
 
         /// <summary>
