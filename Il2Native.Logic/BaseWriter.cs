@@ -628,10 +628,10 @@ namespace Il2Native.Logic
             }
 
             var tries = new List<TryClause>();
-            CatchOfFinallyClause previousClause = null;
             foreach (var groupedEh in this.ExceptionHandlingClauses.GroupBy(eh => eh.TryOffset + eh.TryLength))
             {
                 TryClause tryItem = null;
+                CatchOfFinallyClause previousClause = null;
                 foreach (var exceptionHandlingClause in groupedEh)
                 {
                     if (tryItem == null)
