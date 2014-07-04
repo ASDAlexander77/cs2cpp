@@ -10,11 +10,13 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Exceptions;
 
     using PEAssemblyReader;
 
@@ -620,52 +622,84 @@ namespace Il2Native.Logic
         /// </summary>
         protected void AssignExceptionsToOpCodes()
         {
-            if (this.ExceptionHandlingClauses == null)
+            if (this.ExceptionHandlingClauses == null || !ExceptionHandlingClauses.Any())
             {
                 return;
             }
 
-            foreach (var exceptionHandlingClause in this.ExceptionHandlingClauses)
+            var tries = new List<TryClause>();
+            CatchOfFinallyClause previousClause = null;
+            foreach (var groupedEh in this.ExceptionHandlingClauses.GroupBy(eh => eh.TryOffset + eh.TryLength))
+            {
+                TryClause tryItem = null;
+                foreach (var exceptionHandlingClause in groupedEh)
+                {
+                    if (tryItem == null)
+                    {
+                        tryItem = new TryClause();
+                        tryItem.Offset = exceptionHandlingClause.TryOffset;
+                        tryItem.Length = exceptionHandlingClause.TryLength;
+                    }
+
+                    var catchOfFinallyClause = new CatchOfFinallyClause()
+                                                   {
+                                                       Flags = exceptionHandlingClause.Flags,
+                                                       Offset = exceptionHandlingClause.HandlerOffset,
+                                                       Length = exceptionHandlingClause.HandlerLength,
+                                                       Catch = exceptionHandlingClause.CatchType,
+                                                       OwnerTry = tryItem
+                                                   };
+
+                    tryItem.Catches.Add(catchOfFinallyClause);
+
+                    if (previousClause != null)
+                    {
+                        previousClause.Next = catchOfFinallyClause;
+                    }
+
+                    previousClause = catchOfFinallyClause;
+                }
+
+                tries.Add(tryItem);
+            }
+
+            foreach (var tryItem in tries)
             {
                 OpCodePart opCodePart;
-                if (this.OpsByAddressStart.TryGetValue(exceptionHandlingClause.TryOffset, out opCodePart))
+                if (this.OpsByAddressStart.TryGetValue(tryItem.Offset, out opCodePart))
                 {
                     if (opCodePart.TryBegin == null)
                     {
-                        opCodePart.TryBegin = new HashSet<IExceptionHandlingClause>();
+                        opCodePart.TryBegin = new List<TryClause>();
                     }
 
-                    opCodePart.TryBegin.Add(exceptionHandlingClause);
+                    opCodePart.TryBegin.Add(tryItem);
                 }
 
-                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.TryOffset + exceptionHandlingClause.TryLength, out opCodePart))
+                if (this.OpsByAddressEnd.TryGetValue(tryItem.Offset + tryItem.Length, out opCodePart))
                 {
-                    if (opCodePart.TryEnd == null)
-                    {
-                        opCodePart.TryEnd = new HashSet<IExceptionHandlingClause>();
-                    }
-
-                    opCodePart.TryEnd.Add(exceptionHandlingClause);
+                    Debug.Assert(opCodePart.TryEnd == null);
+                    opCodePart.TryEnd = tryItem;
                 }
 
-                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength, out opCodePart))
+                if (this.OpsByAddressEnd.TryGetValue(tryItem.Catches.First().Offset, out opCodePart))
                 {
-                    if (opCodePart.CatchOrFinallyEnd == null)
-                    {
-                        opCodePart.CatchOrFinallyEnd = new HashSet<IExceptionHandlingClause>();
-                    }
-
-                    opCodePart.CatchOrFinallyEnd.Add(exceptionHandlingClause);
+                    opCodePart.ExceptionHandlers = tryItem.Catches;
                 }
 
-                if (this.OpsByAddressEnd.TryGetValue(exceptionHandlingClause.HandlerOffset, out opCodePart))
+                foreach (var catchOrFinally in tryItem.Catches)
                 {
-                    if (opCodePart.ExceptionHandlers == null)
+                    if (this.OpsByAddressStart.TryGetValue(catchOrFinally.Offset, out opCodePart))
                     {
-                        opCodePart.ExceptionHandlers = new List<IExceptionHandlingClause>();
+                        Debug.Assert(opCodePart.CatchOrFinallyBegin == null);
+                        opCodePart.CatchOrFinallyBegin = catchOrFinally;
                     }
 
-                    opCodePart.ExceptionHandlers.Add(exceptionHandlingClause);
+                    if (this.OpsByAddressEnd.TryGetValue(catchOrFinally.Offset + catchOrFinally.Length, out opCodePart))
+                    {
+                        Debug.Assert(opCodePart.CatchOrFinallyEnd == null);
+                        opCodePart.CatchOrFinallyEnd = catchOrFinally;
+                    }
                 }
             }
         }

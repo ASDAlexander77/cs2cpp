@@ -60,6 +60,8 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
+    <Compile Include="Exceptions\TryClause.cs" />
     <Compile Include="FullyDefinedReference.cs" />
     <Compile Include="Gencode\ArraySingleDimensionGen.cs" />
     <Compile Include="Gencode\DelegateGen.cs" />

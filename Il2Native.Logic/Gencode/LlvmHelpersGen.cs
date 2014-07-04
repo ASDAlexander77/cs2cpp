@@ -14,6 +14,7 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Exceptions;
 
     using PEAssemblyReader;
 
@@ -176,7 +177,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="thisResultNumber">
         /// </param>
-        /// <param name="exceptionHandlingClause">
+        /// <param name="tryClause">
         /// </param>
         public static void WriteCall(
             this LlvmWriter llvmWriter,
@@ -186,7 +187,7 @@ namespace Il2Native.Logic.Gencode
             bool hasThis,
             bool isCtor,
             LlvmResult thisResultNumber,
-            IExceptionHandlingClause exceptionHandlingClause)
+            TryClause tryClause)
         {
             if (opCodeMethodInfo.HasResult)
             {
@@ -195,9 +196,9 @@ namespace Il2Native.Logic.Gencode
 
             var methodInfo = methodBase;
 
-            if (methodInfo != null 
-                && methodInfo.ReturnType.IsStructureType() 
-                && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any) 
+            if (methodInfo != null
+                && methodInfo.ReturnType.IsStructureType()
+                && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any)
                 && opCodeMethodInfo.DestinationName == null)
             {
                 // You should not allocate it yourself, as result of function should be stored in DestinationName or in Return Value such as "agg.return"
@@ -305,7 +306,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            if (exceptionHandlingClause != null)
+            if (tryClause != null)
             {
                 writer.Write("invoke ");
             }
@@ -355,20 +356,27 @@ namespace Il2Native.Logic.Gencode
                 returnFullyDefinedReference,
                 methodInfo != null ? methodInfo.ReturnType : null);
 
-            if (exceptionHandlingClause != null)
+            if (tryClause != null)
             {
                 var nextOpCode = opCodeMethodInfo.NextOpCode(llvmWriter);
                 var nextIsBrunch = nextOpCode.Any(Code.Br, Code.Br_S, Code.Leave, Code.Leave_S);
                 var nextAddress = nextIsBrunch ? nextOpCode.JumpAddress() : opCodeMethodInfo.AddressEnd;
 
+                var useBlockJumpRandomAddress = false;
+                if (nextAddress == 0)
+                {
+                    useBlockJumpRandomAddress = true;
+                    nextAddress = llvmWriter.GetBlockJumpAddress();
+                }
+
                 writer.WriteLine(string.Empty);
                 writer.Indent++;
-                writer.WriteLine("to label %.a{0} unwind label %.catch{1}", nextAddress, exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("to label %.{0}{1} unwind label %.catch{2}", useBlockJumpRandomAddress ? "b" : "a", nextAddress, tryClause.Catches.First().Offset);
                 writer.Indent--;
                 if (!nextIsBrunch)
                 {
                     writer.Indent--;
-                    writer.WriteLine(".a{0}:", opCodeMethodInfo.GroupAddressEnd);
+                    writer.WriteLine(".{0}{1}:", useBlockJumpRandomAddress ? "b" : "a", useBlockJumpRandomAddress ? nextAddress : opCodeMethodInfo.GroupAddressEnd);
                     writer.Indent++;
                     opCodeMethodInfo.NextOpCode(llvmWriter).JumpProcessed = true;
                 }
@@ -613,10 +621,10 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result.ToFullyDefinedReference();
                 }
 
-                if (dereferencedType == null 
-                    && !source.Type.IsPointer 
-                    && !source.Type.IsByRef 
-                    && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize() 
+                if (dereferencedType == null
+                    && !source.Type.IsPointer
+                    && !source.Type.IsByRef
+                    && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize()
                     && typeToLoad.IntTypeBitSize() > 0)
                 {
                     // check if you need cast here

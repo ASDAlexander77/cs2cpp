@@ -125,21 +125,5 @@ namespace PEAssemblyReader
         }
 
         public bool FinallyVariablesAreWritten { get; set; }
-
-        public int CompareTo(object obj)
-        {
-            var eh = obj as IExceptionHandlingClause;
-            if (eh != null)
-            {
-                return this.HandlerOffset.CompareTo(eh.HandlerOffset);
-            }
-
-            return -1;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return this.CompareTo(obj) == 0;
-        }
     }
 }

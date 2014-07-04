@@ -13,6 +13,7 @@ namespace Il2Native.Logic.Gencode
     using System.Reflection;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Exceptions;
 
     using PEAssemblyReader;
 
@@ -80,7 +81,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="exceptionHandlingClause">
         /// </param>
-        public static void WriteCatchBegin(this LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause)
+        public static void WriteCatchBegin(this LlvmWriter llvmWriter, CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -94,7 +95,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("; Begin of Catch");
             }
 
-            var catchType = exceptionHandlingClause.CatchType;
+            var catchType = exceptionHandlingClause.Catch;
 
             var opCodeNone = OpCodePart.CreateNop;
             var bytePointerType = llvmWriter.ResolveType("System.Byte").CreatePointer();
@@ -111,10 +112,10 @@ namespace Il2Native.Logic.Gencode
             if (isFinally)
             {
                 // set default error handler jump to carry on try/catch execution
-                writer.WriteLine("store i32 0, i32* %.finally_jump{0}", exceptionHandlingClause.HandlerOffset);
-                writer.WriteLine("br label %.finally_no_error_entry{0}", exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("store i32 0, i32* %.finally_jump{0}", exceptionHandlingClause.Offset);
+                writer.WriteLine("br label %.finally_no_error_entry{0}", exceptionHandlingClause.Offset);
                 writer.Indent--;
-                writer.WriteLine(".finally_no_error_entry{0}:", exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine(".finally_no_error_entry{0}:", exceptionHandlingClause.Offset);
                 writer.Indent++;
             }
 
@@ -141,8 +142,8 @@ namespace Il2Native.Logic.Gencode
         public static void WriteCatchEnd(
             this LlvmWriter llvmWriter, 
             OpCodePart opCode, 
-            IExceptionHandlingClause exceptionHandlingClause, 
-            IExceptionHandlingClause upperLevelExceptionHandlingClause)
+            CatchOfFinallyClause exceptionHandlingClause,
+            CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -163,14 +164,14 @@ namespace Il2Native.Logic.Gencode
                 var opCodeNope = OpCodePart.CreateNop;
 
                 var fullyDefinedRef = new FullyDefinedReference(
-                    string.Concat("%.finally_jump", exceptionHandlingClause.HandlerOffset), llvmWriter.ResolveType("System.Int32"));
+                    string.Concat("%.finally_jump", exceptionHandlingClause.Offset), llvmWriter.ResolveType("System.Int32"));
 
                 llvmWriter.WriteLlvmLoad(opCodeNope, fullyDefinedRef);
                 writer.WriteLine(string.Empty);
                 writer.WriteLine(
-                    "switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.HandlerOffset, opCodeNope.Result);
+                    "switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.Offset, opCodeNope.Result);
                 writer.Indent++;
-                writer.WriteLine("i32 {0}, label %.finally_exit{1}", index++, exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("i32 {0}, label %.finally_exit{1}", index++, exceptionHandlingClause.Offset);
                 foreach (var leave in exceptionHandlingClause.FinallyJumps)
                 {
                     writer.WriteLine("i32 {0}, label %{1}", index++, leave);
@@ -180,11 +181,11 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("]");
 
                 writer.Indent--;
-                writer.WriteLine(".finally_exit{0}:", exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine(".finally_exit{0}:", exceptionHandlingClause.Offset);
                 writer.Indent++;
             }
 
-            var endOfHandlerAddress = exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength;
+            var endOfHandlerAddress = exceptionHandlingClause.Offset + exceptionHandlingClause.Length;
 
             if (exceptionHandlingClause.RethrowCatchWithCleanUpRequired)
             {
@@ -193,7 +194,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
-                llvmWriter.WriteLandingPad(opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.CatchType });
+                llvmWriter.WriteLandingPad(opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.Catch });
                 writer.WriteLine(string.Empty);
             }
             else
@@ -201,14 +202,12 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("store i32 0, i32* %.error_typeid");
             }
 
-            // TODO: I didn't find what is that
-            ////writer.WriteLine("store i32 1, i32* %-1");
             writer.WriteLine("call void @__cxa_end_catch()");
 
             if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
                 var nextOp = opCode.NextOpCode(llvmWriter);
-                if (!nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
+                if (nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
                 {
                     writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
 
@@ -224,7 +223,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                writer.WriteLine("br label %.exceptions_switch{0}", upperLevelExceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("br label %.exception_switch{0}", upperLevelExceptionHandlingClause.Offset);
             }
 
             if (isFinally)
@@ -249,7 +248,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Cacth Clauses - Prolog");
 
-            var handlerOffset = opCode.ExceptionHandlers.First().HandlerOffset;
+            var handlerOffset = opCode.ExceptionHandlers.First().Offset;
             writer.Indent--;
             writer.WriteLine(".catch{0}:", handlerOffset);
             writer.Indent++;
@@ -257,15 +256,9 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteLandingPad(
                 opCode, 
                 opCode.ExceptionHandlers.Any(eh => eh.Flags == ExceptionHandlingClauseOptions.Finally) ? LandingPadOptions.Cleanup : LandingPadOptions.None, 
-                opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.CatchType).ToArray());
+                opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.Catch).ToArray());
 
             writer.WriteLine(string.Empty);
-
-            writer.WriteLine("br label %.exceptions_switch{0}", handlerOffset);
-
-            writer.Indent--;
-            writer.WriteLine(".exceptions_switch{0}:", handlerOffset);
-            writer.Indent++;
         }
 
         /// <summary>
@@ -277,13 +270,19 @@ namespace Il2Native.Logic.Gencode
         /// <param name="nextExceptionHandlingClause">
         /// </param>
         public static void WriteCatchTest(
-            this LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause, IExceptionHandlingClause nextExceptionHandlingClause)
+            this LlvmWriter llvmWriter, CatchOfFinallyClause exceptionHandlingClause, CatchOfFinallyClause nextExceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
+            writer.WriteLine("br label %.exception_switch{0}", exceptionHandlingClause.Offset);
+
+            writer.Indent--;
+            writer.WriteLine(".exception_switch{0}:", exceptionHandlingClause.Offset);
+            writer.Indent++;
+
             writer.WriteLine("; Test Exception type");
 
-            var catchType = exceptionHandlingClause.CatchType;
+            var catchType = exceptionHandlingClause.Catch;
 
             var opCodeNone = OpCodePart.CreateNop;
             var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, llvmWriter.ResolveType("System.Int32"));
@@ -300,11 +299,11 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(
                 "br i1 {0}, label %.exception_handler{1}, label %.{2}",
                 compareResultResultNumber, 
-                exceptionHandlingClause.HandlerOffset, 
-                nextExceptionHandlingClause != null ? string.Concat("exception_handler", nextExceptionHandlingClause.HandlerOffset) : "resume");
+                exceptionHandlingClause.Offset,
+                nextExceptionHandlingClause != null ? string.Concat("exception_switch", nextExceptionHandlingClause.Offset) : "resume");
 
             writer.Indent--;
-            writer.WriteLine(".exception_handler{0}:", exceptionHandlingClause.HandlerOffset);
+            writer.WriteLine(".exception_handler{0}:", exceptionHandlingClause.Offset);
             writer.Indent++;
         }
 
@@ -314,14 +313,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="finallyClause">
         /// </param>
-        public static void WriteFinallyLeave(this LlvmWriter llvmWriter, IExceptionHandlingClause finallyClause)
+        public static void WriteFinallyLeave(this LlvmWriter llvmWriter, CatchOfFinallyClause finallyClause)
         {
             var writer = llvmWriter.Output;
 
             llvmWriter.WriteFinallyVariables(finallyClause);
 
-            writer.WriteLine("store i32 {0}, i32* %.finally_jump{1}", finallyClause.FinallyJumps.Count, finallyClause.HandlerOffset);
-            writer.WriteLine("br label %.finally_no_error_entry{0}", finallyClause.HandlerOffset);
+            writer.WriteLine("store i32 {0}, i32* %.finally_jump{1}", finallyClause.FinallyJumps.Count, finallyClause.Offset);
+            writer.WriteLine("br label %.finally_no_error_entry{0}", finallyClause.Offset);
         }
 
         /// <summary>
@@ -330,7 +329,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="finallyClause">
         /// </param>
-        public static void WriteFinallyVariables(this LlvmWriter llvmWriter, IExceptionHandlingClause finallyClause)
+        public static void WriteFinallyVariables(this LlvmWriter llvmWriter, CatchOfFinallyClause finallyClause)
         {
             if (finallyClause.FinallyVariablesAreWritten)
             {
@@ -341,7 +340,7 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            writer.Write("%.finally_jump{0} = ", finallyClause.HandlerOffset);
+            writer.Write("%.finally_jump{0} = ", finallyClause.Offset);
             writer.Write("alloca i32, align " + LlvmWriter.PointerSize);
             writer.WriteLine(string.Empty);
         }
@@ -486,9 +485,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRethrow(
             this LlvmWriter llvmWriter, 
-            OpCodePart opCode, 
-            IExceptionHandlingClause exceptionHandlingClause, 
-            IExceptionHandlingClause upperLevelExceptionHandlingClause)
+            OpCodePart opCode,
+            CatchOfFinallyClause exceptionHandlingClause,
+            CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -504,7 +503,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="exceptionHandlingClause">
         /// </param>
-        public static void WriteThrow(this LlvmWriter llvmWriter, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        public static void WriteThrow(this LlvmWriter llvmWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -572,7 +571,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="exceptionHandlingClause">
         /// </param>
-        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, IExceptionHandlingClause exceptionHandlingClause)
+        private static void WriteRethrowInvoke(LlvmWriter llvmWriter, CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -581,7 +580,7 @@ namespace Il2Native.Logic.Gencode
             {
                 writer.Indent++;
                 writer.WriteLine(
-                    "to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.HandlerOffset + exceptionHandlingClause.HandlerLength);
+                    "to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
                 writer.Indent--;
                 exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;
             }
@@ -628,7 +627,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        private static IType WriteThrowInvoke(LlvmWriter llvmWriter, OpCodePart opCode, IExceptionHandlingClause exceptionHandlingClause)
+        private static IType WriteThrowInvoke(LlvmWriter llvmWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -641,7 +640,7 @@ namespace Il2Native.Logic.Gencode
             writer.Indent++;
             if (exceptionHandlingClause != null)
             {
-                writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.HandlerOffset);
+                writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.Offset);
             }
             else
             {

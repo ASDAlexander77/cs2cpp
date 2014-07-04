@@ -18,6 +18,7 @@ namespace Il2Native.Logic
     using System.Text;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Exceptions;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Properties;
 
@@ -37,7 +38,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public Stack<IExceptionHandlingClause> catchScopes = new Stack<IExceptionHandlingClause>();
+        public Stack<CatchOfFinallyClause> catchScopes = new Stack<CatchOfFinallyClause>();
 
         /// <summary>
         /// </summary>
@@ -53,7 +54,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public Stack<IExceptionHandlingClause> tryScopes = new Stack<IExceptionHandlingClause>();
+        public Stack<TryClause> tryScopes = new Stack<TryClause>();
 
         /// <summary>
         /// </summary>
@@ -94,6 +95,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private int resultNumberIncremental;
+
+        /// <summary>
+        /// </summary>
+        private int blockJumpAddressIncremental;
 
         /// <summary>
         /// </summary>
@@ -544,6 +549,7 @@ namespace Il2Native.Logic
         {
             base.StartProcess();
             this.resultNumberIncremental = 0;
+            this.blockJumpAddressIncremental = 0;
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
             this.needToWriteUnreachable = false;
@@ -1341,6 +1347,11 @@ namespace Il2Native.Logic
             return llvmResult;
         }
 
+        public int GetBlockJumpAddress()
+        {
+            return ++this.blockJumpAddressIncremental;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="moduleName">
@@ -1396,7 +1407,7 @@ namespace Il2Native.Logic
 
             // get all required types
             var requiredTypes = new List<IType>();
-            Il2Converter.ProcessRequiredITypesForITypes(new [] { type }, new HashSet<IType>(), requiredTypes, null);
+            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null);
             foreach (var requiredType in requiredTypes)
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
@@ -1479,10 +1490,11 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Leave, Code.Leave_S))
             {
-                this.WriteCatchFinnally(writer, opCode);
+                this.WriteCatchFinnallyEnd(writer, opCode);
             }
 
             this.WriteTryBegins(writer, opCode);
+            this.WriteCatchBegins(writer, opCode);
 
             var block = opCode as OpCodeBlock;
             if (block != null)
@@ -1500,10 +1512,10 @@ namespace Il2Native.Logic
 
             if (!opCode.Any(Code.Leave, Code.Leave_S))
             {
-                this.WriteCatchFinnally(writer, opCode);
+                this.WriteCatchFinnallyEnd(writer, opCode);
             }
 
-            this.WriteCatchFinnallyCleanUp(opCode);
+            this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlers(writer, opCode);
         }
@@ -2425,11 +2437,11 @@ namespace Il2Native.Logic
                     if (this.tryScopes.Count > 0)
                     {
                         var tryClause = this.tryScopes.Peek();
-                        var isFinally = tryClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally);
-                        if (isFinally)
+                        var finallyClause = tryClause.Catches.First(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                        if (finallyClause != null)
                         {
-                            tryClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                            this.WriteFinallyLeave(tryClause);
+                            finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
+                            this.WriteFinallyLeave(finallyClause);
                         }
                         else
                         {
@@ -2592,14 +2604,14 @@ namespace Il2Native.Logic
 
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
-                    this.WriteThrow(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                    this.WriteThrow(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
 
                     break;
 
                 case Code.Rethrow:
 
                     this.WriteRethrow(
-                        opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                        opCode, this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
 
                     break;
 
@@ -2820,8 +2832,8 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            if (!destinationType.IsPointer 
-                && destinationType.IntTypeBitSize() >= (LlvmWriter.PointerSize * 8) 
+            if (!destinationType.IsPointer
+                && destinationType.IntTypeBitSize() >= (LlvmWriter.PointerSize * 8)
                 && destinationType.IntTypeBitSize() != type.IntTypeBitSize()
                 && !opCode.OpCodeOperands[0].Result.Type.IsPointer
                 && !opCode.OpCodeOperands[0].Result.Type.IsByRef)
@@ -3587,36 +3599,34 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchFinnally(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCatchFinnallyEnd(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.CatchOrFinallyEnd != null && opCode.CatchOrFinallyEnd.Count > 0)
+            if (opCode.CatchOrFinallyEnd == null)
             {
-                var ehs = opCode.CatchOrFinallyEnd.ToArray();
-                Array.Sort(ehs);
-                foreach (var eh in ehs)
-                {
-                    writer.WriteLine(string.Empty);
-                    this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
-                }
+                return;
             }
+
+            var eh = opCode.CatchOrFinallyEnd;
+            opCode.CatchOrFinallyEnd = null;
+            writer.WriteLine(string.Empty);
+            this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchFinnallyCleanUp(OpCodePart opCode)
+        private void WriteCatchFinnallyCleanUpEnd(OpCodePart opCode)
         {
-            if (opCode.CatchOrFinallyEnd != null && opCode.CatchOrFinallyEnd.Count > 0)
+            if (opCode.CatchOrFinallyEnd == null)
             {
-                var ehs = opCode.CatchOrFinallyEnd.ToArray();
-                Array.Sort(ehs);
-                foreach (var eh in ehs)
-                {
-                    var ehPopped = this.catchScopes.Pop();
-                    Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
-                }
+                return;
             }
+
+            var eh = opCode.CatchOrFinallyEnd;
+            opCode.CatchOrFinallyEnd = null;
+            var ehPopped = this.catchScopes.Pop();
+            Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
         }
 
         /// <summary>
@@ -3643,29 +3653,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteExceptionHandlers(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.ExceptionHandlers != null)
+            if (opCode.ExceptionHandlers == null)
             {
-                writer.WriteLine(string.Empty);
-                this.WriteCatchProlog(opCode);
-
-                var exceptionHandlers = opCode.ExceptionHandlers.ToArray();
-                var nextExceptionHandlerIndex = 1;
-                foreach (var exceptionHandler in exceptionHandlers)
-                {
-                    if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
-                    {
-                        writer.WriteLine(string.Empty);
-                        this.WriteCatchTest(
-                            exceptionHandler, nextExceptionHandlerIndex < exceptionHandlers.Length ? exceptionHandlers[nextExceptionHandlerIndex] : null);
-                    }
-
-                    writer.WriteLine(string.Empty);
-
-                    this.WriteCatchBegin(exceptionHandler);
-
-                    nextExceptionHandlerIndex++;
-                }
+                return;
             }
+
+            writer.WriteLine(string.Empty);
+            this.WriteCatchProlog(opCode);
         }
 
         /// <summary>
@@ -4138,18 +4132,42 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTryBegins(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.TryBegin == null || opCode.HasResult)
+            if (opCode.TryBegin == null || opCode.TryBegin.Count <= 0)
             {
                 return;
             }
 
             var ehs = opCode.TryBegin.ToArray();
+            opCode.TryBegin.Clear();
             Array.Sort(ehs);
             foreach (var eh in ehs.Reverse())
             {
                 writer.WriteLine("; Try, start of scope");
                 this.tryScopes.Push(eh);
             }
+        }
+
+        private void WriteCatchBegins(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            if (opCode.CatchOrFinallyBegin == null)
+            {
+                return;
+            }
+
+            var exceptionHandler = opCode.CatchOrFinallyBegin;
+            opCode.CatchOrFinallyBegin = null;
+            this.catchScopes.Push(exceptionHandler);
+
+            if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
+            {
+                writer.WriteLine(string.Empty);
+                this.WriteCatchTest(
+                    exceptionHandler, exceptionHandler.Next);
+            }
+
+            writer.WriteLine(string.Empty);
+
+            this.WriteCatchBegin(exceptionHandler);
         }
 
         /// <summary>
@@ -4160,17 +4178,15 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTryEnds(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.TryEnd != null && opCode.TryEnd.Count > 0)
+            if (opCode.TryEnd == null)
             {
-                var ehs = opCode.TryEnd.ToArray();
-                Array.Sort(ehs);
-                foreach (var eh in ehs)
-                {
-                    var ehPopped = this.tryScopes.Pop();
-                    Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
-                    this.catchScopes.Push(ehPopped);
-                }
+                return;
             }
+
+            var eh = opCode.TryEnd;
+            opCode.TryEnd = null;
+            var ehPopped = this.tryScopes.Pop();
+            Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
         }
 
         /// <summary>

@@ -14,7 +14,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
-    public interface IExceptionHandlingClause : IComparable
+    public interface IExceptionHandlingClause
     {
         /// <summary>
         /// </summary>
@@ -39,15 +39,5 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         int TryOffset { get; }
-
-        /// <summary>
-        /// </summary>
-        bool RethrowCatchWithCleanUpRequired { get; set; }
-
-        /// <summary>
-        /// </summary>
-        IList<string> FinallyJumps { get; }
-
-        bool FinallyVariablesAreWritten { get; set; }
     }
 }

@@ -13,6 +13,8 @@ namespace Il2Native.Logic.CodeParts
     using System.Linq;
     using System.Reflection.Emit;
 
+    using Il2Native.Logic.Exceptions;
+
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -71,7 +73,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public HashSet<IExceptionHandlingClause> CatchOrFinallyEnd { get; set; }
+        public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public CatchOfFinallyClause CatchOrFinallyEnd { get; set; }
 
         /// <summary>
         /// </summary>
@@ -103,7 +109,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public IList<IExceptionHandlingClause> ExceptionHandlers { get; set; }
+        public IList<CatchOfFinallyClause> ExceptionHandlers { get; set; }
 
         /// <summary>
         /// </summary>
@@ -215,11 +221,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public HashSet<IExceptionHandlingClause> TryBegin { get; set; }
+        public List<TryClause> TryBegin { get; set; }
 
         /// <summary>
         /// </summary>
-        public HashSet<IExceptionHandlingClause> TryEnd { get; set; }
+        public TryClause TryEnd { get; set; }
 
         /// <summary>
         /// </summary>
