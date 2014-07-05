@@ -24,6 +24,8 @@ namespace PEAssemblyReader
     [DebuggerDisplay("Type = {FullName}")]
     public class MetadataTypeAdapter : IType
     {
+        private Lazy<string> lazyNamespace;
+
         /// <summary>
         /// </summary>
         private readonly bool isByRef;
@@ -44,6 +46,8 @@ namespace PEAssemblyReader
 
             this.typeDef = typeDef;
             this.isByRef = isByRef;
+
+            this.lazyNamespace = new Lazy<string>(calculateNamespace);
         }
 
         /// <summary>
@@ -117,20 +121,23 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.typeDef.IsNestedType())
+                var sb = new StringBuilder();
+
+                sb.Append(this.Namespace);
+                if (sb.Length > 0)
                 {
-                    var metadataTypeName = this.typeDef.ContainingType.ContainingNamespace != null
-                                               ? MetadataTypeName.FromNamespaceAndTypeName(
-                                                        this.typeDef.ContainingType.ContainingNamespace.ToString(),
-                                                        string.Concat(this.typeDef.ContainingType.Name, '+', this.typeDef.Name))
-                                               : MetadataTypeName.FromTypeName(this.typeDef.Name);
-                    return metadataTypeName.FullName;
+                    sb.Append('.');
                 }
 
-                var metadataTypeNameOfType = this.typeDef.ContainingNamespace != null
-                                           ? MetadataTypeName.FromNamespaceAndTypeName(this.typeDef.ContainingNamespace.ToString(), this.typeDef.Name)
-                                           : MetadataTypeName.FromTypeName(this.typeDef.Name);
-                return metadataTypeNameOfType.FullName;
+                if (this.typeDef.ContainingType != null)
+                {
+                    sb.Append(this.typeDef.ContainingType.Name);
+                    sb.Append('+');
+                }
+
+                sb.Append(this.typeDef.Name);
+
+                return sb.ToString();
             }
         }
 
@@ -387,8 +394,13 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.ContainingNamespace != null ? this.typeDef.ContainingNamespace.Name : string.Empty;
+                return this.lazyNamespace.Value;
             }
+        }
+
+        private string calculateNamespace()
+        {
+            return this.typeDef.CalculateNamespace();
         }
 
         /// <summary>

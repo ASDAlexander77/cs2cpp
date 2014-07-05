@@ -8,7 +8,10 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
     using System.Diagnostics;
+    using System.Text;
 
     /// <summary>
     /// </summary>
@@ -69,6 +72,35 @@ namespace PEAssemblyReader
         public static bool TypeNotEquals(this IType type, IType other)
         {
             return !type.TypeEquals(other);
+        }
+
+        internal static string CalculateNamespace(this Symbol symbol)
+        {
+            var namespaceSrc = symbol.ContainingNamespace;
+
+            if (symbol.ContainingType.IsNestedType())
+            {
+                namespaceSrc = symbol.ContainingType.ContainingNamespace;
+            }
+
+            if (namespaceSrc == null)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var namespacePart in namespaceSrc.ConstituentNamespaces)
+            {
+                if (namespacePart.IsGlobalNamespace)
+                {
+                    continue;
+                }
+
+                sb.Append(namespacePart.ToString());
+            }
+
+            return sb.ToString();
         }
     }
 }

@@ -26,6 +26,8 @@ namespace PEAssemblyReader
     /// </summary>
     public class MetadataMethodAdapter : IMethod
     {
+        private Lazy<string> lazyNamespace;
+
         /// <summary>
         /// </summary>
         private readonly MethodSymbol methodDef;
@@ -38,6 +40,7 @@ namespace PEAssemblyReader
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
+            this.lazyNamespace = new Lazy<string>(calculateNamespace);
         }
 
         /// <summary>
@@ -289,13 +292,13 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.methodDef.ContainingType.IsNestedType())
-                {
-                    return this.methodDef.ContainingType.ContainingNamespace.ToString();
-                }
-
-                return this.methodDef.ContainingNamespace.ToString();
+                return this.lazyNamespace.Value;
             }
+        }
+
+        private string calculateNamespace()
+        {
+            return this.methodDef.CalculateNamespace();
         }
 
         /// <summary>
