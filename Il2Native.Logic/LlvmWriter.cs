@@ -1784,7 +1784,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        writer.Write("bitcast ([{1} x i16]* @.s{0} to i16*)", opCodeString.StringIndex, opCodeString.Operand.Length + 1);
+                        writer.Write("bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)", opCodeString.StringIndex, opCodeString.Operand.Length + 1, '{', '}');
                     }
 
                     break;
@@ -4077,15 +4077,9 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteAnsiString(KeyValuePair<int, string> pair)
-        {
-            this.Output.WriteLine(
-                string.Format("@.s{0} = private unnamed_addr constant [{2} x i8] c\"{1}\\00\", align 1", pair.Key, pair.Value, pair.Value.Length + 1));
-        }
-
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
-            this.Output.Write("@.s{0} = private unnamed_addr constant [{2} x i16] [", pair.Key, pair.Value, pair.Value.Length + 1);
+            this.Output.Write("@.s{0} = private unnamed_addr constant {4} i32, [{2} x i16] {5} {4} i32 {3}, [{2} x i16] [", pair.Key, pair.Value, pair.Value.Length + 1, pair.Value.Length, '{', '}');
 
             var index = 0;
             foreach (var c in pair.Value.ToCharArray())
@@ -4104,7 +4098,7 @@ namespace Il2Native.Logic
                 this.Output.Write(", ");
             }
 
-            this.Output.WriteLine("i16 0], align 2", pair.Key, pair.Value, pair.Value.Length + 1);
+            this.Output.WriteLine("i16 0] {0}, align 2", '}');
         }
 
         /// <summary>

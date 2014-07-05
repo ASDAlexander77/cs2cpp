@@ -361,25 +361,43 @@ namespace System
         
         public static String Concat(String str0, String str1)
         {
-            throw new NotImplementedException();
+            var sb = new Text.StringBuilder();
+            sb.Append(str0);
+            sb.Append(str1);
+            return sb.ToString();
         }
 
         
         public static String Concat(String str0, String str1, String str2)
         {
-            throw new NotImplementedException();
+            var sb = new Text.StringBuilder();
+            sb.Append(str0);
+            sb.Append(str1);
+            sb.Append(str2);
+            return sb.ToString();
         }
 
         
         public static String Concat(String str0, String str1, String str2, String str3)
         {
-            throw new NotImplementedException();
+            var sb = new Text.StringBuilder();
+            sb.Append(str0);
+            sb.Append(str1);
+            sb.Append(str2);
+            sb.Append(str3);
+            return sb.ToString();
         }
 
         
         public static String Concat(params String[] values)
         {
-            throw new NotImplementedException();
+            var sb = new Text.StringBuilder();
+            foreach (var value in values)
+            {
+                sb.Append(value);
+            }
+
+            return sb.ToString();
         }
 
         public static String Intern(String str)

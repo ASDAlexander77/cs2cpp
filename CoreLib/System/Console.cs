@@ -30,7 +30,7 @@
         }
 
         public static void WriteLine()
-        {
+        { 
             wprintf(NewLine.ToCharArray());
         }
 

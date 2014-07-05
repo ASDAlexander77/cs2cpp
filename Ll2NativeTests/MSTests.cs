@@ -108,7 +108,7 @@
         public void TestRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 10, 12, 16, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
+            var skip = new int[] { 10, 12, 16, 19, 20, 21, 26, 27, 28, 30, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
 
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
@@ -120,7 +120,7 @@
         public void TestCompileAndRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 10, 12, 16, 19, 20, 21, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
+            var skip = new int[] { 10, 12, 16, 19, 20, 21, 26, 27, 28, 30, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
