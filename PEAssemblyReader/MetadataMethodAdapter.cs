@@ -271,6 +271,30 @@ namespace PEAssemblyReader
             }
         }
 
+        public string ExplicitName
+        {
+            get
+            {
+                var result = new StringBuilder();
+
+                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
+                {
+                    if (this.methodDef.ContainingType.IsNestedType())
+                    {
+                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
+                        result.Append('+');
+                    }
+
+                    result.Append(this.methodDef.ContainingType.Name);
+                    result.Append('.');
+                }
+
+                result.Append(this.methodDef.Name);
+
+                return result.ToString();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string Namespace
@@ -399,6 +423,38 @@ namespace PEAssemblyReader
 
             // write Full Name
             result.Append(this.FullName);
+
+            // write Parameter Types
+            result.Append('(');
+            var index = 0;
+            foreach (var parameterType in this.GetParameters())
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(parameterType);
+                index++;
+            }
+
+            result.Append(')');
+
+            return result.ToString();
+        }
+
+        public string ToString(IType ownerOfExplicitInterface)
+        {
+            var result = new StringBuilder();
+
+            // write return type
+            result.Append(this.ReturnType);
+            result.Append(' ');
+
+            // write Full Name
+            result.Append(ownerOfExplicitInterface.FullName);
+            result.Append('.');
+            result.Append(this.ExplicitName);
 
             // write Parameter Types
             result.Append('(');

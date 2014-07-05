@@ -36,6 +36,8 @@ namespace PEAssemblyReader
         /// </summary>
         bool IsInternalCall { get; }
 
+        string ExplicitName { get; }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -53,5 +55,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IParameter> GetParameters();
+
+        string ToString(IType ownerOfExplicitInterface);
     }
 }

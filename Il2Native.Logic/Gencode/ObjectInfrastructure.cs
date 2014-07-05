@@ -326,6 +326,15 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            public string ExplicitName
+            {
+                get
+                {
+                    return String.Concat(this.Type.Name, "..init");
+                }
+            }
+
+
             /// <summary>
             /// </summary>
             public bool IsAbstract { get; private set; }
@@ -391,6 +400,11 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// </summary>
             public IType Type { get; private set; }
+
+            public string ToString(IType ownerOfExplicitInterface)
+            {
+                throw new NotImplementedException();
+            }
 
             /// <summary>
             /// </summary>

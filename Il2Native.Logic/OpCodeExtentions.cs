@@ -197,7 +197,7 @@ namespace Il2Native.Logic
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }
 
-            if (interfaceMember.FullName == publicMethod.Name)
+            if (interfaceMember.ExplicitName == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
             }

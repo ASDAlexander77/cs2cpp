@@ -3281,8 +3281,6 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
-            var methodName = methodBase.ToString();
-
             if (methodBase.IsInternalCall)
             {
                 return string.Concat('@', methodBase.Name);
@@ -3293,30 +3291,11 @@ namespace Il2Native.Logic
 
             if (ownerOfExplicitInterface != null)
             {
-                var lookupTypeName = string.Concat(' ', methodBase.DeclaringType.Name, '.', methodBase.Name, '(');
-                var index = methodName.IndexOf(lookupTypeName);
-                if (index >= 0)
-                {
-                    sb.Append(methodName.Insert(index + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
-                }
-                else
-                {
-                    lookupTypeName = string.Concat(' ', methodBase.DeclaringType.FullName, '.', methodBase.Name, '(');
-                    index = methodName.IndexOf(lookupTypeName);
-                    if (index >= 0)
-                    {
-                        sb.Append(methodName.Insert(index + 1, string.Concat(ownerOfExplicitInterface.FullName, '.')));
-                    }
-                    else
-                    {
-                        Debug.Assert(false, "Could not find interface name");
-                        sb.Append(methodName);
-                    }
-                }
+                sb.Append(methodBase.ToString(ownerOfExplicitInterface));
             }
             else
             {
-                sb.Append(methodName);
+                sb.Append(methodBase.ToString());
             }
 
             sb.Append('"');
