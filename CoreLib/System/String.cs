@@ -123,10 +123,12 @@ namespace System
                     return 0;
                 }
 
-                var size = 0;
-                while (chars[size++] != '\0');
+                ////var size = 0;
+                ////while (chars[size++] != '\0');
 
-                return size + 1;
+                ////return size + 1;
+
+                return chars.Length;
             }
         }
 

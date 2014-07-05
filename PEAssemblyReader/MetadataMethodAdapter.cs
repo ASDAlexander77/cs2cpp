@@ -130,19 +130,7 @@ namespace PEAssemblyReader
                     result.Append('.');
                 }
 
-                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
-                {
-                    if (this.methodDef.ContainingType.IsNestedType())
-                    {
-                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
-                        result.Append('+');
-                    }
-
-                    result.Append(this.methodDef.ContainingType.Name);
-                    result.Append('.');
-                }
-
-                result.Append(this.methodDef.Name);
+                result.Append(this.ExplicitName);
 
                 return result.ToString();
             }
@@ -454,7 +442,7 @@ namespace PEAssemblyReader
             // write Full Name
             result.Append(ownerOfExplicitInterface.FullName);
             result.Append('.');
-            result.Append(this.ExplicitName);
+            result.Append(this.FullName);
 
             // write Parameter Types
             result.Append('(');
