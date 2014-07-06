@@ -46,8 +46,8 @@ namespace System.Globalization
                 throw new ArgumentNullException("name");
             }
 
-            m_rm = new ResourceManager(c_ResourceBase, typeof(CultureInfo).Assembly, name, true);
-            m_name = m_rm.m_cultureName;
+            //m_rm = new ResourceManager(c_ResourceBase, typeof(CultureInfo).Assembly, name, true);
+            //m_name = m_rm.m_cultureName;
         }
 
         internal CultureInfo(ResourceManager resourceManager)
@@ -74,17 +74,9 @@ namespace System.Globalization
 
         private static CultureInfo CurrentUICultureInternal
         {
-            
-            get
-            {
-                throw new NotImplementedException();
-            }
+            get;
 
-            
-            set
-            {
-                throw new NotImplementedException();
-            }
+            set;
         }
 
         public virtual CultureInfo Parent

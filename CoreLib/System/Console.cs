@@ -9,6 +9,7 @@
         private static string NewLine = "\r\n";
         private static string PrintDouble = "%f";
         private static string PrintInt = "%i";
+        private static string PrintChar = "%c";
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern int wprintf(char[] chars);
@@ -41,12 +42,14 @@
 
         public static void WriteLine(char value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintChar.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(char[] buffer)
         {
-            throw new NotImplementedException();
+            wprintf(buffer);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(char[] buffer, int index, int count)
@@ -93,12 +96,12 @@
             throw new NotImplementedException();
         }
 
-        public static void WriteLine(Object value)
+        public static void WriteLine(object value)
         {
             throw new NotImplementedException();
         }
 
-        public static void WriteLine(String value)
+        public static void WriteLine(string value)
         {
             wprintf(value.ToCharArray());
             wprintf(NewLine.ToCharArray());
@@ -151,12 +154,12 @@
 
         public static void Write(char value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintChar.ToCharArray(), value);
         }
 
         public static void Write(char[] buffer)
         {
-            throw new NotImplementedException();
+            wprintf(buffer);
         }
 
         public static void Write(char[] buffer, int index, int count)

@@ -214,7 +214,8 @@ namespace System.Text
             this.m_ChunkLength = length;
             //Copy the value to the chunkChars
             {
-                value.ToCharArray().CopyTo(this.m_ChunkChars, 0);
+                var tmp = value.ToCharArray();//.CopyTo(this.m_ChunkChars, 0);
+                wstrcpy(this.m_ChunkChars, 0, tmp, tmp.Length);
             }
         }
 
@@ -436,7 +437,9 @@ namespace System.Text
                     else
                     {
                         char[] tmp = value.ToCharArray();
-                        System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);
+                        //System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);
+                        wstrcpy(chunkChars, chunkLength, tmp, length);
+
                     }
                     this.m_ChunkLength = num3;
                 }
@@ -445,6 +448,7 @@ namespace System.Text
                     this.AppendHelper(ref value);
                 }
             }
+
             return this;
         }
 
@@ -664,28 +668,27 @@ namespace System.Text
             return new string(result);
         }
 
-        private static unsafe void wstrcpy(char[] d, int doffset, char[] s, int charCount)
+        public static void wstrcpy(char[] d, int doffset, char[] s, int charCount)
         {
             if (charCount > 0)
             {
-                fixed (char* dmem_fixed = d)
-                fixed (char* smem_fixed = s)
+                var dindex = doffset;
+                for (var index = 0; index < charCount; index++)
                 {
-                    char* dmem = dmem_fixed;
-                    char* smem = smem_fixed;
+                    d[dindex++] = s[index];
+                }
+            }
+        }
 
-                    dmem += doffset;
-
-                    // This is rare case where at least one of the pointers is only byte aligned.
-                    do
-                    {
-                        ((byte*)dmem)[0] = ((byte*)smem)[0];
-                        ((byte*)dmem)[1] = ((byte*)smem)[1];
-                        charCount -= 1;
-                        dmem += 1;
-                        smem += 1;
-                    }
-                    while (charCount > 0);
+        public static void wstrcpy(char[] d, int doffset, char[] s, int soffset, int charCount)
+        {
+            if (charCount > 0)
+            {
+                var dindex = doffset;
+                var sindex = soffset;
+                for (var index = 0; index < charCount; index++)
+                {
+                    d[dindex++] = s[sindex++];
                 }
             }
         }
@@ -1423,7 +1426,8 @@ namespace System.Text
                         if (destinationIndex != sourceIndex)
                         {
                             //ThreadSafeCopy(builder.m_ChunkChars, ref sourceIndex, builder.m_ChunkChars, ref destinationIndex, num4);
-                            System.Array.Copy(builder.m_ChunkChars, sourceIndex, builder.m_ChunkChars, destinationIndex, num4);
+                            //System.Array.Copy(builder.m_ChunkChars, sourceIndex, builder.m_ChunkChars, destinationIndex, num4);
+                            wstrcpy(builder.m_ChunkChars, destinationIndex, builder.m_ChunkChars, sourceIndex, num4);
                         }
                         return;
                     }
@@ -1439,7 +1443,8 @@ namespace System.Text
             if (num <= this.m_ChunkChars.Length)
             {
                 //ThreadSafeCopy(value, this.m_ChunkChars, this.m_ChunkLength, valueCount);
-                System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, valueCount);
+                //System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, valueCount);
+                wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, valueCount);
                 this.m_ChunkLength = num;
             }
             else
@@ -1448,15 +1453,18 @@ namespace System.Text
                 if (count > 0)
                 {
                     //ThreadSafeCopy(value, this.m_ChunkChars, this.m_ChunkLength, count);
-                    System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, count);
+                    //System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, count);
+                    wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, valueCount);
                     this.m_ChunkLength = this.m_ChunkChars.Length;
                 }
                 int minBlockCharCount = valueCount - count;
                 this.ExpandByABlock(minBlockCharCount);
                 //ThreadSafeCopy(value + count, this.m_ChunkChars, 0, minBlockCharCount);
-                System.Array.Copy(value, count, this.m_ChunkChars, 0, minBlockCharCount);
+                //System.Array.Copy(value, count, this.m_ChunkChars, 0, minBlockCharCount);
+                wstrcpy(this.m_ChunkChars, 0, value, count, minBlockCharCount);
                 this.m_ChunkLength = minBlockCharCount;
             }
+
             return;
         }
 

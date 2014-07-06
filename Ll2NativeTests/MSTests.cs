@@ -71,7 +71,27 @@
         [TestMethod]
         public void Test()
         {
-            Test(1);
+            //Test(1);
+
+            var newChars = new char[32];
+
+            var @base = 10;
+            var i = 30;
+            var value = 0;
+
+            if (value > 0)
+            {
+                for (; value > 0 && i > 0; --i, value /= @base)
+                {
+                    newChars[i] = "0123456789abcdef"[value % @base];
+                }
+            }
+            else
+            {
+                newChars[i--] = "0123456789abcdef"[0];
+            }
+
+            var s = new String(newChars, i + 1, 30 - i + 1);
         }
 
         [TestMethod]

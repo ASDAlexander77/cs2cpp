@@ -279,7 +279,9 @@ namespace System
     //This class contains only static members and does not need to be serializable
     internal static class Number
     {
-        public static String Format(Object value, bool isInteger, String format, NumberFormatInfo info)
+        private static string NumberChars = "0123456789abcdef";
+
+        public static String Format(int value, bool isInteger, String format, NumberFormatInfo info)
         {
             char formatCh;
             int precision;
@@ -297,10 +299,31 @@ namespace System
             }
         }
 
-        
-        private static String FormatNative(Object value, char format, int precision)
+        public static String Format(object value, bool isInteger, String format, NumberFormatInfo info)
         {
             throw new NotImplementedException();
+        }
+        
+        private static String FormatNative(int value, char format, int precision)
+        {
+            var newChars = new char[32];
+
+            var @base = 10;
+            var i = 30;
+
+            if (value > 0)
+            {
+                for (; value > 0 && i > 0; --i, value /= @base)
+                {
+                    newChars[i] = NumberChars[value % @base];
+                }
+            }
+            else
+            {
+                newChars[i--] = NumberChars[0];
+            }
+
+            return new String(newChars, i + 1, 30 - i + 1);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)

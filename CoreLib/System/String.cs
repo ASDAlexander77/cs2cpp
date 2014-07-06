@@ -7,6 +7,7 @@ namespace System
     using System.Threading;
     using System.Collections;
     using System.Runtime.CompilerServices;
+    using System.Text;
     /**
      * <p>The <code>String</code> class represents a static string of characters.  Many of
      * the <code>String</code> methods perform some type of transformation on the current
@@ -43,8 +44,8 @@ namespace System
        
         public static bool Equals(String a, String b)
         {
-            var charsA = a.ToCharArray();
-            var charsB = b.ToCharArray();
+            var charsA = a.chars;
+            var charsB = b.chars;
 
             if (charsA == null && charsB == null)
             {
@@ -56,29 +57,24 @@ namespace System
                 return false;
             }
 
-            var index = 0;
-            while (true)
+            if (charsA.Length != charsB.Length)
+            {
+                return false;
+            }
+
+            var len = charsA.Length;
+            for (var index = 0; index < len; index++)
             {
                 var cA = charsA[index];
                 var cB = charsB[index];
 
-                if (cA == cB)
-                {
-                    index++;
-                }
-
-                var cmpA = cA == '\0';
-                var cmpB = cB == '\0';
-                if (cmpA && cmpB)
-                {
-                    return true;
-                }
-
-                if (cmpA || cmpB)
+                if (cA != cB)
                 {
                     return false;
                 }
             }
+
+            return true;
         }
         
         public static bool operator ==(String a, String b)
@@ -95,19 +91,16 @@ namespace System
         [System.Runtime.CompilerServices.IndexerName("Chars")]
         public char this[int index]
         {
-            
             get
             {
-                throw new NotImplementedException();
+                return this.chars[index];
             }
         }
-
         
         public char[] ToCharArray()
         {
             return this.chars;
         }
-
         
         public char[] ToCharArray(int startIndex, int length)
         {
@@ -122,11 +115,6 @@ namespace System
                 {
                     return 0;
                 }
-
-                ////var size = 0;
-                ////while (chars[size++] != '\0');
-
-                ////return size + 1;
 
                 return chars.Length;
             }
@@ -170,11 +158,11 @@ namespace System
         {
             throw new NotImplementedException();
         }
-
         
         public String(char[] value, int startIndex, int length)
         {
-            throw new NotImplementedException();
+            this.chars = new char[length];
+            StringBuilder.wstrcpy(this.chars, 0, value, startIndex, length);
         }
 
         public String(char[] value)
@@ -184,9 +172,13 @@ namespace System
         
         public String(char c, int count)
         {
-            throw new NotImplementedException();
+            this.chars = new char[count];
+            for (var index = 0; index < count; index++)
+            {
+                chars[index] = c;
+            }
         }
-        
+
         public static int Compare(String strA, String strB)
         {
             throw new NotImplementedException();
