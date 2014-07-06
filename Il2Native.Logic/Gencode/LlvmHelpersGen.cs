@@ -273,9 +273,12 @@ namespace Il2Native.Logic.Gencode
                 if (isPrimitive)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
-                    llvmWriter.WriteConvertValueTypeToReferenceType(writer, opCodeFirstOperand, thisType);
-                }
+                    ////llvmWriter.WriteConvertValueTypeToReferenceType(opCodeFirstOperand, thisType);
+                    thisType.WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
+                    opCodeFirstOperand.Result = opCodeMethodInfo.Result;
 
+                    writer.WriteLine(string.Empty);
+                }
             }
 
             // check if you need to cast parameter

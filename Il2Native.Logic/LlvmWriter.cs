@@ -524,7 +524,8 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
+            if ((opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult))
+                && op != "store")
             {
                 var resultOf = this.ResultOf(opCode);
                 this.WriteSetResultNumber(opCode, resultType ?? (resultOf != null ? resultOf.IType : requiredType));
@@ -632,6 +633,19 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(string.Empty);
                 this.ThisType.WriteInitObjectMethod(this);
+
+                var stored = this.ThisType.UseAsClass;
+                this.ThisType.UseAsClass = false;
+
+                if ((this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType()) 
+                    && this.ThisType.FullName != "System.Enum" 
+                    && this.ThisType.FullName != "System.IntPtr" 
+                    && this.ThisType.FullName != "System.UIntPtr")
+                {
+                    this.ThisType.WriteBoxMethod(this);
+                }
+
+                this.ThisType.UseAsClass = stored;
             }
         }
 
@@ -1089,9 +1103,13 @@ namespace Il2Native.Logic
         {
             writer.Write("(");
 
+            var hasParameterWritten = false;
+
             if (returnType.IsStructureType())
             {
                 returnType.WriteTypePrefix(writer, returnType.IsStructureType());
+                hasParameterWritten = true;
+
                 if (!noArgumentName)
                 {
                     writer.Write(" noalias sret %agg.result");
@@ -1110,6 +1128,8 @@ namespace Il2Native.Logic
                 thisType.UseAsClass = true;
 
                 thisType.WriteTypePrefix(writer, true);
+                hasParameterWritten = true;
+
                 if (!noArgumentName)
                 {
                     writer.Write(" %this");
@@ -1121,12 +1141,14 @@ namespace Il2Native.Logic
             {
                 this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
-                if (hasThis || index > start || returnType.IsStructureType())
+                if (hasParameterWritten)
                 {
                     writer.Write(", ");
                 }
 
                 parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
+                hasParameterWritten = true;
+
                 if (parameter.ParameterType.IsStructureType())
                 {
                     if (!noArgumentName)
@@ -1852,42 +1874,14 @@ namespace Il2Native.Logic
                     break;
                 case Code.Stfld:
 
-                    opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-
-                    var directResult1 = this.PreProcessOperand(writer, opCode, 1);
-                    this.WriteFieldAccess(writer, opCodeFieldInfoPart);
-                    writer.WriteLine(string.Empty);
-
-                    operandType = opCodeFieldInfoPart.Operand.FieldType;
-
-                    if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
-                    {
-                        opCode.DestinationName = opCode.Result.ToString();
-                        if (IsDirectValue(opCode.OpCodeOperands[1]))
-                        {
-                            this.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(GetDirectName(opCode.OpCodeOperands[1]), opCodeFieldInfoPart.Operand.FieldType));
-                        }
-                        else
-                        {
-                            this.WriteLlvmLoad(opCode, operandType, opCode.OpCodeOperands[1].Result);
-                        }
-                    }
-                    else
-                    {
-                        this.ProcessOperator(writer, opCode, "store", opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
-                        this.PostProcessOperand(writer, opCode, 1, directResult1);
-                        writer.Write(", ");
-                        opCode.Result.Type.WriteTypePrefix(writer);
-                        writer.Write("* ");
-                        WriteResultNumber(opCode.Result);
-                    }
+                    this.WriteGetFieldAccessAndSaveToField(opCode as OpCodeFieldInfoPart);
 
                     break;
                 case Code.Stsfld:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                    var directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
                     destinationName = string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
@@ -2108,14 +2102,12 @@ namespace Il2Native.Logic
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     break;
                 case Code.Box:
-                    writer.WriteLine("; Boxing");
 
-                    opCodeTypePart = opCode as OpCodeTypePart;
-                    var declaringType = opCodeTypePart.Operand;
-
-                    this.WriteConvertValueTypeToReferenceType(writer, opCodeTypePart, declaringType);
+                    var type = (opCode as OpCodeTypePart).Operand;
+                    type.WriteCallBoxObjectMethod(this, opCode);
 
                     break;
+
                 case Code.Unbox:
                 case Code.Unbox_Any:
                     writer.WriteLine("; Unboxing");
@@ -2571,7 +2563,7 @@ namespace Il2Native.Logic
                 case Code.Newobj:
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
+                    var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
                     this.CheckIfExternalDeclarationIsRequired(declaringType);
 
@@ -2664,6 +2656,55 @@ namespace Il2Native.Logic
                     }
 
                     break;
+            }
+        }
+
+        private void WriteGetFieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
+        {
+            var writer = this.Output;
+
+            var directResult1 = this.PreProcessOperand(writer, opCodeFieldInfoPart, 1);
+            this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+            writer.WriteLine(string.Empty);
+
+            var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+
+            WriteSaveToField(opCodeFieldInfoPart, fieldType);
+        }
+
+        public void WriteSaveToField(OpCodePart opCodePart, IType fieldType, int valueOperand = 1)
+        {
+            var writer = this.Output;
+
+            if (opCodePart.OpCodeOperands == null)
+            {
+                return;
+            }
+
+            bool directResult1 = IsDirectValue(opCodePart.OpCodeOperands[valueOperand]);
+
+            if (fieldType.IsStructureType())
+            {
+                opCodePart.DestinationName = opCodePart.Result.ToString();
+                if (directResult1)
+                {
+                    this.WriteLlvmLoad(opCodePart, fieldType, new FullyDefinedReference(GetDirectName(opCodePart.OpCodeOperands[valueOperand]), fieldType));
+                }
+                else
+                {
+                    this.WriteLlvmLoad(opCodePart, fieldType, opCodePart.OpCodeOperands[valueOperand].Result);
+                }
+            }
+            else
+            {
+                var opts = valueOperand == 1 ? OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes : OperandOptions.AdjustIntTypes;
+
+                this.ProcessOperator(writer, opCodePart, "store", fieldType, options: opts);
+                this.PostProcessOperand(writer, opCodePart, valueOperand, directResult1);
+                writer.Write(", ");
+                opCodePart.Result.Type.WriteTypePrefix(writer);
+                writer.Write("* ");
+                WriteResultNumber(opCodePart.Result);
             }
         }
 
@@ -2976,13 +3017,39 @@ namespace Il2Native.Logic
             }
         }
 
-        public void WriteConvertValueTypeToReferenceType(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType declaringType)
+        public void WriteConvertValueTypeToReferenceType(OpCodePart opCode, IType declaringType)
         {
+            var writer = this.Output;
+
             writer.WriteLine(string.Empty);
             this.CheckIfExternalDeclarationIsRequired(declaringType);
-            this.WriteNewWithoutCallingConstructor(opCodePart, declaringType);
+            this.WriteNewWithoutCallingConstructor(opCode, declaringType);
+
+            var newObjectResult = opCode.Result;
+
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; Copy data");
-            ////this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+
+            // write access to a field
+            var directResult1 = this.PreProcessOperand(writer, opCode, 0);
+
+            if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
+            {
+                this.WriteFieldAccess(writer, opCode, declaringType, 1, opCode.Result.ToFullyDefinedReference());
+                writer.WriteLine(string.Empty);
+            }
+
+            var fieldType = declaringType;
+
+            fieldType.UseAsClass = false;
+
+            WriteSaveToField(opCode, fieldType, 0);
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; End of Copy data");
+
+            opCode.Result = newObjectResult;
+            opCode.Result.Type.UseAsClass = true;
         }
 
         // returns true if destination type should be changed
@@ -3163,9 +3230,9 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (res1 != null 
-                && res1.IType.TypeNotEquals(effectiveType) 
-                && (res1.IType.IsClass || res1.IType.IsArray || res1.IType.IsInterface || res1.IType.IsDelegate) 
+            if (res1 != null
+                && res1.IType.TypeNotEquals(effectiveType)
+                && (res1.IType.IsClass || res1.IType.IsArray || res1.IType.IsInterface || res1.IType.IsDelegate)
                 && effectiveType.IsAssignableFrom(res1.IType))
             {
                 castFrom = res1.IType;
@@ -3651,8 +3718,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCodeFieldInfoPart">
         /// </param>
-        private void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
+        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
+            writer.WriteLine("; Access to '{0}' field - ", opCodeFieldInfoPart.Operand.Name);
+
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
 
@@ -3669,17 +3738,37 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="OpCodePart">
         /// </param>
-        private void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index)
+        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index)
         {
+            writer.WriteLine("; Access to '#{0}' field ", index);
             var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
+
+            var classType = operand.IType;
+
             var opts = OperandOptions.GenerateResult;
+            var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
+            classType.UseAsClass = true;
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, field.FieldType, options: opts);
+            this.WriteFieldIndex(writer, classType, index);
+        }
 
-            var field = IlReader.Fields(operand.IType).Where(t => !t.IsStatic).Skip(index - 1).First();
+        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, int index, FullyDefinedReference valueReference)
+        {
+            var opts = OperandOptions.GenerateResult;
+            var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
 
-            operand.IType.UseAsClass = true;
+            classType.UseAsClass = true;
+            var stored = opCodePart.Result;
 
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", operand.IType, field.FieldType, options: opts);
-            this.WriteFieldIndex(writer, operand.IType, index);
+            WriteSetResultNumber(opCodePart, field.FieldType);
+
+            writer.Write("getelementptr inbounds ");
+            valueReference.Type.UseAsClass = true;
+            valueReference.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            writer.Write(valueReference.Name);
+
+            this.WriteFieldIndex(writer, classType, index);
         }
 
         /// <summary>
@@ -3690,7 +3779,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="fieldInfo">
         /// </param>
-        private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
+        public void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
         {
             var targetType = fieldInfo.DeclaringType;
             var type = classType;
