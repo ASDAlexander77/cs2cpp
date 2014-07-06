@@ -2896,7 +2896,7 @@ namespace Il2Native.Logic
             this.PostProcessOperand(writer, opCode, 0, directResult1);
         }
 
-        private void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.Result != null)
             {
@@ -2943,7 +2943,14 @@ namespace Il2Native.Logic
                     break;
             }
 
+            this.LoadIndirect(writer, opCode, type);
+        }
+
+        public void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type)
+        {
+            bool directResult1;
             LlvmResult accessIndexResultNumber2;
+            directResult1 = false;
 
             // next code fixing issue with using Code.Ldind to load first value in value types
             var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
@@ -2976,7 +2983,15 @@ namespace Il2Native.Logic
             }
 
             opCode.Result = null;
-            this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2);
+
+            if (directResult1)
+            {
+                this.WriteLlvmLoad(opCode, type, new FullyDefinedReference(GetDirectName(opCode.OpCodeOperands[0]), type));
+            }
+            else
+            {
+                this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2);
+            }
 
             if (!isUsedAsClass && resultOfOperand0 != null)
             {

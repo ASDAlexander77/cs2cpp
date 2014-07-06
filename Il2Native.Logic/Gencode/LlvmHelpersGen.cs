@@ -18,6 +18,8 @@ namespace Il2Native.Logic.Gencode
 
     using PEAssemblyReader;
 
+    using OpCodesEmit = System.Reflection.Emit.OpCodes;
+
     /// <summary>
     /// </summary>
     public static class LlvmHelpersGen
@@ -274,6 +276,18 @@ namespace Il2Native.Logic.Gencode
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
                     ////llvmWriter.WriteConvertValueTypeToReferenceType(opCodeFirstOperand, thisType);
+
+                    // call Ldind to load value
+                    var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
+                    toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                    var resultOf = llvmWriter.ResultOf(toLoadValue.OpCodeOperands[0]);
+                    llvmWriter.LoadIndirect(writer, toLoadValue, resultOf.IType);
+
+                    toLoadValue.Result.Type.UseAsClass = false;
+                    opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
+                    opCodeFirstOperand = toLoadValue;
+
+                    // convert value to object
                     thisType.WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
                     opCodeFirstOperand.Result = opCodeMethodInfo.Result;
 
