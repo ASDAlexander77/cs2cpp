@@ -637,7 +637,7 @@ namespace Il2Native.Logic
                 var stored = this.ThisType.UseAsClass;
                 this.ThisType.UseAsClass = false;
 
-                if ((this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType()) 
+                if ((this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum) 
                     && this.ThisType.FullName != "System.Enum" 
                     && this.ThisType.FullName != "System.IntPtr" 
                     && this.ThisType.FullName != "System.UIntPtr")
