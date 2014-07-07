@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
 
             var resAdd = opCode.Result;
 
-            var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("call i8* @malloc(i32 {0})", resAdd);
             writer.WriteLine(string.Empty);
 
@@ -110,7 +110,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
             }
 
-            opCode.Result = new LlvmResult(opCode.Result.Number, declaringType.CreateArray(1));
+            opCode.Result = new LlvmResult(opCode.Result.Number, declaringType.ToArrayType(1));
 
             writer.WriteLine("; end of new array");
         }

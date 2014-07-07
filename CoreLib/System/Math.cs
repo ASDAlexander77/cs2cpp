@@ -8,6 +8,18 @@ namespace System
     using System.Runtime.CompilerServices;
     public static class Math
     {
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double @llvm_log10_f64(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double @llvm_log_f64(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double @llvm_pow_f64(double value, double power);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double @llvm_floor_f64(double value);
+
         // Public Constants
 
         // Summary:
@@ -233,7 +245,10 @@ namespace System
         //     System.Double.NegativeInfinity, or System.Double.PositiveInfinity, that value
         //     is returned.
         
-        public static extern double Floor(double d);
+        public static double Floor(double d)
+        {
+            return llvm_floor_f64(d);
+        }
         
         //
         // Summary:
@@ -249,7 +264,10 @@ namespace System
         //     d is equal to System.Double.NaN, returns System.Double.NaN. If d is equal
         //     to System.Double.PositiveInfinity, returns System.Double.PositiveInfinity.
         
-        public static extern double Log(double d);
+        public static double Log(double d)
+        {
+            return @llvm_log_f64(d);
+        }
         //
         // Summary:
         //     Returns the base 10 logarithm of a specified number.
@@ -264,7 +282,10 @@ namespace System
         //     returns System.Double.NaN. If d is equal to System.Double.PositiveInfinity,
         //     this method returns System.Double.PositiveInfinity.
         
-        public static extern double Log10(double d);
+        public static double Log10(double d)
+        {
+            return @llvm_log10_f64(d);
+        }
         //
         // Summary:
         //     Returns the larger of two double-precision floating-point numbers.
@@ -317,7 +338,7 @@ namespace System
         
         public static double Pow(double x, double y)
         {
-            throw new NotImplementedException();
+            return @llvm_pow_f64(x, y);
         }
 
         //

@@ -389,7 +389,7 @@ namespace Il2Native.Logic
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Newarr:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand.CreateArray(1));
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand.ToArrayType(1));
                 case Code.Ret:
                 case Code.Neg:
                 case Code.Not:

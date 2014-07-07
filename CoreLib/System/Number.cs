@@ -288,22 +288,24 @@ namespace System
             ValidateFormat(format, out formatCh, out precision);
 
             String result = FormatNative(value, formatCh, precision);
+            return PostProcessInteger(value, result, formatCh, precision, info);
+        }
 
-            if (isInteger)
-            {
-                return PostProcessInteger(value, result, formatCh, precision, info);
-            }
-            else
-            {
-                return PostProcessFloat(result, formatCh, info);
-            }
+        public static String Format(double value, bool isInteger, String format, NumberFormatInfo info)
+        {
+            char formatCh;
+            int precision;
+            ValidateFormat(format, out formatCh, out precision);
+
+            String result = FormatNative(value, formatCh, precision);
+            return PostProcessFloat(result, formatCh, info);
         }
 
         public static String Format(object value, bool isInteger, String format, NumberFormatInfo info)
         {
             throw new NotImplementedException();
         }
-        
+
         private static String FormatNative(int value, char format, int precision)
         {
             var newChars = new char[32];
@@ -323,7 +325,29 @@ namespace System
                 newChars[i--] = NumberChars[0];
             }
 
-            return new String(newChars, i + 1, 30 - i + 1);
+            return new String(newChars, i + 1, 30 - i);
+        }
+
+        private static String FormatNative(double value, char format, int precision)
+        {
+            var newChars = new char[80];
+
+            int m = (int) Math.Log10(value);
+            int digit;
+            int index = 0;
+
+            while (value > 0 + precision || m >= 0)
+            {
+                float weight = (float)Math.Pow(10.0f, m);
+                digit = (int)Math.Floor(value / weight);
+                value -= (digit * weight);
+                newChars[index++] = NumberChars[digit];
+                if (m == 0)
+                    newChars[index++] = '.';
+                m--;
+            }
+
+            return new String(newChars, 0, index);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)
@@ -471,16 +495,16 @@ namespace System
 
         private static String ReplaceDecimalSeperator(String original, NumberFormatInfo info)
         {
-            int pos = original.IndexOf('.');
+            //int pos = original.IndexOf('.');
 
-            if (pos != -1)
-            {
-                return original.Substring(0, pos) + info.NumberDecimalSeparator + original.Substring(pos + 1);
-            }
-            else
-            {
+            //if (pos != -1)
+            //{
+            //    return original.Substring(0, pos) + info.NumberDecimalSeparator + original.Substring(pos + 1);
+            //}
+            //else
+            //{
                 return original;
-            }
+            //}
         }
 
         private static String InsertGroupSeperators(String original, NumberFormatInfo info)

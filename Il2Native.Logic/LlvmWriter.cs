@@ -1181,7 +1181,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
         {
-            var fullMethodName = this.GetFullMethodName(methodBase);
             var methodInfo = methodBase;
             methodInfo.ReturnType.WriteTypePrefix(writer);
 
@@ -1280,7 +1279,7 @@ namespace Il2Native.Logic
             this.WriteMethodReturnType(this.Output, method);
 
             this.WriteMethodDefinitionName(this.Output, method);
-            if (method.IsInternalCall)
+            if (method.IsExternalLibraryMethod())
             {
                 this.Output.Write("(...)");
             }
@@ -2469,11 +2468,11 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Conv_R4:
+                case Code.Conv_R_Un:
                     this.LlvmConvert(opCode, "fptrunc", "sitofp", "float", false, this.ResolveType("System.Single"));
                     break;
 
                 case Code.Conv_R8:
-                case Code.Conv_R_Un:
                     this.LlvmConvert(opCode, "fpext", "sitofp", "double", false, this.ResolveType("System.Double"));
                     break;
 
@@ -2870,7 +2869,7 @@ namespace Il2Native.Logic
                 // adjust destination type, cast pointer to pointer of type
                 this.WriteBitcast(opCode, opCode.OpCodeOperands[0].Result, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
-                destinationType = type.CreatePointer();
+                destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
             }
 
@@ -2883,7 +2882,7 @@ namespace Il2Native.Logic
                 // adjust destination type, cast pointer to pointer of type
                 this.WriteIntToPtr(opCode, opCode.OpCodeOperands[0].Result.ToFullyDefinedReference(), type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
-                destinationType = type.CreatePointer();
+                destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
             }
 
@@ -3005,7 +3004,7 @@ namespace Il2Native.Logic
             this.WriteCast(opCodeTypePart, fromType, this.ResolveType("System.Byte"));
             var firstCastToBytesResult = opCodeTypePart.Result;
 
-            var dynamicCastResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Byte").CreatePointer());
+            var dynamicCastResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Byte").ToPointerType());
 
             writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", firstCastToBytesResult);
             fromType.Type.WriteRttiClassInfoDeclaration(writer);
@@ -3365,7 +3364,7 @@ namespace Il2Native.Logic
         {
             if (methodBase.IsInternalCall)
             {
-                return string.Concat('@', methodBase.Name);
+                return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
             }
 
             var sb = new StringBuilder();
@@ -3417,7 +3416,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                type = this.ResolveType("System.Byte").CreatePointer();
+                type = this.ResolveType("System.Byte").ToPointerType();
             }
 
             if (type.IsArray || type.IsByRef)
@@ -3769,11 +3768,9 @@ namespace Il2Native.Logic
 
         public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, int index, FullyDefinedReference valueReference)
         {
-            var opts = OperandOptions.GenerateResult;
             var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
 
             classType.UseAsClass = true;
-            var stored = opCodePart.Result;
 
             WriteSetResultNumber(opCodePart, field.FieldType);
 
@@ -3887,13 +3884,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod method)
         {
-            this.WriteSetResultNumber(opCode, this.ResolveType("System.Int32").CreatePointer());
+            this.WriteSetResultNumber(opCode, this.ResolveType("System.Int32").ToPointerType());
             writer.Write("bitcast ");
             this.WriteMethodPointerType(writer, method);
             writer.Write("* ");
             WriteResultNumber(opCode.OpCodeOperands[0].Result);
             writer.Write(" to ");
-            this.ResolveType("System.Int32").CreatePointer().WriteTypePrefix(writer);
+            this.ResolveType("System.Int32").ToPointerType().WriteTypePrefix(writer);
             writer.WriteLine(string.Empty);
 
             var res = opCode.Result;

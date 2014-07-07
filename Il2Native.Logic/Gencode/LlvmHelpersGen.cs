@@ -106,7 +106,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
@@ -128,7 +128,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(writer, true);
             writer.Write(" ");
@@ -352,7 +352,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                if (methodBase.IsInternalCall)
+                if (methodBase.IsExternalLibraryMethod())
                 {
                     writer.Write("(...)* ");
                 }
@@ -420,7 +420,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
 
             // load pointer
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer());
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("** ");
@@ -429,7 +429,7 @@ namespace Il2Native.Logic.Gencode
             var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
             // get address of a function
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("getelementptr inbounds ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("* ");
@@ -438,7 +438,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
             // load method address
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);
             writer.Write("* ");

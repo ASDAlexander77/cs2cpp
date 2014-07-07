@@ -22,7 +22,7 @@ namespace System
 
         public override String ToString()
         {
-            return Number.Format(m_value, false, "G", NumberFormatInfo.CurrentInfo);
+            return Number.Format((double)m_value, false, "G", NumberFormatInfo.CurrentInfo);
         }
 
         public String ToString(String format)

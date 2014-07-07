@@ -104,7 +104,19 @@ namespace System
         
         public char[] ToCharArray(int startIndex, int length)
         {
-            throw new NotImplementedException();
+            if (startIndex == 0 && length == this.chars.Length)
+            {
+                return this.chars;
+            }
+
+            var newChars = new char[length];
+            var index = startIndex;
+            for (var dst = 0; dst < length; dst++)
+            {
+                newChars[dst] = this.chars[index++];
+            }
+
+            return newChars;
         }
 
         public int Length
@@ -133,13 +145,13 @@ namespace System
         
         public String Substring(int startIndex)
         {
-            throw new NotImplementedException();
+            return new String(this.chars, startIndex, this.chars.Length - startIndex);
         }
 
         
         public String Substring(int startIndex, int length)
         {
-            throw new NotImplementedException();
+            return new String(this.chars, startIndex, length);
         }
 
         
@@ -196,21 +208,43 @@ namespace System
         
         public int IndexOf(char value)
         {
-            throw new NotImplementedException();
+            for (var index = 0; index < this.chars.Length; index++)
+            {
+                if (this.chars[index] == value)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
 
         
         public int IndexOf(char value, int startIndex)
         {
-            throw new NotImplementedException();
-        }
+            for (var index = startIndex; index < this.chars.Length; index++)
+            {
+                if (this.chars[index] == value)
+                {
+                    return index;
+                }
+            }
 
+            return -1;
+        }
         
         public int IndexOf(char value, int startIndex, int count)
         {
-            throw new NotImplementedException();
-        }
+            for (var index = startIndex; index < Math.Min(count, this.chars.Length); index++)
+            {
+                if (this.chars[index] == value)
+                {
+                    return index;
+                }
+            }
 
+            return -1;
+        }
         
         public extern int IndexOfAny(char[] anyOf);
 

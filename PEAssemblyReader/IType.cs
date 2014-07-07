@@ -158,8 +158,14 @@ namespace PEAssemblyReader
         /// </returns>
         bool IsAssignableFrom(IType type);
 
-        IType CreateArray(int rank);
+        IType ToArrayType(int rank);
 
-        IType CreatePointer();
+        IType ToPointerType();
+
+        IType Clone();
+
+        IType ToClass();
+
+        IType ToNormal();
     }
 }

@@ -3,10 +3,12 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
+    using System.Text;
 
     public static class Console
     {
         private static string NewLine = "\r\n";
+        private static string PrintString = "%.*s";
         private static string PrintDouble = "%f";
         private static string PrintInt = "%i";
         private static string PrintChar = "%c";
@@ -15,10 +17,16 @@
         public static extern int wprintf(char[] chars);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] chars, double d);
+        public static extern int wprintf(char[] format, int length, char[] chars);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] chars, int t);
+        public static extern int wprintf(char[] format, double d);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int wprintf(char[] format, float d);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int wprintf(char[] format, int t);
 
         public static int Read()
         {
@@ -48,7 +56,7 @@
 
         public static void WriteLine(char[] buffer)
         {
-            wprintf(buffer);
+            wprintf(PrintString.ToCharArray(), buffer.Length, buffer);
             wprintf(NewLine.ToCharArray());
         }
 
@@ -70,7 +78,8 @@
 
         public static void WriteLine(float value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintDouble.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(int value)
@@ -98,53 +107,70 @@
 
         public static void WriteLine(object value)
         {
-            throw new NotImplementedException();
+            WriteLine(value.ToString());
         }
 
         public static void WriteLine(string value)
         {
-            wprintf(value.ToCharArray());
+            var chars = value.ToCharArray();
+            wprintf(PrintString.ToCharArray(), chars.Length, chars);
             wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(String format, Object arg0)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0);
+            WriteLine(sb.ToString());
         }
 
         public static void WriteLine(String format, Object arg0, Object arg1)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0, arg1);
+            WriteLine(sb.ToString());
         }
 
         public static void WriteLine(String format, Object arg0, Object arg1, Object arg2)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0, arg1, arg2);
+            WriteLine(sb.ToString());
         }
 
         public static void WriteLine(String format, params Object[] arg)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg);
+            WriteLine(sb.ToString());
         }
 
         public static void Write(String format, Object arg0)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0);
+            Write(sb.ToString());
         }
 
         public static void Write(String format, Object arg0, Object arg1)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0, arg1);
+            Write(sb.ToString());
         }
 
         public static void Write(String format, Object arg0, Object arg1, Object arg2)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg0, arg1, arg2);
+            Write(sb.ToString());
         }
 
         public static void Write(String format, params Object[] arg)
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+            sb.AppendFormat(format, arg);
+            Write(sb.ToString());
         }
 
         public static void Write(bool value)
@@ -179,7 +205,7 @@
 
         public static void Write(float value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintDouble.ToCharArray(), value);
         }
 
         public static void Write(int value)
@@ -206,7 +232,7 @@
 
         public static void Write(Object value)
         {
-            throw new NotImplementedException();
+            Write(value.ToString());
         }
 
         public static void Write(String value)

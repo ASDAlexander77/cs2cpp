@@ -413,14 +413,29 @@ namespace PEAssemblyReader
             }
         }
 
-        public IType CreateArray(int rank)
+        public IType ToArrayType(int rank)
         {
             return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
         }
 
-        public IType CreatePointer()
+        public IType ToPointerType()
         {
             return new MetadataTypeAdapter(new PointerTypeSymbol(this.typeDef));
+        }
+
+        public IType Clone()
+        {
+            return new MetadataTypeAdapter(this.typeDef);
+        }
+
+        public IType ToClass()
+        {
+            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = true };
+        }
+
+        public IType ToNormal()
+        {
+            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = false };
         }
 
         /// <summary>

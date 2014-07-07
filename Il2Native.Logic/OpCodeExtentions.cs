@@ -614,5 +614,9 @@ namespace Il2Native.Logic
             return index;
         }
 
+        public static bool IsExternalLibraryMethod(this IMethod method)
+        {
+            return method.IsInternalCall && !method.Name.StartsWith("llvm_");
+        }
     }
 }

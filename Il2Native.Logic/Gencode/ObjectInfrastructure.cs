@@ -90,30 +90,29 @@ namespace Il2Native.Logic.Gencode
 
             var valueLoadResult = opCode.Result;
 
+            declaringType.UseAsClass = false;
+            var isStruct = declaringType.IsStructureType();
+            declaringType.UseAsClass = true;
+
             opCode.Result = null;
 
             writer.WriteLine("; Boxing");
 
             writer.WriteLine(string.Empty);
             llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
-            llvmWriter.WriteNewWithoutCallingConstructor(opCode, declaringType);
+            llvmWriter.WriteNewWithoutCallingConstructor(opCode, declaringType, isStruct);
 
             var newObjectResult = opCode.Result;
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Copy data");
 
-            declaringType.UseAsClass = false;
-            if (!declaringType.IsStructureType())
+            if (!isStruct)
             {
-                declaringType.UseAsClass = true;
-
                 // write access to a field
                 llvmWriter.WriteFieldAccess(writer, opCode, declaringType, 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
-
-            declaringType.UseAsClass = true;
 
             var fieldType = declaringType;
 
@@ -122,6 +121,12 @@ namespace Il2Native.Logic.Gencode
             opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
             opCode.OpCodeOperands[0].Result = valueLoadResult;
             llvmWriter.WriteSaveToField(opCode, fieldType, 0);
+
+            if (isStruct)
+            {
+                // init now
+                declaringType.WriteCallInitObjectMethod(llvmWriter, opCode);
+            }
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
@@ -157,12 +162,12 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer(), true);
+                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
                 }
                 else
                 {
                     declaringType.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, declaringType, "%this", llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer(), true);
+                    llvmWriter.WriteCast(opCode, declaringType, "%this", llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
                 }
 
                 writer.WriteLine(String.Empty);
@@ -197,11 +202,11 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer(), true);
+                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
                 }
                 else
                 {
-                    llvmWriter.WriteCast(opCode, @interface, "%this", llvmWriter.ResolveType("System.Byte").CreatePointer().CreatePointer(), true);
+                    llvmWriter.WriteCast(opCode, @interface, "%this", llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
                 }
 
                 writer.WriteLine(String.Empty);
@@ -270,15 +275,19 @@ namespace Il2Native.Logic.Gencode
             var method = new SynthesizedBoxMethod(type, llvmWriter);
             writer.WriteLine("; Box method");
 
+            type.UseAsClass = false;
+            var isStruct = type.IsStructureType();
             type.UseAsClass = true;
 
             var opCode = OpCodePart.CreateNop;
 
             llvmWriter.WriteMethodStart(method);
 
-            if (!type.IsStructureType())
+            if (!isStruct)
             {
-                llvmWriter.WriteLlvmLoad(opCode, type, new FullyDefinedReference("%.value", type));
+                var normalType = type.ToNormal();
+                llvmWriter.WriteLlvmLoad(opCode, normalType, new FullyDefinedReference("%.value", normalType));
+                writer.WriteLine(string.Empty);
             }
 
             llvmWriter.WriteBoxObject(opCode, type);
@@ -313,7 +322,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
-        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType)
+        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType, bool doNotCallInit = false)
         {
             if (opCodePart.HasResult)
             {
@@ -326,7 +335,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New obj");
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").CreatePointer());
+            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
             llvmWriter.WriteMemSet(declaringType, mallocResult);
@@ -337,8 +346,11 @@ namespace Il2Native.Logic.Gencode
 
             var castResult = opCodePart.Result;
 
-            // llvmWriter.WriteInitObject(writer, opCode, declaringType);
-            declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+            if (!doNotCallInit)
+            {
+                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
+                declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+            }
 
             // restore result and type
             opCodePart.Result = castResult;
@@ -728,8 +740,7 @@ namespace Il2Native.Logic.Gencode
             {
                 get
                 {
-                    this.Type.UseAsClass = true;
-                    return this.Type;
+                    return this.Type.ToClass();
                 }
             }
 
@@ -886,7 +897,8 @@ namespace Il2Native.Logic.Gencode
 
             public SynthesizedValueParameter(IType type)
             {
-                this.type = type;
+                this.type = type.Clone();
+                this.type.UseAsClass = false;
             }
 
             public string Name
@@ -898,7 +910,6 @@ namespace Il2Native.Logic.Gencode
             {
                 get
                 {
-                    this.type.UseAsClass = false;
                     return this.type;
                 }
             }
