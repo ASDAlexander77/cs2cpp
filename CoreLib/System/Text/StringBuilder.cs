@@ -984,6 +984,7 @@ namespace System.Text
                     }
                     if (i > p) fmt = new String(chars, p, i - p);
                 }
+
                 if (ch != '}') FormatError();
                 pos++;
                 String s = null;

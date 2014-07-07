@@ -328,7 +328,7 @@ namespace System
             return new String(newChars, i + 1, 30 - i);
         }
 
-        private static String FormatNative(double value, char format, int precision)
+        private static String  FormatNative(double value, char format, int precision)
         {
             var newChars = new char[80];
 
@@ -344,10 +344,10 @@ namespace System
                 newChars[index++] = NumberChars[digit];
                 if (m == 0)
                     newChars[index++] = '.';
-                m--;
+                m--; 
             }
 
-            return new String(newChars, 0, m == -1 ? index - 1 : index);
+            return new String(newChars, 0, index);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)

@@ -104,11 +104,6 @@ namespace System
         
         public char[] ToCharArray(int startIndex, int length)
         {
-            if (startIndex == 0 && length == this.chars.Length)
-            {
-                return this.chars;
-            }
-
             var newChars = new char[length];
             var index = startIndex;
             for (var dst = 0; dst < length; dst++)
