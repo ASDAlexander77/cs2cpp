@@ -71,27 +71,7 @@
         [TestMethod]
         public void Test()
         {
-            //Test(1);
-
-            var newChars = new char[32];
-
-            var @base = 10;
-            var i = 30;
-            var value = 0;
-
-            if (value > 0)
-            {
-                for (; value > 0 && i > 0; --i, value /= @base)
-                {
-                    newChars[i] = "0123456789abcdef"[value % @base];
-                }
-            }
-            else
-            {
-                newChars[i--] = "0123456789abcdef"[0];
-            }
-
-            var s = new String(newChars, i + 1, 30 - i + 1);
+            Test(1);
         }
 
         [TestMethod]
@@ -128,7 +108,7 @@
         public void TestRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 10, 19, 26, 27, 28, 30, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
+            var skip = new int[] { 10, 19, 26, 27, 28, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 RunInterpreter(index);
@@ -139,7 +119,7 @@
         public void TestCompileAndRunLlvm()
         {
             // 9, 10 - Decimal class
-            var skip = new int[] { 10, 19, 26, 27, 28, 30, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
+            var skip = new int[] { 10, 19, 26, 27, 28, 33, 34, 35, 36, 37, 39, 40, 42, 43, 44, 45, 46, 49, 50, 52, 53, 55, 57 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);

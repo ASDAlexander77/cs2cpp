@@ -347,7 +347,7 @@ namespace System
                 m--;
             }
 
-            return new String(newChars, 0, index);
+            return new String(newChars, 0, m == -1 ? index - 1 : index);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)
