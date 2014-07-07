@@ -84,6 +84,16 @@ namespace Il2Native.Logic.Gencode
             opCode.Result.Type.UseAsClass = true;
         }
 
+        public static void WriteCallUnboxObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedUnboxMethod(type, llvmWriter);
+            writer.WriteLine("; call Unbox Object method");
+            llvmWriter.WriteCall(opCode, method, false, true, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCode.Result.Type.UseAsClass = false;
+        }
+
         public static void WriteBoxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
         {
             var writer = llvmWriter.Output;
@@ -395,7 +405,7 @@ namespace Il2Native.Logic.Gencode
             {
                 get
                 {
-                    return this.Type;
+                    return this.Type.Clone();
                 }
             }
 
@@ -644,7 +654,7 @@ namespace Il2Native.Logic.Gencode
             {
                 get
                 {
-                    return this.Type;
+                    return this.Type.Clone();
                 }
             }
 
@@ -820,6 +830,255 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IParameter> GetParameters()
             {
                 return new[] { new SynthesizedValueParameter(this.Type) };
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public override string ToString()
+            {
+                var result = new StringBuilder();
+
+                // write return type
+                result.Append(this.ReturnType);
+                result.Append(' ');
+
+                // write Full Name
+                result.Append(this.FullName);
+
+                // write Parameter Types
+                result.Append('(');
+                var index = 0;
+                foreach (var parameterType in this.GetParameters())
+                {
+                    if (index != 0)
+                    {
+                        result.Append(", ");
+                    }
+
+                    result.Append(parameterType);
+                    index++;
+                }
+
+                result.Append(')');
+
+                return result.ToString();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        private class SynthesizedUnboxMethod : IMethod
+        {
+            private LlvmWriter writer;
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            public SynthesizedUnboxMethod(IType type, LlvmWriter writer)
+            {
+                this.Type = type.ToNormal();
+                this.writer = writer;
+            }
+
+            /// <summary>
+            /// </summary>
+            public string AssemblyQualifiedName { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public CallingConventions CallingConvention
+            {
+                get
+                {
+                    return CallingConventions.HasThis;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IType DeclaringType
+            {
+                get
+                {
+                    return this.Type.Clone();
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
+            {
+                get
+                {
+                    return new IExceptionHandlingClause[0];
+                }
+            }
+
+            /// <summary>
+            /// custom field
+            /// </summary>
+            public bool IsInternalCall { get { return false; } }
+
+            /// <summary>
+            /// </summary>
+            public string FullName
+            {
+                get
+                {
+                    return String.Concat(this.Type.FullName, "..unbox");
+                }
+            }
+
+            public string ExplicitName
+            {
+                get
+                {
+                    return String.Concat(this.Type.Name, "..unbox");
+                }
+            }
+
+
+            /// <summary>
+            /// </summary>
+            public bool IsAbstract { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsConstructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsGenericMethod { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsOverride { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsStatic { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsVirtual { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public IEnumerable<ILocalVariable> LocalVariables
+            {
+                get
+                {
+                    return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IModule Module { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public string Name
+            {
+                get
+                {
+                    return String.Concat(this.Type.Name, "..unbox");
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string Namespace { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public IType ReturnType
+            {
+                get
+                {
+                    return this.Type;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IType Type { get; private set; }
+
+            public string ToString(IType ownerOfExplicitInterface)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="obj">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public int CompareTo(object obj)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="obj">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            public override bool Equals(object obj)
+            {
+                return this.ToString().Equals(obj.ToString());
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public IEnumerable<IType> GetGenericArguments()
+            {
+                return null;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public override int GetHashCode()
+            {
+                return this.ToString().GetHashCode();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public byte[] GetILAsByteArray()
+            {
+                return new byte[0];
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public IMethodBody GetMethodBody()
+            {
+                return new SynthesizedDummyMethodBody();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public IEnumerable<IParameter> GetParameters()
+            {
+                return new IParameter[0];
             }
 
             /// <summary>

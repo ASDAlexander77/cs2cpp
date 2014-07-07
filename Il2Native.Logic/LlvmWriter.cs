@@ -2109,13 +2109,9 @@ namespace Il2Native.Logic
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
-                    writer.WriteLine("; Unboxing");
-                    opCodeTypePart = opCode as OpCodeTypePart;
-                    ////this.ActualWrite(writer, opCode.OpCodeOperands[0]);
 
-                    // for now we need to create empty var
-                    this.WriteSetResultNumber(opCodeTypePart, opCodeTypePart.Operand);
-                    this.WriteAlloca(opCodeTypePart.Operand);
+                    type = (opCode as OpCodeTypePart).Operand;
+                    type.WriteCallUnboxObjectMethod(this, opCode);
 
                     break;
                 case Code.Ret:

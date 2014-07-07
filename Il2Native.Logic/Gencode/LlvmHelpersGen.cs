@@ -269,7 +269,6 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
                 }
 
-                thisType.UseAsClass = false;
                 var isPrimitive = thisType.IsPrimitiveType();
                 thisType.UseAsClass = true;
                 if (isPrimitive)
