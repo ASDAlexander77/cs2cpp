@@ -15,11 +15,11 @@
     [TestClass]
     public class MSTests
     {
-        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"C:\Temp\tests\";
-        private const string OutputPath = @"C:\Temp\IlCTests\";
-        private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
-        //private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
+        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+        private const string SourcePathCustom = @"D:\Temp\tests\";
+        private const string OutputPath = @"D:\Temp\IlCTests\";
+        //private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
 
         public MSTests()
         {
