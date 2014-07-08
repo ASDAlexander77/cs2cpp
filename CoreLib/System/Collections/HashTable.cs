@@ -85,6 +85,8 @@ namespace System.Collections
         //adding for internal purposes
         private void Add(ref Entry[] buckets, object key, object value, bool overwrite)
         {
+            Console.WriteLine("add");
+
             int whichBucket = Hash(key, _numberOfBuckets);
             Entry match = EntryForKey(key, buckets[whichBucket]);
 
@@ -129,6 +131,8 @@ namespace System.Collections
         //Rehashes the table to reduce the load factor
         private void Rehash(int newSize)
         {
+            Console.WriteLine("Rehash");
+
             Entry[] newTable = new Entry[newSize];
             _numberOfBuckets = newSize;
             _count = 0;

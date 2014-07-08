@@ -227,6 +227,8 @@ namespace Il2Native.Logic.Gencode
 
             var thisType = methodBase.DeclaringType;
 
+            llvmWriter.CheckIfExternalDeclarationIsRequired(thisType);
+
             var parametersCount = methodBase.GetParameters().Count();
 
             thisType.UseAsClass = true;
@@ -290,18 +292,24 @@ namespace Il2Native.Logic.Gencode
                     // call Ldind to load value
                     var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
                     toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
-                    var resultOf = llvmWriter.ResultOf(toLoadValue.OpCodeOperands[0]);
-                    llvmWriter.LoadIndirect(writer, toLoadValue, resultOf.IType);
+
+                    llvmWriter.LoadIndirect(writer, toLoadValue, resultOfFirstOperand.IType);
 
                     toLoadValue.Result.Type.UseAsClass = false;
                     opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
                     opCodeFirstOperand = toLoadValue;
 
                     // convert value to object
-                    thisType.WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
+                    resultOfFirstOperand.IType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
                     opCodeFirstOperand.Result = opCodeMethodInfo.Result;
-
                     writer.WriteLine(string.Empty);
+
+                    if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                    {
+                        writer.WriteLine("; Cast of 'Boxed' 'This' parameter");
+                        llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                        writer.WriteLine(string.Empty);
+                    }
                 }
             }
 
