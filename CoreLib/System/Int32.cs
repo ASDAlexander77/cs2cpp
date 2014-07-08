@@ -36,6 +36,10 @@ namespace System
             return Convert.ToInt32(s);
         }
 
+        public override int GetHashCode()
+        {
+            return m_value;
+        }
     }
 }
 
