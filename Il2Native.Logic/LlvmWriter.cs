@@ -2819,7 +2819,7 @@ namespace Il2Native.Logic
 
             this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], directResult1, type);
 
-            this.ProcessOperator(writer, opCode, "store", type);
+            this.ProcessOperator(writer, opCode, "store", type, operand1: 2, operand2: -1);
             this.PostProcessOperand(writer, opCode, operandIndex, directResult1);
 
             writer.Write(", ");
@@ -3206,9 +3206,9 @@ namespace Il2Native.Logic
 
             var res1 = options.HasFlag(OperandOptions.TypeIsInOperator)
                            ? this.ResultOf(opCode)
-                           : opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1 ? this.ResultOf(opCode.OpCodeOperands[operand1]) : null;
+                           : opCode.OpCodeOperands != null && operand1 >=0 && opCode.OpCodeOperands.Length > operand1 ? this.ResultOf(opCode.OpCodeOperands[operand1]) : null;
 
-            var res2 = opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand2 ? this.ResultOf(opCode.OpCodeOperands[operand2]) : null;
+            var res2 = opCode.OpCodeOperands != null && operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 ? this.ResultOf(opCode.OpCodeOperands[operand2]) : null;
 
             // write type
             var effectiveType = this.ResolveType("System.Void");
@@ -3733,7 +3733,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
-            writer.WriteLine("; Access to '{0}' field - ", opCodeFieldInfoPart.Operand.Name);
+            writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
 
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
@@ -3753,7 +3753,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index)
         {
-            writer.WriteLine("; Access to '#{0}' field ", index);
+            writer.WriteLine("; Access to '#{0}' field", index);
             var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
 
             var classType = operand.IType;

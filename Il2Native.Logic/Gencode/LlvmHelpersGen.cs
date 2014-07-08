@@ -447,6 +447,7 @@ namespace Il2Native.Logic.Gencode
             var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
             // get address of a function
+            writer.WriteLine("; Get Virtual Index of Method: {0}", methodInfo.FullName);
             llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("getelementptr inbounds ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo);

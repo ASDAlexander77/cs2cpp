@@ -26,7 +26,6 @@ namespace System
             return GetType().FullName;
         }
 
-
         public virtual bool Equals(Object obj)
         {
             throw new NotImplementedException();

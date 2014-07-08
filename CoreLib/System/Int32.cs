@@ -40,6 +40,16 @@ namespace System
         {
             return m_value;
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is int)
+            {
+                return m_value == (int)obj;
+            }
+
+            return base.Equals(obj);
+        }
     }
 }
 

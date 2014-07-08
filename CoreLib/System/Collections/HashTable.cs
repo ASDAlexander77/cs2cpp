@@ -85,8 +85,6 @@ namespace System.Collections
         //adding for internal purposes
         private void Add(ref Entry[] buckets, object key, object value, bool overwrite)
         {
-            Console.WriteLine("add");
-
             int whichBucket = Hash(key, _numberOfBuckets);
             Entry match = EntryForKey(key, buckets[whichBucket]);
 
@@ -100,7 +98,8 @@ namespace System.Collections
                 throw new ArgumentException("key exists");
             }
             else
-            {            // insert at front
+            {
+                // insert at front
                 Entry newOne = new Entry(key, value, ref buckets[whichBucket]);
                 buckets[whichBucket] = newOne;
                 _count++;
@@ -125,14 +124,13 @@ namespace System.Collections
         {
             for (Entry cur = head; cur != null; cur = cur.next)
                 if (cur.key.Equals(key)) return cur;
+
             return null;
         }
 
         //Rehashes the table to reduce the load factor
         private void Rehash(int newSize)
         {
-            Console.WriteLine("Rehash");
-
             Entry[] newTable = new Entry[newSize];
             _numberOfBuckets = newSize;
             _count = 0;
