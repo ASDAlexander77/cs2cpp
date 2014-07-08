@@ -30,7 +30,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ilCode">
         /// </param>
-        void Write(OpCodePart ilCode);
+        void Write(OpCodePart ilCode, bool doNotWrite = false);
 
         /// <summary>
         /// </summary>
@@ -66,13 +66,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorEnd(IConstructor ctor);
+        void WriteConstructorEnd(IConstructor ctor, bool doNotWrite = false);
 
         /// <summary>
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorStart(IConstructor ctor);
+        void WriteConstructorStart(IConstructor ctor, bool doNotWrite = false);
 
         /// <summary>
         /// </summary>
@@ -112,13 +112,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodEnd(IMethod method);
+        void WriteMethodEnd(IMethod method, bool doNotWrite = false);
 
         /// <summary>
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodStart(IMethod method);
+        void WriteMethodStart(IMethod method, bool doNotWrite = false);
 
         /// <summary>
         /// </summary>

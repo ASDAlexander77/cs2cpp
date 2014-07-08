@@ -119,6 +119,8 @@ namespace Il2Native.Logic
         /// </summary>
         protected IType[] TypeGenericArguments { get; private set; }
 
+        public readonly HashSet<IType> requiredTypesForBody = new HashSet<IType>();
+
         /// <summary>
         /// </summary>
         /// <param name="conditions">
@@ -951,11 +953,27 @@ namespace Il2Native.Logic
             return this.Ops.ToArray();
         }
 
+        public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters, bool doNotWrite)
+        {
+            if (parameters == null || !doNotWrite)
+            {
+                return;
+            }
+
+            foreach (var parameter in parameters)
+            {
+                if (parameter.ParameterType.IsStructureType())
+                {
+                    this.requiredTypesForBody.Add(parameter.ParameterType);
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        protected void Process(OpCodePart opCode)
+        protected void Process(OpCodePart opCode, bool doNotWrite)
         {
             this.Ops.Add(opCode);
 
@@ -968,14 +986,17 @@ namespace Il2Native.Logic
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
                         opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
+                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters(), doNotWrite);
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
+                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters(), doNotWrite);
                     break;
                 case Code.Newobj:
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
+                    this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters(), doNotWrite);
                     break;
                 case Code.Stelem:
                 case Code.Stelem_I:

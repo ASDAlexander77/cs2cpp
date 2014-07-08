@@ -166,6 +166,19 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
+                // pre process step to get all used undefined structures
+                foreach (var ctor in IlReader.Constructors(type))
+                {
+                    codeWriter.WriteConstructorStart(ctor, true);
+                    foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
+                    {
+                        codeWriter.Write(ilCode, true);
+                    }
+
+                    codeWriter.WriteConstructorEnd(ctor, true);
+                }
+
+                // Actual Write
                 foreach (var ctor in IlReader.Constructors(type))
                 {
                     codeWriter.WriteConstructorStart(ctor);
@@ -186,6 +199,19 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
+                // pre process step to get all used undefined structures
+                foreach (var method in IlReader.Methods(type))
+                {
+                    codeWriter.WriteMethodStart(method, true);
+                    foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                    {
+                        codeWriter.Write(ilCode, true);
+                    }
+
+                    codeWriter.WriteMethodEnd(method, true);
+                }
+
+                // Actual Write
                 foreach (var method in IlReader.Methods(type))
                 {
                     codeWriter.WriteMethodStart(method);

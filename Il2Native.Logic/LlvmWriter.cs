@@ -595,10 +595,10 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        public void Write(OpCodePart opCode)
+        public void Write(OpCodePart opCode, bool doNotWrite = false)
         {
             ////this.Output.WriteLine("; {0}", opCode.OpCode.Name);
-            this.Process(opCode);
+            this.Process(opCode, doNotWrite);
         }
 
         /// <summary>
@@ -723,9 +723,14 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorEnd(IConstructor ctor)
+        public void WriteConstructorEnd(IConstructor ctor, bool doNotWrite = false)
         {
-            this.WriteMethodBody(string.Empty);
+            this.WriteMethodBody(doNotWrite);
+
+            if (doNotWrite)
+            {
+                return;
+            }
 
             if (!this.NoBody)
             {
@@ -743,11 +748,20 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorStart(IConstructor ctor)
+        public void WriteConstructorStart(IConstructor ctor, bool doNotWrite = false)
         {
+            this.StartProcess();
+
+            if (doNotWrite)
+            {
+                this.ReadMethodInfo(ctor);
+                return;
+            }
+
+            this.WriteRequiredTypesForBody();
+
             this.processedMethods.Add(ctor);
 
-            this.StartProcess();
             this.ReadMethodInfo(ctor);
 
             if (ctor.IsAbstract || ctor.GetMethodBody() == null)
@@ -785,6 +799,18 @@ namespace Il2Native.Logic
             }
 
             methodNumberIncremental++;
+        }
+
+        private void WriteRequiredTypesForBody()
+        {
+            // get all required types for methods bodies
+            foreach (var requiredType in this.requiredTypesForBody)
+            {
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+
+            // clear types for next type
+            this.requiredTypesForBody.Clear();
         }
 
         /// <summary>
@@ -1040,9 +1066,14 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodEnd(IMethod method)
+        public void WriteMethodEnd(IMethod method, bool doNotWrite = false)
         {
-            this.WriteMethodBody();
+            this.WriteMethodBody(doNotWrite);
+
+            if (doNotWrite)
+            {
+                return;
+            }
 
             if (!this.NoBody)
             {
@@ -1234,16 +1265,24 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodStart(IMethod method)
+        public void WriteMethodStart(IMethod method, bool doNotWrite = false)
         {
             if (method.IsInternalCall && this.processedMethods.Any(m => m.Name == method.Name))
             {
                 return;
             }
 
-            this.processedMethods.Add(method);
-
             this.StartProcess();
+
+            if (doNotWrite)
+            {
+                this.ReadMethodInfo(method);
+                return;
+            }
+
+            this.WriteRequiredTypesForBody();
+
+            this.processedMethods.Add(method);
 
             this.ReadMethodInfo(method);
 
@@ -1288,7 +1327,6 @@ namespace Il2Native.Logic
             {
                 this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
             }
-
 
             this.WriteMethodNumber();
 
@@ -1428,7 +1466,7 @@ namespace Il2Native.Logic
         {
             this.processedTypes.Add(type);
 
-            // get all required types
+            // get all required types for type definition
             var requiredTypes = new List<IType>();
             Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null);
             foreach (var requiredType in requiredTypes)
@@ -4011,21 +4049,18 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="endPart">
         /// </param>
-        private void WriteMethodBody(string endPart = null)
+        private void WriteMethodBody(bool doNotWrite = false)
         {
             var rest = this.PrepareWritingMethodBody();
 
-            var i = 0;
+            if (doNotWrite)
+            {
+                return;
+            }
+
             foreach (var opCodePart in rest)
             {
                 this.ActualWrite(this.Output, opCodePart, true);
-                i++;
-
-                if (endPart != null && i == rest.Length)
-                {
-                    this.Output.Write(endPart);
-                }
-
                 this.Output.WriteLine(string.Empty);
             }
         }
