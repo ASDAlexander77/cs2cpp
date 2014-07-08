@@ -126,7 +126,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType, 1, opCode.Result.ToFullyDefinedReference());
+                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
 
@@ -149,6 +149,36 @@ namespace Il2Native.Logic.Gencode
 
             opCode.Result = newObjectResult;
             opCode.Result.Type.UseAsClass = true;
+        }
+
+        public static void WriteUnboxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        {
+            var writer = llvmWriter.Output;
+
+            var isStruct = declaringType.IsStructureType();
+
+            writer.WriteLine("; Unboxing");
+            writer.WriteLine(string.Empty);
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
+
+            writer.WriteLine("; Copy data");
+
+            if (!isStruct)
+            {
+                // write access to a field
+                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                writer.WriteLine(string.Empty);
+            }
+
+            // load value from field
+            var memberAccessResultNumber = opCode.Result;
+
+            opCode.Result = null;
+            llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; End of Copy data");
         }
 
         /// <summary>
@@ -313,6 +343,42 @@ namespace Il2Native.Logic.Gencode
             type.WriteTypePrefix(writer);
             writer.Write(" ");
             llvmWriter.WriteResultNumber(opCode.Result);
+
+            llvmWriter.WriteMethodEnd(method);
+        }
+
+        public static void WriteUnboxMethod(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedUnboxMethod(type, llvmWriter);
+            writer.WriteLine("; Unbox method");
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method);
+            llvmWriter.WriteLlvmLoad(opCode, type.ToClass(), new FullyDefinedReference("%.this", llvmWriter.ThisType), true, true);
+            writer.WriteLine(string.Empty);
+
+            var normalType = type.ToNormal();
+            var isStruct = normalType.IsStructureType();
+            if (isStruct)
+            {
+                opCode.DestinationName = "%agg.result";
+            }
+
+            llvmWriter.WriteUnboxObject(opCode, type.ToNormal());
+
+            writer.Write("ret ");
+            if (!isStruct)
+            {
+                type.WriteTypePrefix(writer);
+                writer.Write(" ");
+                llvmWriter.WriteResultNumber(opCode.Result);
+            }
+            else
+            {
+                writer.WriteLine(" void");
+            }
 
             llvmWriter.WriteMethodEnd(method);
         }

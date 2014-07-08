@@ -643,6 +643,7 @@ namespace Il2Native.Logic
                     && this.ThisType.FullName != "System.UIntPtr")
                 {
                     this.ThisType.WriteBoxMethod(this);
+                    this.ThisType.WriteUnboxMethod(this);
                 }
 
                 this.ThisType.UseAsClass = stored;
@@ -3047,7 +3048,7 @@ namespace Il2Native.Logic
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
-                this.WriteFieldAccess(writer, opCode, declaringType, 1, opCode.Result.ToFullyDefinedReference());
+                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
 
@@ -3768,13 +3769,10 @@ namespace Il2Native.Logic
         {
             var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
 
-            classType.UseAsClass = true;
-
             WriteSetResultNumber(opCodePart, field.FieldType);
 
             writer.Write("getelementptr inbounds ");
-            valueReference.Type.UseAsClass = true;
-            valueReference.Type.WriteTypePrefix(writer);
+            valueReference.Type.ToClass().WriteTypePrefix(writer);
             writer.Write(" ");
             writer.Write(valueReference.Name);
 

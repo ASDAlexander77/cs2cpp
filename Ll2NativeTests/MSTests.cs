@@ -128,18 +128,18 @@
 
         private void RunInterpreter(int index)
         {
-            System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
             Test(index);
 
-            System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
+            Trace.WriteLine("Executing LLVM for " + index);
 
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "lli.exe";
             pi.Arguments = string.Format("{1}test-{0}.ll", index, OutputPath);
 
-            var piProc = System.Diagnostics.Process.Start(pi);
+            var piProc = Process.Start(pi);
 
             piProc.WaitForExit();
 
@@ -148,11 +148,11 @@
 
         private void CompileAndRun(int index)
         {
-            System.Diagnostics.Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
             Test(index);
 
-            System.Diagnostics.Trace.WriteLine("Executing LLVM for " + index);
+            Trace.WriteLine("Executing LLVM for " + index);
 
             /*
                 call vcvars32.bat
@@ -177,7 +177,7 @@
             pi.FileName = "ll.bat";
             pi.Arguments = string.Format("{0}", index);
 
-            var piProc = System.Diagnostics.Process.Start(pi);
+            var piProc = Process.Start(pi);
 
             piProc.WaitForExit();
 
@@ -187,7 +187,7 @@
             piexec.WorkingDirectory = OutputPath;
             piexec.FileName = string.Format("{1}test-{0}.exe", index, OutputPath);
 
-            var piexecProc = System.Diagnostics.Process.Start(piexec);
+            var piexecProc = Process.Start(piexec);
             
             piexecProc.WaitForExit();
 
