@@ -948,13 +948,18 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.Output.WriteLine(',');
-
-            field.FieldType.WriteTypePrefix(this.Output, false);
+            WriteFieldType(field.FieldType);
 
             // this.Output.Write(' ');
             // this.Output.Write(field.Name);
             // this.Output.WriteLine(';');
+        }
+
+        public void WriteFieldType(IType fieldType)
+        {
+            this.Output.WriteLine(',');
+
+            fieldType.WriteTypePrefix(this.Output, false);
         }
 
         /// <summary>
@@ -3797,17 +3802,17 @@ namespace Il2Native.Logic
             var classType = operand.IType;
 
             var opts = OperandOptions.GenerateResult;
-            var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
+            var FieldType = classType.GetFieldTypeByIndex(index);
             classType.UseAsClass = true;
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, field.FieldType, options: opts);
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, FieldType, options: opts);
             this.WriteFieldIndex(writer, classType, index);
         }
 
         public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, int index, FullyDefinedReference valueReference)
         {
-            var field = IlReader.Fields(classType).Where(t => !t.IsStatic).Skip(index - 1).First();
+            var FieldType = classType.GetFieldTypeByIndex(index);
 
-            WriteSetResultNumber(opCodePart, field.FieldType);
+            WriteSetResultNumber(opCodePart, FieldType);
 
             writer.Write("getelementptr inbounds ");
             valueReference.Type.ToClass().WriteTypePrefix(writer);

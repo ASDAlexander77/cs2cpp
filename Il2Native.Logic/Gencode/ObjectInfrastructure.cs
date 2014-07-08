@@ -901,7 +901,7 @@ namespace Il2Native.Logic.Gencode
             /// </returns>
             public IEnumerable<IParameter> GetParameters()
             {
-                return new[] { new SynthesizedValueParameter(this.Type) };
+                return new[] { new SynthesizedValueParameter(this.Type.ToNormal()) };
             }
 
             /// <summary>

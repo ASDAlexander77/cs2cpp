@@ -118,7 +118,7 @@ namespace Il2Native.Logic.Gencode
 
             if (type.IsEnum)
             {
-                return type.GetEnumUnderlyingType().GetTypeSize();
+                return type.GetEnumUnderlyingType().GetTypeSize(); 
             }
 
             var size = 0;
@@ -250,12 +250,16 @@ namespace Il2Native.Logic.Gencode
                     switch (type.GetEnumUnderlyingType().FullName)
                     {
                         case "System.SByte":
+                        case "System.Byte":
                             return "i8";
                         case "System.Int16":
+                        case "System.UInt16":
                             return "i16";
                         case "System.Int32":
+                        case "System.UInt32":
                             return "i32";
                         case "System.Int64":
+                        case "System.UInt64":
                             return "i64";
                     }
                 }

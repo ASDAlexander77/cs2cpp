@@ -98,6 +98,8 @@ namespace Il2Native.Logic
         /// </param>
         void WriteFieldStart(IField field, int number, int count);
 
+        void WriteFieldType(IType fieldType);
+
         /// <summary>
         /// </summary>
         /// <param name="type">

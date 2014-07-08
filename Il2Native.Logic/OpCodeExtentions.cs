@@ -618,5 +618,11 @@ namespace Il2Native.Logic
         {
             return method.IsInternalCall && !method.Name.StartsWith("llvm_");
         }
+
+        public static IType GetFieldTypeByIndex(this IType classType, int index)
+        {
+            var normalType = classType.ToNormal();
+            return normalType.IsEnum ? normalType.GetEnumUnderlyingType() : IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).First().FieldType;
+        }
     }
 }

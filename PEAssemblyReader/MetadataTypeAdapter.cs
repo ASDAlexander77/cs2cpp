@@ -206,7 +206,7 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType();
+                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType() || this.FullName == "System.Enum";
             }
         }
 
@@ -349,6 +349,11 @@ namespace PEAssemblyReader
                     return false;
                 }
 
+                if (this.FullName == "System.Enum")
+                {
+                    return false;
+                }
+
                 return this.typeDef.IsValueType || this.IsDerivedFromEnum() || this.IsDerivedFromValueType();
             }
         }
@@ -364,8 +369,6 @@ namespace PEAssemblyReader
         }
 
         public bool UseAsClass { get; set; }
-
-        public bool IsCCall { get { return false; } }
 
         public IEnumerable<IType> GetNestedTypes()
         {

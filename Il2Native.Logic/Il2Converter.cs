@@ -69,12 +69,19 @@ namespace Il2Native.Logic
 
             codeWriter.WriteBeforeFields(count);
 
-            foreach (var field in fields)
+            if (!type.ToNormal().IsEnum)
             {
-                codeWriter.WriteFieldStart(field, number, count);
-                codeWriter.WriteFieldEnd(field, number, count);
+                foreach (var field in fields)
+                {
+                    codeWriter.WriteFieldStart(field, number, count);
+                    codeWriter.WriteFieldEnd(field, number, count);
 
-                number++;
+                    number++;
+                }
+            }
+            else
+            {
+                codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
             }
 
             codeWriter.WriteAfterFields(count, disablePostDeclarations);
