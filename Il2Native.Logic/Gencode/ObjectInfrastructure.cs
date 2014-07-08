@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            writer.WriteLine(String.Empty);
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
             var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
@@ -69,6 +69,7 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var method = new SynthesizedInitMethod(type, llvmWriter);
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; call Init Object method");
             var opCodeNope = OpCodePart.CreateNop;
             llvmWriter.WriteCall(opCodeNope, method, false, true, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
@@ -79,6 +80,7 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var method = new SynthesizedBoxMethod(type, llvmWriter);
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; call Box Object method");
             llvmWriter.WriteCall(opCode, method, false, false, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             opCode.Result.Type.UseAsClass = true;
@@ -89,9 +91,13 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var method = new SynthesizedUnboxMethod(type, llvmWriter);
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; call Unbox Object method");
             llvmWriter.WriteCall(opCode, method, false, true, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            opCode.Result.Type.UseAsClass = false;
+            if (opCode.Result != null)
+            {
+                opCode.Result.Type.UseAsClass = false;
+            }
         }
 
         public static void WriteBoxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)

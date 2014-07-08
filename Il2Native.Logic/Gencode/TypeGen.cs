@@ -200,12 +200,18 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         // TODO: finish converting array data into array class
-        public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart)
+        public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart, out bool dynamicCastRequired)
         {
+            dynamicCastRequired = false;
+
             if (opCodePart.HasResult && requiredType.TypeNotEquals(opCodePart.Result.Type))
             {
-                return requiredType.IsAssignableFrom(opCodePart.Result.Type) 
-                    || opCodePart.Result.Type.IsArray && requiredType.FullName == "System.Array";
+                if (requiredType.IsAssignableFrom(opCodePart.Result.Type) || opCodePart.Result.Type.IsArray && requiredType.FullName == "System.Array")
+                {
+                    return true;
+                }
+
+                dynamicCastRequired = true;
             }
 
             return false;

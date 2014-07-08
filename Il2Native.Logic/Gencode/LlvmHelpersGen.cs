@@ -226,9 +226,12 @@ namespace Il2Native.Logic.Gencode
             }
 
             var thisType = methodBase.DeclaringType;
+
+            var parametersCount = methodBase.GetParameters().Count();
+
             thisType.UseAsClass = true;
 
-            var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0;
+            var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length - parametersCount > 0;
             var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
                                          ? opCodeMethodInfo.OpCodeOperands[0]
                                          : null;
@@ -262,15 +265,23 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                if (thisType.IsClassCastRequired(opCodeFirstOperand))
+                bool dynamicCastRequired;
+
+                if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'This' parameter");
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
                     writer.WriteLine(string.Empty);
                 }
 
-                var isPrimitive = thisType.IsPrimitiveType();
-                thisType.UseAsClass = true;
+                if (dynamicCastRequired)
+                {
+                    writer.WriteLine("; Dynamic Cast of 'This' parameter");
+                    llvmWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                    writer.WriteLine(string.Empty);
+                }
+
+                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveType();
                 if (isPrimitive)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
@@ -471,7 +482,8 @@ namespace Il2Native.Logic.Gencode
             {
                 var operand = opCodeMethodInfo.OpCodeOperands[index];
 
-                if (parameter.ParameterType.IsClassCastRequired(operand))
+                var dynamicCastRequired = false;
+                if (parameter.ParameterType.IsClassCastRequired(operand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of '{0}' parameter", parameter.Name);
                     llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);

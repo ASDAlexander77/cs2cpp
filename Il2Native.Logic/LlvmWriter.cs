@@ -2998,6 +2998,8 @@ namespace Il2Native.Logic
             LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, LlvmResult fromType, IType toType)
         {
             this.WriteCast(opCodeTypePart, fromType, this.ResolveType("System.Byte"));
+            writer.WriteLine(string.Empty);
+
             var firstCastToBytesResult = opCodeTypePart.Result;
 
             var dynamicCastResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Byte").ToPointerType());
