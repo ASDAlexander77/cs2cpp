@@ -6,12 +6,9 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
-
-    using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
 
@@ -68,14 +65,22 @@ namespace Il2Native.Logic
         /// </summary>
         public IType Type { get; private set; }
 
-        public override string ToString()
-        {
-            return string.Concat("%.r", this.Number);
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public FullyDefinedReference ToFullyDefinedReference()
         {
             return new FullyDefinedReference(this.ToString(), this.Type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
+        {
+            return string.Concat("%.r", this.Number);
         }
     }
 }

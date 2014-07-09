@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Il2Converter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -47,6 +49,33 @@ namespace Il2Native.Logic
             ilReader.Load(type);
             var name = type.Module.Name.Replace(".dll", string.Empty);
             GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="types">
+        /// </param>
+        /// <param name="typesAdded">
+        /// </param>
+        /// <param name="newListOfITypes">
+        /// </param>
+        /// <param name="genericSpecializations">
+        /// </param>
+        public static void ProcessRequiredITypesForITypes(
+            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
+        {
+            foreach (var type in types)
+            {
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, typesAdded, requiredITypesToAdd, genericSpecializations);
+                newListOfITypes.AddRange(requiredITypesToAdd);
+
+                if (!typesAdded.Contains(type))
+                {
+                    typesAdded.Add(type);
+                    newListOfITypes.Add(type);
+                }
+            }
         }
 
         /// <summary>
@@ -112,12 +141,26 @@ namespace Il2Native.Logic
             requiredITypesToAdd.Add(effectiveIType);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="ilReader">
+        /// </param>
+        /// <param name="filter">
+        /// </param>
+        /// <param name="codeWriter">
+        /// </param>
+        /// <param name="newListOfITypes">
+        /// </param>
+        /// <param name="genDefinitionsByGuid">
+        /// </param>
+        /// <param name="mode">
+        /// </param>
         private static void ConvertAllTypes(
-            IlReader ilReader,
-            string[] filter,
-            ICodeWriter codeWriter,
-            List<IType> newListOfITypes,
-            SortedDictionary<string, IType> genDefinitionsByGuid,
+            IlReader ilReader, 
+            string[] filter, 
+            ICodeWriter codeWriter, 
+            List<IType> newListOfITypes, 
+            SortedDictionary<string, IType> genDefinitionsByGuid, 
             ConvertingMode mode)
         {
             foreach (var type in newListOfITypes)
@@ -162,6 +205,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericDefinition">
         /// </param>
+        /// <param name="mode">
+        /// </param>
         private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, ConvertingMode mode)
         {
             if (mode == ConvertingMode.Declaration)
@@ -173,19 +218,9 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
+                codeWriter.DisableWrite(true);
+
                 // pre process step to get all used undefined structures
-                foreach (var ctor in IlReader.Constructors(type))
-                {
-                    codeWriter.WriteConstructorStart(ctor, true);
-                    foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
-                    {
-                        codeWriter.Write(ilCode, true);
-                    }
-
-                    codeWriter.WriteConstructorEnd(ctor, true);
-                }
-
-                // Actual Write
                 foreach (var ctor in IlReader.Constructors(type))
                 {
                     codeWriter.WriteConstructorStart(ctor);
@@ -196,6 +231,12 @@ namespace Il2Native.Logic
 
                     codeWriter.WriteConstructorEnd(ctor);
                 }
+
+                codeWriter.DisableWrite(false);
+
+                // Actual Write
+                codeWriter.WriteRequiredTypesForBody();
+                codeWriter.WriteStoredText();
             }
 
             if (mode == ConvertingMode.Declaration)
@@ -206,19 +247,9 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
+                codeWriter.DisableWrite(true);
+
                 // pre process step to get all used undefined structures
-                foreach (var method in IlReader.Methods(type))
-                {
-                    codeWriter.WriteMethodStart(method, true);
-                    foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
-                    {
-                        codeWriter.Write(ilCode, true);
-                    }
-
-                    codeWriter.WriteMethodEnd(method, true);
-                }
-
-                // Actual Write
                 foreach (var method in IlReader.Methods(type))
                 {
                     codeWriter.WriteMethodStart(method);
@@ -229,6 +260,12 @@ namespace Il2Native.Logic
 
                     codeWriter.WriteMethodEnd(method);
                 }
+
+                codeWriter.DisableWrite(false);
+
+                // Actual Write
+                codeWriter.WriteRequiredTypesForBody();
+                codeWriter.WriteStoredText();
             }
 
             if (mode == ConvertingMode.Declaration)
@@ -325,8 +362,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="allITypes">
-        /// </param>
         /// <param name="genericSpecializations">
         /// </param>
         /// <returns>
@@ -410,8 +445,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="allITypes">
-        /// </param>
         /// <param name="typesAdded">
         /// </param>
         /// <param name="requiredITypesToAdd">
@@ -427,35 +460,6 @@ namespace Il2Native.Logic
                 if (type.TypeNotEquals(requiredIType))
                 {
                     AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
-                }
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="types">
-        /// </param>
-        /// <param name="allITypes">
-        /// </param>
-        /// <param name="typesAdded">
-        /// </param>
-        /// <param name="newListOfITypes">
-        /// </param>
-        /// <param name="genericSpecializations">
-        /// </param>
-        public static void ProcessRequiredITypesForITypes(
-            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
-        {
-            foreach (var type in types)
-            {
-                var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, typesAdded, requiredITypesToAdd, genericSpecializations);
-                newListOfITypes.AddRange(requiredITypesToAdd);
-
-                if (!typesAdded.Contains(type))
-                {
-                    typesAdded.Add(type);
-                    newListOfITypes.Add(type);
                 }
             }
         }
@@ -499,6 +503,7 @@ namespace Il2Native.Logic
                 {
                     var requiredITypes = type.Item2;
                     requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
+
                     // remove not used types, for example System.Object which maybe not in current assembly
                     requiredITypes.RemoveAll(r => !types.Any(n => n.TypeEquals(r)));
                     if (requiredITypes.Count == 0)
@@ -566,10 +571,16 @@ namespace Il2Native.Logic
                               || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
         }
 
+        /// <summary>
+        /// </summary>
         public enum ConvertingMode
         {
-            Declaration,
+            /// <summary>
+            /// </summary>
+            Declaration, 
 
+            /// <summary>
+            /// </summary>
             Definition
         }
 

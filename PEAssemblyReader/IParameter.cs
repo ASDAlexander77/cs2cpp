@@ -14,11 +14,7 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// </summary>
-        IType ParameterType { get; }
+        bool IsOut { get; }
 
         /// <summary>
         /// </summary>
@@ -26,6 +22,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsOut { get; }
+        string Name { get; }
+
+        /// <summary>
+        /// </summary>
+        IType ParameterType { get; }
     }
 }

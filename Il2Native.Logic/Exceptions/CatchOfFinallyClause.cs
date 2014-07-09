@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic.Exceptions
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="CatchOfFinallyClause.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Exceptions
 {
     using System;
     using System.Collections.Generic;
@@ -7,32 +16,54 @@
     using PEAssemblyReader;
 
     // if Exception is null means Finally Clause
+    /// <summary>
+    /// </summary>
     public class CatchOfFinallyClause
     {
-        private Lazy<List<string>> lazyFinallyJumps = new Lazy<List<string>>(() => new List<string>()); 
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<List<string>> lazyFinallyJumps = new Lazy<List<string>>(() => new List<string>());
 
-        public ExceptionHandlingClauseOptions Flags { get; set; }
-
-        public int Offset { get; set; }
-
-        public int Length { get; set; }
-
+        /// <summary>
+        /// </summary>
         public IType Catch { get; set; }
 
-        public CatchOfFinallyClause Next { get; set; }
-
-        public TryClause OwnerTry { get; set; }
-
-        public IList<string> FinallyJumps 
+        /// <summary>
+        /// </summary>
+        public IList<string> FinallyJumps
         {
             get
             {
-                return lazyFinallyJumps.Value;
+                return this.lazyFinallyJumps.Value;
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool FinallyVariablesAreWritten { get; set; }
 
+        /// <summary>
+        /// </summary>
+        public ExceptionHandlingClauseOptions Flags { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int Length { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public CatchOfFinallyClause Next { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int Offset { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public TryClause OwnerTry { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool RethrowCatchWithCleanUpRequired { get; set; }
     }
 }

@@ -68,6 +68,16 @@ namespace PEAssemblyReader
         /// </returns>
         IType ResolveType(int token, IType[] typeGenerics, IType[] methodGenerics);
 
+        /// <summary>
+        /// </summary>
+        /// <param name="s">
+        /// </param>
+        /// <param name="typeGenerics">
+        /// </param>
+        /// <param name="methodGenerics">
+        /// </param>
+        /// <returns>
+        /// </returns>
         IType ResolveType(string s, IType[] typeGenerics, IType[] methodGenerics);
     }
 }

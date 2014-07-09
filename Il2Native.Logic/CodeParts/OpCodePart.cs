@@ -93,6 +93,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public int? CustomJumpAddress { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool DefaultCase { get; set; }
 
         /// <summary>
@@ -242,10 +246,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public bool UseAsNullCoalescingExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public int? CustomJumpAddress { get; set; }
 
         /// <summary>
         /// </summary>

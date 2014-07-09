@@ -49,6 +49,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsDelegate { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsEnum { get; }
 
         /// <summary>
@@ -69,7 +73,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsDelegate { get; }
+        bool IsNested { get; }
 
         /// <summary>
         /// </summary>
@@ -85,16 +89,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsNested { get; }
-
-        /// <summary>
-        /// </summary>
         IModule Module { get; }
 
         /// <summary>
         /// to disable optimazing for the type
         /// </summary>
         bool UseAsClass { get; set; }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType Clone();
 
         /// <summary>
         /// </summary>
@@ -158,14 +164,30 @@ namespace PEAssemblyReader
         /// </returns>
         bool IsAssignableFrom(IType type);
 
+        /// <summary>
+        /// </summary>
+        /// <param name="rank">
+        /// </param>
+        /// <returns>
+        /// </returns>
         IType ToArrayType(int rank);
 
-        IType ToPointerType();
-
-        IType Clone();
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType ToClass();
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType ToNormal();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToPointerType();
     }
 }

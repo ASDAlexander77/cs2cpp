@@ -13,6 +13,7 @@ namespace PEAssemblyReader
     using System.Reflection.Metadata;
     using System.Reflection.Metadata.Ecma335;
 
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
@@ -176,19 +177,32 @@ namespace PEAssemblyReader
             throw new KeyNotFoundException();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="fullName">
+        /// </param>
+        /// <param name="typeGenerics">
+        /// </param>
+        /// <param name="methodGenerics">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
         public IType ResolveType(string fullName, IType[] typeGenerics, IType[] methodGenerics)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            var typeSymbol = new MetadataDecoder(peModuleSymbol).GetTypeSymbolForSerializedType(fullName) as TypeSymbol;
+            var typeSymbol = new MetadataDecoder(peModuleSymbol).GetTypeSymbolForSerializedType(fullName);
 
-            if (typeSymbol.TypeKind == Microsoft.CodeAnalysis.TypeKind.Error)
+            if (typeSymbol.TypeKind == TypeKind.Error)
             {
                 // try to find it in CoreLib
-                typeSymbol = new MetadataDecoder(peModuleSymbol.ContainingAssembly.CorLibrary.Modules[0] as PEModuleSymbol).GetTypeSymbolForSerializedType(fullName) as TypeSymbol;
+                typeSymbol =
+                    new MetadataDecoder(peModuleSymbol.ContainingAssembly.CorLibrary.Modules[0] as PEModuleSymbol).GetTypeSymbolForSerializedType(fullName);
             }
 
-            if (typeSymbol != null && typeSymbol.TypeKind != Microsoft.CodeAnalysis.TypeKind.Error)
+            if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
                 return new MetadataTypeAdapter(typeSymbol);
             }

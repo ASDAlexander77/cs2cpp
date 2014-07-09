@@ -8,8 +8,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
 {
-    using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
@@ -47,6 +45,85 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetArgIndex(this OpCodePart opCode)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldarg_S, Code.Ldarg, Code.Ldarga_S, Code.Ldarga, Code.Starg_S, Code.Starg))
+            {
+                var opCodeInt32 = opCode as OpCodeInt32Part;
+                index = opCodeInt32.Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+
+            return index;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetArgType(this BaseWriter baseWriter, int index)
+        {
+            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
+            var parameterType = parameter.ParameterType;
+            return parameterType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="classType">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetFieldTypeByIndex(this IType classType, int index)
+        {
+            var normalType = classType.ToNormal();
+            return normalType.IsEnum
+                       ? normalType.GetEnumUnderlyingType()
+                       : IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).First().FieldType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetLocalType(this OpCodePart opCode, BaseWriter baseWriter)
+        {
+            var asString = opCode.ToCode().ToString();
+            var index = -1;
+            if (opCode.Any(Code.Ldloc_S, Code.Ldloc, Code.Ldloca_S, Code.Ldloca) || opCode.Any(Code.Stloc_S, Code.Stloc))
+            {
+                index = (opCode as OpCodeInt32Part).Operand;
+            }
+            else
+            {
+                index = int.Parse(asString.Substring(asString.Length - 1));
+            }
+
+            var localType = baseWriter.LocalInfo[index].LocalType;
+            return localType;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="thisType">
         /// </param>
         /// <returns>
@@ -75,6 +152,18 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int IntTypeBitSize(this IType thisType)
+        {
+            var thisTypeString = thisType.TypeToCType();
+            return GetIntSize(thisTypeString);
         }
 
         /// <summary>
@@ -155,6 +244,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsExternalLibraryMethod(this IMethod method)
+        {
+            return method.IsInternalCall && !method.Name.StartsWith("llvm_");
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -162,6 +262,30 @@ namespace Il2Native.Logic
         public static bool IsFloat(this IType type)
         {
             return type != null && type.Name == "Float" && type.Namespace == "System";
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsIntValueTypeCastRequired(this IType thisType, IType type)
+        {
+            var thisTypeString = thisType.TypeToCType();
+            var typeString = type.TypeToCType();
+
+            var thisTypeSize = GetIntSize(thisTypeString);
+            var typeSize = GetIntSize(typeString);
+
+            if (thisTypeSize == 0 || typeSize == 0)
+            {
+                return false;
+            }
+
+            return thisTypeSize > typeSize;
         }
 
         /// <summary>
@@ -507,6 +631,23 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="thisTypeString">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static int GetIntSize(string thisTypeString)
+        {
+            if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
+            {
+                return 0;
+            }
+
+            int size;
+            return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="method">
         /// </param>
         /// <param name="overridingMethod">
@@ -538,91 +679,6 @@ namespace Il2Native.Logic
             }
 
             return true;
-        }
-
-        public static bool IsIntValueTypeCastRequired(this IType thisType, IType type)
-        {
-            var thisTypeString = thisType.TypeToCType();
-            var typeString = type.TypeToCType();
-
-            var thisTypeSize = GetIntSize(thisTypeString);
-            var typeSize = GetIntSize(typeString);
-
-            if (thisTypeSize == 0 || typeSize == 0)
-            {
-                return false;
-            }
-
-            return thisTypeSize > typeSize;
-        }
-
-        public static int IntTypeBitSize(this IType thisType)
-        {
-            var thisTypeString = thisType.TypeToCType();
-            return GetIntSize(thisTypeString);
-        }
-
-        private static int GetIntSize(string thisTypeString)
-        {
-            if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
-            {
-                return 0;
-            }
-
-            int size;
-            return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
-        }
-
-        public static IType GetLocalType(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            var asString = opCode.ToCode().ToString();
-            var index = -1;
-            if (opCode.Any(Code.Ldloc_S, Code.Ldloc, Code.Ldloca_S, Code.Ldloca) || opCode.Any(Code.Stloc_S, Code.Stloc))
-            {
-                index = (opCode as OpCodeInt32Part).Operand;
-            }
-            else
-            {
-                index = int.Parse(asString.Substring(asString.Length - 1));
-            }
-
-            IType localType = baseWriter.LocalInfo[index].LocalType;
-            return localType;
-        }
-
-        public static IType GetArgType(this BaseWriter baseWriter, int index)
-        {
-            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
-            var parameterType = parameter.ParameterType;
-            return parameterType;
-        }
-
-        public static int GetArgIndex(this OpCodePart opCode)
-        {
-            var asString = opCode.ToCode().ToString();
-            var index = -1;
-            if (opCode.Any(Code.Ldarg_S, Code.Ldarg, Code.Ldarga_S, Code.Ldarga, Code.Starg_S, Code.Starg))
-            {
-                var opCodeInt32 = opCode as OpCodeInt32Part;
-                index = opCodeInt32.Operand;
-            }
-            else
-            {
-                index = int.Parse(asString.Substring(asString.Length - 1));
-            }
-
-            return index;
-        }
-
-        public static bool IsExternalLibraryMethod(this IMethod method)
-        {
-            return method.IsInternalCall && !method.Name.StartsWith("llvm_");
-        }
-
-        public static IType GetFieldTypeByIndex(this IType classType, int index)
-        {
-            var normalType = classType.ToNormal();
-            return normalType.IsEnum ? normalType.GetEnumUnderlyingType() : IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).First().FieldType;
         }
     }
 }

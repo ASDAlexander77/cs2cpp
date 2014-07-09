@@ -29,6 +29,8 @@ namespace Il2Native.Logic.CodeParts
         {
         }
 
+        /// <summary>
+        /// </summary>
         public int StringIndex { get; set; }
     }
 }

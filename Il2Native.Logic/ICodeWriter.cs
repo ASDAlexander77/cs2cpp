@@ -22,6 +22,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="value">
+        /// </param>
+        void DisableWrite(bool value);
+
+        /// <summary>
+        /// </summary>
         /// <param name="rawText">
         /// </param>
         void Write(string rawText);
@@ -30,7 +36,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ilCode">
         /// </param>
-        void Write(OpCodePart ilCode, bool doNotWrite = false);
+        void Write(OpCodePart ilCode);
 
         /// <summary>
         /// </summary>
@@ -66,13 +72,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorEnd(IConstructor ctor, bool doNotWrite = false);
+        void WriteConstructorEnd(IConstructor ctor);
 
         /// <summary>
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorStart(IConstructor ctor, bool doNotWrite = false);
+        void WriteConstructorStart(IConstructor ctor);
 
         /// <summary>
         /// </summary>
@@ -98,6 +104,10 @@ namespace Il2Native.Logic
         /// </param>
         void WriteFieldStart(IField field, int number, int count);
 
+        /// <summary>
+        /// </summary>
+        /// <param name="fieldType">
+        /// </param>
         void WriteFieldType(IType fieldType);
 
         /// <summary>
@@ -114,21 +124,30 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodEnd(IMethod method, bool doNotWrite = false);
+        void WriteMethodEnd(IMethod method);
 
         /// <summary>
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodStart(IMethod method, bool doNotWrite = false);
+        void WriteMethodStart(IMethod method);
+
+        /// <summary>
+        /// </summary>
+        void WriteRequiredTypesForBody();
 
         /// <summary>
         /// </summary>
         /// <param name="moduleName">
         /// </param>
         /// <param name="assemblyName">
-        /// </param>/// 
+        /// </param>
+        /// ///
         void WriteStart(string moduleName, string assemblyName);
+
+        /// <summary>
+        /// </summary>
+        void WriteStoredText();
 
         /// <summary>
         /// </summary>

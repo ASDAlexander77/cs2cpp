@@ -18,15 +18,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsOverride { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsStatic { get; }
 
         /// <summary>
         /// </summary>
         bool IsVirtual { get; }
-
-        /// <summary>
-        /// </summary>
-        bool IsOverride { get; }
 
         /// <summary>
         /// </summary>

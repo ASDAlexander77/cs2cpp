@@ -1,24 +1,49 @@
-﻿namespace Il2Native.Logic.Exceptions
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="TryClause.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Exceptions
 {
     using System;
     using System.Collections.Generic;
 
+    /// <summary>
+    /// </summary>
     public class TryClause : IComparable
     {
-        private Lazy<List<CatchOfFinallyClause>> lazyCatches = new Lazy<List<CatchOfFinallyClause>>(() => new List<CatchOfFinallyClause>()); 
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<List<CatchOfFinallyClause>> lazyCatches = new Lazy<List<CatchOfFinallyClause>>(() => new List<CatchOfFinallyClause>());
 
-        public int Offset { get; set; }
-
-        public int Length { get; set; }
-
-        public List<CatchOfFinallyClause> Catches 
+        /// <summary>
+        /// </summary>
+        public List<CatchOfFinallyClause> Catches
         {
             get
             {
-                return lazyCatches.Value;
+                return this.lazyCatches.Value;
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public int Length { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public int Offset { get; set; }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public int CompareTo(TryClause other)
         {
             var cmp = this.Offset.CompareTo(other.Offset);
@@ -30,6 +55,12 @@
             return this.Length.CompareTo(other.Length);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public int CompareTo(object obj)
         {
             var other = obj as TryClause;

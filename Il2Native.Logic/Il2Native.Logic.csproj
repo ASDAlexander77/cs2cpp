@@ -93,17 +93,13 @@
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\llvm_declarations.li" />
     <None Include="Resources\llvm_mini_mscore_lib.li" />
-    <None Include="Resources\operations.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Resources\stack.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">

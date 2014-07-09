@@ -9,11 +9,11 @@
 namespace PEAssemblyReader
 {
     using System;
+    using System.Collections.Generic;
     using System.Reflection;
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -27,7 +27,9 @@ namespace PEAssemblyReader
         /// </summary>
         private ExceptionRegion exceptionRegion;
 
-        private Lazy<IList<string>> lazyFinallyJumps;
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IList<string>> lazyFinallyJumps;
 
         /// <summary>
         /// </summary>
@@ -44,17 +46,27 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool RethrowCatchWithCleanUpRequired { get; set; }
-
-        /// <summary>
-        /// </summary>
         public IType CatchType
         {
             get
             {
-                return catchType != null ? new MetadataTypeAdapter(this.catchType) : null;
+                return this.catchType != null ? new MetadataTypeAdapter(this.catchType) : null;
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public IList<string> FinallyJumps
+        {
+            get
+            {
+                return this.lazyFinallyJumps.Value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool FinallyVariablesAreWritten { get; set; }
 
         /// <summary>
         /// </summary>
@@ -66,10 +78,14 @@ namespace PEAssemblyReader
             {
                 switch (this.exceptionRegion.Kind)
                 {
-                    case ExceptionRegionKind.Catch: return ExceptionHandlingClauseOptions.Clause;
-                    case ExceptionRegionKind.Filter: return ExceptionHandlingClauseOptions.Filter;
-                    case ExceptionRegionKind.Finally: return ExceptionHandlingClauseOptions.Finally;
-                    case ExceptionRegionKind.Fault: return ExceptionHandlingClauseOptions.Fault;
+                    case ExceptionRegionKind.Catch:
+                        return ExceptionHandlingClauseOptions.Clause;
+                    case ExceptionRegionKind.Filter:
+                        return ExceptionHandlingClauseOptions.Filter;
+                    case ExceptionRegionKind.Finally:
+                        return ExceptionHandlingClauseOptions.Finally;
+                    case ExceptionRegionKind.Fault:
+                        return ExceptionHandlingClauseOptions.Fault;
                 }
 
                 throw new NotImplementedException();
@@ -98,6 +114,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool RethrowCatchWithCleanUpRequired { get; set; }
+
+        /// <summary>
+        /// </summary>
         public int TryLength
         {
             get
@@ -115,15 +135,5 @@ namespace PEAssemblyReader
                 return this.exceptionRegion.TryOffset;
             }
         }
-
-        public IList<string> FinallyJumps
-        {
-            get
-            {
-                return lazyFinallyJumps.Value;
-            }
-        }
-
-        public bool FinallyVariablesAreWritten { get; set; }
     }
 }

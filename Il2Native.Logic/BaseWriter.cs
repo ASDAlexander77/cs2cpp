@@ -28,6 +28,10 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
+        protected readonly HashSet<IType> requiredTypesForBody = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         public BaseWriter()
         {
             this.StaticConstructors = new List<IConstructor>();
@@ -42,6 +46,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string AssemblyQualifiedName { get; protected set; }
+
+        /// <summary>
+        /// </summary>
+        public bool HasMethodThis { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -65,15 +73,19 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public IParameter[] Parameters { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public IType ThisType { get; private set; }
+
+        /// <summary>
+        /// </summary>
         protected IExceptionHandlingClause[] ExceptionHandlingClauses { get; private set; }
 
         /// <summary>
         /// </summary>
         protected IType[] GenericMethodArguments { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool HasMethodThis { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -101,10 +113,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public IParameter[] Parameters { get; private set; }
-
-        /// <summary>
-        /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
 
         /// <summary>
@@ -113,13 +121,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public IType ThisType { get; private set; }
-
-        /// <summary>
-        /// </summary>
         protected IType[] TypeGenericArguments { get; private set; }
-
-        public readonly HashSet<IType> requiredTypesForBody = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
@@ -251,6 +253,38 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="parameters">
+        /// </param>
+        public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
+        {
+            if (parameters == null)
+            {
+                return;
+            }
+
+            foreach (var parameter in parameters)
+            {
+                if (parameter.ParameterType.IsStructureType())
+                {
+                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void CheckIfTypeIsRequiredForBody(IType type)
+        {
+            if (!type.IsArray)
+            {
+                this.requiredTypesForBody.Add(type);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="oper1">
         /// </param>
         /// <returns>
@@ -261,6 +295,12 @@ namespace Il2Native.Logic
             return isThis;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="fullTypeName">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public IType ResolveType(string fullTypeName)
         {
             return this.ThisType.Module.ResolveType(fullTypeName, null, null);
@@ -269,6 +309,8 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         /// <param name="opCode">
+        /// </param>
+        /// <param name="doNotUseCachedResult">
         /// </param>
         /// <returns>
         /// </returns>
@@ -350,52 +392,52 @@ namespace Il2Native.Logic
                 case Code.Ble_Un_S:
                 case Code.Bgt_Un:
                 case Code.Bgt_Un_S:
-                    return new ReturnResult(ResolveType("System.Boolean"));
+                    return new ReturnResult(this.ResolveType("System.Boolean"));
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    return new ReturnResult(ResolveType("System.Int32"));
+                    return new ReturnResult(this.ResolveType("System.Int32"));
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    return new ReturnResult(ResolveType("System.UInt32"));
+                    return new ReturnResult(this.ResolveType("System.UInt32"));
                 case Code.Conv_R_Un:
                 case Code.Conv_R4:
-                    return new ReturnResult(ResolveType("System.Single"));
+                    return new ReturnResult(this.ResolveType("System.Single"));
                 case Code.Conv_R8:
-                    return new ReturnResult(ResolveType("System.Double"));
+                    return new ReturnResult(this.ResolveType("System.Double"));
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-                    return new ReturnResult(ResolveType("System.SByte"));
+                    return new ReturnResult(this.ResolveType("System.SByte"));
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    return new ReturnResult(ResolveType("System.Int16"));
+                    return new ReturnResult(this.ResolveType("System.Int16"));
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    return new ReturnResult(ResolveType("System.Int32"));
+                    return new ReturnResult(this.ResolveType("System.Int32"));
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    return new ReturnResult(ResolveType("System.Int64"));
+                    return new ReturnResult(this.ResolveType("System.Int64"));
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    return new ReturnResult(ResolveType("System.Byte"));
+                    return new ReturnResult(this.ResolveType("System.Byte"));
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    return new ReturnResult(ResolveType("System.UInt16"));
+                    return new ReturnResult(this.ResolveType("System.UInt16"));
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    return new ReturnResult(ResolveType("System.UInt32"));
+                    return new ReturnResult(this.ResolveType("System.UInt32"));
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    return new ReturnResult(ResolveType("System.UInt64"));
+                    return new ReturnResult(this.ResolveType("System.UInt64"));
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Newarr:
@@ -406,7 +448,7 @@ namespace Il2Native.Logic
                 case Code.Dup:
                     return this.ResultOf(opCode.OpCodeOperands[0]);
                 case Code.Ldlen:
-                    return new ReturnResult(ResolveType("System.Int32"));
+                    return new ReturnResult(this.ResolveType("System.Int32"));
                 case Code.Ldloca:
                 case Code.Ldloca_S:
                     var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
@@ -460,7 +502,7 @@ namespace Il2Native.Logic
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.IType.GetElementType());
                 case Code.Ldelem_Ref:
-                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
+                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult(null);
                     result.IsReference = true;
                     return result;
                 case Code.Ldelema:
@@ -480,35 +522,35 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_M1:
                 case Code.Ldc_I4:
                 case Code.Ldc_I4_S:
-                    return new ReturnResult(opCode.UseAsBoolean ? ResolveType("System.Boolean") : ResolveType("System.Int32")) { IsConst = true };
+                    return new ReturnResult(opCode.UseAsBoolean ? this.ResolveType("System.Boolean") : this.ResolveType("System.Int32")) { IsConst = true };
                 case Code.Ldc_I8:
-                    return new ReturnResult(ResolveType("System.Int64")) { IsConst = true };
+                    return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
                 case Code.Ldc_R4:
-                    return new ReturnResult(ResolveType("System.Single")) { IsConst = true };
+                    return new ReturnResult(this.ResolveType("System.Single")) { IsConst = true };
                 case Code.Ldc_R8:
-                    return new ReturnResult(ResolveType("System.Double")) { IsConst = true };
+                    return new ReturnResult(this.ResolveType("System.Double")) { IsConst = true };
                 case Code.Ldstr:
-                    return new ReturnResult(ResolveType("System.String"));
+                    return new ReturnResult(this.ResolveType("System.String"));
                 case Code.Ldind_I:
-                    return new ReturnResult(ResolveType("System.Int32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int32")) { IsIndirect = true };
                 case Code.Ldind_I1:
-                    return new ReturnResult(ResolveType("System.Byte")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Byte")) { IsIndirect = true };
                 case Code.Ldind_I2:
-                    return new ReturnResult(ResolveType("System.Int16")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int16")) { IsIndirect = true };
                 case Code.Ldind_I4:
-                    return new ReturnResult(ResolveType("System.Int32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int32")) { IsIndirect = true };
                 case Code.Ldind_I8:
-                    return new ReturnResult(ResolveType("System.Int64")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int64")) { IsIndirect = true };
                 case Code.Ldind_U1:
-                    return new ReturnResult(ResolveType("System.Byte")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Byte")) { IsIndirect = true };
                 case Code.Ldind_U2:
-                    return new ReturnResult(ResolveType("System.UInt16")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.UInt16")) { IsIndirect = true };
                 case Code.Ldind_U4:
-                    return new ReturnResult(ResolveType("System.UInt32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.UInt32")) { IsIndirect = true };
                 case Code.Ldind_R4:
-                    return new ReturnResult(ResolveType("System.Single")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Single")) { IsIndirect = true };
                 case Code.Ldind_R8:
-                    return new ReturnResult(ResolveType("System.Double")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Double")) { IsIndirect = true };
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
                     return new ReturnResult(resultType.GetElementType()) { IsIndirect = true, IsReference = true };
@@ -589,20 +631,24 @@ namespace Il2Native.Logic
                 var receivingType = this.ResultOf(usedOpCode1);
                 if (requiredType != receivingType)
                 {
-                    if (requiredType.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (requiredType.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode1.UseAsBoolean = true;
                         return;
                     }
                 }
 
-                if ((requiredType.IType.IsPointer || requiredType.IType.IsByRef) && usedOpCode1.Any(Code.Conv_U) && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
+                if ((requiredType.IType.IsPointer || requiredType.IType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
+                    && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
                 }
             }
 
-            if (opCode.OpCodeOperands.Length == 2 && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
+            if (opCode.OpCodeOperands.Length == 2
+                && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
+                
+                
                 /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
             {
                 // types should be equal
@@ -613,13 +659,13 @@ namespace Il2Native.Logic
 
                 if (type1 != null && type2 != null && !type1.Equals(type2))
                 {
-                    if (type1.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (type1.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode2.UseAsBoolean = true;
                         return;
                     }
 
-                    if (type2.IsTypeOf(ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
+                    if (type2.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
                     {
                         usedOpCode1.UseAsBoolean = true;
                         return;
@@ -632,7 +678,7 @@ namespace Il2Native.Logic
         /// </summary>
         protected void AssignExceptionsToOpCodes()
         {
-            if (this.ExceptionHandlingClauses == null || !ExceptionHandlingClauses.Any())
+            if (this.ExceptionHandlingClauses == null || !this.ExceptionHandlingClauses.Any())
             {
                 return;
             }
@@ -651,12 +697,12 @@ namespace Il2Native.Logic
                         tryItem.Length = exceptionHandlingClause.TryLength;
                     }
 
-                    var catchOfFinallyClause = new CatchOfFinallyClause()
+                    var catchOfFinallyClause = new CatchOfFinallyClause
                                                    {
-                                                       Flags = exceptionHandlingClause.Flags,
-                                                       Offset = exceptionHandlingClause.HandlerOffset,
-                                                       Length = exceptionHandlingClause.HandlerLength,
-                                                       Catch = exceptionHandlingClause.CatchType,
+                                                       Flags = exceptionHandlingClause.Flags, 
+                                                       Offset = exceptionHandlingClause.HandlerOffset, 
+                                                       Length = exceptionHandlingClause.HandlerLength, 
+                                                       Catch = exceptionHandlingClause.CatchType, 
                                                        OwnerTry = tryItem
                                                    };
 
@@ -961,27 +1007,11 @@ namespace Il2Native.Logic
             return this.Ops.ToArray();
         }
 
-        public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters, bool doNotWrite)
-        {
-            if (parameters == null || !doNotWrite)
-            {
-                return;
-            }
-
-            foreach (var parameter in parameters)
-            {
-                if (parameter.ParameterType.IsStructureType())
-                {
-                    this.requiredTypesForBody.Add(parameter.ParameterType);
-                }
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        protected void Process(OpCodePart opCode, bool doNotWrite)
+        protected void Process(OpCodePart opCode)
         {
             this.Ops.Add(opCode);
 
@@ -994,17 +1024,17 @@ namespace Il2Native.Logic
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
                         opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
-                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters(), doNotWrite);
+                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
-                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters(), doNotWrite);
+                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
-                    this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters(), doNotWrite);
+                    this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
                     break;
                 case Code.Stelem:
                 case Code.Stelem_I:
@@ -1317,7 +1347,7 @@ namespace Il2Native.Logic
         {
             var groups = new List<OpCodePart[]>();
 
-            for (var i = 0; i < conditions.Length; )
+            for (var i = 0; i < conditions.Length;)
             {
                 var group = new List<OpCodePart>();
 
@@ -1420,18 +1450,18 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart,
-            OpCodePart currentArgument,
-            Stack<OpCodePart> stack,
-            out int sizeOfCondition,
-            out OpCodePart firstCondition,
+            OpCodePart opCodePart, 
+            OpCodePart currentArgument, 
+            Stack<OpCodePart> stack, 
+            out int sizeOfCondition, 
+            out OpCodePart firstCondition, 
             out OpCodePart lastCondition)
         {
             sizeOfCondition = 3;
             firstCondition = null;
             lastCondition = null;
 
-            for (; ; )
+            for (;;)
             {
                 var subOpCodes = stack.Take(sizeOfCondition);
                 if (subOpCodes.Count() != sizeOfCondition)

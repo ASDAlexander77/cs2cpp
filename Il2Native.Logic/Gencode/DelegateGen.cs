@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ArraySingleDimensionGen.cs" company="">
+// <copyright file="DelegateGen.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -8,14 +8,18 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.Gencode
 {
-    using Il2Native.Logic.CodeParts;
-
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public static class DelegateGen
     {
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsDelegateFunctionBody(this IMethod method)
         {
             return method.Name == "Invoke" || method.Name == "BeginInvoke" || method.Name == "EndInvoke";
@@ -25,7 +29,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="llvmWriter">
         /// </param>
-        /// <param name="opCode">
+        /// <param name="method">
         /// </param>
         public static void WriteDelegateFunctionBody(this LlvmWriter llvmWriter, IMethod method)
         {

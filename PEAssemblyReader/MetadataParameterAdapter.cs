@@ -32,6 +32,26 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsOut
+        {
+            get
+            {
+                return this.paramDef.RefKind == RefKind.Out;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsRef
+        {
+            get
+            {
+                return this.paramDef.RefKind == RefKind.Ref;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string Name
         {
             get
@@ -47,22 +67,6 @@ namespace PEAssemblyReader
             get
             {
                 return new MetadataTypeAdapter(this.paramDef.Type, this.IsRef || this.IsOut);
-            }
-        }
-
-        public bool IsRef 
-        {
-            get
-            {
-                return this.paramDef.RefKind == RefKind.Ref;
-            }
-        }
-
-        public bool IsOut
-        {
-            get
-            {
-                return this.paramDef.RefKind == RefKind.Out;
             }
         }
 

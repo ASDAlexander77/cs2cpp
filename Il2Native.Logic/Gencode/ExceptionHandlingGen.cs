@@ -140,10 +140,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="upperLevelExceptionHandlingClause">
         /// </param>
         public static void WriteCatchEnd(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCode, 
-            CatchOfFinallyClause exceptionHandlingClause,
-            CatchOfFinallyClause upperLevelExceptionHandlingClause)
+            this LlvmWriter llvmWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause, CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -168,8 +165,7 @@ namespace Il2Native.Logic.Gencode
 
                 llvmWriter.WriteLlvmLoad(opCodeNope, fullyDefinedRef);
                 writer.WriteLine(string.Empty);
-                writer.WriteLine(
-                    "switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.Offset, opCodeNope.Result);
+                writer.WriteLine("switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.Offset, opCodeNope.Result);
                 writer.Indent++;
                 writer.WriteLine("i32 {0}, label %.finally_exit{1}", index++, exceptionHandlingClause.Offset);
                 foreach (var leave in exceptionHandlingClause.FinallyJumps)
@@ -292,14 +288,11 @@ namespace Il2Native.Logic.Gencode
             catchType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*))", catchType.GetRttiPointerInfoName());
             var compareResultResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, llvmWriter.ResolveType("System.Boolean"));
+            writer.WriteLine("icmp eq i32 {0}, {1}", errorTypeIdOfCatchResultNumber, errorTypeIdOfExceptionResultNumber);
             writer.WriteLine(
-                "icmp eq i32 {0}, {1}",
-                errorTypeIdOfCatchResultNumber,
-                errorTypeIdOfExceptionResultNumber);
-            writer.WriteLine(
-                "br i1 {0}, label %.exception_handler{1}, label %.{2}",
+                "br i1 {0}, label %.exception_handler{1}, label %.{2}", 
                 compareResultResultNumber, 
-                exceptionHandlingClause.Offset,
+                exceptionHandlingClause.Offset, 
                 nextExceptionHandlingClause != null ? string.Concat("exception_switch", nextExceptionHandlingClause.Offset) : "resume");
 
             writer.Indent--;
@@ -465,11 +458,7 @@ namespace Il2Native.Logic.Gencode
             var insertedErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.WriteLine("insertvalue {1} undef, i8* {0}, 0", getErrorObjectResultNumber, "{ i8*, i32 }");
             var insertedErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.WriteLine(
-                "insertvalue {2} {0}, i32 {1}, 1",
-                insertedErrorObjectResultNumber,
-                getErrorTypeIdResultNumber, 
-                "{ i8*, i32 }");
+            writer.WriteLine("insertvalue {2} {0}, i32 {1}, 1", insertedErrorObjectResultNumber, getErrorTypeIdResultNumber, "{ i8*, i32 }");
             writer.WriteLine("resume {1} {0}", insertedErrorTypeIdResultNumber, "{ i8*, i32 }");
         }
 
@@ -484,10 +473,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="upperLevelExceptionHandlingClause">
         /// </param>
         public static void WriteRethrow(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCode,
-            CatchOfFinallyClause exceptionHandlingClause,
-            CatchOfFinallyClause upperLevelExceptionHandlingClause)
+            this LlvmWriter llvmWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause, CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = llvmWriter.Output;
 
@@ -579,8 +565,7 @@ namespace Il2Native.Logic.Gencode
             if (exceptionHandlingClause != null)
             {
                 writer.Indent++;
-                writer.WriteLine(
-                    "to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+                writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
                 writer.Indent--;
                 exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;
             }

@@ -26,7 +26,9 @@ namespace PEAssemblyReader
     /// </summary>
     public class MetadataMethodAdapter : IMethod
     {
-        private Lazy<string> lazyNamespace;
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
         /// </summary>
@@ -40,7 +42,7 @@ namespace PEAssemblyReader
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
-            this.lazyNamespace = new Lazy<string>(calculateNamespace);
+            this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
         }
 
         /// <summary>
@@ -119,6 +121,32 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public string ExplicitName
+        {
+            get
+            {
+                var result = new StringBuilder();
+
+                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
+                {
+                    if (this.methodDef.ContainingType.IsNestedType())
+                    {
+                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
+                        result.Append('+');
+                    }
+
+                    result.Append(this.methodDef.ContainingType.Name);
+                    result.Append('.');
+                }
+
+                result.Append(this.methodDef.Name);
+
+                return result.ToString();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <exception cref="NotImplementedException">
         /// </exception>
         public string FullName
@@ -165,6 +193,26 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsInternalCall
+        {
+            get
+            {
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ManagedMask);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsOverride
+        {
+            get
+            {
+                return this.methodDef.IsOverride;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsStatic
         {
             get
@@ -180,24 +228,6 @@ namespace PEAssemblyReader
             get
             {
                 return this.methodDef.IsVirtual;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsOverride
-        {
-            get
-            {
-                return this.methodDef.IsOverride;
-            }
-        }
-
-        public bool IsInternalCall
-        {
-            get 
-            {
-                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ManagedMask);
             }
         }
 
@@ -262,30 +292,6 @@ namespace PEAssemblyReader
             }
         }
 
-        public string ExplicitName
-        {
-            get
-            {
-                var result = new StringBuilder();
-
-                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
-                {
-                    if (this.methodDef.ContainingType.IsNestedType())
-                    {
-                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
-                        result.Append('+');
-                    }
-
-                    result.Append(this.methodDef.ContainingType.Name);
-                    result.Append('.');
-                }
-
-                result.Append(this.methodDef.Name);
-
-                return result.ToString();
-            }
-        }
-
         /// <summary>
         /// </summary>
         public string Namespace
@@ -294,11 +300,6 @@ namespace PEAssemblyReader
             {
                 return this.lazyNamespace.Value;
             }
-        }
-
-        private string calculateNamespace()
-        {
-            return this.methodDef.CalculateNamespace();
         }
 
         /// <summary>
@@ -342,11 +343,37 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            var type = obj as IName;
+            if (type != null)
+            {
+                return this.CompareTo(type) == 0;
+            }
+
+            return base.Equals(obj);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
             return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return this.ToString().GetHashCode();
         }
 
         /// <summary>
@@ -434,6 +461,12 @@ namespace PEAssemblyReader
             return result.ToString();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="ownerOfExplicitInterface">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public string ToString(IType ownerOfExplicitInterface)
         {
             var result = new StringBuilder();
@@ -490,28 +523,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="obj">
-        /// </param>
         /// <returns>
         /// </returns>
-        public override bool Equals(object obj)
+        private string calculateNamespace()
         {
-            var type = obj as IName;
-            if (type != null)
-            {
-                return this.CompareTo(type) == 0;
-            }
-
-            return base.Equals(obj);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public override int GetHashCode()
-        {
-            return this.ToString().GetHashCode();
+            return this.methodDef.CalculateNamespace();
         }
     }
 }

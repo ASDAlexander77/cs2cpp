@@ -8,10 +8,11 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
-    using Microsoft.CodeAnalysis.CSharp;
-    using Microsoft.CodeAnalysis.CSharp.Symbols;
     using System.Diagnostics;
     using System.Text;
+
+    using Microsoft.CodeAnalysis.CSharp;
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
     /// </summary>
@@ -74,6 +75,12 @@ namespace PEAssemblyReader
             return !type.TypeEquals(other);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="symbol">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static string CalculateNamespace(this Symbol symbol)
         {
             var namespaceSrc = symbol.ContainingNamespace;
@@ -97,7 +104,7 @@ namespace PEAssemblyReader
                     continue;
                 }
 
-                sb.Append(namespacePart.ToString());
+                sb.Append(namespacePart);
             }
 
             return sb.ToString();

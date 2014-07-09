@@ -79,39 +79,5 @@ namespace Il2Native.Logic.Properties {
                 return ((byte[])(obj));
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to template&lt;typename T&gt; System::Object * box(T t);
-        ///template&lt;&gt; System::Object * box(bool b) { return new System::Boolean(b); }
-        ///template&lt;&gt; System::Object * box(int i) { return new System::Int32(i); }
-        ///
-        ///template&lt;typename T&gt; T unbox(::System::Object * o);
-        ///template&lt;&gt; bool unbox(System::Object * o) { return *(dynamic_cast&lt;System::Boolean*&gt;(o)); }
-        ///template&lt;&gt; int unbox(System::Object * o) { return *(dynamic_cast&lt;System::Int32*&gt;(o)); }
-        ///
-        ///template&lt;typename T&gt; inline T nullCoalescing(T val, T def) { return (val !=  [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string operations {
-            get {
-                return ResourceManager.GetString("operations", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to class Stack
-        ///{
-        ///public:
-        ///	Stack() 
-        ///	{
-        ///	}
-        ///};
-        ///
-        ///.
-        /// </summary>
-        internal static string stack {
-            get {
-                return ResourceManager.GetString("stack", resourceCulture);
-            }
-        }
     }
 }

@@ -13,6 +13,7 @@ namespace Il2Native.Logic
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -28,7 +29,6 @@ namespace Il2Native.Logic
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -279,6 +279,8 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="source">
         /// </param>
+        /// <param name="args">
+        /// </param>
         public IlReader(string source, string[] args)
             : this()
         {
@@ -290,10 +292,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string CoreLibPath { get; set; }
-
-        /// <summary>
-        /// </summary>
         public string AssemblyQualifiedName
         {
             get
@@ -301,6 +299,10 @@ namespace Il2Native.Logic
                 return this.Assembly.Assembly.Identity.Name;
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public string CoreLibPath { get; set; }
 
         /// <summary>
         /// </summary>
@@ -358,7 +360,7 @@ namespace Il2Native.Logic
         public void Load()
         {
             this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
-                                ? Compile(this.Source)
+                                ? this.Compile(this.Source)
                                 : AssemblyMetadata.CreateFromFile(this.Source);
         }
 
@@ -622,42 +624,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="source">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="Exception">
-        /// </exception>
-        private AssemblyMetadata Compile(string source)
-        {
-            var codeProvider = new CSharpCodeProvider();
-            var icc = codeProvider.CreateCompiler();
-            var outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
-
-            var parameters = new CompilerParameters();
-            parameters.GenerateExecutable = false;
-            parameters.GenerateInMemory = false;
-            parameters.CompilerOptions = string.Concat(
-                "/optimize+ /unsafe+", string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
-            parameters.OutputAssembly = outDll;
-
-            // parameters.CompilerOptions = "/optimize-";
-            var results = icc.CompileAssemblyFromFile(parameters, source);
-
-            if (results.Errors.Count > 0)
-            {
-                foreach (CompilerError compilerError in results.Errors)
-                {
-                    throw new Exception(compilerError.ErrorText);
-                }
-            }
-
-            // Successful Compile
-            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="identity">
         /// </param>
         /// <param name="map">
@@ -734,6 +700,42 @@ namespace Il2Native.Logic
             }
 
             throw new InvalidOperationException("Could not read a short for of int32");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="source">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="Exception">
+        /// </exception>
+        private AssemblyMetadata Compile(string source)
+        {
+            var codeProvider = new CSharpCodeProvider();
+            var icc = codeProvider.CreateCompiler();
+            var outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
+
+            var parameters = new CompilerParameters();
+            parameters.GenerateExecutable = false;
+            parameters.GenerateInMemory = false;
+            parameters.CompilerOptions = string.Concat(
+                "/optimize+ /unsafe+", string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
+            parameters.OutputAssembly = outDll;
+
+            // parameters.CompilerOptions = "/optimize-";
+            var results = icc.CompileAssemblyFromFile(parameters, source);
+
+            if (results.Errors.Count > 0)
+            {
+                foreach (CompilerError compilerError in results.Errors)
+                {
+                    throw new Exception(compilerError.ErrorText);
+                }
+            }
+
+            // Successful Compile
+            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
         }
 
         /// <summary>

@@ -6,7 +6,6 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
     using System;
@@ -51,6 +50,10 @@ namespace Il2Native.Logic
         /// </summary>
         public IType Type { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public override string ToString()
         {
             return this.Name;

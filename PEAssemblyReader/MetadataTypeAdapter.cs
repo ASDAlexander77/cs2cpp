@@ -24,11 +24,13 @@ namespace PEAssemblyReader
     [DebuggerDisplay("Type = {FullName}")]
     public class MetadataTypeAdapter : IType
     {
-        private Lazy<string> lazyNamespace;
-
         /// <summary>
         /// </summary>
         private readonly bool isByRef;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
         /// </summary>
@@ -47,7 +49,7 @@ namespace PEAssemblyReader
             this.typeDef = typeDef;
             this.isByRef = isByRef;
 
-            this.lazyNamespace = new Lazy<string>(calculateNamespace);
+            this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
         }
 
         /// <summary>
@@ -210,6 +212,8 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsDelegate
         {
             get
@@ -231,16 +235,6 @@ namespace PEAssemblyReader
 
                 return this.typeDef.IsEnumType() || this.IsDerivedFromEnum();
             }
-        }
-
-        private bool IsDerivedFromEnum()
-        {
-            return this.BaseType != null && this.BaseType.FullName == "System.Enum";
-        }
-
-        private bool IsDerivedFromValueType()
-        {
-            return this.BaseType != null && this.BaseType.FullName == "System.ValueType";
         }
 
         /// <summary>
@@ -286,6 +280,16 @@ namespace PEAssemblyReader
             get
             {
                 return this.typeDef.IsInterfaceType();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsNested
+        {
+            get
+            {
+                return this.typeDef.IsNestedType();
             }
         }
 
@@ -360,25 +364,12 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsNested
+        public IModule Module
         {
             get
             {
-                return this.typeDef.IsNestedType();
+                return new MetadataModuleAdapter(this.typeDef.ContainingModule);
             }
-        }
-
-        public bool UseAsClass { get; set; }
-
-        public IEnumerable<IType> GetNestedTypes()
-        {
-            var peType = this.typeDef as PENamedTypeSymbol;
-            if (peType != null)
-            {
-                return peType.GetTypeMembers().Select(t => new MetadataTypeAdapter(t));
-            }
-
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -401,44 +392,17 @@ namespace PEAssemblyReader
             }
         }
 
-        private string calculateNamespace()
-        {
-            return this.typeDef.CalculateNamespace();
-        }
+        /// <summary>
+        /// </summary>
+        public bool UseAsClass { get; set; }
 
         /// <summary>
         /// </summary>
-        public IModule Module
-        {
-            get
-            {
-                return new MetadataModuleAdapter(this.typeDef.ContainingModule);
-            }
-        }
-
-        public IType ToArrayType(int rank)
-        {
-            return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
-        }
-
-        public IType ToPointerType()
-        {
-            return new MetadataTypeAdapter(new PointerTypeSymbol(this.typeDef));
-        }
-
+        /// <returns>
+        /// </returns>
         public IType Clone()
         {
             return new MetadataTypeAdapter(this.typeDef);
-        }
-
-        public IType ToClass()
-        {
-            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = true };
-        }
-
-        public IType ToNormal()
-        {
-            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = false };
         }
 
         /// <summary>
@@ -468,6 +432,23 @@ namespace PEAssemblyReader
             }
 
             return 0;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="obj">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public override bool Equals(object obj)
+        {
+            var type = obj as IType;
+            if (type != null)
+            {
+                return this.CompareTo(type) == 0;
+            }
+
+            return base.Equals(obj);
         }
 
         /// <summary>
@@ -559,6 +540,15 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public override int GetHashCode()
+        {
+            return this.FullName.GetHashCode();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IType> GetInterfaces()
         {
             return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i));
@@ -570,7 +560,6 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        // TODO: finish filter by public etc
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
             var filterPublic = bindingFlags.HasFlag(BindingFlags.Public);
@@ -598,6 +587,23 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public IEnumerable<IType> GetNestedTypes()
+        {
+            var peType = this.typeDef as PENamedTypeSymbol;
+            if (peType != null)
+            {
+                return peType.GetTypeMembers().Select(t => new MetadataTypeAdapter(t));
+            }
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -609,28 +615,40 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="obj">
+        /// <param name="rank">
         /// </param>
         /// <returns>
         /// </returns>
-        public override bool Equals(object obj)
+        public IType ToArrayType(int rank)
         {
-            var type = obj as IType;
-            if (type != null)
-            {
-                return this.CompareTo(type) == 0;
-            }
-
-            return base.Equals(obj);
+            return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
         }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        public override int GetHashCode()
+        public IType ToClass()
         {
-            return this.FullName.GetHashCode();
+            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = true };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToNormal()
+        {
+            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = false };
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToPointerType()
+        {
+            return new MetadataTypeAdapter(new PointerTypeSymbol(this.typeDef));
         }
 
         /// <summary>
@@ -715,6 +733,33 @@ namespace PEAssemblyReader
         private bool IsAny(MethodKind source, MethodKind methodKind1, MethodKind methodKind2)
         {
             return source == methodKind1 || source == methodKind2;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool IsDerivedFromEnum()
+        {
+            return this.BaseType != null && this.BaseType.FullName == "System.Enum";
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool IsDerivedFromValueType()
+        {
+            return this.BaseType != null && this.BaseType.FullName == "System.ValueType";
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string calculateNamespace()
+        {
+            return this.typeDef.CalculateNamespace();
         }
     }
 }

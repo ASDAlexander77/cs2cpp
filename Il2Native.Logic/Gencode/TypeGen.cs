@@ -97,11 +97,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
-        public static void Clear()
-        {
-            sizeByType.Clear();
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -118,7 +113,7 @@ namespace Il2Native.Logic.Gencode
 
             if (type.IsEnum)
             {
-                return type.GetEnumUnderlyingType().GetTypeSize(); 
+                return type.GetEnumUnderlyingType().GetTypeSize();
             }
 
             var size = 0;
@@ -175,6 +170,13 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        public static void Clear()
+        {
+            sizeByType.Clear();
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -197,9 +199,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCodePart">
         /// </param>
+        /// <param name="dynamicCastRequired">
+        /// </param>
         /// <returns>
         /// </returns>
-        // TODO: finish converting array data into array class
         public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart, out bool dynamicCastRequired)
         {
             dynamicCastRequired = false;
@@ -220,8 +223,6 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         /// <param name="type">
-        /// </param>
-        /// <param name="doNotConvert">
         /// </param>
         /// <returns>
         /// </returns>
@@ -281,8 +282,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        /// <param name="refChar">
-        /// </param>
         public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference)
         {
             var refChar = '*';
@@ -292,7 +291,8 @@ namespace Il2Native.Logic.Gencode
             do
             {
                 var isReference = !effectiveType.IsValueType;
-                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter && !effectiveType.IsArray && !effectiveType.IsByRef)
+                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter
+                    && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
@@ -320,8 +320,6 @@ namespace Il2Native.Logic.Gencode
         /// <param name="type">
         /// </param>
         /// <param name="writer">
-        /// </param>
-        /// <param name="doNotConvert">
         /// </param>
         public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer)
         {
@@ -353,10 +351,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        /// <param name="refChar">
-        /// </param>
-        public static void WriteTypePrefix(
-            this IType type, LlvmIndentedTextWriter writer, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, LlvmIndentedTextWriter writer, bool asReference = false)
         {
             type.WriteTypeWithoutModifiers(writer);
             type.WriteTypeModifiers(writer, asReference);
@@ -367,8 +362,6 @@ namespace Il2Native.Logic.Gencode
         /// <param name="type">
         /// </param>
         /// <param name="writer">
-        /// </param>
-        /// <param name="doNotIncludeTypePrefixId">
         /// </param>
         public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer)
         {

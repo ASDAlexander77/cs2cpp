@@ -21,6 +21,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        string ExplicitName { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsConstructor { get; }
 
         /// <summary>
@@ -28,15 +32,13 @@ namespace PEAssemblyReader
         bool IsGenericMethod { get; }
 
         /// <summary>
-        /// </summary>
-        IType ReturnType { get; }
-
-        /// <summary>
         /// custom field
         /// </summary>
         bool IsInternalCall { get; }
 
-        string ExplicitName { get; }
+        /// <summary>
+        /// </summary>
+        IType ReturnType { get; }
 
         /// <summary>
         /// </summary>
@@ -56,6 +58,12 @@ namespace PEAssemblyReader
         /// </returns>
         IEnumerable<IParameter> GetParameters();
 
+        /// <summary>
+        /// </summary>
+        /// <param name="ownerOfExplicitInterface">
+        /// </param>
+        /// <returns>
+        /// </returns>
         string ToString(IType ownerOfExplicitInterface);
     }
 }

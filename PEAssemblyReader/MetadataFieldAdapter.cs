@@ -97,6 +97,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsOverride
+        {
+            get
+            {
+                return this.fieldDef.IsOverride;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsStatic
         {
             get
@@ -112,16 +122,6 @@ namespace PEAssemblyReader
             get
             {
                 return this.fieldDef.IsVirtual;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsOverride
-        {
-            get
-            {
-                return this.fieldDef.IsOverride;
             }
         }
 
