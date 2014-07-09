@@ -1801,15 +1801,16 @@ namespace Il2Native.Logic
 
                     if (opCodeSingle.Operand == float.PositiveInfinity)
                     {
-                        writer.Write("0x7FF00000");
+                        writer.Write("0x7FF0000000000000");
                     }
                     else if (opCodeSingle.Operand == float.NegativeInfinity)
                     {
-                        writer.Write("0xFFF00000");
+                        writer.Write("0xFFF0000000000000");
                     }
                     else
                     {
-                        writer.Write(opCodeSingle.Operand.ToString("F"));
+                        var g = BitConverter.DoubleToInt64Bits(opCodeSingle.Operand);
+                        writer.Write("0x{0}", g.ToString("X"));
                     }
 
                     break;
@@ -1826,7 +1827,8 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        writer.Write(opCodeDouble.Operand.ToString("F"));
+                        var g = BitConverter.DoubleToInt64Bits(opCodeDouble.Operand);
+                        writer.Write("0x{0}", g.ToString("X"));
                     }
 
                     break;

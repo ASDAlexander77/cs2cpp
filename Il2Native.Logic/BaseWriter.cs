@@ -312,7 +312,15 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-                    return this.ResultOf(opCode.OpCodeOperands[0]);
+
+                    var op1 = this.ResultOf(opCode.OpCodeOperands[0]);
+                    if (!(op1.IsConst ?? false))
+                    {
+                        return op1;
+                    }
+
+                    return this.ResultOf(opCode.OpCodeOperands[1]);
+
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ceq:

@@ -34,7 +34,7 @@ namespace System
 
         public String ToString(String format)
         {
-            return Number.Format(m_value, true, format, NumberFormatInfo.CurrentInfo);
+            return Number.Format((int)m_value, true, format, NumberFormatInfo.CurrentInfo);
         }
 
         [CLSCompliant(false)]

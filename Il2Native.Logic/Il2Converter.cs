@@ -333,15 +333,6 @@ namespace Il2Native.Logic
         /// </returns>
         private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, HashSet<IType> genericSpecializations)
         {
-            // if (type.FullName == "System.Object")
-            // {
-            // yield break;
-            // }
-            if (type.BaseType != null && type.BaseType.FullName == "System.Enum")
-            {
-                yield break;
-            }
-
             if (type.BaseType != null)
             {
                 DicoverGenericSpecializedIType(type.BaseType, genericSpecializations);
