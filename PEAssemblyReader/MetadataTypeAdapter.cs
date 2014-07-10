@@ -551,7 +551,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetInterfaces()
         {
-            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i));
+            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
         }
 
         /// <summary>
@@ -562,8 +562,6 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
         {
-            var filterPublic = bindingFlags.HasFlag(BindingFlags.Public);
-
             foreach (var method in
                 this.typeDef.GetMembers()
                     .Where(m => m is PEMethodSymbol && !this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))

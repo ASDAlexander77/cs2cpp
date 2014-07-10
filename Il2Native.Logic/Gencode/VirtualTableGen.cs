@@ -36,9 +36,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="virtualTable">
         /// </param>
-        public static void BuildVirtualInterfaceTable(IType thisType, IType @interface, List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable)
+        public static void BuildVirtualInterfaceTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType, IType @interface)
         {
             var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+            virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic);
+        }
+
+        private static void AddMethodsToVirtualInterfaceTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType @interface, IEnumerable<IMethod> allPublic)
+        {
+            var allInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
+            if (firstChildInterface != null)
+            {
+                // get all virtual methods in current type and replace or append
+                virtualTable.AddRange(
+                    IlReader.Methods(firstChildInterface)
+                            .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
+                            .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
+            }
 
             // get all virtual methods in current type and replace or append
             virtualTable.AddRange(
@@ -110,7 +125,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
-            BuildVirtualInterfaceTable(thisType, @interface, virtualInterfaceTable);
+            virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface);
 
             virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
 

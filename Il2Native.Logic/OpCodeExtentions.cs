@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
@@ -99,6 +100,46 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="allInterfaces">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetHeadOfInterface(this IType type, IEnumerable<IType> allInterfaces)
+        {
+            var currentType = type;
+
+            while (currentType.IsFirstChildInterface(allInterfaces))
+            {
+                currentType = currentType.GetParentOfInterface(allInterfaces);
+            }
+
+            return currentType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="allInterfaces">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetInterfaceChildIndex(this IType type, IEnumerable<IType> allInterfaces)
+        {
+            var parent = type.GetParentOfInterface(allInterfaces);
+            if (parent == null)
+            {
+                return -2;
+            }
+
+            var index = parent.GetInterfaces().Where(i => i.GetParentOfInterface(allInterfaces).TypeEquals(parent)).ToList().IndexOf(type);
+            return index;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <param name="baseWriter">
@@ -120,6 +161,32 @@ namespace Il2Native.Logic
 
             var localType = baseWriter.LocalInfo[index].LocalType;
             return localType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="allInterfaces">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetParentOfInterface(this IType type, IEnumerable<IType> allInterfaces)
+        {
+            return allInterfaces.Where(i => i.GetInterfaces().Contains(type)).OrderBy(i => i.GetInterfaces().Count()).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="allInterfaces">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IType> GetTopInterfaces(this IType type, IEnumerable<IType> allInterfaces)
+        {
+            return allInterfaces.Where(i => i.GetParentOfInterface(allInterfaces) == null);
         }
 
         /// <summary>
@@ -251,6 +318,19 @@ namespace Il2Native.Logic
         public static bool IsExternalLibraryMethod(this IMethod method)
         {
             return method.IsInternalCall && !method.Name.StartsWith("llvm_");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="allInterfaces">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsFirstChildInterface(this IType type, IEnumerable<IType> allInterfaces)
+        {
+            return GetInterfaceChildIndex(type, allInterfaces) == 0;
         }
 
         /// <summary>
@@ -391,9 +471,20 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        public static bool IsRootInterface(this IType type)
+        {
+            return type.IsInterface && !type.GetInterfaces().Any();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsRootOfVirtualTable(this IType type)
         {
-            return type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
         }
 
         /// <summary>

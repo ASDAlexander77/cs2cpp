@@ -678,7 +678,7 @@ namespace Il2Native.Logic.Gencode
                 if (fromResult.Type.HasInterface(toType))
                 {
                     opCode.Result = fromResult;
-                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
+                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType, fromResult.Type.GetInterfaces());
                 }
                 else
                 {
