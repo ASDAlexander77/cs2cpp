@@ -25,6 +25,11 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        private static readonly IDictionary<string, List<IMethod>> virtualInterfaceTableLayoutByType =
+            new SortedDictionary<string, List<IMethod>>();
+
+        /// <summary>
+        /// </summary>
         private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType =
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
@@ -49,10 +54,7 @@ namespace Il2Native.Logic.Gencode
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
-                virtualTable.AddRange(
-                    IlReader.Methods(firstChildInterface)
-                            .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
-                            .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
+                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allPublic);
             }
 
             // get all virtual methods in current type and replace or append
@@ -60,6 +62,25 @@ namespace Il2Native.Logic.Gencode
                 IlReader.Methods(@interface)
                         .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
                         .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
+        }
+
+        public static void BuildVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface)
+        {
+            virtualTable.AddMethodsToVirtualInterfaceTableLayout(@interface);
+        }
+
+        private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface)
+        {
+            var allInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
+            if (firstChildInterface != null)
+            {
+                // get all virtual methods in current type and replace or append
+                virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface);
+            }
+
+            // get all virtual methods in current type and replace or append
+            virtualTable.AddRange(IlReader.Methods(@interface));
         }
 
         /// <summary>
@@ -132,6 +153,23 @@ namespace Il2Native.Logic.Gencode
             return virtualInterfaceTable;
         }
 
+        public static List<IMethod> GetVirtualInterfaceTableLayout(this IType @interface)
+        {
+            List<IMethod> virtualInterfaceTableLayout;
+
+            if (virtualInterfaceTableLayoutByType.TryGetValue(string.Concat(@interface.FullName, '+', @interface.FullName), out virtualInterfaceTableLayout))
+            {
+                return virtualInterfaceTableLayout;
+            }
+
+            virtualInterfaceTableLayout = new List<IMethod>();
+            virtualInterfaceTableLayout.BuildVirtualInterfaceTableLayout(@interface);
+
+            virtualInterfaceTableLayoutByType[@interface.FullName] = virtualInterfaceTableLayout;
+
+            return virtualInterfaceTableLayout;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -155,23 +193,67 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo)
+        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo, out IType requiredInterface)
         {
-            var virtualTable = thisType.GetVirtualTable();
+            requiredInterface = null;
 
-            var index = 0;
-            foreach (var virtualMethod in virtualTable.Select(v => v.Value))
+            if (!thisType.IsInterface)
             {
-                if (virtualMethod.IsMatchingOverride(methodInfo))
+                var virtualTable = thisType.GetVirtualTable();
+
+                var index = 0;
+                foreach (var virtualMethod in virtualTable.Select(v => v.Value))
                 {
-                    // + RTTI info shift
-                    return index;
+                    if (virtualMethod.IsMatchingOverride(methodInfo))
+                    {
+                        // + RTTI info shift
+                        return index;
+                    }
+
+                    index++;
                 }
 
-                index++;
+                throw new KeyNotFoundException("virtual method could not be found");
             }
+            else
+            {
+                var virtualTable = thisType.GetVirtualInterfaceTableLayout();
 
-            throw new KeyNotFoundException("virtual method could not be found");
+                var index = 0;
+                foreach (var virtualMethod in virtualTable)
+                {
+                    if (virtualMethod.IsMatchingOverride(methodInfo))
+                    {
+                        // + RTTI info shift
+                        return index;
+                    }
+
+                    index++;
+                }
+
+                // try to find an method in all interfaces
+                var allInterfaces = thisType.GetInterfaces();
+                foreach (var @interface in allInterfaces.Where(i => i.IsRootInterface()).Select(i => i.GetHeadOfInterface(allInterfaces)).Skip(1))
+                {
+                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout();
+
+                    index = 0;
+                    foreach (var virtualMethod in virtualTableOfSecondaryInterface)
+                    {
+                        if (virtualMethod.IsMatchingOverride(methodInfo))
+                        {
+                            requiredInterface = @interface;
+
+                            // + RTTI info shift
+                            return index;
+                        }
+
+                        index++;
+                    }
+                }
+
+                throw new KeyNotFoundException("virtual method could not be found");
+            }
         }
 
         /// <summary>

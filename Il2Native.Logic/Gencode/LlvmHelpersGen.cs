@@ -54,7 +54,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            if (thisType.IsInterface && !resultOfirstOperand.IType.Equals(thisType))
+            if (thisType.IsInterface && resultOfirstOperand.IType.TypeNotEquals(thisType))
             {
                 // we need to extract interface from an object
                 requiredType = thisType;
@@ -63,16 +63,29 @@ namespace Il2Native.Logic.Gencode
             // get pointer to Virtual Table and call method
             // 1) get pointer to virtual table
             writer.WriteLine("; Get Virtual Table");
+
+            IType requiredInterface;
+            var effectiveType = requiredType ?? thisType;
+            var methodIndex = effectiveType.GetVirtualMethodIndex(methodInfo, out requiredInterface);
+
+            if (requiredInterface != null)
+            {
+                llvmWriter.WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface, requiredType.GetInterfaces());
+                opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
+                requiredType = requiredInterface;
+            }
+
             llvmWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType);
             writer.Write(" to ");
-            llvmWriter.WriteMethodPointerType(writer, methodInfo);
+            llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.WriteLine("**");
+
             var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
 
             // load pointer
             llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
             writer.Write("load ");
-            llvmWriter.WriteMethodPointerType(writer, methodInfo);
+            llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
             llvmWriter.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber);
             writer.WriteLine(string.Empty);
@@ -82,16 +95,16 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Get Virtual Index of Method: {0}", methodInfo.FullName);
             llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("getelementptr inbounds ");
-            llvmWriter.WriteMethodPointerType(writer, methodInfo);
+            llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
             llvmWriter.WriteResultNumber(virtualTableOfMethodPointersResultNumber);
-            writer.WriteLine(", i64 {0}", (requiredType ?? thisType).GetVirtualMethodIndex(methodInfo));
+            writer.WriteLine(", i64 {0}", methodIndex);
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
             // load method address
             llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("load ");
-            llvmWriter.WriteMethodPointerType(writer, methodInfo);
+            llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
             llvmWriter.WriteResultNumber(pointerToFunctionPointerResultNumber);
             writer.WriteLine(string.Empty);

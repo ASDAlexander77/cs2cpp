@@ -1534,7 +1534,7 @@ namespace Il2Native.Logic
         {
             writer.WriteLine("; Get 'this' from Interface Virtual Table");
 
-            this.WriteGetInterfaceOffsetToObjectRootPointer(writer, opCodeMethodInfo, methodInfo);
+            this.WriteGetInterfaceOffsetToObjectRootPointer(writer, opCodeMethodInfo, methodInfo, thisType);
 
             writer.WriteLine(string.Empty);
             var offsetAddressAsIntResultNumber = opCodeMethodInfo.Result;
@@ -1542,7 +1542,7 @@ namespace Il2Native.Logic
             // get 'this' address
             var thisAddressFromInterfaceResultNumber = this.WriteSetResultNumber(opCodeMethodInfo, thisType);
             writer.Write("getelementptr ");
-            this.WriteMethodPointerType(writer, methodInfo);
+            this.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
             this.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber);
             writer.Write(", i32 ");
@@ -1552,7 +1552,7 @@ namespace Il2Native.Logic
             // adjust 'this' pointer
             this.WriteSetResultNumber(opCodeMethodInfo, thisType);
             writer.Write("bitcast ");
-            this.WriteMethodPointerType(writer, methodInfo);
+            this.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
             this.WriteResultNumber(thisAddressFromInterfaceResultNumber);
             writer.Write(" to ");
@@ -1747,7 +1747,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodBase">
         /// </param>
-        public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase)
+        public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
         {
             var methodInfo = methodBase;
             methodInfo.ReturnType.WriteTypePrefix(writer);
@@ -1755,10 +1755,9 @@ namespace Il2Native.Logic
             writer.Write(" (");
 
             var hasThis = !methodInfo.IsStatic;
-
             if (hasThis)
             {
-                methodInfo.DeclaringType.WriteTypePrefix(writer);
+                (thisType ?? methodInfo.DeclaringType).WriteTypePrefix(writer);
             }
 
             var index = 0;
@@ -4189,13 +4188,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="method">
+        /// <param name="methodBase">
         /// </param>
-        private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod method)
+        private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod methodBase, IType thisType = null)
         {
             this.WriteSetResultNumber(opCode, this.ResolveType("System.Int32").ToPointerType());
             writer.Write("bitcast ");
-            this.WriteMethodPointerType(writer, method);
+            this.WriteMethodPointerType(writer, methodBase, thisType);
             writer.Write("* ");
             WriteResultNumber(opCode.OpCodeOperands[0].Result);
             writer.Write(" to ");
