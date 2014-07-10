@@ -686,7 +686,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            if (!fromResult.Type.IsInterface && toType.IsInterface)
+            if (toType.IsInterface)
             {
                 if (fromResult.Type.HasInterface(toType))
                 {

@@ -3373,22 +3373,20 @@ namespace Il2Native.Logic
                 index++;
             }
 
+            IType[] baseInterfaces = null;
             // add shift for base type
             if (type.BaseType != null)
             {
                 index++;
-            }
-
-            // add shift for interfaces
-            if (type.BaseType == null)
-            {
-                index += type.GetInterfaces().Count();
+                baseInterfaces = type.BaseType.GetInterfaces().ToArray();
             }
             else
             {
-                var baseInterfaces = type.BaseType.GetInterfaces();
-                index += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i));
+                baseInterfaces = new IType[0];
             }
+
+            // add shift for interfaces
+            index += type.GetTopInterfaces(type.GetInterfaces()).Count(t => !baseInterfaces.Contains(t));
 
             return index;
         }
