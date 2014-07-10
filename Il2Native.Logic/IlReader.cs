@@ -786,6 +786,7 @@ namespace Il2Native.Logic
             foreach (var module in assemblySymbol.Modules)
             {
                 module.SetReferences(moduleReferences);
+
                 var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
                 foreach (var typeWithNamespace in typeWithNamespaces)
                 {
