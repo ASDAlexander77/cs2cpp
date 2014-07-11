@@ -306,7 +306,8 @@ namespace System
 
             if(isNeg && value > 0)
             {
-                value = -value;
+                value = -value;
+
             }
 
             return value;
@@ -337,7 +338,7 @@ namespace System
             {
                 index = 1;
             }
-            
+
             for (int i = index; i < len; i++)
             {
                 ulong digit;
@@ -413,7 +414,8 @@ namespace System
             }
 
             // final check for max/min
-            if (max != 0 && (res < min || res > max)) throw new Exception();
+            // TODO: 
+            ////if (max != 0 && (res < min || res > max)) throw new Exception();
 
             return res;
         }

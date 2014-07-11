@@ -29,6 +29,10 @@ namespace System
     {
         public static readonly String Empty = "";
 
+        private const int TrimHead = 0;
+        private const int TrimTail = 1;
+        private const int TrimBoth = 2;
+
         private char[] chars;
 
         public override bool Equals(object obj)
@@ -179,18 +183,77 @@ namespace System
         
         public String Trim(params char[] trimChars)
         {
-            throw new NotImplementedException();
+            return this.TrimHelper(trimChars, TrimBoth);
         }
 
         
         public String TrimStart(params char[] trimChars)
         {
-            throw new NotImplementedException();
+            return this.TrimHelper(trimChars, TrimHead);
         }
 
         public String TrimEnd(params char[] trimChars)
         {
-            throw new NotImplementedException();
+            return this.TrimHelper(trimChars, TrimTail);
+        }
+
+        private String TrimHelper(char[] trimChars, int trimType)
+        {
+            //end will point to the first non-trimmed character on the right
+            //start will point to the first non-trimmed character on the Left
+            int end = this.Length - 1;
+            int start = 0;
+
+            //Trim specified characters.
+            if (trimType != TrimTail)
+            {
+                for (start = 0; start < this.Length; start++)
+                {
+                    int i = 0;
+                    char ch = this.chars[start];
+                    for (i = 0; i < trimChars.Length; i++)
+                    {
+                        if (trimChars[i] == ch) break;
+                    }
+                    if (i == trimChars.Length)
+                    { // the character is not white space
+                        break;
+                    }
+                }
+            }
+
+            if (trimType != TrimHead)
+            {
+                for (end = Length - 1; end >= start; end--)
+                {
+                    int i = 0;
+                    char ch = this.chars[end];
+                    for (i = 0; i < trimChars.Length; i++)
+                    {
+                        if (trimChars[i] == ch) break;
+                    }
+                    if (i == trimChars.Length)
+                    { // the character is not white space
+                        break;
+                    }
+                }
+            }
+
+            //Create a new STRINGREF and initialize it from the range determined above.
+            int len = end - start + 1;
+            if (len == this.Length)
+            {
+                // Don't allocate a new string is the trimmed string has not changed.
+                return this;
+            }
+            else
+            {
+                if (len == 0)
+                {
+                    return String.Empty;
+                }
+                return new String(this.chars, start, len);
+            }
         }
         
         public String(char[] value, int startIndex, int length)
@@ -338,7 +401,7 @@ namespace System
         
         public String Trim()
         {
-            throw new NotImplementedException();
+            return this.TrimHelper(this.chars, TrimBoth);
         }
 
         ////// This method contains the same functionality as StringBuilder Replace. The only difference is that
