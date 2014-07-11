@@ -446,6 +446,7 @@ namespace Il2Native.Logic.Gencode
             var methodInfo = methodBase;
 
             if (methodInfo != null && methodInfo.ReturnType.IsStructureType()
+                && opCodeMethodInfo.UsedBy != null
                 && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any)
                 && opCodeMethodInfo.DestinationName == null)
             {

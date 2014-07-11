@@ -33,15 +33,7 @@ namespace Il2Native.Logic
         public static bool Any(this OpCodePart opCode, params Code[] codes)
         {
             var code = opCode.ToCode();
-            foreach (var item in codes)
-            {
-                if (item == code)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return codes.Any(item => item == code);
         }
 
         /// <summary>

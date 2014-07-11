@@ -76,7 +76,34 @@ namespace System
 
             return true;
         }
-        
+
+        public static String Format(String format, Object arg0)
+        {
+            return Format(null, format, new Object[] { arg0 });
+        }
+
+        public static String Format(String format, Object arg0, Object arg1)
+        {
+            return Format(null, format, new Object[] { arg0, arg1 });
+        }
+
+        public static String Format(String format, Object arg0, Object arg1, Object arg2)
+        {
+            return Format(null, format, new Object[] { arg0, arg1, arg2 });
+        }
+
+        public static String Format(String format, params Object[] args)
+        {
+            return Format(null, format, args);
+        }
+
+        public static String Format(IFormatProvider provider, String format, params Object[] args)
+        {
+            var sb = new Text.StringBuilder();
+            sb.AppendFormat(provider, format, args);
+            return sb.ToString();
+        }
+
         public static bool operator ==(String a, String b)
         {
             return a.Equals(b);
