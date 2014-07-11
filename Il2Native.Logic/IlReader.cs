@@ -1,9 +1,7 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IlReader.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -622,6 +620,15 @@ namespace Il2Native.Logic
             return this.lazyTypes.Value;
         }
 
+        private static IEnumerable<NamespaceSymbol> GetAllNamespaces(NamespaceSymbol source)
+        {
+            yield return source;
+            foreach (var namespaceSymbolSub in source.GetNamespaceMembers().SelectMany(namespaceSymbolSub => GetAllNamespaces(namespaceSymbolSub)))
+            {
+                yield return namespaceSymbolSub;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="identity">
@@ -787,12 +794,9 @@ namespace Il2Native.Logic
             {
                 module.SetReferences(moduleReferences);
 
-                var typeWithNamespaces = module.TypeWithNamespaceNames.ToArray();
-                foreach (var typeWithNamespace in typeWithNamespaces)
+                var peModuleSymbol = module as PEModuleSymbol;
+                foreach (var symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers()))
                 {
-                    var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(typeWithNamespace.Value, typeWithNamespace.Key);
-                    var symbol = module.LookupTopLevelMetadataType(ref metadataTypeName);
-
                     if (symbol.TypeKind == TypeKind.Error)
                     {
                         continue;
