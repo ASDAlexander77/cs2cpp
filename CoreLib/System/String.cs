@@ -160,12 +160,16 @@ namespace System
 
         public String[] Split(params char[] separator)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            // TODO:
+            return null;
         }
         
         public String[] Split(char[] separator, int count)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            // TODO:
+            return null;
         }
 
         

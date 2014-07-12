@@ -2541,13 +2541,8 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        directResult1 = this.PreProcessOperand(writer, opCode, 0);
-
-                        this.UnaryOper(writer, opCode, 1, "store", opCodeTypePart.Operand);
-                        writer.Write(", ");
-                        opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(writer);
-                        writer.Write("* ");
-                        this.PostProcessOperand(writer, opCode, 0, directResult1);
+                        opCode.DestinationName = opCode.OpCodeOperands[0].Result.ToString();
+                        this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[1].Result.ToFullyDefinedReferenceAsNotmalType());
                     }
 
                     break;
@@ -2723,8 +2718,17 @@ namespace Il2Native.Logic
                     {
                         var operands = opCode.OpCodeOperands;
                         var opCodeOperand = operands[0];
-                        opCodeOperand.DestinationName = "%agg.result";
-                        opCodeOperand.DestinationType = this.MethodReturnType;
+                        if (!opCodeOperand.HasResult)
+                        {
+                            opCodeOperand.DestinationName = "%agg.result";
+                            opCodeOperand.DestinationType = this.MethodReturnType;
+                        }
+                        else
+                        {
+                            opCode.DestinationName = "%agg.result";
+                            opCode.DestinationType = this.MethodReturnType;
+                            this.WriteLlvmLoad(opCode, opCodeOperand.Result.ToFullyDefinedReferenceAsNotmalType());
+                        }
 
                         opts |= OperandOptions.IgnoreOperand;
                     }

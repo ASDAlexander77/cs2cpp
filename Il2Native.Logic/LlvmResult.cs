@@ -74,6 +74,11 @@ namespace Il2Native.Logic
             return new FullyDefinedReference(this.ToString(), this.Type);
         }
 
+        public FullyDefinedReference ToFullyDefinedReferenceAsNotmalType()
+        {
+            return new FullyDefinedReference(this.ToString(), this.Type.ToNormal());
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
