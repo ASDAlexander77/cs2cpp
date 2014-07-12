@@ -2539,7 +2539,7 @@ namespace Il2Native.Logic
                         opCode.OpCodeOperands[1].DestinationName = opCode.OpCodeOperands[0].Result.ToString();
                         this.ActualWrite(writer, opCode.OpCodeOperands[1]);
                     }
-                    else
+                    else if (opCode.OpCodeOperands[0].Result.Type.ToNormal().IsStructureType())
                     {
                         opCode.DestinationName = opCode.OpCodeOperands[0].Result.ToString();
                         this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[1].Result.ToFullyDefinedReferenceAsNotmalType());
