@@ -501,7 +501,11 @@ namespace Il2Native.Logic.Gencode
                 thisType = requiredType;
             }
 
-            if (isIndirectMethodCall && methodBase.DeclaringType.TypeNotEquals(thisType) && methodBase.DeclaringType.IsInterface && !thisType.IsInterface)
+            if (isIndirectMethodCall 
+                && methodBase.DeclaringType.TypeNotEquals(thisType) 
+                && methodBase.DeclaringType.IsInterface 
+                && !thisType.IsInterface
+                && thisType.HasExplicitInterfaceMethodOverride(methodBase))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;

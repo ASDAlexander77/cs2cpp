@@ -183,6 +183,16 @@ namespace Il2Native.Logic.Gencode
             return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
         }
 
+        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo)
+        {
+            return thisType.GetVirtualTable().Select(v => v.Value).Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
+        }
+
+        public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
+        {
+            return thisType.GetMethods(BindingFlags.Instance).Any(method => methodInfo.IsMatchingExplicitInterfaceOverride(method));
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="thisType">

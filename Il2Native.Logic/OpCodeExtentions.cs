@@ -406,6 +406,21 @@ namespace Il2Native.Logic
             return false;
         }
 
+        public static bool IsMatchingExplicitInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
+        {
+            if (interfaceMember.ExplicitName == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            if (interfaceMember.FullName == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="method">
