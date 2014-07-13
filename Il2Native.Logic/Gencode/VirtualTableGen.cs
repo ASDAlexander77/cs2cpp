@@ -242,8 +242,7 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 // try to find an method in all interfaces
-                var allInterfaces = thisType.GetInterfaces();
-                foreach (var @interface in allInterfaces.Where(i => i.IsRootInterface()).Select(i => i.GetHeadOfInterface(allInterfaces)).Skip(1))
+                foreach (var @interface in thisType.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
                 {
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout();
 

@@ -551,7 +551,23 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetInterfaces()
         {
+            return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+        }
+
+        public IEnumerable<IType> GetAllInterfaces()
+        {
             return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+        }
+
+        public IEnumerable<IType> GetInterfacesExcludingBaseAllInterfaces()
+        {
+            if (this.typeDef.BaseType == null)
+            {
+                return GetInterfaces();
+            }
+
+            var baseInterfaces = this.typeDef.BaseType.AllInterfaces;           
+            return this.typeDef.Interfaces.Where(i => !baseInterfaces.Contains(i)).Select(i => new MetadataTypeAdapter(i)).ToList();
         }
 
         /// <summary>
@@ -608,7 +624,7 @@ namespace PEAssemblyReader
         /// </returns>
         public bool IsAssignableFrom(IType type)
         {
-            return type.IsDerivedFrom(this) || type.GetInterfaces().Contains(this);
+            return type.IsDerivedFrom(this) || type.GetAllInterfaces().Contains(this);
         }
 
         /// <summary>

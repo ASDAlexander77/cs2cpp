@@ -98,36 +98,41 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetHeadOfInterface(this IType type, IEnumerable<IType> allInterfaces)
+        public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
         {
-            var currentType = type;
-
-            while (currentType.IsFirstChildInterface(allInterfaces))
+            foreach (var topInterface in type.GetInterfaces())
             {
-                currentType = currentType.GetParentOfInterface(allInterfaces);
+                if (type.BaseType == null || !type.BaseType.GetAllInterfaces().Contains(topInterface))
+                {
+                    yield return topInterface;
+                }
+
+                // enumerate all children except first
+                foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
+                {
+                    yield return notFirstChild;
+                }                
             }
 
-            return currentType;
+            if (type.BaseType != null)
+            {
+                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                {
+                    yield return baseInterface;
+                }
+            }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allInterfaces">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int GetInterfaceChildIndex(this IType type, IEnumerable<IType> allInterfaces)
+        public static IEnumerable<IType> SelectAllNestedChildrenExceptFirstInterfaces(this IType type)
         {
-            var parent = type.GetParentOfInterface(allInterfaces);
-            if (parent == null)
+            foreach (var childInterface in type.GetInterfacesExcludingBaseAllInterfaces().Skip(1))
             {
-                return -2;
+                yield return childInterface;
+                foreach (var subChildInterface in childInterface.SelectAllNestedChildrenExceptFirstInterfaces())
+                {
+                    yield return subChildInterface;
+                }
             }
-
-            var index = parent.GetInterfaces().Where(i => i.GetParentOfInterface(allInterfaces).TypeEquals(parent)).ToList().IndexOf(type);
-            return index;
         }
 
         /// <summary>
@@ -153,32 +158,6 @@ namespace Il2Native.Logic
 
             var localType = baseWriter.LocalInfo[index].LocalType;
             return localType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allInterfaces">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IType GetParentOfInterface(this IType type, IEnumerable<IType> allInterfaces)
-        {
-            return allInterfaces.Where(i => i.GetInterfaces().Contains(type)).OrderBy(i => i.GetInterfaces().Count()).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allInterfaces">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IType> GetTopInterfaces(this IType type, IEnumerable<IType> allInterfaces)
-        {
-            return allInterfaces.Where(i => i.GetParentOfInterface(allInterfaces) == null);
         }
 
         /// <summary>
@@ -310,19 +289,6 @@ namespace Il2Native.Logic
         public static bool IsExternalLibraryMethod(this IMethod method)
         {
             return method.IsInternalCall && !method.Name.StartsWith("llvm_");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allInterfaces">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsFirstChildInterface(this IType type, IEnumerable<IType> allInterfaces)
-        {
-            return GetInterfaceChildIndex(type, allInterfaces) == 0;
         }
 
         /// <summary>

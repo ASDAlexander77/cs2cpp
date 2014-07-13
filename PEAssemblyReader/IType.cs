@@ -13,7 +13,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
-    public interface IType : IName
+    public interface   IType : IName
     {
         /// <summary>
         /// </summary>
@@ -141,6 +141,18 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IType> GetInterfaces();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetAllInterfaces();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetInterfacesExcludingBaseAllInterfaces();
 
         /// <summary>
         /// </summary>

@@ -27,32 +27,6 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        /// <param name="classType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool HasInterface(this IType classType, IType @interface)
-        {
-            Debug.Assert(@interface.IsInterface);
-
-            var type = classType;
-
-            while (!type.GetInterfaces().Contains(@interface) || type.BaseType != null && type.BaseType.GetInterfaces().Contains(@interface))
-            {
-                type = type.BaseType;
-                if (type == null)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <param name="llvmWriter">
@@ -303,8 +277,8 @@ namespace Il2Native.Logic.Gencode
             }
 
             // init all interfaces
-            var allInterfaces = declaringType.GetInterfaces();
-            foreach (var @interface in allInterfaces.Where(i => i.IsRootInterface()).Select(i => i.GetHeadOfInterface(allInterfaces)))
+            var allInterfaces = declaringType.GetAllInterfaces().ToList();
+            foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
                 var opCodeResult = opCode.Result;
 

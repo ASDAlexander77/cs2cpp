@@ -1042,8 +1042,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
-            var interfacesList = this.ThisType.GetInterfaces();
-
             // put virtual root table if type has no any base with virtual types
             if (this.ThisType.IsRootInterface())
             {
@@ -1060,19 +1058,8 @@ namespace Il2Native.Logic
             }
 
             var index = 0;
-            var baseInterfaces = this.ThisType.BaseType != null ? this.ThisType.BaseType.GetInterfaces() : null;
-            foreach (var @interface in interfacesList)
+            foreach (var @interface in this.ThisType.GetInterfacesExcludingBaseAllInterfaces())
             {
-                if (baseInterfaces != null && baseInterfaces.Contains(@interface))
-                {
-                    continue;
-                }
-
-                if (interfacesList.Any(i => i.GetInterfaces().Contains(@interface)))
-                {
-                    continue;
-                }
-
                 ////this.WriteTypeDefinitionIfNotWrittenYet(@interface);
                 this.CheckIfExternalDeclarationIsRequired(@interface);
 
@@ -2068,8 +2055,7 @@ namespace Il2Native.Logic
             }
 
             var interfacesList = type.GetInterfaces();
-            var baseInterfaces = type.BaseType != null ? type.BaseType.GetInterfaces() : null;
-            foreach (var @interface in interfacesList.Where(@interface => baseInterfaces == null || !baseInterfaces.Contains(@interface)))
+            foreach (var @interface in interfacesList)
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(@interface);
             }
@@ -3371,26 +3357,19 @@ namespace Il2Native.Logic
         {
             var index = 0;
 
+            if (type.BaseType != null)
+            {
+                index++;
+            }
+
             // add shift for virtual table
             if (type.IsRootOfVirtualTable())
             {
                 index++;
             }
 
-            IType[] baseInterfaces = null;
-            // add shift for base type
-            if (type.BaseType != null)
-            {
-                index++;
-                baseInterfaces = type.BaseType.GetInterfaces().ToArray();
-            }
-            else
-            {
-                baseInterfaces = new IType[0];
-            }
-
             // add shift for interfaces
-            index += type.GetTopInterfaces(type.GetInterfaces()).Count(t => !baseInterfaces.Contains(t));
+            index += type.GetInterfaces().Count();
 
             return index;
         }
@@ -4209,7 +4188,7 @@ namespace Il2Native.Logic
             this.ResolveType("System.Int32").WriteTypePrefix(writer);
             writer.Write("* ");
             WriteResultNumber(res);
-            writer.WriteLine(", i32 -2");
+            writer.WriteLine(", i32 -{0}", ObjectInfrastructure.FunctionsOffsetInVirtualTable);
 
             opCode.Result = null;
             this.WriteLlvmLoad(opCode, this.ResolveType("System.Int32"), offsetResult);
@@ -4230,7 +4209,7 @@ namespace Il2Native.Logic
         private bool WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface, IEnumerable<IType> allInterfaces)
         {
             var type = classType;
-            if (!type.HasInterface(@interface))
+            if (!type.GetAllInterfaces().Contains(@interface))
             {
                 return false;
             }
@@ -4238,7 +4217,7 @@ namespace Il2Native.Logic
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (!type.GetInterfaces().Contains(@interface) || type.BaseType != null && type.BaseType.GetInterfaces().Contains(@interface))
+            while (!type.GetInterfacesExcludingBaseAllInterfaces().Contains(@interface))
             {
                 type = type.BaseType;
                 if (type == null)
@@ -4263,29 +4242,46 @@ namespace Il2Native.Logic
                 index++;
             }
 
-            var indexes = new Stack<int>();
+            var indexes = new List<int>();
 
-            var currentInterface = @interface;
+            var currentInterface = type;
 
-            while (true)
+            while (currentInterface != null)
             {
-                var childIndex = currentInterface.GetInterfaceChildIndex(allInterfaces);
-                if (childIndex >= 0)
+                var found = false;
+                var interfaceIndex = -1;
+                foreach (var subInterface in currentInterface.GetInterfaces().ToList())
                 {
-                    indexes.Push(childIndex);
+                    interfaceIndex++;
+
+                    if (subInterface.TypeEquals(@interface))
+                    {
+                        currentInterface = null;
+                        found = true;
+                        break;
+                    }
+
+                    if (subInterface.GetAllInterfaces().Contains(@interface))
+                    {
+                        currentInterface = subInterface;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    throw new KeyNotFoundException("interface can't be found");
+                }
+
+                if (indexes.Count > 0)
+                {
+                    indexes.Add(interfaceIndex);
                 }
                 else
                 {
-                    if (childIndex == -1)
-                    {
-                        throw new IndexOutOfRangeException("Could not find an interface");
-                    }
-
-                    indexes.Push(index + @interface.GetTopInterfaces(allInterfaces).ToList().IndexOf(currentInterface));
-                    break;
+                    indexes.Add(index + interfaceIndex);
                 }
-
-                currentInterface = currentInterface.GetParentOfInterface(allInterfaces);
             }
 
             foreach (var i in indexes)
@@ -4394,8 +4390,7 @@ namespace Il2Native.Logic
                 }
 
                 var index = 1;
-                var allInterfaces = this.ThisType.GetInterfaces();
-                foreach (var @interface in allInterfaces.Where(i => i.IsRootInterface()).Select(i => i.GetHeadOfInterface(allInterfaces)))
+                foreach (var @interface in this.ThisType.SelectAllTopAndAllNotFirstChildrenInterfaces())
                 {
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));

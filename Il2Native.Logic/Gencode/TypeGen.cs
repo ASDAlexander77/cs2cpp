@@ -130,15 +130,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // add shift for interfaces
-            if (type.BaseType == null)
-            {
-                size += type.GetInterfaces().Count() * LlvmWriter.PointerSize;
-            }
-            else
-            {
-                var baseInterfaces = type.BaseType.GetInterfaces();
-                size += type.GetInterfaces().Count(i => !baseInterfaces.Contains(i)) * LlvmWriter.PointerSize;
-            }
+            size += type.GetInterfacesExcludingBaseAllInterfaces().Count() * LlvmWriter.PointerSize;
 
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
