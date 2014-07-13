@@ -29,7 +29,6 @@ namespace System.Collections
                 SetCapacity(value);
             }
         }
-
         
         private void SetCapacity(int capacity)
         {

@@ -4209,7 +4209,7 @@ namespace Il2Native.Logic
             this.ResolveType("System.Int32").WriteTypePrefix(writer);
             writer.Write("* ");
             WriteResultNumber(res);
-            writer.WriteLine(", i32 -1");
+            writer.WriteLine(", i32 -2");
 
             opCode.Result = null;
             this.WriteLlvmLoad(opCode, this.ResolveType("System.Int32"), offsetResult);

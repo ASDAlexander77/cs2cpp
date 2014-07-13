@@ -14,9 +14,11 @@ namespace PEAssemblyReader
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("Name = {Name}, Type = {CatchType.FullName}")]
     public class MetadataExceptionHandlingClauseAdapter : IExceptionHandlingClause
     {
         /// <summary>

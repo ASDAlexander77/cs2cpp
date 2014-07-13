@@ -24,6 +24,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("Name = {ExplicitName}")]
     public class MetadataMethodAdapter : IMethod
     {
         /// <summary>
@@ -227,6 +228,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (FullName == "System.Object.Finalize")
+                {
+                    return true;
+                }
+
                 return this.methodDef.IsVirtual;
             }
         }

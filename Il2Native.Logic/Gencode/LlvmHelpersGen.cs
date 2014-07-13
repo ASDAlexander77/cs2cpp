@@ -70,7 +70,8 @@ namespace Il2Native.Logic.Gencode
 
             if (requiredInterface != null)
             {
-                llvmWriter.WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface, requiredType.GetInterfaces());
+                llvmWriter.
+                    WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface, requiredType.GetInterfaces());
                 opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
                 requiredType = requiredInterface;
             }

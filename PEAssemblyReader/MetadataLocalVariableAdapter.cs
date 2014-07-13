@@ -9,6 +9,7 @@
 namespace PEAssemblyReader
 {
     using System;
+    using System.Diagnostics;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -16,6 +17,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("Index = {LocalIndex}, Type = {LocalType.FullName}")]
     public class MetadataLocalVariableAdapter : ILocalVariable
     {
         /// <summary>

@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System.Diagnostics;
     using System.Text;
 
     using Microsoft.CodeAnalysis;
@@ -15,6 +16,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("Name = {Name}, Type = {ParameterType.FullName}")]
     public class MetadataParameterAdapter : IParameter
     {
         /// <summary>

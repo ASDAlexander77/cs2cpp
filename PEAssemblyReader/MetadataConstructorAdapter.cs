@@ -8,10 +8,12 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System.Diagnostics;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("Name = {Name}, Type = {FullName}")]
     public class MetadataConstructorAdapter : MetadataMethodAdapter, IConstructor
     {
         /// <summary>
