@@ -3939,7 +3939,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="isThis">
         /// </param>
-        private void WriteArgumentCopyDeclaration(string name, IType type, bool isThis = false)
+        public void WriteArgumentCopyDeclaration(string name, IType type, bool isThis = false)
         {
             if (!isThis && type.IsStructureType())
             {

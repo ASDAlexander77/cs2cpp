@@ -74,6 +74,17 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
+        public static string GetArgName(this BaseWriter baseWriter, int index)
+        {
+            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
+            return parameter.Name;
+        }
+
+        public static int GetArgCount(this BaseWriter baseWriter)
+        {
+            return baseWriter.Parameters.Count() - (baseWriter.HasMethodThis ? 1 : 0);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="classType">
