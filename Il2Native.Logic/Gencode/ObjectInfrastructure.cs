@@ -426,7 +426,7 @@ namespace Il2Native.Logic.Gencode
             var isStruct = normalType.IsStructureType();
             if (isStruct)
             {
-                opCode.DestinationName = "%agg.result";
+                opCode.Destination = new FullyDefinedReference("%agg.result", normalType);
             }
 
             llvmWriter.WriteUnboxObject(opCode, type.ToNormal());

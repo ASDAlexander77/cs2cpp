@@ -449,7 +449,7 @@ namespace Il2Native.Logic.Gencode
             if (methodInfo != null && methodInfo.ReturnType.IsStructureType()
                 && opCodeMethodInfo.UsedBy != null
                 && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any)
-                && opCodeMethodInfo.DestinationName == null)
+                && opCodeMethodInfo.Destination == null)
             {
                 // You should not allocate it yourself, as result of function should be stored in DestinationName or in Return Value such as "agg.return"
                 // so if Destination is null means that call is not ready and will be ready later when DestinationName is set
@@ -580,7 +580,7 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.PreProcessCallParameters(opCodeMethodInfo, methodBase, preProcessedOperandDirectResults);
             }
 
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && opCodeMethodInfo.DestinationName == null)
+            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && opCodeMethodInfo.Destination == null)
             {
                 llvmWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
@@ -590,7 +590,7 @@ namespace Il2Native.Logic.Gencode
             // allocate space for structure if return type is structure
             if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
             {
-                if (opCodeMethodInfo.DestinationName == null)
+                if (opCodeMethodInfo.Destination == null)
                 {
                     // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
                     llvmWriter.WriteAlloca(methodInfo.ReturnType);
@@ -598,7 +598,8 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    returnFullyDefinedReference = new FullyDefinedReference(opCodeMethodInfo.DestinationName, methodInfo.ReturnType);
+                    Debug.Assert(opCodeMethodInfo.Destination.Type.TypeEquals(methodInfo.ReturnType));
+                    returnFullyDefinedReference = new FullyDefinedReference(opCodeMethodInfo.Destination.Name, methodInfo.ReturnType);
                 }
             }
 
@@ -867,9 +868,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.DestinationName != null);
+            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.Destination != null);
 
-            if (!typeToLoad.IsStructureType() || structAsRef || opCode.DestinationName == null)
+            if (!typeToLoad.IsStructureType() || structAsRef || opCode.Destination == null)
             {
                 if (opCode.HasResult)
                 {
@@ -918,7 +919,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, typeToLoad, source.Name, opCode.DestinationName);
+                llvmWriter.WriteCopyStruct(writer, opCode, source, opCode.Destination);
             }
         }
 

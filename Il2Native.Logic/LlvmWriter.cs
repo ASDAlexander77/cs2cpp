@@ -478,7 +478,7 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
             {
                 var localType = opCode.GetLocalType(this);
-                var skip = localType.IsStructureType() && opCode.DestinationName == null;
+                var skip = localType.IsStructureType() && opCode.Destination == null;
                 if (skip)
                 {
                     // it means that we are working with a Struct and are going to pass it as an address
@@ -493,7 +493,7 @@ namespace Il2Native.Logic
                 if (!(this.HasMethodThis && index == 0))
                 {
                     var parameterType = this.GetArgType(index);
-                    var skip = parameterType.IsStructureType() && opCode.DestinationName == null;
+                    var skip = parameterType.IsStructureType() && opCode.Destination == null;
                     if (skip)
                     {
                         // it means that we are working with a Struct and are going to pass it as an address
@@ -1195,20 +1195,22 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="sourceVarName">
         /// </param>
-        /// <param name="desctVarName">
+        /// <param name="destVarName">
         /// </param>
-        public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type, string sourceVarName, string desctVarName)
+        public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, FullyDefinedReference source, FullyDefinedReference dest)
         {
+            Debug.Assert(source.Type.TypeEquals(dest.Type));
+
             var storeResult = opCode.Result;
 
-            this.WriteBitcast(opCode, type, desctVarName);
+            this.WriteBitcast(opCode, dest.Type, dest.Name);
             var op1 = opCode.Result;
             writer.WriteLine(string.Empty);
-            this.WriteBitcast(opCode, type, sourceVarName);
+            this.WriteBitcast(opCode, source.Type, source.Name);
             var op2 = opCode.Result;
             writer.WriteLine(string.Empty);
 
-            this.WriteMemCopy(type, op1, op2);
+            this.WriteMemCopy(dest.Type, op1, op2);
 
             opCode.Result = storeResult;
         }
@@ -1935,7 +1937,7 @@ namespace Il2Native.Logic
 
             if (fieldType.IsStructureType())
             {
-                opCodePart.DestinationName = opCodePart.Result.ToString();
+                opCodePart.Destination = opCodePart.Result.ToFullyDefinedReference();
                 if (directResult1)
                 {
                     this.WriteLlvmLoad(opCodePart, fieldType, new FullyDefinedReference(this.GetDirectName(opCodePart.OpCodeOperands[valueOperand]), fieldType));
@@ -2410,7 +2412,7 @@ namespace Il2Native.Logic
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     // we wait when opCode.DestinationName is set;
-                    var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.DestinationName == null;
+                    var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.Destination == null;
                     if (!skip)
                     {
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
@@ -2470,7 +2472,7 @@ namespace Il2Native.Logic
 
                     if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
                     {
-                        opCode.DestinationName = destinationName;
+                        opCode.Destination = new FullyDefinedReference(destinationName, operandType);
                         if (this.IsDirectValue(opCode.OpCodeOperands[0]))
                         {
                             this.WriteLlvmLoad(
@@ -2502,7 +2504,7 @@ namespace Il2Native.Logic
 
                     directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-                    if (opCode.DestinationName != null || !opCode.OpCodeOperands[0].Result.Type.UseAsClass)
+                    if (opCode.Destination != null || !opCode.OpCodeOperands[0].Result.Type.UseAsClass)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
@@ -2522,12 +2524,12 @@ namespace Il2Native.Logic
                     if (!opCode.OpCodeOperands[1].HasResult)
                     {
                         // we expect to see Ldobj here, so we set DestinationName to copy it into reserved stack
-                        opCode.OpCodeOperands[1].DestinationName = opCode.OpCodeOperands[0].Result.ToString();
+                        opCode.OpCodeOperands[1].Destination = opCode.OpCodeOperands[0].Result.ToFullyDefinedReference();
                         this.ActualWrite(writer, opCode.OpCodeOperands[1]);
                     }
                     else if (opCode.OpCodeOperands[0].Result.Type.ToNormal().IsStructureType())
                     {
-                        opCode.DestinationName = opCode.OpCodeOperands[0].Result.ToString();
+                        opCode.Destination = opCode.OpCodeOperands[0].Result.ToFullyDefinedReference();
                         this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[1].Result.ToFullyDefinedReferenceAsNotmalType());
                     }
 
@@ -2675,9 +2677,9 @@ namespace Il2Native.Logic
                     break;
                 case Code.Dup:
 
-                    if (opCode.DestinationName != null)
+                    if (opCode.Destination != null)
                     {
-                        opCode.OpCodeOperands[0].DestinationName = opCode.DestinationName;
+                        opCode.OpCodeOperands[0].Destination = opCode.Destination;
                     }
 
                     this.ActualWrite(writer, opCode.OpCodeOperands[0]);
@@ -2706,13 +2708,11 @@ namespace Il2Native.Logic
                         var opCodeOperand = operands[0];
                         if (!opCodeOperand.HasResult)
                         {
-                            opCodeOperand.DestinationName = "%agg.result";
-                            opCodeOperand.DestinationType = this.MethodReturnType;
+                            opCodeOperand.Destination = new FullyDefinedReference("%agg.result", this.MethodReturnType);
                         }
                         else
                         {
-                            opCode.DestinationName = "%agg.result";
-                            opCode.DestinationType = this.MethodReturnType;
+                            opCode.Destination = new FullyDefinedReference("%agg.result", this.MethodReturnType);
                             this.WriteLlvmLoad(opCode, opCodeOperand.Result.ToFullyDefinedReferenceAsNotmalType());
                         }
 
@@ -2750,7 +2750,7 @@ namespace Il2Native.Logic
 
                     if (localType.IsStructureType())
                     {
-                        opCode.OpCodeOperands[0].DestinationName = this.GetLocalVarName(index);
+                        opCode.OpCodeOperands[0].Destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                         this.ActualWrite(writer, opCode.OpCodeOperands[0]);
                     }
                     else
@@ -2778,11 +2778,11 @@ namespace Il2Native.Logic
                         index = int.Parse(asString.Substring(asString.Length - 1));
                     }
 
-                    destinationName = string.Concat("%local", index);
+                    destinationName = this.GetLocalVarName(index);
 
                     localType = this.LocalInfo[index].LocalType;
 
-                    skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.DestinationName == null;
+                    skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.Destination == null;
                     if (!skip)
                     {
                         this.WriteLlvmLoad(opCode, new FullyDefinedReference(destinationName, localType));
@@ -2839,7 +2839,7 @@ namespace Il2Native.Logic
 
                         destinationName = string.Concat("%.", parameter.Name);
 
-                        skip = parameter.ParameterType.IsStructureType() && opCode.DestinationName == null;
+                        skip = parameter.ParameterType.IsStructureType() && opCode.Destination == null;
                         if (!skip)
                         {
                             this.WriteLlvmLoad(opCode, new FullyDefinedReference(destinationName, parameter.ParameterType));
@@ -3193,7 +3193,7 @@ namespace Il2Native.Logic
 
                     this.WriteNew(opCodeConstructorInfoPart, declaringType);
 
-                    if (!string.IsNullOrWhiteSpace(opCode.DestinationName))
+                    if (opCode.Destination != null)
                     {
                         opCode.Result.Type.UseAsClass = false;
                         this.WriteLlvmLoad(opCode, opCode.Result.ToFullyDefinedReference());

@@ -101,11 +101,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public string DestinationName { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public IType DestinationType { get; set; }
+        public FullyDefinedReference Destination { get; set; }
 
         /// <summary>
         /// </summary>
