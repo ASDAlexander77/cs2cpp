@@ -277,14 +277,13 @@ namespace Il2Native.Logic.Gencode
             }
 
             // init all interfaces
-            var allInterfaces = declaringType.GetAllInterfaces().ToList();
             foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
                 var opCodeResult = opCode.Result;
 
                 writer.WriteLine("; set virtual interface table");
 
-                llvmWriter.WriteInterfaceAccess(writer, opCode, declaringType, @interface, allInterfaces);
+                llvmWriter.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
 
                 if (opCode.HasResult)
                 {

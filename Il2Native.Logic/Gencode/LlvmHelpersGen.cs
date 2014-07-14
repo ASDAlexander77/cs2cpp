@@ -71,7 +71,7 @@ namespace Il2Native.Logic.Gencode
             if (requiredInterface != null)
             {
                 llvmWriter.
-                    WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface, requiredType.GetAllInterfaces());
+                    WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface);
                 opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
                 requiredType = requiredInterface;
             }
@@ -701,10 +701,10 @@ namespace Il2Native.Logic.Gencode
 
             if (toType.IsInterface)
             {
-                if (fromResult.Type.GetInterfacesExcludingBaseAllInterfaces().Contains(toType))
+                if (fromResult.Type.GetAllInterfaces().Contains(toType))
                 {
                     opCode.Result = fromResult;
-                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType, fromResult.Type.GetAllInterfaces());
+                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
                 }
                 else
                 {

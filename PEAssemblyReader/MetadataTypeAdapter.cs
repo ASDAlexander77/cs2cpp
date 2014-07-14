@@ -1,9 +1,7 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MetadataTypeAdapter.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
@@ -49,7 +47,7 @@ namespace PEAssemblyReader
             this.typeDef = typeDef;
             this.isByRef = isByRef;
 
-            this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
+            this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
         /// <summary>
@@ -451,6 +449,11 @@ namespace PEAssemblyReader
             return base.Equals(obj);
         }
 
+        public IEnumerable<IType> GetAllInterfaces()
+        {
+            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="bindingFlags">
@@ -551,23 +554,19 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetInterfaces()
         {
-            return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
-        }
-
-        public IEnumerable<IType> GetAllInterfaces()
-        {
-            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+            // return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+            return this.EnumerableUniqueInterfaces().Select(@interface => new MetadataTypeAdapter(@interface));
         }
 
         public IEnumerable<IType> GetInterfacesExcludingBaseAllInterfaces()
         {
             if (this.typeDef.BaseType == null)
             {
-                return GetInterfaces();
+                return this.GetInterfaces();
             }
 
-            var baseInterfaces = this.typeDef.BaseType.AllInterfaces;           
-            return this.typeDef.Interfaces.Where(i => !baseInterfaces.Contains(i)).Select(i => new MetadataTypeAdapter(i)).ToList();
+            var baseInterfaces = this.typeDef.BaseType.AllInterfaces;
+            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => new MetadataTypeAdapter(i)).ToList();
         }
 
         /// <summary>
@@ -710,28 +709,15 @@ namespace PEAssemblyReader
             return result.ToString();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        private TypeSymbol GetElementTypeSymbol()
+        private IEnumerable<TypeSymbol> EnumerableUniqueInterfaces()
         {
-            if (this.IsArray)
-            {
-                return (this.typeDef as ArrayTypeSymbol).ElementType;
-            }
+            TypeSymbol previous = null;
 
-            if (this.IsByRef)
+            foreach (var @interface in this.typeDef.Interfaces.Where(@interface => previous == null || !previous.AllInterfaces.Contains(@interface)))
             {
-                return this.typeDef;
+                previous = @interface;
+                yield return @interface;
             }
-
-            if (this.IsPointer)
-            {
-                return (this.typeDef as PointerTypeSymbol).PointedAtType;
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -771,7 +757,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        private string calculateNamespace()
+        private string CalculateNamespace()
         {
             return this.typeDef.CalculateNamespace();
         }

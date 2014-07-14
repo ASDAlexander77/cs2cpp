@@ -1557,7 +1557,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="interface">
         /// </param>
-        public void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface, IEnumerable<IType> allInterfaces)
+        public void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
         {
             var objectResult = opCode.Result;
 
@@ -1572,7 +1572,7 @@ namespace Il2Native.Logic
 
             this.CheckIfTypeIsRequiredForBody(declaringType);
 
-            this.WriteInterfaceIndex(writer, declaringType, @interface, allInterfaces);
+            this.WriteInterfaceIndex(writer, declaringType, @interface);
 
             writer.WriteLine(string.Empty);
         }
@@ -4206,7 +4206,7 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        private bool WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface, IEnumerable<IType> allInterfaces)
+        private bool WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface)
         {
             var type = classType;
             if (!type.GetAllInterfaces().Contains(@interface))
