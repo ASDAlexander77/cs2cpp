@@ -1107,7 +1107,8 @@ namespace Il2Native.Logic
 
             this.ReadMethodInfo(ctor);
 
-            if (ctor.IsAbstract || ctor.GetMethodBody() == null)
+            var isDelegateBodyFunctions = ctor.IsDelegateFunctionBody();
+            if ((ctor.IsAbstract || ctor.GetMethodBody() == null) && !isDelegateBodyFunctions)
             {
                 this.Output.Write("declare ");
             }
@@ -1118,7 +1119,6 @@ namespace Il2Native.Logic
 
             this.Output.Write("void ");
 
-            // this.WriteMethodName(this.Output, ctor);
             this.WriteMethodDefinitionName(this.Output, ctor);
             if (ctor.IsStatic)
             {
@@ -1139,6 +1139,10 @@ namespace Il2Native.Logic
                 this.WriteArgumentCopyDeclarations(ctor.GetParameters(), this.HasMethodThis);
 
                 this.Output.StartMethodBody();
+            }
+            else if (isDelegateBodyFunctions)
+            {
+                this.WriteDelegateFunctionBody(ctor);
             }
 
             methodNumberIncremental++;
@@ -1168,7 +1172,7 @@ namespace Il2Native.Logic
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
-                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
 
@@ -1362,13 +1366,13 @@ namespace Il2Native.Logic
             var classType = operand.IType;
 
             var opts = OperandOptions.GenerateResult;
-            var FieldType = classType.GetFieldTypeByIndex(index);
+            var fieldType = classType.GetFieldTypeByIndex(index);
             classType.UseAsClass = true;
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, FieldType, options: opts);
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, options: opts);
 
             this.CheckIfTypeIsRequiredForBody(classType);
 
-            this.WriteFieldIndex(writer, classType, index);
+            this.WriteFieldIndex(writer, classType, classType, index);
         }
 
         /// <summary>
@@ -1383,11 +1387,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="valueReference">
         /// </param>
-        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, int index, FullyDefinedReference valueReference)
+        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
         {
-            var FieldType = classType.GetFieldTypeByIndex(index);
+            var fieldType = fieldContainerType.GetFieldTypeByIndex(index);
 
-            this.WriteSetResultNumber(opCodePart, FieldType);
+            this.WriteSetResultNumber(opCodePart, fieldType);
 
             writer.Write("getelementptr inbounds ");
             valueReference.Type.ToClass().WriteTypePrefix(writer);
@@ -1396,7 +1400,7 @@ namespace Il2Native.Logic
 
             this.CheckIfTypeIsRequiredForBody(valueReference.Type);
 
-            this.WriteFieldIndex(writer, classType, index);
+            this.WriteFieldIndex(writer, classType, fieldContainerType, index);
         }
 
         /// <summary>
@@ -1448,6 +1452,31 @@ namespace Il2Native.Logic
 
             writer.Write(", i32 ");
             writer.Write(index);
+        }
+
+        public void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IType fieldContainerType, int fieldIndex)
+        {
+            var targetType = fieldContainerType;
+            var type = classType;
+
+            // first element for pointer (IType* + 0)
+            writer.Write(", i32 0");
+
+            while (type.TypeNotEquals(targetType))
+            {
+                type = type.BaseType;
+                if (type == null)
+                {
+                    break;
+                }
+
+                // first index is base type index
+                writer.Write(", i32 0");
+            }
+
+            // find index
+            writer.Write(", i32 ");
+            writer.Write(fieldIndex);
         }
 
         /// <summary>
@@ -4084,22 +4113,6 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
             this.WriteCatchProlog(opCode);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="classType">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        private void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, int index)
-        {
-            // first element for pointer (IType* + 0)
-            writer.Write(", i32 0");
-            writer.Write(", i32 ");
-            writer.Write(index);
         }
 
         /// <summary>

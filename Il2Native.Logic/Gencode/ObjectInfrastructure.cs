@@ -98,7 +98,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
 
@@ -470,7 +470,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
                 writer.WriteLine(string.Empty);
             }
 
@@ -578,6 +578,14 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsInternalCall
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public bool IsExternal
             {
                 get
                 {
@@ -893,6 +901,14 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            public bool IsExternal
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
             /// <summary>
             /// </summary>
             public bool IsOverride { get; private set; }
@@ -1154,6 +1170,14 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsInternalCall
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public bool IsExternal
             {
                 get
                 {

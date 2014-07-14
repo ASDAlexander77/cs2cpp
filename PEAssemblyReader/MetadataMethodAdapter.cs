@@ -204,6 +204,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsExternal
+        {
+            get
+            {
+                return this.methodDef.IsExternal;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsOverride
         {
             get

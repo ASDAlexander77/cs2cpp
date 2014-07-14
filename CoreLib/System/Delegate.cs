@@ -11,36 +11,54 @@ namespace System
     [Serializable()]
     public abstract class Delegate
     {
-
+        private Object obj;
+        private IntPtr methodPtr;
 
         public override bool Equals(Object obj)
         {
             throw new NotImplementedException();
         }
 
-        
-        public static extern Delegate Combine(Delegate a, Delegate b);
 
-        extern public MethodInfo Method
+        public static Delegate Combine(Delegate a, Delegate b)
         {
-            
-            get;
+            throw new NotImplementedException();
         }
 
-        extern public Object Target
+        public MethodInfo Method
         {
-            
-            get;
+
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
 
-        
-        public static extern Delegate Remove(Delegate source, Delegate value);
+        public Object Target
+        {
 
-        
-        public static extern bool operator ==(Delegate d1, Delegate d2);
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
 
-        
-        public static extern bool operator !=(Delegate d1, Delegate d2);
+        public static Delegate Remove(Delegate source, Delegate value)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public static bool operator ==(Delegate d1, Delegate d2)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        public static bool operator !=(Delegate d1, Delegate d2)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }

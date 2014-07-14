@@ -12,10 +12,15 @@ namespace System
     {
 
         
-        public extern static bool operator ==(MulticastDelegate d1, MulticastDelegate d2);
-
+        public static bool operator ==(MulticastDelegate d1, MulticastDelegate d2)
+        {
+            throw new NotImplementedException();
+        }
         
-        public extern static bool operator !=(MulticastDelegate d1, MulticastDelegate d2);
+        public static bool operator !=(MulticastDelegate d1, MulticastDelegate d2)
+        {
+            throw new NotImplementedException();
+        }
 
     }
 }
