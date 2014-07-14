@@ -100,12 +100,9 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
         {
-            foreach (var topInterface in type.GetInterfaces())
+            foreach (var topInterface in type.GetInterfacesExcludingBaseAllInterfaces())
             {
-                if (type.BaseType == null || !type.BaseType.GetAllInterfaces().Contains(topInterface))
-                {
-                    yield return topInterface;
-                }
+                yield return topInterface;
 
                 // enumerate all children except first
                 foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
