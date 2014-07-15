@@ -772,7 +772,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private class SynthesizedDummyMethodBody : IMethodBody
+        public class SynthesizedDummyMethodBody : IMethodBody
         {
             /// <summary>
             /// </summary>

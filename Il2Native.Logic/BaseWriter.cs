@@ -1327,7 +1327,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected virtual void StartProcess()
+        public virtual void StartProcess()
         {
             this.Ops.Clear();
             this.Stack.Clear();

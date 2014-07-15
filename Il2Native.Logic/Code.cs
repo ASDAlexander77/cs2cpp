@@ -779,35 +779,35 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        Ceq, 
+        Ceq = 0xE2, 
 
         /// <summary>
         /// </summary>
-        Cgt, 
+        Cgt = 0xE3, 
 
         /// <summary>
         /// </summary>
-        Cgt_Un, 
+        Cgt_Un = 0xE4, 
 
         /// <summary>
         /// </summary>
-        Clt, 
+        Clt = 0xE5, 
 
         /// <summary>
         /// </summary>
-        Clt_Un, 
+        Clt_Un = 0xE6, 
 
         /// <summary>
         /// </summary>
-        Ldftn, 
+        Ldftn = 0xE7, 
 
         /// <summary>
         /// </summary>
-        Ldvirtftn, 
+        Ldvirtftn = 0xE8, 
 
         /// <summary>
         /// </summary>
-        Ldarg, 
+        Ldarg = 0xEA, 
 
         /// <summary>
         /// </summary>
