@@ -216,7 +216,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsDelegateType();
+                return this.typeDef.IsDelegateType() || this.IsDerivedFromDelegateType();
             }
         }
 
@@ -709,6 +709,15 @@ namespace PEAssemblyReader
             return result.ToString();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateNamespace()
+        {
+            return this.typeDef.CalculateNamespace();
+        }
+
         private IEnumerable<TypeSymbol> EnumerableUniqueInterfaces()
         {
             TypeSymbol previous = null;
@@ -735,6 +744,11 @@ namespace PEAssemblyReader
             return source == methodKind1 || source == methodKind2;
         }
 
+        private bool IsDerivedFromDelegateType()
+        {
+            return this.BaseType != null && (this.BaseType.FullName == "System.Delegate" || this.BaseType.FullName == "System.MulticastDelegate");
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -751,15 +765,6 @@ namespace PEAssemblyReader
         private bool IsDerivedFromValueType()
         {
             return this.BaseType != null && this.BaseType.FullName == "System.ValueType";
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        private string CalculateNamespace()
-        {
-            return this.typeDef.CalculateNamespace();
         }
     }
 }

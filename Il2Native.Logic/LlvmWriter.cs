@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LlvmWriter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -1238,11 +1240,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="type">
+        /// <param name="source">
         /// </param>
-        /// <param name="sourceVarName">
-        /// </param>
-        /// <param name="destVarName">
+        /// <param name="dest">
         /// </param>
         public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, FullyDefinedReference source, FullyDefinedReference dest)
         {
@@ -1426,6 +1426,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="classType">
         /// </param>
+        /// <param name="fieldContainerType">
+        /// </param>
         /// <param name="index">
         /// </param>
         /// <param name="valueReference">
@@ -1498,6 +1500,16 @@ namespace Il2Native.Logic
             writer.Write(index);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="classType">
+        /// </param>
+        /// <param name="fieldContainerType">
+        /// </param>
+        /// <param name="fieldIndex">
+        /// </param>
         public void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IType fieldContainerType, int fieldIndex)
         {
             var targetType = fieldContainerType;
@@ -1809,6 +1821,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodBase">
         /// </param>
+        /// <param name="thisType">
+        /// </param>
         public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
         {
             var methodInfo = methodBase;
@@ -2007,6 +2021,14 @@ namespace Il2Native.Logic
             this.Output.Write(reference.Name);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="methodReturnType">
+        /// </param>
         public void WriteReturn(LlvmIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
             var opts = this.WriteReturnStruct(opCode, methodReturnType);
@@ -2019,6 +2041,14 @@ namespace Il2Native.Logic
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="methodReturnType">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public OperandOptions WriteReturnStruct(OpCodePart opCode, IType methodReturnType)
         {
             var opts = OperandOptions.None;
@@ -4137,6 +4167,19 @@ namespace Il2Native.Logic
             opCode.NextOpCode(this).JumpProcessed = true;
         }
 
+        public void WriteCondBranch(LlvmIndentedTextWriter writer, LlvmResult compareResult, string trueLabel, string falseLabel)
+        {
+            writer.WriteLine("br i1 {0}, label %{1}, label %{2}", compareResult, trueLabel, falseLabel);
+            WriteLabel(writer, trueLabel);
+        }
+
+        public void WriteLabel(LlvmIndentedTextWriter writer, string label)
+        {
+            writer.Indent--;
+            writer.WriteLine(string.Concat(label, ':'));
+            writer.Indent++;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -4222,6 +4265,8 @@ namespace Il2Native.Logic
         /// <param name="opCode">
         /// </param>
         /// <param name="methodBase">
+        /// </param>
+        /// <param name="thisType">
         /// </param>
         private void WriteGetInterfaceOffsetToObjectRootPointer(LlvmIndentedTextWriter writer, OpCodePart opCode, IMethod methodBase, IType thisType = null)
         {
