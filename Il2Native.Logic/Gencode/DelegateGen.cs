@@ -204,7 +204,7 @@ namespace Il2Native.Logic.Gencode
 
             method.MethodResult = opCodeNopeForBitCast.Result;
 
-            // write actual call
+            // actual call
             llvmWriter.WriteCall(opCodeNope, method, false, true, false, objectResult, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             writer.WriteLine(string.Empty);
 
@@ -220,7 +220,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write("ret ");
 
-            if (method.ReturnType.IsVoid())
+            if (method.ReturnType.IsVoid() || method.ReturnType.IsStructureType())
             {
                 writer.WriteLine("void");
             }

@@ -1812,20 +1812,38 @@ namespace Il2Native.Logic
         public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
         {
             var methodInfo = methodBase;
-            methodInfo.ReturnType.WriteTypePrefix(writer);
+            var isStructureType = methodInfo.ReturnType.IsStructureType();
+            if (!isStructureType)
+            {
+                methodInfo.ReturnType.WriteTypePrefix(writer);
+            }
+            else
+            {
+                writer.Write("void");
+            }
 
             writer.Write(" (");
+
+            if (isStructureType)
+            {
+                methodInfo.ReturnType.WriteTypePrefix(writer, true);
+            }
 
             var hasThis = !methodInfo.IsStatic;
             if (hasThis)
             {
+                if (isStructureType)
+                {
+                    writer.Write(", ");
+                }
+
                 (thisType ?? methodInfo.DeclaringType).WriteTypePrefix(writer);
             }
 
             var index = 0;
             foreach (var parameter in methodBase.GetParameters())
             {
-                if (index > 0 || hasThis)
+                if (index > 0 || hasThis || isStructureType)
                 {
                     writer.Write(", ");
                 }
@@ -1991,6 +2009,18 @@ namespace Il2Native.Logic
 
         public void WriteReturn(LlvmIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
+            var opts = this.WriteReturnStruct(opCode, methodReturnType);
+
+            this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
+
+            if (methodReturnType.IsStructureType())
+            {
+                writer.Write("void");
+            }
+        }
+
+        public OperandOptions WriteReturnStruct(OpCodePart opCode, IType methodReturnType)
+        {
             var opts = OperandOptions.None;
 
             if (methodReturnType.IsStructureType())
@@ -2010,12 +2040,7 @@ namespace Il2Native.Logic
                 opts |= OperandOptions.IgnoreOperand;
             }
 
-            this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
-
-            if (methodReturnType.IsStructureType())
-            {
-                writer.Write("void");
-            }
+            return opts;
         }
 
         /// <summary>
@@ -2969,7 +2994,6 @@ namespace Il2Native.Logic
 
                 case Code.Ldftn:
 
-                    // bitcast (i8* (i8*)* @"[I]System.String fn(System.String)" to i32*)
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
                     writer.Write("bitcast (");
