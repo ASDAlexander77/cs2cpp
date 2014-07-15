@@ -175,15 +175,6 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (!type.IsInterface && type.IsGenericTypeDefinition)
-                {
-                    ////foreach (var genericSpecialization in genericSpecializations.Where(g => g.GUID == type.GUID))
-                    ////{
-                    ////    ConvertIType(ilReader, codeWriter, genericSpecialization);
-                    ////}
-                    continue;
-                }
-
                 IType genDef = null;
                 if (type.IsGenericType)
                 {
@@ -335,7 +326,7 @@ namespace Il2Native.Logic
             codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName);
 
             var genericSpecializations = new HashSet<IType>();
-            var newListOfITypes = ResortITypes(ilReader.Types().ToList(), genericSpecializations);
+            var newListOfITypes = ResortITypes(ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
 
             // build quick access array for Generic Definitions
             var genDefinitionsByGuid = new SortedDictionary<string, IType>();
@@ -389,9 +380,9 @@ namespace Il2Native.Logic
             {
                 foreach (var field in fields)
                 {
+                    DicoverGenericSpecializedIType(field.FieldType, genericSpecializations);
                     if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
                     {
-                        DicoverGenericSpecializedIType(field.FieldType, genericSpecializations);
                         yield return field.FieldType;
                     }
                 }
@@ -415,9 +406,9 @@ namespace Il2Native.Logic
                     {
                         foreach (var localVar in methodBody.LocalVariables)
                         {
+                            DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
                             if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
                             {
-                                DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
                                 yield return localVar.LocalType;
                             }
                         }

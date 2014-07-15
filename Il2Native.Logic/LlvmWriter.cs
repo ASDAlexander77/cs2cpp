@@ -2223,13 +2223,6 @@ namespace Il2Native.Logic
 
             this.ReadTypeInfo(type, genericType);
 
-            if (type.IsGenericType)
-            {
-                this.Output.Write("template <");
-                this.WriteGenericParameters(this.Output, type);
-                this.Output.Write("> ");
-            }
-
             this.WriteTypeDeclarationStart(type);
         }
 
@@ -4195,50 +4188,6 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
             this.WriteCatchProlog(opCode);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="type">
-        /// </param>
-        private void WriteGenericParameters(LlvmIndentedTextWriter writer, IType type)
-        {
-            var index = type.Name.IndexOf('`');
-            var level = int.Parse(type.Name.Substring(index + 1));
-
-            for (var i = 0; i < level; i++)
-            {
-                if (i > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                writer.Write("typename ");
-
-                IType generic = null;
-
-                if (this.GenericMethodArguments != null)
-                {
-                    generic = this.GenericMethodArguments.Where(a => a.GenericParameterPosition == i).FirstOrDefault();
-                }
-
-                if (generic == null && this.TypeGenericArguments != null)
-                {
-                    generic = this.TypeGenericArguments.Where(a => a.GenericParameterPosition == i).FirstOrDefault();
-                }
-
-                if (generic != null)
-                {
-                    writer.Write(generic.Name);
-                }
-                else
-                {
-                    writer.Write("T");
-                    writer.Write(i + 1);
-                }
-            }
         }
 
         /// <summary>

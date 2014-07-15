@@ -323,16 +323,7 @@ namespace Il2Native.Logic.Gencode
                 typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
             }
 
-            var index = typeBaseName.IndexOf('`');
-            if (index >= 0)
-            {
-                var nameWithoutGeneric = typeBaseName.Substring(0, index);
-                writer.Write(nameWithoutGeneric);
-            }
-            else
-            {
-                writer.Write(typeBaseName);
-            }
+            writer.Write(typeBaseName);
         }
 
         /// <summary>

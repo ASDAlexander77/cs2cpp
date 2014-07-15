@@ -98,25 +98,9 @@
         }
 
         [TestMethod]
-        public void TestType()
-        {
-            Il2Converter.Convert(typeof(object), OutputPath);
-        }
-
-        [TestMethod]
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath);
-        }
-
-        [TestMethod]
-        public void TestRunLlvm()
-        {
-            var skip = new int[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99 };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
-            {
-                RunInterpreter(index);
-            }
         }
 
         [TestMethod]
@@ -124,31 +108,11 @@
         {
             // 95 - init double in class to '0'
             // 99 - using GetType
-            var skip = new int[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99 };
+            var skip = new int[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
             }
-        }
-
-        private void RunInterpreter(int index)
-        {
-            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
-
-            Test(index);
-
-            Trace.WriteLine("Executing LLVM for " + index);
-
-            var pi = new ProcessStartInfo();
-            pi.WorkingDirectory = OutputPath;
-            pi.FileName = "lli.exe";
-            pi.Arguments = string.Format("{1}test-{0}.ll", index, OutputPath);
-
-            var piProc = Process.Start(pi);
-
-            piProc.WaitForExit();
-
-            Assert.AreEqual(0, piProc.ExitCode);
         }
 
         private void CompileAndRun(int index)

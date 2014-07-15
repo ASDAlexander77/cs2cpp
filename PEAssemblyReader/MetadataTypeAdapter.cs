@@ -99,7 +99,13 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
+                {
+                    return namedTypeSymbol.TypeArguments.Any();
+                }
+
+                return false;
             }
         }
 
@@ -135,7 +141,7 @@ namespace PEAssemblyReader
                     sb.Append('+');
                 }
 
-                sb.Append(this.typeDef.Name);
+                sb.Append(this.Name);
 
                 return sb.ToString();
             }
@@ -161,6 +167,12 @@ namespace PEAssemblyReader
         {
             get
             {
+                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
+                {
+                    return namedTypeSymbol.TypeArguments.Select(t => new MetadataTypeAdapter(t));
+                }
+
                 throw new NotImplementedException();
             }
         }
@@ -251,7 +263,13 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.ContainsTypeParameter();
+                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
+                {
+                    return namedTypeSymbol.IsGenericType;
+                }
+
+                return false;
             }
         }
 
@@ -264,7 +282,7 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeParameters.Any() && !namedTypeSymbol.TypeArguments.Any();
+                    return namedTypeSymbol.TypeArguments.Any(t => t.TypeKind == TypeKind.TypeParameter);
                 }
 
                 return false;
@@ -376,7 +394,29 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.Name;
+                var sb = new StringBuilder();
+
+                sb.Append(this.typeDef.Name);
+
+                if (this.IsGenericType)
+                {
+                    sb.Append('<');
+
+                    var index = 0;
+                    foreach (var genArg in this.GetGenericArguments())
+                    {
+                        if (index++ > 0)
+                        {
+                            sb.Append(", ");
+                        }
+
+                        sb.Append(genArg.FullName);
+                    }
+
+                    sb.Append('>');
+                }
+
+                return sb.ToString();
             }
         }
 
@@ -464,8 +504,8 @@ namespace PEAssemblyReader
         {
             return
                 this.typeDef.GetMembers()
-                    .Where(m => m is PEMethodSymbol && this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataConstructorAdapter(f as PEMethodSymbol));
+                    .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
         }
 
         /// <summary>
@@ -579,7 +619,7 @@ namespace PEAssemblyReader
         {
             foreach (var method in
                 this.typeDef.GetMembers()
-                    .Where(m => m is PEMethodSymbol && !this.IsAny(((PEMethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
                     .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
             {
                 yield return method;
@@ -606,7 +646,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GetNestedTypes()
         {
-            var peType = this.typeDef as PENamedTypeSymbol;
+            var peType = this.typeDef as NamedTypeSymbol;
             if (peType != null)
             {
                 return peType.GetTypeMembers().Select(t => new MetadataTypeAdapter(t));
@@ -703,6 +743,25 @@ namespace PEAssemblyReader
                 else
                 {
                     result.Append(this.FullName);
+                }
+
+                // append generic types
+                if (this.IsGenericType)
+                {
+                    result.Append('<');
+
+                    var index = 0;
+                    foreach (var genArg in this.GenericTypeArguments)
+                    {
+                        if (index++ > 0)
+                        {
+                            result.Append(", ");
+                        }
+
+                        result.Append(genArg);
+                    }
+
+                    result.Append('>');
                 }
             }
 

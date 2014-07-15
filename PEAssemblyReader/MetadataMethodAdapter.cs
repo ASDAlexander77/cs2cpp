@@ -132,11 +132,11 @@ namespace PEAssemblyReader
                 {
                     if (this.methodDef.ContainingType.IsNestedType())
                     {
-                        result.Append(this.methodDef.ContainingType.ContainingType.Name);
+                        result.Append(new MetadataTypeAdapter(this.methodDef.ContainingType.ContainingType).Name);
                         result.Append('+');
                     }
 
-                    result.Append(this.methodDef.ContainingType.Name);
+                    result.Append(new MetadataTypeAdapter(this.methodDef.ContainingType).Name);
                     result.Append('.');
                 }
 
@@ -531,8 +531,6 @@ namespace PEAssemblyReader
                 Debug.Assert(peModule.HasIL);
                 return peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
             }
-
-            ;
 
             return null;
         }

@@ -546,6 +546,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Debug.Assert(method.SynthesizesLoweredBoundBody);
                 method.GenerateMethodBody(compilationState, diagnostics);
             }
+             
 
             CompileSynthesizedMethods(compilationState);
             compilationState.Free();
