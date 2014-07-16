@@ -8,3 +8,9 @@
 /Il2Native.sln.DotSettings.user
 /Il2Bc.sln.DotSettings.user
 /*.suo
+/CoreLib/obj
+/CoreLib/bin
+/CoreSource/obj
+/CoreSource/bin
+/CSharpSource/obj/Debug
+/CSharpSource/bin
