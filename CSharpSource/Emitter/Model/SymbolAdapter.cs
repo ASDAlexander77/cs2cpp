@@ -18,7 +18,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Checks if this symbol is a definition and its containing module is a SourceModuleSymbol.
         /// </summary>
-        [Conditional("DEBUG")]
+        [Conditional("_DEBUG")]
         internal protected void CheckDefinitionInvariant()
         {
             // can't be generic instantiation

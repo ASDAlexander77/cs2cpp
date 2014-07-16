@@ -420,7 +420,6 @@ namespace PEAssemblyReader
         public IMethodBody GetMethodBody()
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peModule = peModuleSymbol.Module;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
             {
@@ -429,6 +428,12 @@ namespace PEAssemblyReader
                 {
                     return this;
                 }
+            }
+
+            var substitutedMethodSymbol = this.methodDef as SubstitutedMethodSymbol;
+            if (substitutedMethodSymbol != null)
+            {
+
             }
 
             return null;

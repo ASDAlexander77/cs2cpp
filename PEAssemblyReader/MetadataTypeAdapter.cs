@@ -561,7 +561,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is PEFieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
         }
 
         /// <summary>

@@ -759,24 +759,27 @@ namespace Il2Native.Logic
             var coreLibSet = false;
             var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-            foreach (var assemblyIdentity in this.Assembly.Assembly.AssemblyReferences)
+            foreach (var coreAssemblySymbol in from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences 
+                                               where assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib" 
+                                               select AssemblyMetadata.CreateFromFile(
+                                                    assemblyIdentity.Name == "CoreLib" 
+                                                        ? this.CoreLibPath 
+                                                        : typeof(int).Assembly.Location) 
+                                               into coreAssembly 
+                                               select new PEAssemblySymbol(
+                                                   coreAssembly.Assembly, 
+                                                   DocumentationProvider.Default, 
+                                                   isLinked: false, 
+                                                   importOptions: MetadataImportOptions.All))
             {
-                if (assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib")
-                {
-                    var coreAssembly = AssemblyMetadata.CreateFromFile(assemblyIdentity.Name == "CoreLib" ? this.CoreLibPath : typeof(int).Assembly.Location);
-                    var coreAssemblySymbol = new PEAssemblySymbol(
-                        coreAssembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-                    coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
+                coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
-                    assemblySymbol.SetCorLibrary(coreAssemblySymbol);
+                assemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
-                    referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
-                    unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
-                    coreLibSet = true;
-                    continue;
-                }
-
-                // TODO: finish it, loading Assebly (find it by DLL name etc)
+                referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
+                unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
+                coreLibSet = true;
+                continue;
             }
 
             if (!coreLibSet)
@@ -795,14 +798,10 @@ namespace Il2Native.Logic
                 module.SetReferences(moduleReferences);
 
                 var peModuleSymbol = module as PEModuleSymbol;
-                foreach (var symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers()))
+                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers()) 
+                                                    where symbol.TypeKind != TypeKind.Error 
+                                                    select new MetadataTypeAdapter(symbol))
                 {
-                    if (symbol.TypeKind == TypeKind.Error)
-                    {
-                        continue;
-                    }
-
-                    var metadataTypeAdapter = new MetadataTypeAdapter(symbol);
                     yield return metadataTypeAdapter;
                     foreach (var nestedType in metadataTypeAdapter.GetNestedTypes())
                     {

@@ -326,7 +326,8 @@ namespace Il2Native.Logic
             codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName);
 
             var genericSpecializations = new HashSet<IType>();
-            var newListOfITypes = ResortITypes(ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
+            var types = ilReader.Types().ToList();
+            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
 
             // build quick access array for Generic Definitions
             var genDefinitionsByGuid = new SortedDictionary<string, IType>();
