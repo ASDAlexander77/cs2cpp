@@ -982,7 +982,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
         /// <remarks>
         /// NOTE: we are specifically diverging from dev11 to improve the user experience.
         /// Since treating the "async" keyword as an identifier in older language
-        /// versions can never result in a correct program, we instead accept it as the a
+        /// versions can never result in a correct program, we instead accept it as a
         /// keyword regardless of the language version and produce an error if the version
         /// is insufficient.
         /// </remarks>
@@ -999,25 +999,33 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax.InternalSyntax
                     : this.AddError(node, ErrorCode.WRN_NonECMAFeature, feature.Localize());
             }
 
-            LanguageVersion requiredVersion = feature.RequiredVersion();
-
-            if (availableVersion >= requiredVersion)
+            if (IsFeatureEnabled(feature))
             {
                 return node;
             }
 
-            if (!forceWarning)
+            var featureName = feature.Localize();
+            var requiredVersion = feature.RequiredVersion();
+
+            if (forceWarning)
             {
-                return this.AddError(node, availableVersion.GetErrorCode(), feature.Localize(), (int)requiredVersion);
+                SyntaxDiagnosticInfo rawInfo = new SyntaxDiagnosticInfo(availableVersion.GetErrorCode(), featureName, requiredVersion.Localize());
+                return this.AddError(node, ErrorCode.WRN_ErrorOverride, rawInfo, rawInfo.Code);
+            }
+            
+            if (requiredVersion == LanguageVersion.Experimental)
+            {
+                return this.AddError(node, ErrorCode.ERR_FeatureIsExperimental, featureName);
             }
 
-            SyntaxDiagnosticInfo rawInfo = new SyntaxDiagnosticInfo(availableVersion.GetErrorCode(), feature.Localize(), (int)requiredVersion);
-            return this.AddError(node, ErrorCode.WRN_ErrorOverride, rawInfo, rawInfo.Code);
+            return this.AddError(node, availableVersion.GetErrorCode(), featureName, requiredVersion.Localize());
         }
 
-        protected bool AreExpreimentalFeaturesEnabled()
+        protected bool IsFeatureEnabled(MessageID feature)
         {
-            return this.Options.LanguageVersion == LanguageVersion.Experimental;
+            LanguageVersion availableVersion = this.Options.LanguageVersion;
+            LanguageVersion requiredVersion = feature.RequiredVersion();
+            return availableVersion >= requiredVersion;
         }
     }
 }

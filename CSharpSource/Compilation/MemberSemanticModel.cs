@@ -26,7 +26,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         // The bound nodes associated with a syntax node, from highest in the tree to lowest.
         private readonly Dictionary<CSharpSyntaxNode, ImmutableArray<BoundNode>> guardedNodeMap = new Dictionary<CSharpSyntaxNode, ImmutableArray<BoundNode>>();
 
-        protected readonly Binder rootBinder;
+        internal readonly Binder RootBinder;
 
         // Fields specific to a speculative MemberSemanticModel.
         private readonly SyntaxTreeSemanticModel parentSemanticModelOpt;
@@ -42,7 +42,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             this.compilation = compilation;
             this.root = root;
             this.memberSymbol = memberSymbol;
-            this.rootBinder = rootBinder.WithAdditionalFlags(BinderFlags.SemanticModel);
+            this.RootBinder = rootBinder.WithAdditionalFlags(BinderFlags.SemanticModel);
             this.parentSemanticModelOpt = parentSemanticModelOpt;
             this.speculatedPosition = speculatedPosition;
         }
@@ -137,7 +137,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (node == this.root)
             {
-                return rootBinder;
+                return RootBinder;
             }
 
             ExpressionSyntax typeOfArgument = null;
@@ -159,39 +159,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     if (LookupPosition.IsInStatementScope(position, stmt))
                     {
-                        binder = rootBinder.GetBinder(current);
+                        binder = RootBinder.GetBinder(current);
 
                         if (binder != null)
                         {
-                            switch (stmt.CSharpKind())
-                            {
-                                case SyntaxKind.ForEachStatement:
-                                    var forEachStmt = (ForEachStatementSyntax)stmt;
-                                    if (LookupPosition.IsBetweenTokens(position, forEachStmt.InKeyword, forEachStmt.CloseParenToken))
-                                    {
-                                        binder = binder.Next;
-                                        Debug.Assert(binder is ScopedExpressionBinder);
-                                    }
-                                    break;
-
-                                case SyntaxKind.ForStatement:
-                                    var forStmt = (ForStatementSyntax)stmt;
-                                    if (LookupPosition.IsBetweenTokens(position, forStmt.OpenParenToken, forStmt.FirstSemicolonToken))
-                                    {
-                                        binder = binder.Next;
-                                        Debug.Assert(binder is ForLoopInitializationBinder);
-                                    }
-                                    break;
-
-                                case SyntaxKind.SwitchStatement:
-                                    var switchStmt = (SwitchStatementSyntax)stmt;
-                                    if (LookupPosition.IsBetweenTokens(position, switchStmt.OpenParenToken, switchStmt.CloseParenToken))
-                                    {
-                                        binder = binder.Next;
-                                        Debug.Assert(binder is ScopedExpressionBinder);
-                                    }
-                                    break;
-                            }
+                            binder = AdjustBinderForPositionWithinStatement(position, binder, stmt);
                         }
                     }
                 }
@@ -199,21 +171,21 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     if (LookupPosition.IsInCatchBlockScope(position, (CatchClauseSyntax)current))
                     {
-                        binder = rootBinder.GetBinder(current);
+                        binder = RootBinder.GetBinder(current);
                     }
                 }
                 else if (current.Kind == SyntaxKind.CatchFilterClause)
                 {
                     if (LookupPosition.IsInCatchFilterScope(position, (CatchFilterClauseSyntax)current))
                     {
-                        binder = rootBinder.GetBinder(current);
+                        binder = RootBinder.GetBinder(current);
                     }
                 }
                 else if (current.IsAnonymousFunction())
                 {
                     if (LookupPosition.IsInAnonymousFunctionOrQuery(position, current))
                     {
-                        binder = rootBinder.GetBinder(current);
+                        binder = RootBinder.GetBinder(current);
 
                         // This should only happen in error scenarios.  For example, C# does not allow array rank
                         // specifiers in types, (e.g. int[1] x;), but the syntax model does.  In order to construct
@@ -243,7 +215,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            binder = binder ?? rootBinder;
+            binder = binder ?? RootBinder;
             Debug.Assert(binder != null);
 
             if (typeOfArgument != null && !typeOfEncounteredBeforeUnexpectedAnonymousFunction)
@@ -262,6 +234,41 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             return binder.WithAdditionalFlags(BinderFlags.SemanticModel);
+        }
+
+        private static Binder AdjustBinderForPositionWithinStatement(int position, Binder binder, StatementSyntax stmt)
+        {
+            switch (stmt.CSharpKind())
+            {
+                case SyntaxKind.ForEachStatement:
+                    var forEachStmt = (ForEachStatementSyntax)stmt;
+                    if (LookupPosition.IsBetweenTokens(position, forEachStmt.InKeyword, forEachStmt.Statement.GetFirstToken()))
+                    {
+                        binder = binder.Next;
+                        Debug.Assert(binder is ScopedExpressionBinder);
+                    }
+                    break;
+
+                case SyntaxKind.ForStatement:
+                    var forStmt = (ForStatementSyntax)stmt;
+                    if (LookupPosition.IsBetweenTokens(position, forStmt.OpenParenToken, forStmt.FirstSemicolonToken))
+                    {
+                        binder = binder.Next;
+                        Debug.Assert(binder is ForLoopInitializationBinder);
+                    }
+                    break;
+
+                case SyntaxKind.SwitchStatement:
+                    var switchStmt = (SwitchStatementSyntax)stmt;
+                    if (LookupPosition.IsBetweenTokens(position, switchStmt.OpenParenToken, switchStmt.OpenBraceToken))
+                    {
+                        binder = binder.Next;
+                        Debug.Assert(binder is ScopedExpressionBinder);
+                    }
+                    break;
+            }
+
+            return binder;
         }
 
         public override Conversion ClassifyConversion(
@@ -482,6 +489,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         public override IMethodSymbol GetDeclaredSymbol(AccessorDeclarationSyntax declarationSyntax, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Can't define accessor inside member.
+            return null;
+        }
+
+        public override IMethodSymbol GetDeclaredSymbol(ArrowExpressionClauseSyntax declarationSyntax, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Can't define another member inside member.
             return null;
         }
 
@@ -1148,7 +1161,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // If we have a root binder with no tokens in it, position can be outside the span event
             // after position is adjusted. If this happens, there can't be any 
             if (!this.Root.FullSpan.Contains(position))
-                return this.rootBinder;
+                return this.RootBinder;
 
             SyntaxToken token = this.Root.FindToken(position);
             CSharpSyntaxNode node = (CSharpSyntaxNode)token.Parent;
@@ -1273,7 +1286,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// 
         /// Returned binder doesn't need to have <see cref="BinderFlags.SemanticModel"/> set - the caller will add it.
         /// </remarks>
-        private static Binder GetLambdaEnclosingBinder(int position, CSharpSyntaxNode startingNode, CSharpSyntaxNode containingLambda, ExecutableCodeBinder lambdaBinder)
+        private static Binder GetLambdaEnclosingBinder(int position, CSharpSyntaxNode startingNode, CSharpSyntaxNode containingLambda, Binder lambdaBinder)
         {
             Debug.Assert(containingLambda.IsAnonymousFunction());
             Debug.Assert(LookupPosition.IsInAnonymousFunctionOrQuery(position, containingLambda));
@@ -1291,7 +1304,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         Binder binder = lambdaBinder.GetBinder(current);
                         if (binder != null)
                         {
-                            return binder;
+                            return AdjustBinderForPositionWithinStatement(position, binder, stmt);
                         }
                     }
                 }
@@ -1498,7 +1511,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                             !(node is QueryClauseSyntax) &&
                             !(node is OrderingSyntax) &&
                             !(node is JoinIntoClauseSyntax) &&
-                            !(node is QueryContinuationSyntax))
+                            !(node is QueryContinuationSyntax) &&
+                            !(node is ArrowExpressionClauseSyntax))
                         {
                             return GetBindableSyntaxNode(parent);
                         }

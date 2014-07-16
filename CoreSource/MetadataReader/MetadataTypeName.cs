@@ -13,7 +13,7 @@ namespace Microsoft.CodeAnalysis
     /// Also, allows us to stop using strings in the APIs that accept only metadata names, 
     /// making usage of them less bug prone.
     /// </summary>
-    public partial struct MetadataTypeName
+    internal partial struct MetadataTypeName
     {
         /// <summary>
         /// Full metadata name of a type, includes namespace name for top level types.

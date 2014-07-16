@@ -16,7 +16,7 @@ namespace Microsoft.Cci
     /// Specifies how the caller passes parameters to the callee and who cleans up the stack.
     /// </summary>
     [Flags]
-    public enum CallingConvention
+    internal enum CallingConvention
     {
         /// <summary>
         /// C/C++ style calling convention for unmanaged methods. The call stack is cleaned up by the caller, 
@@ -120,30 +120,17 @@ namespace Microsoft.Cci
         IMetadataConstant GetCompileTimeValue(EmitContext context);
 
         /// <summary>
-        /// Information of the location where this field is mapped to
+        /// Mapped field data, or null if the field is not mapped.
         /// </summary>
-        ISectionBlock FieldMapping
+        ImmutableArray<byte> MappedData
         {
             get;
-
-            // ^ requires this.IsMapped;
         }
 
         /// <summary>
         /// This field is a compile-time constant. The field has no runtime location and cannot be directly addressed from IL.
         /// </summary>
         bool IsCompileTimeConstant { get; }
-
-        /// <summary>
-        /// This field is mapped to an explicitly initialized (static) memory location.
-        /// </summary>
-        bool IsMapped
-        {
-            get;
-
-            // ^ ensures result ==> this.IsStatic;
-            // ^ ensures !result || this.IsStatic;
-        }
 
         /// <summary>
         /// This field has associated field marshalling information.
@@ -247,8 +234,6 @@ namespace Microsoft.Cci
         IMetadataConstant CompileTimeValue
         {
             get;
-
-            // ^ requires this.IsConstant;
         }
 
         /// <summary>
@@ -258,11 +243,6 @@ namespace Microsoft.Cci
         {
             get;
         }
-
-        /// <summary>
-        /// True if this local definition is readonly and initialized with a compile time constant value.
-        /// </summary>
-        bool IsConstant { get; }
 
         /// <summary>
         /// True if the value referenced by the local must not be moved by the actions of the garbage collector.
@@ -306,6 +286,11 @@ namespace Microsoft.Cci
         /// Slot index or -1 if not applicable.
         /// </summary>
         int SlotIndex { get; }
+
+        /// <summary>
+        /// Optional serialized local signature.
+        /// </summary>
+        byte[] Signature { get; }
     }
 
     /// <summary>

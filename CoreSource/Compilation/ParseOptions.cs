@@ -12,19 +12,18 @@ namespace Microsoft.CodeAnalysis
     /// <summary>
     /// Represents parse options common to C# and VB.
     /// </summary>
-    [Serializable]
-    public abstract class ParseOptions : ISerializable
+    public abstract class ParseOptions
     {
         /// <summary>
         /// Specifies whether to parse as regular code files, script files or interactive code.
         /// </summary>
-        public readonly SourceCodeKind Kind;
+        public SourceCodeKind Kind { get; protected set; }
 
         /// <summary>
         /// Gets a value indicating whether the documentation comments are parsed.
         /// </summary>
         /// <value><c>true</c> if documentation comments are parsed, <c>false</c> otherwise.</value>
-        public readonly DocumentationMode DocumentationMode;
+        public DocumentationMode DocumentationMode { get; protected set; }
 
         internal ParseOptions(SourceCodeKind kind, DocumentationMode documentationMode)
         {
@@ -91,27 +90,5 @@ namespace Microsoft.CodeAnalysis
         {
             return !object.Equals(left, right);
         }
-
-        #region "serialization"
-
-        protected ParseOptions(SerializationInfo info, StreamingContext context)
-        {
-            //public readonly SourceCodeKind Kind;
-            this.Kind = (SourceCodeKind)info.GetValue("Kind", typeof(SourceCodeKind));
-
-            //public readonly DocumentationMode DocumentationMode;
-            this.DocumentationMode = (DocumentationMode)info.GetValue("DocumentationMode", typeof(DocumentationMode));
-        }
-
-        public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            //public readonly SourceCodeKind Kind;
-            info.AddValue("Kind", Kind, typeof(SourceCodeKind));
-
-            //public readonly DocumentationMode DocumentationMode;
-            info.AddValue("DocumentationMode", DocumentationMode, typeof(DocumentationMode));
-        }
-
-        #endregion
     }
 }

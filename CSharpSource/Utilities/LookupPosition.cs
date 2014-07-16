@@ -25,6 +25,45 @@ namespace Microsoft.CodeAnalysis.CSharp
             return blockOpt != null && IsBeforeToken(position, blockOpt, blockOpt.CloseBraceToken);
         }
 
+        internal static bool IsInExpressionBody(
+            int position,
+            ArrowExpressionClauseSyntax expressionBodyOpt,
+            SyntaxToken semicolonToken)
+        {
+            return expressionBodyOpt != null
+                && IsBeforeToken(position, expressionBodyOpt, semicolonToken);
+        }
+
+        /// <summary>
+        /// A position is inside a body if it is inside the block or expression
+        /// body. 
+        ///
+        /// A position is considered to be inside a block if it is on or after
+        /// the open brace and strictly before the close brace. A position is
+        /// considered to be inside an expression body if it is on or after
+        /// the '=>' and strictly before the semicolon.
+        /// </summary>
+        internal static bool IsInBody(int position, BaseMethodDeclarationSyntax method)
+        {
+            ArrowExpressionClauseSyntax expressionBodyOpt = null;
+            switch (method.Kind)
+            {
+                case SyntaxKind.ConversionOperatorDeclaration:
+                    expressionBodyOpt = ((ConversionOperatorDeclarationSyntax)method).ExpressionBody;
+                    break;
+                case SyntaxKind.OperatorDeclaration:
+                    expressionBodyOpt = ((OperatorDeclarationSyntax)method).ExpressionBody;
+                    break;
+                case SyntaxKind.MethodDeclaration:
+                    expressionBodyOpt = ((MethodDeclarationSyntax)method).ExpressionBody;
+                    break;
+                default:
+                    break;
+            }
+            return IsInExpressionBody(position, expressionBodyOpt, method.SemicolonToken)
+                || IsInBlock(position, method.Body);
+        }
+
         internal static bool IsBetweenTokens(int position, SyntaxToken firstIncluded, SyntaxToken firstExcluded)
         {
             return position >= firstIncluded.SpanStart && IsBeforeToken(position, firstExcluded);
@@ -202,7 +241,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return IsBetweenTokens(position, filterClause.OpenParenToken, filterClause.CloseParenToken);
         }
 
-        private static SyntaxToken GetFirstIncludedToken(StatementSyntax statement, bool inRecursiveCall = false)
+        private static SyntaxToken GetFirstIncludedToken(StatementSyntax statement)
         {
             Debug.Assert(statement != null);
             switch (statement.Kind)
@@ -228,22 +267,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.ForEachStatement:
                     // NB: iteration variable is only in scope in body.
                     ForEachStatementSyntax forEachSyntax = (ForEachStatementSyntax)statement;
-                    if (inRecursiveCall)
-                    {
-                        return forEachSyntax.ForEachKeyword;
-                    }
-                    return GetFirstIncludedToken(forEachSyntax.Statement, inRecursiveCall: true);
+                    return forEachSyntax.Expression.GetFirstToken();
                 case SyntaxKind.ForStatement:
-                    // Section 8.8.3 of the spec says that the scope of the loop variable starts at 
-                    // its declaration.  If it's not there, then the scope we are interested in is
-                    // the loop body.
                     ForStatementSyntax forSyntax = (ForStatementSyntax)statement;
-                    if (inRecursiveCall)
-                    {
-                        return forSyntax.ForKeyword;
-                    }
-                    VariableDeclarationSyntax declOpt = forSyntax.Declaration;
-                    return declOpt == null ? GetFirstIncludedToken(forSyntax.Statement, inRecursiveCall: true) : declOpt.GetFirstToken();
+                    return forSyntax.OpenParenToken.GetNextToken();
                 case SyntaxKind.GotoDefaultStatement:
                 case SyntaxKind.GotoCaseStatement:
                 case SyntaxKind.GotoStatement:
@@ -257,7 +284,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.ReturnStatement:
                     return ((ReturnStatementSyntax)statement).ReturnKeyword;
                 case SyntaxKind.SwitchStatement:
-                    return ((SwitchStatementSyntax)statement).OpenBraceToken;
+                    return ((SwitchStatementSyntax)statement).Expression.GetFirstToken();
                 case SyntaxKind.ThrowStatement:
                     return ((ThrowStatementSyntax)statement).ThrowKeyword;
                 case SyntaxKind.TryStatement:

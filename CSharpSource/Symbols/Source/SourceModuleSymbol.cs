@@ -411,14 +411,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
-        {
-            get
-            {
-                return sources.TypeWithNamespaceNames;
-            }
-        }
-
         IAttributeTargetSymbol IAttributeTargetSymbol.AttributesOwner
         {
             get { return this.assemblySymbol; }

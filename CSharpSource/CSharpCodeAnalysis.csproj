@@ -124,7 +124,7 @@
     <Compile Include="Binder\LocalInProgressBinder.cs" />
     <Compile Include="Binder\LocalScopeBinder.cs" />
     <Compile Include="Binder\LockBinder.cs" />
-    <Compile Include="Binder\LockOrUsingStatementExpressionHandler.cs" />
+    <Compile Include="Binder\LockOrUsingBinder.cs" />
     <Compile Include="Binder\LookupOptions.cs" />
     <Compile Include="Binder\LookupResult.cs" />
     <Compile Include="Binder\LookupResultKind.cs" />
@@ -215,10 +215,6 @@
     <Compile Include="CodeGen\EmitOperators.cs" />
     <Compile Include="CodeGen\EmitStatement.cs" />
     <Compile Include="CodeGen\Optimizer.cs" />
-    <Compile Include="CommandLine\CommandLineArguments.cs" />
-    <Compile Include="CommandLine\CommandLineDiagnosticFormatter.cs" />
-    <Compile Include="CommandLine\CommandLineParser.cs" />
-    <Compile Include="CommandLine\CSharpCompiler.cs" />
     <Compile Include="Compilation\AttributeSemanticModel.cs" />
     <Compile Include="Compilation\AwaitExpressionInfo.cs" />
     <Compile Include="Compilation\BuiltInOperators.cs" />
@@ -296,7 +292,6 @@
     <Compile Include="Emitter\Model\GenericNamespaceTypeInstanceReference.cs" />
     <Compile Include="Emitter\Model\GenericNestedTypeInstanceReference.cs" />
     <Compile Include="Emitter\Model\GenericTypeInstanceReference.cs" />
-    <Compile Include="Emitter\Model\MethodImplementation.cs" />
     <Compile Include="Emitter\Model\MethodReference.cs" />
     <Compile Include="Emitter\Model\MethodSymbolAdapter.cs" />
     <Compile Include="Emitter\Model\ModuleReference.cs" />
@@ -385,7 +380,6 @@
     <Compile Include="Lowering\LambdaRewriter\ExpressionLambdaRewriter.cs" />
     <Compile Include="Lowering\LambdaRewriter\LambdaCapturedVariable.cs" />
     <Compile Include="Lowering\LambdaRewriter\LambdaFrameConstructor.cs" />
-    <Compile Include="Lowering\LambdaRewriter\LambdaFrameLocalSymbol.cs" />
     <Compile Include="Lowering\LambdaRewriter\LambdaRewriter.Analysis.cs" />
     <Compile Include="Lowering\LambdaRewriter\LambdaRewriter.cs" />
     <Compile Include="Lowering\LambdaRewriter\LambdaFrame.cs" />
@@ -456,9 +450,6 @@
     <Compile Include="Lowering\SynthesizedSubmissionFields.cs" />
     <Compile Include="Lowering\SyntheticBoundNodeFactory.cs" />
     <Compile Include="Lowering\UnmatchedGotoFinder.cs" />
-    <Compile Include="obj\Release\BoundNodes.xml.Generated.cs" />
-    <Compile Include="obj\Release\ErrorFacts.Generated.cs" />
-    <Compile Include="obj\Release\Syntax.xml.Generated.cs" />
     <Compile Include="Parser\AbstractLexer.cs" />
     <Compile Include="Parser\BlendedNode.cs" />
     <Compile Include="Parser\Blender.cs" />
@@ -679,7 +670,6 @@
     <Compile Include="Symbols\Synthesized\GeneratedNames.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedAccessorValueParameterSymbol.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedBackingFieldSymbol.cs" />
-    <Compile Include="Symbols\Synthesized\SynthesizedCapturedVariable.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedContainer.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedDelegateSymbol.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedEntryPointSymbol.cs" />
@@ -700,7 +690,8 @@
     <Compile Include="Symbols\Synthesized\SynthesizedStringHashFunctionSymbol.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedSubmissionConstructor.cs" />
     <Compile Include="Symbols\Synthesized\SynthesizedTypeParameterSymbol.cs" />
-    <Compile Include="Symbols\TempKind.cs" />
+    <Compile Include="Symbols\SynthesizedLocalKind.cs" />
+    <Compile Include="Symbols\Synthesized\TypeSubstitutedLocalSymbol.cs" />
     <Compile Include="Symbols\TypedConstantExtensions.cs" />
     <Compile Include="Symbols\TypeMap.cs" />
     <Compile Include="Symbols\TypeParameterBounds.cs" />
@@ -787,6 +778,7 @@
     <Compile Include="Syntax\SyntaxFactory.cs" />
     <Compile Include="Syntax\SyntaxFormatter.cs" />
     <Compile Include="Syntax\SyntaxKind.cs" />
+    <Compile Include="Syntax\SyntaxKindEqualityComparer.cs" />
     <Compile Include="Syntax\SyntaxKindFacts.cs" />
     <Compile Include="Syntax\SyntaxList.cs" />
     <Compile Include="Syntax\SyntaxList.SeparatedWithManyChildren.cs" />
@@ -830,6 +822,9 @@
     <BoundTreeDefinition Include="BoundTree\BoundNodes.xml">
       <SubType>Designer</SubType>
     </BoundTreeDefinition>
+    <Compile Include="obj\Release\BoundNodes.xml.Generated.cs" />
+    <Compile Include="obj\Release\ErrorFacts.Generated.cs" />
+    <Compile Include="obj\Release\Syntax.xml.Generated.cs" />
     <Compile Include="Errors\ErrorCode.cs" />
     <EmbeddedResource Include="CSharpResources.resx">
       <SubType>Designer</SubType>

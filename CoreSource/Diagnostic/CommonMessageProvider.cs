@@ -10,7 +10,6 @@ namespace Microsoft.CodeAnalysis
     /// Abstracts the ability to classify and load messages for error codes. Allows the error
     /// infrastructure to be reused between C# and VB.
     /// </summary>
-    [Serializable]
     internal abstract class CommonMessageProvider
     {
         /// <summary>
@@ -75,6 +74,7 @@ namespace Microsoft.CodeAnalysis
         public abstract int WRN_NoConfigNotOnCommandLine { get; }
         public abstract int ERR_BinaryFile { get; }
         public abstract int WRN_UnableToLoadAnalyzer { get; }
+        public abstract int INF_UnableToLoadSomeTypesInAnalyzer { get; }
         public abstract int WRN_AnalyzerCannotBeCreated { get; }
         public abstract int WRN_NoAnalyzerInAssembly { get; }
         public abstract int ERR_CantReadRulesetFile { get; }

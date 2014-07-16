@@ -867,9 +867,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 var fileRef = pair.Key as PortableExecutableReference;
 
-                if ((object)fileRef != null && (object)fileRef.FullPath != null)
+                if ((object)fileRef != null && (object)fileRef.FilePath != null)
                 {
-                    string fileName = PathUtilities.GetFileName(fileRef.FullPath);
+                    string fileName = FileNameUtilities.GetFileName(fileRef.FilePath);
                     string moduleName = modules[pair.Value].Name;
 
                     if (!string.Equals(fileName, moduleName, StringComparison.OrdinalIgnoreCase))
@@ -1236,7 +1236,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     arguments.Attribute = attribute;
                     arguments.Index = i;
 
-                    // CONSIDER: Provide usable AttributeSyntax node for dignostics of malformed netmodule assembly attributes
+                    // CONSIDER: Provide usable AttributeSyntax node for diagnostics of malformed netmodule assembly attributes
                     arguments.AttributeSyntaxOpt = null;
 
                     this.DecodeWellKnownAttribute(ref arguments, isFromNetModule: true);

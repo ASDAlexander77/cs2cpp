@@ -126,7 +126,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 // ResourceType temp = expr;
-                boundTemp = this.factory.StoreToTemp(rewrittenExpression, tempKind: TempKind.Using, store: out tempAssignment);
+                boundTemp = this.factory.StoreToTemp(rewrittenExpression, out tempAssignment, kind: SynthesizedLocalKind.Using);
             }
 
             BoundStatement expressionStatement = new BoundExpressionStatement(expressionSyntax, tempAssignment);
@@ -140,7 +140,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             // { ResourceType temp = expr; try { ... } finally { ... } }
             return new BoundBlock(
                 syntax: usingSyntax,
-                localsOpt: node.Locals.Add(boundTemp.LocalSymbol),
+                locals: node.Locals.Add(boundTemp.LocalSymbol),
                 statements: ImmutableArray.Create<BoundStatement>(expressionStatement, tryFinally));
         }
 
@@ -189,7 +189,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 return new BoundBlock(
                     syntax: usingSyntax,
-                    localsOpt: ImmutableArray.Create<LocalSymbol>(boundTemp.LocalSymbol), //localSymbol will be declared by an enclosing block
+                    locals: ImmutableArray.Create<LocalSymbol>(boundTemp.LocalSymbol), //localSymbol will be declared by an enclosing block
                     statements: ImmutableArray.Create<BoundStatement>(
                         rewrittenDeclaration,
                         new BoundExpressionStatement(declarationSyntax, tempAssignment),

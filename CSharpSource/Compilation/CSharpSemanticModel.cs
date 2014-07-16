@@ -169,7 +169,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         internal abstract ImmutableArray<PropertySymbol> GetIndexerGroupWorker(CSharpSyntaxNode node, SymbolInfoOptions options, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
-        /// Gets a the constant value for a syntax node. This is overridden by various specializations of SemanticModel.
+        /// Gets the constant value for a syntax node. This is overridden by various specializations of SemanticModel.
         /// It can assume that CheckSyntaxNode and CanGetSemanticInfo have already been called, as well as that named
         /// argument nodes have been handled.
         /// </summary>
@@ -1723,24 +1723,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     ImmutableArray<Symbol> unusedHighestMemberGroup;
                     ImmutableArray<Symbol> highestSymbols = GetSemanticSymbols(highestBoundExpr, boundNodeForSyntacticParent, binderOpt, options, out highestIsDynamic, out highestResultKind, out unusedHighestMemberGroup);
 
-                    // For an expression of the form (x.M is T) where x.M is a method group, we return an
-                    // arbitrary representative of the method group.
-                    if (boundNodeForSyntacticParent != null && boundNodeForSyntacticParent.Kind == BoundKind.IsOperator && boundExpr.Kind == BoundKind.MethodGroup)
-                    {
-                        // Just take the first one that happens to be in our list. This code once tried to sort based
-                        // on the LexicalOrderSymbolComparer, but that assumes that the symbols are in source, which is
-                        // not always the case.
-                        if (symbols.Length >= 1)
-                        {
-                            symbols = ImmutableArray.Create<Symbol>(symbols.First());
-                            resultKind = LookupResultKind.Viable;
-                        }
-                    }
-                    // Generally, we want to use the symbols from the LOWEST node. However, if the
-                    // lowest node doesn't have symbols (or had an overload resolution failure), and
-                    // the highest does, use those instead. Also, if the highest node has a WORSE
-                    // resultKind, use that.
-                    else if ((symbols.Length != 1 || resultKind == LookupResultKind.OverloadResolutionFailure) && highestSymbols.Length > 0)
+                    if ((symbols.Length != 1 || resultKind == LookupResultKind.OverloadResolutionFailure) && highestSymbols.Length > 0)
                     {
                         symbols = highestSymbols;
                         resultKind = highestResultKind;
@@ -2627,6 +2610,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         public abstract IMethodSymbol GetDeclaredSymbol(AccessorDeclarationSyntax declarationSyntax, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
+        /// Given a syntax node that declares an expression body, get the corresponding symbol.
+        /// </summary>
+        /// <param name="declarationSyntax">The syntax node that declares an expression body.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The symbol that was declared.</returns>
+        public abstract IMethodSymbol GetDeclaredSymbol(ArrowExpressionClauseSyntax declarationSyntax, CancellationToken cancellationToken = default(CancellationToken));
+
+        /// <summary>
         /// Given a variable declarator syntax, get the corresponding symbol.
         /// </summary>
         /// <param name="declarationSyntax">The syntax node that declares a variable.</param>
@@ -2732,7 +2723,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Binder enclosingBinder = this.GetEnclosingBinder(GetAdjustedNodePosition(forEachStatement));
                 Binder foreachBinder = enclosingBinder.GetBinder(forEachStatement).WithAdditionalFlags(BinderFlags.SemanticModel);
                 LocalSymbol local = foreachBinder.Locals.FirstOrDefault();
-                return ((object)local != null && local.DeclarationKind == LocalDeclarationKind.ForEach)
+                return ((object)local != null && local.DeclarationKind == LocalDeclarationKind.ForEachIterationVariable)
                     ? local
                     : null;
             }
@@ -2753,7 +2744,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 Binder enclosingBinder = this.GetEnclosingBinder(GetAdjustedNodePosition(catchClause));
                 Binder catchBinder = enclosingBinder.GetBinder(catchClause).WithAdditionalFlags(BinderFlags.SemanticModel);
                 LocalSymbol local = catchBinder.Locals.FirstOrDefault();
-                return ((object)local != null && local.DeclarationKind == LocalDeclarationKind.Catch)
+                return ((object)local != null && local.DeclarationKind == LocalDeclarationKind.CatchVariable)
                     ? local
                     : null;
             }
@@ -3723,6 +3714,11 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     default:
                         symbols = methodGroup;
+                        if (symbols.Length > 0)
+                        {
+                            resultKind = resultKind.WorseResultKind(LookupResultKind.OverloadResolutionFailure);
+                        }
+
                         break;
                 }
             }
@@ -3734,6 +3730,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 // one candidate, then we should probably succeed.
 
                 symbols = methodGroup;
+                if (symbols.Length > 0)
+                {
+                    resultKind = resultKind.WorseResultKind(LookupResultKind.OverloadResolutionFailure);
+                }
             }
 
             if (!symbols.Any())
@@ -4613,9 +4613,27 @@ namespace Microsoft.CodeAnalysis.CSharp
                     }
 
                 case SyntaxKind.PropertyDeclaration:
+                    {
+                        var t = (PropertyDeclarationSyntax)node;
+                        if (t.AccessorList != null)
+                        {
+                            foreach (var decl in t.AccessorList.Accessors) DeclarationsInSpanCore(decl, span, builder);
+                        }
+                        if (t.ExpressionBody != null)
+                        {
+                            builder.Add(new DeclarationInSpan(t, t.ExpressionBody.Expression));
+                        }
+                        if (t.Initializer != null)
+                        {
+                            builder.Add(new DeclarationInSpan(t, t.Initializer.Value));
+                        }
+                        builder.Add(new DeclarationInSpan(node, null));
+                        return;
+                    }
+
                 case SyntaxKind.IndexerDeclaration:
                     {
-                        var t = (BasePropertyDeclarationSyntax)node;
+                        var t = (IndexerDeclarationSyntax)node;
                         foreach (var decl in t.AccessorList.Accessors) DeclarationsInSpanCore(decl, span, builder);
                         builder.Add(new DeclarationInSpan(node, null));
                         return;
@@ -4658,10 +4676,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             TextSpan span,
             ImmutableArray<IDiagnosticAnalyzer> analyzers,
             Action<Diagnostic> addDiagnostic,
+            AnalyzerOptions options,
             bool continueOnError,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            AnalyzerDriver.RunAnalyzersCore(this, span, analyzers, n => n.CSharpKind(), addDiagnostic, continueOnError, cancellationToken);
+            AnalyzerDriver.RunAnalyzersCore(this, span, analyzers, n => n.CSharpKind(), addDiagnostic, options, continueOnError, cancellationToken);
         }
 
         protected sealed override ImmutableArray<ISymbol> LookupSymbolsCore(int position, INamespaceOrTypeSymbol container, string name, bool includeReducedExtensionMethods)

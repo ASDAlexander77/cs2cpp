@@ -13,22 +13,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// <summary>
     /// Represents a local variable in a method body.
     /// </summary>
-    internal sealed class SourceLocalSymbol : LocalSymbol
+    internal class SourceLocalSymbol : LocalSymbol
     {
-        private readonly Binder binder;
+        protected readonly Binder binder;
 
         /// <summary>
-        /// Might not be a method symbol in error cases.
+        /// Might not be a method symbol.
         /// </summary>
         private readonly Symbol containingSymbol;
 
         private readonly SyntaxToken identifierToken;
         private readonly ImmutableArray<Location> locations;
         private readonly TypeSyntax typeSyntax;
-        private readonly EqualsValueClauseSyntax initializer; // for regular locals
-        private readonly ExpressionSyntax collection; // for "foreach" locals
         private readonly LocalDeclarationKind declarationKind;
-        private TypeSymbol type;
+        protected TypeSymbol type;
 
         /// <summary>
         /// There are three ways to initialize a fixed statement local:
@@ -47,13 +45,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </remarks>
         private int isSpecificallyNotPinned;
 
-        /// <summary>
-        /// Store the constant value and the corresponding diagnostics together
-        /// to avoid having the former set by one thread and the latter set by
-        /// another.
-        /// </summary>
-        private EvaluatedConstant constantTuple;
-
         public static SourceLocalSymbol MakeForeachLocal(
             MethodSymbol containingMethod,
             ForEachLoopBinder binder,
@@ -61,7 +52,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             SyntaxToken identifierToken,
             ExpressionSyntax collection)
         {
-            return new SourceLocalSymbol(containingMethod, binder, typeSyntax, identifierToken, null, collection, LocalDeclarationKind.ForEach);
+            return new ForEachLocal(containingMethod, binder, typeSyntax, identifierToken, collection, LocalDeclarationKind.ForEachIterationVariable);
+        }
+
+        public static SourceLocalSymbol MakeLocalWithInitializer(
+            Symbol containingSymbol,
+            Binder binder,
+            TypeSyntax typeSyntax,
+            SyntaxToken identifierToken,
+            EqualsValueClauseSyntax initializer,
+            LocalDeclarationKind declarationKind)
+        {
+            Debug.Assert(declarationKind != LocalDeclarationKind.ForEachIterationVariable);
+            return new LocalWithInitializer(containingSymbol, binder, typeSyntax, identifierToken, initializer, declarationKind);
+        }
+
+        public static SourceLocalSymbol MakePossibleOutVarLocalWithoutInitializer(
+            Symbol containingSymbol,
+            Binder binder,
+            TypeSyntax typeSyntax,
+            SyntaxToken identifierToken,
+            CSharpSyntaxNode scopeSegmentRoot,
+            LocalDeclarationKind declarationKind)
+        {
+            Debug.Assert(declarationKind != LocalDeclarationKind.ForEachIterationVariable);
+            return new PossibleOutVarLocalWithoutInitializer(containingSymbol, binder, typeSyntax, identifierToken, scopeSegmentRoot, declarationKind);
         }
 
         public static SourceLocalSymbol MakeLocal(
@@ -69,11 +84,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Binder binder,
             TypeSyntax typeSyntax,
             SyntaxToken identifierToken,
-            EqualsValueClauseSyntax initializer,
             LocalDeclarationKind declarationKind)
         {
-            Debug.Assert(declarationKind != LocalDeclarationKind.ForEach);
-            return new SourceLocalSymbol(containingSymbol, binder, typeSyntax, identifierToken, initializer, null, declarationKind);
+            Debug.Assert(declarationKind != LocalDeclarationKind.ForEachIterationVariable);
+            return new SourceLocalSymbol(containingSymbol, binder, typeSyntax, identifierToken, declarationKind);
         }
 
         private SourceLocalSymbol(
@@ -81,19 +95,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Binder binder,
             TypeSyntax typeSyntax,
             SyntaxToken identifierToken,
-            EqualsValueClauseSyntax initializer,
-            ExpressionSyntax collection,
             LocalDeclarationKind declarationKind)
         {
             Debug.Assert(identifierToken.CSharpKind() != SyntaxKind.None);
-            Debug.Assert(declarationKind != LocalDeclarationKind.CompilerGenerated);
+            Debug.Assert(declarationKind != LocalDeclarationKind.None);
 
             this.binder = binder;
             this.containingSymbol = containingSymbol;
             this.identifierToken = identifierToken;
             this.typeSyntax = typeSyntax;
-            this.initializer = initializer;
-            this.collection = collection;
             this.declarationKind = declarationKind;
 
             // create this eagerly as it will always be needed for the EnsureSingleDefinition
@@ -105,9 +115,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get { return this.declarationKind; }
         }
 
-        internal override TempKind TempKind
+        internal override SynthesizedLocalKind SynthesizedLocalKind
         {
-            get { return TempKind.None; }
+            get { return SynthesizedLocalKind.None; }
         }
 
         internal override bool IsPinned
@@ -121,7 +131,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     Debug.Assert((this.isSpecificallyNotPinned & 2) == 2, "Regardless of which thread won, the read bit should be set.");
                 }
 #endif
-                return this.declarationKind == LocalDeclarationKind.Fixed && (isSpecificallyNotPinned & 1) == 0;
+                return this.declarationKind == LocalDeclarationKind.FixedVariable && (isSpecificallyNotPinned & 1) == 0;
             }
         }
 
@@ -173,11 +183,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        public bool IsVarPendingTypeInference
+        public bool IsVar
         {
             get
             {
-                if ((object)this.type == null && typeSyntax.IsVar)
+                if (typeSyntax.IsVar)
                 {
                     bool isVar;
                     TypeSymbol declType = this.binder.BindType(typeSyntax, new DiagnosticBag(), out isVar);
@@ -199,27 +209,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             if (isVar)
             {
-                TypeSymbol inferredType = null;
-
-                if (this.DeclarationKind == LocalDeclarationKind.ForEach)
-                {
-                    // Normally, it would not be safe to cast to a specific binder type.  However, we verified the type
-                    // in the factory method call for this symbol.
-                    inferredType = ((ForEachLoopBinder)typeBinder).InferCollectionElementType(diagnostics, collection);
-                }
-                else if (initializer != null)
-                {
-                    var newBinder = new ImplicitlyTypedLocalBinder(typeBinder, this);
-                    var initializerOpt = newBinder.BindInferredVariableInitializer(diagnostics, initializer, initializer);
-                    if (initializerOpt != null)
-                    {
-                        inferredType = initializerOpt.Type;
-                    }
-                }
+                TypeSymbol inferredType = InferTypeOfVarVariable(diagnostics);
 
                 // If we got a valid result that was not void then use the inferred type
                 // else create an error type.
-
                 if ((object)inferredType != null &&
                     inferredType.SpecialType != SpecialType.System_Void)
                 {
@@ -235,6 +228,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             diagnostics.Free();
             return declType;
+        }
+
+        protected virtual TypeSymbol InferTypeOfVarVariable(DiagnosticBag diagnostics)
+        {
+            return null;
         }
 
         internal void SetTypeSymbol(TypeSymbol newType)
@@ -275,16 +273,16 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 switch (declarationKind)
                 {
-                    case LocalDeclarationKind.Variable:
+                    case LocalDeclarationKind.RegularVariable:
                     case LocalDeclarationKind.Constant:
-                    case LocalDeclarationKind.Fixed:
-                    case LocalDeclarationKind.Using:
-                    case LocalDeclarationKind.Catch:
-                    case LocalDeclarationKind.For:
+                    case LocalDeclarationKind.FixedVariable:
+                    case LocalDeclarationKind.UsingVariable:
+                    case LocalDeclarationKind.CatchVariable:
+                    case LocalDeclarationKind.ForInitializerVariable:
                         node = identifierToken.Parent.FirstAncestorOrSelf<VariableDeclaratorSyntax>();
                         break;
 
-                    case LocalDeclarationKind.ForEach:
+                    case LocalDeclarationKind.ForEachIterationVariable:
                         node = identifierToken.Parent.FirstAncestorOrSelf<ForEachStatementSyntax>();
                         break;
 
@@ -303,16 +301,76 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override ConstantValue GetConstantValue(LocalSymbol inProgress)
         {
-            MakeConstantTuple(inProgress, boundInitValue: null);
-            return this.constantTuple == null ? null : this.constantTuple.Value;
+            return null;
         }
 
         internal override ImmutableArray<Diagnostic> GetConstantValueDiagnostics(BoundExpression boundInitValue)
         {
-            Debug.Assert(boundInitValue != null);
-            MakeConstantTuple(inProgress: null, boundInitValue: boundInitValue);
-            return this.constantTuple == null ? default(ImmutableArray<Diagnostic>) : this.constantTuple.Diagnostics;
+            return default(ImmutableArray<Diagnostic>);
         }
+
+        internal override RefKind RefKind
+        {
+            get { return RefKind.None; }
+        }
+
+        public sealed override bool Equals(object obj)
+        {
+            if (obj == (object)this)
+            {
+                return true;
+            }
+
+            var symbol = obj as SourceLocalSymbol;
+            return (object)symbol != null
+                && symbol.identifierToken.Equals(this.identifierToken)
+                && Equals(symbol.containingSymbol, this.containingSymbol);
+        }
+
+        public sealed override int GetHashCode()
+        {
+            return Hash.Combine(this.identifierToken.GetHashCode(), this.containingSymbol.GetHashCode());
+        }
+
+        private class LocalWithInitializer : SourceLocalSymbol
+        {
+            private readonly EqualsValueClauseSyntax initializer;
+
+            /// <summary>
+            /// Store the constant value and the corresponding diagnostics together
+            /// to avoid having the former set by one thread and the latter set by
+            /// another.
+            /// </summary>
+            private EvaluatedConstant constantTuple;
+
+            public LocalWithInitializer(
+                Symbol containingSymbol,
+                Binder binder,
+                TypeSyntax typeSyntax,
+                SyntaxToken identifierToken,
+                EqualsValueClauseSyntax initializer,
+                LocalDeclarationKind declarationKind) :
+                    base(containingSymbol, binder, typeSyntax, identifierToken, declarationKind)
+            {
+                if (initializer == null)
+                {
+                    throw ExceptionUtilities.Unreachable;
+                }
+                
+                this.initializer = initializer;
+            }
+
+            protected override TypeSymbol InferTypeOfVarVariable(DiagnosticBag diagnostics)
+            {
+                var newBinder = new ImplicitlyTypedLocalBinder(this.binder, this);
+                var initializerOpt = newBinder.BindInferredVariableInitializer(diagnostics, initializer, initializer);
+                if (initializerOpt != null)
+                {
+                    return initializerOpt.Type;
+        }
+
+                return null;
+            }
 
         /// <summary>
         /// Determine the constant value of this local and the corresponding diagnostics.
@@ -322,7 +380,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// <param name="boundInitValue">If we already have the bound node for the initial value, pass it in to avoid recomputing it.</param>
         private void MakeConstantTuple(LocalSymbol inProgress, BoundExpression boundInitValue)
         {
-            if (this.IsConst && this.constantTuple == null && this.initializer != null)
+                if (this.IsConst && this.constantTuple == null)
             {
                 var value = Microsoft.CodeAnalysis.ConstantValue.Bad;
                 var initValueNodeLocation = this.initializer.Value.Location;
@@ -348,27 +406,136 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override RefKind RefKind
+            internal override ConstantValue GetConstantValue(LocalSymbol inProgress)
         {
-            get { return RefKind.None; }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == (object)this)
-            {
-                return true;
+                MakeConstantTuple(inProgress, boundInitValue: null);
+                return this.constantTuple == null ? null : this.constantTuple.Value;
             }
 
-            var symbol = obj as SourceLocalSymbol;
-            return (object)symbol != null
-                && symbol.identifierToken.Equals(this.identifierToken)
-                && Equals(symbol.containingSymbol, this.containingSymbol);
+            internal override ImmutableArray<Diagnostic> GetConstantValueDiagnostics(BoundExpression boundInitValue)
+            {
+                Debug.Assert(boundInitValue != null);
+                MakeConstantTuple(inProgress: null, boundInitValue: boundInitValue);
+                return this.constantTuple == null ? default(ImmutableArray<Diagnostic>) : this.constantTuple.Diagnostics;
+            }
         }
 
-        public override int GetHashCode()
+        private class ForEachLocal : SourceLocalSymbol
         {
-            return Hash.Combine(this.identifierToken.GetHashCode(), this.containingSymbol.GetHashCode());
+            private readonly ExpressionSyntax collection;
+
+            public ForEachLocal(
+                Symbol containingSymbol,
+                Binder binder,
+                TypeSyntax typeSyntax,
+                SyntaxToken identifierToken,
+                ExpressionSyntax collection,
+                LocalDeclarationKind declarationKind) :
+                    base(containingSymbol, binder, typeSyntax, identifierToken, declarationKind)
+            {
+                Debug.Assert(declarationKind == LocalDeclarationKind.ForEachIterationVariable);
+                this.collection = collection;
+            }
+
+            protected override TypeSymbol InferTypeOfVarVariable(DiagnosticBag diagnostics)
+            {
+                // Normally, it would not be safe to cast to a specific binder type.  However, we verified the type
+                // in the factory method call for this symbol.
+                return ((ForEachLoopBinder)this.binder).InferCollectionElementType(diagnostics, collection);
+            }
+        }
+
+        private class PossibleOutVarLocalWithoutInitializer : SourceLocalSymbol
+        {
+            private readonly CSharpSyntaxNode scopeSegmentRoot;
+
+            public PossibleOutVarLocalWithoutInitializer(
+                Symbol containingSymbol,
+                Binder binder,
+                TypeSyntax typeSyntax,
+                SyntaxToken identifierToken,
+                CSharpSyntaxNode scopeSegmentRoot,
+                LocalDeclarationKind declarationKind) :
+                    base(containingSymbol, binder, typeSyntax, identifierToken, declarationKind)
+            {
+                Debug.Assert(identifierToken.Parent.CSharpKind() == SyntaxKind.VariableDeclarator && ((VariableDeclaratorSyntax)identifierToken.Parent).Identifier == identifierToken);
+                Debug.Assert(identifierToken.Parent.Parent.CSharpKind() == SyntaxKind.DeclarationExpression);
+
+                if (scopeSegmentRoot == null)
+                {
+                    throw ExceptionUtilities.Unreachable;
+                }
+
+                this.scopeSegmentRoot = scopeSegmentRoot;
+        }
+
+            protected override TypeSymbol InferTypeOfVarVariable(DiagnosticBag diagnostics)
+            {
+                // Try binding immediately enclosing invocation expression, this should force the inference.
+                SyntaxNode node = identifierToken.Parent.Parent;
+                Debug.Assert(node.CSharpKind() == SyntaxKind.DeclarationExpression);
+
+                // Skip parenthesized and checked/unchecked expressions
+                while (node != scopeSegmentRoot && node.Parent != null)
+        {
+                    switch (node.Parent.CSharpKind())
+            {
+                        case SyntaxKind.ParenthesizedExpression:
+                        case SyntaxKind.CheckedExpression:
+                        case SyntaxKind.UncheckedExpression:
+                            node = node.Parent;
+                            continue;
+                    }
+
+                    break;
+            }
+
+                if (node != scopeSegmentRoot && node.Parent != null && node.Parent.CSharpKind() == SyntaxKind.Argument)
+                {
+                    node = node.Parent;
+
+                    if (node != scopeSegmentRoot && node.Parent != null && node.Parent.CSharpKind() == SyntaxKind.ArgumentList)
+                    {
+                        node = node.Parent;
+
+                        if (node != scopeSegmentRoot)
+                        {
+                            if (node.Parent != null)
+                            {
+                                node = node.Parent;
+
+                                switch (node.CSharpKind())
+                                {
+                                    case SyntaxKind.InvocationExpression:
+                                    case SyntaxKind.ObjectCreationExpression:
+                                        this.binder.BindExpression((ExpressionSyntax)node, diagnostics);
+                                        var result = this.type;
+                                        Debug.Assert((object)result != null);
+                                        return result;
+                                }
+                            }
+        }
+                        else if (node.Parent != null)
+                        {
+                            Debug.Assert(node.CSharpKind() == SyntaxKind.ArgumentList);
+                            Debug.Assert(node == scopeSegmentRoot);
+                            // This could be an argument list for a constructor initializer
+
+                            switch (node.Parent.CSharpKind())
+        {
+                                case SyntaxKind.ThisConstructorInitializer:
+                                case SyntaxKind.BaseConstructorInitializer:
+                                    this.binder.BindConstructorInitializer((ArgumentListSyntax)node, (MethodSymbol)this.binder.ContainingMember(), diagnostics);
+                                    var result = this.type;
+                                    Debug.Assert((object)result != null);
+                                    return result;
+                            }
+                        }
+                    }
+                }
+
+                return null;
+            }
         }
     }
 }

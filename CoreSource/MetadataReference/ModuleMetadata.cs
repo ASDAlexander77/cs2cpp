@@ -10,8 +10,6 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
-    using System.Linq;
-
     /// <summary>
     /// Represents an immutable snapshot of module CLI metadata.
     /// </summary>
@@ -252,39 +250,6 @@ namespace Microsoft.CodeAnalysis
         public ImmutableArray<string> GetModuleNames()
         {
             return Module.GetMetadataModuleNamesOrThrow();
-        }
-
-        public ICollection<string> Namespaces()
-        {
-            return Module.NamespaceNames.AsCaseSensitiveCollection();
-        }
-
-        public ICollection<string> TypeNames()
-        {
-            return Module.TypeNames.AsCaseSensitiveCollection();
-        }
-
-        internal class ExStringComparer : StringComparer 
-        {
-            public override int Compare(string x, string y)
-            {
-                return x.CompareTo(y);
-            }
-
-            public override bool Equals(string x, string y)
-            {
-                return x.CompareTo(y) == 0;
-            }
-
-            public override int GetHashCode(string obj)
-            {
-                return obj.GetHashCode();
-            }
-        }
-
-        public IEnumerable<IGrouping<string, TypeHandle>> GroupTypesByNamespace()
-        {
-            return Module.GroupTypesByNamespaceOrThrow(new ExStringComparer());
         }
 
         internal MetadataReader MetadataReader

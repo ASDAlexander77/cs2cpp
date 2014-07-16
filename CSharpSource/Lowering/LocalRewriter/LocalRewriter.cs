@@ -6,7 +6,6 @@ using System.Linq;
 using Microsoft.CodeAnalysis.CSharp.Emit;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.RuntimeMembers;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
@@ -16,6 +15,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         private readonly CSharpCompilation compilation;
         private readonly SyntheticBoundNodeFactory factory;
         private readonly SynthesizedSubmissionFields previousSubmissionFields;
+        private readonly bool includeConditionalCalls;
         private readonly LoweredDynamicOperationFactory dynamicFactory;
         private bool sawLambdas;
         private bool inExpressionLambda;
@@ -24,7 +24,15 @@ namespace Microsoft.CodeAnalysis.CSharp
         private bool sawAwaitInExceptionHandler;
         private readonly DiagnosticBag diagnostics;
 
-        private LocalRewriter(bool generateDebugInfo, MethodSymbol containingMethod, NamedTypeSymbol containingType, SyntheticBoundNodeFactory factory, SynthesizedSubmissionFields previousSubmissionFields, CSharpCompilation compilation, DiagnosticBag diagnostics)
+        private LocalRewriter(
+            CSharpCompilation compilation,
+            bool generateDebugInfo,
+            MethodSymbol containingMethod,
+            NamedTypeSymbol containingType,
+            SyntheticBoundNodeFactory factory,
+            SynthesizedSubmissionFields previousSubmissionFields,
+            bool includeConditionalCalls,
+            DiagnosticBag diagnostics)
         {
             this.generateDebugInfo = generateDebugInfo && containingMethod.GenerateDebugInfo;
             this.compilation = compilation;
@@ -33,6 +41,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             Debug.Assert(factory.CurrentClass == (containingType ?? containingMethod.ContainingType));
             this.dynamicFactory = new LoweredDynamicOperationFactory(factory);
             this.previousSubmissionFields = previousSubmissionFields;
+            this.includeConditionalCalls = includeConditionalCalls;
             this.diagnostics = diagnostics;
         }
 
@@ -46,8 +55,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             NamedTypeSymbol containingType,
             BoundStatement statement,
             TypeCompilationState compilationState,
-            DiagnosticBag diagnostics,
             SynthesizedSubmissionFields previousSubmissionFields,
+            bool includeConditionalCalls,
+            DiagnosticBag diagnostics,
             out bool sawLambdas,
             out bool sawDynamicOperations,
             out bool sawAwaitInExceptionHandler)
@@ -58,7 +68,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             try
             {
                 var factory = new SyntheticBoundNodeFactory(containingSymbol, statement.Syntax, compilationState, diagnostics);
-                var localRewriter = new LocalRewriter(generateDebugInfo, containingSymbol, containingType, factory, previousSubmissionFields, compilation, diagnostics);
+                var localRewriter = new LocalRewriter(compilation, generateDebugInfo, containingSymbol, containingType, factory, previousSubmissionFields, includeConditionalCalls, diagnostics);
                 var loweredStatement = (BoundStatement)localRewriter.Visit(statement);
                 sawLambdas = localRewriter.sawLambdas;
                 sawAwaitInExceptionHandler = localRewriter.sawAwaitInExceptionHandler;
@@ -86,8 +96,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 var first = body.Statements.First();
                 if (first.Kind != BoundKind.SequencePoint && first.Kind != BoundKind.SequencePointWithSpan)
                 {
-                    // we basically need to get a span for the whole declaration, but not the body -
-                    //  "[SomeAttribute] public MyCtorName(params int[] values): base()" 
                     var asSourceMethod = method.ConstructedFrom as SourceMethodSymbol;
                     if ((object)asSourceMethod != null)
                     {
@@ -95,16 +103,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                         if (syntax != null)
                         {
-                            var start = syntax.Parent.SpanStart;
-                            var end = syntax.OpenBraceToken.GetPreviousToken().Span.End;
-
-                            // just wrap it. We do not need to force a nop. there will either be
-                            // code between the method start and the first statement or we do not
-                            // care about this SP
-                            return new BoundSequencePointWithSpan(
-                                syntax,
-                                body,
-                                TextSpan.FromBounds(start, end));
+                            return AddSequencePoint(syntax, body, asSourceMethod.IsPrimaryCtor);
                         }
                     }
                 }

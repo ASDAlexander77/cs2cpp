@@ -486,8 +486,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case BoundKind.Local:
                 case BoundKind.ThisReference:
                 case BoundKind.BaseReference:
-                case BoundKind.DeclarationExpression:
                     // no need for it to be previously assigned: it is on the left.
+                    break;
+
+                case BoundKind.DeclarationExpression:
+                    VisitLvalueDeclarationExpression((BoundDeclarationExpression)node);
                     break;
 
                 case BoundKind.FieldAccess:
@@ -960,11 +963,21 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override BoundNode VisitDeclarationExpression(BoundDeclarationExpression node)
         {
+            VisitDeclarationExpressionInitializer(node);
+            return null;
+        }
+
+        private void VisitDeclarationExpressionInitializer(BoundDeclarationExpression node)
+        {
             if (node.InitializerOpt != null)
             {
                 VisitRvalue(node.InitializerOpt); // analyze the expression
             }
-            return null;
+        }
+
+        protected virtual void VisitLvalueDeclarationExpression(BoundDeclarationExpression node)
+        {
+            VisitDeclarationExpressionInitializer(node);
         }
 
         public override BoundNode VisitBlock(BoundBlock node)
@@ -1617,11 +1630,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private void VisitSwitchBlock(BoundSwitchStatement node)
         {
+            var switchSections = node.SwitchSections;
+            var iLastSection = (switchSections.Length - 1);
             // visit switch sections
-            foreach (var section in node.SwitchSections)
+            for (var iSection = 0; iSection <= iLastSection; iSection++)
             {
-                VisitSwitchSection(section);
+                VisitSwitchSection(switchSections[iSection], iSection == iLastSection);
             }
+        }
+
+        public virtual BoundNode VisitSwitchSection(BoundSwitchSection node, bool lastSection)
+        {
+            return VisitSwitchSection(node);
         }
 
         public override BoundNode VisitSwitchSection(BoundSwitchSection node)

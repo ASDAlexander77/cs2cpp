@@ -291,8 +291,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal abstract ICollection<string> NamespaceNames { get; }
 
-        internal abstract IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames { get; }
-
         /// <summary>
         /// Returns true if there is any applied CompilationRelaxationsAttribute assembly attribute for this module.
         /// </summary>

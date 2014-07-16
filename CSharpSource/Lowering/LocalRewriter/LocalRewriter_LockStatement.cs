@@ -71,7 +71,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
 
             BoundAssignmentOperator assignmentToLockTemp;
-            BoundLocal boundLockTemp = this.factory.StoreToTemp(rewrittenArgument, tempKind: TempKind.Lock, store: out assignmentToLockTemp);
+            BoundLocal boundLockTemp = this.factory.StoreToTemp(rewrittenArgument, out assignmentToLockTemp, kind: SynthesizedLocalKind.Lock);
 
             BoundStatement boundLockTempInit = new BoundExpressionStatement(lockSyntax, assignmentToLockTemp);
             if (this.generateDebugInfo)
@@ -123,7 +123,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 BoundAssignmentOperator assignmentToTemp;
                 BoundLocal boundFlagTemp = this.factory.StoreToTemp(
                     MakeLiteral(rewrittenArgument.Syntax, ConstantValue.False, boolType),
-                    tempKind: TempKind.LockTaken,
+                    kind: SynthesizedLocalKind.LockTaken,
                     store: out assignmentToTemp);
 
                 BoundStatement boundFlagTempInit = new BoundExpressionStatement(lockSyntax, assignmentToTemp);
@@ -152,7 +152,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 return new BoundBlock(
                     lockSyntax,
-                    ImmutableArray.Create<LocalSymbol>(boundLockTemp.LocalSymbol, boundFlagTemp.LocalSymbol),
+                    node.Locals.Concat(ImmutableArray.Create<LocalSymbol>(boundLockTemp.LocalSymbol, boundFlagTemp.LocalSymbol)),
                     ImmutableArray.Create<BoundStatement>(
                         boundFlagTempInit,
                         new BoundTryStatement(
@@ -194,7 +194,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 return new BoundBlock(
                     lockSyntax,
-                    ImmutableArray.Create<LocalSymbol>(boundLockTemp.LocalSymbol),
+                    node.Locals.Add(boundLockTemp.LocalSymbol),
                     ImmutableArray.Create<BoundStatement>(
                         boundLockTempInit,
                         enterCall,

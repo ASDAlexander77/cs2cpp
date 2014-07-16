@@ -3501,7 +3501,7 @@
   <data name="ERR_FixedBufferTooManyDimensions" xml:space="preserve">
     <value>A fixed buffer may only have one dimension.</value>
   </data>
-  <data name="ERR_ReferencedAssemblyDoesNotHaveStrongName" xml:space="preserve">
+  <data name="WRN_ReferencedAssemblyDoesNotHaveStrongName" xml:space="preserve">
     <value>Referenced assembly '{0}' does not have a strong name.</value>
   </data>
   <data name="ERR_InvalidSignaturePublicKey" xml:space="preserve">
@@ -3563,6 +3563,27 @@
   </data>
   <data name="IDS_Text" xml:space="preserve">
     <value>&lt;text&gt;</value>
+  </data>
+  <data name="IDS_FeatureDeclarationExpression" xml:space="preserve">
+    <value>declaration expression</value>
+  </data>
+  <data name="IDS_FeaturePrimaryConstructor" xml:space="preserve">
+    <value>primary constructor</value>
+  </data>
+  <data name="IDS_FeatureNullPropagatingOperator" xml:space="preserve">
+    <value>null propagating operator</value>
+  </data>
+  <data name="IDS_FeatureExpressionBodiedMethod" xml:space="preserve">
+    <value>expression-bodied method</value>
+  </data>
+  <data name="IDS_FeatureExpressionBodiedProperty" xml:space="preserve">
+    <value>expression-bodied property</value>
+  </data>
+  <data name="IDS_FeatureExpressionBodiedIndexer" xml:space="preserve">
+    <value>expression-bodied indexer</value>
+  </data>
+  <data name="IDS_FeatureAutoPropertyInitializer" xml:space="preserve">
+    <value>auto property initializer</value>
   </data>
   <data name="IDS_Namespace1" xml:space="preserve">
     <value>&lt;namespace&gt;</value>
@@ -3726,7 +3747,16 @@
   <data name="ERR_FeatureNotAvailableInVersion5" xml:space="preserve">
     <value>Feature '{0}' is not available in C# 5.  Please use language version {1} or greater.</value>
   </data>
-  <data name="ERR_DeclarationExpressionOutsideOfAMethodBody" xml:space="preserve">
+  <data name="ERR_FeatureNotAvailableInVersion6" xml:space="preserve">
+    <value>Feature '{0}' is not available in C# 6.  Please use language version {1} or greater.</value>
+  </data>
+  <data name="ERR_FeatureIsExperimental" xml:space="preserve">
+    <value>Feature '{0}' is only available in 'experimental' language version.</value>
+  </data>
+  <data name="IDS_VersionExperimental" xml:space="preserve">
+    <value>'experimental'</value>
+  </data>
+  <data name="ERR_DeclarationExpressionOutOfContext" xml:space="preserve">
     <value>A declaration expression is not permitted in this context.</value>
   </data>
   <data name="ERR_VariableUsedInTheSameArgumentList" xml:space="preserve">
@@ -3768,6 +3798,9 @@
   <data name="WRN_UnableToLoadAnalyzer" xml:space="preserve">
     <value>Unable to load Analyzer assembly {0} : {1}</value>
   </data>
+  <data name="INF_UnableToLoadSomeTypesInAnalyzer" xml:space="preserve">
+    <value>Skipping some types in analyzer assembly {0} due to a ReflectionTypeLoadException : {1}.</value>
+  </data>
   <data name="ERR_CantReadRulesetFile" xml:space="preserve">
     <value>Error reading ruleset file {0} - {1}</value>
   </data>
@@ -3784,10 +3817,13 @@
     <value>Since this type has a primary constructor, all instance constructor declarations must specify a constructor initializer of the form this([argument-list]).</value>
   </data>
   <data name="ERR_PrimaryCtorParameterSameNameAsTypeParam" xml:space="preserve">
-    <value>'{0}': a parameter of a primary constructor cannot have the same name as a type's type parameter '{1}'</value>
+    <value>'{0}': a parameter of a primary constructor cannot have the same name as a type's type parameter '{1}'.</value>
   </data>
   <data name="ERR_PrimaryCtorParameterSameNameAsContainingType" xml:space="preserve">
-    <value>'{0}': a parameter of a primary constructor cannot have the same name as containing type</value>
+    <value>'{0}': a parameter of a primary constructor cannot have the same name as containing type.</value>
+  </data>
+  <data name="ERR_DuplicatePrimaryCtorBody" xml:space="preserve">
+    <value>Primary constructor already has a body.</value>
   </data>
   <data name="ERR_InstanceCtorCannotHaveDefaultThisInitializer" xml:space="preserve">
     <value>Since this struct type has a primary constructor, an instance constructor declaration cannot specify a constructor initializer that invokes default constructor.</value>
@@ -3796,7 +3832,7 @@
     <value>Implemented interface cannot have arguments.</value>
   </data>
   <data name="ERR_InitializerOnNonAutoProperty" xml:space="preserve">
-    <value>Only auto-implemented properties can have a initializers.</value>
+    <value>Only auto-implemented properties can have initializers.</value>
   </data>
   <data name="ERR_AutoPropertyMustHaveSetOrInitializer" xml:space="preserve">
     <value>Auto-implemented properties must have set accessors or initializers.</value>
@@ -3812,5 +3848,17 @@
   </data>
   <data name="ERR_EncodinglessSyntaxTree" xml:space="preserve">
     <value>Cannot emit debug information for a source text without encoding.</value>
+  </data>
+  <data name="ERR_AccessorListAndExpressionBody" xml:space="preserve">
+    <value>Properties cannot combine accessor lists with expression bodies.</value>
+  </data>
+  <data name="ERR_BlockBodyAndExpressionBody" xml:space="preserve">
+    <value>Methods cannot combine block bodies with expression bodies.</value>
+  </data>
+  <data name="ERR_ExpressionTreeContainsDeclarationExpression" xml:space="preserve">
+    <value>An expression tree may not contain a Declaration Expression.</value>
+  </data>
+  <data name="ERR_SwitchFallOut" xml:space="preserve">
+    <value>Control cannot fall out of switch from final case label ('{0}')</value>
   </data>
 </root>

@@ -1684,28 +1684,29 @@ namespace Microsoft.CodeAnalysis.CSharp
 
     internal sealed partial class BoundBlock : BoundStatementList
     {
-        public BoundBlock(CSharpSyntaxNode syntax, ImmutableArray<LocalSymbol> localsOpt, ImmutableArray<BoundStatement> statements, bool hasErrors = false)
+        public BoundBlock(CSharpSyntaxNode syntax, ImmutableArray<LocalSymbol> locals, ImmutableArray<BoundStatement> statements, bool hasErrors = false)
             : base(BoundKind.Block, syntax, statements, hasErrors || statements.HasErrors())
         {
 
+            Debug.Assert(!locals.IsDefault, "Field 'locals' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(!statements.IsDefault, "Field 'statements' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
 
-            this.LocalsOpt = localsOpt;
+            this.Locals = locals;
         }
 
 
-        public ImmutableArray<LocalSymbol> LocalsOpt { get; private set; }
+        public ImmutableArray<LocalSymbol> Locals { get; private set; }
 
         public override BoundNode Accept(BoundTreeVisitor visitor)
         {
             return visitor.VisitBlock(this);
         }
 
-        public BoundBlock Update(ImmutableArray<LocalSymbol> localsOpt, ImmutableArray<BoundStatement> statements)
+        public BoundBlock Update(ImmutableArray<LocalSymbol> locals, ImmutableArray<BoundStatement> statements)
         {
-            if (localsOpt != this.LocalsOpt || statements != this.Statements)
+            if (locals != this.Locals || statements != this.Statements)
             {
-                var result = new BoundBlock(this.Syntax, localsOpt, statements, this.HasErrors);
+                var result = new BoundBlock(this.Syntax, locals, statements, this.HasErrors);
                 result.WasCompilerGenerated = this.WasCompilerGenerated;
                 return result;
             }
@@ -2033,19 +2034,20 @@ namespace Microsoft.CodeAnalysis.CSharp
 
     internal sealed partial class BoundSwitchStatement : BoundStatement
     {
-        public BoundSwitchStatement(CSharpSyntaxNode syntax, ImmutableArray<LocalSymbol> outerLocals, BoundExpression boundExpression, LabelSymbol constantTargetOpt, ImmutableArray<LocalSymbol> innerLocalsOpt, ImmutableArray<BoundSwitchSection> switchSections, GeneratedLabelSymbol breakLabel, MethodSymbol stringEquality, bool hasErrors = false)
+        public BoundSwitchStatement(CSharpSyntaxNode syntax, ImmutableArray<LocalSymbol> outerLocals, BoundExpression boundExpression, LabelSymbol constantTargetOpt, ImmutableArray<LocalSymbol> innerLocals, ImmutableArray<BoundSwitchSection> switchSections, GeneratedLabelSymbol breakLabel, MethodSymbol stringEquality, bool hasErrors = false)
             : base(BoundKind.SwitchStatement, syntax, hasErrors || boundExpression.HasErrors() || switchSections.HasErrors())
         {
 
             Debug.Assert(!outerLocals.IsDefault, "Field 'outerLocals' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(boundExpression != null, "Field 'boundExpression' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
+            Debug.Assert(!innerLocals.IsDefault, "Field 'innerLocals' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(!switchSections.IsDefault, "Field 'switchSections' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(breakLabel != null, "Field 'breakLabel' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
 
             this.OuterLocals = outerLocals;
             this.BoundExpression = boundExpression;
             this.ConstantTargetOpt = constantTargetOpt;
-            this.InnerLocalsOpt = innerLocalsOpt;
+            this.InnerLocals = innerLocals;
             this.SwitchSections = switchSections;
             this.BreakLabel = breakLabel;
             this.StringEquality = stringEquality;
@@ -2058,7 +2060,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public LabelSymbol ConstantTargetOpt { get; private set; }
 
-        public ImmutableArray<LocalSymbol> InnerLocalsOpt { get; private set; }
+        public ImmutableArray<LocalSymbol> InnerLocals { get; private set; }
 
         public ImmutableArray<BoundSwitchSection> SwitchSections { get; private set; }
 
@@ -2071,11 +2073,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             return visitor.VisitSwitchStatement(this);
         }
 
-        public BoundSwitchStatement Update(ImmutableArray<LocalSymbol> outerLocals, BoundExpression boundExpression, LabelSymbol constantTargetOpt, ImmutableArray<LocalSymbol> innerLocalsOpt, ImmutableArray<BoundSwitchSection> switchSections, GeneratedLabelSymbol breakLabel, MethodSymbol stringEquality)
+        public BoundSwitchStatement Update(ImmutableArray<LocalSymbol> outerLocals, BoundExpression boundExpression, LabelSymbol constantTargetOpt, ImmutableArray<LocalSymbol> innerLocals, ImmutableArray<BoundSwitchSection> switchSections, GeneratedLabelSymbol breakLabel, MethodSymbol stringEquality)
         {
-            if (outerLocals != this.OuterLocals || boundExpression != this.BoundExpression || constantTargetOpt != this.ConstantTargetOpt || innerLocalsOpt != this.InnerLocalsOpt || switchSections != this.SwitchSections || breakLabel != this.BreakLabel || stringEquality != this.StringEquality)
+            if (outerLocals != this.OuterLocals || boundExpression != this.BoundExpression || constantTargetOpt != this.ConstantTargetOpt || innerLocals != this.InnerLocals || switchSections != this.SwitchSections || breakLabel != this.BreakLabel || stringEquality != this.StringEquality)
             {
-                var result = new BoundSwitchStatement(this.Syntax, outerLocals, boundExpression, constantTargetOpt, innerLocalsOpt, switchSections, breakLabel, stringEquality, this.HasErrors);
+                var result = new BoundSwitchStatement(this.Syntax, outerLocals, boundExpression, constantTargetOpt, innerLocals, switchSections, breakLabel, stringEquality, this.HasErrors);
                 result.WasCompilerGenerated = this.WasCompilerGenerated;
                 return result;
             }
@@ -2576,17 +2578,21 @@ namespace Microsoft.CodeAnalysis.CSharp
 
     internal sealed partial class BoundLockStatement : BoundStatement
     {
-        public BoundLockStatement(CSharpSyntaxNode syntax, BoundExpression argument, BoundStatement body, bool hasErrors = false)
+        public BoundLockStatement(CSharpSyntaxNode syntax, ImmutableArray<LocalSymbol> locals, BoundExpression argument, BoundStatement body, bool hasErrors = false)
             : base(BoundKind.LockStatement, syntax, hasErrors || argument.HasErrors() || body.HasErrors())
         {
 
+            Debug.Assert(!locals.IsDefault, "Field 'locals' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(argument != null, "Field 'argument' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
             Debug.Assert(body != null, "Field 'body' cannot be null (use Null=\"allow\" in BoundNodes.xml to remove this check)");
 
+            this.Locals = locals;
             this.Argument = argument;
             this.Body = body;
         }
 
+
+        public ImmutableArray<LocalSymbol> Locals { get; private set; }
 
         public BoundExpression Argument { get; private set; }
 
@@ -2597,11 +2603,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             return visitor.VisitLockStatement(this);
         }
 
-        public BoundLockStatement Update(BoundExpression argument, BoundStatement body)
+        public BoundLockStatement Update(ImmutableArray<LocalSymbol> locals, BoundExpression argument, BoundStatement body)
         {
-            if (argument != this.Argument || body != this.Body)
+            if (locals != this.Locals || argument != this.Argument || body != this.Body)
             {
-                var result = new BoundLockStatement(this.Syntax, argument, body, this.HasErrors);
+                var result = new BoundLockStatement(this.Syntax, locals, argument, body, this.HasErrors);
                 result.WasCompilerGenerated = this.WasCompilerGenerated;
                 return result;
             }
@@ -4631,7 +4637,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
     internal sealed partial class BoundLambda : BoundExpression
     {
-        public BoundLambda(CSharpSyntaxNode syntax, LambdaSymbol symbol, BoundBlock body, ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> diagnostics, ExecutableCodeBinder binder, TypeSymbol type, bool hasErrors = false)
+        public BoundLambda(CSharpSyntaxNode syntax, LambdaSymbol symbol, BoundBlock body, ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> diagnostics, Binder binder, TypeSymbol type, bool hasErrors = false)
             : base(BoundKind.Lambda, syntax, type, hasErrors || body.HasErrors())
         {
 
@@ -4653,14 +4659,14 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> Diagnostics { get; private set; }
 
-        public ExecutableCodeBinder Binder { get; private set; }
+        public Binder Binder { get; private set; }
 
         public override BoundNode Accept(BoundTreeVisitor visitor)
         {
             return visitor.VisitLambda(this);
         }
 
-        public BoundLambda Update(LambdaSymbol symbol, BoundBlock body, ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> diagnostics, ExecutableCodeBinder binder, TypeSymbol type)
+        public BoundLambda Update(LambdaSymbol symbol, BoundBlock body, ImmutableArray<Microsoft.CodeAnalysis.Diagnostic> diagnostics, Binder binder, TypeSymbol type)
         {
             if (symbol != this.Symbol || body != this.Body || diagnostics != this.Diagnostics || binder != this.Binder || type != this.Type)
             {
@@ -6816,7 +6822,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         public override BoundNode VisitBlock(BoundBlock node)
         {
             ImmutableArray<BoundStatement> statements = (ImmutableArray<BoundStatement>)this.VisitList(node.Statements);
-            return node.Update(node.LocalsOpt, statements);
+            return node.Update(node.Locals, statements);
         }
         public override BoundNode VisitIteratorScope(BoundIteratorScope node)
         {
@@ -6874,7 +6880,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundExpression boundExpression = (BoundExpression)this.Visit(node.BoundExpression);
             ImmutableArray<BoundSwitchSection> switchSections = (ImmutableArray<BoundSwitchSection>)this.VisitList(node.SwitchSections);
-            return node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocalsOpt, switchSections, node.BreakLabel, node.StringEquality);
+            return node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocals, switchSections, node.BreakLabel, node.StringEquality);
         }
         public override BoundNode VisitSwitchSection(BoundSwitchSection node)
         {
@@ -6946,7 +6952,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             BoundExpression argument = (BoundExpression)this.Visit(node.Argument);
             BoundStatement body = (BoundStatement)this.Visit(node.Body);
-            return node.Update(argument, body);
+            return node.Update(node.Locals, argument, body);
         }
         public override BoundNode VisitTryStatement(BoundTryStatement node)
         {
@@ -7689,7 +7695,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             return new TreeDumperNode("block", null, new TreeDumperNode[]
             {
-                new TreeDumperNode("localsOpt", node.LocalsOpt, null),
+                new TreeDumperNode("locals", node.Locals, null),
                 new TreeDumperNode("statements", null, from x in node.Statements select Visit(x, null))
             }
             );
@@ -7787,7 +7793,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 new TreeDumperNode("outerLocals", node.OuterLocals, null),
                 new TreeDumperNode("boundExpression", null, new TreeDumperNode[] { Visit(node.BoundExpression, null) }),
                 new TreeDumperNode("constantTargetOpt", node.ConstantTargetOpt, null),
-                new TreeDumperNode("innerLocalsOpt", node.InnerLocalsOpt, null),
+                new TreeDumperNode("innerLocals", node.InnerLocals, null),
                 new TreeDumperNode("switchSections", null, from x in node.SwitchSections select Visit(x, null)),
                 new TreeDumperNode("breakLabel", node.BreakLabel, null),
                 new TreeDumperNode("stringEquality", node.StringEquality, null)
@@ -7921,6 +7927,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             return new TreeDumperNode("lockStatement", null, new TreeDumperNode[]
             {
+                new TreeDumperNode("locals", node.Locals, null),
                 new TreeDumperNode("argument", null, new TreeDumperNode[] { Visit(node.Argument, null) }),
                 new TreeDumperNode("body", null, new TreeDumperNode[] { Visit(node.Body, null) })
             }

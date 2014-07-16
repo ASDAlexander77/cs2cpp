@@ -72,6 +72,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.VisitDeclarationExpression(node);
         }
 
+        protected override void VisitLvalueDeclarationExpression(BoundDeclarationExpression node)
+        {
+            if (IsInside)
+            {
+                variablesDeclared.Add(node.LocalSymbol);
+            }
+
+            base.VisitLvalueDeclarationExpression(node);
+        }
+
         public override BoundNode VisitLambda(BoundLambda node)
         {
             if (IsInside && !node.WasCompilerGenerated)
@@ -102,7 +112,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 var local = catchBlock.Locals.FirstOrDefault();
 
-                if ((object)local != null && local.DeclarationKind == LocalDeclarationKind.Catch)
+                if ((object)local != null && local.DeclarationKind == LocalDeclarationKind.CatchVariable)
                 {
                     variablesDeclared.Add(local);
                 }

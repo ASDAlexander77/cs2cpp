@@ -76,7 +76,7 @@ namespace PEAssemblyReader
                     break;
                 }
 
-                return effective.ContainingAssembly.Identity.ToAssemblyName().FullName;
+                return effective.ContainingAssembly.Identity.Name;
             }
         }
 

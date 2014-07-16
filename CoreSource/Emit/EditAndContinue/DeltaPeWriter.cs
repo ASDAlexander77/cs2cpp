@@ -10,13 +10,26 @@ using System.Reflection.Metadata.Ecma335;
 using System.Threading;
 using Microsoft.Cci;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeGen;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Emit
 {
     internal sealed class DeltaPeWriter : PeWriter
     {
+        private struct MethodLocals
+        {
+            // Locals for the method, indexed by slot.
+            internal readonly ImmutableArray<ILocalDefinition> Definitions;
+            // Local signatures (serialized by PeWriter) corresponding to definitions above.
+            internal readonly ImmutableArray<byte[]> Signatures;
+
+            internal MethodLocals(ImmutableArray<ILocalDefinition> definitions, ImmutableArray<byte[]> signatures)
+            {
+                this.Definitions = definitions;
+                this.Signatures = signatures;
+            }
+        }
+
         private readonly EmitBaseline previousGeneration;
         private readonly Guid encId;
         private readonly DefinitionMap definitionMap;
@@ -41,7 +54,7 @@ namespace Microsoft.CodeAnalysis.Emit
         private readonly HeapOrReferenceIndex<ITypeReference> typeRefIndex;
         private readonly InstanceAndStructuralReferenceIndex<ITypeReference> typeSpecIndex;
         private readonly HeapOrReferenceIndex<uint> standAloneSignatureIndex;
-        private readonly Dictionary<IMethodDefinition, ImmutableArray<LocalDefinition>> localMap;
+        private readonly Dictionary<IMethodDefinition, MethodLocals> localMap;
 
         private uint unalignedStringStreamLength;
 
@@ -89,13 +102,14 @@ namespace Microsoft.CodeAnalysis.Emit
             this.typeSpecIndex = new InstanceAndStructuralReferenceIndex<ITypeReference>(this, new TypeSpecComparer(this), lastRowId: (uint)sizes[(int)TableIndex.TypeSpec]);
             this.standAloneSignatureIndex = new HeapOrReferenceIndex<uint>(this, lastRowId: (uint)sizes[(int)TableIndex.StandAloneSig]);
 
-            this.localMap = new Dictionary<IMethodDefinition, ImmutableArray<LocalDefinition>>();
+            this.localMap = new Dictionary<IMethodDefinition, MethodLocals>();
         }
 
-        private ImmutableArray<int> GetDeltaTableSizes()
+        private ImmutableArray<int> GetDeltaTableSizes(ImmutableArray<int> rowCounts)
         {
             var sizes = new int[MetadataTokens.TableCount];
-            this.GetTableSizes(sizes);
+
+            rowCounts.CopyTo(sizes);
 
             sizes[(int)TableIndex.TypeRef] = this.typeRefIndex.Rows.Count;
             sizes[(int)TableIndex.TypeDef] = this.typeDefs.GetAdded().Count;
@@ -118,10 +132,7 @@ namespace Microsoft.CodeAnalysis.Emit
             return ImmutableArray.Create(sizes);
         }
 
-        internal EmitBaseline GetDelta(
-            EmitBaseline baseline,
-            Microsoft.CodeAnalysis.Compilation compilation,
-            Guid encId)
+        internal EmitBaseline GetDelta(EmitBaseline baseline, Compilation compilation, Guid encId, MetadataSizes metadataSizes)
         {
             Debug.Assert(this.unalignedStringStreamLength > 0); // OnSerializedMetadataTables should have been called.
 
@@ -130,13 +141,14 @@ namespace Microsoft.CodeAnalysis.Emit
             foreach (var pair in this.localMap)
             {
                 var methodDef = pair.Key;
+                var methodLocals = pair.Value;
                 var methodIndex = this.GetMethodDefIndex(methodDef);
-                var localOffsetsAndKinds = this.definitionMap.GetLocalInfo(methodDef, pair.Value);
+                var localOffsetsAndKinds = this.definitionMap.GetLocalInfo(methodDef, methodLocals.Definitions, methodLocals.Signatures);
                 locals.Add(methodIndex, localOffsetsAndKinds);
             }
 
             var previousTableSizes = this.previousGeneration.TableEntriesAdded;
-            var deltaTableSizes = this.GetDeltaTableSizes();
+            var deltaTableSizes = this.GetDeltaTableSizes(metadataSizes.RowCounts);
             var tableSizes = new int[MetadataTokens.TableCount];
 
             for (int i = 0; i < tableSizes.Length; i++)
@@ -502,7 +514,7 @@ namespace Microsoft.CodeAnalysis.Emit
 
             var implementingMethods = ArrayBuilder<uint>.GetInstance();
 
-            // First, visit all IMethodImplementations and add to this.methodImplList.
+            // First, visit all MethodImplementations and add to this.methodImplList.
             foreach (var methodImpl in typeDef.GetExplicitImplementationOverrides(Context))
             {
                 var methodDef = (IMethodDefinition)methodImpl.ImplementingMethod.AsDefinition(this.Context);
@@ -582,14 +594,55 @@ namespace Microsoft.CodeAnalysis.Emit
             return new DeltaReferenceIndexer(this);
         }
 
-        protected override void OnSerializedMethodBody(IMethodBody body)
+        protected override uint SerializeLocalVariablesSignature(IMethodBody body)
         {
+            uint result = 0;
+            var localVariables = body.LocalVariables;
+            var signatures = ArrayBuilder<byte[]>.GetInstance();
+
+            if (localVariables.Length > 0)
+            {
+                MemoryStream stream = MemoryStream.GetInstance();
+                BinaryWriter writer = new BinaryWriter(stream);
+                writer.WriteByte(0x07);
+                writer.WriteCompressedUInt((uint)localVariables.Length);
+
+                foreach (ILocalDefinition local in localVariables)
+                {
+                    var signature = local.Signature;
+                    if (signature == null)
+                    {
+                        uint start = stream.Position;
+                        this.SerializeLocalVariableSignature(writer, local);
+                        uint length = stream.Position - start + 1;
+                        signature = new byte[length];
+                        for (int i = 0; i < length; i++)
+                        {
+                            signature[i] = stream.Buffer[start + i];
+                        }
+                    }
+                    else
+                    {
+                        writer.WriteBytes(signature);
+                    }
+                    signatures.Add(signature);
+                }
+
+                uint blobIndex = this.GetBlobIndex(writer.BaseStream.ToArray());
+                uint signatureIndex = this.GetOrAddStandAloneSignatureIndex(blobIndex);
+                stream.Free();
+
+                result = 0x11000000 | signatureIndex;
+            }
+
             var method = body.MethodDefinition;
             if (!method.IsImplicitlyDeclared)
             {
-                var locals = body.LocalVariables;
-                this.localMap[method] = (locals == null) ? ImmutableArray<LocalDefinition>.Empty : ImmutableArray.CreateRange(locals.Cast<LocalDefinition>());
+                this.localMap[method] = new MethodLocals(body.LocalVariables, signatures.ToImmutable());
             }
+
+            signatures.Free();
+            return result;
         }
 
         protected override void OnBeforeHeapsAligned()
@@ -601,13 +654,13 @@ namespace Microsoft.CodeAnalysis.Emit
             this.unalignedStringStreamLength = this.stringWriter.BaseStream.Length;
         }
 
-        protected override void PopulateEncLogTableRows(List<EncLogRow> table)
+        protected override void PopulateEncLogTableRows(List<EncLogRow> table, ImmutableArray<int> rowCounts)
         {
             // The EncLog table is a log of all the operations needed
             // to update the previous metadata. That means all
             // new references must be added to the EncLog.
             var previousSizes = this.previousGeneration.TableSizes;
-            var deltaSizes = this.GetDeltaTableSizes();
+            var deltaSizes = this.GetDeltaTableSizes(rowCounts);
 
             PopulateEncLogTableRows(table, TableIndex.AssemblyRef, previousSizes, deltaSizes);
             PopulateEncLogTableRows(table, TableIndex.ModuleRef, previousSizes, deltaSizes);
@@ -732,7 +785,7 @@ namespace Microsoft.CodeAnalysis.Emit
             }
         }
 
-        protected override void PopulateEncMapTableRows(List<EncMapRow> table)
+        protected override void PopulateEncMapTableRows(List<EncMapRow> table, ImmutableArray<int> rowCounts)
         {
             // The EncMap table maps from offset in each table in the delta
             // metadata to token. As such, the EncMap is a concatenated
@@ -740,7 +793,7 @@ namespace Microsoft.CodeAnalysis.Emit
             // and, within each table, sorted by row.
             var tokens = ArrayBuilder<uint>.GetInstance();
             var previousSizes = this.previousGeneration.TableSizes;
-            var deltaSizes = this.GetDeltaTableSizes();
+            var deltaSizes = this.GetDeltaTableSizes(rowCounts);
 
             AddReferencedTokens(tokens, TableIndex.AssemblyRef, previousSizes, deltaSizes);
             AddReferencedTokens(tokens, TableIndex.ModuleRef, previousSizes, deltaSizes);
@@ -828,15 +881,14 @@ namespace Microsoft.CodeAnalysis.Emit
                 TableIndex.GenericParamConstraint,
             };
 
-            var tableSizes = new int[MetadataTokens.TableCount];
-            this.GetTableSizes(tableSizes);
-            for (uint i = 0; i < tableSizes.Length; i++)
+            for (int i = 0; i < rowCounts.Length; i++)
             {
                 if (handledTables.Contains((TableIndex)i))
                 {
                     continue;
                 }
-                Debug.Assert(tableSizes[i] == 0);
+
+                Debug.Assert(rowCounts[i] == 0);
             }
 #endif
         }
@@ -1336,13 +1388,21 @@ namespace Microsoft.CodeAnalysis.Emit
                 base.Visit(fieldDefinition);
             }
 
+            public override void Visit(ILocalDefinition localDefinition)
+            {
+                if (localDefinition.Signature == null)
+                {
+                    base.Visit(localDefinition);
+                }
+            }
+
             public override void Visit(IMethodDefinition method)
             {
                 Debug.Assert(this.ShouldVisit(method));
                 base.Visit(method);
             }
 
-            public override void Visit(IMethodImplementation methodImplementation)
+            public override void Visit(MethodImplementation methodImplementation)
             {
                 // Unless the implementing method was added,
                 // the method implementation already exists.

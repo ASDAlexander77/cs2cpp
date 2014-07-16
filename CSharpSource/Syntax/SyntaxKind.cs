@@ -491,6 +491,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         OperatorDeclaration,
         ConversionOperatorDeclaration,
         ConstructorDeclaration,
+        PrimaryConstructorBody,
         BaseConstructorInitializer,
         ThisConstructorInitializer,
         DestructorDeclaration,
@@ -508,6 +509,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         Parameter,
         TypeParameterList,
         TypeParameter,
-        IncompleteMember
+        IncompleteMember,
+        ArrowExpressionClause
     }
 }

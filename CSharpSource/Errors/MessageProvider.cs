@@ -3,26 +3,18 @@
 using System;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Runtime.Serialization;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    [Serializable]
-    internal sealed class MessageProvider : CommonMessageProvider, IObjectReference, IObjectWritable, IObjectReadable
+    internal sealed class MessageProvider : CommonMessageProvider, IObjectWritable, IObjectReadable
     {
         public static readonly MessageProvider Instance = new MessageProvider();
 
         private MessageProvider()
         {
-        }
-
-        object IObjectReference.GetRealObject(StreamingContext context)
-        {
-            return Instance;
         }
 
         void IObjectWritable.WriteTo(ObjectWriter writer)
@@ -95,6 +87,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         public override int WRN_AnalyzerCannotBeCreated { get { return (int)ErrorCode.WRN_AnalyzerCannotBeCreated; } }
         public override int WRN_NoAnalyzerInAssembly { get { return (int)ErrorCode.WRN_NoAnalyzerInAssembly; } }
         public override int WRN_UnableToLoadAnalyzer { get { return (int)ErrorCode.WRN_UnableToLoadAnalyzer; } }
+        public override int INF_UnableToLoadSomeTypesInAnalyzer { get { return (int)ErrorCode.INF_UnableToLoadSomeTypesInAnalyzer; } }        
         public override int ERR_CantReadRulesetFile { get { return (int)ErrorCode.ERR_CantReadRulesetFile; } }
 
         // reference manager:

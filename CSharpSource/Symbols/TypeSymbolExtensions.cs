@@ -818,8 +818,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         }
 
         /// <summary>
-        /// Returns true if the type is one of the restricted types, namely: <see cref="System.TypedReference"/>, 
-        /// <see cref="System.ArgIterator"/>, or <see cref="System.RuntimeArgumentHandle"/>.
+        /// Returns true if the type is one of the restricted types, namely: <see cref="T:System.TypedReference"/>, 
+        /// <see cref="T:System.ArgIterator"/>, or <see cref="T:System.RuntimeArgumentHandle"/>.
         /// </summary>
         internal static bool IsRestrictedType(this TypeSymbol type)
         {
@@ -1033,19 +1033,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         /// </summary>
         internal static ImmutableArray<TypeParameterSymbol> GetAllTypeParameters(this NamedTypeSymbol type)
         {
-            var typeParameters = type.TypeParameters;
-
-            while (true)
+            // Avoid allocating a builder in the common case.
+            if ((object)type.ContainingType == null)
             {
-                type = type.ContainingType;
-                if ((object)type == null)
-                {
-                    break;
-                }
-                typeParameters = type.TypeParameters.Concat(typeParameters);
+                return type.TypeParameters;
             }
 
-            return typeParameters;
+            var builder = ArrayBuilder<TypeParameterSymbol>.GetInstance();
+            type.GetAllTypeParameters(builder);
+            return builder.ToImmutableAndFree();
         }
 
         /// <summary>
@@ -1055,7 +1051,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         internal static void GetAllTypeParameters(this NamedTypeSymbol type, ArrayBuilder<TypeParameterSymbol> result)
         {
             var containingType = type.ContainingType;
-            if (!ReferenceEquals(containingType, null))
+            if ((object)containingType != null)
             {
                 containingType.GetAllTypeParameters(result);
             }

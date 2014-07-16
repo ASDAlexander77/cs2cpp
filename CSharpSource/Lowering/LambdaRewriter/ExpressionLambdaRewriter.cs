@@ -16,6 +16,7 @@ namespace Microsoft.CodeAnalysis.CSharp
     internal class ExpressionLambdaRewriter // this is like a bound tree rewriter, but only handles a small subset of node kinds
     {
         private readonly SyntheticBoundNodeFactory Bound;
+        private readonly TypeMap typeMap;
         private readonly Dictionary<ParameterSymbol, BoundExpression> parameterMap = new Dictionary<ParameterSymbol, BoundExpression>();
 
         private NamedTypeSymbol _ExpressionType;
@@ -79,20 +80,22 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private DiagnosticBag Diagnostics { get { return Bound.Diagnostics; } }
 
-        private ExpressionLambdaRewriter(TypeCompilationState compilationState, CSharpSyntaxNode node, DiagnosticBag diagnostics)
+        private ExpressionLambdaRewriter(TypeCompilationState compilationState, TypeMap typeMap, CSharpSyntaxNode node, DiagnosticBag diagnostics)
         {
             Bound = new SyntheticBoundNodeFactory(null, null, node, compilationState, diagnostics);
             Int32Type = Bound.SpecialType(SpecialType.System_Int32);
             ObjectType = Bound.SpecialType(SpecialType.System_Object);
             NullableType = Bound.SpecialType(SpecialType.System_Nullable_T);
             IEnumerableType = Bound.SpecialType(SpecialType.System_Collections_Generic_IEnumerable_T);
+
+            this.typeMap = typeMap;
         }
 
-        internal static BoundNode RewriteLambda(BoundLambda node, TypeCompilationState compilationState, DiagnosticBag diagnostics)
+        internal static BoundNode RewriteLambda(BoundLambda node, TypeCompilationState compilationState, TypeMap typeMap, DiagnosticBag diagnostics)
         {
             try
             {
-                var r = new ExpressionLambdaRewriter(compilationState, node.Syntax, diagnostics);
+                var r = new ExpressionLambdaRewriter(compilationState, typeMap, node.Syntax, diagnostics);
                 var result = r.VisitLambdaInternal(node);
                 if (node.Type != result.Type)
                 {
@@ -109,7 +112,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private BoundExpression TranslateLambdaBody(BoundBlock block)
         {
-            Debug.Assert(block.LocalsOpt.IsEmpty);
+            Debug.Assert(block.Locals.IsEmpty);
             foreach (var s in block.Statements)
             {
                 for (var stmt = s; stmt != null;)
@@ -616,13 +619,13 @@ namespace Microsoft.CodeAnalysis.CSharp
             var parameters = ArrayBuilder<BoundExpression>.GetInstance();
             foreach (var p in node.Symbol.Parameters)
             {
-                var param = Bound.SynthesizedLocal(ParameterExpressionType, p.Name);
+                var param = Bound.SynthesizedLocal(ParameterExpressionType);
                 locals.Add(param);
                 var parameterReference = Bound.Local(param);
                 parameters.Add(parameterReference);
                 var parameter = ExprFactory(
                     "Parameter",
-                    Bound.Typeof(p.Type), Bound.Literal(p.Name));
+                    Bound.Typeof(typeMap.SubstituteType(p.Type)), Bound.Literal(p.Name));
                 initializers.Add(Bound.AssignmentExpression(parameterReference, parameter));
                 parameterMap[p] = parameterReference;
             }
@@ -667,14 +670,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             string parameterName = "p";
             ParameterSymbol lambdaParameter = Bound.SynthesizedParameter(fromType, parameterName);
-            var param = Bound.SynthesizedLocal(ParameterExpressionType, parameterName);
+            var param = Bound.SynthesizedLocal(ParameterExpressionType);
             var parameterReference = Bound.Local(param);
             var parameter = ExprFactory("Parameter", Bound.Typeof(fromType), Bound.Literal(parameterName));
             parameterMap[lambdaParameter] = parameterReference;
             var convertedValue = Visit(Bound.Convert(toType, Bound.Parameter(lambdaParameter), conversion));
             parameterMap.Remove(lambdaParameter);
             var result = Bound.Sequence(
-                ImmutableArray.Create<LocalSymbol>(param),
+                ImmutableArray.Create(param),
                 ImmutableArray.Create<BoundExpression>(Bound.AssignmentExpression(parameterReference, parameter)),
                 ExprFactory(
                     "Lambda",

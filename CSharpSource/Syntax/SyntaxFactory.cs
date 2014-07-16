@@ -1203,14 +1203,15 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        internal static ExpressionSyntax ParseDebuggerExpression(string text, bool consumeFullText = true)
+        internal static ExpressionSyntax ParseDebuggerExpression(SourceText text, bool consumeFullText = true)
         {
-            using (var lexer = MakeLexer(text, offset: 0))
+            using (var lexer = new InternalSyntax.Lexer(text, CSharpParseOptions.Default))
             using (var parser = new InternalSyntax.LanguageParser(lexer, oldTree: null, changes: null, lexerMode: InternalSyntax.LexerMode.DebuggerSyntax))
             {
                 var node = parser.ParseExpression();
                 if (consumeFullText) node = parser.ConsumeUnexpectedTokens(node);
-                return (ExpressionSyntax)node.CreateRed();
+                var syntaxTree = CSharpSyntaxTree.Create((ExpressionSyntax)node.CreateRed(), text: text);
+                return (ExpressionSyntax)syntaxTree.GetRoot();
             }
         }
 
@@ -1830,6 +1831,113 @@ namespace Microsoft.CodeAnalysis.CSharp
         public static BlockSyntax Block(IEnumerable<StatementSyntax> statements)
         {
             return Block(List(statements));
+        }
+
+        public static PropertyDeclarationSyntax PropertyDeclaration(
+            SyntaxList<AttributeListSyntax> attributeLists,
+            SyntaxTokenList modifiers,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            SyntaxToken identifier,
+            AccessorListSyntax accessorList)
+        {
+            return SyntaxFactory.PropertyDeclaration(
+                attributeLists,
+                modifiers,
+                type,
+                explicitInterfaceSpecifier,
+                identifier,
+                accessorList,
+                default(ArrowExpressionClauseSyntax),
+                default(EqualsValueClauseSyntax));
+        }
+
+        public static MethodDeclarationSyntax MethodDeclaration(
+            SyntaxList<AttributeListSyntax> attributeLists,
+            SyntaxTokenList modifiers,
+            TypeSyntax returnType,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            SyntaxToken identifier,
+            TypeParameterListSyntax typeParameterList,
+            ParameterListSyntax parameterList,
+            SyntaxList<TypeParameterConstraintClauseSyntax> constraintClauses,
+            BlockSyntax body,
+            SyntaxToken semicolonToken)
+        {
+            return SyntaxFactory.MethodDeclaration(
+                attributeLists,
+                modifiers,
+                returnType,
+                explicitInterfaceSpecifier,
+                identifier,
+                typeParameterList,
+                parameterList,
+                constraintClauses,
+                body,
+                default(ArrowExpressionClauseSyntax),
+                semicolonToken);
+        }
+
+        public static ConversionOperatorDeclarationSyntax ConversionOperatorDeclaration(
+            SyntaxList<AttributeListSyntax> attributeLists,
+            SyntaxTokenList modifiers,
+            SyntaxToken implicitOrExplicitKeyword,
+            SyntaxToken operatorKeyword,
+            TypeSyntax type,
+            ParameterListSyntax parameterList,
+            BlockSyntax body,
+            SyntaxToken semicolonToken)
+        {
+            return SyntaxFactory.ConversionOperatorDeclaration(
+                attributeLists: attributeLists,
+                modifiers: modifiers,
+                implicitOrExplicitKeyword: implicitOrExplicitKeyword,
+                operatorKeyword: operatorKeyword,
+                type: type,
+                parameterList: parameterList,
+                body: body,
+                expressionBody: default(ArrowExpressionClauseSyntax),
+                semicolonToken: semicolonToken);
+        }
+
+        public static OperatorDeclarationSyntax OperatorDeclaration(
+            SyntaxList<AttributeListSyntax> attributeLists,
+            SyntaxTokenList modifiers,
+            TypeSyntax returnType,
+            SyntaxToken operatorKeyword,
+            SyntaxToken operatorToken,
+            ParameterListSyntax parameterList,
+            BlockSyntax body,
+            SyntaxToken semicolonToken)
+        {
+            return SyntaxFactory.OperatorDeclaration(
+                attributeLists: attributeLists,
+                modifiers: modifiers,
+                returnType: returnType,
+                operatorKeyword: operatorKeyword,
+                operatorToken: operatorToken,
+                parameterList: parameterList,
+                body: body,
+                expressionBody: default(ArrowExpressionClauseSyntax),
+                semicolonToken: semicolonToken);
+        }
+
+        public static IndexerDeclarationSyntax IndexerDeclaration(
+            SyntaxList<AttributeListSyntax> attributeLists,
+            SyntaxTokenList modifiers,
+            TypeSyntax type,
+            ExplicitInterfaceSpecifierSyntax explicitInterfaceSpecifier,
+            BracketedParameterListSyntax parameterList,
+            AccessorListSyntax accessorList)
+        {
+            return SyntaxFactory.IndexerDeclaration(
+                attributeLists: attributeLists,
+                modifiers: modifiers,
+                type: type,
+                explicitInterfaceSpecifier: explicitInterfaceSpecifier,
+                parameterList: parameterList,
+                accessorList: accessorList,
+                expressionBody: default(ArrowExpressionClauseSyntax));
         }
     }
 }

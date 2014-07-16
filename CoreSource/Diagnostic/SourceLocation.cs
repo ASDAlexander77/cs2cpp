@@ -10,7 +10,6 @@ namespace Microsoft.CodeAnalysis
     /// <summary>
     /// A program location in source code.
     /// </summary>
-    [Serializable]
     internal sealed class SourceLocation : Location, IEquatable<SourceLocation>
     {
         private readonly SyntaxTree syntaxTree;
@@ -48,14 +47,6 @@ namespace Microsoft.CodeAnalysis
             // If we're using a syntaxref, we don't have a node in hand, so we couldn't get equality
             // on syntax node, so associatedNodeOpt shouldn't be set. We never use this constructor
             // when binding executable code anywhere, so it has no use.
-        }
-
-        public override string FilePath
-        {
-            get
-            {
-                return this.syntaxTree.FilePath;
-            }
         }
 
         public override LocationKind Kind

@@ -53,10 +53,9 @@ namespace Microsoft.CodeAnalysis.CSharp
         /// <summary>
         /// Bind the ForEachStatementSyntax at the root of this binder.
         /// </summary>
-        /// <param name="diagnostics">Will be populated with binding diagnostics.</param>
-        internal override BoundStatement BindForEachParts(DiagnosticBag diagnostics)
+        internal override BoundStatement BindForEachParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            BoundForEachStatement result = BindForEachPartsWorker(diagnostics);
+            BoundForEachStatement result = BindForEachPartsWorker(diagnostics, originalBinder);
 
             var foreachExpressionBinder = (ScopedExpressionBinder)this.Next;
             if (!foreachExpressionBinder.Locals.IsDefaultOrEmpty)
@@ -76,7 +75,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return result;
         }
 
-        private BoundForEachStatement BindForEachPartsWorker(DiagnosticBag diagnostics)
+        private BoundForEachStatement BindForEachPartsWorker(DiagnosticBag diagnostics, Binder originalBinder)
         { 
             BoundExpression collectionExpr = this.Next.BindValue(syntax.Expression, diagnostics, BindValueKind.RValue); //bind with next to avoid seeing iteration variable
 
@@ -92,7 +91,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             // Check for local variable conflicts in the *enclosing* binder; obviously the *current*
             // binder has a local that matches!
-            hasErrors |= this.ValidateDeclarationNameConflictsInScope(IterationVariable, diagnostics);
+            var hasNameConflicts = this.ValidateDeclarationNameConflictsInScope(IterationVariable, diagnostics);
 
             // If the type in syntax is "var", then the type should be set explicitly so that the
             // Type property doesn't fail.
@@ -118,11 +117,11 @@ namespace Microsoft.CodeAnalysis.CSharp
             BoundTypeExpression boundIterationVariableType = new BoundTypeExpression(typeSyntax, alias, iterationVariableType);
             this.IterationVariable.SetTypeSymbol(iterationVariableType);
 
-            BoundStatement body = BindPossibleEmbeddedStatement(syntax.Statement, diagnostics);
+            BoundStatement body = originalBinder.BindPossibleEmbeddedStatement(syntax.Statement, diagnostics);
 
             hasErrors = hasErrors || iterationVariableType.IsErrorType();
 
-            // Skip the conversion checks and array/enumerator differentiation if we know we have an error.
+            // Skip the conversion checks and array/enumerator differentiation if we know we have an error (except local name conflicts).
             if (hasErrors)
             {
                 return new BoundForEachStatement(
@@ -139,6 +138,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     this.ContinueLabel,
                     hasErrors);
             }
+
+            hasErrors |= hasNameConflicts;
 
             var foreachKeyword = syntax.ForEachKeyword;
             ReportDiagnosticsIfObsolete(diagnostics, builder.GetEnumeratorMethod, foreachKeyword, hasBaseReceiver: false);
@@ -478,11 +479,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return true;
             }
 
-            // This is a type that we don't know how to enumerate.
-            // Skip the diagnostic if the type has no name - it makes the message unhelpful.
-            if (!string.IsNullOrEmpty(collectionExprType.Name))
+
+            if (!string.IsNullOrEmpty(collectionExprType.Name) || !collectionExpr.HasErrors)
             {
-                diagnostics.Add(ErrorCode.ERR_ForEachMissingMember, syntax.Expression.Location, collectionExprType, GetEnumeratorMethodName);
+                diagnostics.Add(ErrorCode.ERR_ForEachMissingMember, syntax.Expression.Location, collectionExprType.ToDisplayString(), GetEnumeratorMethodName);
             }
             return false;
         }

@@ -100,7 +100,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 NodeUsage usage;
-                if (LookupPosition.IsInBlock(position, methodDecl.Body))
+                if (LookupPosition.IsInBody(position, methodDecl))
                 {
                     usage = NodeUsage.MethodBody;
                 }
@@ -241,6 +241,56 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return base.VisitBaseClassWithArguments(node);
             }
 
+            public override Binder VisitPrimaryConstructorBody(PrimaryConstructorBodySyntax node)
+            {
+                if (node.Parent != null && LookupPosition.IsInBlock(position, node.Body))
+                {
+                    ParameterListSyntax parameters = null;
+
+                    switch (node.Parent.Kind)
+                    {
+                        case SyntaxKind.ClassDeclaration:
+                            parameters = ((ClassDeclarationSyntax)node.Parent).ParameterList;
+                            break;
+                        case SyntaxKind.StructDeclaration:
+                            parameters = ((StructDeclarationSyntax)node.Parent).ParameterList;
+                            break;
+                    }
+
+                    if (parameters != null)
+                    {
+                        // This is a body for a primary constructor.
+                        Binder resultBinder;
+                        var key = CreateBinderCacheKey(node, NodeUsage.ConstructorBodyOrInitializer);
+
+                        if (!binderCache.TryGetValue(key, out resultBinder))
+                        {
+                            resultBinder = base.VisitPrimaryConstructorBody(node);
+                            var container = resultBinder.ContainingMemberOrLambda as SourceMemberContainerTypeSymbol;
+
+                            if ((object)container != null)
+                            {
+                                var method = (SourceMethodSymbol)GetMemberSymbol(WellKnownMemberNames.InstanceConstructorName, parameters.FullSpan, container, SymbolKind.Method);
+                                if ((object)method != null)
+                                {
+                                    Debug.Assert(method.IsPrimaryCtor);
+                                    // Ctors cannot be generic
+                                    Debug.Assert(method.Arity == 0, "Generic Ctor, What to do?");
+
+                                    resultBinder = new InMethodBinder(method, resultBinder);
+                                }
+                            }
+
+                            binderCache.TryAdd(key, resultBinder);
+                        }
+
+                        return resultBinder;
+                    }
+                }
+
+                return base.VisitPrimaryConstructorBody(node);
+            }
+
             public override Binder VisitDestructorDeclaration(DestructorDeclarationSyntax parent)
             {
                 // If the position isn't in the scope of the method, then proceed to the parent syntax node.
@@ -273,8 +323,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return VisitCore(parent.Parent);
                 }
 
-                bool inBody = LookupPosition.IsInBlock(position, parent.Body);
-                var extraInfo = inBody ? NodeUsage.AccessorBody : NodeUsage.Normal;  // extra info for the cache.
+                bool inBlock = LookupPosition.IsInBlock(position, parent.Body);
+                var extraInfo = inBlock ? NodeUsage.AccessorBody : NodeUsage.Normal;  // extra info for the cache.
                 var key = CreateBinderCacheKey(parent, extraInfo);
 
                 Binder resultBinder;
@@ -282,7 +332,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     resultBinder = VisitCore(parent.Parent);
 
-                    if (inBody)
+                    if (inBlock)
                     {
                         var propertyOrEventDecl = parent.Parent.Parent;
                         MethodSymbol accessor = null;
@@ -337,7 +387,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return VisitCore(parent.Parent);
                 }
 
-                bool inBody = LookupPosition.IsInBlock(position, parent.Body);
+                bool inBody = LookupPosition.IsInBody(position, parent);
                 var extraInfo = inBody ? NodeUsage.OperatorBody : NodeUsage.Normal;  // extra info for the cache.
                 var key = CreateBinderCacheKey(parent, extraInfo);
 
@@ -525,7 +575,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                         // If this is a partial method, the method represents the defining part,
                         // not the implementation (method.Locations includes both parts). If the
                         // span is in fact in the implementation, return that method instead.
-                        var implementation = ((MethodSymbol)sym).PartialImplementation();
+                        var implementation = ((MethodSymbol)sym).PartialImplementationPart;
                         if ((object)implementation != null)
                         {
                             if (InSpan(implementation.Locations[0], this.syntaxTree, memberSpan))

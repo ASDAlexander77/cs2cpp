@@ -112,7 +112,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         private EntryPoint lazyEntryPoint;
 
         /// <summary>
-        /// The set of trees for which a <see cref="CompilationEvent.CompilationCompleted"/> has been added to the queue.
+        /// The set of trees for which a <see cref="CompilationUnitCompletedEvent"/> has been added to the queue.
         /// </summary>
         private HashSet<SyntaxTree> lazyCompilationUnitCompletedTrees;
 
@@ -320,7 +320,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
 
                 Debug.Assert((object)this.lazyAssemblySymbol == null);
-                if (EventQueue != null) EventQueue.Enqueue(new CompilationEvent.CompilationStarted(this));
+                if (EventQueue != null) EventQueue.Enqueue(new CompilationStartedEvent(this));
             }
         }
 
@@ -1729,12 +1729,12 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (completedCompilationUnit)
             {
-                EventQueue.Enqueue(new CompilationEvent.CompilationUnitCompleted(this, null, tree));
+                EventQueue.Enqueue(new CompilationUnitCompletedEvent(this, tree));
             }
 
             if (completedCompilation)
             {
-                EventQueue.Enqueue(new CompilationEvent.CompilationCompleted(this));
+                EventQueue.Enqueue(new CompilationCompletedEvent(this));
                 EventQueue.Complete(); // signal the end of compilation events
             }
         }
@@ -2222,81 +2222,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             get { return FunctionId.CSharp_Compilation_Emit; }
         }
 
-        /// <summary>
-        /// Emit the IL for the compilation into the specified stream.
-        /// </summary>
-        /// <param name="outputStream">Stream to which the compilation will be written.</param>
-        /// <param name="outputName">Name of the module or assembly. Null to use the existing compilation name.
-        /// CAUTION: If this is set to a (non-null) value other than the existing compilation output name, then internals-visible-to
-        /// and assembly references may not work as expected.  In particular, things that were visible at bind time, based on the 
-        /// name of the compilation, may not be visible at runtime and vice-versa.
-        /// </param>
-        /// <param name="pdbFileName">The name of the PDB file - embedded in the output.  Null to infer from the stream or the compilation.
-        /// Ignored unless pdbStream is non-null.
-        /// </param>
-        /// <param name="pdbStream">Stream to which the compilation's debug info will be written.  Null to forego PDB generation.</param>
-        /// <param name="xmlDocStream">Stream to which the compilation's XML documentation will be written.  Null to forego XML generation.</param>
-        /// <param name="cancellationToken">To cancel the emit process.</param>
-        /// <param name="win32Resources">Stream from which the compilation's Win32 resources will be read (in RES format).  
-        /// Null to indicate that there are none.</param>
-        /// <param name="manifestResources">List of the compilation's managed resources.  Null to indicate that there are none.</param>
-        public new EmitResult Emit(
-            Stream outputStream,
-            string outputName = null,
-            string pdbFileName = null,
-            Stream pdbStream = null,
-            Stream xmlDocStream = null,
-            CancellationToken cancellationToken = default(CancellationToken),
-            Stream win32Resources = null,
-            IEnumerable<ResourceDescription> manifestResources = null)
-        {
-            return base.Emit(outputStream, outputName, pdbFileName, pdbStream, xmlDocStream, cancellationToken, win32Resources, manifestResources);
-        }
-
-        /// <summary>
-        /// Emit the IL for the compilation into the specified stream.
-        /// </summary>
-        /// <param name="outputPath">Path of the file to which the compilation will be written.</param>
-        /// <param name="pdbPath">Path of the file to which the compilation's debug info will be written.
-        /// Also embedded in the output file.  Null to forego PDB generation.
-        /// </param>
-        /// <param name="xmlDocPath">Path of the file to which the compilation's XML documentation will be written.  Null to forego XML generation.</param>
-        /// <param name="cancellationToken">To cancel the emit process.</param>
-        /// <param name="win32ResourcesPath">Path of the file from which the compilation's Win32 resources will be read (in RES format).  
-        /// Null to indicate that there are none.</param>
-        /// <param name="manifestResources">List of the compilation's managed resources.  Null to indicate that there are none.</param>
-        public new EmitResult Emit(
-            string outputPath,
-            string pdbPath = null,
-            string xmlDocPath = null,
-            CancellationToken cancellationToken = default(CancellationToken),
-            string win32ResourcesPath = null,
-            IEnumerable<ResourceDescription> manifestResources = null)
-        {
-            return base.Emit(outputPath, pdbPath, xmlDocPath, cancellationToken, win32ResourcesPath, manifestResources);
-        }
-
-        /// <summary>
-        /// Emits the IL for the symbol declarations into the specified stream.  Useful for emitting information for
-        /// cross-language modeling of code.  This emits what it can even if there are errors.
-        /// </summary>
-        /// <param name="metadataStream">Stream to which the compilation's metadata will be written.</param>
-        /// <param name="outputName">Name of the compilation: file name and extension.  Null to use the existing output name.
-        /// CAUTION: If this is set to a (non-null) value other than the existing compilation output name, then internals-visible-to
-        /// and assembly references may not work as expected.  In particular, things that were visible at bind time, based on the 
-        /// name of the compilation, may not be visible at runtime and vice-versa.
-        /// </param>
-        /// <param name="xmlDocStream">Stream to which the compilation's XML documentation will be written.  Null to forego XML generation.</param>
-        /// <param name="cancellationToken">To cancel the emit process.</param>
-        public new EmitResult EmitMetadataOnly(
-            Stream metadataStream,
-            string outputName = null,
-            Stream xmlDocStream = null,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return base.EmitMetadataOnly(metadataStream, outputName, xmlDocStream, cancellationToken);
-        }
-
         internal override CommonPEModuleBuilder CreateModuleBuilder(
             string outputName,
             IEnumerable<ResourceDescription> manifestResources,
@@ -2456,7 +2381,9 @@ namespace Microsoft.CodeAnalysis.CSharp
           
             // Use a temporary bag so we don't have to refilter pre-existing diagnostics.
             DiagnosticBag xmlDiagnostics = DiagnosticBag.GetInstance();
-            DocumentationCommentCompiler.WriteDocumentationCommentXml(this, outputName, xmlDocStream, xmlDiagnostics, cancellationToken);
+
+            string assemblyName = FileNameUtilities.ChangeExtension(outputName, extension: null);
+            DocumentationCommentCompiler.WriteDocumentationCommentXml(this, assemblyName, xmlDocStream, xmlDiagnostics, cancellationToken);
 
             if (!FilterAndAppendAndFreeDiagnostics(diagnostics, ref xmlDiagnostics))
             {
@@ -2967,9 +2894,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             return lazyMakeMemberMissingMap != null && lazyMakeMemberMissingMap.ContainsKey(member);
         }
 
+        internal override AnalyzerDriver3 AnalyzerForLanguage(ImmutableArray<IDiagnosticAnalyzer> analyzers, AnalyzerOptions options, CancellationToken cancellationToken)
+        {
+            return new AnalyzerDriver3<CSharp.SyntaxKind>(analyzers, n => n.CSharpKind(), options, cancellationToken);
+        }
+
         internal void SymbolDeclaredEvent(Symbol symbol)
         {
-            if (EventQueue != null) EventQueue.Enqueue(new CompilationEvent.SymbolDeclared(this, symbol));
+            if (EventQueue != null) EventQueue.Enqueue(new SymbolDeclaredCompilationEvent(this, symbol));
         }
     }
 }

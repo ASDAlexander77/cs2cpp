@@ -255,14 +255,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
-        {
-            get
-            {
-                return null;
-            }
-        }
-        
         public IEnumerable<ReferenceDirective> ReferenceDirectives
         {
             get
@@ -270,6 +262,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 return referenceDirectives.Value;
             }
         }
+
 
         public IEnumerable<Diagnostic> Diagnostics
         {

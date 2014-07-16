@@ -173,7 +173,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             VariableDeclarationSyntax declarationSyntax = node.Declaration;
 
             ImmutableArray<BoundLocalDeclaration> declarations;
-            BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.Fixed, diagnostics, out declarations);
+            BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.FixedVariable, diagnostics, out declarations);
 
             Debug.Assert(!declarations.IsEmpty);
 
@@ -232,12 +232,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var lockBinder = this.GetBinder(node);
             Debug.Assert(lockBinder != null);
-            return lockBinder.BindLockStatementParts(diagnostics);
+            return lockBinder.BindLockStatementParts(diagnostics, lockBinder);
         }
 
-        internal virtual BoundStatement BindLockStatementParts(DiagnosticBag diagnostics)
+        internal virtual BoundStatement BindLockStatementParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindLockStatementParts(diagnostics);
+            return this.Next.BindLockStatementParts(diagnostics, originalBinder);
         }
 
 
@@ -245,15 +245,15 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var usingBinder = this.GetBinder(node);
             Debug.Assert(usingBinder != null);
-            return usingBinder.BindUsingStatementParts(diagnostics);
+            return usingBinder.BindUsingStatementParts(diagnostics, usingBinder);
         }
 
-        internal virtual BoundStatement BindUsingStatementParts(DiagnosticBag diagnostics)
+        internal virtual BoundStatement BindUsingStatementParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindUsingStatementParts(diagnostics);
+            return this.Next.BindUsingStatementParts(diagnostics, originalBinder);
         }
 
-        protected BoundStatement BindPossibleEmbeddedStatement(StatementSyntax node, DiagnosticBag diagnostics)
+        internal BoundStatement BindPossibleEmbeddedStatement(StatementSyntax node, DiagnosticBag diagnostics)
         {
             switch (node.Kind)
             {
@@ -278,7 +278,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     if (!locals.IsDefaultOrEmpty)
                     {
                         result = new BoundBlock(node, locals, ImmutableArray.Create(result)) { WasCompilerGenerated = true };
-            }
+                    }
 
                     return result;
             }
@@ -514,20 +514,14 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var typeSyntax = node.Declaration.Type;
             bool isConst = node.IsConst;
-            bool isFixed = node.IsFixed;
 
             bool isVar;
             AliasSymbol alias;
-            TypeSymbol declType = BindVariableType(node, diagnostics, typeSyntax, ref isConst, isFixed, out isVar, out alias);
+            TypeSymbol declType = BindVariableType(node, diagnostics, typeSyntax, ref isConst, isVar: out isVar, alias: out alias);
 
             // UNDONE: "possible expression" feature for IDE
 
-            LocalDeclarationKind kind = LocalDeclarationKind.Variable;
-            if (isFixed)
-            {
-                kind = LocalDeclarationKind.Fixed;
-            }
-
+            LocalDeclarationKind kind = LocalDeclarationKind.RegularVariable;
             if (isConst)
             {
                 kind = LocalDeclarationKind.Constant;
@@ -554,7 +548,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
-        private TypeSymbol BindVariableType(CSharpSyntaxNode declarationNode, DiagnosticBag diagnostics, TypeSyntax typeSyntax, ref bool isConst, bool isFixed, out bool isVar, out AliasSymbol alias)
+        private TypeSymbol BindVariableType(CSharpSyntaxNode declarationNode, DiagnosticBag diagnostics, TypeSyntax typeSyntax, ref bool isConst, out bool isVar, out AliasSymbol alias)
         {
             Debug.Assert(declarationNode.Kind == SyntaxKind.LocalDeclarationStatement || declarationNode.Kind == SyntaxKind.DeclarationExpression);
 
@@ -569,11 +563,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 // There are a number of ways in which a var decl can be illegal, but in these 
                 // cases we should report an error and then keep right on going with the inference.
-
-                if (isFixed)
-                {
-                    Error(diagnostics, ErrorCode.ERR_ImplicitlyTypedLocalCannotBeFixed, declarationNode);
-                }
 
                 if (isConst)
                 {
@@ -617,11 +606,6 @@ namespace Microsoft.CodeAnalysis.CSharp
                 if (declType.IsStatic)
                 {
                     Error(diagnostics, ErrorCode.ERR_VarDeclIsStaticClass, typeSyntax, declType);
-                }
-
-                if (isFixed && !(declType is PointerTypeSymbol))
-                {
-                    Error(diagnostics, ErrorCode.ERR_BadFixedInitType, declarationNode);
                 }
 
                 if (isConst && !declType.CanBeConst())
@@ -684,13 +668,37 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         protected BoundLocalDeclaration BindVariableDeclaration(
-            LocalDeclarationKind kind, 
-            bool isVar, 
-            VariableDeclaratorSyntax declarator, 
-            TypeSyntax typeSyntax, 
-            TypeSymbol declTypeOpt, 
-            AliasSymbol aliasOpt, 
-            DiagnosticBag diagnostics, 
+            LocalDeclarationKind kind,
+            bool isVar,
+            VariableDeclaratorSyntax declarator,
+            TypeSyntax typeSyntax,
+            TypeSymbol declTypeOpt,
+            AliasSymbol aliasOpt,
+            DiagnosticBag diagnostics,
+            CSharpSyntaxNode associatedSyntaxNode = null)
+        {
+            Debug.Assert(declarator != null);
+
+            return BindVariableDeclaration(LocateDeclaredVariableSymbol(declarator, typeSyntax),
+                                           kind,
+                                           isVar,
+                                           declarator,
+                                           typeSyntax,
+                                           declTypeOpt,
+                                           aliasOpt,
+                                           diagnostics,
+                                           associatedSyntaxNode);
+        }
+
+        protected BoundLocalDeclaration BindVariableDeclaration(
+            SourceLocalSymbol localSymbol,
+            LocalDeclarationKind kind,
+            bool isVar,
+            VariableDeclaratorSyntax declarator,
+            TypeSyntax typeSyntax,
+            TypeSymbol declTypeOpt,
+            AliasSymbol aliasOpt,
+            DiagnosticBag diagnostics,
             CSharpSyntaxNode associatedSyntaxNode = null)
         {
             Debug.Assert(declarator != null);
@@ -703,8 +711,6 @@ namespace Microsoft.CodeAnalysis.CSharp
             bool hasErrors = false;
             
             BoundExpression initializerOpt;
-
-            SourceLocalSymbol localSymbol = LocateDeclaredVariableSymbol(declarator, typeSyntax);
 
             // Check for variable declaration errors.
             hasErrors |= this.ValidateDeclarationNameConflictsInScope(localSymbol, diagnostics);
@@ -754,7 +760,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 {
                     // Basically inlined BindVariableInitializer, but with conversion optional.
                     initializerOpt = BindPossibleArrayInitializer(equalsValueClauseSyntax.Value, declTypeOpt, diagnostics);
-                    if (kind != LocalDeclarationKind.Fixed)
+                    if (kind != LocalDeclarationKind.FixedVariable)
                     {
                         // If this is for a fixed statement, we'll do our own conversion since there are some special cases.
                         initializerOpt = GenerateConversionForAssignment(declTypeOpt, initializerOpt, diagnostics);
@@ -764,7 +770,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             Debug.Assert((object)declTypeOpt != null);
 
-            if (kind == LocalDeclarationKind.Fixed)
+            if (kind == LocalDeclarationKind.FixedVariable)
             {
                 // NOTE: this is an error, but it won't prevent further binding.
                 if (isVar)
@@ -807,7 +813,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             ImmutableArray<BoundExpression> arguments = BindDeclaratorArguments(declarator, diagnostics);
 
-            if (kind == LocalDeclarationKind.Fixed || kind == LocalDeclarationKind.Using)
+            if (kind == LocalDeclarationKind.FixedVariable || kind == LocalDeclarationKind.UsingVariable)
             {
                 // CONSIDER: The error message is "you must provide an initializer in a fixed 
                 // CONSIDER: or using declaration". The error message could be targetted to 
@@ -859,17 +865,26 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         private SourceLocalSymbol LocateDeclaredVariableSymbol(VariableDeclaratorSyntax declarator, TypeSyntax typeSyntax)
-            {
+        {
             SourceLocalSymbol localSymbol = this.LookupLocal(declarator.Identifier);
 
             // In error scenarios with misplaced code, it is possible we can't bind the local declaration.
             // This occurs through the semantic model.  In that case concoct a plausible result.
             if ((object)localSymbol == null)
+            {
+                if (declarator.Initializer == null)
                 {
-                localSymbol = SourceLocalSymbol.MakeLocal(
-                    ContainingMemberOrLambda, this, typeSyntax,
-                    declarator.Identifier, declarator.Initializer, LocalDeclarationKind.Variable);
+                    localSymbol = SourceLocalSymbol.MakeLocal(
+                        ContainingMemberOrLambda, this, typeSyntax,
+                        declarator.Identifier, LocalDeclarationKind.RegularVariable);
                 }
+                else
+                {
+                    localSymbol = SourceLocalSymbol.MakeLocalWithInitializer(
+                        ContainingMemberOrLambda, this, typeSyntax,
+                        declarator.Identifier, declarator.Initializer, LocalDeclarationKind.RegularVariable);
+                }
+            }
 
             return localSymbol;
         }
@@ -2481,13 +2496,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             var ifBinder = this.GetBinder(node);
             Debug.Assert(ifBinder != null);
-            return ifBinder.BindIfParts(diagnostics);
+            return ifBinder.BindIfParts(diagnostics, ifBinder);
         }
 
-        internal virtual BoundIfStatement BindIfParts(DiagnosticBag diagnostics)
-            {
-            return this.Next.BindIfParts(diagnostics);
-            }
+        internal virtual BoundIfStatement BindIfParts(DiagnosticBag diagnostics, Binder originalBinder)
+        {
+            return this.Next.BindIfParts(diagnostics, originalBinder);
+        }
 
         protected BoundExpression BindBooleanExpression(ExpressionSyntax node, DiagnosticBag diagnostics)
         {
@@ -2629,12 +2644,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             Debug.Assert(node != null);
             Binder switchBinder = this.GetBinder(node);
-            return switchBinder.BindSwitchExpressionAndSections(node, diagnostics);
+            return switchBinder.BindSwitchExpressionAndSections(node, switchBinder, diagnostics);
         }
 
-        internal virtual BoundSwitchStatement BindSwitchExpressionAndSections(SwitchStatementSyntax node, DiagnosticBag diagnostics)
+        internal virtual BoundSwitchStatement BindSwitchExpressionAndSections(SwitchStatementSyntax node, Binder originalBinder, DiagnosticBag diagnostics)
         {
-            return this.Next.BindSwitchExpressionAndSections(node, diagnostics);
+            return this.Next.BindSwitchExpressionAndSections(node, originalBinder, diagnostics);
         }
 
 
@@ -2644,69 +2659,39 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             var loopBinder = this.GetBinder(node);
             Debug.Assert(loopBinder != null);
-            return loopBinder.BindWhileParts(diagnostics);
+            return loopBinder.BindWhileParts(diagnostics, loopBinder);
         }
 
-        internal virtual BoundWhileStatement BindWhileParts(DiagnosticBag diagnostics)
+        internal virtual BoundWhileStatement BindWhileParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindWhileParts(diagnostics);
+            return this.Next.BindWhileParts(diagnostics, originalBinder);
         }
 
         public BoundDoStatement BindDo(DoStatementSyntax node, DiagnosticBag diagnostics)
         {
             var loopBinder = this.GetBinder(node);
             Debug.Assert(loopBinder != null);
-            return loopBinder.BindDoParts(diagnostics);
+            return loopBinder.BindDoParts(diagnostics, loopBinder);
         }
 
-        internal virtual BoundDoStatement BindDoParts(DiagnosticBag diagnostics)
+        internal virtual BoundDoStatement BindDoParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindDoParts(diagnostics);
+            return this.Next.BindDoParts(diagnostics, originalBinder);
         }
 
         public BoundForStatement BindFor(ForStatementSyntax node, DiagnosticBag diagnostics)
         {
             var loopBinder = this.GetBinder(node);
             Debug.Assert(loopBinder != null);
-            return loopBinder.BindForParts(diagnostics);
+            return loopBinder.BindForParts(diagnostics, loopBinder);
         }
 
-        internal virtual BoundForStatement BindForParts(DiagnosticBag diagnostics)
+        internal virtual BoundForStatement BindForParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindForParts(diagnostics);
+            return this.Next.BindForParts(diagnostics, originalBinder);
         }
 
-        // TODO: Move this method into ForLoopBinder. Keep it here fo now for better diff.
-        internal BoundForStatement BindForParts(ForStatementSyntax node, DiagnosticBag diagnostics)
-        {
-            BoundStatement initializer;
-            if (node.Declaration != null)
-            {
-                Debug.Assert(node.Initializers.Count == 0);
-                ImmutableArray<BoundLocalDeclaration> unused;
-                initializer = this.Next.BindForOrUsingOrFixedDeclarations(node.Declaration, LocalDeclarationKind.For, diagnostics, out unused);
-            }
-            else
-            {
-                initializer = this.Next.BindStatementExpressionList(node.Initializers, diagnostics);
-            }
-
-            var condition = (node.Condition != null) ? BindBooleanExpression(node.Condition, diagnostics) : null;
-            var increment = BindStatementExpressionList(node.Incrementors, diagnostics);
-            var body = BindPossibleEmbeddedStatement(node.Statement, diagnostics);
-
-            return new BoundForStatement(node,
-                                         ImmutableArray<LocalSymbol>.Empty,
-                                         initializer,
-                                         this.Locals,
-                                         condition, 
-                                         increment, 
-                                         body, 
-                                         this.BreakLabel, 
-                                         this.ContinueLabel);
-        }
-
-        protected BoundStatement BindForOrUsingOrFixedDeclarations(VariableDeclarationSyntax nodeOpt, LocalDeclarationKind localDeclarationKind, DiagnosticBag diagnostics, out ImmutableArray<BoundLocalDeclaration> declarations)
+        internal BoundStatement BindForOrUsingOrFixedDeclarations(VariableDeclarationSyntax nodeOpt, LocalDeclarationKind localKind, DiagnosticBag diagnostics, out ImmutableArray<BoundLocalDeclaration> declarations)
         {
             if (nodeOpt == null)
             {
@@ -2739,7 +2724,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             for (int i = 0; i < count; i++)
             {
                 var variableDeclarator = variables[i];
-                var declaration = BindVariableDeclaration(localDeclarationKind, isVar, variableDeclarator, typeSyntax, declType, alias, diagnostics);
+                var declaration = BindVariableDeclaration(localKind, isVar, variableDeclarator, typeSyntax, declType, alias, diagnostics);
 
                 declarationArray[i] = declaration;
             }
@@ -2751,7 +2736,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 new BoundMultipleLocalDeclarations(nodeOpt, declarations);
         }
 
-        private BoundStatement BindStatementExpressionList(SeparatedSyntaxList<ExpressionSyntax> statements, DiagnosticBag diagnostics)
+        internal BoundStatement BindStatementExpressionList(SeparatedSyntaxList<ExpressionSyntax> statements, DiagnosticBag diagnostics)
         {
             int count = statements.Count;
             if (count == 0)
@@ -2779,12 +2764,12 @@ namespace Microsoft.CodeAnalysis.CSharp
         public BoundStatement BindForEach(ForEachStatementSyntax node, DiagnosticBag diagnostics)
         {
             Binder loopBinder = this.GetBinder(node);
-            return loopBinder.BindForEachParts(diagnostics);
+            return loopBinder.BindForEachParts(diagnostics, loopBinder);
         }
 
-        internal virtual BoundStatement BindForEachParts(DiagnosticBag diagnostics)
+        internal virtual BoundStatement BindForEachParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            return this.Next.BindForEachParts(diagnostics);
+            return this.Next.BindForEachParts(diagnostics, originalBinder);
         }
 
         public BoundStatement BindBreak(BreakStatementSyntax node, DiagnosticBag diagnostics)
@@ -3131,7 +3116,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             BoundExpression exceptionSource = null;
             LocalSymbol local = this.Locals.FirstOrDefault();
-            if ((object)local != null && local.DeclarationKind == LocalDeclarationKind.Catch)
+            if ((object)local != null && local.DeclarationKind == LocalDeclarationKind.CatchVariable)
             {
                 // Check for local variable conflicts in the *enclosing* binder, not the *current* binder;
                 // obviously we will find a local of the given name in the current binder.
@@ -3141,7 +3126,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
             
             var block = this.BindBlock(node.Block, diagnostics);
-            Debug.Assert(((object)local == null || local.DeclarationKind != LocalDeclarationKind.Catch) || local.Type.IsErrorType() || (local.Type == type));
+            Debug.Assert(((object)local == null || local.DeclarationKind != LocalDeclarationKind.CatchVariable) || local.Type.IsErrorType() || (local.Type == type));
             return new BoundCatchBlock(node, GetDeclaredLocalsForScope(node), exceptionSource, type, boundFilter, block, hasError);
         }
 
@@ -3204,10 +3189,16 @@ namespace Microsoft.CodeAnalysis.CSharp
             return true;
         }
 
-        internal BoundBlock WrapExpressionLambdaBody(ImmutableArray<LocalSymbol> locals, BoundExpression expression, CSharpSyntaxNode node, DiagnosticBag diagnostics)
+        /// <summary>
+        /// Wrap a given expression e into a block as either { e; } or { return e; } 
+        /// Shared between lambda and expression-bodied method binding.
+        /// </summary>
+        internal BoundBlock CreateBlockFromExpression(ImmutableArray<LocalSymbol> locals,
+            BoundExpression expression, CSharpSyntaxNode node, DiagnosticBag diagnostics)
         {
-            var returnType = this.GetCurrentReturnType();
+            var returnType = GetCurrentReturnType();
             BoundStatement statement;
+            var syntax = expression.Syntax;
 
             if ((object)returnType != null)
             {
@@ -3217,42 +3208,54 @@ namespace Microsoft.CodeAnalysis.CSharp
                     // statement expression.
 
                     bool errors = false;
-                    if (!IsValidStatementExpression(node, expression))
+                    if (!IsValidStatementExpression(syntax, expression))
                     {
                         Error(diagnostics, ErrorCode.ERR_IllegalStatement, node);
                         errors = true;
                     }
-                    var expressionStatement = new BoundExpressionStatement(expression.Syntax, expression, errors);
+
+                    // Don't mark compiler generated so that the rewriter generates sequence points
+                    var expressionStatement = new BoundExpressionStatement(syntax, expression, errors);
+
                     CheckForUnobservedAwaitable(expressionStatement, diagnostics);
                     statement = expressionStatement;
                 }
                 else
                 {
                     expression = CreateReturnConversion(node, diagnostics, expression, returnType);
-                    statement = new BoundReturnStatement(expression.Syntax, expression) { WasCompilerGenerated = true };
+                    statement = new BoundReturnStatement(syntax, expression) { WasCompilerGenerated = true };
                 }
             }
             else if ((object)expression.Type != null && expression.Type.SpecialType == SpecialType.System_Void)
             {
-                statement = new BoundExpressionStatement(expression.Syntax, expression) { WasCompilerGenerated = true };
+                statement = new BoundExpressionStatement(syntax, expression) { WasCompilerGenerated = true };
             }
             else
             {
-                statement = new BoundReturnStatement(expression.Syntax, expression) { WasCompilerGenerated = true };
+                statement = new BoundReturnStatement(syntax, expression) { WasCompilerGenerated = true };
             }
 
             // Need to attach the tree for when we generate sequence points.
-            var block = new BoundBlock(node, locals, ImmutableArray.Create<BoundStatement>(statement)) { WasCompilerGenerated = true };
-            return block;
+            return new BoundBlock(node, locals, ImmutableArray.Create(statement)) { WasCompilerGenerated = true };
         }
 
-        // Takes a lambda of the form (a,b)=>M(a, b) and binds it either as
-        // { return M(a,b); } or { M(a,b); }.
-        public BoundBlock BindExpressionLambdaBody(ExpressionSyntax body, DiagnosticBag diagnostics)
+        /// <summary>
+        /// Binds an expression-bodied member with expression e as either { return e;} or { e; }.
+        /// </summary>
+        public BoundBlock BindExpressionBodyAsBlock(ArrowExpressionClauseSyntax expressionBody,
+                                                    DiagnosticBag diagnostics)
         {
-            var expressionBinder = new ScopedExpressionBinder(this, body);
-            BoundExpression expression = expressionBinder.BindValue(body, diagnostics, BindValueKind.RValue);
-            return WrapExpressionLambdaBody(expressionBinder.Locals, expression, body, diagnostics);
+            BoundExpression expression = this.BindValue(expressionBody.Expression, diagnostics, BindValueKind.RValue);
+            return CreateBlockFromExpression(this.Locals, expression, expressionBody, diagnostics);
+        }
+
+        /// <summary>
+        /// Binds a lambda with expression e as either { return e;} or { e; }.
+        /// </summary>
+        public BoundBlock BindLambdaExpressionAsBlock(ExpressionSyntax body, DiagnosticBag diagnostics)
+        {
+            BoundExpression expression = this.BindValue(body, diagnostics, BindValueKind.RValue);
+            return CreateBlockFromExpression(this.Locals, expression, body, diagnostics);
         }
 
         internal virtual ImmutableArray<LocalSymbol> Locals

@@ -359,7 +359,7 @@ namespace Il2Native.Logic
         {
             this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
                                 ? this.Compile(this.Source)
-                                : AssemblyMetadata.CreateFromFile(this.Source);
+                                : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
         }
 
         /// <summary>
@@ -368,7 +368,7 @@ namespace Il2Native.Logic
         /// </param>
         public void Load(Type type)
         {
-            this.Assembly = AssemblyMetadata.CreateFromFile(type.Module.Assembly.Location);
+            this.Assembly = AssemblyMetadata.CreateFromImageStream(new FileStream(type.Module.Assembly.Location, FileMode.Open, FileAccess.Read));
         }
 
         /// <summary>
@@ -742,7 +742,7 @@ namespace Il2Native.Logic
             }
 
             // Successful Compile
-            return AssemblyMetadata.CreateFromFile(results.PathToAssembly);
+            return AssemblyMetadata.CreateFromImageStream(new FileStream(results.PathToAssembly, FileMode.Open, FileAccess.Read));
         }
 
         /// <summary>
@@ -759,18 +759,18 @@ namespace Il2Native.Logic
             var coreLibSet = false;
             var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-            foreach (var coreAssemblySymbol in from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences 
-                                               where assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib" 
-                                               select AssemblyMetadata.CreateFromFile(
-                                                    assemblyIdentity.Name == "CoreLib" 
-                                                        ? this.CoreLibPath 
-                                                        : typeof(int).Assembly.Location) 
-                                               into coreAssembly 
-                                               select new PEAssemblySymbol(
-                                                   coreAssembly.Assembly, 
-                                                   DocumentationProvider.Default, 
-                                                   isLinked: false, 
-                                                   importOptions: MetadataImportOptions.All))
+            foreach (var coreAssemblySymbol in from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences
+                                               where assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib"
+                                               select AssemblyMetadata.CreateFromImageStream(new FileStream(
+                                                    assemblyIdentity.Name == "CoreLib"
+                                                        ? this.CoreLibPath
+                                                        : typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                                                   into coreAssembly
+                                                   select new PEAssemblySymbol(
+                                                       coreAssembly.Assembly,
+                                                       DocumentationProvider.Default,
+                                                       isLinked: false,
+                                                       importOptions: MetadataImportOptions.All))
             {
                 coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
@@ -798,8 +798,8 @@ namespace Il2Native.Logic
                 module.SetReferences(moduleReferences);
 
                 var peModuleSymbol = module as PEModuleSymbol;
-                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers()) 
-                                                    where symbol.TypeKind != TypeKind.Error 
+                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
+                                                    where symbol.TypeKind != TypeKind.Error
                                                     select new MetadataTypeAdapter(symbol))
                 {
                     yield return metadataTypeAdapter;

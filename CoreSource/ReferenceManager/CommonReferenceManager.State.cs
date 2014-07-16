@@ -230,7 +230,7 @@ namespace Microsoft.CodeAnalysis
                 return lazyReferenceDirectiveMap;
             }
         }
-         
+
         internal ImmutableArray<MetadataReference> DirectiveReferences
         {
             get

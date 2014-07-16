@@ -90,10 +90,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             this.noOptimizations = !optimize;
             this.debugInformationKind = module.Compilation.Options.DebugInformationKind;
 
-            if (!this.debugInformationKind.IsValid())
-            {
-                this.debugInformationKind = DebugInformationKind.None;
-            }
+            Debug.Assert(this.debugInformationKind.IsValid());
 
             // Special case: always optimize synthesized explicit interface implementation methods
             // (aka bridge methods) with by-ref returns because peverify produces errors if we
@@ -128,10 +125,9 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             return stackLocals != null && stackLocals.Contains(local);
         }
 
-        public static void Run(
-            MethodSymbol meth, BoundStatement block, ILBuilder builder, PEModuleBuilder module, DiagnosticBag diagnostics, bool optimize, bool emitSequencePoints)
+        public static void Run(MethodSymbol method, BoundStatement block, ILBuilder builder, PEModuleBuilder module, DiagnosticBag diagnostics, bool optimize, bool emitSequencePoints)
         {
-            CodeGenerator generator = new CodeGenerator(meth, block, builder, module, diagnostics, optimize, emitSequencePoints);
+            CodeGenerator generator = new CodeGenerator(method, block, builder, module, diagnostics, optimize, emitSequencePoints);
             generator.Generate();
             Debug.Assert(generator.asyncCatchHandlerOffset < 0);
             Debug.Assert(generator.asyncYieldPoints == null);
@@ -143,11 +139,10 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
         }
 
-        public static void Run(
-            MethodSymbol meth, BoundStatement block, ILBuilder builder, PEModuleBuilder module, DiagnosticBag diagnostics, bool optimize, bool emitSequencePoints,
+        public static void Run(MethodSymbol method, BoundStatement block, ILBuilder builder, PEModuleBuilder module, DiagnosticBag diagnostics, bool optimize, bool emitSequencePoints,
             out int asyncCatchHandlerOffset, out ImmutableArray<int> asyncYieldPoints, out ImmutableArray<int> asyncResumePoints)
         {
-            CodeGenerator generator = new CodeGenerator(meth, block, builder, module, diagnostics, optimize, emitSequencePoints);
+            CodeGenerator generator = new CodeGenerator(method, block, builder, module, diagnostics, optimize, emitSequencePoints);
             generator.Generate();
 
             if (!diagnostics.HasAnyErrors())

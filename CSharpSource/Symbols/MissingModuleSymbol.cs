@@ -139,14 +139,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        internal override IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
-        {
-            get
-            {
-                return SpecializedCollections.EmptyCollection<KeyValuePair<string, string>>();
-            }
-        }
-
         internal override NamedTypeSymbol LookupTopLevelMetadataType(ref MetadataTypeName emittedName)
         {
             return new MissingMetadataTypeSymbol.TopLevel(this, ref emittedName);

@@ -155,5 +155,84 @@ namespace Roslyn.Utilities
             result = null;
             return false;
         }
+
+        internal static bool IsValidUnicodeString(this string str)
+        {
+            int i = 0;
+            while (i < str.Length)
+            {
+                char c = str[i++];
+
+                // (high surrogate, low surrogate) makes a valid pair, anything else is invalid:
+                if (char.IsHighSurrogate(c))
+                {
+                    if (i < str.Length && char.IsLowSurrogate(str[i]))
+                    {
+                        i++;
+                    }
+                    else
+                    {
+                        // high surrogate not followed by low surrogate
+                        return false;
+                    }
+                }
+                else if (char.IsLowSurrogate(c))
+                {
+                    // previous character wasn't a high surrogate
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Remove one set of leading and trailing double quote characters, if both are present.
+        /// </summary>
+        internal static string Unquote(this string arg)
+        {
+            bool quoted;
+            return Unquote(arg, out quoted);
+        }
+
+        internal static string Unquote(this string arg, out bool quoted)
+        {
+            if (arg.Length > 1 && arg[0] == '"' && arg[arg.Length - 1] == '"')
+            {
+                quoted = true;
+                return arg.Substring(1, arg.Length - 2);
+            }
+            else
+            {
+                quoted = false;
+                return arg;
+            }
+        }
+
+        // String isn't IEnumerable<char> in the current Portable profile. 
+        internal static char First(this string arg)
+        {
+            return arg[0];
+        }
+
+        // String isn't IEnumerable<char> in the current Portable profile. 
+        internal static char Last(this string arg)
+        {
+            return arg[arg.Length - 1];
+        }
+
+        // String isn't IEnumerable<char> in the current Portable profile. 
+        internal static bool All(this string arg, Predicate<char> predicate)
+        {
+            foreach (char c in arg)
+            {
+                if (!predicate(c))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

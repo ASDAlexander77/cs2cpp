@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -33,26 +34,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             Debug.Assert(syntax.Kind == SyntaxKind.GetAccessorDeclaration || syntax.Kind == SyntaxKind.SetAccessorDeclaration);
 
-            bool isGetMethod = (syntax.Kind == SyntaxKind.GetAccessorDeclaration);
-            bool isWinMd = property.IsCompilationOutputWinMdObj();
+            bool isGetMethod = (syntax.Kind == SyntaxKind.GetAccessorDeclaration); 
             string name;
             ImmutableArray<MethodSymbol> explicitInterfaceImplementations;
-            if ((object)explicitlyImplementedPropertyOpt == null)
-            {
-                name = GetAccessorName(propertyName, isGetMethod, isWinMd);
-                explicitInterfaceImplementations = ImmutableArray<MethodSymbol>.Empty;
-            }
-            else
-            {
-                MethodSymbol implementedAccessor = isGetMethod ? explicitlyImplementedPropertyOpt.GetMethod : explicitlyImplementedPropertyOpt.SetMethod;
-                string accessorName = (object)implementedAccessor != null ? implementedAccessor.Name
-                    : GetAccessorName(explicitlyImplementedPropertyOpt.MetadataName, isGetMethod, isWinMd); //Not name - could be indexer placeholder
-                name = ExplicitInterfaceHelpers.GetMemberName(accessorName, explicitlyImplementedPropertyOpt.ContainingType, aliasQualifierOpt);
-                explicitInterfaceImplementations =
-                    (object)implementedAccessor == null ?
-                        ImmutableArray<MethodSymbol>.Empty :
-                        ImmutableArray.Create<MethodSymbol>(implementedAccessor);
-            }
+            GetNameAndExplicitInterfaceImplementations(
+                explicitlyImplementedPropertyOpt,
+                propertyName,
+                property.IsCompilationOutputWinMdObj(),
+                aliasQualifierOpt,
+                isGetMethod,
+                out name,
+                out explicitInterfaceImplementations);
 
             var methodKind = isGetMethod ? MethodKind.PropertyGet : MethodKind.PropertySet;
             return new SourcePropertyAccessorSymbol(
@@ -66,6 +58,127 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 methodKind,
                 isAutoPropertyAccessor,
                 diagnostics);
+        }
+
+        public static SourcePropertyAccessorSymbol CreateAccessorSymbol(
+            NamedTypeSymbol containingType,
+            SourcePropertySymbol property,
+            DeclarationModifiers propertyModifiers,
+            string propertyName,
+            ArrowExpressionClauseSyntax syntax,
+            PropertySymbol explicitlyImplementedPropertyOpt,
+            string aliasQualifierOpt,
+            DiagnosticBag diagnostics)
+        {
+            string name;
+            ImmutableArray<MethodSymbol> explicitInterfaceImplementations;
+            GetNameAndExplicitInterfaceImplementations(
+                explicitlyImplementedPropertyOpt,
+                propertyName,
+                property.IsCompilationOutputWinMdObj(),
+                aliasQualifierOpt,
+                isGetMethod: true,
+                name: out name,
+                explicitInterfaceImplementations:
+                out explicitInterfaceImplementations);
+
+            return new SourcePropertyAccessorSymbol(
+                containingType,
+                name,
+                property,
+                propertyModifiers,
+                explicitInterfaceImplementations,
+                syntax.Expression.GetLocation(),
+                syntax,
+                diagnostics);
+        }
+
+        internal override bool IsExpressionBodied
+        {
+            get
+            {
+                return property.IsExpressionBodied;
+            }
+        }
+
+        private static void GetNameAndExplicitInterfaceImplementations(
+            PropertySymbol explicitlyImplementedPropertyOpt,
+            string propertyName,
+            bool isWinMd,
+            string aliasQualifierOpt,
+            bool isGetMethod,
+            out string name,
+            out ImmutableArray<MethodSymbol> explicitInterfaceImplementations)
+        {
+            if ((object)explicitlyImplementedPropertyOpt == null)
+            {
+                name = GetAccessorName(propertyName, isGetMethod, isWinMd);
+                explicitInterfaceImplementations = ImmutableArray<MethodSymbol>.Empty;
+            }
+            else
+            {
+                MethodSymbol implementedAccessor = isGetMethod
+                    ? explicitlyImplementedPropertyOpt.GetMethod
+                    : explicitlyImplementedPropertyOpt.SetMethod;
+
+                string accessorName = (object)implementedAccessor != null
+                    ? implementedAccessor.Name
+                    : GetAccessorName(explicitlyImplementedPropertyOpt.MetadataName,
+                        isGetMethod, isWinMd); //Not name - could be indexer placeholder
+
+                name = ExplicitInterfaceHelpers.GetMemberName(accessorName, explicitlyImplementedPropertyOpt.ContainingType, aliasQualifierOpt);
+                explicitInterfaceImplementations = (object)implementedAccessor == null
+                    ? ImmutableArray<MethodSymbol>.Empty
+                    : ImmutableArray.Create<MethodSymbol>(implementedAccessor);
+            }
+        }
+
+        private SourcePropertyAccessorSymbol(
+            NamedTypeSymbol containingType,
+            string name,
+            SourcePropertySymbol property,
+            DeclarationModifiers propertyModifiers,
+            ImmutableArray<MethodSymbol> explicitInterfaceImplementations,
+            Location location,
+            ArrowExpressionClauseSyntax syntax,
+            DiagnosticBag diagnostics) :
+            base(containingType, syntax.GetReference(), syntax.GetReference(), location)
+        {
+            this.property = property;
+            this.explicitInterfaceImplementations = explicitInterfaceImplementations;
+            this.name = name;
+            this.isAutoPropertyAccessor = false;
+
+            // The modifiers for the accessor are the same as the modifiers for the property,
+            // minus the indexer bit
+            var declarationModifiers = propertyModifiers & ~DeclarationModifiers.Indexer;
+
+            // ReturnsVoid property is overridden in this class so
+            // returnsVoid argument to MakeFlags is ignored.
+            this.flags = MakeFlags(MethodKind.PropertyGet, declarationModifiers, returnsVoid: false, isExtensionMethod: false,
+                isMetadataVirtualIgnoringModifiers: explicitInterfaceImplementations.Any());
+
+            CheckModifiersForBody(location, diagnostics);
+
+            var info = ModifierUtils.CheckAccessibility(this.DeclarationModifiers);
+            if (info != null)
+            {
+                diagnostics.Add(info, location);
+            }
+
+            this.CheckModifiers(location, isAutoPropertyOrExpressionBodied: true, diagnostics: diagnostics);
+
+            if (this.IsOverride)
+            {
+                MethodSymbol overriddenMethod = this.OverriddenMethod;
+                if ((object)overriddenMethod != null)
+                {
+                    // If this accessor is overriding a method from metadata, it is possible that
+                    // the name of the overridden method doesn't follow the C# get_X/set_X pattern.
+                    // We should copy the name so that the runtime will recognize this as an override.
+                    this.name = overriddenMethod.Name;
+                }
+            }
         }
 
         private SourcePropertyAccessorSymbol(
@@ -106,20 +219,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             var bodyOpt = syntax.Body;
             if (bodyOpt != null)
             {
-                if (containingType.IsInterface)
-                {
-                    diagnostics.Add(ErrorCode.ERR_InterfaceMemberHasBody, location, this);
-                }
-                else if (IsExtern && !IsAbstract)
-                {
-                    diagnostics.Add(ErrorCode.ERR_ExternHasBody, location, this);
-                }
-                else if (IsAbstract && !IsExtern)
-                {
-                    diagnostics.Add(ErrorCode.ERR_AbstractHasBody, location, this);
-                }
-                // Do not report error for IsAbstract && IsExtern. Dev10 reports CS0180 only
-                // in that case ("member cannot be both extern and abstract").
+                CheckModifiersForBody(location, diagnostics);
             }
 
             var info = ModifierUtils.CheckAccessibility(this.DeclarationModifiers);
@@ -301,7 +401,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             return mods;
         }
 
-        private void CheckModifiers(Location location, bool isAutoPropertyAccessor, DiagnosticBag diagnostics)
+        private void CheckModifiers(Location location, bool isAutoPropertyOrExpressionBodied, DiagnosticBag diagnostics)
         {
             // Check accessibility against the accessibility declared on the accessor not the property.
             var localAccessibility = this.LocalAccessibility;
@@ -316,7 +416,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 // '{0}' is a new virtual member in sealed class '{1}'
                 diagnostics.Add(ErrorCode.ERR_NewVirtualInSealed, location, this, ContainingType);
             }
-            else if (blockSyntaxReference == null && !IsExtern && !IsAbstract && !isAutoPropertyAccessor)
+            else if (bodySyntaxReference == null && !IsExtern && !IsAbstract && !isAutoPropertyOrExpressionBodied)
             {
                 diagnostics.Add(ErrorCode.ERR_ConcreteMissingBody, location, this);
             }
@@ -347,7 +447,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         internal override OneOrMany<SyntaxList<AttributeListSyntax>> GetAttributeDeclarations()
         {
-            return OneOrMany.Create(((AccessorDeclarationSyntax)this.SyntaxNode).AttributeLists);
+            var syntax = this.SyntaxNode;
+            switch (syntax.Kind)
+            {
+                case SyntaxKind.GetAccessorDeclaration:
+                case SyntaxKind.SetAccessorDeclaration:
+                    return OneOrMany.Create(((AccessorDeclarationSyntax)syntax).AttributeLists);
+            }
+            return base.GetAttributeDeclarations();
         }
 
         public override string Name
@@ -363,7 +470,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             get
             {
                 // Per design meeting resolution [see bug 11253], no source accessor is implicitly declared in C#,
-                // because there is the "get" or "set" syntax.
+                // because there is "get", "set", or expression-body syntax.
                 return false;
             }
         }

@@ -264,8 +264,9 @@ namespace PEAssemblyReader
                         var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                         if (methodBody != null && !methodBody.LocalSignature.IsNil)
                         {
-                            var signature = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
-                            localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(signature);
+                            var signatureHandle = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                            var signatureReader = peModule.GetMemoryReaderOrThrow(signatureHandle);
+                            localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
                         {

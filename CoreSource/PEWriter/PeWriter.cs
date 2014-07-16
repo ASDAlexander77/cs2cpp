@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -20,7 +21,7 @@ using Roslyn.Utilities;
 using EmitContext = Microsoft.CodeAnalysis.Emit.EmitContext;
 
 namespace Microsoft.Cci
-{
+{   
     internal abstract class PeWriter
     {
         /// <summary>
@@ -424,13 +425,6 @@ namespace Microsoft.Cci
         protected abstract ReferenceIndexer CreateReferenceVisitor();
 
         /// <summary>
-        /// Invoked after serializing the method body.
-        /// </summary>
-        protected virtual void OnSerializedMethodBody(IMethodBody body)
-        {
-        }
-
-        /// <summary>
         /// Invoked after serializing metadata tables.
         /// </summary>
         protected virtual void OnBeforeHeapsAligned()
@@ -450,12 +444,12 @@ namespace Microsoft.Cci
         /// <summary>
         /// Populate EncLog table.
         /// </summary>
-        protected abstract void PopulateEncLogTableRows(List<EncLogRow> table);
+        protected abstract void PopulateEncLogTableRows(List<EncLogRow> table, ImmutableArray<int> rowCounts);
 
         /// <summary>
         /// Populate EncMap table.
         /// </summary>
-        protected abstract void PopulateEncMapTableRows(List<EncMapRow> table);
+        protected abstract void PopulateEncMapTableRows(List<EncMapRow> table, ImmutableArray<int> rowCounts);
 
         // If true, it is allowed to have methods not have bodies (for emitting metadata-only
         // assembly)
@@ -471,8 +465,6 @@ namespace Microsoft.Cci
 
         private uint[] pseudoSymbolTokenToTokenMap;
         private List<uint> pseudoStringTokenToTokenMap;
-
-        private readonly ClrHeader clrHeader = new ClrHeader();
 
         private readonly bool emitRuntimeStartupStub;
         private readonly BinaryWriter coverageDataWriter = new BinaryWriter(new MemoryStream());
@@ -507,38 +499,10 @@ namespace Microsoft.Cci
         private readonly Dictionary<IFieldReference, uint> fieldSignatureIndex = new Dictionary<IFieldReference, uint>();
         private readonly Dictionary<ISignature, uint> signatureIndex;
         private readonly Dictionary<IMarshallingInformation, uint> marshallingDescriptorIndex = new Dictionary<IMarshallingInformation, uint>();
-        protected readonly List<IMethodImplementation> methodImplList = new List<IMethodImplementation>();
+        protected readonly List<MethodImplementation> methodImplList = new List<MethodImplementation>();
         private readonly Dictionary<IGenericMethodInstanceReference, uint> methodInstanceSignatureIndex = new Dictionary<IGenericMethodInstanceReference, uint>();
         // A map of method body to RVA. 
         private readonly Dictionary<byte[], uint> possiblyDuplicateMethodBodies;
-
-        private byte blobIndexSize;
-        private byte stringIndexSize;
-        private byte guidIndexSize;
-
-        private byte customAttributeTypeCodedIndexSize;
-        private byte declSecurityCodedIndexSize;
-        private byte eventDefIndexSize;
-        private byte fieldDefIndexSize;
-        private byte genericParamIndexSize;
-        private byte hasConstantCodedIndexSize;
-        private byte hasCustomAttributeCodedIndexSize;
-        private byte hasFieldMarshalCodedIndexSize;
-        private byte hasSemanticsCodedIndexSize;
-        private byte implementationCodedIndexSize;
-        private byte memberForwardedCodedIndexSize;
-        private byte memberRefParentCodedIndexSize;
-        private byte methodDefIndexSize;
-        private byte methodDefOrRefCodedIndexSize;
-        private byte moduleRefIndexSize;
-        private byte parameterIndexSize;
-        private byte propertyDefIndexSize;
-        private byte resolutionScopeCodedIndexSize;
-        private byte typeDefIndexSize;
-        private byte typeDefOrRefCodedIndexSize;
-        private byte typeOrMethodDefCodedIndexSize;
-
-        private readonly uint[] tableSizes = new uint[MetadataTokens.TableCount];
 
         private readonly NtHeader ntHeader = new NtHeader();
         private readonly PdbWriter pdbWriter;
@@ -550,10 +514,8 @@ namespace Microsoft.Cci
         private readonly SectionHeader rdataSection = new SectionHeader();
         private readonly SectionHeader sdataSection = new SectionHeader();
         private readonly uint sizeOfImportAddressTable;
-        private readonly BinaryWriter textDataWriter = new BinaryWriter(new MemoryStream());
         private readonly SectionHeader textSection = new SectionHeader();
-        private readonly SectionHeader textDataSection = new SectionHeader();
-        private readonly SectionHeader textMethodBodySection = new SectionHeader();
+        
         private readonly SectionHeader tlsSection = new SectionHeader();
         private readonly BinaryWriter tlsDataWriter = new BinaryWriter(new MemoryStream());
 
@@ -586,6 +548,8 @@ namespace Microsoft.Cci
             0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
         };
 
+        private const int MappedFieldDataAlignment = 8;
+      
         /// <summary>
         /// Wraps a virtual string table index.
         /// An override to SerializeIndex does the resolving at the right time.
@@ -718,6 +682,8 @@ namespace Microsoft.Cci
             var ilWriter = new BinaryWriter(ilBuffer);
             var metadataBuffer = new MemoryStream(16 * 1024);
             var metadataWriter = new BinaryWriter(metadataBuffer);
+            var mappedFieldDataBuffer = new MemoryStream();
+            var mappedFieldDataWriter = new BinaryWriter(mappedFieldDataBuffer);
 
             // Since we are producing a full assembly, we should not have a module version ID
             // imposed ahead-of time. Instead we will compute a deterministic module version ID
@@ -725,18 +691,29 @@ namespace Microsoft.Cci
             Debug.Assert(this.ModuleVersionId == default(Guid));
 
             uint moduleVersionIdOffsetInMetadataStream;
-            SerializeMetadataAndIL(metadataWriter, ilWriter, separateMethodIL: false, moduleVersionIdOffsetInMetadataStream: out moduleVersionIdOffsetInMetadataStream);
+            int mappedFieldDataStreamRva;
+            MetadataSizes metadataSizes;
+
+            SerializeMetadataAndIL(
+                metadataWriter, 
+                ilWriter, 
+                mappedFieldDataWriter, 
+                separateMethodIL: false,
+                moduleVersionIdOffsetInMetadataStream: out moduleVersionIdOffsetInMetadataStream,
+                mappedFieldDataStreamRva: out mappedFieldDataStreamRva,
+                metadataSizes: out metadataSizes);
 
             // fill in header fields.
-            FillInNtHeader((int)ilBuffer.Length);
-            FillInClrHeader((int)ilBuffer.Length);
+            FillInNtHeader(metadataSizes, (int)ilBuffer.Length, mappedFieldDataStreamRva);
+            var corHeader = CreateCorHeader(metadataSizes, (int)ilBuffer.Length);
 
             // write to pe stream.
             long positionOfHeaderTimestamp;
             WriteHeaders(peStream, out positionOfHeaderTimestamp);
+
             long startOfMetadataStream;
             long positionOfDebugTableTimestamp;
-            WriteTextSection(peStream, metadataBuffer, ilBuffer, out startOfMetadataStream, out positionOfDebugTableTimestamp);
+            WriteTextSection(peStream, corHeader, metadataBuffer, ilBuffer, mappedFieldDataBuffer, out startOfMetadataStream, out positionOfDebugTableTimestamp);
             WriteRdataSection(peStream);
             WriteSdataSection(peStream);
             WriteCoverSection(peStream);
@@ -751,7 +728,7 @@ namespace Microsoft.Cci
             }
         }
 
-        internal void WriteMetadataAndIL(Stream metadataStream, Stream ilStream)
+        internal void WriteMetadataAndIL(Stream metadataStream, Stream ilStream, out MetadataSizes metadataSizes)
         {
             // Extract information from object model into tables, indices and streams
             CreateIndices();
@@ -761,6 +738,8 @@ namespace Microsoft.Cci
             var ilWriter = new BinaryWriter(ilBuffer);
             var metadataBuffer = new MemoryStream(4 * 1024);
             var metadataWriter = new BinaryWriter(metadataBuffer);
+            var mappedFieldDataBuffer = new MemoryStream(0);
+            var mappedFieldDataWriter = new BinaryWriter(mappedFieldDataBuffer);
 
             // Add 4B of padding to the start of the separated IL stream, 
             // so that method RVAs, which are offsets to this stream, are never 0.
@@ -773,10 +752,20 @@ namespace Microsoft.Cci
             Debug.Assert(this.ModuleVersionId != default(Guid));
 
             uint moduleVersionIdOffsetInMetadataStream;
-            SerializeMetadataAndIL(metadataWriter, ilWriter, separateMethodIL: true, moduleVersionIdOffsetInMetadataStream: out moduleVersionIdOffsetInMetadataStream);
+            int mappedFieldDataStreamRva;
 
+            SerializeMetadataAndIL(
+                metadataWriter, 
+                ilWriter, 
+                mappedFieldDataWriter,
+                separateMethodIL: true, 
+                moduleVersionIdOffsetInMetadataStream: out moduleVersionIdOffsetInMetadataStream,
+                mappedFieldDataStreamRva: out mappedFieldDataStreamRva,
+                metadataSizes: out metadataSizes);
+            
             ilBuffer.WriteTo(ilStream);
             metadataBuffer.WriteTo(metadataStream);
+            Debug.Assert(mappedFieldDataBuffer.Length == 0);
         }
 
         /// <summary>
@@ -823,7 +812,7 @@ namespace Microsoft.Cci
             for (int i = 0; i < bytes; i++)
             {
                 int value = stream.ReadByte();
-                Debug.Assert(value == 0, "Value not zero", "Value at index '{0}' was not zero", i);
+                Debug.Assert(value == 0);
             }
         }
 
@@ -835,7 +824,7 @@ namespace Microsoft.Cci
         {
             stream.Position = 0; // rewind the stream
 
-            var hashData = Hash.ComputeSha1(stream);
+            var hashData = CryptographicHashProvider.ComputeSha1(stream);
             var guidData = new byte[16];
             for (var i = 0; i < guidData.Length; i++)
             {
@@ -860,17 +849,6 @@ namespace Microsoft.Cci
             return guidData;
         }
 
-        internal static uint Aligned(uint position, uint alignment)
-        {
-            uint result = position & ~(alignment - 1);
-            if (result == position)
-            {
-                return result;
-            }
-
-            return result + alignment;
-        }
-
         private uint ComputeStrongNameSignatureSize()
         {
             IAssembly assembly = this.module.AsAssembly;
@@ -893,18 +871,18 @@ namespace Microsoft.Cci
             return keySize < 128 + 32 ? 128u : keySize - 32;
         }
 
-        private uint ComputeOffsetToDebugTable(int ilStreamLength)
+        private uint ComputeOffsetToDebugTable(MetadataSizes metadataSizes, int ilStreamLength)
         {
             uint result = this.ComputeOffsetToMetadata(ilStreamLength);
-            result += this.ComputeSizeOfMetadata();
-            result += Aligned(this.resourceWriter.BaseStream.Length, 4);
+            result += (uint)metadataSizes.MetadataSize;
+            result += BitArithmeticUtilities.Align(this.resourceWriter.BaseStream.Length, 4);
             result += this.ComputeStrongNameSignatureSize(); // size of strong name hash
             return result;
         }
 
-        private uint ComputeOffsetToImportTable(int ilStreamLength)
+        private uint ComputeOffsetToImportTable(MetadataSizes metadataSizes, int ilStreamLength)
         {
-            uint result = this.ComputeOffsetToDebugTable(ilStreamLength);
+            uint result = this.ComputeOffsetToDebugTable(metadataSizes, ilStreamLength);
             result += this.ComputeSizeOfDebugTable(result);
             result += 0; // TODO: size of unmanaged export stubs (when and if these are ever supported).
             return result;
@@ -915,7 +893,7 @@ namespace Microsoft.Cci
             uint result = 0;
             result += this.sizeOfImportAddressTable;
             result += 72; // size of CLR header
-            result += Aligned((uint)ilStreamLength, 4);
+            result += BitArithmeticUtilities.Align((uint)ilStreamLength, 4);
             return result;
         }
 
@@ -932,69 +910,63 @@ namespace Microsoft.Cci
             return 0x1c + (uint)this.debugDirectory.Data.Length;
         }
 
-        private uint ComputeSizeOfMetadata()
+        private ImmutableArray<int> CalculateRowCounts()
         {
-            uint result = this.MetadataHeaderSize;
-            result += Aligned(this.ComputeSizeOfMetadataTablesStream(), 4);
-            result += Aligned(this.stringWriter.BaseStream.Length, 4);
-            result += Aligned(this.userStringWriter.BaseStream.Length, 4);
-            result += Aligned(this.guidWriter.BaseStream.Length, 4);
-            result += Aligned(this.blobWriter.BaseStream.Length, 4);
-            return result;
+            var rowCounts = new int[MetadataTokens.TableCount];
+
+            rowCounts[(int)TableIndex.Assembly] = (this.module.AsAssembly != null) ? 1 : 0;
+            rowCounts[(int)TableIndex.AssemblyRef] = this.assemblyRefTable.Count;
+            rowCounts[(int)TableIndex.ClassLayout] = this.classLayoutTable.Count;
+            rowCounts[(int)TableIndex.Constant] = this.constantTable.Count;
+            rowCounts[(int)TableIndex.CustomAttribute] = this.customAttributeTable.Count;
+            rowCounts[(int)TableIndex.TypeRef] = this.typeRefTable.Count;
+            rowCounts[(int)TableIndex.DeclSecurity] = this.declSecurityTable.Count;
+            rowCounts[(int)TableIndex.EncLog] = this.encLogTable.Count;
+            rowCounts[(int)TableIndex.EncMap] = this.encMapTable.Count;
+            rowCounts[(int)TableIndex.EventMap] = this.eventMapTable.Count;
+            rowCounts[(int)TableIndex.Event] = this.eventTable.Count;
+            rowCounts[(int)TableIndex.ExportedType] = this.exportedTypeTable.Count;
+            rowCounts[(int)TableIndex.FieldLayout] = this.fieldLayoutTable.Count;
+            rowCounts[(int)TableIndex.FieldMarshal] = this.fieldMarshalTable.Count;
+            rowCounts[(int)TableIndex.FieldRva] = this.fieldRvaTable.Count;
+            rowCounts[(int)TableIndex.Field] = this.fieldDefTable.Count;
+            rowCounts[(int)TableIndex.File] = this.fileTable.Count;
+            rowCounts[(int)TableIndex.GenericParamConstraint] = this.genericParamConstraintTable.Count;
+            rowCounts[(int)TableIndex.GenericParam] = this.genericParamTable.Count;
+            rowCounts[(int)TableIndex.ImplMap] = this.implMapTable.Count;
+            rowCounts[(int)TableIndex.InterfaceImpl] = this.interfaceImplTable.Count;
+            rowCounts[(int)TableIndex.ManifestResource] = this.manifestResourceTable.Count;
+            rowCounts[(int)TableIndex.MemberRef] = this.memberRefTable.Count;
+            rowCounts[(int)TableIndex.MethodImpl] = this.methodImplTable.Count;
+            rowCounts[(int)TableIndex.MethodSemantics] = this.methodSemanticsTable.Count;
+            rowCounts[(int)TableIndex.MethodSpec] = this.methodSpecTable.Count;
+            rowCounts[(int)TableIndex.MethodDef] = this.methodTable.Length;
+            rowCounts[(int)TableIndex.ModuleRef] = this.moduleRefTable.Count;
+            rowCounts[(int)TableIndex.Module] = 1;
+            rowCounts[(int)TableIndex.NestedClass] = this.nestedClassTable.Count;
+            rowCounts[(int)TableIndex.Param] = this.paramTable.Count;
+            rowCounts[(int)TableIndex.PropertyMap] = this.propertyMapTable.Count;
+            rowCounts[(int)TableIndex.Property] = this.propertyTable.Count;
+            rowCounts[(int)TableIndex.StandAloneSig] = this.GetStandAloneSignatures().Count;
+            rowCounts[(int)TableIndex.TypeDef] = this.typeDefTable.Count;
+            rowCounts[(int)TableIndex.TypeRef] = this.typeRefTable.Count;
+            rowCounts[(int)TableIndex.TypeSpec] = this.typeSpecTable.Count;
+
+            return ImmutableArray.CreateRange(rowCounts);
         }
 
-        private uint ComputeSizeOfMetadataTablesStream()
+        private ImmutableArray<int> CalculateHeapSizes()
         {
-            this.ComputeColumnSizes();
-            uint result = this.ComputeSizeOfTablesHeader();
-            result += this.tableSizes[(byte)TableIndex.Module] * (2u + 3u * this.guidIndexSize + this.stringIndexSize);
-            result += this.tableSizes[(byte)TableIndex.TypeRef] * (0u + this.resolutionScopeCodedIndexSize + this.stringIndexSize + this.stringIndexSize);
-            result += this.tableSizes[(byte)TableIndex.TypeDef] * (4u + this.stringIndexSize + this.stringIndexSize + this.typeDefOrRefCodedIndexSize + this.fieldDefIndexSize + this.methodDefIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.FieldPtr] == 0);
-            result += this.tableSizes[(byte)TableIndex.Field] * (2u + this.stringIndexSize + this.blobIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.MethodPtr] == 0);
-            result += this.tableSizes[(byte)TableIndex.MethodDef] * (8u + this.stringIndexSize + this.blobIndexSize + this.parameterIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.ParamPtr] == 0);
-            result += this.tableSizes[(byte)TableIndex.Param] * (4u + this.stringIndexSize);
-            result += this.tableSizes[(byte)TableIndex.InterfaceImpl] * (0u + this.typeDefIndexSize + this.typeDefOrRefCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.MemberRef] * (0u + this.memberRefParentCodedIndexSize + this.stringIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.Constant] * (2u + this.hasConstantCodedIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.CustomAttribute] * (0u + this.hasCustomAttributeCodedIndexSize + this.customAttributeTypeCodedIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.FieldMarshal] * (0u + this.hasFieldMarshalCodedIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.DeclSecurity] * (2u + this.declSecurityCodedIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.ClassLayout] * (6u + this.typeDefIndexSize);
-            result += this.tableSizes[(byte)TableIndex.FieldLayout] * (4u + this.fieldDefIndexSize);
-            result += this.tableSizes[(byte)TableIndex.StandAloneSig] * (0u + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.EventMap] * (0u + this.typeDefIndexSize + this.eventDefIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.EventPtr] == 0);
-            result += this.tableSizes[(byte)TableIndex.Event] * (2u + this.stringIndexSize + this.typeDefOrRefCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.PropertyMap] * (0u + this.typeDefIndexSize + this.propertyDefIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.PropertyPtr] == 0);
-            result += this.tableSizes[(byte)TableIndex.Property] * (2u + this.stringIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.MethodSemantics] * (2u + this.methodDefIndexSize + this.hasSemanticsCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.MethodImpl] * (0u + this.typeDefIndexSize + this.methodDefOrRefCodedIndexSize + this.methodDefOrRefCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.ModuleRef] * (0u + this.stringIndexSize);
-            result += this.tableSizes[(byte)TableIndex.TypeSpec] * (0u + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.ImplMap] * (2u + this.memberForwardedCodedIndexSize + this.stringIndexSize + this.moduleRefIndexSize);
-            result += this.tableSizes[(byte)TableIndex.FieldRva] * (4u + this.fieldDefIndexSize);
-            result += this.tableSizes[(byte)TableIndex.EncLog] * (8u);
-            result += this.tableSizes[(byte)TableIndex.EncMap] * (4u);
-            result += this.tableSizes[(byte)TableIndex.Assembly] * (16u + this.blobIndexSize + this.stringIndexSize + this.stringIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.AssemblyProcessor] == 0);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.AssemblyOS] == 0);
-            result += this.tableSizes[(byte)TableIndex.AssemblyRef] * (12u + this.blobIndexSize + this.stringIndexSize + this.stringIndexSize + this.blobIndexSize);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.AssemblyRefProcessor] == 0);
-            Debug.Assert(this.tableSizes[(byte)TableIndex.AssemblyRefOS] == 0);
-            result += this.tableSizes[(byte)TableIndex.File] * (4u + this.stringIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.ExportedType] * (8u + this.stringIndexSize + this.stringIndexSize + this.implementationCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.ManifestResource] * (8u + this.stringIndexSize + this.implementationCodedIndexSize);
-            result += this.tableSizes[(byte)TableIndex.NestedClass] * (0u + this.typeDefIndexSize + this.typeDefIndexSize);
-            result += this.tableSizes[(byte)TableIndex.GenericParam] * (4u + this.typeOrMethodDefCodedIndexSize + this.stringIndexSize);
-            result += this.tableSizes[(byte)TableIndex.MethodSpec] * (0u + this.methodDefOrRefCodedIndexSize + this.blobIndexSize);
-            result += this.tableSizes[(byte)TableIndex.GenericParamConstraint] * (0u + this.genericParamIndexSize + this.typeDefOrRefCodedIndexSize);
-            return result + 1;
-        }
+            var heapSizes = new int[MetadataTokens.HeapCount];
 
+            heapSizes[(int)HeapIndex.UserString] = (int)this.userStringWriter.BaseStream.Length;
+            heapSizes[(int)HeapIndex.String] = (int)this.stringWriter.BaseStream.Length;
+            heapSizes[(int)HeapIndex.Blob] = (int)this.blobWriter.BaseStream.Length;
+            heapSizes[(int)HeapIndex.Guid] = (int)this.guidWriter.BaseStream.Length;
+
+            return ImmutableArray.CreateRange(heapSizes);
+        }
+        
         private uint ComputeSizeOfPeHeaders()
         {
             ushort numberOfSections = 1; // .text 
@@ -1017,19 +989,20 @@ namespace Microsoft.Cci
             return sizeOfPeHeaders;
         }
 
-        private uint ComputeSizeOfTextSection(int ilStreamLength)
+        private uint ComputeSizeOfTextSection(MetadataSizes metadataSizes, int ilStreamLength, int mappedFieldDataLength)
         {
-            uint textSectionLength = this.ComputeOffsetToImportTable(ilStreamLength);
+            uint textSectionLength = this.ComputeOffsetToImportTable(metadataSizes, ilStreamLength);
 
             if (this.emitRuntimeStartupStub)
             {
                 textSectionLength += !this.module.Requires64bits ? 66u : 70u; //size of import table
                 textSectionLength += 14; //size of name table
-                textSectionLength = Aligned(textSectionLength, !this.module.Requires64bits ? 4u : 8u); //optional padding to make startup stub's target address align on word or double word boundary
+                textSectionLength = BitArithmeticUtilities.Align(textSectionLength, !this.module.Requires64bits ? 4u : 8u); //optional padding to make startup stub's target address align on word or double word boundary
                 textSectionLength += !this.module.Requires64bits ? 8u : 16u; //fixed size of runtime startup stub
             }
 
-            textSectionLength += Aligned(this.textDataWriter.BaseStream.Length, 4);
+            Debug.Assert(mappedFieldDataLength % MappedFieldDataAlignment == 0);
+            textSectionLength += (uint)mappedFieldDataLength;
             this.streamsAreComplete = true;
             return textSectionLength;
         }
@@ -1040,8 +1013,8 @@ namespace Microsoft.Cci
             uint result = 0;
             if (this.win32ResourceWriter.BaseStream.Length > 0)
             {
-                result += Aligned(this.win32ResourceWriter.BaseStream.Length, 4);
-            }            // result += Aligned(this.win32ResourceWriter.BaseStream.Length+1, 8);
+                result += BitArithmeticUtilities.Align(this.win32ResourceWriter.BaseStream.Length, 4);
+            }            // result += BitArithmeticUtilities.Align(this.win32ResourceWriter.BaseStream.Length+1, 8);
 
             return result;
         }
@@ -1311,49 +1284,51 @@ namespace Microsoft.Cci
             }
         }
 
-        private void FillInClrHeader(int ilStreamLength)
+        private CorHeader CreateCorHeader(MetadataSizes metadataSizes, int ilStreamLength)
         {
-            ClrHeader clrHeader = this.clrHeader;
-            clrHeader.CodeManagerTable.RelativeVirtualAddress = 0;
-            clrHeader.CodeManagerTable.Size = 0;
+            CorHeader corHeader = new CorHeader();
+            corHeader.CodeManagerTable.RelativeVirtualAddress = 0;
+            corHeader.CodeManagerTable.Size = 0;
 
             IMethodReference entryPoint = this.module.EntryPoint;
             if (entryPoint == null || entryPoint.GetResolvedMethod(Context) == null)
             {
-                clrHeader.EntryPointToken = 0;
+                corHeader.EntryPointToken = 0;
             }
             else
             {
-                clrHeader.EntryPointToken = this.GetMethodToken(entryPoint);
+                corHeader.EntryPointToken = this.GetMethodToken(entryPoint);
             }
 
-            clrHeader.ExportAddressTableJumps.RelativeVirtualAddress = 0;
-            clrHeader.ExportAddressTableJumps.Size = 0;
-            clrHeader.Flags = this.GetClrHeaderFlags();
-            clrHeader.MajorRuntimeVersion = 2;
-            clrHeader.MetaData.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.ComputeOffsetToMetadata(ilStreamLength);
-            clrHeader.MetaData.Size = this.ComputeSizeOfMetadata();
-            clrHeader.MinorRuntimeVersion = 5;
-            clrHeader.Resources.RelativeVirtualAddress = clrHeader.MetaData.RelativeVirtualAddress + clrHeader.MetaData.Size;
-            clrHeader.Resources.Size = Aligned(this.resourceWriter.BaseStream.Length, 4);
-            clrHeader.StrongNameSignature.RelativeVirtualAddress = clrHeader.Resources.RelativeVirtualAddress + clrHeader.Resources.Size;
-            clrHeader.StrongNameSignature.Size = this.ComputeStrongNameSignatureSize();
-            clrHeader.VTableFixups.RelativeVirtualAddress = 0;
-            clrHeader.VTableFixups.Size = 0;
+            corHeader.ExportAddressTableJumps.RelativeVirtualAddress = 0;
+            corHeader.ExportAddressTableJumps.Size = 0;
+            corHeader.Flags = this.GetCorHeaderFlags();
+            corHeader.MajorRuntimeVersion = 2;
+            corHeader.MetadataDirectory.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.ComputeOffsetToMetadata(ilStreamLength);
+            corHeader.MetadataDirectory.Size = (uint)metadataSizes.MetadataSize;
+            corHeader.MinorRuntimeVersion = 5;
+            corHeader.Resources.RelativeVirtualAddress = corHeader.MetadataDirectory.RelativeVirtualAddress + corHeader.MetadataDirectory.Size;
+            corHeader.Resources.Size = BitArithmeticUtilities.Align(this.resourceWriter.BaseStream.Length, 4);
+            corHeader.StrongNameSignature.RelativeVirtualAddress = corHeader.Resources.RelativeVirtualAddress + corHeader.Resources.Size;
+            corHeader.StrongNameSignature.Size = this.ComputeStrongNameSignatureSize();
+            corHeader.VTableFixups.RelativeVirtualAddress = 0;
+            corHeader.VTableFixups.Size = 0;
+
+            return corHeader;
         }
 
-        private void FillInNtHeader(int ilStreamLength)
+        private void FillInNtHeader(MetadataSizes metadataSizes, int ilStreamLength, int mappedFieldDataStreamRva)
         {
             bool use32bitAddresses = !this.module.Requires64bits;
             NtHeader ntHeader = this.ntHeader;
-            ntHeader.AddressOfEntryPoint = this.emitRuntimeStartupStub ? this.textDataSection.RelativeVirtualAddress - (use32bitAddresses ? 6u : 10u) : 0;
+            ntHeader.AddressOfEntryPoint = this.emitRuntimeStartupStub ? (uint)mappedFieldDataStreamRva - (use32bitAddresses ? 6u : 10u) : 0;
             ntHeader.BaseOfCode = this.textSection.RelativeVirtualAddress;
             ntHeader.BaseOfData = this.rdataSection.RelativeVirtualAddress;
             ntHeader.PointerToSymbolTable = 0;
             ntHeader.SizeOfCode = this.textSection.SizeOfRawData;
             ntHeader.SizeOfInitializedData = this.rdataSection.SizeOfRawData + this.coverSection.SizeOfRawData + this.sdataSection.SizeOfRawData + this.tlsSection.SizeOfRawData + this.resourceSection.SizeOfRawData + this.relocSection.SizeOfRawData;
-            ntHeader.SizeOfHeaders = Aligned(this.ComputeSizeOfPeHeaders(), this.module.FileAlignment);
-            ntHeader.SizeOfImage = Aligned(this.relocSection.RelativeVirtualAddress + this.relocSection.VirtualSize, 0x2000);
+            ntHeader.SizeOfHeaders = BitArithmeticUtilities.Align(this.ComputeSizeOfPeHeaders(), this.module.FileAlignment);
+            ntHeader.SizeOfImage = BitArithmeticUtilities.Align(this.relocSection.RelativeVirtualAddress + this.relocSection.VirtualSize, 0x2000);
             ntHeader.SizeOfUninitializedData = 0;
 
             // In the PE File Header this is a "Time/Date Stamp" whose description is "Time and date
@@ -1363,9 +1338,11 @@ namespace Microsoft.Cci
 
             ntHeader.ImportAddressTable.RelativeVirtualAddress = (this.emitRuntimeStartupStub) ? this.textSection.RelativeVirtualAddress : 0;
             ntHeader.ImportAddressTable.Size = this.sizeOfImportAddressTable;
+
             ntHeader.CliHeaderTable.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + ntHeader.ImportAddressTable.Size;
             ntHeader.CliHeaderTable.Size = 72;
-            ntHeader.ImportTable.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.ComputeOffsetToImportTable(ilStreamLength);
+
+            ntHeader.ImportTable.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.ComputeOffsetToImportTable(metadataSizes, ilStreamLength);
 
             if (!this.emitRuntimeStartupStub)
             {
@@ -1386,7 +1363,7 @@ namespace Microsoft.Cci
             ntHeader.CertificateTable.Size = 0;
             ntHeader.CopyrightTable.RelativeVirtualAddress = 0;
             ntHeader.CopyrightTable.Size = 0;
-            ntHeader.DebugTable.RelativeVirtualAddress = this.pdbWriter == null ? 0u : this.textSection.RelativeVirtualAddress + this.ComputeOffsetToDebugTable(ilStreamLength);
+            ntHeader.DebugTable.RelativeVirtualAddress = this.pdbWriter == null ? 0u : this.textSection.RelativeVirtualAddress + this.ComputeOffsetToDebugTable(metadataSizes, ilStreamLength);
             ntHeader.DebugTable.Size = this.pdbWriter == null ? 0u : 0x1c; // Only the size of the fixed part of the debug table goes here.
             ntHeader.DelayImportTable.RelativeVirtualAddress = 0;
             ntHeader.DelayImportTable.Size = 0;
@@ -1406,28 +1383,21 @@ namespace Microsoft.Cci
             ntHeader.ThreadLocalStorageTable.Size = this.tlsSection.SizeOfRawData;
         }
 
-        private void FillInSectionHeaders(int ilStreamLength)
+        private void FillInSectionHeaders(MetadataSizes metadataSizes, int ilStreamLength, int mappedFieldDataLength)
         {
             uint sizeOfPeHeaders = this.ComputeSizeOfPeHeaders();
-            uint sizeOfTextSection = this.ComputeSizeOfTextSection(ilStreamLength);
+            uint sizeOfTextSection = this.ComputeSizeOfTextSection(metadataSizes, ilStreamLength, mappedFieldDataLength);
 
             this.textSection.Characteristics = 0x60000020; // section is read + execute + code 
             this.textSection.Name = ".text";
             this.textSection.NumberOfLinenumbers = 0;
             this.textSection.NumberOfRelocations = 0;
             this.textSection.PointerToLinenumbers = 0;
-            this.textSection.PointerToRawData = Aligned(sizeOfPeHeaders, this.module.FileAlignment);
+            this.textSection.PointerToRawData = BitArithmeticUtilities.Align(sizeOfPeHeaders, this.module.FileAlignment);
             this.textSection.PointerToRelocations = 0;
-            this.textSection.RelativeVirtualAddress = Aligned(sizeOfPeHeaders, 0x2000);
-            this.textSection.SizeOfRawData = Aligned(sizeOfTextSection, this.module.FileAlignment);
+            this.textSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(sizeOfPeHeaders, 0x2000);
+            this.textSection.SizeOfRawData = BitArithmeticUtilities.Align(sizeOfTextSection, this.module.FileAlignment);
             this.textSection.VirtualSize = sizeOfTextSection;
-
-            // Note: the textDataSection is not actually written out. Its data is appended to the text section.
-            // The section exists to make it easier to use a single method to compute all field RVAs.
-            this.textDataSection.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.textSection.VirtualSize - Aligned(this.textDataWriter.BaseStream.Length, 4);
-
-            // likewise for the textMethodBodySection
-            this.textMethodBodySection.RelativeVirtualAddress = this.textSection.RelativeVirtualAddress + this.sizeOfImportAddressTable + 72;
 
             this.rdataSection.Characteristics = 0x40000040; // section is read + initialized
             this.rdataSection.Name = ".rdata";
@@ -1436,8 +1406,8 @@ namespace Microsoft.Cci
             this.rdataSection.PointerToLinenumbers = 0;
             this.rdataSection.PointerToRawData = this.textSection.PointerToRawData + this.textSection.SizeOfRawData;
             this.rdataSection.PointerToRelocations = 0;
-            this.rdataSection.RelativeVirtualAddress = Aligned(this.textSection.RelativeVirtualAddress + this.textSection.VirtualSize, 0x2000);
-            this.rdataSection.SizeOfRawData = Aligned(this.rdataWriter.BaseStream.Length, this.module.FileAlignment);
+            this.rdataSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.textSection.RelativeVirtualAddress + this.textSection.VirtualSize, 0x2000);
+            this.rdataSection.SizeOfRawData = BitArithmeticUtilities.Align(this.rdataWriter.BaseStream.Length, this.module.FileAlignment);
             this.rdataSection.VirtualSize = this.rdataWriter.BaseStream.Length;
 
             this.sdataSection.Characteristics = 0xC0000040; // section is write + read + initialized 
@@ -1447,8 +1417,8 @@ namespace Microsoft.Cci
             this.sdataSection.PointerToLinenumbers = 0;
             this.sdataSection.PointerToRawData = this.rdataSection.PointerToRawData + this.rdataSection.SizeOfRawData;
             this.sdataSection.PointerToRelocations = 0;
-            this.sdataSection.RelativeVirtualAddress = Aligned(this.rdataSection.RelativeVirtualAddress + this.rdataSection.VirtualSize, 0x2000);
-            this.sdataSection.SizeOfRawData = Aligned(this.sdataWriter.BaseStream.Length, this.module.FileAlignment);
+            this.sdataSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.rdataSection.RelativeVirtualAddress + this.rdataSection.VirtualSize, 0x2000);
+            this.sdataSection.SizeOfRawData = BitArithmeticUtilities.Align(this.sdataWriter.BaseStream.Length, this.module.FileAlignment);
             this.sdataSection.VirtualSize = this.sdataWriter.BaseStream.Length;
 
             this.coverSection.Characteristics = 0xC8000040; // section is not paged + write + read + initialized 
@@ -1458,8 +1428,8 @@ namespace Microsoft.Cci
             this.coverSection.PointerToLinenumbers = 0;
             this.coverSection.PointerToRawData = this.sdataSection.PointerToRawData + this.sdataSection.SizeOfRawData;
             this.coverSection.PointerToRelocations = 0;
-            this.coverSection.RelativeVirtualAddress = Aligned(this.sdataSection.RelativeVirtualAddress + this.sdataSection.VirtualSize, 0x2000);
-            this.coverSection.SizeOfRawData = Aligned(this.coverageDataWriter.BaseStream.Length, this.module.FileAlignment);
+            this.coverSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.sdataSection.RelativeVirtualAddress + this.sdataSection.VirtualSize, 0x2000);
+            this.coverSection.SizeOfRawData = BitArithmeticUtilities.Align(this.coverageDataWriter.BaseStream.Length, this.module.FileAlignment);
             this.coverSection.VirtualSize = this.coverageDataWriter.BaseStream.Length;
 
             this.tlsSection.Characteristics = 0xC0000040; // section is write + read + initialized 
@@ -1469,8 +1439,8 @@ namespace Microsoft.Cci
             this.tlsSection.PointerToLinenumbers = 0;
             this.tlsSection.PointerToRawData = this.coverSection.PointerToRawData + this.coverSection.SizeOfRawData;
             this.tlsSection.PointerToRelocations = 0;
-            this.tlsSection.RelativeVirtualAddress = Aligned(this.coverSection.RelativeVirtualAddress + this.coverSection.VirtualSize, 0x2000);
-            this.tlsSection.SizeOfRawData = Aligned(this.tlsDataWriter.BaseStream.Length, this.module.FileAlignment);
+            this.tlsSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.coverSection.RelativeVirtualAddress + this.coverSection.VirtualSize, 0x2000);
+            this.tlsSection.SizeOfRawData = BitArithmeticUtilities.Align(this.tlsDataWriter.BaseStream.Length, this.module.FileAlignment);
             this.tlsSection.VirtualSize = this.tlsDataWriter.BaseStream.Length;
 
             this.resourceSection.Characteristics = 0x40000040; // section is read + initialized  
@@ -1480,9 +1450,9 @@ namespace Microsoft.Cci
             this.resourceSection.PointerToLinenumbers = 0;
             this.resourceSection.PointerToRawData = this.tlsSection.PointerToRawData + this.tlsSection.SizeOfRawData;
             this.resourceSection.PointerToRelocations = 0;
-            this.resourceSection.RelativeVirtualAddress = Aligned(this.tlsSection.RelativeVirtualAddress + this.tlsSection.VirtualSize, 0x2000);
+            this.resourceSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.tlsSection.RelativeVirtualAddress + this.tlsSection.VirtualSize, 0x2000);
             uint sizeOfWin32Resources = this.ComputeSizeOfWin32Resources();
-            this.resourceSection.SizeOfRawData = Aligned(sizeOfWin32Resources, this.module.FileAlignment);
+            this.resourceSection.SizeOfRawData = BitArithmeticUtilities.Align(sizeOfWin32Resources, this.module.FileAlignment);
             this.resourceSection.VirtualSize = sizeOfWin32Resources;
 
             this.relocSection.Characteristics = 0x42000040; // section is read + discardable + initialized  
@@ -1492,7 +1462,7 @@ namespace Microsoft.Cci
             this.relocSection.PointerToLinenumbers = 0;
             this.relocSection.PointerToRawData = this.resourceSection.PointerToRawData + this.resourceSection.SizeOfRawData;
             this.relocSection.PointerToRelocations = 0;
-            this.relocSection.RelativeVirtualAddress = Aligned(this.resourceSection.RelativeVirtualAddress + this.resourceSection.VirtualSize, 0x2000);
+            this.relocSection.RelativeVirtualAddress = BitArithmeticUtilities.Align(this.resourceSection.RelativeVirtualAddress + this.resourceSection.VirtualSize, 0x2000);
 
             if (!this.emitRuntimeStartupStub)
             {
@@ -1578,7 +1548,7 @@ namespace Microsoft.Cci
             }
         }
 
-        private uint GetBlobIndex(byte[] blob)
+        internal uint GetBlobIndex(byte[] blob)
         {
             uint result = 0;
             if (blob.Length == 0 || this.blobIndex.TryGetValue(blob, out result))
@@ -1621,25 +1591,32 @@ namespace Microsoft.Cci
             return this.GetBlobIndex(byteArray);
         }
 
-        private uint GetClrHeaderFlags()
+        private CorFlags GetCorHeaderFlags()
         {
-            uint result = 0;
+            CorFlags result = 0;
             if (this.module.ILOnly)
-                result |= 1;
+            {
+                result |= CorFlags.ILOnly;
+            }
 
             if (this.module.Requires32bits)
-                result |= 2;
+            {
+                result |= CorFlags.Requires32Bit;
+            }
 
             if (this.module.StrongNameSigned)
-                result |= 8;
+            {
+                result |= CorFlags.StrongNameSigned;
+            }
 
             if (this.module.TrackDebugData)
-                result |= 0x10000;
+            {
+                result |= CorFlags.TrackDebugData;
+            }
 
             if (this.module.Prefers32bits)
             {
-                result |= 0x20000;
-                result |= 2;
+                result |= CorFlags.Requires32Bit | CorFlags.Prefers32Bit;
             }
 
             return result;
@@ -1678,46 +1655,6 @@ namespace Microsoft.Cci
             {
                 return (this.GetMemberRefIndex(methodReference) << 3) | 3;
             }
-        }
-
-        private uint GetDataOffset(ISectionBlock sectionBlock)
-        {
-            BinaryWriter sectionWriter;
-            switch (sectionBlock.PESectionKind)
-            {
-                case PESectionKind.ConstantData:
-                    sectionWriter = this.rdataWriter;
-                    break;
-                case PESectionKind.CoverageData:
-                    sectionWriter = this.coverageDataWriter;
-                    break;
-                case PESectionKind.StaticData:
-                    sectionWriter = this.sdataWriter;
-                    break;
-                case PESectionKind.Text:
-                    sectionWriter = this.textDataWriter;
-                    break;
-                case PESectionKind.ThreadLocalStorage:
-                    sectionWriter = this.tlsDataWriter;
-                    break;
-                default:
-                    // TODO: error
-                    goto case PESectionKind.Text;
-            }
-
-            if (sectionBlock.PESectionKind != PESectionKind.Text)
-            {
-                sectionWriter.BaseStream.Position = sectionBlock.Offset;
-            }
-
-            uint result = sectionWriter.BaseStream.Position;
-            sectionWriter.WriteBytes(new List<byte>(sectionBlock.Data).ToArray());
-            if (sectionWriter.BaseStream.Position == sectionWriter.BaseStream.Length)
-            {
-                sectionWriter.Align(8);
-            }
-
-            return result;
         }
 
         public static ushort GetEventFlags(IEventDefinition eventDef)
@@ -1773,7 +1710,7 @@ namespace Microsoft.Cci
                 result |= 0x0080;
             }
 
-            if (fieldDef.IsMapped)
+            if (!fieldDef.MappedData.IsDefault)
             {
                 result |= 0x0100;
             }
@@ -2397,23 +2334,6 @@ namespace Microsoft.Cci
 
             // TODO: error
             return 0;
-        }
-
-        private static uint GetRva(SectionHeader sectionHeader, uint offset)
-        {
-            return sectionHeader.RelativeVirtualAddress + offset;
-        }
-
-        private SectionHeader GetSection(PESectionKind section)
-        {
-            switch (section)
-            {
-                case PESectionKind.ConstantData: return this.rdataSection;
-                case PESectionKind.CoverageData: return this.coverSection;
-                case PESectionKind.StaticData: return this.sdataSection;
-                case PESectionKind.ThreadLocalStorage: return this.tlsSection;
-                default: return this.textDataSection;
-            }
         }
 
         private StringIdx GetStringIndex(string str)
@@ -3055,12 +2975,7 @@ namespace Microsoft.Cci
             writer.WriteCompressedUInt(this.GetTypeDefOrRefCodedIndex(customModifier.GetModifier(Context), true));
         }
 
-        private uint MetadataHeaderSize
-        {
-            get { return (uint)(this.IsMinimalDelta ? 124 : 108); }
-        }
-
-        private void SerializeMetadataHeader(BinaryWriter writer, uint tableStreamLength)
+        private void SerializeMetadataHeader(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             uint startOffset = writer.BaseStream.Position;
 
@@ -3088,27 +3003,27 @@ namespace Microsoft.Cci
             writer.WriteUshort((ushort)(this.IsMinimalDelta ? 6 : 5)); // number of streams 32
 
             // Stream headers
-            uint offsetFromStartOfMetadata = this.MetadataHeaderSize;
-            SerializeStreamHeader(ref offsetFromStartOfMetadata, tableStreamLength, (this.CompressMetadataStream ? "#~" : "#-"), writer);
-            SerializeStreamHeader(ref offsetFromStartOfMetadata, this.stringWriter.BaseStream.Length, "#Strings", writer);
-            SerializeStreamHeader(ref offsetFromStartOfMetadata, this.userStringWriter.BaseStream.Length, "#US", writer);
-            SerializeStreamHeader(ref offsetFromStartOfMetadata, this.guidWriter.BaseStream.Length, "#GUID", writer);
-            SerializeStreamHeader(ref offsetFromStartOfMetadata, this.blobWriter.BaseStream.Length, "#Blob", writer);
+            int offsetFromStartOfMetadata = metadataSizes.MetadataHeaderSize;
+            SerializeStreamHeader(ref offsetFromStartOfMetadata, metadataSizes.MetadataTableStreamSize, (this.CompressMetadataStream ? "#~" : "#-"), writer);
+            SerializeStreamHeader(ref offsetFromStartOfMetadata, metadataSizes.GetAlignedHeapSize(HeapIndex.String), "#Strings", writer);
+            SerializeStreamHeader(ref offsetFromStartOfMetadata, metadataSizes.GetAlignedHeapSize(HeapIndex.UserString), "#US", writer);
+            SerializeStreamHeader(ref offsetFromStartOfMetadata, metadataSizes.GetAlignedHeapSize(HeapIndex.Guid), "#GUID", writer);
+            SerializeStreamHeader(ref offsetFromStartOfMetadata, metadataSizes.GetAlignedHeapSize(HeapIndex.Blob), "#Blob", writer);
             if (this.IsMinimalDelta)
             {
                 SerializeStreamHeader(ref offsetFromStartOfMetadata, 0, "#JTD", writer);
             }
 
             uint endOffset = writer.BaseStream.Position;
-            Debug.Assert(endOffset - startOffset == MetadataHeaderSize);
+            Debug.Assert(endOffset - startOffset == metadataSizes.MetadataHeaderSize);
         }
 
-        private static void SerializeStreamHeader(ref uint offsetFromStartOfMetadata, uint sizeOfStreamHeap, string streamName, BinaryWriter writer)
+        private static void SerializeStreamHeader(ref int offsetFromStartOfMetadata, int alignedStreamSize, string streamName, BinaryWriter writer)
         {
             // 4 for the first uint (offset), 4 for the second uint (padded size), length of stream name + 1 for null terminator (then padded)
-            uint sizeOfStreamHeader = 8 + Aligned((uint)streamName.Length + 1, 4);
-            writer.WriteUint(offsetFromStartOfMetadata);
-            writer.WriteUint(Aligned(sizeOfStreamHeap, 4));
+            int sizeOfStreamHeader = 8 + BitArithmeticUtilities.Align(streamName.Length + 1, 4);
+            writer.WriteInt(offsetFromStartOfMetadata);
+            writer.WriteInt(alignedStreamSize);
             foreach (char ch in streamName)
             {
                 writer.WriteByte((byte)ch);
@@ -3120,21 +3035,18 @@ namespace Microsoft.Cci
                 writer.WriteByte(0);
             }
 
-            offsetFromStartOfMetadata += sizeOfStreamHeap;
+            offsetFromStartOfMetadata += alignedStreamSize;
         }
 
-        private void SerializeMetadata(BinaryWriter metadataWriter, bool separateMethodIL, out uint moduleVersionIdOffset)
+        private void SerializeMetadata(BinaryWriter metadataWriter, MetadataSizes metadataSizes, int methodBodyStreamRva, int mappedFieldDataStreamRva, bool separateMethodIL, out uint moduleVersionIdOffset)
         {
             uint metadataStartOffset = metadataWriter.BaseStream.Position;
-            uint metadataTablesStartOffset = metadataStartOffset + MetadataHeaderSize;
 
             // Leave space for the metadata header. We need to fill in the sizes of all tables and heaps.
             // It's easier to write it at the end then to precalculate the sizes.
-            metadataWriter.BaseStream.Position = metadataTablesStartOffset;
-            this.SerializeMetadataTables(metadataWriter, separateMethodIL);
-
-            uint metadataTablesEndOffset = metadataWriter.BaseStream.Position;
-
+            metadataWriter.BaseStream.Position = metadataStartOffset + (uint)metadataSizes.MetadataHeaderSize;
+            this.SerializeMetadataTables(metadataWriter, metadataSizes, methodBodyStreamRva, mappedFieldDataStreamRva, separateMethodIL);
+            
             this.stringWriter.BaseStream.WriteTo(metadataWriter.BaseStream);
             this.userStringWriter.BaseStream.WriteTo(metadataWriter.BaseStream);
 
@@ -3148,7 +3060,7 @@ namespace Microsoft.Cci
 
             // write header at the start of the metadata stream:
             metadataWriter.BaseStream.Position = 0;
-            this.SerializeMetadataHeader(metadataWriter, tableStreamLength: metadataTablesEndOffset - metadataTablesStartOffset);
+            this.SerializeMetadataHeader(metadataWriter, metadataSizes);
 
             metadataWriter.BaseStream.Position = metadataSize;
         }
@@ -3164,128 +3076,62 @@ namespace Microsoft.Cci
             return guidHeapOffsetInMetadataStream + moduleVersionOffsetInGuidTable;
         }
 
-        private void SerializeMetadataTables(BinaryWriter writer, bool separateMethodIL)
+        private void SerializeMetadataTables(BinaryWriter writer, MetadataSizes metadataSizes, int methodBodyStreamRva, int mappedFieldDataStreamRva, bool separateMethodIL)
         {
-            this.SerializeTablesHeader(writer);
-            this.SerializeModuleTable(writer);
-            this.SerializeTypeRefTable(writer);
-            this.SerializeTypeDefTable(writer);
-            this.SerializeFieldTable(writer);
-            this.SerializeMethodTable(writer, separateMethodIL);
-            this.SerializeParamTable(writer);
-            this.SerializeInterfaceImplTable(writer);
-            this.SerializeMemberRefTable(writer);
-            this.SerializeConstantTable(writer);
-            this.SerializeCustomAttributeTable(writer);
-            this.SerializeFieldMarshalTable(writer);
-            this.SerializeDeclSecurityTable(writer);
-            this.SerializeClassLayoutTable(writer);
-            this.SerializeFieldLayoutTable(writer);
-            this.SerializeStandAloneSigTable(writer);
-            this.SerializeEventMapTable(writer);
-            this.SerializeEventTable(writer);
-            this.SerializePropertyMapTable(writer);
-            this.SerializePropertyTable(writer);
-            this.SerializeMethodSemanticsTable(writer);
-            this.SerializeMethodImplTable(writer);
-            this.SerializeModuleRefTable(writer);
-            this.SerializeTypeSpecTable(writer);
-            this.SerializeImplMapTable(writer);
-            this.SerializeFieldRvaTable(writer);
+            uint startPosition = writer.BaseStream.Position;
+
+            this.SerializeTablesHeader(writer, metadataSizes);
+            this.SerializeModuleTable(writer, metadataSizes);
+            this.SerializeTypeRefTable(writer, metadataSizes);
+            this.SerializeTypeDefTable(writer, metadataSizes);
+            this.SerializeFieldTable(writer, metadataSizes);
+            this.SerializeMethodTable(writer, metadataSizes, methodBodyStreamRva, separateMethodIL);
+            this.SerializeParamTable(writer, metadataSizes);
+            this.SerializeInterfaceImplTable(writer, metadataSizes);
+            this.SerializeMemberRefTable(writer, metadataSizes);
+            this.SerializeConstantTable(writer, metadataSizes);
+            this.SerializeCustomAttributeTable(writer, metadataSizes);
+            this.SerializeFieldMarshalTable(writer, metadataSizes);
+            this.SerializeDeclSecurityTable(writer, metadataSizes);
+            this.SerializeClassLayoutTable(writer, metadataSizes);
+            this.SerializeFieldLayoutTable(writer, metadataSizes);
+            this.SerializeStandAloneSigTable(writer, metadataSizes);
+            this.SerializeEventMapTable(writer, metadataSizes);
+            this.SerializeEventTable(writer, metadataSizes);
+            this.SerializePropertyMapTable(writer, metadataSizes);
+            this.SerializePropertyTable(writer, metadataSizes);
+            this.SerializeMethodSemanticsTable(writer, metadataSizes);
+            this.SerializeMethodImplTable(writer, metadataSizes);
+            this.SerializeModuleRefTable(writer, metadataSizes);
+            this.SerializeTypeSpecTable(writer, metadataSizes);
+            this.SerializeImplMapTable(writer, metadataSizes);
+            this.SerializeFieldRvaTable(writer, metadataSizes, mappedFieldDataStreamRva);
             this.SerializeEncLogTable(writer);
             this.SerializeEncMapTable(writer);
-            this.SerializeAssemblyTable(writer);
-            this.SerializeAssemblyRefTable(writer);
-            this.SerializeFileTable(writer);
-            this.SerializeExportedTypeTable(writer);
-            this.SerializeManifestResourceTable(writer);
-            this.SerializeNestedClassTable(writer);
-            this.SerializeGenericParamTable(writer);
-            this.SerializeMethodSpecTable(writer);
-            this.SerializeGenericParamConstraintTable(writer);
+            this.SerializeAssemblyTable(writer, metadataSizes);
+            this.SerializeAssemblyRefTable(writer, metadataSizes);
+            this.SerializeFileTable(writer, metadataSizes);
+            this.SerializeExportedTypeTable(writer, metadataSizes);
+            this.SerializeManifestResourceTable(writer, metadataSizes);
+            this.SerializeNestedClassTable(writer, metadataSizes);
+            this.SerializeGenericParamTable(writer, metadataSizes);
+            this.SerializeMethodSpecTable(writer, metadataSizes);
+            this.SerializeGenericParamConstraintTable(writer, metadataSizes);
             writer.WriteByte(0);
             writer.Align(4);
+
+            uint endPosition = writer.BaseStream.Position;
+            Debug.Assert(metadataSizes.MetadataTableStreamSize == endPosition - startPosition);
         }
 
-        private void ComputeColumnSizes()
-        {
-            const byte large = 4;
-            const byte small = 2;
-
-            // TODO (tomat): reuse values from metadata reader?
-
-            this.blobIndexSize = (IsMinimalDelta || this.blobWriter.BaseStream.Length > ushort.MaxValue) ? large : small;
-            this.stringIndexSize = (IsMinimalDelta || this.stringWriter.BaseStream.Length > ushort.MaxValue) ? large : small;
-            this.guidIndexSize = (IsMinimalDelta || this.guidWriter.BaseStream.Length > ushort.MaxValue) ? large : small;
-
-            this.customAttributeTypeCodedIndexSize = this.GetIndexByteSize(3, TableIndex.MethodDef, TableIndex.MemberRef);
-            this.declSecurityCodedIndexSize = this.GetIndexByteSize(2, TableIndex.MethodDef, TableIndex.TypeDef);
-            this.eventDefIndexSize = this.GetIndexByteSize(0, TableIndex.Event);
-            this.fieldDefIndexSize = this.GetIndexByteSize(0, TableIndex.Field);
-            this.genericParamIndexSize = this.GetIndexByteSize(0, TableIndex.GenericParam);
-            this.hasConstantCodedIndexSize = this.GetIndexByteSize(2, TableIndex.Field, TableIndex.Param, TableIndex.Property);
-
-            this.hasCustomAttributeCodedIndexSize = this.GetIndexByteSize(5,
-                TableIndex.MethodDef,
-                TableIndex.Field,
-                TableIndex.TypeRef,
-                TableIndex.TypeDef,
-                TableIndex.Param,
-                TableIndex.InterfaceImpl,
-                TableIndex.MemberRef,
-                TableIndex.Module,
-                TableIndex.DeclSecurity,
-                TableIndex.Property,
-                TableIndex.Event,
-                TableIndex.StandAloneSig,
-                TableIndex.ModuleRef,
-                TableIndex.TypeSpec,
-                TableIndex.Assembly,
-                TableIndex.AssemblyRef,
-                TableIndex.File,
-                TableIndex.ExportedType,
-                TableIndex.ManifestResource,
-                TableIndex.GenericParam,
-                TableIndex.GenericParamConstraint,
-                TableIndex.MethodSpec);
-
-            this.hasFieldMarshalCodedIndexSize = this.GetIndexByteSize(1, TableIndex.Field, TableIndex.Param);
-            this.hasSemanticsCodedIndexSize = this.GetIndexByteSize(1, TableIndex.Event, TableIndex.Property);
-            this.implementationCodedIndexSize = this.GetIndexByteSize(2, TableIndex.File, TableIndex.AssemblyRef, TableIndex.ExportedType);
-            this.memberForwardedCodedIndexSize = this.GetIndexByteSize(1, TableIndex.Field, TableIndex.MethodDef);
-            this.memberRefParentCodedIndexSize = this.GetIndexByteSize(3, TableIndex.TypeDef, TableIndex.TypeRef, TableIndex.ModuleRef, TableIndex.MethodDef, TableIndex.TypeSpec);
-            this.methodDefIndexSize = this.GetIndexByteSize(0, TableIndex.MethodDef);
-            this.methodDefOrRefCodedIndexSize = this.GetIndexByteSize(1, TableIndex.MethodDef, TableIndex.MemberRef);
-            this.moduleRefIndexSize = this.GetIndexByteSize(0, TableIndex.ModuleRef);
-            this.parameterIndexSize = this.GetIndexByteSize(0, TableIndex.Param);
-            this.propertyDefIndexSize = this.GetIndexByteSize(0, TableIndex.Property);
-            this.resolutionScopeCodedIndexSize = this.GetIndexByteSize(2, TableIndex.Module, TableIndex.ModuleRef, TableIndex.AssemblyRef, TableIndex.TypeRef);
-            this.typeDefIndexSize = this.GetIndexByteSize(0, TableIndex.TypeDef);
-            this.typeDefOrRefCodedIndexSize = this.GetIndexByteSize(2, TableIndex.TypeDef, TableIndex.TypeRef, TableIndex.TypeSpec);
-            this.typeOrMethodDefCodedIndexSize = this.GetIndexByteSize(1, TableIndex.TypeDef, TableIndex.MethodDef);
-        }
-
-        private byte GetIndexByteSize(int discriminatingBits, params TableIndex[] tables)
-        {
-            const int BitsPerShort = 16;
-            return (byte)(IsMinimalDelta || IndexDoesNotFit(BitsPerShort - discriminatingBits, tables) ? 4 : 2);
-        }
-
-        private bool IndexDoesNotFit(int numberOfBits, params TableIndex[] tables)
-        {
-            uint maxIndex = (uint)(1 << numberOfBits) - 1;
-            foreach (TableIndex table in tables)
-            {
-                if (this.tableSizes[(uint)table] > maxIndex)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        private void SerializeMetadataAndIL(BinaryWriter metadataWriter, BinaryWriter ilWriter, bool separateMethodIL, out uint moduleVersionIdOffsetInMetadataStream)
+        private void SerializeMetadataAndIL(
+            BinaryWriter metadataWriter, 
+            BinaryWriter ilWriter, 
+            BinaryWriter mappedFieldDataWriter,
+            bool separateMethodIL, 
+            out uint moduleVersionIdOffsetInMetadataStream, 
+            out int mappedFieldDataStreamRva,
+            out MetadataSizes metadataSizes)
         {
             uint[] methodBodyRvas = SerializeMethodBodies(ilWriter);
 
@@ -3294,13 +3140,20 @@ namespace Microsoft.Cci
             // method body serialization adds Stand Alone Signatures
             this.tableIndicesAreComplete = true;
 
-            PopulateTables(methodBodyRvas);
+            PopulateTables(methodBodyRvas, mappedFieldDataWriter);
+
+            var rowCounts = CalculateRowCounts();
+
+            int mappedFieldDataLength = (int)mappedFieldDataWriter.BaseStream.Length;
+            int ilStreamLength = (int)ilWriter.BaseStream.Length;
 
             // Do this as soon as table rows are done and before we need to final size of string table
             SerializeStringHeap();
 
+            metadataSizes = new MetadataSizes(rowCounts, CalculateHeapSizes(), IsMinimalDelta);
+
             // Do this here so that tables and win32 resources can contain actual RVAs without the need for fixups.
-            FillInSectionHeaders((int)ilWriter.BaseStream.Length);
+            FillInSectionHeaders(metadataSizes, ilStreamLength, mappedFieldDataLength);
 
             // Align heaps
             this.OnBeforeHeapsAligned();
@@ -3309,10 +3162,15 @@ namespace Microsoft.Cci
             this.guidWriter.Align(4);
             this.blobWriter.Align(4);
 
-            SerializeMetadata(metadataWriter, separateMethodIL, moduleVersionIdOffset: out moduleVersionIdOffsetInMetadataStream);
+            int methodBodyStreamRva = (int)(this.textSection.RelativeVirtualAddress + this.sizeOfImportAddressTable + 72);
+
+            Debug.Assert(mappedFieldDataLength % MappedFieldDataAlignment == 0);
+            mappedFieldDataStreamRva = (int)(this.textSection.RelativeVirtualAddress + this.textSection.VirtualSize - mappedFieldDataLength);
+            
+            SerializeMetadata(metadataWriter, metadataSizes, methodBodyStreamRva, mappedFieldDataStreamRva, separateMethodIL, moduleVersionIdOffset: out moduleVersionIdOffsetInMetadataStream);
         }
 
-        private void PopulateTables(uint[] methodBodyRvas)
+        private void PopulateTables(uint[] methodBodyRvas, BinaryWriter mappedFieldDataWriter)
         {
             this.PopulateAssemblyRefTableRows();
             this.PopulateAssemblyTableRows();
@@ -3324,7 +3182,7 @@ namespace Microsoft.Cci
             this.PopulateExportedTypeTableRows();
             this.PopulateFieldLayoutTableRows();
             this.PopulateFieldMarshalTableRows();
-            this.PopulateFieldRvaTableRows();
+            this.PopulateFieldRvaTableRows(mappedFieldDataWriter);
             this.PopulateFieldTableRows();
             this.PopulateFileTableRows();
             this.PopulateGenericParamTableRows();
@@ -3343,7 +3201,6 @@ namespace Microsoft.Cci
             this.PopulateParamTableRows();
             this.PopulatePropertyMapTableRows();
             this.PopulatePropertyTableRows();
-            this.PopulateStandAloneSigTableRows();
             this.PopulateTypeDefTableRows();
             this.PopulateTypeRefTableRows();
             this.PopulateTypeSpecTableRows();
@@ -3351,8 +3208,11 @@ namespace Microsoft.Cci
             // This table is populated after the others because it depends on the order of the entries of the generic parameter table.
             this.PopulateCustomAttributeTableRows();
 
-            this.PopulateEncLogTableRows();
-            this.PopulateEncMapRows();
+            ImmutableArray<int> rowCounts = CalculateRowCounts();
+            Debug.Assert(rowCounts[(int)TableIndex.EncLog] == 0 && rowCounts[(int)TableIndex.EncMap] == 0);
+
+            this.PopulateEncLogTableRows(this.encLogTable, rowCounts);
+            this.PopulateEncMapTableRows(this.encMapTable, rowCounts);
         }
 
         private struct AssemblyRefTableRow
@@ -3391,8 +3251,6 @@ namespace Microsoft.Cci
                 r.ContentType = assemblyRef.ContentType;
                 this.assemblyRefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.AssemblyRef] = (uint)this.assemblyRefTable.Count;
         }
 
         private static readonly Version NullVersion = new Version(0, 0, 0, 0);
@@ -3447,7 +3305,6 @@ namespace Microsoft.Cci
             this.assemblyKey = (IteratorHelper.EnumerableIsNotEmpty(assembly.PublicKey)) ? this.GetBlobIndex(new List<byte>(assembly.PublicKey).ToArray()) : 0;
             this.assemblyName = this.GetStringIndexForPathAndCheckLength(assembly.Name, assembly);
             this.assemblyCulture = (assembly.Culture != null) ? this.GetStringIndex(assembly.Culture) : StringIdx.Empty;
-            this.tableSizes[(uint)TableIndex.Assembly] = 1;
         }
 
         private uint assemblyKey;
@@ -3470,8 +3327,6 @@ namespace Microsoft.Cci
                 r.Parent = typeDefIndex;
                 this.classLayoutTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.ClassLayout] = (uint)this.classLayoutTable.Count;
         }
 
         private struct ClassLayoutRow { public ushort PackingSize; public uint ClassSize; public uint Parent; }
@@ -3520,8 +3375,6 @@ namespace Microsoft.Cci
             {
                 this.constantTable.Sort(new ConstantRowComparer());
             }
-
-            this.tableSizes[(uint)TableIndex.Constant] = (uint)this.constantTable.Count;
         }
 
         private class ConstantRowComparer : Comparer<ConstantRow>
@@ -3596,7 +3449,6 @@ namespace Microsoft.Cci
             this.AddCustomAttributesToTable(sortedGenericParameterList, 19, this.GetGenericParameterIndex);
 
             this.customAttributeTable.Sort(new CustomAttributeRowComparer());
-            this.tableSizes[(uint)TableIndex.CustomAttribute] = (uint)this.customAttributeTable.Count;
         }
 
         private void AddAssemblyAttributesToTable()
@@ -3654,7 +3506,6 @@ namespace Microsoft.Cci
                 r.Name = this.GetStringIndex(dummyAssemblyAttributeParentName + dummyAssemblyAttributeParentQualifier[iS, iM]);
                 r.Namespace = this.GetStringIndex(dummyAssemblyAttributeParentNamespace);
                 this.typeRefTable.Add(r);
-                this.tableSizes[(uint)TableIndex.TypeRef] = (uint)this.typeRefTable.Count;
                 dummyAssemblyAttributeParent[iS, iM] = ((uint)this.typeRefTable.Count << 5) | 2;
             }
             return dummyAssemblyAttributeParent[iS, iM];
@@ -3759,7 +3610,6 @@ namespace Microsoft.Cci
             }
 
             this.declSecurityTable.Sort(new DeclSecurityRowComparer());
-            this.tableSizes[(uint)TableIndex.DeclSecurity] = (uint)this.declSecurityTable.Count;
         }
 
         private void PopulateDeclSecurityTableRowsFor(uint parent, IEnumerable<SecurityAttribute> attributes)
@@ -3809,22 +3659,10 @@ namespace Microsoft.Cci
 
         private readonly List<DeclSecurityRow> declSecurityTable = new List<DeclSecurityRow>();
 
-        private void PopulateEncLogTableRows()
-        {
-            this.PopulateEncLogTableRows(this.encLogTable);
-            this.tableSizes[(uint)TableIndex.EncLog] = (uint)this.encLogTable.Count;
-        }
-
         protected struct EncLogRow { public uint Token; public EncFuncCode FuncCode; }
 
         private readonly List<EncLogRow> encLogTable = new List<EncLogRow>();
-
-        private void PopulateEncMapRows()
-        {
-            this.PopulateEncMapTableRows(this.encMapTable);
-            this.tableSizes[(uint)TableIndex.EncMap] = (uint)this.encMapTable.Count;
-        }
-
+        
         protected struct EncMapRow { public uint Token; }
 
         private readonly List<EncMapRow> encMapTable = new List<EncMapRow>();
@@ -3832,7 +3670,6 @@ namespace Microsoft.Cci
         private void PopulateEventMapTableRows()
         {
             this.PopulateEventMapTableRows(this.eventMapTable);
-            this.tableSizes[(uint)TableIndex.EventMap] = (uint)this.eventMapTable.Count;
         }
 
         protected struct EventMapRow { public uint Parent; public uint EventList; }
@@ -3852,8 +3689,6 @@ namespace Microsoft.Cci
                 r.EventType = this.GetTypeDefOrRefCodedIndex(eventDef.GetType(Context), true);
                 this.eventTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.Event] = (uint)this.eventTable.Count;
         }
 
         private struct EventRow { public ushort EventFlags; public StringIdx Name; public uint EventType; }
@@ -3924,8 +3759,6 @@ namespace Microsoft.Cci
                     this.exportedTypeTable.Add(r);
                 }
             }
-
-            this.tableSizes[(uint)TableIndex.ExportedType] = (uint)this.exportedTypeTable.Count;
         }
 
         private struct ExportedTypeRow { public TypeFlags Flags; public uint TypeDefId; public StringIdx TypeName; public StringIdx TypeNamespace; public uint Implementation; }
@@ -3947,8 +3780,6 @@ namespace Microsoft.Cci
                 r.Field = fieldDefIndex;
                 this.fieldLayoutTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.FieldLayout] = (uint)this.fieldLayoutTable.Count;
         }
 
         private struct FieldLayoutRow { public uint Offset; public uint Field; }
@@ -4012,8 +3843,6 @@ namespace Microsoft.Cci
             {
                 this.fieldMarshalTable.Sort(new FieldMarshalRowComparer());
             }
-
-            this.tableSizes[(uint)TableIndex.FieldMarshal] = (uint)this.fieldMarshalTable.Count;
         }
 
         private class FieldMarshalRowComparer : Comparer<FieldMarshalRow>
@@ -4028,27 +3857,28 @@ namespace Microsoft.Cci
 
         private readonly List<FieldMarshalRow> fieldMarshalTable = new List<FieldMarshalRow>();
 
-        private void PopulateFieldRvaTableRows()
+        private void PopulateFieldRvaTableRows(BinaryWriter mappedFieldDataWriter)
         {
             foreach (IFieldDefinition fieldDef in this.GetFieldDefs())
             {
-                if (!fieldDef.IsMapped)
+                if (fieldDef.MappedData.IsDefault)
                 {
                     continue;
                 }
 
                 uint fieldIndex = this.GetFieldDefIndex(fieldDef);
                 FieldRvaRow r = new FieldRvaRow();
-                r.SectionKind = fieldDef.FieldMapping.PESectionKind;
-                r.Offset = this.GetDataOffset(fieldDef.FieldMapping);
+
+                r.Offset = mappedFieldDataWriter.BaseStream.Position;
+                mappedFieldDataWriter.WriteBytes(fieldDef.MappedData);
+                mappedFieldDataWriter.Align(MappedFieldDataAlignment);
+
                 r.Field = fieldIndex;
                 this.fieldRvaTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.FieldRva] = (uint)this.fieldRvaTable.Count;
         }
 
-        private struct FieldRvaRow { public PESectionKind SectionKind; public uint Offset; public uint Field; }
+        private struct FieldRvaRow { public uint Offset; public uint Field; }
 
         private readonly List<FieldRvaRow> fieldRvaTable = new List<FieldRvaRow>();
 
@@ -4071,8 +3901,6 @@ namespace Microsoft.Cci
                 r.Signature = this.GetFieldSignatureIndex(fieldDef);
                 this.fieldDefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.Field] = (uint)this.fieldDefTable.Count;
         }
 
         private struct FieldDefRow { public ushort Flags; public StringIdx Name; public uint Signature; }
@@ -4098,8 +3926,6 @@ namespace Microsoft.Cci
                 r.HashValue = this.GetBlobIndex(fileReference.GetHashValue(hashAlgorithm).ToArray());
                 this.fileTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.File] = (uint)this.fileTable.Count;
         }
 
         private struct FileTableRow { public uint Flags; public StringIdx FileName; public uint HashValue; }
@@ -4120,8 +3946,6 @@ namespace Microsoft.Cci
                     this.genericParamConstraintTable.Add(r);
                 }
             }
-
-            this.tableSizes[(uint)TableIndex.GenericParamConstraint] = (uint)this.genericParamConstraintTable.Count;
         }
 
         private struct GenericParamConstraintRow { public uint Owner; public uint Constraint; }
@@ -4150,7 +3974,6 @@ namespace Microsoft.Cci
             }
 
             this.genericParamTable.Sort(new GenericParamRowComparer());
-            this.tableSizes[(uint)TableIndex.GenericParam] = (uint)this.genericParamTable.Count;
         }
 
         private class GenericParamRowComparer : Comparer<GenericParamRow>
@@ -4199,8 +4022,6 @@ namespace Microsoft.Cci
                 r.ImportScope = this.GetModuleRefIndex(data.ModuleName);
                 this.implMapTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.ImplMap] = (uint)this.implMapTable.Count;
         }
 
         private struct ImplMapRow { public ushort MappingFlags; public uint MemberForwarded; public StringIdx ImportName; public uint ImportScope; }
@@ -4220,8 +4041,6 @@ namespace Microsoft.Cci
                     this.interfaceImplTable.Add(r);
                 }
             }
-
-            this.tableSizes[(uint)TableIndex.InterfaceImpl] = (uint)this.interfaceImplTable.Count;
         }
 
         private struct InterfaceImplRow { public uint Class; public uint Interface; }
@@ -4251,8 +4070,6 @@ namespace Microsoft.Cci
 
                 this.manifestResourceTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.ManifestResource] = (uint)this.manifestResourceTable.Count;
         }
 
         private struct ManifestResourceRow { public uint Offset; public uint Flags; public StringIdx Name; public uint Implementation; }
@@ -4272,8 +4089,6 @@ namespace Microsoft.Cci
                 r.Signature = this.GetMemberRefSignatureIndex(memberRef);
                 this.memberRefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.MemberRef] = (uint)this.memberRefTable.Count;
         }
 
         private struct MemberRefRow { public uint Class; public StringIdx Name; public uint Signature; }
@@ -4284,7 +4099,7 @@ namespace Microsoft.Cci
         {
             this.methodImplTable.Capacity = this.methodImplList.Count;
 
-            foreach (IMethodImplementation methodImplementation in this.methodImplList)
+            foreach (MethodImplementation methodImplementation in this.methodImplList)
             {
                 MethodImplRow r = new MethodImplRow();
                 r.Class = this.GetTypeDefIndex(methodImplementation.ContainingType);
@@ -4292,8 +4107,6 @@ namespace Microsoft.Cci
                 r.MethodDecl = this.GetMethodDefOrRefCodedIndex(methodImplementation.ImplementedMethod);
                 this.methodImplTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.MethodImpl] = (uint)this.methodImplTable.Count;
         }
 
         private struct MethodImplRow { public uint Class; public uint MethodBody; public uint MethodDecl; }
@@ -4367,8 +4180,6 @@ namespace Microsoft.Cci
             {
                 this.methodSemanticsTable.Sort(new MethodSemanticsRowComparer());
             }
-
-            this.tableSizes[(uint)TableIndex.MethodSemantics] = (uint)this.methodSemanticsTable.Count;
         }
 
         private class MethodSemanticsRowComparer : Comparer<MethodSemanticsRow>
@@ -4401,8 +4212,6 @@ namespace Microsoft.Cci
                 r.Instantiation = this.GetGenericMethodInstanceIndex(genericMethodInstanceReference);
                 this.methodSpecTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.MethodSpec] = (uint)this.methodSpecTable.Count;
         }
 
         private struct MethodSpecRow { public uint Method; public uint Instantiation; }
@@ -4429,8 +4238,6 @@ namespace Microsoft.Cci
 
                 i++;
             }
-
-            this.tableSizes[(uint)TableIndex.MethodDef] = (uint)this.methodTable.Length;
         }
 
         private struct MethodRow { public uint Rva; public ushort ImplFlags; public ushort Flags; public StringIdx Name; public uint Signature; public uint ParamList; }
@@ -4448,8 +4255,6 @@ namespace Microsoft.Cci
                 r.Name = this.GetStringIndexForPathAndCheckLength(moduleName);
                 this.moduleRefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.ModuleRef] = (uint)this.moduleRefTable.Count;
         }
 
         private struct ModuleRefRow { public StringIdx Name; }
@@ -4465,7 +4270,6 @@ namespace Microsoft.Cci
             r.EncId = this.GetGuidIndex(this.EncId);
             r.EncBaseId = this.GetGuidIndex(this.EncBaseId);
             this.moduleRow = r;
-            this.tableSizes[(uint)TableIndex.Module] = 1;
         }
 
         private struct ModuleRow { public ushort Generation; public StringIdx Name; public uint ModuleVersionId; public uint EncId; public uint EncBaseId; }
@@ -4488,8 +4292,6 @@ namespace Microsoft.Cci
                 r.EnclosingClass = this.GetTypeDefIndex(nestedTypeDef.ContainingTypeDefinition);
                 this.nestedClassTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.NestedClass] = (uint)this.nestedClassTable.Count;
         }
 
         private struct NestedClassRow { public uint NestedClass; public uint EnclosingClass; }
@@ -4509,8 +4311,6 @@ namespace Microsoft.Cci
                 r.Name = this.GetStringIndexForNameAndCheckLength(parDef.Name, parDef);
                 this.paramTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.Param] = (uint)this.paramTable.Count;
         }
 
         private struct ParamRow { public ushort Flags; public ushort Sequence; public StringIdx Name; }
@@ -4520,7 +4320,6 @@ namespace Microsoft.Cci
         private void PopulatePropertyMapTableRows()
         {
             this.PopulatePropertyMapTableRows(this.propertyMapTable);
-            this.tableSizes[(uint)TableIndex.PropertyMap] = (uint)this.propertyMapTable.Count;
         }
 
         protected struct PropertyMapRow { public uint Parent; public uint PropertyList; }
@@ -4540,18 +4339,11 @@ namespace Microsoft.Cci
                 r.Type = this.GetPropertySignatureIndex(propertyDef);
                 this.propertyTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.Property] = (uint)this.propertyTable.Count;
         }
 
         private struct PropertyRow { public ushort PropFlags; public StringIdx Name; public uint Type; }
 
         private readonly List<PropertyRow> propertyTable = new List<PropertyRow>();
-
-        private void PopulateStandAloneSigTableRows()
-        {
-            this.tableSizes[(uint)TableIndex.StandAloneSig] = (uint)this.GetStandAloneSignatures().Count;
-        }
 
         private void PopulateTypeDefTableRows()
         {
@@ -4576,8 +4368,6 @@ namespace Microsoft.Cci
 
                 this.typeDefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.TypeDef] = (uint)this.typeDefTable.Count;
         }
 
         private struct TypeDefRow { public uint Flags; public StringIdx Name; public StringIdx Namespace; public uint Extends; public uint FieldList; public uint MethodList; }
@@ -4624,8 +4414,6 @@ namespace Microsoft.Cci
 
                 this.typeRefTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.TypeRef] = (uint)this.typeRefTable.Count;
         }
 
         private struct TypeRefRow { public uint ResolutionScope; public StringIdx Name; public StringIdx Namespace; }
@@ -4643,28 +4431,28 @@ namespace Microsoft.Cci
                 r.Signature = this.GetTypeSpecSignatureIndex(typeSpec);
                 this.typeSpecTable.Add(r);
             }
-
-            this.tableSizes[(uint)TableIndex.TypeSpec] = (uint)this.typeSpecTable.Count;
         }
 
         private struct TypeSpecRow { public uint Signature; }
 
         private readonly List<TypeSpecRow> typeSpecTable = new List<TypeSpecRow>();
 
-        private void SerializeTablesHeader(BinaryWriter writer)
+        private void SerializeTablesHeader(BinaryWriter writer, MetadataSizes metadataSizes)
         {
+            uint startPosition = writer.BaseStream.Position;
+
             HeapSizeFlag heapSizes = 0;
-            if (this.stringIndexSize > 2)
+            if (metadataSizes.StringIndexSize > 2)
             {
                 heapSizes |= HeapSizeFlag.StringHeapLarge;
             }
 
-            if (this.guidIndexSize > 2)
+            if (metadataSizes.GuidIndexSize > 2)
             {
                 heapSizes |= HeapSizeFlag.GuidHeapLarge;
             }
 
-            if (this.blobIndexSize > 2)
+            if (metadataSizes.BlobIndexSize > 2)
             {
                 heapSizes |= HeapSizeFlag.BlobHeapLarge;
             }
@@ -4676,7 +4464,7 @@ namespace Microsoft.Cci
 
             ulong validTables = 0;
             ulong sortedTables = 0;
-            this.ComputeValidAndSortedMasks(out validTables, out sortedTables);
+            ComputeValidAndSortedMasks(metadataSizes, out validTables, out sortedTables);
 
             writer.WriteUint(0); // reserved
             writer.WriteByte(this.module.MetadataFormatMajorVersion);
@@ -4685,39 +4473,20 @@ namespace Microsoft.Cci
             writer.WriteByte(1); // reserved
             writer.WriteUlong(validTables);
             writer.WriteUlong(sortedTables);
-            this.SerializeTableSizes(writer);
+            SerializeRowCounts(writer, metadataSizes);
+
+            uint endPosition = writer.BaseStream.Position;
+            Debug.Assert(metadataSizes.CalculateTableStreamHeaderSize() == endPosition - startPosition);
         }
 
-        internal void GetTableSizes(int[] sizes)
-        {
-            for (int i = 0; i < this.tableSizes.Length; i++)
-            {
-                sizes[i] = (int)this.tableSizes[i];
-            }
-        }
-
-        private uint ComputeSizeOfTablesHeader()
-        {
-            uint result = 4 + 4 + 8 + 8;
-            foreach (uint tableSize in this.tableSizes)
-            {
-                if (tableSize > 0)
-                {
-                    result += 4;
-                }
-            }
-
-            return result;
-        }
-
-        private void ComputeValidAndSortedMasks(out ulong validTables, out ulong sortedTables)
+        private static void ComputeValidAndSortedMasks(MetadataSizes metadataSizes, out ulong validTables, out ulong sortedTables)
         {
             validTables = 0;
             ulong validBit = 1;
 
-            foreach (uint tableSize in this.tableSizes)
+            foreach (int rowCount in metadataSizes.RowCounts)
             {
-                if (tableSize > 0)
+                if (rowCount > 0)
                 {
                     validTables |= validBit;
                 }
@@ -4728,13 +4497,13 @@ namespace Microsoft.Cci
             sortedTables = 0x16003301fa00/* & validTables*/;
         }
 
-        private void SerializeTableSizes(BinaryWriter writer)
+        private static void SerializeRowCounts(BinaryWriter writer, MetadataSizes tableSizes)
         {
-            foreach (uint tableSize in this.tableSizes)
+            foreach (int rowCount in tableSizes.RowCounts)
             {
-                if (tableSize > 0)
+                if (rowCount > 0)
                 {
-                    writer.WriteUint(tableSize);
+                    writer.WriteInt(rowCount);
                 }
             }
         }
@@ -4812,13 +4581,13 @@ namespace Microsoft.Cci
             }
         }
 
-        private void SerializeModuleTable(BinaryWriter writer)
+        private void SerializeModuleTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
-            writer.WriteUshort(this.moduleRow.Generation); // generation (Edit & Continue)
-            SerializeIndex(writer, this.moduleRow.Name, this.stringIndexSize);
-            SerializeIndex(writer, this.moduleRow.ModuleVersionId, this.guidIndexSize); // module version id GUID index
-            SerializeIndex(writer, this.moduleRow.EncId, this.guidIndexSize); // Edit & Continue Id GUID
-            SerializeIndex(writer, this.moduleRow.EncBaseId, this.guidIndexSize); // Edit & Continue Base Id GUID
+            writer.WriteUshort(this.moduleRow.Generation);
+            SerializeIndex(writer, this.moduleRow.Name, metadataSizes.StringIndexSize);
+            SerializeIndex(writer, this.moduleRow.ModuleVersionId, metadataSizes.GuidIndexSize);
+            SerializeIndex(writer, this.moduleRow.EncId, metadataSizes.GuidIndexSize);
+            SerializeIndex(writer, this.moduleRow.EncBaseId, metadataSizes.GuidIndexSize);
         }
 
         private void SerializeEncLogTable(BinaryWriter writer)
@@ -4838,36 +4607,36 @@ namespace Microsoft.Cci
             }
         }
 
-        private void SerializeTypeRefTable(BinaryWriter writer)
+        private void SerializeTypeRefTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (TypeRefRow typeRef in this.typeRefTable)
             {
-                SerializeIndex(writer, typeRef.ResolutionScope, this.resolutionScopeCodedIndexSize);
-                this.SerializeIndex(writer, typeRef.Name, this.stringIndexSize);
-                this.SerializeIndex(writer, typeRef.Namespace, this.stringIndexSize);
+                SerializeIndex(writer, typeRef.ResolutionScope, metadataSizes.ResolutionScopeCodedIndexSize);
+                this.SerializeIndex(writer, typeRef.Name, metadataSizes.StringIndexSize);
+                this.SerializeIndex(writer, typeRef.Namespace, metadataSizes.StringIndexSize);
             }
         }
 
-        private void SerializeTypeDefTable(BinaryWriter writer)
+        private void SerializeTypeDefTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (TypeDefRow typeDef in this.typeDefTable)
             {
                 writer.WriteUint(typeDef.Flags);
-                this.SerializeIndex(writer, typeDef.Name, this.stringIndexSize);
-                this.SerializeIndex(writer, typeDef.Namespace, this.stringIndexSize);
-                SerializeIndex(writer, typeDef.Extends, this.typeDefOrRefCodedIndexSize);
-                SerializeIndex(writer, typeDef.FieldList, this.fieldDefIndexSize);
-                SerializeIndex(writer, typeDef.MethodList, this.methodDefIndexSize);
+                this.SerializeIndex(writer, typeDef.Name, metadataSizes.StringIndexSize);
+                this.SerializeIndex(writer, typeDef.Namespace, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, typeDef.Extends, metadataSizes.TypeDefOrRefCodedIndexSize);
+                SerializeIndex(writer, typeDef.FieldList, metadataSizes.FieldDefIndexSize);
+                SerializeIndex(writer, typeDef.MethodList, metadataSizes.MethodDefIndexSize);
             }
         }
 
-        private void SerializeFieldTable(BinaryWriter writer)
+        private void SerializeFieldTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (FieldDefRow fieldDef in this.fieldDefTable)
             {
                 writer.WriteUshort(fieldDef.Flags);
-                this.SerializeIndex(writer, fieldDef.Name, this.stringIndexSize);
-                SerializeIndex(writer, fieldDef.Signature, this.blobIndexSize);
+                this.SerializeIndex(writer, fieldDef.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, fieldDef.Signature, metadataSizes.BlobIndexSize);
             }
         }
 
@@ -4889,7 +4658,7 @@ namespace Microsoft.Cci
             }
         }
 
-        private void SerializeMethodTable(BinaryWriter writer, bool separateMethodIL)
+        private void SerializeMethodTable(BinaryWriter writer, MetadataSizes metadataSizes, int methodBodyStreamRva, bool separateMethodIL)
         {
             foreach (MethodRow method in this.methodTable)
             {
@@ -4905,208 +4674,208 @@ namespace Microsoft.Cci
                 }
                 else
                 {
-                    writer.WriteUint(GetRva(this.textMethodBodySection, method.Rva));
+                    writer.WriteUint((uint)methodBodyStreamRva + method.Rva);
                 }
 
                 writer.WriteUshort(method.ImplFlags);
                 writer.WriteUshort(method.Flags);
-                this.SerializeIndex(writer, method.Name, this.stringIndexSize);
-                SerializeIndex(writer, method.Signature, this.blobIndexSize);
-                SerializeIndex(writer, method.ParamList, this.parameterIndexSize);
+                this.SerializeIndex(writer, method.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, method.Signature, metadataSizes.BlobIndexSize);
+                SerializeIndex(writer, method.ParamList, metadataSizes.ParameterIndexSize);
             }
         }
 
-        private void SerializeParamTable(BinaryWriter writer)
+        private void SerializeParamTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ParamRow param in this.paramTable)
             {
                 writer.WriteUshort(param.Flags);
                 writer.WriteUshort(param.Sequence);
-                this.SerializeIndex(writer, param.Name, this.stringIndexSize);
+                this.SerializeIndex(writer, param.Name, metadataSizes.StringIndexSize);
             }
         }
 
-        private void SerializeInterfaceImplTable(BinaryWriter writer)
+        private void SerializeInterfaceImplTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (InterfaceImplRow interfaceImpl in this.interfaceImplTable)
             {
-                SerializeIndex(writer, interfaceImpl.Class, this.typeDefIndexSize);
-                SerializeIndex(writer, interfaceImpl.Interface, this.typeDefOrRefCodedIndexSize);
+                SerializeIndex(writer, interfaceImpl.Class, metadataSizes.TypeDefIndexSize);
+                SerializeIndex(writer, interfaceImpl.Interface, metadataSizes.TypeDefOrRefCodedIndexSize);
             }
         }
 
-        private void SerializeMemberRefTable(BinaryWriter writer)
+        private void SerializeMemberRefTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (MemberRefRow memberRef in this.memberRefTable)
             {
-                SerializeIndex(writer, memberRef.Class, this.memberRefParentCodedIndexSize);
-                SerializeIndex(writer, memberRef.Name, this.stringIndexSize);
-                SerializeIndex(writer, memberRef.Signature, this.blobIndexSize);
+                SerializeIndex(writer, memberRef.Class, metadataSizes.MemberRefParentCodedIndexSize);
+                SerializeIndex(writer, memberRef.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, memberRef.Signature, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeConstantTable(BinaryWriter writer)
+        private void SerializeConstantTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ConstantRow constant in this.constantTable)
             {
                 writer.WriteByte(constant.Type);
                 writer.WriteByte(0);
-                SerializeIndex(writer, constant.Parent, this.hasConstantCodedIndexSize);
-                SerializeIndex(writer, constant.Value, this.blobIndexSize);
+                SerializeIndex(writer, constant.Parent, metadataSizes.HasConstantCodedIndexSize);
+                SerializeIndex(writer, constant.Value, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeCustomAttributeTable(BinaryWriter writer)
+        private void SerializeCustomAttributeTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (CustomAttributeRow customAttribute in this.customAttributeTable)
             {
-                SerializeIndex(writer, customAttribute.Parent, this.hasCustomAttributeCodedIndexSize);
-                SerializeIndex(writer, customAttribute.Type, this.customAttributeTypeCodedIndexSize);
-                SerializeIndex(writer, customAttribute.Value, this.blobIndexSize);
+                SerializeIndex(writer, customAttribute.Parent, metadataSizes.HasCustomAttributeCodedIndexSize);
+                SerializeIndex(writer, customAttribute.Type, metadataSizes.CustomAttributeTypeCodedIndexSize);
+                SerializeIndex(writer, customAttribute.Value, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeFieldMarshalTable(BinaryWriter writer)
+        private void SerializeFieldMarshalTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (FieldMarshalRow fieldMarshal in this.fieldMarshalTable)
             {
-                SerializeIndex(writer, fieldMarshal.Parent, this.hasFieldMarshalCodedIndexSize);
-                SerializeIndex(writer, fieldMarshal.NativeType, this.blobIndexSize);
+                SerializeIndex(writer, fieldMarshal.Parent, metadataSizes.HasFieldMarshalCodedIndexSize);
+                SerializeIndex(writer, fieldMarshal.NativeType, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeDeclSecurityTable(BinaryWriter writer)
+        private void SerializeDeclSecurityTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (DeclSecurityRow declSecurity in this.declSecurityTable)
             {
                 writer.WriteUshort(declSecurity.Action);
-                SerializeIndex(writer, declSecurity.Parent, this.declSecurityCodedIndexSize);
-                SerializeIndex(writer, declSecurity.PermissionSet, this.blobIndexSize);
+                SerializeIndex(writer, declSecurity.Parent, metadataSizes.DeclSecurityCodedIndexSize);
+                SerializeIndex(writer, declSecurity.PermissionSet, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeClassLayoutTable(BinaryWriter writer)
+        private void SerializeClassLayoutTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ClassLayoutRow classLayout in this.classLayoutTable)
             {
                 writer.WriteUshort(classLayout.PackingSize);
                 writer.WriteUint(classLayout.ClassSize);
-                SerializeIndex(writer, classLayout.Parent, this.typeDefIndexSize);
+                SerializeIndex(writer, classLayout.Parent, metadataSizes.TypeDefIndexSize);
             }
         }
 
-        private void SerializeFieldLayoutTable(BinaryWriter writer)
+        private void SerializeFieldLayoutTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (FieldLayoutRow fieldLayout in this.fieldLayoutTable)
             {
                 writer.WriteUint(fieldLayout.Offset);
-                SerializeIndex(writer, fieldLayout.Field, this.fieldDefIndexSize);
+                SerializeIndex(writer, fieldLayout.Field, metadataSizes.FieldDefIndexSize);
             }
         }
 
-        private void SerializeStandAloneSigTable(BinaryWriter writer)
+        private void SerializeStandAloneSigTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (uint blobIndex in this.GetStandAloneSignatures())
             {
-                SerializeIndex(writer, blobIndex, this.blobIndexSize);
+                SerializeIndex(writer, blobIndex, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeEventMapTable(BinaryWriter writer)
+        private void SerializeEventMapTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (EventMapRow eventMap in this.eventMapTable)
             {
-                SerializeIndex(writer, eventMap.Parent, this.typeDefIndexSize);
-                SerializeIndex(writer, eventMap.EventList, this.eventDefIndexSize);
+                SerializeIndex(writer, eventMap.Parent, metadataSizes.TypeDefIndexSize);
+                SerializeIndex(writer, eventMap.EventList, metadataSizes.EventDefIndexSize);
             }
         }
 
-        private void SerializeEventTable(BinaryWriter writer)
+        private void SerializeEventTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (EventRow eventRow in this.eventTable)
             {
                 writer.WriteUshort(eventRow.EventFlags);
-                SerializeIndex(writer, eventRow.Name, this.stringIndexSize);
-                SerializeIndex(writer, eventRow.EventType, this.typeDefOrRefCodedIndexSize);
+                SerializeIndex(writer, eventRow.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, eventRow.EventType, metadataSizes.TypeDefOrRefCodedIndexSize);
             }
         }
 
-        private void SerializePropertyMapTable(BinaryWriter writer)
+        private void SerializePropertyMapTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (PropertyMapRow propertyMap in this.propertyMapTable)
             {
-                SerializeIndex(writer, propertyMap.Parent, this.typeDefIndexSize);
-                SerializeIndex(writer, propertyMap.PropertyList, this.propertyDefIndexSize);
+                SerializeIndex(writer, propertyMap.Parent, metadataSizes.TypeDefIndexSize);
+                SerializeIndex(writer, propertyMap.PropertyList, metadataSizes.PropertyDefIndexSize);
             }
         }
 
-        private void SerializePropertyTable(BinaryWriter writer)
+        private void SerializePropertyTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (PropertyRow property in this.propertyTable)
             {
                 writer.WriteUshort(property.PropFlags);
-                this.SerializeIndex(writer, property.Name, this.stringIndexSize);
-                SerializeIndex(writer, property.Type, this.blobIndexSize);
+                this.SerializeIndex(writer, property.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, property.Type, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeMethodSemanticsTable(BinaryWriter writer)
+        private void SerializeMethodSemanticsTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (MethodSemanticsRow methodSemantic in this.methodSemanticsTable)
             {
                 writer.WriteUshort(methodSemantic.Semantic);
-                SerializeIndex(writer, methodSemantic.Method, this.methodDefIndexSize);
-                SerializeIndex(writer, methodSemantic.Association, this.hasSemanticsCodedIndexSize);
+                SerializeIndex(writer, methodSemantic.Method, metadataSizes.MethodDefIndexSize);
+                SerializeIndex(writer, methodSemantic.Association, metadataSizes.HasSemanticsCodedIndexSize);
             }
         }
 
-        private void SerializeMethodImplTable(BinaryWriter writer)
+        private void SerializeMethodImplTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (MethodImplRow methodImpl in this.methodImplTable)
             {
-                SerializeIndex(writer, methodImpl.Class, this.typeDefIndexSize);
-                SerializeIndex(writer, methodImpl.MethodBody, this.methodDefOrRefCodedIndexSize);
-                SerializeIndex(writer, methodImpl.MethodDecl, this.methodDefOrRefCodedIndexSize);
+                SerializeIndex(writer, methodImpl.Class, metadataSizes.TypeDefIndexSize);
+                SerializeIndex(writer, methodImpl.MethodBody, metadataSizes.MethodDefOrRefCodedIndexSize);
+                SerializeIndex(writer, methodImpl.MethodDecl, metadataSizes.MethodDefOrRefCodedIndexSize);
             }
         }
 
-        private void SerializeModuleRefTable(BinaryWriter writer)
+        private void SerializeModuleRefTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ModuleRefRow moduleRef in this.moduleRefTable)
             {
-                this.SerializeIndex(writer, moduleRef.Name, this.stringIndexSize);
+                this.SerializeIndex(writer, moduleRef.Name, metadataSizes.StringIndexSize);
             }
         }
 
-        private void SerializeTypeSpecTable(BinaryWriter writer)
+        private void SerializeTypeSpecTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (TypeSpecRow typeSpec in this.typeSpecTable)
             {
-                SerializeIndex(writer, typeSpec.Signature, this.blobIndexSize);
+                SerializeIndex(writer, typeSpec.Signature, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeImplMapTable(BinaryWriter writer)
+        private void SerializeImplMapTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ImplMapRow implMap in this.implMapTable)
             {
                 writer.WriteUshort(implMap.MappingFlags);
-                SerializeIndex(writer, implMap.MemberForwarded, this.memberForwardedCodedIndexSize);
-                this.SerializeIndex(writer, implMap.ImportName, this.stringIndexSize);
-                SerializeIndex(writer, implMap.ImportScope, this.moduleRefIndexSize);
+                SerializeIndex(writer, implMap.MemberForwarded, metadataSizes.MemberForwardedCodedIndexSize);
+                this.SerializeIndex(writer, implMap.ImportName, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, implMap.ImportScope, metadataSizes.ModuleRefIndexSize);
             }
         }
 
-        private void SerializeFieldRvaTable(BinaryWriter writer)
+        private void SerializeFieldRvaTable(BinaryWriter writer, MetadataSizes metadataSizes, int mappedFieldDataStreamRva)
         {
             foreach (FieldRvaRow fieldRva in this.fieldRvaTable)
             {
-                writer.WriteUint(GetRva(this.GetSection(fieldRva.SectionKind), fieldRva.Offset));
-                SerializeIndex(writer, fieldRva.Field, this.fieldDefIndexSize);
+                writer.WriteUint((uint)mappedFieldDataStreamRva + fieldRva.Offset);
+                SerializeIndex(writer, fieldRva.Field, metadataSizes.FieldDefIndexSize);
             }
         }
 
-        private void SerializeAssemblyTable(BinaryWriter writer)
+        private void SerializeAssemblyTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             IAssembly assembly = this.module.AsAssembly;
             if (assembly == null)
@@ -5120,12 +4889,12 @@ namespace Microsoft.Cci
             writer.WriteUshort((ushort)assembly.Version.Build);
             writer.WriteUshort((ushort)assembly.Version.Revision);
             writer.WriteUint(assembly.Flags);
-            SerializeIndex(writer, this.assemblyKey, this.blobIndexSize);
-            this.SerializeIndex(writer, this.assemblyName, this.stringIndexSize);
-            this.SerializeIndex(writer, this.assemblyCulture, this.stringIndexSize);
+            SerializeIndex(writer, this.assemblyKey, metadataSizes.BlobIndexSize);
+            this.SerializeIndex(writer, this.assemblyName, metadataSizes.StringIndexSize);
+            this.SerializeIndex(writer, this.assemblyCulture, metadataSizes.StringIndexSize);
         }
 
-        private void SerializeAssemblyRefTable(BinaryWriter writer)
+        private void SerializeAssemblyRefTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (AssemblyRefTableRow assemblyRef in this.assemblyRefTable)
             {
@@ -5145,81 +4914,81 @@ namespace Microsoft.Cci
 
                 writer.WriteUint(flags);
 
-                SerializeIndex(writer, assemblyRef.PublicKeyToken, this.blobIndexSize);
-                this.SerializeIndex(writer, assemblyRef.Name, this.stringIndexSize);
-                this.SerializeIndex(writer, assemblyRef.Culture, this.stringIndexSize);
-                SerializeIndex(writer, 0, this.blobIndexSize); // hash of referenced assembly. Omitted.
+                SerializeIndex(writer, assemblyRef.PublicKeyToken, metadataSizes.BlobIndexSize);
+                this.SerializeIndex(writer, assemblyRef.Name, metadataSizes.StringIndexSize);
+                this.SerializeIndex(writer, assemblyRef.Culture, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, 0, metadataSizes.BlobIndexSize); // hash of referenced assembly. Omitted.
             }
         }
 
-        private void SerializeFileTable(BinaryWriter writer)
+        private void SerializeFileTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (FileTableRow fileReference in this.fileTable)
             {
                 writer.WriteUint(fileReference.Flags);
-                this.SerializeIndex(writer, fileReference.FileName, this.stringIndexSize);
-                SerializeIndex(writer, fileReference.HashValue, this.blobIndexSize);
+                this.SerializeIndex(writer, fileReference.FileName, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, fileReference.HashValue, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeExportedTypeTable(BinaryWriter writer)
+        private void SerializeExportedTypeTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ExportedTypeRow exportedType in this.exportedTypeTable)
             {
                 writer.WriteUint((uint)exportedType.Flags);
                 writer.WriteUint(exportedType.TypeDefId);
-                this.SerializeIndex(writer, exportedType.TypeName, this.stringIndexSize);
-                this.SerializeIndex(writer, exportedType.TypeNamespace, this.stringIndexSize);
-                SerializeIndex(writer, exportedType.Implementation, this.implementationCodedIndexSize);
+                this.SerializeIndex(writer, exportedType.TypeName, metadataSizes.StringIndexSize);
+                this.SerializeIndex(writer, exportedType.TypeNamespace, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, exportedType.Implementation, metadataSizes.ImplementationCodedIndexSize);
             }
         }
 
-        private void SerializeManifestResourceTable(BinaryWriter writer)
+        private void SerializeManifestResourceTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (ManifestResourceRow manifestResource in this.manifestResourceTable)
             {
                 writer.WriteUint(manifestResource.Offset);
                 writer.WriteUint(manifestResource.Flags);
-                this.SerializeIndex(writer, manifestResource.Name, this.stringIndexSize);
-                SerializeIndex(writer, manifestResource.Implementation, this.implementationCodedIndexSize);
+                this.SerializeIndex(writer, manifestResource.Name, metadataSizes.StringIndexSize);
+                SerializeIndex(writer, manifestResource.Implementation, metadataSizes.ImplementationCodedIndexSize);
             }
         }
 
-        private void SerializeNestedClassTable(BinaryWriter writer)
+        private void SerializeNestedClassTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (NestedClassRow nestedClass in this.nestedClassTable)
             {
-                SerializeIndex(writer, nestedClass.NestedClass, this.typeDefIndexSize);
-                SerializeIndex(writer, nestedClass.EnclosingClass, this.typeDefIndexSize);
+                SerializeIndex(writer, nestedClass.NestedClass, metadataSizes.TypeDefIndexSize);
+                SerializeIndex(writer, nestedClass.EnclosingClass, metadataSizes.TypeDefIndexSize);
             }
         }
 
-        private void SerializeGenericParamTable(BinaryWriter writer)
+        private void SerializeGenericParamTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (GenericParamRow genericParam in this.genericParamTable)
             {
                 writer.WriteUshort(genericParam.Number);
                 writer.WriteUshort(genericParam.Flags);
-                SerializeIndex(writer, genericParam.Owner, this.typeOrMethodDefCodedIndexSize);
-                this.SerializeIndex(writer, genericParam.Name, this.stringIndexSize);
+                SerializeIndex(writer, genericParam.Owner, metadataSizes.TypeOrMethodDefCodedIndexSize);
+                this.SerializeIndex(writer, genericParam.Name, metadataSizes.StringIndexSize);
             }
         }
 
-        private void SerializeMethodSpecTable(BinaryWriter writer)
+        private void SerializeMethodSpecTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (MethodSpecRow methodSpec in this.methodSpecTable)
             {
-                SerializeIndex(writer, methodSpec.Method, this.methodDefOrRefCodedIndexSize);
-                SerializeIndex(writer, methodSpec.Instantiation, this.blobIndexSize);
+                SerializeIndex(writer, methodSpec.Method, metadataSizes.MethodDefOrRefCodedIndexSize);
+                SerializeIndex(writer, methodSpec.Instantiation, metadataSizes.BlobIndexSize);
             }
         }
 
-        private void SerializeGenericParamConstraintTable(BinaryWriter writer)
+        private void SerializeGenericParamConstraintTable(BinaryWriter writer, MetadataSizes metadataSizes)
         {
             foreach (GenericParamConstraintRow genericParamConstraint in this.genericParamConstraintTable)
             {
-                SerializeIndex(writer, genericParamConstraint.Owner, this.genericParamIndexSize);
-                SerializeIndex(writer, genericParamConstraint.Constraint, this.typeDefOrRefCodedIndexSize);
+                SerializeIndex(writer, genericParamConstraint.Owner, metadataSizes.GenericParamIndexSize);
+                SerializeIndex(writer, genericParamConstraint.Constraint, metadataSizes.TypeDefOrRefCodedIndexSize);
             }
         }
         
@@ -5243,7 +5012,7 @@ namespace Microsoft.Cci
 
                     if (body != null)
                     {
-                        uint localSignatureToken = this.SerializeLocalVariablesSignature(body.LocalVariables);
+                        uint localSignatureToken = this.SerializeLocalVariablesSignature(body);
 
                         // TODO: consider parallelizing these (local signature tokens can be piped into IL serialization & debug info generation)
                         rva = this.SerializeMethodBody(body, writer, localSignatureToken);
@@ -5331,15 +5100,18 @@ namespace Microsoft.Cci
                 }
             }
 
-            this.OnSerializedMethodBody(methodBody);
-
             return bodyRva;
         }
 
-        private uint SerializeLocalVariablesSignature(ImmutableArray<ILocalDefinition> localVariables)
+        /// <summary>
+        /// Serialize the method local signature to the blob.
+        /// </summary>
+        /// <returns>Standalone signature token</returns>
+        protected virtual uint SerializeLocalVariablesSignature(IMethodBody body)
         {
             Debug.Assert(!this.tableIndicesAreComplete);
 
+            var localVariables = body.LocalVariables;
             if (localVariables.Length == 0)
             {
                 return 0;
@@ -5351,29 +5123,7 @@ namespace Microsoft.Cci
             writer.WriteCompressedUInt((uint)localVariables.Length);
             foreach (ILocalDefinition local in localVariables)
             {
-                if (module.IsPlatformType(local.Type, PlatformType.SystemTypedReference))
-                {
-                    writer.WriteByte(0x16);
-                }
-                else
-                {
-                    foreach (ICustomModifier customModifier in local.CustomModifiers)
-                    {
-                        this.SerializeCustomModifier(customModifier, writer);
-                    }
-
-                    if (local.IsPinned)
-                    {
-                        writer.WriteByte(0x45);
-                    }
-
-                    if (local.IsReference)
-                    {
-                        writer.WriteByte(0x10);
-                    }
-
-                    this.SerializeTypeReference(local.Type, writer, false, true);
-                }
+                this.SerializeLocalVariableSignature(writer, local);
             }
 
             uint blobIndex = this.GetBlobIndex(writer.BaseStream.ToArray());
@@ -5381,6 +5131,33 @@ namespace Microsoft.Cci
             stream.Free();
 
             return 0x11000000 | signatureIndex;
+        }
+
+        protected void SerializeLocalVariableSignature(BinaryWriter writer, ILocalDefinition local)
+        {
+            if (module.IsPlatformType(local.Type, PlatformType.SystemTypedReference))
+            {
+                writer.WriteByte(0x16);
+            }
+            else
+            {
+                foreach (ICustomModifier customModifier in local.CustomModifiers)
+                {
+                    this.SerializeCustomModifier(customModifier, writer);
+                }
+
+                if (local.IsPinned)
+                {
+                    writer.WriteByte(0x45);
+                }
+
+                if (local.IsReference)
+                {
+                    writer.WriteByte(0x10);
+                }
+
+                this.SerializeTypeReference(local.Type, writer, false, true);
+            }
         }
 
         internal uint SerializeLocalConstantSignature(ILocalDefinition localConstant)
@@ -7077,22 +6854,32 @@ namespace Microsoft.Cci
             writer.WriteUint(sectionHeader.Characteristics);
         }
 
-        private void WriteTextSection(Stream peStream, MemoryStream metadataStream, MemoryStream ilStream, out long startOfMetadata, out long positionOfTimestamp)
+        private void WriteTextSection(Stream peStream, CorHeader corHeader, MemoryStream metadataStream, MemoryStream ilStream, MemoryStream mappedFieldDataStream, out long startOfMetadata, out long positionOfTimestamp)
         {
             peStream.Position = this.textSection.PointerToRawData;
-            if (this.emitRuntimeStartupStub) this.WriteImportAddressTable(peStream);
-            this.WriteClrHeader(peStream);
-            this.WriteIL(peStream, ilStream);
+            if (this.emitRuntimeStartupStub)
+            {
+                this.WriteImportAddressTable(peStream);
+            }
+
+            WriteCorHeader(peStream, corHeader);
+            WriteIL(peStream, ilStream);
+
             startOfMetadata = peStream.Position;
-            this.WriteMetadata(peStream, metadataStream);
+            WriteMetadata(peStream, metadataStream);
+
             this.WriteManagedResources(peStream);
-            this.WriteSpaceForHash(peStream);
+            WriteSpaceForHash(peStream, (int)corHeader.StrongNameSignature.Size);
             this.WriteDebugTable(peStream, out positionOfTimestamp);
-            // this.WriteUnmanagedExportStubs();
-            if (this.emitRuntimeStartupStub) this.WriteImportTable(peStream);
-            if (this.emitRuntimeStartupStub) this.WriteNameTable(peStream);
-            if (this.emitRuntimeStartupStub) this.WriteRuntimeStartupStub(peStream);
-            this.WriteTextData(peStream);
+
+            if (this.emitRuntimeStartupStub)
+            {
+                this.WriteImportTable(peStream);
+                this.WriteNameTable(peStream);
+                this.WriteRuntimeStartupStub(peStream);
+            }
+
+            WriteMappedFieldData(peStream, mappedFieldDataStream);            
         }
 
         private void WriteImportAddressTable(Stream peStream)
@@ -7177,32 +6964,31 @@ namespace Microsoft.Cci
             writer.BaseStream.WriteTo(peStream);
         }
 
-        private void WriteClrHeader(Stream peStream)
+        private static void WriteCorHeader(Stream peStream, CorHeader corHeader)
         {
             BinaryWriter writer = new BinaryWriter(new MemoryStream(72));
-            ClrHeader clrHeader = this.clrHeader;
             writer.WriteUint(72); // Number of bytes in this header  4
-            writer.WriteUshort(clrHeader.MajorRuntimeVersion); // 6 
-            writer.WriteUshort(clrHeader.MinorRuntimeVersion); // 8
-            writer.WriteUint(clrHeader.MetaData.RelativeVirtualAddress); // 12
-            writer.WriteUint(clrHeader.MetaData.Size); // 16
-            writer.WriteUint(clrHeader.Flags); // 20
-            writer.WriteUint(clrHeader.EntryPointToken); // 24
-            writer.WriteUint(clrHeader.Resources.Size == 0 ? 0u : clrHeader.Resources.RelativeVirtualAddress); // 28
-            writer.WriteUint(clrHeader.Resources.Size); // 32
-            writer.WriteUint(clrHeader.StrongNameSignature.Size == 0 ? 0u : clrHeader.StrongNameSignature.RelativeVirtualAddress); // 36
-            writer.WriteUint(clrHeader.StrongNameSignature.Size); // 40
-            writer.WriteUint(clrHeader.CodeManagerTable.RelativeVirtualAddress); // 44
-            writer.WriteUint(clrHeader.CodeManagerTable.Size); // 48
-            writer.WriteUint(clrHeader.VTableFixups.RelativeVirtualAddress); // 52
-            writer.WriteUint(clrHeader.VTableFixups.Size); // 56
-            writer.WriteUint(clrHeader.ExportAddressTableJumps.RelativeVirtualAddress); // 60
-            writer.WriteUint(clrHeader.ExportAddressTableJumps.Size); // 64
+            writer.WriteUshort(corHeader.MajorRuntimeVersion); // 6 
+            writer.WriteUshort(corHeader.MinorRuntimeVersion); // 8
+            writer.WriteUint(corHeader.MetadataDirectory.RelativeVirtualAddress); // 12
+            writer.WriteUint(corHeader.MetadataDirectory.Size); // 16
+            writer.WriteUint((uint)corHeader.Flags); // 20
+            writer.WriteUint(corHeader.EntryPointToken); // 24
+            writer.WriteUint(corHeader.Resources.Size == 0 ? 0u : corHeader.Resources.RelativeVirtualAddress); // 28
+            writer.WriteUint(corHeader.Resources.Size); // 32
+            writer.WriteUint(corHeader.StrongNameSignature.Size == 0 ? 0u : corHeader.StrongNameSignature.RelativeVirtualAddress); // 36
+            writer.WriteUint(corHeader.StrongNameSignature.Size); // 40
+            writer.WriteUint(corHeader.CodeManagerTable.RelativeVirtualAddress); // 44
+            writer.WriteUint(corHeader.CodeManagerTable.Size); // 48
+            writer.WriteUint(corHeader.VTableFixups.RelativeVirtualAddress); // 52
+            writer.WriteUint(corHeader.VTableFixups.Size); // 56
+            writer.WriteUint(corHeader.ExportAddressTableJumps.RelativeVirtualAddress); // 60
+            writer.WriteUint(corHeader.ExportAddressTableJumps.Size); // 64
             writer.WriteUlong(0); // 72
             writer.BaseStream.WriteTo(peStream);
         }
 
-        private void WriteIL(Stream peStream, MemoryStream ilStream)
+        private static void WriteIL(Stream peStream, MemoryStream ilStream)
         {
             ilStream.WriteTo(peStream);
             while (peStream.Position % 4 != 0)
@@ -7211,26 +6997,25 @@ namespace Microsoft.Cci
             }
         }
 
-        private void WriteTextData(Stream peStream)
+        private static void WriteMappedFieldData(Stream peStream, MemoryStream dataStream)
         {
-            this.textDataWriter.BaseStream.WriteTo(peStream);
+            dataStream.WriteTo(peStream);
             while (peStream.Position % 4 != 0)
             {
                 peStream.WriteByte(0);
             }
         }
 
-        private void WriteSpaceForHash(Stream peStream)
+        private static void WriteSpaceForHash(Stream peStream, int strongNameSignatureSize)
         {
-            uint size = this.clrHeader.StrongNameSignature.Size;
-            while (size > 0)
+            while (strongNameSignatureSize > 0)
             {
                 peStream.WriteByte(0);
-                size--;
+                strongNameSignatureSize--;
             }
         }
 
-        private void WriteMetadata(Stream peStream, MemoryStream metadataStream)
+        private static void WriteMetadata(Stream peStream, MemoryStream metadataStream)
         {
             metadataStream.WriteTo(peStream);
             while (peStream.Position % 4 != 0)
@@ -7284,7 +7069,7 @@ namespace Microsoft.Cci
             if (!this.module.Requires64bits)
             {
                 //emit 0's (nops) to pad the entry point code so that the target address is aligned on a 4 byte boundary.
-                for (uint i = 0, n = (uint)(Aligned((uint)peStream.Position, 4) - peStream.Position); i < n; i++) writer.WriteByte(0);
+                for (uint i = 0, n = (uint)(BitArithmeticUtilities.Align((uint)peStream.Position, 4) - peStream.Position); i < n; i++) writer.WriteByte(0);
                 writer.WriteUshort(0);
                 writer.WriteByte(0xff);
                 writer.WriteByte(0x25); //4
@@ -7293,7 +7078,7 @@ namespace Microsoft.Cci
             else
             {
                 //emit 0's (nops) to pad the entry point code so that the target address is aligned on a 8 byte boundary.
-                for (uint i = 0, n = (uint)(Aligned((uint)peStream.Position, 8) - peStream.Position); i < n; i++) writer.WriteByte(0);
+                for (uint i = 0, n = (uint)(BitArithmeticUtilities.Align((uint)peStream.Position, 8) - peStream.Position); i < n; i++) writer.WriteByte(0);
                 writer.WriteUint(0);
                 writer.WriteUshort(0);
                 writer.WriteByte(0xff);

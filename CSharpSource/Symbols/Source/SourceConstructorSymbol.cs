@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -39,11 +40,24 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             Location location,
             ParameterListSyntax syntax,
             DiagnosticBag diagnostics) :
-            base(containingType, syntax.GetReference(), null, ImmutableArray.Create(location))
+            base(containingType, syntax.GetReference(), GetPrimaryConstructorBlockSyntaxReferenceOrNull(syntax), ImmutableArray.Create(location))
         {
             var declarationModifiers = (containingType.IsAbstract ? DeclarationModifiers.Protected : DeclarationModifiers.Public) | DeclarationModifiers.PrimaryCtor;
             this.flags = MakeFlags(MethodKind.Constructor, declarationModifiers, returnsVoid: true, isExtensionMethod: false);
             this.CheckModifiers(MethodKind.Constructor, location, diagnostics);
+        }
+
+        private static SyntaxReference GetPrimaryConstructorBlockSyntaxReferenceOrNull(ParameterListSyntax syntax)
+        {
+            foreach (var m in ((TypeDeclarationSyntax)syntax.Parent).Members)
+            {
+                if (m.Kind == SyntaxKind.PrimaryConstructorBody)
+                {
+                    return ((PrimaryConstructorBodySyntax)m).Body.GetReference();
+                }
+            }
+
+            return null;
         }
 
         private SourceConstructorSymbol(
@@ -225,7 +239,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         private void CheckModifiers(MethodKind methodKind, Location location, DiagnosticBag diagnostics)
         {
-            if (blockSyntaxReference == null && !IsExtern && !IsPrimaryCtor)
+            if (bodySyntaxReference == null && !IsExtern && !IsPrimaryCtor)
             {
                 diagnostics.Add(ErrorCode.ERR_ConcreteMissingBody, location, this);
             }
@@ -275,6 +289,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
                 return base.AttributeOwner;
             }
+        }
+
+        internal override bool IsExpressionBodied
+        {
+            get { return false; }
         }
     }
 }

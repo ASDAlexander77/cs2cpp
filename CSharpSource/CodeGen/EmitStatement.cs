@@ -363,7 +363,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         private void EmitCondBranch(BoundExpression condition, ref object dest, bool sense)
         {
 
-        oneMoreTime:
+            oneMoreTime:
 
             ILOpCode ilcode;
 
@@ -565,13 +565,13 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
         private void EmitBlock(BoundBlock block)
         {
-            var hasLocals = !block.LocalsOpt.IsDefaultOrEmpty;
+            var hasLocals = !block.Locals.IsEmpty;
 
             if (hasLocals)
             {
                 builder.OpenLocalScope();
 
-                foreach (var local in block.LocalsOpt)
+                foreach (var local in block.Locals)
                 {
                     var declaringReferences = local.DeclaringSyntaxReferences;
                     DefineLocal(local, !declaringReferences.IsEmpty ? (CSharpSyntaxNode)declaringReferences[0].GetSyntax() : block.Syntax);
@@ -591,7 +591,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             if (hasLocals)
             {
-                foreach (var local in block.LocalsOpt)
+                foreach (var local in block.Locals)
                 {
                     FreeLocal(local);
                 }
@@ -988,7 +988,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 }
             }
 
-            EmitSwitchBody(switchStatement.InnerLocalsOpt, switchSections, breakLabel, switchStatement.Syntax);
+            EmitSwitchBody(switchStatement.InnerLocals, switchSections, breakLabel, switchStatement.Syntax);
         }
 
         private static KeyValuePair<ConstantValue, object>[] GetSwitchCaseLabels(ImmutableArray<BoundSwitchSection> sections, ref LabelSymbol fallThroughLabel)
@@ -1217,18 +1217,18 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         }
 
         private void EmitSwitchBody(
-            ImmutableArray<LocalSymbol> localsOpt,
+            ImmutableArray<LocalSymbol> locals,
             ImmutableArray<BoundSwitchSection> switchSections,
             GeneratedLabelSymbol breakLabel,
             CSharpSyntaxNode syntaxNode)
         {
-            var hasLocals = !localsOpt.IsEmpty;
+            var hasLocals = !locals.IsEmpty;
 
             if (hasLocals)
             {
                 builder.OpenLocalScope();
 
-                foreach (var local in localsOpt)
+                foreach (var local in locals)
                 {
                     DefineLocal(local, syntaxNode);
                 }
@@ -1293,17 +1293,17 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 builder.AddLocalConstantToScope(localConstantDef);
                 return null;
             }
-            else if (IsStackLocal(local))
+
+            if (IsStackLocal(local))
             {
                 return null;
             }
-            else
-            {
-                var name = RequiresGeneratedName(local) ? GenerateName(local) : local.Name;
-                LocalSlotConstraints constraints;
-                Microsoft.Cci.ITypeReference translatedType;
 
-                if (local.DeclarationKind == LocalDeclarationKind.Fixed && local.IsPinned) // Excludes pointer local and string local in fixed string case.
+            var name = GetLocalDebugName(local);
+                LocalSlotConstraints constraints;
+            Cci.ITypeReference translatedType;
+
+            if (local.DeclarationKind == LocalDeclarationKind.FixedVariable && local.IsPinned) // Excludes pointer local and string local in fixed string case.
                 {
                     Debug.Assert(local.RefKind == RefKind.None);
                     Debug.Assert(local.Type.IsPointerType());
@@ -1333,48 +1333,48 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                         type: translatedType,
                         identity: local,
                         name: name,
-                        isCompilerGenerated: local.TempKind != TempKind.None,
+                    isCompilerGenerated: local.SynthesizedLocalKind != SynthesizedLocalKind.None,
                         constraints: constraints,
                         isDynamic: isDynamicSourceLocal,
                         dynamicTransformFlags: transformFlags);
 
-                // If named, add it to the scope
+            // If named, add it to the scope. It will be emitted to the PDB.
                 if (name != null)
                 {
-                    //reference in the scope for debugging purpose
                     builder.AddLocalToScope(localDef);
                 }
 
                 return localDef;
             }
-        }
 
         /// <summary>
-        /// Temporaries spanning multiple statements are
+        /// Gets the name of the local that is going to be generated into the debug metadata.
+        /// </summary>
+        /// <remarks>
+        /// Synthesized locals spanning multiple statements are
         /// named in debug builds to ensure the associated
         /// slots are recognized and reused in EnC.
-        /// </summary>
-        private bool RequiresGeneratedName(LocalSymbol local)
+        /// </remarks>
+        private string GetLocalDebugName(LocalSymbol local)
         {
-            int kind = (int)local.TempKind;
+            if (local.Name != null)
+            {
+                // variable has been explicitly named in the source code:
+                Debug.Assert(local.SynthesizedLocalKind == SynthesizedLocalKind.None);
+                return local.Name;
+            }
 
-            // Locals should only have been named if they represent explicit local variables.
-            Debug.Assert((kind < 0) || (local.Name == null));
+            if (HasDebugName(local))
+            {
+                return GeneratedNames.MakeLocalName(local.SynthesizedLocalKind, uniqueId++);
+            }
 
-            // Only generating names in debug builds.
-            return (kind >= 0) && (this.debugInformationKind != DebugInformationKind.None);
+            return null;
         }
 
-        /// <summary>
-        /// Generate a unique name for the temporary that
-        /// will be recognized by EnC.
-        /// </summary>
-        private string GenerateName(LocalSymbol local)
+        private bool HasDebugName(LocalSymbol local)
         {
-            Debug.Assert(local.Name == null);
-            Debug.Assert(RequiresGeneratedName(local));
-
-            return GeneratedNames.MakeTemporaryName(local.TempKind, uniqueId++);
+            return local.Name != null || local.SynthesizedLocalKind.IsNamed(this.debugInformationKind);
         }
 
         /// <summary>
@@ -1383,9 +1383,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         private void FreeLocal(LocalSymbol local)
         {
             //TODO: releasing named locals is NYI.
-            if (local.Name == null &&
-                !RequiresGeneratedName(local) &&
-                !IsStackLocal(local))
+            if (!HasDebugName(local) && !IsStackLocal(local))
             {
                 builder.LocalSlotManager.FreeLocal(local);
             }
@@ -1454,7 +1452,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
                 BoundExpression boundExpression = node.BoundExpression;
                 ImmutableArray<BoundSwitchSection> switchSections = (ImmutableArray<BoundSwitchSection>)this.VisitList(node.SwitchSections);
                 Debug.Assert(node.OuterLocals.IsEmpty);
-                return node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocalsOpt, switchSections, breakLabelClone, node.StringEquality);
+                return node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocals, switchSections, breakLabelClone, node.StringEquality);
             }
 
             public override BoundNode VisitSwitchLabel(BoundSwitchLabel node)

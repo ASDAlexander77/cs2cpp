@@ -23,6 +23,8 @@ namespace Microsoft.CodeAnalysis.CSharp
         private readonly CSharpCompilation compilation;
         private readonly SyntaxTree syntaxTree;
         private readonly ConcurrentDictionary<CSharpSyntaxNode, MemberSemanticModel> memberModels = new ConcurrentDictionary<CSharpSyntaxNode, MemberSemanticModel>();
+        private readonly ConcurrentDictionary<TypeDeclarationSyntax, FieldInitializersInfo> instanceInitializersInfo = new ConcurrentDictionary<TypeDeclarationSyntax, FieldInitializersInfo>();
+        private readonly ConcurrentDictionary<TypeDeclarationSyntax, FieldInitializersInfo> staticInitializersInfo = new ConcurrentDictionary<TypeDeclarationSyntax, FieldInitializersInfo>();
 
         private readonly BinderFactory binderFactory;
         private Func<CSharpSyntaxNode, MemberSemanticModel> createMemberModelFunction;
@@ -743,8 +745,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                     case SyntaxKind.ConversionOperatorDeclaration:
                     case SyntaxKind.OperatorDeclaration:
                         {
-                            BaseMethodDeclarationSyntax methodDecl = (BaseMethodDeclarationSyntax)memberDecl;
+                            var methodDecl = (BaseMethodDeclarationSyntax)memberDecl;
+                            var expressionBody = methodDecl.GetExpressionBodySyntax();
                             return GetOrAddModelForParameterDefaultValue(methodDecl.ParameterList.Parameters, span) ??
+                                   GetOrAddModelIfContains(expressionBody, span) ??
                                    GetOrAddModelIfContains(methodDecl.Body, span);
                         }
 
@@ -755,6 +759,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 GetOrAddModelIfContains(constructorDecl.Initializer, span) ??
                                 GetOrAddModelIfContains(constructorDecl.Body, span);
                         }
+
+                    case SyntaxKind.PrimaryConstructorBody:
+                        return GetOrAddModelIfContains(((PrimaryConstructorBodySyntax)memberDecl).Body, span);
 
                     case SyntaxKind.ClassDeclaration:
                         {
@@ -804,8 +811,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     case SyntaxKind.IndexerDeclaration:
                         {
-                            IndexerDeclarationSyntax indexerDecl = (IndexerDeclarationSyntax)memberDecl;
-                            return GetOrAddModelForParameterDefaultValue(indexerDecl.ParameterList.Parameters, span);
+                            var indexerDecl = (IndexerDeclarationSyntax)memberDecl;
+                            return GetOrAddModelForParameterDefaultValue(
+                                indexerDecl.ParameterList.Parameters, span) ??
+                                GetOrAddModelIfContains(indexerDecl.ExpressionBody, span);
                         }
 
                     case SyntaxKind.FieldDeclaration:
@@ -834,9 +843,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     case SyntaxKind.PropertyDeclaration:
                         {
                             var propertyDecl = (PropertyDeclarationSyntax)memberDecl;
-                            return (propertyDecl.Initializer != null) ?
-                                    GetOrAddModelIfContains(propertyDecl.Initializer, span) :
-                                    null;
+                            return GetOrAddModelIfContains(propertyDecl.Initializer, span) ??
+                                GetOrAddModelIfContains(propertyDecl.ExpressionBody, span);
                         }
 
                     case SyntaxKind.GetAccessorDeclaration:
@@ -906,7 +914,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return this.memberModels.GetOrAdd(node, createMemberModelFunction);
         }
 
-        // Create a the member model for the given declaration syntax. In certain very malformed
+        // Create a member model for the given declaration syntax. In certain very malformed
         // syntax trees, there may not be a symbol that can have a member model associated with it
         // (although we try to minimize such cases). In such cases, null is returned.
         private MemberSemanticModel CreateMemberModel(CSharpSyntaxNode node)
@@ -915,6 +923,51 @@ namespace Microsoft.CodeAnalysis.CSharp
             switch (node.Kind)
             {
                 case SyntaxKind.Block:
+                    if (node.Parent != null && node.Parent.Kind == SyntaxKind.PrimaryConstructorBody)
+                    {
+                        if (node.Parent.Parent != null && (node.Parent.Parent.Kind == SyntaxKind.ClassDeclaration || node.Parent.Parent.Kind == SyntaxKind.StructDeclaration))
+                        {
+                            var typeDecl = (TypeDeclarationSyntax)node.Parent.Parent;
+                            var constructorSymbol = (SourceMethodSymbol)GetDeclaredConstructorSymbol(typeDecl);
+
+                            if ((object)constructorSymbol == null)
+                                return null;
+
+                            // We need to share locals declared in constructor initializer with 
+                            // constructor initializer member model. We want both models to use the same symbols for the locals.
+                            var localsDeclaredInInitializer = ImmutableArray<LocalSymbol>.Empty;
+
+                            if (typeDecl.Kind == SyntaxKind.ClassDeclaration)
+                            {
+                                var classDecl = (ClassDeclarationSyntax)typeDecl;
+
+                                if (classDecl.BaseList != null && classDecl.BaseList.Types.Count > 0 && classDecl.BaseList.Types[0].Kind == SyntaxKind.BaseClassWithArguments)
+                                {
+                                    ArgumentListSyntax argList = ((BaseClassWithArgumentsSyntax)classDecl.BaseList.Types[0]).ArgumentList;
+                                    MemberSemanticModel initializerModel = GetOrAddModel(argList);
+
+                                    if (initializerModel != null)
+                                    {
+                                        localsDeclaredInInitializer = initializerModel.RootBinder.GetDeclaredLocalsForScope(argList);
+                                    }
+                                }
+                            }
+
+                            // Locals declared in instance initializers within the current partial class declaration
+                            // should be in scope within the body.
+                            outer = AddInitializersLocalsScope(outer, typeDecl, constructorSymbol);
+
+                            if (!localsDeclaredInInitializer.IsDefaultOrEmpty)
+                            {
+                                outer = new SimpleLocalScopeBinder(localsDeclaredInInitializer, outer);
+                            }
+
+                            return MethodBodySemanticModel.Create(this.Compilation, constructorSymbol, outer, node);
+                        }
+
+                        return null;
+                    }
+                    else
                     {
                         MemberDeclarationSyntax memberDecl;
                         AccessorDeclarationSyntax accessorDecl;
@@ -923,6 +976,26 @@ namespace Microsoft.CodeAnalysis.CSharp
                             var symbol = (SourceMethodSymbol)GetDeclaredSymbol(memberDecl);
                             if ((object)symbol == null)
                                 return null;
+
+                            // In case of constructor, we need to share locals declared in constructor initializer with 
+                            // constructor initializer member model. We want both models to use the same symbols for the locals.
+                            if (node.Parent.Kind == SyntaxKind.ConstructorDeclaration && !symbol.IsStatic)
+                            {
+                                var decl = (ConstructorDeclarationSyntax)node.Parent;
+                                if (decl.Initializer != null)
+                                {
+                                    MemberSemanticModel initializerModel = GetOrAddModel(decl.Initializer);
+                                    if (initializerModel != null)
+                                    {
+                                        var localsDeclaredInInitializer = initializerModel.RootBinder.GetDeclaredLocalsForScope(decl);
+                                        if (!localsDeclaredInInitializer.IsDefaultOrEmpty)
+                                        {
+                                            outer = new SimpleLocalScopeBinder(localsDeclaredInInitializer, outer);
+                                        }
+                                    }
+                                }
+                            }
+
                             return MethodBodySemanticModel.Create(this.Compilation, symbol, outer, memberDecl);
                         }
                         else if ((accessorDecl = node.Parent as AccessorDeclarationSyntax) != null)
@@ -953,7 +1026,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                                     variableDecl,   //pass in the entire field initializer to permit region analysis. 
                                     fieldSymbol,
                                     //if we're in regular C#, then insert an extra binder to perform field initialization checks
-                                    GetFieldInitializerBinder(fieldSymbol, outer));
+                                    GetFieldOrPropertyInitializerBinder(fieldSymbol, outer));
                             }
 
                         case SyntaxKind.PropertyDeclaration:
@@ -964,7 +1037,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                                     this.Compilation,
                                     propertyDecl,
                                     propertySymbol,
-                                    GetPropertyInitializerBinder(propertySymbol, outer));
+                                    GetFieldOrPropertyInitializerBinder(propertySymbol.BackingField, outer));
                             }
 
                         case SyntaxKind.Parameter:
@@ -981,7 +1054,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                                     this.Compilation,
                                     parameterDecl,
                                     parameterSymbol,
-                                    new LocalScopeBinder(outer)); //Since otherwise there won't be one and we'll assert.
+                                    outer.CreateBinderForParameterDefaultValue(parameterSymbol, (EqualsValueClauseSyntax)node));
                             }
 
                         case SyntaxKind.EnumMemberDeclaration:
@@ -995,11 +1068,37 @@ namespace Microsoft.CodeAnalysis.CSharp
                                     this.Compilation,
                                     enumDecl,
                                     enumSymbol,
-                                    GetFieldInitializerBinder(enumSymbol, outer));
+                                    GetFieldOrPropertyInitializerBinder(enumSymbol, outer));
                             }
                         default:
                             Debug.Assert(false, "Unexpected node: " + node.Parent);
                             return null;
+                    }
+
+                case SyntaxKind.ArrowExpressionClause:
+                    {
+                        SourceMethodSymbol symbol = null;
+                        MemberDeclarationSyntax memberSyntax;
+                        var exprDecl = (ArrowExpressionClauseSyntax)node;
+
+                        if (node.Parent is BasePropertyDeclarationSyntax)
+                        {
+                            symbol = (SourceMethodSymbol)GetDeclaredSymbol(exprDecl);
+                        }
+                        else if ((memberSyntax = node.Parent as MemberDeclarationSyntax) != null)
+                        {
+                            symbol = (SourceMethodSymbol)GetDeclaredSymbol(node.Parent as MemberDeclarationSyntax);
+                        }
+                        else
+                        {
+                            // Don't throw, just use for the assert
+                            ExceptionUtilities.UnexpectedValue(node.Parent);
+                        }
+
+                        if ((object)symbol == null)
+                            return null;
+                        return MethodBodySemanticModel.Create(
+                            this.compilation, symbol, outer.WithContainingMemberOrLambda(symbol), exprDecl);
                     }
 
                 case SyntaxKind.GlobalStatement:
@@ -1031,7 +1130,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                             (ConstructorInitializerSyntax)node,
                             constructorSymbol,
                             //insert an extra binder to perform constructor initialization checks
-                            outer.WithAdditionalFlagsAndContainingMemberOrLambda(BinderFlags.ConstructorInitializer, constructorSymbol));
+                            new WithConstructorInitializerLocalsBinder(outer.WithAdditionalFlagsAndContainingMemberOrLambda(BinderFlags.ConstructorInitializer, constructorSymbol),
+                                                                       constructorDecl));
                     }
 
                 case SyntaxKind.ArgumentList:
@@ -1051,12 +1151,19 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 if ((object)constructorSymbol == null)
                                     return null;
 
+                                // Locals declared in instance initializers within the current partial class declaration
+                                // should be in scope within the argument list.
+                                outer = AddInitializersLocalsScope(outer, classDecl, constructorSymbol);
+
+                                //insert an extra binder to perform constructor initialization checks
+                                outer = outer.WithAdditionalFlagsAndContainingMemberOrLambda(BinderFlags.ConstructorInitializer, constructorSymbol);
+                                outer = new WithConstructorInitializerLocalsBinder(outer, initializer.ArgumentList);
+
                                 return InitializerSemanticModel.Create(
                                     this.Compilation,
                                     initializer.ArgumentList,
                                     constructorSymbol,
-                                    //insert an extra binder to perform constructor initialization checks
-                                    outer.WithAdditionalFlagsAndContainingMemberOrLambda(BinderFlags.ConstructorInitializer, constructorSymbol));
+                                    outer);
                             }
                         }
                     }
@@ -1082,6 +1189,31 @@ namespace Microsoft.CodeAnalysis.CSharp
             return null;
         }
 
+        private Binder AddInitializersLocalsScope(Binder outer, TypeDeclarationSyntax typeDecl, SourceMethodSymbol constructorSymbol)
+        {
+            if ((object)((SourceMemberContainerTypeSymbol)constructorSymbol.ContainingSymbol).PrimaryCtor == constructorSymbol)
+            {
+                foreach (FieldInitializers siblingInitializers in ((SourceMemberContainerTypeSymbol)constructorSymbol.ContainingType).InstanceInitializers)
+                {
+                    if (siblingInitializers.TypeDeclarationSyntax != null &&
+                        siblingInitializers.TypeDeclarationSyntax.SyntaxTree == this.syntaxTree &&
+                        siblingInitializers.TypeDeclarationSyntax.GetSyntax() == typeDecl)
+                    {
+                        FieldInitializersInfo initializersInfo = GetFieldInitializersInfo(instanceInitializersInfo, siblingInitializers);
+
+                        if (!initializersInfo.Locals.IsDefaultOrEmpty)
+                        {
+                            return new SimpleLocalScopeBinder(initializersInfo.Locals, outer);
+                        }
+
+                        return outer;
+                    }
+                }
+            }
+
+            return outer;
+        }
+
         private SourceMemberFieldSymbol GetDeclaredFieldSymbol(VariableDeclaratorSyntax variableDecl)
         {
             var declaredSymbol = GetDeclaredSymbol(variableDecl);
@@ -1101,36 +1233,78 @@ namespace Microsoft.CodeAnalysis.CSharp
             return null;
         }
 
-        private Binder GetPropertyInitializerBinder(PropertySymbol propertySymbol, Binder outer)
+        private Binder GetFieldOrPropertyInitializerBinderSimple(FieldSymbol symbol, Binder outer)
         {
-            BinderFlags flags = outer.Flags | BinderFlags.FieldInitializer;
-
-            if (!propertySymbol.IsStatic)
-            {
-                outer = outer.WithPrimaryConstructorParametersIfNecessary(propertySymbol.ContainingType);
-            }
-
-            return new LocalScopeBinder(outer.WithAdditionalFlagsAndContainingMemberOrLambda(
-                flags, propertySymbol));
-        }
-
-
-        private Binder GetFieldInitializerBinder(FieldSymbol fieldSymbol, Binder outer)
-        {
-            BinderFlags flags = outer.Flags;
+            BinderFlags flags = BinderFlags.None;
 
             // NOTE: checking for a containing script class is sufficient, but the regular C# test is quick and easy.
-            if (this.IsRegularCSharp || !fieldSymbol.ContainingType.IsScriptClass)
+            if (this.IsRegularCSharp || !symbol.ContainingType.IsScriptClass)
             {
                 flags |= BinderFlags.FieldInitializer;
             }
 
-            if (!fieldSymbol.IsStatic)
+            return new LocalScopeBinder(outer).WithAdditionalFlagsAndContainingMemberOrLambda(flags, symbol);
+        }
+
+        private Binder GetFieldOrPropertyInitializerBinder(FieldSymbol field, Binder outer)
+        {
+            if (field.IsConst)
             {
-                outer = outer.WithPrimaryConstructorParametersIfNecessary(fieldSymbol.ContainingType);
+                return GetFieldOrPropertyInitializerBinderSimple(field, outer); 
             }
 
-            return new LocalScopeBinder(outer).WithAdditionalFlagsAndContainingMemberOrLambda(flags, fieldSymbol);
+            var sourceTypeSymbol = field.ContainingSymbol as SourceMemberContainerTypeSymbol;
+
+            if ((object)sourceTypeSymbol == null || sourceTypeSymbol.IsScriptClass)
+            {
+                return GetFieldOrPropertyInitializerBinderSimple(field, outer);
+            }
+
+            ImmutableArray<FieldInitializers> initializers = field.IsStatic ? sourceTypeSymbol.StaticInitializers : sourceTypeSymbol.InstanceInitializers;
+
+            // We want to share symbols for locals declaraed within initialization scope across 
+            // models for all initializers in that scope, let's build binders for all of them 
+            // in one go and cache them for future use.
+            foreach (FieldInitializers siblingInitializers in initializers)
+            {
+                if (siblingInitializers.TypeDeclarationSyntax == null || siblingInitializers.TypeDeclarationSyntax.SyntaxTree != this.syntaxTree)
+                {
+                    continue;
+                }
+
+                foreach (FieldInitializer initializer in siblingInitializers.Initializers)
+                {
+                    if ((object)initializer.Field == field)
+                    {
+                        FieldInitializersInfo initializersInfo = GetFieldInitializersInfo(field.IsStatic ? staticInitializersInfo : instanceInitializersInfo, siblingInitializers);
+
+                        foreach (var info in initializersInfo.Initializers)
+                        {
+                            if ((object)field == info.Initializer.Field)
+                            {
+                                return info.Binder;
+                            }
+                        }
+
+                        Debug.Assert(false);
+                        break;
+                    }
+                }
+            }
+
+            return GetFieldOrPropertyInitializerBinderSimple(field, outer);
+        }
+
+        private FieldInitializersInfo GetFieldInitializersInfo(ConcurrentDictionary<TypeDeclarationSyntax, FieldInitializersInfo> map, FieldInitializers siblingInitializers)
+        {
+            return map.GetOrAdd((TypeDeclarationSyntax)siblingInitializers.TypeDeclarationSyntax.GetSyntax(),
+                                                            (typeDecl) =>
+                                                            {
+                                                                var infos = ArrayBuilder<FieldInitializerInfo>.GetInstance(); // Exact size is not known up front.
+                                                                ConsList<Imports> firstDebugImports = null;
+                                                                var locals = Binder.GetFieldInitializerInfos(compilation, siblingInitializers, infos, false, ref firstDebugImports);
+                                                                return new FieldInitializersInfo(locals, infos.ToImmutableAndFree());
+                                                            });
         }
 
         private static bool IsMemberDeclaration(CSharpSyntaxNode node)
@@ -1489,6 +1663,34 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        public override IMethodSymbol GetDeclaredSymbol(ArrowExpressionClauseSyntax declarationSyntax, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            using (Logger.LogBlock(FunctionId.CSharp_SemanticModel_GetDeclaredSymbol, message: this.SyntaxTree.FilePath, cancellationToken: cancellationToken))
+            {
+                CheckSyntaxNode(declarationSyntax);
+
+                var containingMemberSyntax = declarationSyntax.Parent;
+
+                NamespaceOrTypeSymbol container;
+                switch (containingMemberSyntax.Kind)
+                {
+                    case SyntaxKind.PropertyDeclaration:
+                    case SyntaxKind.IndexerDeclaration:
+                        container = GetDeclaredTypeMemberContainer(containingMemberSyntax);
+                        Debug.Assert((object)container != null);
+                        // We are looking for the SourcePropertyAccessorSymbol here,
+                        // not the SourcePropertySymbol, so use declarationSyntax
+                        // to exclude the property symbol from being retrieved.
+                        return this.GetDeclaredMember(container, declarationSyntax.Span) as MethodSymbol;
+
+                    default:
+                        // Don't throw, use only for the assert
+                        ExceptionUtilities.UnexpectedValue(containingMemberSyntax.Kind);
+                        return null;
+                }
+            }
+        }
+
         private string GetDeclarationName(CSharpSyntaxNode declaration)
         {
             switch (declaration.Kind)
@@ -1613,6 +1815,9 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
 
+        /// <summary>
+        /// Finds the member in the containing symbol which is inside the given declaration span.
+        /// </summary>
         private Symbol GetDeclaredMember(NamespaceOrTypeSymbol container, TextSpan declarationSpan, string name = null)
         {
             if ((object)container == null)
@@ -1655,7 +1860,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 // Handle the case of the implementation of a partial method.
                 var partial = symbol.Kind == SymbolKind.Method
-                    ? ((MethodSymbol)symbol).PartialImplementation()
+                    ? ((MethodSymbol)symbol).PartialImplementationPart
                     : null;
                 if ((object)partial != null)
                 {

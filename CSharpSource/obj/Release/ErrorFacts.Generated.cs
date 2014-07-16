@@ -1,4 +1,3 @@
-
 namespace Microsoft.CodeAnalysis.CSharp
 {
     internal static partial class ErrorFacts
@@ -193,6 +192,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case ErrorCode.WRN_AssemblyAttributeFromModuleIsOverridden:
                 case ErrorCode.WRN_FilterIsConstant:
                 case ErrorCode.WRN_UnimplementedCommandLineSwitch:
+                case ErrorCode.WRN_ReferencedAssemblyDoesNotHaveStrongName:
                 case ErrorCode.WRN_RefCultureMismatch:
                 case ErrorCode.WRN_ConflictingMachineAssembly:
                 case ErrorCode.WRN_UnqualifiedNestedTypeInCref:
@@ -232,6 +232,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             {
                 case ErrorCode.INF_UnusedUsingDirective:
                 case ErrorCode.INF_UnusedExternAlias:
+                case ErrorCode.INF_UnableToLoadSomeTypesInAnalyzer:
                     return true;
                 default:
                     return false;

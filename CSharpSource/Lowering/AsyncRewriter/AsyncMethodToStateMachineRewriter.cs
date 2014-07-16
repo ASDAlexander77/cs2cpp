@@ -73,7 +73,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             this.exitLabel = F.GenerateLabel("exitLabel");
 
             this.exprRetValue = method.IsGenericTaskReturningAsync(F.Compilation)
-                ? F.SynthesizedLocal(asyncMethodBuilderMemberCollection.ResultType, GeneratedNames.AsyncExprRetValueFieldName())
+                ? F.SynthesizedLocal(asyncMethodBuilderMemberCollection.ResultType, kind: SynthesizedLocalKind.AsyncMethodReturnValue)
                 : null;
 
             this.dynamicFactory = new LoweredDynamicOperationFactory(F);
@@ -102,38 +102,34 @@ namespace Microsoft.CodeAnalysis.CSharp
             GeneratedLabelSymbol initialLabel;
             AddState(out initialState, out initialLabel);
 
-            var exceptionLocal = F.SynthesizedLocal(F.WellKnownType(WellKnownType.System_Exception), GeneratedNames.AsyncExceptionFieldName());
+            var exceptionLocal = F.SynthesizedLocal(F.WellKnownType(WellKnownType.System_Exception));
 
             var bodyBuilder = ArrayBuilder<BoundStatement>.GetInstance();
 
-            bodyBuilder.Add(
-                F.HiddenSequencePoint());
-            bodyBuilder.Add(
-                F.Assignment(F.Local(cachedState), F.Field(F.This(), stateField)));
+            bodyBuilder.Add(F.HiddenSequencePoint());
+            bodyBuilder.Add(F.Assignment(F.Local(cachedState), F.Field(F.This(), stateField)));
 
             BoundStatement rewrittenBody = (BoundStatement)Visit(body);
 
             bodyBuilder.Add(
                 F.Try(
-                    F.Block(
-                        ImmutableArray<LocalSymbol>.Empty,
-                            // switch (state) ...
-                            F.HiddenSequencePoint(),
+                    F.Block(ImmutableArray<LocalSymbol>.Empty,
+                        // switch (state) ...
+                        F.HiddenSequencePoint(),
                         Dispatch(),
                         F.Label(initialLabel),
-                            // [body]
-                            rewrittenBody
+                        // [body]
+                        rewrittenBody
                     ),
                     F.CatchBlocks(
                         F.Catch(
                             exceptionLocal,
                             F.Block(
                                 F.NoOp(method.ReturnsVoid ? NoOpStatementFlavor.AsyncMethodCatchHandler : NoOpStatementFlavor.Default),
-                                F.HiddenSequencePoint(),
-                                    // this.state = finishedState
-                                    F.Assignment(F.Field(F.This(), stateField), F.Literal(StateMachineStates.FinishedStateMachine)),
-                                    // builder.SetException(ex)
-                                    F.ExpressionStatement(
+                                // this.state = finishedState
+                                F.Assignment(F.Field(F.This(), stateField), F.Literal(StateMachineStates.FinishedStateMachine)),
+                                // builder.SetException(ex)
+                                F.ExpressionStatement(
                                     F.Call(
                                         F.Field(F.This(), asyncMethodBuilderField),
                                         asyncMethodBuilderMemberCollection.SetException,
@@ -245,6 +241,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             MethodSymbol isCompletedMethod = ((object)node.IsCompleted != null) ? VisitMethodSymbol(node.IsCompleted.GetMethod) : null;
             TypeSymbol type = VisitType(node.Type);
 
+            // The lifespan of awaiter temp doesn't cross sequence points (user code in between awaits), so it doesn't need to be named.
             LocalSymbol awaiterTemp;
             if ((object)getResult == null)
             {
@@ -308,7 +305,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         private BoundExpression MakeCallMaybeDynamic(
             BoundExpression receiver,
             MethodSymbol methodSymbol = null,
-        string methodName = null,
+            string methodName = null,
             bool resultsDiscarded = false)
         {
             if ((object)methodSymbol != null)
@@ -328,7 +325,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 receiver,
                 typeArguments: ImmutableArray<TypeSymbol>.Empty,
                 loweredArguments: ImmutableArray<BoundExpression>.Empty,
-            argumentNames: ImmutableArray<string>.Empty,
+                argumentNames: ImmutableArray<string>.Empty,
                 refKinds: ImmutableArray<RefKind>.Empty,
                 hasImplicitReceiver: false,
                 resultDiscarded: resultsDiscarded).ToExpression();

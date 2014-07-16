@@ -1218,7 +1218,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         ERR_MetadataReferencesNotSupported = 7099,
 
         WRN_UnimplementedCommandLineSwitch = 8001,
-        ERR_ReferencedAssemblyDoesNotHaveStrongName = 8002,
+        WRN_ReferencedAssemblyDoesNotHaveStrongName = 8002,
         ERR_InvalidSignaturePublicKey = 8003,
         ERR_ExportedTypeConflictsWithDeclaration = 8004,
         ERR_ExportedTypesConflict = 8005,
@@ -1245,6 +1245,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         ERR_FeatureNotAvailableInVersion3 = 8024,
         ERR_FeatureNotAvailableInVersion4 = 8025,
         ERR_FeatureNotAvailableInVersion5 = 8026,
+        // ERR_FeatureNotAvailableInVersion6 is below
 
         ERR_FieldHasMultipleDistinctConstantValues = 8027,
 
@@ -1264,16 +1265,18 @@ namespace Microsoft.CodeAnalysis.CSharp
         ERR_InstanceCtorMustHaveThisInitializer = 8037,
         ERR_PrimaryCtorParameterSameNameAsTypeParam = 8038,
         ERR_PrimaryCtorParameterSameNameAsContainingType = 8039,
-        // available = 8040
-        // available = 8041
+
+        INF_UnableToLoadSomeTypesInAnalyzer = 8040,
+        
+        ERR_DuplicatePrimaryCtorBody = 8041,
         // available = 8042
         ERR_InstanceCtorCannotHaveDefaultThisInitializer = 8043,
 
         // available = 8044,
         // available = 8045,
-        // available = 8046,
 
-        ERR_DeclarationExpressionOutsideOfAMethodBody = 8047,
+        ERR_ExpressionTreeContainsDeclarationExpression = 8046,
+        ERR_DeclarationExpressionOutOfContext = 8047,
         ERR_VariableUsedInTheSameArgumentList = 8048,
 
         ERR_ImplementedInterfaceWithArguments = 8049,
@@ -1284,12 +1287,21 @@ namespace Microsoft.CodeAnalysis.CSharp
         ERR_AutoPropertyInitializerInInterface = 8053,
 
         ERR_InitializerInStructWithoutExplicitConstructor = 8054,
-        ERR_EncodinglessSyntaxTree = 8055,
 
-        // Values in the range 10000-14000 are used for "Code Analysis" issues previously reported by FXCop
+        ERR_EncodinglessSyntaxTree = 8055,
+        ERR_AccessorListAndExpressionBody = 8056,
+        ERR_BlockBodyAndExpressionBody = 8057,
+
+        ERR_FeatureIsExperimental = 8058,
+        ERR_FeatureNotAvailableInVersion6 = 8059,
+        // gap for future versions
+
+        ERR_SwitchFallOut = 8070,
+
+        // Values in the range 10000-10099 are used for "Code Analysis" issues previously reported by FXCop
         WRN_CA2000_DisposeObjectsBeforeLosingScope1 = 10000,
         WRN_CA2000_DisposeObjectsBeforeLosingScope2 = 10001,
 
-        WRN_CA2202_DoNotDisposeObjectsMultipleTimes = 10002
+        WRN_CA2202_DoNotDisposeObjectsMultipleTimes = 10002,
     }
 }

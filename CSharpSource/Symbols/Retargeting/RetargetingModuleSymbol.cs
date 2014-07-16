@@ -249,14 +249,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Retargeting
             }
         }
 
-        internal override IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
-        {
-            get
-            {
-                return underlyingModule.TypeWithNamespaceNames;
-            }
-        }
-
         public override ImmutableArray<CSharpAttributeData> GetAttributes()
         {
             return RetargetingTranslator.GetRetargetedAttributes(this.underlyingModule.GetAttributes(), ref this.lazyCustomAttributes);

@@ -338,7 +338,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SymbolKind.Parameter:
                     // Parameters of a primary constructor are never captured, they are similar to fields.
                     var container = variable.ContainingSymbol as SourceMethodSymbol;
-                    if ((object)container != null && container.IsPrimaryCtor )
+                    if ((object)container != null && container.IsPrimaryCtor)
                     {
                         break;
                     }
@@ -434,6 +434,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     case BoundKind.Local:
                         NoteRead(((BoundLocal)n).LocalSymbol);
+                        return;
+
+                    case BoundKind.DeclarationExpression:
+                        NoteRead(((BoundDeclarationExpression)n).LocalSymbol);
                         return;
 
                     case BoundKind.Parameter:
@@ -558,6 +562,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                                 {
                                     usedVariables.Add(((BoundLocal)n).LocalSymbol);
                                 }
+                                else if (n.Kind == BoundKind.DeclarationExpression)
+                                {
+                                    usedVariables.Add(((BoundDeclarationExpression)n).LocalSymbol);
+                                }
                                 continue;
                             }
                             else
@@ -593,6 +601,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                     case BoundKind.Local:
                         NoteWrite(((BoundLocal)n).LocalSymbol, value, read);
+                        return;
+
+                    case BoundKind.DeclarationExpression:
+                        NoteWrite(((BoundDeclarationExpression)n).LocalSymbol, value, read);
                         return;
 
                     case BoundKind.Parameter:
@@ -686,6 +698,8 @@ namespace Microsoft.CodeAnalysis.CSharp
                     return MakeSlot(MethodThisParameter);
                 case BoundKind.Local:
                     return MakeSlot(((BoundLocal)node).LocalSymbol);
+                case BoundKind.DeclarationExpression:
+                    return MakeSlot(((BoundDeclarationExpression)node).LocalSymbol);
                 case BoundKind.Parameter:
                     return MakeSlot(((BoundParameter)node).ParameterSymbol);
                 case BoundKind.RangeVariable:
@@ -807,6 +821,12 @@ namespace Microsoft.CodeAnalysis.CSharp
                         break;
                     }
 
+                case BoundKind.DeclarationExpression:
+                    {
+                        unassignedSlot = MakeSlot(((BoundDeclarationExpression)node).LocalSymbol);
+                        break;
+                    }
+
                 case BoundKind.FieldAccess:
                     {
                         var fieldAccess = (BoundFieldAccess)node;
@@ -892,6 +912,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                         var result = ((BoundLocal)expression).LocalSymbol;
                         usedVariables.Add(result);
                         return result;
+                    case BoundKind.DeclarationExpression:
+                        var local = ((BoundDeclarationExpression)expression).LocalSymbol;
+                        usedVariables.Add(local);
+                        return local;
                     case BoundKind.RangeVariable:
                         return ((BoundRangeVariable)expression).RangeVariableSymbol;
                     case BoundKind.Parameter:
@@ -978,7 +1002,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 case BoundKind.RangeVariable:
                     AssignImpl(((BoundRangeVariable)node).Value, value, refKind, written, read);
-                        break;
+                    break;
 
                 case BoundKind.ForEachStatement:
                     {
@@ -1209,18 +1233,18 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override BoundNode VisitBlock(BoundBlock node)
         {
-            DeclareVariables(node.LocalsOpt);
+            DeclareVariables(node.Locals);
             var result = base.VisitBlock(node);
-            ReportUnusedVariables(node.LocalsOpt);
+            ReportUnusedVariables(node.Locals);
             return result;
         }
 
         public override BoundNode VisitSwitchStatement(BoundSwitchStatement node)
         {
             DeclareVariables(node.OuterLocals);
-            DeclareVariables(node.InnerLocalsOpt);
+            DeclareVariables(node.InnerLocals);
             var result = base.VisitSwitchStatement(node);
-            ReportUnusedVariables(node.InnerLocalsOpt);
+            ReportUnusedVariables(node.InnerLocals);
             ReportUnusedVariables(node.OuterLocals);
             return result;
         }
@@ -1246,7 +1270,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         public override BoundNode VisitWhileStatement(BoundWhileStatement node)
         {
             DeclareVariables(node.InnerLocals);
-            var result = base.VisitWhileStatement(node); 
+            var result = base.VisitWhileStatement(node);
             ReportUnusedVariables(node.InnerLocals);
             return result;
         }
@@ -1267,6 +1291,14 @@ namespace Microsoft.CodeAnalysis.CSharp
             return result;
         }
 
+        public override BoundNode VisitLockStatement(BoundLockStatement node)
+        {
+            DeclareVariables(node.Locals);
+            var result = base.VisitLockStatement(node);
+            ReportUnusedVariables(node.Locals);
+            return result;
+        }
+
         /// <remarks>
         /// Variables declared in a using statement are always considered used, so this is just an assert.
         /// </remarks>
@@ -1281,38 +1313,38 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             foreach (LocalSymbol local in localsOpt)
             {
-                if (local.DeclarationKind == LocalDeclarationKind.Variable)
+                if (local.DeclarationKind == LocalDeclarationKind.RegularVariable)
                 {
                     DeclareVariable(local);
                 }
                 else
                 {
-                    Debug.Assert(local.DeclarationKind == LocalDeclarationKind.Using);
-                int slot = MakeSlot(local);
-                if (slot >= 0)
-                {
-                    SetSlotAssigned(slot);
-                    NoteWrite(local, value: null, read: true);
+                    Debug.Assert(local.DeclarationKind == LocalDeclarationKind.UsingVariable);
+                    int slot = MakeSlot(local);
+                    if (slot >= 0)
+                    {
+                        SetSlotAssigned(slot);
+                        NoteWrite(local, value: null, read: true);
+                    }
+                    else
+                    {
+                        Debug.Assert(emptyStructTypeCache.IsEmptyStructType(local.Type));
+                    }
                 }
-                else
-                {
-                    Debug.Assert(emptyStructTypeCache.IsEmptyStructType(local.Type));
-                }
-            }
             }
 
             var result = base.VisitUsingStatement(node);
 
             foreach (LocalSymbol local in localsOpt)
             {
-                if (local.DeclarationKind == LocalDeclarationKind.Variable)
+                if (local.DeclarationKind == LocalDeclarationKind.RegularVariable)
                 {
                     ReportIfUnused(local, assigned: true);
                 }
                 else
                 {
-                NoteRead(local); // At the end of the statement, there's an implied read when the local is disposed
-            }
+                    NoteRead(local); // At the end of the statement, there's an implied read when the local is disposed
+                }
             }
             Debug.Assert(localsOpt.All(usedVariables.Contains));
 
@@ -1323,13 +1355,13 @@ namespace Microsoft.CodeAnalysis.CSharp
         {
             foreach (LocalSymbol local in node.Locals)
             {
-                if (local.DeclarationKind == LocalDeclarationKind.Variable)
+                if (local.DeclarationKind == LocalDeclarationKind.RegularVariable)
                 {
                     DeclareVariable(local);
                 }
                 else
                 {
-                    Debug.Assert(local.DeclarationKind == LocalDeclarationKind.Fixed);
+                    Debug.Assert(local.DeclarationKind == LocalDeclarationKind.FixedVariable);
                     // TODO: should something be done about this local?
                 }
             }
@@ -1338,7 +1370,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             foreach (LocalSymbol local in node.Locals)
             {
-                if (local.DeclarationKind == LocalDeclarationKind.Variable)
+                if (local.DeclarationKind == LocalDeclarationKind.RegularVariable)
                 {
                     ReportIfUnused(local, assigned: true);
                 }
@@ -1357,12 +1389,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private void DeclareVariables(ImmutableArray<LocalSymbol> locals)
         {
-            if (!locals.IsDefaultOrEmpty)
+            foreach (var symbol in locals)
             {
-                foreach (var symbol in locals)
-                {
-                    DeclareVariable(symbol);
-                }
+                DeclareVariable(symbol);
             }
         }
 
@@ -1378,7 +1407,6 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         private void ReportUnusedVariables(ImmutableArray<LocalSymbol> locals)
         {
-            if (locals.IsDefault) return;
             foreach (var symbol in locals)
             {
                 ReportIfUnused(symbol, assigned: true);
@@ -1450,6 +1478,25 @@ namespace Microsoft.CodeAnalysis.CSharp
             // Treat similar to BoundLocal. This needs an adjustment for a semicolon operators.
             CheckAssigned(localSymbol, node.Syntax);
             return null;
+        }
+
+        protected override void VisitLvalueDeclarationExpression(BoundDeclarationExpression node)
+        {
+            LocalSymbol localSymbol = node.LocalSymbol;
+            int slot = MakeSlot(localSymbol); // not initially assigned
+            if (initiallyAssignedVariables != null && initiallyAssignedVariables.Contains(localSymbol))
+            {
+                // When data flow analysis determines that the variable is sometimes
+                // used without being assigned first, we want to treat that variable, during region analysis,
+                // as assigned at its point of declaration.
+                Assign(node, node.InitializerOpt);
+            }
+
+            if (node.InitializerOpt != null)
+            {
+                base.VisitLvalueDeclarationExpression(node);
+                Assign(node, node.InitializerOpt);
+            }
         }
 
         public override BoundNode VisitLambda(BoundLambda node)
@@ -1597,6 +1644,9 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case BoundKind.Local:
                     CheckAssigned(((BoundLocal)expr).LocalSymbol, node);
                     break;
+                case BoundKind.DeclarationExpression:
+                    CheckAssigned(((BoundDeclarationExpression)expr).LocalSymbol, node);
+                    break;
                 case BoundKind.Parameter:
                     CheckAssigned(((BoundParameter)expr).ParameterSymbol, node);
                     break;
@@ -1735,7 +1785,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             foreach (var symbol in catchBlock.Locals)
             {
-                ReportIfUnused(symbol, assigned: symbol.DeclarationKind != LocalDeclarationKind.Catch);
+                ReportIfUnused(symbol, assigned: symbol.DeclarationKind != LocalDeclarationKind.CatchVariable);
             }
         }
 

@@ -16,40 +16,53 @@ namespace Microsoft.CodeAnalysis.CSharp
     /// </summary>
     internal sealed class IteratorAndAsyncCaptureWalker : DataFlowPass
     {
-        private MultiDictionary<Symbol, CSharpSyntaxNode> variablesCaptured = new MultiDictionary<Symbol, CSharpSyntaxNode>();
-        private Dictionary<LocalSymbol, BoundExpression> refLocalInitializers = new Dictionary<LocalSymbol, BoundExpression>();
+        // The analyzer collects captured variables and their usages. The syntax locations are used to report errors.
+        private readonly MultiDictionary<Symbol, CSharpSyntaxNode> variablesCaptured = new MultiDictionary<Symbol, CSharpSyntaxNode>();
+
+        private readonly Dictionary<LocalSymbol, BoundExpression> refLocalInitializers = new Dictionary<LocalSymbol, BoundExpression>();
         private bool seenYieldInCurrentTry = false;
 
-        private IteratorAndAsyncCaptureWalker(CSharpCompilation compilation, MethodSymbol method, BoundNode node)
-            : this(compilation, method, node, new CaptureWalkerEmptyStructTypeCache())
-        {
-        }
-
-        private IteratorAndAsyncCaptureWalker(CSharpCompilation compilation, MethodSymbol method, BoundNode node, CaptureWalkerEmptyStructTypeCache emptyStructCache)
-            : base(compilation, method, node, emptyStructCache, trackUnassignments: true, initiallyAssignedVariables: UnassignedVariablesWalker.Analyze(compilation, method, node, emptyStructCache))
+        private IteratorAndAsyncCaptureWalker(CSharpCompilation compilation, MethodSymbol method, BoundNode node, CaptureWalkerEmptyStructTypeCache emptyStructCache, HashSet<Symbol> initiallyAssignedVariables)
+            : base(compilation, 
+                  method, 
+                  node, 
+                  emptyStructCache, 
+                  trackUnassignments: true, 
+                  initiallyAssignedVariables: initiallyAssignedVariables)
         {
         }
 
         public static MultiDictionary<Symbol, CSharpSyntaxNode> Analyze(CSharpCompilation compilation, MethodSymbol method, BoundNode node)
         {
-            IteratorAndAsyncCaptureWalker w = new IteratorAndAsyncCaptureWalker(compilation, method, node);
+            var emptyStructs = new CaptureWalkerEmptyStructTypeCache();
+            var initiallyAssignedVariables = UnassignedVariablesWalker.Analyze(compilation, method, node, emptyStructs);
+
+            var walker = new IteratorAndAsyncCaptureWalker(compilation, method, node, emptyStructs, initiallyAssignedVariables);
+
             bool badRegion = false;
-            w.Analyze(ref badRegion);
+            walker.Analyze(ref badRegion);
             Debug.Assert(!badRegion);
-            var result = w.variablesCaptured;
+
+            var result = walker.variablesCaptured;
+
+
             if (!method.IsStatic && method.ContainingType.TypeKind == TypeKind.Struct)
             {
                 // It is possible that the enclosing method only *writes* to the enclosing struct, but in that
                 // case it should be considered captured anyway so that we have a proxy for it to write to.
-                w.variablesCaptured.Add(method.ThisParameter, node.Syntax);
+                result.Add(method.ThisParameter, node.Syntax);
             }
+
             foreach (var variable in result.Keys.ToArray()) // take a snapshot, as we are modifying the underlying multidictionary
             {
                 var local = variable as LocalSymbol;
-                if ((object)local == null || local.RefKind == RefKind.None) continue;
-                w.AddSpillsForRef(w.refLocalInitializers[local], result[local]);
+                if ((object)local != null && local.RefKind != RefKind.None)
+                {
+                    walker.AddSpillsForRef(walker.refLocalInitializers[local], result[local]);
+                }
             }
-            w.Free();
+
+            walker.Free();
             return result;
         }
 
@@ -71,7 +84,11 @@ namespace Microsoft.CodeAnalysis.CSharp
                         var local = (BoundLocal)refInitializer;
                         if (!variablesCaptured.ContainsKey(local.LocalSymbol))
                         {
-                            foreach (var loc in locations) variablesCaptured.Add(local.LocalSymbol, loc);
+                            foreach (var loc in locations)
+                            {
+                                variablesCaptured.Add(local.LocalSymbol, loc);
+                            }
+
                             if (local.LocalSymbol.RefKind != RefKind.None)
                             {
                                 refInitializer = refLocalInitializers[local.LocalSymbol];
@@ -79,6 +96,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             }
                         }
                         return;
+
                     case BoundKind.FieldAccess:
                         var field = (BoundFieldAccess)refInitializer;
                         if (!field.FieldSymbol.IsStatic && field.FieldSymbol.ContainingType.IsValueType)
@@ -87,6 +105,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                             continue;
                         }
                         return;
+
                     default:
                         return;
                 }
@@ -182,7 +201,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             return base.VisitBaseReference(node);
         }
 
-        void MarkLocalsUnassigned()
+        private void MarkLocalsUnassigned()
         {
             for (int i = 0; i < nextVariableSlot; i++)
             {
@@ -237,9 +256,8 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             base.VisitFinallyBlock(finallyBlock, ref unsetInFinally);
         }
-    }
 
-    class OutsideVariablesUsedInside : BoundTreeWalker
+        private sealed class OutsideVariablesUsedInside : BoundTreeWalker
     {
         private HashSet<Symbol> localsInScope = new HashSet<Symbol>();
         private readonly MultiDictionary<Symbol, CSharpSyntaxNode> variablesCaptured;
@@ -253,18 +271,15 @@ namespace Microsoft.CodeAnalysis.CSharp
 
         public override BoundNode VisitBlock(BoundBlock node)
         {
-            AddVariables(node.LocalsOpt);
+            AddVariables(node.Locals);
             return base.VisitBlock(node);
         }
 
         private void AddVariables(ImmutableArray<LocalSymbol> locals)
         {
-            if (!locals.IsDefaultOrEmpty)
+            foreach (var local in locals)
             {
-                foreach (var local in locals)
-                {
-                    AddVariable(local);
-                }
+                AddVariable(local);
             }
         }
 
@@ -317,4 +332,5 @@ namespace Microsoft.CodeAnalysis.CSharp
             }
         }
     }
+}
 }

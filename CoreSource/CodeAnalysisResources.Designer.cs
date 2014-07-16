@@ -10,6 +10,7 @@
 
 namespace Microsoft.CodeAnalysis {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace Microsoft.CodeAnalysis {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.CodeAnalysisResources", typeof(CodeAnalysisResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.CodeAnalysisResources", typeof(CodeAnalysisResources).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -246,6 +247,15 @@ namespace Microsoft.CodeAnalysis {
         internal static string Delegate1 {
             get {
                 return ResourceManager.GetString("Delegate1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A DiagnosticDescriptor must have an Id that is neiter null nor an empty string nor a string that only contains white space..
+        /// </summary>
+        internal static string DiagnosticIdCantBeNullOrWhitespace {
+            get {
+                return ResourceManager.GetString("DiagnosticIdCantBeNullOrWhitespace", resourceCulture);
             }
         }
         
@@ -669,6 +679,15 @@ namespace Microsoft.CodeAnalysis {
         internal static string ReturnTypeCannotBeVoidByRefOrOpen {
             get {
                 return ResourceManager.GetString("ReturnTypeCannotBeVoidByRefOrOpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The rule set file has duplicate rules for &apos;{0}&apos; with differing actions &apos;{1}&apos; and &apos;{2}&apos;..
+        /// </summary>
+        internal static string RuleSetHasDuplicateRules {
+            get {
+                return ResourceManager.GetString("RuleSetHasDuplicateRules", resourceCulture);
             }
         }
         

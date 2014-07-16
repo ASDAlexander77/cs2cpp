@@ -778,7 +778,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         internal static bool IsValidMetadataIdentifier(string str)
         {
-            return !String.IsNullOrEmpty(str) && IsValidUnicodeString(str, allowNullCharacters: false);
+            return !string.IsNullOrEmpty(str) && str.IsValidUnicodeString() && str.IndexOf('\0') == -1;
         }
 
         /// <summary>
@@ -786,41 +786,7 @@ namespace Microsoft.CodeAnalysis
         /// </summary>
         internal static bool IsValidUnicodeString(string str)
         {
-            return String.IsNullOrEmpty(str) || IsValidUnicodeString(str, allowNullCharacters: true);
-        }
-
-        private static bool IsValidUnicodeString(string str, bool allowNullCharacters)
-        {
-            int i = 0;
-            while (i < str.Length)
-            {
-                char c = str[i++];
-                if (c == 0 && !allowNullCharacters)
-                {
-                    return false;
-                }
-
-                // (high surrogate, low surrogate) makes a valid pair, anything else is invalid:
-                if (Char.IsHighSurrogate(c))
-                {
-                    if (i < str.Length && Char.IsLowSurrogate(str[i]))
-                    {
-                        i++;
-                    }
-                    else
-                    {
-                        // high surrogate not followed by low surrogate
-                        return false;
-                    }
-                }
-                else if (Char.IsLowSurrogate(c))
-                {
-                    // previous character wasn't a high surrogate
-                    return false;
-                }
-            }
-
-            return true;
+            return str == null || str.IsValidUnicodeString();
         }
 
         internal static void ValidateAssemblyOrModuleName(string name, string argumentName)
@@ -853,17 +819,32 @@ namespace Microsoft.CodeAnalysis
 
             // Dev11 VB can produce assembly that starts with whitespace (vbc /out:" a.dll" /target:library). 
             // We disallow it. PEVerify reports an error: Assembly name contains leading spaces.
-            if (Char.IsWhiteSpace(name[0]))
+            if (char.IsWhiteSpace(name[0]))
             {
                 return new ArgumentException(CodeAnalysisResources.NameCannotStartWithWhitespace, argumentName);
             }
 
-            if (PathUtilities.HasDirectorySeparators(name) || !IsValidMetadataIdentifier(name))
+            if (!IsValidMetadataFileName(name))
             {
                 return new ArgumentException(CodeAnalysisResources.NameContainsInvalidCharacter, argumentName);
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Checks that the specified name is a valid metadata String and a file name.
+        /// The specification isn't entirely consistent and complete but it mentiones:
+        /// 
+        /// 22.19.2: "Name shall index a non-empty string in the String heap. It shall be in the format {filename}.{extension} (e.g., 'foo.dll', but not 'c:\utils\foo.dll')."
+        /// 22.30.2: "The format of Name is {file name}.{file extension} with no path or drive letter; on POSIX-compliant systems Name contains no colon, no forward-slash, no backslash."
+        ///          As Microsoft specific constraint.
+        /// 
+        /// A reasonable restriction seems to be a valid UTF8 non-empty string that doesn't contain '\0', '\', '/', ':' characters.
+        /// </summary>
+        internal static bool IsValidMetadataFileName(string name)
+        {
+            return FileNameUtilities.IsFileName(name) && IsValidMetadataIdentifier(name);
         }
 
         /// <summary>

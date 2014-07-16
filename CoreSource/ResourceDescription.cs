@@ -1,10 +1,8 @@
 ﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Roslyn.Utilities;
-using System.Security.Cryptography;
 using System.Reflection;
 using System.Collections.Immutable;
 using System.Diagnostics;
@@ -69,7 +67,7 @@ namespace Microsoft.CodeAnalysis
                     throw new ArgumentNullException("resourceName");
                 }
 
-                if (resourceName.Length == 0 || resourceName.IndexOf('\0') >= 0)
+                if (!MetadataHelpers.IsValidMetadataIdentifier(resourceName))
                 {
                     throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidResourceName, "resourceName");
                 }
@@ -81,7 +79,7 @@ namespace Microsoft.CodeAnalysis
                         throw new ArgumentNullException("fileName");
                     }
 
-                    if (fileName.Length == 0 || !PathUtilities.IsValidFileName(fileName))
+                    if (!MetadataHelpers.IsValidMetadataFileName(fileName))
                     {
                         throw new ArgumentException(CodeAnalysisResources.EmptyOrInvalidFileName, "fileName");
                     }
@@ -105,7 +103,7 @@ namespace Microsoft.CodeAnalysis
                 this.resource = resource;
             }
 
-            protected override ImmutableArray<byte> ComputeHash(HashAlgorithm algorithm)
+            internal override ImmutableArray<byte> ComputeHash(HashAlgorithm algorithm)
             {
                 try
                 {

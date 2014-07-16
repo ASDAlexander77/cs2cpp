@@ -10,9 +10,9 @@ namespace Microsoft.CodeAnalysis.CSharp
 {
     /// <summary>
     /// A binding for a field initializer, property initializer, constructor
-    /// initializer, or parameter default value. Represents the result of
-    /// binding an initial value expression rather than an block (for that,
-    /// use a MethodBodySemanticModel).
+    /// initializer, or a parameter default value.
+    /// Represents the result of binding a value expression rather than a
+    /// block (for that, use a <see cref="MethodBodySemanticModel"/>).
     /// </summary>
     internal sealed class InitializerSemanticModel : MemberSemanticModel
     {
@@ -21,11 +21,11 @@ namespace Microsoft.CodeAnalysis.CSharp
         // (b) A constructor initializer (": this(...)" or ": base(...)") OR
         // (c) A parameter default value
         private InitializerSemanticModel(CSharpCompilation compilation,
-                                         CSharpSyntaxNode syntax,
-                                         Symbol symbol,
-                                         Binder rootBinder,
-                                         SyntaxTreeSemanticModel parentSemanticModelOpt = null,
-                                         int speculatedPosition = 0) :
+                                     CSharpSyntaxNode syntax,
+                                     Symbol symbol,
+                                     Binder rootBinder,
+                                     SyntaxTreeSemanticModel parentSemanticModelOpt = null,
+                                     int speculatedPosition = 0) :
             base(compilation, syntax, symbol, rootBinder, parentSemanticModelOpt, speculatedPosition)
         {
         }
@@ -65,7 +65,7 @@ namespace Microsoft.CodeAnalysis.CSharp
         }
 
         /// <summary>
-        /// Creates a SemanticModel for a a parameter default value.
+        /// Creates a SemanticModel for a parameter default value.
         /// </summary>
         internal static InitializerSemanticModel Create(CSharpCompilation compilation, ParameterSyntax syntax, ParameterSymbol parameterSymbol, Binder rootBinder)
         {
@@ -122,6 +122,10 @@ namespace Microsoft.CodeAnalysis.CSharp
                 case SyntaxKind.ArgumentList:
                     break;
 
+                case SyntaxKind.PropertyDeclaration:
+                    rootSyntax = ((PropertyDeclarationSyntax)rootSyntax).Initializer.Value;
+                    break;
+
                 default:
                     throw ExceptionUtilities.UnexpectedValue(rootSyntax.Kind);
             }
@@ -141,6 +145,10 @@ namespace Microsoft.CodeAnalysis.CSharp
 
                 case SyntaxKind.VariableDeclarator:
                     equalsValue = ((VariableDeclaratorSyntax)node).Initializer;
+                    break;
+
+                case SyntaxKind.PropertyDeclaration:
+                    equalsValue = ((PropertyDeclarationSyntax)node).Initializer;
                     break;
 
                 case SyntaxKind.Parameter:
@@ -193,7 +201,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                     {
                         BoundExpression unusedValueBeforeConversion; // not needed.
                         var parameter = (ParameterSymbol)this.MemberSymbol;
-                        return binder.BindParameterDefaultValue(parameter.ContainingSymbol,
+                        return binder.BindParameterDefaultValue(
                             equalsValue,
                             parameter.Type,
                             diagnostics,
@@ -212,9 +220,20 @@ namespace Microsoft.CodeAnalysis.CSharp
             // that's our root and we know how to bind that thing even if it is not an 
             // expression or a statement.
 
-            return (node.Kind == SyntaxKind.EqualsValueClause &&
-                (/*enum or parameter initializer*/ this.Root == node || /*field initializer*/ this.Root == node.Parent)) ||
-                    ((node.Kind == SyntaxKind.BaseConstructorInitializer || node.Kind == SyntaxKind.ThisConstructorInitializer || node.Kind == SyntaxKind.ArgumentList) && this.Root == node);
+            switch (node.Kind)
+            {
+                case SyntaxKind.EqualsValueClause:
+                    return this.Root == node ||     /*enum or parameter initializer*/
+                           this.Root == node.Parent /*field initializer*/;
+
+                case SyntaxKind.BaseConstructorInitializer:
+                case SyntaxKind.ThisConstructorInitializer:
+                case SyntaxKind.ArgumentList:
+                    return this.Root == node;
+
+                default:
+                    return false;
+            }
         }
 
         internal override bool TryGetSpeculativeSemanticModelCore(SyntaxTreeSemanticModel parentModel, int position, EqualsValueClauseSyntax initializer, out SemanticModel speculativeModel)

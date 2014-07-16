@@ -305,7 +305,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             }
         }
 
-        IEnumerable<Cci.IMethodImplementation> Cci.ITypeDefinition.GetExplicitImplementationOverrides(EmitContext context)
+        IEnumerable<Cci.MethodImplementation> Cci.ITypeDefinition.GetExplicitImplementationOverrides(EmitContext context)
         {
             CheckDefinitionInvariant();
 
@@ -321,12 +321,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 if (member.Kind == SymbolKind.Method)
                 {
                     var method = (MethodSymbol)member;
+                    Debug.Assert((object)method.PartialDefinitionPart == null); // must be definition
+
                     var explicitImplementations = method.ExplicitInterfaceImplementations;
                     if (explicitImplementations.Length != 0)
                     {
                         foreach (var implemented in method.ExplicitInterfaceImplementations)
                         {
-                            yield return new MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(implemented, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
+                            yield return new Microsoft.Cci.MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(implemented, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
                         }
                     }
 
@@ -337,7 +339,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                         // specify the override explicitly.
                         // This mostly affects accessors - C# ignores method interactions
                         // between accessors and non-accessors, whereas the runtime does not.
-                        yield return new MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(method.OverriddenMethod, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
+                        yield return new Microsoft.Cci.MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(method.OverriddenMethod, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
                     }
                     else if (method.MethodKind == MethodKind.Destructor && this.SpecialType != SpecialType.System_Object)
                     {
@@ -352,7 +354,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                             MethodSymbol objectMethod = objectMember as MethodSymbol;
                             if ((object)objectMethod != null && objectMethod.MethodKind == MethodKind.Destructor)
                             {
-                                yield return new MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(objectMethod, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
+                                yield return new Microsoft.Cci.MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(objectMethod, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
                             }
                         }
                     }
@@ -369,7 +371,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                     {
                         foreach (var implemented in method.ExplicitInterfaceImplementations)
                         {
-                            yield return new MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(implemented, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
+                            Debug.Assert((object)method.PartialDefinitionPart == null); // must be definition
+                            yield return new Microsoft.Cci.MethodImplementation(method, moduleBeingBuilt.TranslateOverriddenMethodReference(implemented, (CSharpSyntaxNode)context.SyntaxNodeOpt, context.Diagnostics));
                         }
 
                         Debug.Assert(!method.RequiresExplicitOverride());
@@ -647,26 +650,24 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
                 {
                     var method = (MethodSymbol)m;
 
-                    var sourceMethod = method as SourceMemberMethodSymbol;
-                    if ((object)sourceMethod != null && sourceMethod.IsPartial)
+                    if (method.IsPartialDefinition())
                     {
-                        // implementations are not listed in the members:
-                        Debug.Assert(sourceMethod.IsPartialDefinition);
-
                         // Don't emit partial methods without an implementation part.
-                        if (!sourceMethod.IsPartialWithoutImplementation)
+                        if ((object)method.PartialImplementationPart == null)
                         {
-                            yield return sourceMethod.PartialImplementation();
+                            continue;
                         }
                     }
                     // Don't emit the default value type constructor - the runtime handles that
-                    else if (!method.IsParameterlessValueTypeConstructor(requireSynthesized: true))
+                    else if (method.IsParameterlessValueTypeConstructor(requireSynthesized: true))
                     {
+                        continue;
+                    }
+
                         yield return method;
                     }
                 }
             }
-        }
 
         IEnumerable<Cci.INestedTypeDefinition> Cci.ITypeDefinition.GetNestedTypes(EmitContext context)
         {

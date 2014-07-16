@@ -10,7 +10,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis
 {
-    public abstract class MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>
+    internal abstract class MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>
         where TypeSymbol : class, Symbol, ITypeSymbol
         where MethodSymbol : class, Symbol, IMethodSymbol
         where FieldSymbol : class, Symbol, IFieldSymbol
@@ -280,7 +280,7 @@ namespace Microsoft.CodeAnalysis
             //   Only the short form is valid."
             // 
             // Native compilers accept long form signatures (actually IMetadataImport does).
-            // When a MemberRef s emitted the signature blob is copied from the metadata reference to the resulting assembly. 
+            // When a MemberRef is emitted the signature blob is copied from the metadata reference to the resulting assembly. 
             // Such assembly doesn't PEVerify but the CLR type loader matches the MemberRef with the original signature 
             // (since they are identical copies).
             // 
@@ -545,7 +545,7 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        public struct ModifierInfo
+        internal struct ModifierInfo
         {
             internal readonly bool IsOptional;
             internal readonly TypeSymbol Modifier;
@@ -557,7 +557,7 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        public struct ParamInfo
+        internal struct ParamInfo
         {
             internal bool IsByRef;
             internal bool HasByRefBeforeCustomModifiers;
@@ -568,17 +568,19 @@ namespace Microsoft.CodeAnalysis
 
         internal struct LocalInfo
         {
-            internal readonly bool IsPinned;
-            internal readonly bool IsByRef;
+            internal readonly byte[] Signature;
             internal readonly TypeSymbol Type;
             internal readonly ImmutableArray<ModifierInfo> CustomModifiers;
+            internal readonly bool IsPinned;
+            internal readonly bool IsByRef;
 
-            public LocalInfo(TypeSymbol type, ImmutableArray<ModifierInfo> customModifiers, bool isPinned, bool isByRef)
+            internal LocalInfo(byte[] signature, TypeSymbol type, ImmutableArray<ModifierInfo> customModifiers, bool isPinned, bool isByRef)
             {
-                Type = type;
-                CustomModifiers = customModifiers;
-                IsPinned = isPinned;
-                IsByRef = isByRef;
+                this.Signature = signature;
+                this.Type = type;
+                this.CustomModifiers = customModifiers;
+                this.IsPinned = isPinned;
+                this.IsByRef = isByRef;
             }
         }
 
@@ -588,7 +590,7 @@ namespace Microsoft.CodeAnalysis
         {
             ArrayBuilder<ModifierInfo> modifiers = null;
 
-            for (; ; )
+            for (; ;)
             {
                 typeCode = signatureReader.ReadSignatureTypeCode();
 
@@ -668,15 +670,9 @@ namespace Microsoft.CodeAnalysis
 
         /// <exception cref="UnsupportedSignatureContent">If the encoded local variable type is invalid.</exception>
         /// <exception cref="BadImageFormatException">An exception from metadata reader.</exception>
-        internal ImmutableArray<LocalInfo> DecodeLocalSignatureOrThrow(BlobHandle signature)
+        internal ImmutableArray<LocalInfo> DecodeLocalSignatureOrThrow(ref BlobReader signatureReader)
         {
-            if (signature.IsNil)
-            {
-                throw new UnsupportedSignatureContent();
-            }
-
-            byte callingConvention;
-            BlobReader signatureReader = DecodeSignatureHeaderOrThrow(signature, out callingConvention);
+            var callingConvention = signatureReader.ReadByte();
 
             if (!SignatureHeader.IsLocalVarSignature(callingConvention))
             {
@@ -688,10 +684,12 @@ namespace Microsoft.CodeAnalysis
             GetSignatureCountsOrThrow(ref signatureReader, callingConvention, out localCount, out typeParameterCount);
             Debug.Assert(typeParameterCount == 0);
 
-            var locals = new LocalInfo[localCount];
-            for (int i = 0; i < locals.Length; i++)
+            var locals = ArrayBuilder<LocalInfo>.GetInstance(localCount);
+            var offsets = ArrayBuilder<int>.GetInstance(localCount);
+            for (int i = 0; i < localCount; i++)
             {
-                locals[i] = DecodeLocalVariableOrThrow(ref signatureReader);
+                offsets.Add(signatureReader.Offset);
+                locals.Add(DecodeLocalVariableOrThrow(ref signatureReader));
             }
 
             if (signatureReader.RemainingBytes > 0)
@@ -699,7 +697,24 @@ namespace Microsoft.CodeAnalysis
                 throw new UnsupportedSignatureContent();
             }
 
-            return ImmutableArray.Create(locals);
+            // Include signatures with each local.
+            signatureReader.Reset();
+            var builder = ArrayBuilder<byte[]>.GetInstance();
+            for (int i = 0; i < localCount; i++)
+            {
+                int start = offsets[i];
+                Debug.Assert(signatureReader.Offset <= start);
+                while (signatureReader.Offset < start)
+                {
+                    signatureReader.ReadByte();
+                }
+                int n = (i < localCount - 1) ? (offsets[i + 1] - start) : signatureReader.RemainingBytes;
+                var signature = signatureReader.ReadBytes(n);
+                var local = locals[i];
+                locals[i] = new LocalInfo(signature, local.Type, local.CustomModifiers, local.IsPinned, local.IsByRef);
+            }
+
+            return locals.ToImmutableAndFree();
         }
 
         /// <exception cref="UnsupportedSignatureContent">If the encoded local variable type is invalid.</exception>
@@ -743,7 +758,7 @@ namespace Microsoft.CodeAnalysis
                 }
             }
 
-            return new LocalInfo(typeSymbol, customModifiers, isPinned, isByRef);
+            return new LocalInfo(null, typeSymbol, customModifiers, isPinned, isByRef);
         }
 
         /// <exception cref="UnsupportedSignatureContent">If the encoded parameter type is invalid.</exception>
@@ -1268,6 +1283,7 @@ namespace Microsoft.CodeAnalysis
         {
             positionalArgs = SpecializedCollections.EmptyArray<TypedConstant>();
             namedArgs = SpecializedCollections.EmptyArray<KeyValuePair<String, TypedConstant>>();
+
             try
             {
                 // We could call decoder.GetSignature and use that to decode the arguments. However, materializing the
@@ -1536,7 +1552,7 @@ namespace Microsoft.CodeAnalysis
                 SignatureTypeCode typeCode;
                 ArrayBuilder<ModifierInfo> customModifierBuilder = null;
 
-                for (; ; )
+                for (; ;)
                 {
                     typeCode = signatureReader.ReadSignatureTypeCode();
 
@@ -1661,8 +1677,8 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Search for the MethodSymbol corresponding to the a given MethodDef token.  Search amongst the supertypes
-        /// (classes and interfaces) of a designated type.
+        /// Search for the <typeparamref name="MethodSymbol"/> corresponding to the given MethodDef token. Search amongst
+        /// the supertypes (classes and interfaces) of a designated type.
         /// </summary>
         /// <remarks>
         /// Generally, the type will be a type that explicitly implements an interface and the method will be the
@@ -1670,7 +1686,7 @@ namespace Microsoft.CodeAnalysis
         /// </remarks>
         /// <param name="searchTypeDef">TypeDef token of the type from which the search should begin.</param>
         /// <param name="targetMethodDef">MethodDef token of the target method.</param>
-        /// <returns>Corresponding MethodSymbol or null, if none is found.</returns>
+        /// <returns>Corresponding <typeparamref name="MethodSymbol"/> or null, if none is found.</returns>
         private MethodSymbol FindMethodSymbolInSuperType(TypeHandle searchTypeDef, MethodHandle targetMethodDef)
         {
             try
@@ -1678,7 +1694,7 @@ namespace Microsoft.CodeAnalysis
                 // We're using queues (i.e. BFS), rather than stacks (i.e. DFS), because we expect the common case
                 // to be implementing a method on an immediate supertype, rather than a remote ancestor.
                 // We're using more than one queue for two reasons: 1) some of our TypeDef tokens come directly from the
-                // metadata tables and we'd prefer not to manipulate the correspoding symbol objects; 2) we bump TypeDefs
+                // metadata tables and we'd prefer not to manipulate the corresponding symbol objects; 2) we bump TypeDefs
                 // to the front of the search order (i.e. ahead of symbols) because a MethodDef can correspond to a TypeDef
                 // but not to a type ref (i.e. symbol).
                 Queue<TypeHandle> typeDefsToSearch = new Queue<TypeHandle>();
@@ -1862,7 +1878,7 @@ namespace Microsoft.CodeAnalysis
         /// Symbol for generic type.
         /// </param>
         /// <param name="arguments">
-        /// Generic type arguments, including those for nesting types.
+        /// Generic type arguments, including those for containing types.
         /// </param>
         /// <param name="refersToNoPiaLocalType">
         /// Flags for arguments. Each item indicates whether corresponding argument refers to NoPia local types.
@@ -1921,7 +1937,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Returns a symbol that given token resolves to or null of the token represents entity that isn't represented by a symbol,
+        /// Returns a symbol that given token resolves to or null of the token represents an entity that isn't represented by a symbol,
         /// such as vararg MemberRef.
         /// </summary>
         internal Symbol GetSymbolForILToken(Handle token)

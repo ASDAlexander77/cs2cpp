@@ -11,7 +11,6 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Threading;
 using Roslyn.Utilities;
 
@@ -22,7 +21,7 @@ namespace Microsoft.CodeAnalysis
     /// This type is not responsible for managing the underlying storage
     /// backing the PE image.
     /// </summary>
-    public sealed class PEModule : IDisposable
+    internal sealed class PEModule : IDisposable
     {
         private readonly PEReader peReaderOpt;
         private MetadataReader lazyMetadataReader;
@@ -32,7 +31,6 @@ namespace Microsoft.CodeAnalysis
 
         private readonly Lazy<IdentifierCollection> lazyTypeNameCollection;
         private readonly Lazy<IdentifierCollection> lazyNamespaceNameCollection;
-        private readonly Lazy<IEnumerable<KeyValuePair<string, string>>> lazyTypeWithNamespaceNameCollection;
 
         private string lazyName;
         private bool isDisposed;
@@ -83,7 +81,6 @@ namespace Microsoft.CodeAnalysis
             this.lazyMetadataReader = metadataReader;
             this.lazyTypeNameCollection = new Lazy<IdentifierCollection>(ComputeTypeNameCollection);
             this.lazyNamespaceNameCollection = new Lazy<IdentifierCollection>(ComputeNamespaceNameCollection);
-            this.lazyTypeWithNamespaceNameCollection = new Lazy<IEnumerable<KeyValuePair<string, string>>>(ComputeFullTypeNamesCollection);
             this.hashesOpt = (peReader != null) ? new PEHashProvider(peReader) : null;
         }
 
@@ -97,7 +94,7 @@ namespace Microsoft.CodeAnalysis
                 this.peReader = peReader;
             }
 
-            protected override ImmutableArray<byte> ComputeHash(HashAlgorithm algorithm)
+            internal override ImmutableArray<byte> ComputeHash(HashAlgorithm algorithm)
             {
                 IntPtr pointer;
                 int size;
@@ -279,7 +276,7 @@ namespace Microsoft.CodeAnalysis
                     }
 
                     string moduleName = MetadataReader.GetString(file.Name);
-                    if (!PathUtilities.IsFileName(moduleName))
+                    if (!MetadataHelpers.IsValidMetadataFileName(moduleName))
                     {
                         throw new BadImageFormatException(string.Format(CodeAnalysisResources.InvalidModuleName, this.Name, moduleName));
                     }
@@ -807,26 +804,6 @@ namespace Microsoft.CodeAnalysis
                 {
                     namespaces.Add(namespaceName, null);
                 }
-            }
-        }
-
-        private IEnumerable<KeyValuePair<string, string>> ComputeFullTypeNamesCollection()
-        {
-            try
-            {
-                var allTypeDefs = GetTypeDefsOrThrow(topLevelOnly: false);
-                var typeNames =
-                    from typeDef in allTypeDefs
-                    let namespaceType = typeDef.NamespaceHandle.IsNil ? string.Empty : MetadataReader.GetString(typeDef.NamespaceHandle)
-                    let metadataName = GetTypeDefNameOrThrow(typeDef.TypeDef)
-                    let backtickIndex = metadataName.IndexOf('`')
-                    select new KeyValuePair<string, string>(backtickIndex < 0 ? metadataName : metadataName.Substring(0, backtickIndex), namespaceType);
-
-                return typeNames;
-            }
-            catch (BadImageFormatException)
-            {
-                return null;
             }
         }
 
@@ -1763,16 +1740,16 @@ namespace Microsoft.CodeAnalysis
 
             try
             {
-                foreach (var attributeHande in MetadataReader.GetCustomAttributes(typeDef))
+                foreach (var attributeHandle in MetadataReader.GetCustomAttributes(typeDef))
                 {
-                    int signatureIndex = IsTypeIdentifierAttribute(attributeHande);
+                    int signatureIndex = IsTypeIdentifierAttribute(attributeHandle);
                     if (signatureIndex != -1)
                     {
                         // We found a match
                         lazyContainsNoPiaLocalTypes = ThreeState.True;
 
-                        RegisterNoPiaLocalType(typeDef, attributeHande, signatureIndex);
-                        attributeInfo = new AttributeInfo(attributeHande, signatureIndex);
+                        RegisterNoPiaLocalType(typeDef, attributeHandle, signatureIndex);
+                        attributeInfo = new AttributeInfo(attributeHandle, signatureIndex);
                         return true;
                     }
                 }
@@ -2860,14 +2837,6 @@ namespace Microsoft.CodeAnalysis
             }
         }
 
-        internal IEnumerable<KeyValuePair<string, string>> TypeWithNamespaceNames
-        {
-            get
-            {
-                return lazyTypeWithNamespaceNameCollection.Value;
-            }
-        }
-
         /// <exception cref="BadImageFormatException">An exception from metadata reader.</exception>
         internal PropertyMethodHandles GetPropertyMethodsOrThrow(PropertyHandle propertyDef)
         {
@@ -2892,7 +2861,7 @@ namespace Microsoft.CodeAnalysis
         }
 
         /// <summary>
-        /// Returns true if method IL can be retrieved from the the module.
+        /// Returns true if method IL can be retrieved from the module.
         /// </summary>
         internal bool HasIL
         {

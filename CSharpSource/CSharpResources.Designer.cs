@@ -10,6 +10,7 @@
 
 namespace Microsoft.CodeAnalysis.CSharp {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.CSharp.CSharpResources", typeof(CSharpResources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.CSharp.CSharpResources", typeof(CSharpResources).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -210,6 +211,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string ERR_AccessorImplementingMethod {
             get {
                 return ResourceManager.GetString("ERR_AccessorImplementingMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties cannot combine accessor lists with expression bodies..
+        /// </summary>
+        internal static string ERR_AccessorListAndExpressionBody {
+            get {
+                return ResourceManager.GetString("ERR_AccessorListAndExpressionBody", resourceCulture);
             }
         }
         
@@ -2140,6 +2150,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Methods cannot combine block bodies with expression bodies..
+        /// </summary>
+        internal static string ERR_BlockBodyAndExpressionBody {
+            get {
+                return ResourceManager.GetString("ERR_BlockBodyAndExpressionBody", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; cannot implement &apos;{1}&apos; because it is not supported by the language.
         /// </summary>
         internal static string ERR_BogusExplicitImpl {
@@ -2925,9 +2944,9 @@ namespace Microsoft.CodeAnalysis.CSharp {
         /// <summary>
         ///   Looks up a localized string similar to A declaration expression is not permitted in this context..
         /// </summary>
-        internal static string ERR_DeclarationExpressionOutsideOfAMethodBody {
+        internal static string ERR_DeclarationExpressionOutOfContext {
             get {
-                return ResourceManager.GetString("ERR_DeclarationExpressionOutsideOfAMethodBody", resourceCulture);
+                return ResourceManager.GetString("ERR_DeclarationExpressionOutOfContext", resourceCulture);
             }
         }
         
@@ -3324,6 +3343,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string ERR_DuplicateParamName {
             get {
                 return ResourceManager.GetString("ERR_DuplicateParamName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Primary constructor already has a body..
+        /// </summary>
+        internal static string ERR_DuplicatePrimaryCtorBody {
+            get {
+                return ResourceManager.GetString("ERR_DuplicatePrimaryCtorBody", resourceCulture);
             }
         }
         
@@ -3769,6 +3797,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An expression tree may not contain a Declaration Expression..
+        /// </summary>
+        internal static string ERR_ExpressionTreeContainsDeclarationExpression {
+            get {
+                return ResourceManager.GetString("ERR_ExpressionTreeContainsDeclarationExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An expression tree may not contain a dynamic operation.
         /// </summary>
         internal static string ERR_ExpressionTreeContainsDynamicOperation {
@@ -3877,6 +3914,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Feature &apos;{0}&apos; is only available in &apos;experimental&apos; language version..
+        /// </summary>
+        internal static string ERR_FeatureIsExperimental {
+            get {
+                return ResourceManager.GetString("ERR_FeatureIsExperimental", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Feature &apos;{0}&apos; is not available in C# 1.  Please use language version {1} or greater..
         /// </summary>
         internal static string ERR_FeatureNotAvailableInVersion1 {
@@ -3918,6 +3964,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string ERR_FeatureNotAvailableInVersion5 {
             get {
                 return ResourceManager.GetString("ERR_FeatureNotAvailableInVersion5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature &apos;{0}&apos; is not available in C# 6.  Please use language version {1} or greater..
+        /// </summary>
+        internal static string ERR_FeatureNotAvailableInVersion6 {
+            get {
+                return ResourceManager.GetString("ERR_FeatureNotAvailableInVersion6", resourceCulture);
             }
         }
         
@@ -4696,7 +4751,7 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only auto-implemented properties can have a initializers..
+        ///   Looks up a localized string similar to Only auto-implemented properties can have initializers..
         /// </summary>
         internal static string ERR_InitializerOnNonAutoProperty {
             get {
@@ -6838,7 +6893,7 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos;: a parameter of a primary constructor cannot have the same name as containing type.
+        ///   Looks up a localized string similar to &apos;{0}&apos;: a parameter of a primary constructor cannot have the same name as containing type..
         /// </summary>
         internal static string ERR_PrimaryCtorParameterSameNameAsContainingType {
             get {
@@ -6847,7 +6902,7 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos;: a parameter of a primary constructor cannot have the same name as a type&apos;s type parameter &apos;{1}&apos;.
+        ///   Looks up a localized string similar to &apos;{0}&apos;: a parameter of a primary constructor cannot have the same name as a type&apos;s type parameter &apos;{1}&apos;..
         /// </summary>
         internal static string ERR_PrimaryCtorParameterSameNameAsTypeParam {
             get {
@@ -7140,15 +7195,6 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string ERR_RefConstraintNotSatisfied {
             get {
                 return ResourceManager.GetString("ERR_RefConstraintNotSatisfied", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Referenced assembly &apos;{0}&apos; does not have a strong name..
-        /// </summary>
-        internal static string ERR_ReferencedAssemblyDoesNotHaveStrongName {
-            get {
-                return ResourceManager.GetString("ERR_ReferencedAssemblyDoesNotHaveStrongName", resourceCulture);
             }
         }
         
@@ -7716,6 +7762,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string ERR_StructWithBaseConstructorCall {
             get {
                 return ResourceManager.GetString("ERR_StructWithBaseConstructorCall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Control cannot fall out of switch from final case label (&apos;{0}&apos;).
+        /// </summary>
+        internal static string ERR_SwitchFallOut {
+            get {
+                return ResourceManager.GetString("ERR_SwitchFallOut", resourceCulture);
             }
         }
         
@@ -8530,11 +8585,29 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to auto property initializer.
+        /// </summary>
+        internal static string IDS_FeatureAutoPropertyInitializer {
+            get {
+                return ResourceManager.GetString("IDS_FeatureAutoPropertyInitializer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to collection initializer.
         /// </summary>
         internal static string IDS_FeatureCollectionInitializer {
             get {
                 return ResourceManager.GetString("IDS_FeatureCollectionInitializer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to declaration expression.
+        /// </summary>
+        internal static string IDS_FeatureDeclarationExpression {
+            get {
+                return ResourceManager.GetString("IDS_FeatureDeclarationExpression", resourceCulture);
             }
         }
         
@@ -8562,6 +8635,33 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string IDS_FeatureExceptionFilter {
             get {
                 return ResourceManager.GetString("IDS_FeatureExceptionFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expression-bodied indexer.
+        /// </summary>
+        internal static string IDS_FeatureExpressionBodiedIndexer {
+            get {
+                return ResourceManager.GetString("IDS_FeatureExpressionBodiedIndexer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expression-bodied method.
+        /// </summary>
+        internal static string IDS_FeatureExpressionBodiedMethod {
+            get {
+                return ResourceManager.GetString("IDS_FeatureExpressionBodiedMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expression-bodied property.
+        /// </summary>
+        internal static string IDS_FeatureExpressionBodiedProperty {
+            get {
+                return ResourceManager.GetString("IDS_FeatureExpressionBodiedProperty", resourceCulture);
             }
         }
         
@@ -8674,6 +8774,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to null propagating operator.
+        /// </summary>
+        internal static string IDS_FeatureNullPropagatingOperator {
+            get {
+                return ResourceManager.GetString("IDS_FeatureNullPropagatingOperator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to object initializer.
         /// </summary>
         internal static string IDS_FeatureObjectInitializer {
@@ -8715,6 +8824,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string IDS_FeaturePragma {
             get {
                 return ResourceManager.GetString("IDS_FeaturePragma", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to primary constructor.
+        /// </summary>
+        internal static string IDS_FeaturePrimaryConstructor {
+            get {
+                return ResourceManager.GetString("IDS_FeaturePrimaryConstructor", resourceCulture);
             }
         }
         
@@ -9070,6 +9188,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;experimental&apos;.
+        /// </summary>
+        internal static string IDS_VersionExperimental {
+            get {
+                return ResourceManager.GetString("IDS_VersionExperimental", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to : Warning as Error.
         /// </summary>
         internal static string IDS_WarnAsError {
@@ -9147,6 +9274,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string IDS_XMLNOINCLUDE {
             get {
                 return ResourceManager.GetString("IDS_XMLNOINCLUDE", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skipping some types in analyzer assembly {0} due to a ReflectionTypeLoadException : {1}..
+        /// </summary>
+        internal static string INF_UnableToLoadSomeTypesInAnalyzer {
+            get {
+                return ResourceManager.GetString("INF_UnableToLoadSomeTypesInAnalyzer", resourceCulture);
             }
         }
         
@@ -10650,6 +10786,15 @@ namespace Microsoft.CodeAnalysis.CSharp {
         internal static string WRN_RefCultureMismatch {
             get {
                 return ResourceManager.GetString("WRN_RefCultureMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Referenced assembly &apos;{0}&apos; does not have a strong name..
+        /// </summary>
+        internal static string WRN_ReferencedAssemblyDoesNotHaveStrongName {
+            get {
+                return ResourceManager.GetString("WRN_ReferencedAssemblyDoesNotHaveStrongName", resourceCulture);
             }
         }
         

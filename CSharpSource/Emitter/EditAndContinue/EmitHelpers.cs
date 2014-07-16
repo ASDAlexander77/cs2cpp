@@ -36,9 +36,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                 throw;
             }
 
-            var pdbName = PathUtilities.ChangeExtension(compilation.SourceModule.Name, "pdb");
-
-
+            var pdbName = FileNameUtilities.ChangeExtension(compilation.SourceModule.Name, "pdb");
             var diagnostics = DiagnosticBag.GetInstance();
             string runtimeMDVersion = compilation.GetRuntimeMetadataVersion(diagnostics);
             var serializationProperties = compilation.ConstructModuleSerializationProperties(runtimeMDVersion, moduleVersionId);
@@ -96,14 +94,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
                             definitionMap,
                             changes,
                             cancellationToken);
-                    
-                        writer.WriteMetadataAndIL(metadataStream, ilStream);
+
+                        Cci.MetadataSizes metadataSizes;
+                        writer.WriteMetadataAndIL(metadataStream, ilStream, out metadataSizes);
                         writer.GetMethodTokens(updatedMethodTokens);
 
                         return new EmitDifferenceResult(
                             success: true,
                             diagnostics: diagnostics.ToReadOnlyAndFree(),
-                            baseline: writer.GetDelta(baseline, compilation, encId));
+                            baseline: writer.GetDelta(baseline, compilation, encId, metadataSizes));
                     }
                     catch (Cci.PdbWritingException e)
                     {
@@ -221,9 +220,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Emit
             EncLocalInfo localInfo)
         {
             Debug.Assert(!localInfo.IsDefault);
-            var type = map.MapReference(localInfo.Type);
-            Debug.Assert(type != null);
-            return new EncLocalInfo(localInfo.Offset, type, localInfo.Constraints, localInfo.TempKind);
+            if (localInfo.Type == null)
+            {
+                Debug.Assert(localInfo.Signature != null);
+                return localInfo;
+            }
+            else
+            {
+                var type = map.MapReference(localInfo.Type);
+                Debug.Assert(type != null);
+                return new EncLocalInfo(localInfo.Offset, type, localInfo.Constraints, localInfo.TempKind, localInfo.Signature);
+            }
         }
     }
 }

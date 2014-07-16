@@ -130,9 +130,16 @@
     <Compile Include="ConstantValueSpecialized.cs" />
     <Compile Include="CryptographicHashProvider.cs" />
     <Compile Include="CvtRes.cs" />
+    <Compile Include="DiagnosticAnalyzer\AdditionalStream.cs" />
+    <Compile Include="DiagnosticAnalyzer\AnalyzerDriver.cs" />
     <Compile Include="DiagnosticAnalyzer\AnalyzerDriver3.cs" />
     <Compile Include="DiagnosticAnalyzer\AnalyzerImageReference.cs" />
+    <Compile Include="DiagnosticAnalyzer\AnalyzerOptions.cs" />
     <Compile Include="DiagnosticAnalyzer\AnalyzerReference.cs" />
+    <Compile Include="DiagnosticAnalyzer\CompilationCompletedEvent.cs" />
+    <Compile Include="DiagnosticAnalyzer\CompilationStartedEvent.cs" />
+    <Compile Include="DiagnosticAnalyzer\CompilationUnitCompletedEvent.cs" />
+    <Compile Include="DiagnosticAnalyzer\SymbolDeclaredCompilationEvent.cs" />
     <Compile Include="DiagnosticAnalyzer\UnresolvedAnalyzerReference.cs" />
     <Compile Include="Diagnostic\CommonDiagnosticComparer.cs" />
     <Compile Include="Diagnostic\CommonMessageProvider.cs" />
@@ -155,10 +162,8 @@
     <Compile Include="Diagnostic\MetadataLocation.cs" />
     <Compile Include="Diagnostic\NoLocation.cs" />
     <Compile Include="Diagnostic\ReportDiagnostic.cs" />
-    <Compile Include="Diagnostic\SerializedLocation.cs" />
     <Compile Include="Diagnostic\SourceLocation.cs" />
     <Compile Include="Diagnostic\XmlLocation.cs" />
-    <Compile Include="DiagnosticAnalyzer\AnalyzerDriver.cs" />
     <Compile Include="DiagnosticAnalyzer\CompilationEvent.cs" />
     <Compile Include="DiagnosticAnalyzer\AsyncQueue.cs" />
     <Compile Include="DiagnosticAnalyzer\DiagnosticAnalyzerAttribute.cs" />
@@ -208,6 +213,7 @@
     <Compile Include="Emit\SemanticEdit.cs" />
     <Compile Include="Emit\TypeExport.cs" />
     <Compile Include="EnumConstantHelper.cs" />
+    <Compile Include="FailFast.cs" />
     <Compile Include="Instrumentation\FunctionId.cs" />
     <Compile Include="Instrumentation\Logger.cs" />
     <Compile Include="Instrumentation\PerformanceGoals.cs" />
@@ -215,13 +221,11 @@
     <Compile Include="InternalUtilities\ArrayExtensions.cs" />
     <Compile Include="InternalUtilities\BitArithmeticUtilities.cs" />
     <Compile Include="InternalUtilities\CompilerFatalError.cs" />
-    <Compile Include="InternalUtilities\CompilerPathUtilities.cs" />
     <Compile Include="InternalUtilities\ComStreamWrapper.cs" />
     <Compile Include="InternalUtilities\ConcurrentDictionaryExtensions.cs" />
     <Compile Include="InternalUtilities\ConcurrentLruCache.cs" />
     <Compile Include="InternalUtilities\ConcurrentSet.cs" />
     <Compile Include="InternalUtilities\ConsList`1.cs" />
-    <Compile Include="InternalUtilities\DebuggerUtilities.cs" />
     <Compile Include="InternalUtilities\DecimalUtilities.cs" />
     <Compile Include="InternalUtilities\DocumentationCommentXmlNames.cs" />
     <Compile Include="InternalUtilities\EnumerableExtensions.ComparisonComparer.cs" />
@@ -229,7 +233,9 @@
     <Compile Include="InternalUtilities\EnumField.cs" />
     <Compile Include="InternalUtilities\EnumUtilties.cs" />
     <Compile Include="InternalUtilities\ExceptionUtilities.cs" />
-    <Compile Include="InternalUtilities\HashFunctions.cs" />
+    <Compile Include="InternalUtilities\FileNameUtilities.cs" />
+    <Compile Include="InternalUtilities\HashAlgorithms.cs" />
+    <Compile Include="InternalUtilities\Hash.cs" />
     <Compile Include="InternalUtilities\ImmutableArrayExtensions.cs" />
     <Compile Include="InternalUtilities\ImmutableListExtensions.cs" />
     <Compile Include="InternalUtilities\ImmutableSetWithInsertionOrder`1.cs" />
@@ -239,7 +245,6 @@
     <Compile Include="InternalUtilities\ObjectPool`1.cs" />
     <Compile Include="InternalUtilities\OneOrMany.cs" />
     <Compile Include="InternalUtilities\PathKind.cs" />
-    <Compile Include="InternalUtilities\PathUtilities.cs" />
     <Compile Include="InternalUtilities\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="InternalUtilities\ReadOnlyUnmanagedMemoryStream.cs" />
     <Compile Include="InternalUtilities\ReferenceEqualityComparer.cs" />
@@ -264,6 +269,7 @@
     <Compile Include="InternalUtilities\SuppressUnmanagedCodeSecurityAttribute.cs" />
     <Compile Include="InternalUtilities\TextChangeRangeExtensions.cs" />
     <Compile Include="InternalUtilities\TextKeyedCache.cs" />
+    <Compile Include="InternalUtilities\ThreadingUtilities.cs" />
     <Compile Include="InternalUtilities\ThreadSafeFlagOperations.cs" />
     <Compile Include="InternalUtilities\ThreeState.cs" />
     <Compile Include="InternalUtilities\ValueTuple.cs" />
@@ -302,51 +308,6 @@
     <Compile Include="MetadataReference\PortableExecutableReference.cs" />
     <Compile Include="MetadataReference\ReferenceDirective.cs" />
     <Compile Include="MetadataReference\UnresolvedMetadataReference.cs" />
-    <Compile Include="NonPortable\AssemblyIdentityExtensions.cs" />
-    <Compile Include="NonPortable\AssemblyMetadata.FromFile.cs" />
-    <Compile Include="NonPortable\AssemblyPortabilityPolicy.cs" />
-    <Compile Include="NonPortable\AssemblyVersion.cs" />
-    <Compile Include="NonPortable\CLRHost\ClrMetaHost.cs" />
-    <Compile Include="NonPortable\CLRHost\ClrRuntimeInfo.cs" />
-    <Compile Include="NonPortable\CLRHost\HostingInteropHelper.cs" />
-    <Compile Include="NonPortable\CLRHost\ICLRMetaHost.cs" />
-    <Compile Include="NonPortable\CLRHost\ICLRRuntimeInfo.cs" />
-    <Compile Include="NonPortable\CLRHost\ICLRStrongName.cs" />
-    <Compile Include="NonPortable\CLRHost\IEnumUnknown.cs" />
-    <Compile Include="NonPortable\CLRHost\STARTUP_FLAGS.cs" />
-    <Compile Include="NonPortable\CommandLine\CommandLineReference.cs" />
-    <Compile Include="NonPortable\CommandLine\CommandLineSourceFile.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCommandLineArguments.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCommandLineParser.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.LoggingStrongNameProvider.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.LoggingSourceFileResolver.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.LoggingXmlFileResolver.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.LoggingMetadataFileResolver.cs" />
-    <Compile Include="NonPortable\CommandLine\CommonCompiler.ExistingReferencesResolver.cs" />
-    <Compile Include="NonPortable\CommandLine\RuleSet\InvalidRuleSetException.cs" />
-    <Compile Include="NonPortable\CommandLine\RuleSet\RuleSet.cs" />
-    <Compile Include="NonPortable\CommandLine\RuleSet\RuleSetInclude.cs" />
-    <Compile Include="NonPortable\CommandLine\RuleSet\RuleSetProcessor.cs" />
-    <Compile Include="NonPortable\CommandLine\TouchedFileLogger.cs" />
-    <Compile Include="NonPortable\DesktopAssemblyIdentityComparer.cs" />
-    <Compile Include="NonPortable\DesktopAssemblyIdentityComparer.Fx.cs" />
-    <Compile Include="NonPortable\DesktopStrongNameProvider.cs" />
-    <Compile Include="NonPortable\CommandLineAnalyzerReference.cs" />
-    <Compile Include="NonPortable\EncodedStringText.cs" />
-    <Compile Include="NonPortable\FailFast.cs" />
-    <Compile Include="NonPortable\FileKey.cs" />
-    <Compile Include="NonPortable\FileUtilities.cs" />
-    <Compile Include="NonPortable\IVsSQM.cs" />
-    <Compile Include="NonPortable\MetadataCache.cs" />
-    <Compile Include="NonPortable\AnalyzerFileReference.cs" />
-    <Compile Include="NonPortable\MetadataFileReference.cs" />
-    <Compile Include="NonPortable\MetadataFileReferenceProvider.cs" />
-    <Compile Include="NonPortable\MetadataFileReferenceResolver.cs" />
-    <Compile Include="NonPortable\ModuleMetadata.FromFile.cs" />
-    <Compile Include="NonPortable\SourceFileResolver.cs" />
-    <Compile Include="NonPortable\SqmServiceProvider.cs" />
-    <Compile Include="NonPortable\XmlFileResolver.cs" />
     <Compile Include="Optional.cs" />
     <Compile Include="OutputKind.cs" />
     <Compile Include="PEWriter\BinaryWriter.cs" />
@@ -371,6 +332,7 @@
     <Compile Include="PEWriter\MemberRefComparer.cs" />
     <Compile Include="PEWriter\Members.cs" />
     <Compile Include="PEWriter\MemoryStream.cs" />
+    <Compile Include="PEWriter\MetadataSizes.cs" />
     <Compile Include="PEWriter\MetadataVisitor.cs" />
     <Compile Include="PEWriter\MethodSpecComparer.cs" />
     <Compile Include="PEWriter\Miscellaneous.cs" />
@@ -407,10 +369,10 @@
     <Compile Include="ReferenceManager\UnifiedAssembly.cs" />
     <Compile Include="ResourceDescription.cs" />
     <Compile Include="ResourceException.cs" />
+    <Compile Include="Serialization\ConcurrentRecordingObjectBinder.cs" />
     <Compile Include="Serialization\FixedObjectBinder.cs" />
     <Compile Include="Serialization\IObjectReadable.cs" />
     <Compile Include="Serialization\IObjectWritable.cs" />
-    <Compile Include="Serialization\MultiByteEncoding.cs" />
     <Compile Include="Serialization\ObjectBinder.cs" />
     <Compile Include="Serialization\ObjectReader.cs" />
     <Compile Include="Serialization\ObjectReaderData.cs" />
@@ -418,7 +380,7 @@
     <Compile Include="Serialization\ObjectWriter.cs" />
     <Compile Include="Serialization\ObjectWriterData.cs" />
     <Compile Include="Serialization\RecordingObjectBinder.cs" />
-    <Compile Include="Serialization\SerializationInfoExtensions.cs" />
+    <Compile Include="Serialization\SimpleRecordingObjectBinder.cs" />
     <Compile Include="SignatureComparer.cs" />
     <Compile Include="SourceCodeKind.cs" />
     <Compile Include="SpecialMember.cs" />
@@ -608,10 +570,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>CodeAnalysisResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="NonPortable\CommandLine\RuleSet\RuleSetSchema.xsd">
-      <SubType>Designer</SubType>
-      <LogicalName>Microsoft.CodeAnalysis.RuleSet.xsd</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\default.win32manifest" />
   </ItemGroup>

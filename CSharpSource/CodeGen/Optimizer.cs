@@ -57,7 +57,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             {
                 var locInfo = info[local];
 
-                if (local.TempKind == TempKind.Optimizer)
+                if (local.SynthesizedLocalKind == SynthesizedLocalKind.OptimizerTemp)
                 {
                     dummies.Add(locInfo);
                     info.Remove(local);
@@ -558,7 +558,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
             // normally we would not allow stack locals
             // when evaluation stack is not empty.
-            DeclareLocals(node.LocalsOpt, 0);
+            DeclareLocals(node.Locals, 0);
 
             return base.VisitBlock(node);
         }
@@ -1221,7 +1221,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
         {
             Debug.Assert(node.OuterLocals.IsEmpty);
             Debug.Assert(this.evalStack == 0);
-            DeclareLocals(node.InnerLocalsOpt, 0);
+            DeclareLocals(node.InnerLocals, 0);
 
             var origStack = this.evalStack;
 
@@ -1236,8 +1236,17 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             // implicit control flow
             EnsureOnlyEvalStack();
 
+            // switch sections
             ImmutableArray<BoundSwitchSection> switchSections = this.VisitList(node.SwitchSections);
-            var result = node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocalsOpt, switchSections, node.BreakLabel, node.StringEquality);
+
+            // break label
+            var breakLabel = node.BreakLabel;
+            if (breakLabel != null)
+            {
+                this.RecordLabel(breakLabel);
+            }
+
+            var result = node.Update(node.OuterLocals, boundExpression, node.ConstantTargetOpt, node.InnerLocals, switchSections, breakLabel, node.StringEquality);
 
             // implicit control flow
             EnsureOnlyEvalStack();
@@ -1495,7 +1504,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
 
             // if accessing real val, check stack
-            if (local.TempKind != TempKind.Optimizer)
+            if (local.SynthesizedLocalKind != SynthesizedLocalKind.OptimizerTemp)
             {
                 if (locInfo.stackAtDeclaration != evalStack)
                 {
@@ -1531,7 +1540,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
             }
 
             // if accessing real val, check stack
-            if (local.TempKind != TempKind.Optimizer)
+            if (local.SynthesizedLocalKind != SynthesizedLocalKind.OptimizerTemp)
             {
                 // -1 because real assignment "consumes, assigns, and then pushes back" the value.
                 var evalStack = this.evalStack - 1;
@@ -1561,14 +1570,11 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
 
         private void DeclareLocals(ImmutableArray<LocalSymbol> locals, int stack)
         {
-            if (!locals.IsDefaultOrEmpty)
-            {
                 foreach (var local in locals)
                 {
                     DeclareLocal(local, stack);
                 }
             }
-        }
 
         private void DeclareLocal(LocalSymbol local, int stack)
         {
@@ -1764,12 +1770,12 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGen
     {
         internal override LocalDeclarationKind DeclarationKind
         {
-            get { return LocalDeclarationKind.CompilerGenerated; }
+            get { return LocalDeclarationKind.None; }
         }
 
-        internal override TempKind TempKind
+        internal override SynthesizedLocalKind SynthesizedLocalKind
         {
-            get { return TempKind.Optimizer; }
+            get { return SynthesizedLocalKind.OptimizerTemp; }
         }
 
         internal override SyntaxToken IdentifierToken

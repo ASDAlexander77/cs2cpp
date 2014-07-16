@@ -6,39 +6,37 @@ using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Roslyn.Utilities;
 using System.Collections.Generic;
+using System;
 
 namespace Microsoft.CodeAnalysis.CSharp
 {
-    internal sealed class UsingStatementBinder : LocalScopeBinder
+    internal sealed class UsingStatementBinder : LockOrUsingBinder
     {
         private readonly UsingStatementSyntax syntax;
-        private readonly LockOrUsingStatementExpressionHandler expressionHandler;
 
         public UsingStatementBinder(Binder enclosing, UsingStatementSyntax syntax)
             : base(enclosing)
         {
             this.syntax = syntax;
-            this.expressionHandler = syntax.Expression == null ? null : new LockOrUsingStatementExpressionHandler(syntax.Expression, this);
         }
 
         override protected ImmutableArray<LocalSymbol> BuildLocals()
         {
-            return BuildLocals(syntax);
+            Debug.Assert(syntax.Declaration == null || syntax.Expression == null);
+            return BuildLocals(syntax.Declaration ?? (CSharpSyntaxNode)syntax.Expression);
         }
 
-        internal override ImmutableHashSet<Symbol> LockedOrDisposedVariables
+        protected override ExpressionSyntax TargetExpressionSyntax
         {
             get
             {
-                return expressionHandler == null
-                    ? Next.LockedOrDisposedVariables
-                    : expressionHandler.LockedOrDisposedVariables;
+                return syntax.Expression;
             }
         }
 
-        internal override BoundStatement BindUsingStatementParts(DiagnosticBag diagnostics)
+        internal override BoundStatement BindUsingStatementParts(DiagnosticBag diagnostics, Binder originalBinder)
         {
-            ExpressionSyntax expressionSyntax = syntax.Expression;
+            ExpressionSyntax expressionSyntax = TargetExpressionSyntax;
             VariableDeclarationSyntax declarationSyntax = syntax.Declaration;
 
             Debug.Assert((expressionSyntax == null) ^ (declarationSyntax == null)); // Can't have both or neither.
@@ -52,8 +50,7 @@ namespace Microsoft.CodeAnalysis.CSharp
 
             if (expressionSyntax != null)
             {
-                Debug.Assert(this.expressionHandler != null);
-                expressionOpt = this.expressionHandler.GetExpression(diagnostics);
+                expressionOpt = this.BindTargetExpression(diagnostics);
 
                 HashSet<DiagnosticInfo> useSiteDiagnostics = null;
                 iDisposableConversion = this.Conversions.ClassifyImplicitConversionFromExpression(expressionOpt, iDisposable, ref useSiteDiagnostics);
@@ -72,7 +69,7 @@ namespace Microsoft.CodeAnalysis.CSharp
             else
             {
                 ImmutableArray<BoundLocalDeclaration> declarations;
-                BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.Using, diagnostics, out declarations);
+                BindForOrUsingOrFixedDeclarations(declarationSyntax, LocalDeclarationKind.UsingVariable, diagnostics, out declarations);
 
                 Debug.Assert(!declarations.IsEmpty);
 
@@ -102,7 +99,7 @@ namespace Microsoft.CodeAnalysis.CSharp
                 }
             }
 
-            BoundStatement boundBody = BindPossibleEmbeddedStatement(syntax.Statement, diagnostics);
+            BoundStatement boundBody = originalBinder.BindPossibleEmbeddedStatement(syntax.Statement, diagnostics);
 
             return new BoundUsingStatement(
                 syntax,
