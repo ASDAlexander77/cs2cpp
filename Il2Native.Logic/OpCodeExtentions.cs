@@ -38,6 +38,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetArgCount(this BaseWriter baseWriter)
+        {
+            return baseWriter.Parameters.Count() - (baseWriter.HasMethodThis ? 1 : 0);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <returns>
@@ -67,22 +78,25 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetArgType(this BaseWriter baseWriter, int index)
-        {
-            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
-            var parameterType = parameter.ParameterType;
-            return parameterType;
-        }
-
         public static string GetArgName(this BaseWriter baseWriter, int index)
         {
             var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
             return parameter.Name;
         }
 
-        public static int GetArgCount(this BaseWriter baseWriter)
+        /// <summary>
+        /// </summary>
+        /// <param name="baseWriter">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetArgType(this BaseWriter baseWriter, int index)
         {
-            return baseWriter.Parameters.Count() - (baseWriter.HasMethodThis ? 1 : 0);
+            var parameter = baseWriter.Parameters[index - (baseWriter.HasMethodThis ? 1 : 0)];
+            var parameterType = parameter.ParameterType;
+            return parameterType;
         }
 
         /// <summary>
@@ -99,48 +113,6 @@ namespace Il2Native.Logic
             return normalType.IsEnum
                        ? normalType.GetEnumUnderlyingType()
                        : IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).First().FieldType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="allInterfaces">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
-        {
-            foreach (var topInterface in type.GetInterfacesExcludingBaseAllInterfaces())
-            {
-                yield return topInterface;
-
-                // enumerate all children except first
-                foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
-                {
-                    yield return notFirstChild;
-                }                
-            }
-
-            if (type.BaseType != null)
-            {
-                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
-                {
-                    yield return baseInterface;
-                }
-            }
-        }
-
-        public static IEnumerable<IType> SelectAllNestedChildrenExceptFirstInterfaces(this IType type)
-        {
-            foreach (var childInterface in type.GetInterfacesExcludingBaseAllInterfaces().Skip(1))
-            {
-                yield return childInterface;
-                foreach (var subChildInterface in childInterface.SelectAllNestedChildrenExceptFirstInterfaces())
-                {
-                    yield return subChildInterface;
-                }
-            }
         }
 
         /// <summary>
@@ -360,13 +332,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
+        public static bool IsMatchingExplicitInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
         {
-            if (interfaceMember.Name == publicMethod.Name)
-            {
-                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
-            }
-
             if (interfaceMember.ExplicitName == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
@@ -380,8 +347,21 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public static bool IsMatchingExplicitInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
+        /// <summary>
+        /// </summary>
+        /// <param name="interfaceMember">
+        /// </param>
+        /// <param name="publicMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsMatchingInterfaceOverride(this IMethod interfaceMember, IMethod publicMethod)
         {
+            if (interfaceMember.Name == publicMethod.Name)
+            {
+                return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
+            }
+
             if (interfaceMember.ExplicitName == publicMethod.Name)
             {
                 return interfaceMember.IsMatchingParamsAndReturnType(publicMethod);
@@ -408,6 +388,24 @@ namespace Il2Native.Logic
             if (method.Name == overridingMethod.Name)
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="genericMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
+        {
+            if (method.Name == genericMethod.Name)
+            {
+                return method.IsMatchingGenericParamsAndReturnType(genericMethod);
             }
 
             return false;
@@ -660,6 +658,52 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IType> SelectAllNestedChildrenExceptFirstInterfaces(this IType type)
+        {
+            foreach (var childInterface in type.GetInterfacesExcludingBaseAllInterfaces().Skip(1))
+            {
+                yield return childInterface;
+                foreach (var subChildInterface in childInterface.SelectAllNestedChildrenExceptFirstInterfaces())
+                {
+                    yield return subChildInterface;
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
+        {
+            foreach (var topInterface in type.GetInterfacesExcludingBaseAllInterfaces())
+            {
+                yield return topInterface;
+
+                // enumerate all children except first
+                foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
+                {
+                    yield return notFirstChild;
+                }
+            }
+
+            if (type.BaseType != null)
+            {
+                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                {
+                    yield return baseInterface;
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <returns>
@@ -716,6 +760,37 @@ namespace Il2Native.Logic
 
             int size;
             return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="overridingMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static bool IsMatchingGenericParamsAndReturnType(this IMethod method, IMethod overridingMethod)
+        {
+            var params1 = method.GetParameters().ToArray();
+            var params2 = overridingMethod.GetParameters().ToArray();
+
+            if (params1.Length != params2.Length)
+            {
+                return false;
+            }
+
+            if (method.ReturnType.IsVoid() && overridingMethod.ReturnType.IsVoid())
+            {
+                return true;
+            }
+
+            if (!method.ReturnType.IsVoid() && !overridingMethod.ReturnType.IsVoid())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

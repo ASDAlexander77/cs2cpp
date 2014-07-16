@@ -44,7 +44,7 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
 
-            llvmWriter.WriteMethodStart(method);
+            llvmWriter.WriteMethodStart(method, null);
 
             if (!isStruct)
             {
@@ -61,7 +61,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(" ");
             llvmWriter.WriteResultNumber(opCode.Result);
 
-            llvmWriter.WriteMethodEnd(method);
+            llvmWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
@@ -328,12 +328,12 @@ namespace Il2Native.Logic.Gencode
             type.UseAsClass = true;
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method);
+            llvmWriter.WriteMethodStart(method, null);
             llvmWriter.WriteLlvmLoad(opCode, type, new FullyDefinedReference("%.this", llvmWriter.ThisType), true, true);
             writer.WriteLine(string.Empty);
             llvmWriter.WriteInitObject(opCode);
             writer.WriteLine("ret void");
-            llvmWriter.WriteMethodEnd(method);
+            llvmWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
@@ -418,7 +418,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Unbox method");
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method);
+            llvmWriter.WriteMethodStart(method, null);
             llvmWriter.WriteLlvmLoad(opCode, type.ToClass(), new FullyDefinedReference("%.this", llvmWriter.ThisType), true, true);
             writer.WriteLine(string.Empty);
 
@@ -443,7 +443,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(" void");
             }
 
-            llvmWriter.WriteMethodEnd(method);
+            llvmWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>

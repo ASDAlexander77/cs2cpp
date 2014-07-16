@@ -1232,7 +1232,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="methodInfo">
         /// </param>
-        protected void ReadMethodInfo(IMethod methodInfo)
+        protected void ReadMethodInfo(IMethod methodInfo, IMethod genericMethodInfo)
         {
             this.Parameters = methodInfo.GetParameters().ToArray();
             this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
@@ -1241,7 +1241,7 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            var methodBody = methodInfo.GetMethodBody();
+            var methodBody = methodInfo.GetMethodBody() ?? (genericMethodInfo != null ? genericMethodInfo.GetMethodBody() : null);
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {

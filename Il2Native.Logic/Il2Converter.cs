@@ -10,6 +10,7 @@ namespace Il2Native.Logic
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -151,7 +152,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="newListOfITypes">
         /// </param>
-        /// <param name="genDefinitionsByGuid">
+        /// <param name="genDefinitionsByMetadataName">
         /// </param>
         /// <param name="mode">
         /// </param>
@@ -160,7 +161,7 @@ namespace Il2Native.Logic
             string[] filter, 
             ICodeWriter codeWriter, 
             List<IType> newListOfITypes, 
-            SortedDictionary<string, IType> genDefinitionsByGuid, 
+            SortedDictionary<string, IType> genDefinitionsByMetadataName, 
             ConvertingMode mode)
         {
             foreach (var type in newListOfITypes)
@@ -170,7 +171,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.Name == "<Module>")
+                if (type.IsGenericTypeDefinition || type.Name == "<Module>")
                 {
                     continue;
                 }
@@ -178,7 +179,7 @@ namespace Il2Native.Logic
                 IType genDef = null;
                 if (type.IsGenericType)
                 {
-                    genDefinitionsByGuid.TryGetValue(type.Name, out genDef);
+                    genDefinitionsByMetadataName.TryGetValue(type.MetadataFullName, out genDef);
                 }
 
                 type.UseAsClass = true;
@@ -214,13 +215,21 @@ namespace Il2Native.Logic
                 // pre process step to get all used undefined structures
                 foreach (var ctor in IlReader.Constructors(type))
                 {
-                    codeWriter.WriteConstructorStart(ctor);
-                    foreach (var ilCode in ilReader.OpCodes(ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
+                    IConstructor genericCtor = null;
+                    if (type.IsGenericType)
+                    {
+                        // find the same constructor in generic class
+                        Debug.Assert(genericDefinition != null);
+                        genericCtor = IlReader.Constructors(genericDefinition).First(gm => ctor.IsMatchingGeneric(gm));
+                    }
+
+                    codeWriter.WriteConstructorStart(ctor, genericCtor);
+                    foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
                     {
                         codeWriter.Write(ilCode);
                     }
 
-                    codeWriter.WriteConstructorEnd(ctor);
+                    codeWriter.WriteConstructorEnd(ctor, genericCtor);
                 }
 
                 codeWriter.DisableWrite(false);
@@ -243,13 +252,22 @@ namespace Il2Native.Logic
                 // pre process step to get all used undefined structures
                 foreach (var method in IlReader.Methods(type))
                 {
-                    codeWriter.WriteMethodStart(method);
-                    foreach (var ilCode in ilReader.OpCodes(method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                    IMethod genericMethod = null;
+                    if (type.IsGenericType)
+                    {
+                        // find the same method in generic class
+                        Debug.Assert(genericDefinition != null);
+                        genericMethod = IlReader.Methods(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
+                    }
+
+                    codeWriter.WriteMethodStart(method, genericMethod);
+
+                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
                     {
                         codeWriter.Write(ilCode);
                     }
 
-                    codeWriter.WriteMethodEnd(method);
+                    codeWriter.WriteMethodEnd(method, genericMethod);
                 }
 
                 codeWriter.DisableWrite(false);
@@ -327,23 +345,28 @@ namespace Il2Native.Logic
 
             var genericSpecializations = new HashSet<IType>();
             var types = ilReader.Types().ToList();
-            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
+            var newListOfITypes = ResortITypes(types, genericSpecializations);
 
             // build quick access array for Generic Definitions
-            var genDefinitionsByGuid = new SortedDictionary<string, IType>();
+            var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in newListOfITypes.Where(t => t.IsGenericTypeDefinition))
             {
-                genDefinitionsByGuid[genDef.Name] = genDef;
+                genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
 
             for (var index = 0; index < newListOfITypes.Count; index++)
             {
                 var type = newListOfITypes[index];
+                if (type.IsGenericTypeDefinition)
+                {
+                    continue;
+                }
+
                 codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByGuid, ConvertingMode.Declaration);
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByGuid, ConvertingMode.Definition);
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, ConvertingMode.Declaration);
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, ConvertingMode.Definition);
 
             codeWriter.WriteEnd();
 

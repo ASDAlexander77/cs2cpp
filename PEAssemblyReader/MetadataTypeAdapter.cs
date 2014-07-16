@@ -15,7 +15,6 @@ namespace PEAssemblyReader
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     /// <summary>
     /// </summary>
@@ -128,21 +127,8 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-
-                sb.Append(this.Namespace);
-                if (sb.Length > 0)
-                {
-                    sb.Append('.');
-                }
-
-                if (this.typeDef.ContainingType != null)
-                {
-                    sb.Append(this.typeDef.ContainingType.Name);
-                    sb.Append('+');
-                }
-
+                this.AppendFullNamespace(sb);
                 sb.Append(this.Name);
-
                 return sb.ToString();
             }
         }
@@ -375,6 +361,38 @@ namespace PEAssemblyReader
                 }
 
                 return this.typeDef.IsValueType || this.IsDerivedFromEnum() || this.IsDerivedFromValueType();
+            }
+        }
+
+        public string MetadataName
+        {
+            get
+            {
+                var sb = new StringBuilder();
+
+                sb.Append(this.typeDef.Name);
+
+                if (this.IsGenericType)
+                {
+                    sb.Append('`');
+                    sb.Append(this.typeDef.GetArity());
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string MetadataFullName
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                this.AppendFullNamespace(sb);
+                sb.Append(this.MetadataName);
+
+                return sb.ToString();
             }
         }
 
@@ -766,6 +784,21 @@ namespace PEAssemblyReader
             }
 
             return result.ToString();
+        }
+
+        private void AppendFullNamespace(StringBuilder sb)
+        {
+            sb.Append(this.Namespace);
+            if (sb.Length > 0)
+            {
+                sb.Append('.');
+            }
+
+            if (this.typeDef.ContainingType != null && this.typeDef.Kind != SymbolKind.TypeParameter)
+            {
+                sb.Append(new MetadataTypeAdapter(this.typeDef.ContainingType).Name);
+                sb.Append('+');
+            }
         }
 
         /// <summary>

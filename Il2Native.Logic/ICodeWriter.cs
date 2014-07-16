@@ -72,13 +72,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorEnd(IConstructor ctor);
+        void WriteConstructorEnd(IConstructor ctor, IConstructor genericCtor);
 
         /// <summary>
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        void WriteConstructorStart(IConstructor ctor);
+        void WriteConstructorStart(IConstructor ctor, IConstructor genericCtor);
 
         /// <summary>
         /// </summary>
@@ -124,13 +124,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodEnd(IMethod method);
+        void WriteMethodEnd(IMethod method, IMethod genericMethod);
 
         /// <summary>
         /// </summary>
         /// <param name="method">
         /// </param>
-        void WriteMethodStart(IMethod method);
+        void WriteMethodStart(IMethod method, IMethod genericMethod);
 
         /// <summary>
         /// </summary>

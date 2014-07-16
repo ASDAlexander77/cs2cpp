@@ -13,7 +13,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
-    public interface   IType : IName
+    public interface IType : IName
     {
         /// <summary>
         /// </summary>
@@ -89,6 +89,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        string MetadataFullName { get; }
+
+        /// <summary>
+        /// </summary>
+        string MetadataName { get; }
+
+        /// <summary>
+        /// </summary>
         IModule Module { get; }
 
         /// <summary>
@@ -101,6 +109,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType Clone();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetAllInterfaces();
 
         /// <summary>
         /// </summary>
@@ -141,12 +155,6 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IType> GetInterfaces();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IEnumerable<IType> GetAllInterfaces();
 
         /// <summary>
         /// </summary>
