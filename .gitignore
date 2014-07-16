@@ -14,3 +14,7 @@
 /CoreSource/bin
 /CSharpSource/obj/Debug
 /CSharpSource/bin
+/PEAssemblyReader/obj
+/PEAssemblyReader/bin
+StyleCop.Cache
+/packages
