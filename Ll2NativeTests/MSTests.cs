@@ -74,27 +74,9 @@
         #endregion
 
         [TestMethod]
-        public void Test()
+        public void TestCustomConvert()
         {
-            Test(1);
-        }
-
-        [TestMethod]
-        public void TestGen()
-        {
-            TestGen(175);   
-        }
-
-        [TestMethod]
-        public void TestCustom()
-        {
-            TestCustom(1);
-        }
-
-        [TestMethod]
-        public void TestCustomCompileAndRun()
-        {
-            TestCustomCompileAndRun(1);
+            Convert(1, SourcePathCustom, "test");
         }
 
         [TestMethod]
@@ -115,14 +97,42 @@
             }
         }
 
+        [TestMethod]
+        public void TestGenCompileAndRunLlvm()
+        {
+            // 95 - init double in class to '0'
+            // 99 - using GetType
+            var skip = new int[] { 0 };
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            {
+                GenCompileAndRun(index);
+            }
+        }
+
         private void CompileAndRun(int index)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Test(index);
+            Convert(index);
 
             Trace.WriteLine("Executing LLVM for " + index);
 
+            ExecCompile(index);
+        }
+
+        private void GenCompileAndRun(int index)
+        {
+            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+
+            Convert(index, SourcePath, "gtest", "000");
+
+            Trace.WriteLine("Executing LLVM for " + index);
+
+            ExecCompile(index, "gtest", "000");
+        }
+
+        private static void ExecCompile(int index, string fileName = "test", string format = null)
+        {
             /*
                 call vcvars32.bat
                 llc -mtriple i686-pc-win32 -filetype=obj mscorlib.ll
@@ -144,7 +154,7 @@
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";
-            pi.Arguments = string.Format("{0}", index);
+            pi.Arguments = string.Format("{1}-{0}", format == null ? index.ToString() : index.ToString(format), fileName);
 
             var piProc = Process.Start(pi);
 
@@ -154,34 +164,21 @@
 
             var piexec = new ProcessStartInfo();
             piexec.WorkingDirectory = OutputPath;
-            piexec.FileName = string.Format("{1}test-{0}.exe", index, OutputPath);
+            piexec.FileName = string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName);
 
             var piexecProc = Process.Start(piexec);
-            
+
             piexecProc.WaitForExit();
 
             Assert.AreEqual(0, piexecProc.ExitCode);
-
         }
 
-        private void Test(int number)
+        private void Convert(int number, string source = SourcePath, string fileName = "test", string format = null)
         {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("test-{0}.cs", number)), OutputPath, new [] { "corelib:" + Path.GetFullPath(CoreLibPath) });
-        }
-
-        private void TestCustom(int number)
-        {
-            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
-        }
-
-        private void TestCustomCompileAndRun(int number)
-        {
-            Il2Converter.Convert(string.Concat(SourcePathCustom, string.Format("test-{0}.cs", number)), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
-        }
-
-        private void TestGen(int number)
-        {
-            Il2Converter.Convert(string.Concat(SourcePath, string.Format("gtest-{0}.cs", number.ToString("000"))), OutputPath, new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
+            Il2Converter.Convert(
+                string.Concat(source, string.Format("{1}-{0}.cs", format == null ? number.ToString() : number.ToString(format), fileName)), 
+                OutputPath, 
+                new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
         }
     }
 }

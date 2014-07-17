@@ -467,7 +467,11 @@ namespace PEAssemblyReader
         {
             get
             {
+#if DEBUG
+                return this.typeDef.CalculateNamespace();
+#else
                 return this.lazyNamespace.Value;
+#endif
             }
         }
 

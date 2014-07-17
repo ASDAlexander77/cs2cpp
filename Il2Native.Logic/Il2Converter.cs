@@ -345,11 +345,11 @@ namespace Il2Native.Logic
 
             var genericSpecializations = new HashSet<IType>();
             var types = ilReader.Types().ToList();
-            var newListOfITypes = ResortITypes(types, genericSpecializations);
+            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
 
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
-            foreach (var genDef in newListOfITypes.Where(t => t.IsGenericTypeDefinition))
+            foreach (var genDef in types.Where(t => t.IsGenericTypeDefinition))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
@@ -522,6 +522,10 @@ namespace Il2Native.Logic
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
+            var allTypes = new List<IType>();
+            allTypes.AddRange(types);
+            allTypes.AddRange(genericSpecializations);
+
             var strictMode = true;
             while (typesWithRequired.Count > 0)
             {
@@ -533,9 +537,9 @@ namespace Il2Native.Logic
                 {
                     var requiredITypes = type.Item2;
                     requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
-
                     // remove not used types, for example System.Object which maybe not in current assembly
-                    requiredITypes.RemoveAll(r => !types.Any(n => n.TypeEquals(r)));
+                    requiredITypes.RemoveAll(r => !allTypes.Any(n => n.TypeEquals(r)));
+
                     if (requiredITypes.Count == 0)
                     {
                         toRemove.Add(type);
