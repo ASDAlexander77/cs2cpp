@@ -1467,7 +1467,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="classType">
         /// </param>
-        /// <param name="fieldInfo">
+        /// <param name="fieldInfo"> 
         /// </param>
         public void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
         {

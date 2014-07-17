@@ -49,6 +49,15 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
+        internal TypeSymbol TypeDef
+        {
+            get { return typeDef; }
+        }
+
+        /// <summary>
+        /// </summary>
+        private IType GenericTypeSpecialization { get; set; }
+
         /// <summary>
         /// </summary>
         public string AssemblyQualifiedName
@@ -157,6 +166,20 @@ namespace PEAssemblyReader
                 if (namedTypeSymbol != null)
                 {
                     return namedTypeSymbol.TypeArguments.Select(t => new MetadataTypeAdapter(t));
+                }
+
+                throw new NotImplementedException();
+            }
+        }
+
+        public IEnumerable<IType> GenericTypeParameters
+        {
+            get
+            {
+                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
+                {
+                    return namedTypeSymbol.TypeParameters.Select(t => new MetadataTypeAdapter(t));
                 }
 
                 throw new NotImplementedException();
@@ -475,19 +498,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var val = type.Name.CompareTo(this.Name);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            val = type.Namespace.CompareTo(this.Namespace);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            return 0;
+            return this.MetadataFullName.CompareTo(type.MetadataFullName);
         }
 
         /// <summary>
@@ -505,6 +516,22 @@ namespace PEAssemblyReader
             }
 
             return base.Equals(obj);
+        }
+
+        public IType ResolveGenericType(IType typeParameter)
+        {
+            var typeParameters = this.GenericTypeParameters.ToList();
+            var typeArguments = this.GenericTypeArguments.ToList();
+
+            for (var index = 0; index < typeArguments.Count; index++)
+            {
+                if (typeParameters[index].TypeEquals(typeParameter))
+                {
+                    return typeArguments[index];
+                }
+            }
+
+            throw new KeyNotFoundException();
         }
 
         public IEnumerable<IType> GetAllInterfaces()

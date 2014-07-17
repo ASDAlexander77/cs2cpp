@@ -22,7 +22,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IField ResolveField(int token, IType[] typeGenerics, IType[] methodGenerics);
+        IField ResolveField(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt);
 
         /// <summary>
         /// </summary>
@@ -34,7 +34,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IMember ResolveMember(int token, IType[] typeGenerics, IType[] methodGenerics);
+        IMember ResolveMember(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt);
 
         /// <summary>
         /// </summary>
@@ -46,7 +46,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IMethod ResolveMethod(int token, IType[] typeGenerics, IType[] methodGenerics);
+        IMethod ResolveMethod(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt);
 
         /// <summary>
         /// </summary>
@@ -66,7 +66,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IType ResolveType(int token, IType[] typeGenerics, IType[] methodGenerics);
+        IType ResolveType(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt);
 
         /// <summary>
         /// </summary>
@@ -78,6 +78,6 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IType ResolveType(string s, IType[] typeGenerics, IType[] methodGenerics);
+        IType ResolveType(string s, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt);
     }
 }

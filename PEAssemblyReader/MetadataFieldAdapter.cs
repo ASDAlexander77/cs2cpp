@@ -32,6 +32,15 @@ namespace PEAssemblyReader
             this.fieldDef = fieldDef;
         }
 
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, IType genericTypeSpecialization) : this(fieldDef)
+        {
+            this.GenericTypeSpecialization = genericTypeSpecialization;
+        }
+
+        /// <summary>
+        /// </summary>
+        public IType GenericTypeSpecialization { get; set; }
+
         /// <summary>
         /// </summary>
         /// <exception cref="NotImplementedException">
@@ -60,7 +69,13 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.fieldDef.Type);
+                IType effectiveType = new MetadataTypeAdapter(this.fieldDef.Type);
+                if (this.GenericTypeSpecialization != null && this.fieldDef.Type.IsTypeParameter())
+                {
+                    effectiveType = this.GenericTypeSpecialization.ResolveGenericType(effectiveType);
+                }
+
+                return effectiveType;
             }
         }
 

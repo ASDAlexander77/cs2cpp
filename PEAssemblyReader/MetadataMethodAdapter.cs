@@ -46,6 +46,11 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
         }
 
+        internal MethodSymbol MethodDef
+        {
+            get { return methodDef; }
+        } 
+
         /// <summary>
         /// </summary>
         /// <exception cref="NotImplementedException">

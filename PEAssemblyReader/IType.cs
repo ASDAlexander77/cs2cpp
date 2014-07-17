@@ -33,6 +33,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        IEnumerable<IType> GenericTypeParameters { get; }
+
+        /// <summary>
+        /// </summary>
         bool HasElementType { get; }
 
         /// <summary>
@@ -109,6 +113,8 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType Clone();
+
+        IType ResolveGenericType(IType type);        
 
         /// <summary>
         /// </summary>

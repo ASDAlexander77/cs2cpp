@@ -224,7 +224,7 @@ namespace Il2Native.Logic
                     }
 
                     codeWriter.WriteConstructorStart(ctor, genericCtor);
-                    foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, type.GetGenericArguments().ToArray(), null /*ctor.GetGenericArguments()*/))
+                    foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericDefinition, type.IsGenericType ? type : null))
                     {
                         codeWriter.Write(ilCode);
                     }
@@ -262,7 +262,7 @@ namespace Il2Native.Logic
 
                     codeWriter.WriteMethodStart(method, genericMethod);
 
-                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, type.GetGenericArguments().ToArray(), method.GetGenericArguments().ToArray()))
+                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericDefinition, type.IsGenericType ? type : null))
                     {
                         codeWriter.Write(ilCode);
                     }
