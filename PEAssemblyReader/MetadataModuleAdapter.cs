@@ -60,7 +60,7 @@ namespace PEAssemblyReader
                 return new MetadataFieldAdapter(fieldSymbol, genericTypeSpecializationContextOpt);
             }
 
-            throw new KeyNotFoundException();
+            return null;
         }
 
         /// <summary>

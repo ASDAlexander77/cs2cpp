@@ -42,6 +42,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> usedGenericSpecialiazedTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         static IlReader()
         {
             OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
@@ -312,6 +316,11 @@ namespace Il2Native.Logic
             }
         }
 
+        public HashSet<IType> UsedGenericSpecialiazedTypes
+        {
+            get { return usedGenericSpecialiazedTypes; }
+        } 
+
         /// <summary>
         /// </summary>
         protected AssemblyMetadata Assembly { get; private set; }
@@ -319,6 +328,16 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected string Source { get; private set; }
+
+        void AddGenericSpecialiazedType(IType type)
+        {
+            if (type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
+            {
+                return;
+            }
+
+            this.usedGenericSpecialiazedTypes.Add(type);
+        }
 
         /// <summary>
         /// </summary>
@@ -545,6 +564,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericTypeContextOpt, genericTypeSpecializationContextOpt) as IConstructor;
                         Debug.Assert(constructor != null);
+                        AddGenericSpecialiazedType(constructor.DeclaringType);
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
                     case Code.Call:
@@ -555,6 +575,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var member = module.ResolveMethod(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        AddGenericSpecialiazedType(member.DeclaringType);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
                         continue;
                     case Code.Stfld:
@@ -567,9 +588,15 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        if (field != null)
+                        {
+                            this.AddGenericSpecialiazedType(field.FieldType);
+                        }
+
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
+                        
                         token = ReadInt32(enumerator, ref currentAddress);
                         @int32 = token;
                         yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, @int32);
@@ -592,9 +619,11 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        this.AddGenericSpecialiazedType(type);
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
+
                         var ints = new List<int>();
                         var count = ReadInt32(enumerator, ref currentAddress);
                         for (var i = 0; i < count; i++)

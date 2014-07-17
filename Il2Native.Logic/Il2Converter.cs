@@ -436,6 +436,21 @@ namespace Il2Native.Logic
                                 yield return localVar.LocalType;
                             }
                         }
+
+                        if (genericSpecializations != null)
+                        {
+                            // read method body to extract all types
+                            var reader = new IlReader();
+                            foreach (var op in reader.OpCodes(method, null, null))
+                            {
+                                // dummy body we just need to read body of a method
+                            }
+
+                            foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
+                            {
+                                genericSpecializations.Add(genericSpecializedType);
+                            }
+                        }
                     }
                 }
             }
