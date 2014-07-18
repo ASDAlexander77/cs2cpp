@@ -76,7 +76,7 @@
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert(1, SourcePathCustom, "test");
+            Convert(1, SourcePathCustom);
         }
 
         [TestMethod]

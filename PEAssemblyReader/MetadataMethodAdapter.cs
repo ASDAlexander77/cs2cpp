@@ -46,6 +46,16 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
         }
 
+        internal MetadataMethodAdapter(MethodSymbol methodDef, IType genericTypeSpecialization)
+            : this(methodDef)
+        {
+            this.GenericTypeSpecialization = genericTypeSpecialization;
+        }
+
+        /// <summary>
+        /// </summary>
+        public IType GenericTypeSpecialization { get; set; }
+
         internal MethodSymbol MethodDef
         {
             get { return methodDef; }
@@ -95,7 +105,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.methodDef.ContainingType);
+                return this.methodDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization);
             }
         }
 
@@ -137,11 +147,11 @@ namespace PEAssemblyReader
                 {
                     if (this.methodDef.ContainingType.IsNestedType())
                     {
-                        result.Append(new MetadataTypeAdapter(this.methodDef.ContainingType.ContainingType).Name);
+                        result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericTypeSpecialization).Name);
                         result.Append('+');
                     }
 
-                    result.Append(new MetadataTypeAdapter(this.methodDef.ContainingType).Name);
+                    result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization).Name);
                     result.Append('.');
                 }
 
@@ -330,7 +340,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.methodDef.ReturnType);
+                return this.methodDef.ReturnType.ResolveGeneric(this.GenericTypeSpecialization);
             }
         }
 

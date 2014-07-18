@@ -114,7 +114,7 @@ namespace PEAssemblyReader
         /// </returns>
         IType Clone();
 
-        IType ResolveGenericType(IType type);        
+        IType ResolveTypeParameter(IType type);        
 
         /// <summary>
         /// </summary>

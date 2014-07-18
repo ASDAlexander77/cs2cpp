@@ -85,7 +85,7 @@ namespace PEAssemblyReader
             var methodSymbol = new MetadataDecoder(peModuleSymbol, context).GetSymbolForILToken(methodHandle) as MethodSymbol;
             if (methodSymbol != null)
             {
-                if (methodSymbol.HasSpecialName && (methodSymbol.Name == ".ctor" || methodSymbol.Name == "..ctor"))
+                if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
                     return new MetadataConstructorAdapter(methodSymbol);
                 }
@@ -119,12 +119,12 @@ namespace PEAssemblyReader
 
             if (methodSymbol != null)
             {
-                if (methodSymbol.HasSpecialName && (methodSymbol.Name == ".ctor" || methodSymbol.Name == "..ctor"))
+                if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(methodSymbol);
+                    return new MetadataConstructorAdapter(methodSymbol, genericTypeSpecializationContextOpt);
                 }
 
-                return new MetadataMethodAdapter(methodSymbol);
+                return new MetadataMethodAdapter(methodSymbol, genericTypeSpecializationContextOpt);
             }
 
             throw new KeyNotFoundException();

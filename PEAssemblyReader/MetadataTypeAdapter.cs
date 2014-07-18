@@ -56,10 +56,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private IType GenericTypeSpecialization { get; set; }
-
-        /// <summary>
-        /// </summary>
         public string AssemblyQualifiedName
         {
             get
@@ -95,7 +91,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.BaseType != null ? new MetadataTypeAdapter(this.typeDef.BaseType) : null;
+                return this.typeDef.BaseType != null ? this.typeDef.BaseType.ToType() : null;
             }
         }
 
@@ -165,7 +161,7 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeArguments.Select(t => new MetadataTypeAdapter(t));
+                    return namedTypeSymbol.TypeArguments.Select(t => t.ToType());
                 }
 
                 throw new NotImplementedException();
@@ -179,7 +175,7 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeParameters.Select(t => new MetadataTypeAdapter(t));
+                    return namedTypeSymbol.TypeParameters.Select(t => t.ToType());
                 }
 
                 throw new NotImplementedException();
@@ -485,7 +481,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType Clone()
         {
-            return new MetadataTypeAdapter(this.typeDef);
+            return this.typeDef.ToType();
         }
 
         /// <summary>
@@ -522,7 +518,7 @@ namespace PEAssemblyReader
             return base.Equals(obj);
         }
 
-        public IType ResolveGenericType(IType typeParameter)
+        public IType ResolveTypeParameter(IType typeParameter)
         {
             var typeParameters = this.GenericTypeParameters.ToList();
             var typeArguments = this.GenericTypeArguments.ToList();
@@ -540,7 +536,7 @@ namespace PEAssemblyReader
 
         public IEnumerable<IType> GetAllInterfaces()
         {
-            return this.typeDef.AllInterfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
+            return this.typeDef.AllInterfaces.Select(i => i.ToType()).ToList();
         }
 
         /// <summary>
@@ -565,17 +561,17 @@ namespace PEAssemblyReader
         {
             if (this.IsByRef)
             {
-                return new MetadataTypeAdapter(this.typeDef);
+                return this.typeDef.ToType();
             }
 
             if (this.IsArray)
             {
-                return new MetadataTypeAdapter((this.typeDef as ArrayTypeSymbol).ElementType);
+                return (this.typeDef as ArrayTypeSymbol).ElementType.ToType();
             }
 
             if (this.IsPointer)
             {
-                return new MetadataTypeAdapter((this.typeDef as PointerTypeSymbol).PointedAtType);
+                return (this.typeDef as PointerTypeSymbol).PointedAtType.ToType();
             }
 
             Debug.Fail(string.Empty);
@@ -591,7 +587,7 @@ namespace PEAssemblyReader
         {
             if (this.typeDef.IsEnumType())
             {
-                return new MetadataTypeAdapter(this.typeDef.EnumUnderlyingType());
+                return this.typeDef.EnumUnderlyingType().ToType();
             }
 
             if (this.IsDerivedFromEnum())
@@ -622,7 +618,7 @@ namespace PEAssemblyReader
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+                return namedTypeSymbol.TypeArguments.Select(a => a.ToType());
             }
 
             return null;
@@ -644,7 +640,7 @@ namespace PEAssemblyReader
         public IEnumerable<IType> GetInterfaces()
         {
             // return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
-            return this.EnumerableUniqueInterfaces().Select(@interface => new MetadataTypeAdapter(@interface));
+            return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ToType());
         }
 
         public IEnumerable<IType> GetInterfacesExcludingBaseAllInterfaces()
@@ -655,7 +651,7 @@ namespace PEAssemblyReader
             }
 
             var baseInterfaces = this.typeDef.BaseType.AllInterfaces;
-            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => new MetadataTypeAdapter(i)).ToList();
+            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => i.ToType()).ToList();
         }
 
         /// <summary>
@@ -698,7 +694,7 @@ namespace PEAssemblyReader
             var peType = this.typeDef as NamedTypeSymbol;
             if (peType != null)
             {
-                return peType.GetTypeMembers().Select(t => new MetadataTypeAdapter(t));
+                return peType.GetTypeMembers().Select(t => t.ToType());
             }
 
             throw new NotImplementedException();
@@ -723,7 +719,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            return new MetadataTypeAdapter(new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank));
+            return new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank).ToType();
         }
 
         /// <summary>
@@ -732,7 +728,9 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToClass()
         {
-            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = true };
+            var newType = this.typeDef.ToType();
+            newType.UseAsClass = true;
+            return newType;
         }
 
         /// <summary>
@@ -741,7 +739,9 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            return new MetadataTypeAdapter(this.typeDef) { UseAsClass = false };
+            var newType = this.typeDef.ToType();
+            newType.UseAsClass = true;
+            return newType;
         }
 
         /// <summary>
@@ -750,7 +750,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToPointerType()
         {
-            return new MetadataTypeAdapter(new PointerTypeSymbol(this.typeDef));
+            return new PointerTypeSymbol(this.typeDef).ToType();
         }
 
         /// <summary>
@@ -827,7 +827,7 @@ namespace PEAssemblyReader
 
             if (this.typeDef.ContainingType != null && this.typeDef.Kind != SymbolKind.TypeParameter)
             {
-                sb.Append(new MetadataTypeAdapter(this.typeDef.ContainingType).Name);
+                sb.Append(this.typeDef.ContainingType.ToType().Name);
                 sb.Append('+');
             }
         }

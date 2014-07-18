@@ -59,7 +59,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataTypeAdapter(this.fieldDef.ContainingType);
+                return this.fieldDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization);
             }
         }
 
@@ -69,13 +69,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                IType effectiveType = new MetadataTypeAdapter(this.fieldDef.Type);
-                if (this.GenericTypeSpecialization != null && this.fieldDef.Type.IsTypeParameter())
-                {
-                    effectiveType = this.GenericTypeSpecialization.ResolveGenericType(effectiveType);
-                }
-
-                return effectiveType;
+                return this.fieldDef.Type.ResolveGeneric(this.GenericTypeSpecialization);
             }
         }
 

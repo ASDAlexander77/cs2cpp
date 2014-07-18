@@ -8,7 +8,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System.Collections.Immutable;
     using System.Diagnostics;
+    using System.Linq;
     using System.Text;
 
     using Microsoft.CodeAnalysis.CSharp;
@@ -108,6 +110,34 @@ namespace PEAssemblyReader
             }
 
             return sb.ToString();
+        }
+
+        internal static IType ToType(this TypeSymbol typeSymbol)
+        {
+            return new MetadataTypeAdapter(typeSymbol);
+        }
+
+        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IType genericSpecialization)
+        {
+            IType effectiveType = new MetadataTypeAdapter(typeSymbol);
+            if (genericSpecialization != null )
+            {
+                if (typeSymbol.IsTypeParameter())
+                {
+                    return genericSpecialization.ResolveTypeParameter(effectiveType);
+                }
+
+                if ((typeSymbol as NamedTypeSymbol).IsGenericType)
+                {
+                    var newType = new ConstructedNamedTypeSymbol(
+                        (typeSymbol as NamedTypeSymbol).ConstructedFrom,
+                        ImmutableArray.Create(genericSpecialization.GetGenericArguments().Select(a => (a as MetadataTypeAdapter).TypeDef).ToArray()));
+
+                    return new MetadataTypeAdapter(newType);
+                }
+            }
+
+            return effectiveType;
         }
     }
 }
