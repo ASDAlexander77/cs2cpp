@@ -55,7 +55,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IMethodBody GetMethodBody();
+        IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null);
 
         /// <summary>
         /// </summary>

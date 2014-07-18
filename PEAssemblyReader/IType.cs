@@ -45,7 +45,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsByRef { get; }
+        bool IsByRef { get; set; }
 
         /// <summary>
         /// </summary>
@@ -90,14 +90,6 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsValueType { get; }
-
-        /// <summary>
-        /// </summary>
-        string MetadataFullName { get; }
-
-        /// <summary>
-        /// </summary>
-        string MetadataName { get; }
 
         /// <summary>
         /// </summary>

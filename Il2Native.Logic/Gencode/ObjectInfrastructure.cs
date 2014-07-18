@@ -470,7 +470,12 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference()))
+                {
+                    writer.WriteLine("; No data");
+                    return;
+                }
+
                 writer.WriteLine(string.Empty);
             }
 
@@ -559,6 +564,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return string.Concat(this.Type.FullName, "..box");
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
                 }
             }
 
@@ -708,7 +733,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody()
+            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
             {
                 return new SynthesizedDummyMethodBody();
             }
@@ -880,6 +905,26 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
             public bool IsAbstract { get; private set; }
 
             /// <summary>
@@ -1018,7 +1063,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody()
+            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
             {
                 return new SynthesizedDummyMethodBody();
             }
@@ -1151,6 +1196,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return string.Concat(this.Type.FullName, "..unbox");
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
                 }
             }
 
@@ -1294,7 +1359,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody()
+            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
             {
                 return new SynthesizedDummyMethodBody();
             }

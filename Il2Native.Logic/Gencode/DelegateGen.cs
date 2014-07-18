@@ -373,6 +373,26 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
             public bool IsAbstract { get; private set; }
 
             /// <summary>
@@ -519,7 +539,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody()
+            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
             {
                 return new ObjectInfrastructure.SynthesizedDummyMethodBody();
             }

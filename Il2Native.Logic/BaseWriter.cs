@@ -1241,7 +1241,7 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            var methodBody = methodInfo.GetMethodBody() ?? (genericMethodInfo != null ? genericMethodInfo.GetMethodBody() : null);
+            var methodBody = methodInfo.GetMethodBody() ?? (genericMethodInfo != null ? genericMethodInfo.GetMethodBody(methodInfo) : null);
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {

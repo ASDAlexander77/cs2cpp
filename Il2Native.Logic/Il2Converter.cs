@@ -63,12 +63,12 @@ namespace Il2Native.Logic
         /// <param name="genericSpecializations">
         /// </param>
         public static void ProcessRequiredITypesForITypes(
-            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations)
+            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
             foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, typesAdded, requiredITypesToAdd, genericSpecializations);
+                ProcessNextRequiredITypes(type, typesAdded, requiredITypesToAdd, genericSpecializations, genericMethodSpecializations);
                 newListOfITypes.AddRange(requiredITypesToAdd);
 
                 if (!typesAdded.Contains(type))
@@ -162,6 +162,7 @@ namespace Il2Native.Logic
             ICodeWriter codeWriter, 
             List<IType> newListOfITypes, 
             SortedDictionary<string, IType> genDefinitionsByMetadataName, 
+            HashSet<IMethod> genMethodSpec,
             ConvertingMode mode)
         {
             foreach (var type in newListOfITypes)
@@ -183,7 +184,7 @@ namespace Il2Native.Logic
                 }
 
                 type.UseAsClass = true;
-                ConvertIType(ilReader, codeWriter, type, genDef, mode);
+                ConvertIType(ilReader, codeWriter, type, genDef, genMethodSpec, mode);
             }
         }
 
@@ -199,7 +200,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="mode">
         /// </param>
-        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, ConvertingMode mode)
+        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, ConvertingMode mode)
         {
             if (mode == ConvertingMode.Declaration)
             {
@@ -273,7 +274,21 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        // todo: you need to find all specialized methods and process them
+                        // write all specializations of a method
+                        foreach (var methodSpec in genericMethodSpecializatons)
+                        {
+                            if (methodSpec.NameEquals(method))
+                            {
+                                codeWriter.WriteMethodStart(methodSpec, method);
+
+                                foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericDefinition, type.IsGenericType ? type : null))
+                                {
+                                    codeWriter.Write(ilCode);
+                                }
+
+                                codeWriter.WriteMethodEnd(methodSpec, method);
+                            }
+                        }
                     }
                 }
 
@@ -297,16 +312,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
-        private static void DicoverGenericSpecializedIType(IType type, HashSet<IType> genericSpecializations)
+        private static void DicoverGenericSpecializedIType(IType type, HashSet<IType> genericSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
-            if (type == null || genericSpecializations == null)
+            if (type == null || genericSpecializations == null || genericMethodSpecializations == null)
             {
                 return;
             }
 
             if (type.HasElementType)
             {
-                DicoverGenericSpecializedIType(type.GetElementType(), genericSpecializations);
+                DicoverGenericSpecializedIType(type.GetElementType(), genericSpecializations, genericMethodSpecializations);
                 return;
             }
 
@@ -316,7 +331,7 @@ namespace Il2Native.Logic
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                GetAllRequiredITypesForIType(type, genericSpecializations).ToArray();
+                GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations).ToArray();
             }
         }
 
@@ -350,9 +365,10 @@ namespace Il2Native.Logic
         {
             codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName);
 
-            var genericSpecializations = new HashSet<IType>();
+            var genericTypeSpecializations = new HashSet<IType>();
+            var genericMethodSpecializations = new HashSet<IMethod>();
             var types = ilReader.Types().ToList();
-            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericSpecializations);
+            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericTypeSpecializations, genericMethodSpecializations);
 
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
@@ -372,8 +388,8 @@ namespace Il2Native.Logic
                 codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, ConvertingMode.Declaration);
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, ConvertingMode.Definition);
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Declaration);
+            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Definition);
 
             codeWriter.WriteEnd();
 
@@ -384,15 +400,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="genericSpecializations">
+        /// <param name="genericTypeSpecializations">
         /// </param>
         /// <returns>
         /// </returns>
-        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, HashSet<IType> genericSpecializations)
+        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
             if (type.BaseType != null)
             {
-                DicoverGenericSpecializedIType(type.BaseType, genericSpecializations);
+                DicoverGenericSpecializedIType(type.BaseType, genericTypeSpecializations, genericMethodSpecializations);
                 yield return type.BaseType;
             }
 
@@ -401,7 +417,7 @@ namespace Il2Native.Logic
             {
                 foreach (var @interface in interfaces)
                 {
-                    DicoverGenericSpecializedIType(@interface, genericSpecializations);
+                    DicoverGenericSpecializedIType(@interface, genericTypeSpecializations, genericMethodSpecializations);
                     yield return @interface;
                 }
             }
@@ -411,7 +427,7 @@ namespace Il2Native.Logic
             {
                 foreach (var field in fields)
                 {
-                    DicoverGenericSpecializedIType(field.FieldType, genericSpecializations);
+                    DicoverGenericSpecializedIType(field.FieldType, genericTypeSpecializations, genericMethodSpecializations);
                     if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
                     {
                         yield return field.FieldType;
@@ -425,11 +441,11 @@ namespace Il2Native.Logic
             {
                 foreach (var method in methods)
                 {
-                    DicoverGenericSpecializedIType(method.ReturnType, genericSpecializations);
+                    DicoverGenericSpecializedIType(method.ReturnType, genericTypeSpecializations, genericMethodSpecializations);
 
                     foreach (var param in method.GetParameters())
                     {
-                        DicoverGenericSpecializedIType(param.ParameterType, genericSpecializations);
+                        DicoverGenericSpecializedIType(param.ParameterType, genericTypeSpecializations, genericMethodSpecializations);
                     }
 
                     var methodBody = method.GetMethodBody();
@@ -437,14 +453,14 @@ namespace Il2Native.Logic
                     {
                         foreach (var localVar in methodBody.LocalVariables)
                         {
-                            DicoverGenericSpecializedIType(localVar.LocalType, genericSpecializations);
+                            DicoverGenericSpecializedIType(localVar.LocalType, genericTypeSpecializations, genericMethodSpecializations);
                             if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
                             {
                                 yield return localVar.LocalType;
                             }
                         }
 
-                        if (genericSpecializations != null)
+                        if (genericTypeSpecializations != null || genericMethodSpecializations != null)
                         {
                             // read method body to extract all types
                             var reader = new IlReader();
@@ -453,9 +469,20 @@ namespace Il2Native.Logic
                                 // dummy body we just need to read body of a method
                             }
 
-                            foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
+                            if (genericTypeSpecializations != null)
                             {
-                                genericSpecializations.Add(genericSpecializedType);
+                                foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
+                                {
+                                    genericTypeSpecializations.Add(genericSpecializedType);
+                                }
+                            }
+
+                            if (genericMethodSpecializations != null)
+                            {
+                                foreach (var genericSpecializedMethod in reader.UsedGenericSpecialiazedMethods)
+                                {
+                                    genericMethodSpecializations.Add(genericSpecializedMethod);
+                                }
                             }
                         }
                     }
@@ -486,12 +513,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredITypesToAdd">
         /// </param>
-        /// <param name="genericSpecializations">
+        /// <param name="genericTypeSpecializations">
         /// </param>
         private static void ProcessNextRequiredITypes(
-            IType type, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericSpecializations)
+            IType type, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
-            var requiredITypes = GetAllRequiredITypesForIType(type, genericSpecializations).ToList();
+            var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).ToList();
             foreach (var requiredIType in requiredITypes)
             {
                 if (type.TypeNotEquals(requiredIType))
@@ -505,11 +532,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="types">
         /// </param>
-        /// <param name="genericSpecializations">
+        /// <param name="genericTypeSpecializations">
         /// </param>
         /// <returns>
         /// </returns>
-        private static List<IType> ResortITypes(List<IType> types, HashSet<IType> genericSpecializations)
+        private static List<IType> ResortITypes(List<IType> types, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
             var newOrder = new List<IType>();
 
@@ -517,21 +544,21 @@ namespace Il2Native.Logic
             foreach (var type in types)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, genericSpecializations);
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, genericTypeSpecializations, genericMethodSpecializations);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
             // the same for generic specialized types
-            foreach (var type in genericSpecializations)
+            foreach (var type in genericTypeSpecializations)
             {
                 var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, null);
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, null, null);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
             var allTypes = new List<IType>();
             allTypes.AddRange(types);
-            allTypes.AddRange(genericSpecializations);
+            allTypes.AddRange(genericTypeSpecializations);
 
             var strictMode = true;
             while (typesWithRequired.Count > 0)

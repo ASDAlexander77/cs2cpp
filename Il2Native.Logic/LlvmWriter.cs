@@ -1432,10 +1432,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="valueReference">
         /// </param>
-        public void WriteFieldAccess(
+        public bool WriteFieldAccess(
             LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
         {
             var fieldType = fieldContainerType.GetFieldTypeByIndex(index);
+            if (fieldType == null)
+            {
+                return false;
+            }
 
             this.WriteSetResultNumber(opCodePart, fieldType);
 
@@ -1447,6 +1451,8 @@ namespace Il2Native.Logic
             this.CheckIfTypeIsRequiredForBody(valueReference.Type);
 
             this.WriteFieldIndex(writer, classType, fieldContainerType, index);
+
+            return true;
         }
 
         /// <summary>
@@ -2200,7 +2206,7 @@ namespace Il2Native.Logic
 
             // get all required types for type definition
             var requiredTypes = new List<IType>();
-            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null);
+            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null, null);
             foreach (var requiredType in requiredTypes)
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);

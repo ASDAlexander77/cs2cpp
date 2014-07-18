@@ -15,6 +15,7 @@ namespace PEAssemblyReader
 
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis;
 
     /// <summary>
     /// </summary>
@@ -127,6 +128,12 @@ namespace PEAssemblyReader
                     return genericSpecialization.ResolveTypeParameter(effectiveType);
                 }
 
+                var arrayType = typeSymbol as ArrayTypeSymbol;
+                if (arrayType != null)
+                {
+                    return arrayType.ElementType.ResolveGeneric(genericSpecialization).ToArrayType(arrayType.Rank);
+                }
+
                 if ((typeSymbol as NamedTypeSymbol).IsGenericType)
                 {
                     var newType = new ConstructedNamedTypeSymbol(
@@ -139,5 +146,21 @@ namespace PEAssemblyReader
 
             return effectiveType;
         }
+
+        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace)
+        {
+            sb.Append(@namespace);
+            if (sb.Length > 0)
+            {
+                sb.Append('.');
+            }
+
+            if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
+            {
+                sb.Append(symbol.ContainingType.ToType().Name);
+                sb.Append('+');
+            }
+        }
+
     }
 }

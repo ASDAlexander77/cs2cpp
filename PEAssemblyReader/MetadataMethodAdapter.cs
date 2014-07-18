@@ -49,6 +49,7 @@ namespace PEAssemblyReader
         internal MetadataMethodAdapter(MethodSymbol methodDef, IType genericTypeSpecialization)
             : this(methodDef)
         {
+            Debug.Assert(genericTypeSpecialization == null || !genericTypeSpecialization.IsGenericTypeDefinition);
             this.GenericTypeSpecialization = genericTypeSpecialization;
         }
 
@@ -155,7 +156,7 @@ namespace PEAssemblyReader
                     result.Append('.');
                 }
 
-                result.Append(this.methodDef.Name);
+                result.Append(this.Name);
 
                 return result.ToString();
             }
@@ -281,7 +282,10 @@ namespace PEAssemblyReader
                         {
                             var signatureHandle = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             var signatureReader = peModule.GetMemoryReaderOrThrow(signatureHandle);
-                            localInfo = new MetadataDecoder(peModuleSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
+                            var context = this.GenericTypeSpecialization != null 
+                                    ? ((MetadataTypeAdapter)this.GenericTypeSpecialization).TypeDef.ConstructedFrom() as PENamedTypeSymbol 
+                                    : null;
+                            localInfo = new MetadataDecoder(peModuleSymbol, context).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
                         {
@@ -299,7 +303,7 @@ namespace PEAssemblyReader
                 var index = 0;
                 foreach (var li in localInfo)
                 {
-                    yield return new MetadataLocalVariableAdapter(li, index++);
+                    yield return new MetadataLocalVariableAdapter(li, index++, this.GenericTypeSpecialization);
                 }
             }
         }
@@ -320,7 +324,29 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.Name;
+                var sb = new StringBuilder();
+
+                sb.Append(this.methodDef.Name);
+
+                if (this.IsGenericMethod)
+                {
+                    sb.Append('<');
+
+                    var index = 0;
+                    foreach (var genArg in this.GetGenericArguments())
+                    {
+                        if (index++ > 0)
+                        {
+                            sb.Append(", ");
+                        }
+
+                        sb.Append(genArg.FullName);
+                    }
+
+                    sb.Append('>');
+                }
+
+                return sb.ToString();
             }
         }
 
@@ -330,7 +356,43 @@ namespace PEAssemblyReader
         {
             get
             {
+#if DEBUG
+                return this.methodDef.CalculateNamespace();
+#else
                 return this.lazyNamespace.Value;
+#endif
+            }
+        }
+
+        public string MetadataName
+        {
+            get
+            {
+                var sb = new StringBuilder();
+
+                sb.Append(this.methodDef.Name);
+
+                if (this.IsGenericMethod)
+                {
+                    sb.Append('`');
+                    sb.Append(this.methodDef.GetArity());
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string MetadataFullName
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                this.methodDef.AppendFullNamespace(sb, this.Namespace);
+                sb.Append(this.MetadataName);
+
+                return sb.ToString();
             }
         }
 
@@ -358,19 +420,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var val = name.Name.CompareTo(this.Name);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            val = name.Namespace.CompareTo(this.Namespace);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            return 0;
+            return this.MetadataFullName.CompareTo(name.MetadataFullName);
         }
 
         /// <summary>
@@ -433,7 +483,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IMethodBody GetMethodBody()
+        public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
@@ -442,14 +492,13 @@ namespace PEAssemblyReader
                 var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null && methodBody.GetILBytes() != null)
                 {
+                    if (genericMethodSpecialization != null && this.GenericTypeSpecialization == null)
+                    {
+                        this.GenericTypeSpecialization = genericMethodSpecialization.DeclaringType;
+                    }
+
                     return this;
                 }
-            }
-
-            var substitutedMethodSymbol = this.methodDef as SubstitutedMethodSymbol;
-            if (substitutedMethodSymbol != null)
-            {
-
             }
 
             return null;

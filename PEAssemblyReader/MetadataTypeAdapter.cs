@@ -23,10 +23,6 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
-        private readonly bool isByRef;
-
-        /// <summary>
-        /// </summary>
         private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
@@ -44,7 +40,7 @@ namespace PEAssemblyReader
             Debug.Assert(typeDef != null);
 
             this.typeDef = typeDef;
-            this.isByRef = isByRef;
+            this.IsByRef = isByRef;
 
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
@@ -132,7 +128,7 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.AppendFullNamespace(sb);
+                this.typeDef.AppendFullNamespace(sb, this.Namespace);
                 sb.Append(this.Name);
                 return sb.ToString();
             }
@@ -204,13 +200,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsByRef
-        {
-            get
-            {
-                return this.isByRef;
-            }
-        }
+        public bool IsByRef { get; set; }
 
         /// <summary>
         /// </summary>
@@ -408,7 +398,7 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.AppendFullNamespace(sb);
+                this.typeDef.AppendFullNamespace(sb, this.Namespace);
                 sb.Append(this.MetadataName);
 
                 return sb.ToString();
@@ -740,7 +730,7 @@ namespace PEAssemblyReader
         public IType ToNormal()
         {
             var newType = this.typeDef.ToType();
-            newType.UseAsClass = true;
+            newType.UseAsClass = false;
             return newType;
         }
 
@@ -793,43 +783,9 @@ namespace PEAssemblyReader
                 {
                     result.Append(this.FullName);
                 }
-
-                // append generic types
-                if (this.IsGenericType)
-                {
-                    result.Append('<');
-
-                    var index = 0;
-                    foreach (var genArg in this.GenericTypeArguments)
-                    {
-                        if (index++ > 0)
-                        {
-                            result.Append(", ");
-                        }
-
-                        result.Append(genArg);
-                    }
-
-                    result.Append('>');
-                }
             }
 
             return result.ToString();
-        }
-
-        private void AppendFullNamespace(StringBuilder sb)
-        {
-            sb.Append(this.Namespace);
-            if (sb.Length > 0)
-            {
-                sb.Append('.');
-            }
-
-            if (this.typeDef.ContainingType != null && this.typeDef.Kind != SymbolKind.TypeParameter)
-            {
-                sb.Append(this.typeDef.ContainingType.ToType().Name);
-                sb.Append('+');
-            }
         }
 
         /// <summary>

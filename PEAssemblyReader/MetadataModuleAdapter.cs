@@ -179,7 +179,7 @@ namespace PEAssemblyReader
 
             if (typeSymbol != null)
             {
-                return new MetadataTypeAdapter(typeSymbol);
+                return typeSymbol.ResolveGeneric(genericTypeSpecializationContextOpt);
             }
 
             throw new KeyNotFoundException();
@@ -213,7 +213,7 @@ namespace PEAssemblyReader
 
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return new MetadataTypeAdapter(typeSymbol);
+                return typeSymbol.ResolveGeneric(genericTypeSpecializationContextOpt);
             }
 
             throw new KeyNotFoundException();

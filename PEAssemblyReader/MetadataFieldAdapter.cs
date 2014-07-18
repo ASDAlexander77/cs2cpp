@@ -34,6 +34,7 @@ namespace PEAssemblyReader
 
         internal MetadataFieldAdapter(FieldSymbol fieldDef, IType genericTypeSpecialization) : this(fieldDef)
         {
+            Debug.Assert(genericTypeSpecialization == null || !genericTypeSpecialization.IsGenericTypeDefinition);
             this.GenericTypeSpecialization = genericTypeSpecialization;
         }
 
@@ -141,6 +142,26 @@ namespace PEAssemblyReader
             get
             {
                 return new MetadataModuleAdapter(this.fieldDef.ContainingModule);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string MetadataName
+        {
+            get
+            {
+                return this.Name;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string MetadataFullName
+        {
+            get
+            {
+                return this.FullName;
             }
         }
 

@@ -110,9 +110,19 @@ namespace Il2Native.Logic
         public static IType GetFieldTypeByIndex(this IType classType, int index)
         {
             var normalType = classType.ToNormal();
-            return normalType.IsEnum
-                       ? normalType.GetEnumUnderlyingType()
-                       : IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).First().FieldType;
+
+            if (normalType.IsEnum)
+            {
+                return normalType.GetEnumUnderlyingType();
+            }
+
+            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).FirstOrDefault();
+            if (field == null)
+            {
+                return null;
+            }
+
+            return field.FieldType;
         }
 
         /// <summary>

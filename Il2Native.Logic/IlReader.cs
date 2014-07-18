@@ -46,6 +46,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
+
+        /// <summary>
+        /// </summary>
         static IlReader()
         {
             OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
@@ -319,6 +323,11 @@ namespace Il2Native.Logic
         public HashSet<IType> UsedGenericSpecialiazedTypes
         {
             get { return usedGenericSpecialiazedTypes; }
+        }
+
+        public HashSet<IMethod> UsedGenericSpecialiazedMethods
+        {
+            get { return usedGenericSpecialiazedMethods; }
         } 
 
         /// <summary>
@@ -337,6 +346,17 @@ namespace Il2Native.Logic
             }
 
             this.usedGenericSpecialiazedTypes.Add(type);
+        }
+
+
+        void AddGenericSpecialiazedMethod(IMethod method)
+        {
+            if (method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
+            {
+                return;
+            }
+
+            this.usedGenericSpecialiazedMethods.Add(method);
         }
 
         /// <summary>
@@ -576,6 +596,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var member = module.ResolveMethod(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
                         AddGenericSpecialiazedType(member.DeclaringType);
+                        AddGenericSpecialiazedMethod(member);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
                         continue;
                     case Code.Stfld:
