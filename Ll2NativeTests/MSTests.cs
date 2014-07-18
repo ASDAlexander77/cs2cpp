@@ -100,9 +100,7 @@
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 95 - init double in class to '0'
-            // 99 - using GetType
-            var skip = new int[] { 0 };
+            var skip = new int[] { };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);

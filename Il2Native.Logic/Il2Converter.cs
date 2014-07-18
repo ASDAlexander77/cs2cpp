@@ -260,14 +260,21 @@ namespace Il2Native.Logic
                         genericMethod = IlReader.Methods(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
                     }
 
-                    codeWriter.WriteMethodStart(method, genericMethod);
-
-                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericDefinition, type.IsGenericType ? type : null))
+                    if (!method.IsGenericMethod)
                     {
-                        codeWriter.Write(ilCode);
-                    }
+                        codeWriter.WriteMethodStart(method, genericMethod);
 
-                    codeWriter.WriteMethodEnd(method, genericMethod);
+                        foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericDefinition, type.IsGenericType ? type : null))
+                        {
+                            codeWriter.Write(ilCode);
+                        }
+
+                        codeWriter.WriteMethodEnd(method, genericMethod);
+                    }
+                    else
+                    {
+                        // todo: you need to find all specialized methods and process them
+                    }
                 }
 
                 codeWriter.DisableWrite(false);
