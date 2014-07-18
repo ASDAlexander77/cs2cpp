@@ -3840,7 +3840,6 @@ namespace Il2Native.Logic
             IType type = null;
             switch (opCode.ToCode())
             {
-                case Code.Ldelem:
                 case Code.Ldelem_I:
                     type = this.ResolveType("System.Int32");
                     break;
@@ -3871,6 +3870,7 @@ namespace Il2Native.Logic
                 case Code.Ldelem_R8:
                     type = this.ResolveType("System.Double");
                     break;
+                case Code.Ldelem:
                 case Code.Ldelem_Ref:
                     type = this.GetTypeOfReference(opCode);
                     break;
@@ -3911,7 +3911,6 @@ namespace Il2Native.Logic
 
             switch (opCode.ToCode())
             {
-                case Code.Stelem:
                 case Code.Stelem_I:
                     type = this.ResolveType("System.Int32");
                     break;
@@ -3933,6 +3932,7 @@ namespace Il2Native.Logic
                 case Code.Stelem_R8:
                     type = this.ResolveType("System.Double");
                     break;
+                case Code.Stelem:
                 case Code.Stelem_Ref:
                     type = this.GetTypeOfReference(opCode);
                     break;
