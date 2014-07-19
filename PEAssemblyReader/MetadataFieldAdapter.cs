@@ -32,15 +32,15 @@ namespace PEAssemblyReader
             this.fieldDef = fieldDef;
         }
 
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, IType genericTypeSpecialization) : this(fieldDef)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, IGenericContext genericContext)
+            : this(fieldDef)
         {
-            Debug.Assert(genericTypeSpecialization == null || !genericTypeSpecialization.IsGenericTypeDefinition);
-            this.GenericTypeSpecialization = genericTypeSpecialization;
+            this.GenericContext = genericContext;
         }
 
         /// <summary>
         /// </summary>
-        public IType GenericTypeSpecialization { get; set; }
+        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -60,7 +60,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.fieldDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization);
+                return this.fieldDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
 
@@ -70,7 +70,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.fieldDef.Type.ResolveGeneric(this.GenericTypeSpecialization);
+                return this.fieldDef.Type.ResolveGeneric(this.GenericContext);
             }
         }
 

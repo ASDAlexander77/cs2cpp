@@ -52,6 +52,7 @@
     <Compile Include="IConstructor.cs" />
     <Compile Include="IExceptionHandlingClause.cs" />
     <Compile Include="IField.cs" />
+    <Compile Include="IGenericContext.cs" />
     <Compile Include="ILocalVariable.cs" />
     <Compile Include="IMember.cs" />
     <Compile Include="IMethod.cs" />
@@ -63,6 +64,7 @@
     <Compile Include="MetadataConstructorAdapter.cs" />
     <Compile Include="MetadataExceptionHandlingClauseAdapter.cs" />
     <Compile Include="MetadataFieldAdapter.cs" />
+    <Compile Include="MetadataGenericContext.cs" />
     <Compile Include="MetadataLocalVariableAdapter.cs" />
     <Compile Include="MetadataMethodAdapter.cs" />
     <Compile Include="MetadataModuleAdapter.cs" />

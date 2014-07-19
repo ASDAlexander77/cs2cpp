@@ -46,16 +46,15 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
         }
 
-        internal MetadataMethodAdapter(MethodSymbol methodDef, IType genericTypeSpecialization)
+        internal MetadataMethodAdapter(MethodSymbol methodDef, IGenericContext genericContext)
             : this(methodDef)
         {
-            Debug.Assert(genericTypeSpecialization == null || !genericTypeSpecialization.IsGenericTypeDefinition);
-            this.GenericTypeSpecialization = genericTypeSpecialization;
+            this.GenericContext = genericContext;
         }
 
         /// <summary>
         /// </summary>
-        public IType GenericTypeSpecialization { get; set; }
+        public IGenericContext GenericContext { get; set; }
 
         internal MethodSymbol MethodDef
         {
@@ -106,7 +105,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization);
+                 return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
 
@@ -148,11 +147,11 @@ namespace PEAssemblyReader
                 {
                     if (this.methodDef.ContainingType.IsNestedType())
                     {
-                        result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericTypeSpecialization).Name);
+                        result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
                         result.Append('+');
                     }
 
-                    result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericTypeSpecialization).Name);
+                    result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
                     result.Append('.');
                 }
 
@@ -282,10 +281,7 @@ namespace PEAssemblyReader
                         {
                             var signatureHandle = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             var signatureReader = peModule.GetMemoryReaderOrThrow(signatureHandle);
-                            var context = this.GenericTypeSpecialization != null 
-                                    ? ((MetadataTypeAdapter)this.GenericTypeSpecialization).TypeDef.ConstructedFrom() as PENamedTypeSymbol 
-                                    : null;
-                            localInfo = new MetadataDecoder(peModuleSymbol, context).DecodeLocalSignatureOrThrow(ref signatureReader);
+                            localInfo = peModuleSymbol.GetMetadataDecoder(this.GenericContext).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
                         {
@@ -303,7 +299,7 @@ namespace PEAssemblyReader
                 var index = 0;
                 foreach (var li in localInfo)
                 {
-                    yield return new MetadataLocalVariableAdapter(li, index++, this.GenericTypeSpecialization);
+                    yield return new MetadataLocalVariableAdapter(li, index++, this.GenericContext);
                 }
             }
         }
@@ -402,7 +398,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.ReturnType.ResolveGeneric(this.GenericTypeSpecialization);
+                return this.methodDef.ReturnType.ResolveGeneric(this.GenericContext);
             }
         }
 
@@ -483,7 +479,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
+        public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
             var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
             var peMethodSymbol = this.methodDef as PEMethodSymbol;
@@ -492,9 +488,9 @@ namespace PEAssemblyReader
                 var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null && methodBody.GetILBytes() != null)
                 {
-                    if (genericMethodSpecialization != null && this.GenericTypeSpecialization == null)
+                    if (genericContext != null && this.GenericContext == null)
                     {
-                        this.GenericTypeSpecialization = genericMethodSpecialization.DeclaringType;
+                        this.GenericContext = genericContext;
                     }
 
                     return this;

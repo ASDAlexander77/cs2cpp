@@ -1124,7 +1124,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorEnd(IConstructor ctor, IConstructor genericCtor)
+        public void WriteConstructorEnd(IConstructor ctor, IGenericContext genericContext)
         {
             this.WriteMethodBody();
 
@@ -1144,13 +1144,13 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        public void WriteConstructorStart(IConstructor ctor, IConstructor genericCtor)
+        public void WriteConstructorStart(IConstructor ctor, IGenericContext genericContext)
         {
             this.StartProcess();
 
             this.processedMethods.Add(ctor);
 
-            this.ReadMethodInfo(ctor, genericCtor);
+            this.ReadMethodInfo(ctor, genericContext);
 
             var isDelegateBodyFunctions = ctor.IsDelegateFunctionBody();
             if ((ctor.IsAbstract || NoBody) && !isDelegateBodyFunctions)
@@ -1175,7 +1175,7 @@ namespace Il2Native.Logic
             this.WriteMethodNumber();
 
             // write local declarations
-            var methodBase = ctor.GetMethodBody() ?? (genericCtor != null ? genericCtor.GetMethodBody() : null);
+            var methodBase = (ctor as IMethod).ResolveMethodBody(genericContext);
             if (methodBase != null)
             {
                 this.Output.WriteLine(" {");
@@ -1687,7 +1687,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodEnd(IMethod method, IMethod genericMethod)
+        public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
             this.WriteMethodBody();
 
@@ -1900,7 +1900,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void WriteMethodStart(IMethod method, IMethod genericMethod)
+        public void WriteMethodStart(IMethod method, IGenericContext genericContext)
         {
             if (method.IsInternalCall && this.processedMethods.Any(m => m.Name == method.Name))
             {
@@ -1911,7 +1911,7 @@ namespace Il2Native.Logic
 
             this.processedMethods.Add(method);
 
-            this.ReadMethodInfo(method, genericMethod);
+            this.ReadMethodInfo(method, genericContext);
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
 
@@ -1951,7 +1951,7 @@ namespace Il2Native.Logic
             this.WriteMethodNumber();
 
             // write local declarations
-            var methodBodyBytes = method.GetMethodBody() ?? (genericMethod != null ? genericMethod.GetMethodBody() : null);
+            var methodBodyBytes = method.ResolveMethodBody(genericContext);
             if (methodBodyBytes != null)
             {
                 this.Output.WriteLine(" {");
@@ -2200,7 +2200,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericType">
         /// </param>
-        public void WriteTypeStart(IType type, IType genericType)
+        public void WriteTypeStart(IType type, IGenericContext genericContext)
         {
             this.processedTypes.Add(type);
 
@@ -2220,7 +2220,7 @@ namespace Il2Native.Logic
 
             this.staticFieldsInfo.Clear();
 
-            this.ReadTypeInfo(type, genericType);
+            this.ReadTypeInfo(type);
 
             this.WriteTypeDeclarationStart(type);
         }

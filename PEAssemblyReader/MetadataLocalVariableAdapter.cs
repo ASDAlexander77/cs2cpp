@@ -37,16 +37,15 @@ namespace PEAssemblyReader
             this.LocalIndex = index;
         }
 
-        internal MetadataLocalVariableAdapter(MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo, int index, IType genericTypeSpecialization)
+        internal MetadataLocalVariableAdapter(MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo, int index, IGenericContext genericContext)
             : this(localInfo, index)
         {
-            Debug.Assert(genericTypeSpecialization == null || !genericTypeSpecialization.IsGenericTypeDefinition);
-            this.GenericTypeSpecialization = genericTypeSpecialization;
+            this.GenericContext = genericContext;
         }
 
         /// <summary>
         /// </summary>
-        public IType GenericTypeSpecialization { get; set; }
+        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -58,7 +57,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var localType = this.localInfo.Type.ResolveGeneric(this.GenericTypeSpecialization);
+                var localType = this.localInfo.Type.ResolveGeneric(this.GenericContext);
                 localType.IsByRef = this.localInfo.IsByRef;
                 return localType;
             }

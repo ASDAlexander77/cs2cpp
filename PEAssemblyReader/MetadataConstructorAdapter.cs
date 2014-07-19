@@ -31,8 +31,8 @@ namespace PEAssemblyReader
             this.IsConstructor = true;
         }
 
-        internal MetadataConstructorAdapter(MethodSymbol methodDef, IType genericTypeSpecialization)
-            : base(methodDef, genericTypeSpecialization)
+        internal MetadataConstructorAdapter(MethodSymbol methodDef, IGenericContext genericContext)
+            : base(methodDef, genericContext)
         {
             this.methodDef = methodDef;
             this.IsConstructor = true;

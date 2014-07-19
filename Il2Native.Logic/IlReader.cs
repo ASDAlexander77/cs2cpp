@@ -420,14 +420,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IGenericContext genericContext)
         {
             if (ctor == null)
             {
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, genericTypeContextOpt, genericTypeSpecializationContextOpt))
+            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, genericContext))
             {
                 yield return opCode;
             }
@@ -443,14 +443,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IMethod method, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IEnumerable<OpCodePart> OpCodes(IMethod method, IGenericContext genericContext)
         {
             if (method == null)
             {
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, genericTypeContextOpt, genericTypeSpecializationContextOpt))
+            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, genericContext))
             {
                 yield return opCode;
             }
@@ -468,7 +468,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IGenericContext genericContext)
         {
             if (methodBody == null)
             {
@@ -582,7 +582,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var constructor = module.ResolveMember(token, genericTypeContextOpt, genericTypeSpecializationContextOpt) as IConstructor;
+                        var constructor = module.ResolveMember(token, genericContext) as IConstructor;
                         Debug.Assert(constructor != null);
                         AddGenericSpecialiazedType(constructor.DeclaringType);
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
@@ -594,7 +594,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var member = module.ResolveMethod(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        var member = module.ResolveMethod(token, genericContext);
                         AddGenericSpecialiazedType(member.DeclaringType);
                         AddGenericSpecialiazedMethod(member);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
@@ -608,7 +608,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var field = module.ResolveField(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        var field = module.ResolveField(token, genericContext);
                         if (field != null)
                         {
                             this.AddGenericSpecialiazedType(field.FieldType);
@@ -639,7 +639,7 @@ namespace Il2Native.Logic
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var type = module.ResolveType(token, genericTypeContextOpt, genericTypeSpecializationContextOpt);
+                        var type = module.ResolveType(token, genericContext);
                         this.AddGenericSpecialiazedType(type);
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;

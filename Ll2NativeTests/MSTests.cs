@@ -88,8 +88,6 @@
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            // 95 - init double in class to '0'
-            // 99 - using GetType
             var skip = new int[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
@@ -100,7 +98,9 @@
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            var skip = new int[] { };
+            // 21 - using default on Class causing Boxing of Reference type
+            // 24 - GetType
+            var skip = new int[] { 21, 24 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);

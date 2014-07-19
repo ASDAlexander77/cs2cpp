@@ -733,7 +733,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
+            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
             {
                 return new SynthesizedDummyMethodBody();
             }
@@ -1063,7 +1063,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
+            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
             {
                 return new SynthesizedDummyMethodBody();
             }
@@ -1359,7 +1359,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IMethodBody GetMethodBody(IMethod genericMethodSpecialization = null)
+            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
             {
                 return new SynthesizedDummyMethodBody();
             }

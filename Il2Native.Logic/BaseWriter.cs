@@ -121,10 +121,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IType[] TypeGenericArguments { get; private set; }
-
-        /// <summary>
-        /// </summary>
         /// <param name="conditions">
         /// </param>
         /// <param name="startOfTrueExpression">
@@ -303,7 +299,7 @@ namespace Il2Native.Logic
         /// </returns>
         public IType ResolveType(string fullTypeName)
         {
-            return this.ThisType.Module.ResolveType(fullTypeName, null, null);
+            return this.ThisType.Module.ResolveType(fullTypeName, null);
         }
 
         /// <summary>
@@ -1232,7 +1228,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="methodInfo">
         /// </param>
-        protected void ReadMethodInfo(IMethod methodInfo, IMethod genericMethodInfo)
+        protected void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
         {
             this.Parameters = methodInfo.GetParameters().ToArray();
             this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
@@ -1241,7 +1237,8 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            var methodBody = methodInfo.GetMethodBody() ?? (genericMethodInfo != null ? genericMethodInfo.GetMethodBody(methodInfo) : null);
+            var methodBody = methodInfo.ResolveMethodBody(genericContext);
+
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {
@@ -1259,10 +1256,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericType">
         /// </param>
-        protected void ReadTypeInfo(IType type, IType genericType)
+        protected void ReadTypeInfo(IType type)
         {
             this.IsInterface = type.IsInterface;
-            this.TypeGenericArguments = type.GetGenericArguments().ToArray();
             this.ThisType = type;
         }
 

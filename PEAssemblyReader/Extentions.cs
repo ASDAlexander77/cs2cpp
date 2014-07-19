@@ -16,6 +16,8 @@ namespace PEAssemblyReader
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using System;
 
     /// <summary>
     /// </summary>
@@ -118,29 +120,34 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(typeSymbol);
         }
 
-        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IType genericSpecialization)
+        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
             IType effectiveType = new MetadataTypeAdapter(typeSymbol);
-            if (genericSpecialization != null )
+            if (genericContext != null && !genericContext.IsEmpty)
             {
                 if (typeSymbol.IsTypeParameter())
                 {
-                    return genericSpecialization.ResolveTypeParameter(effectiveType);
+                    return genericContext.TypeSpecialization.ResolveTypeParameter(effectiveType);
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
                 if (arrayType != null)
                 {
-                    return arrayType.ElementType.ResolveGeneric(genericSpecialization).ToArrayType(arrayType.Rank);
+                    return arrayType.ElementType.ResolveGeneric(genericContext).ToArrayType(arrayType.Rank);
                 }
 
-                if ((typeSymbol as NamedTypeSymbol).IsGenericType)
+                var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
+                if (namedTypeSymbol != null)
                 {
-                    var newType = new ConstructedNamedTypeSymbol(
-                        (typeSymbol as NamedTypeSymbol).ConstructedFrom,
-                        ImmutableArray.Create(genericSpecialization.GetGenericArguments().Select(a => (a as MetadataTypeAdapter).TypeDef).ToArray()));
+                    var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
+                    if (metadataType.IsGenericTypeDefinition)
+                    {
+                        var newType = new ConstructedNamedTypeSymbol(
+                            (typeSymbol as NamedTypeSymbol).ConstructedFrom,
+                            ImmutableArray.Create(genericContext.TypeSpecialization.GetGenericArguments().Select(a => (a as MetadataTypeAdapter).TypeDef).ToArray()));
 
-                    return new MetadataTypeAdapter(newType);
+                        return new MetadataTypeAdapter(newType);
+                    }
                 }
             }
 
@@ -162,5 +169,32 @@ namespace PEAssemblyReader
             }
         }
 
+        public static IMethodBody ResolveMethodBody(this IMethod methodInfo, IGenericContext genericContext)
+        {
+            return methodInfo.GetMethodBody()
+                            ?? (genericContext != null && genericContext.MethodDefinition != null
+                                ? genericContext.MethodDefinition.GetMethodBody(genericContext)
+                                : null);
+        }
+
+        internal static MetadataDecoder GetMetadataDecoder(this PEModuleSymbol peModuleSymbol, IGenericContext genericContext)
+        {
+            if (genericContext != null)
+            {
+                if (genericContext.MethodDefinition != null)
+                {
+                    var contextMethod = ((MetadataMethodAdapter)genericContext.MethodDefinition).MethodDef as PEMethodSymbol;
+                    return new MetadataDecoder(peModuleSymbol, contextMethod);
+                }
+
+                if (genericContext.TypeDefinition != null)
+                {
+                    var contextType = ((MetadataTypeAdapter)genericContext.TypeDefinition).TypeDef as PENamedTypeSymbol;
+                    return new MetadataDecoder(peModuleSymbol, contextType);
+                }
+            }
+
+            return new MetadataDecoder(peModuleSymbol);
+        }
     }
 }

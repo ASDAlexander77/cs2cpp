@@ -46,18 +46,16 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public IField ResolveField(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IField ResolveField(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
             var fieldHandle = MetadataTokens.Handle(token);
 
-            var context = genericTypeContextOpt != null ? ((MetadataTypeAdapter)genericTypeContextOpt).TypeDef as PENamedTypeSymbol : null;
-            var fieldSymbol = new MetadataDecoder(peModuleSymbol, context).GetSymbolForILToken(fieldHandle) as FieldSymbol;
-
+            var fieldSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(fieldHandle) as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(fieldSymbol, genericTypeSpecializationContextOpt);
+                return new MetadataFieldAdapter(fieldSymbol, genericContext);
             }
 
             return null;
@@ -75,22 +73,21 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public IMember ResolveMember(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IMember ResolveMember(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
             var methodHandle = MetadataTokens.Handle(token);
 
-            var context = genericTypeContextOpt != null ? ((MetadataTypeAdapter)genericTypeContextOpt).TypeDef as PENamedTypeSymbol : null;
-            var methodSymbol = new MetadataDecoder(peModuleSymbol, context).GetSymbolForILToken(methodHandle) as MethodSymbol;
+            var methodSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(methodHandle) as MethodSymbol;
             if (methodSymbol != null)
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(methodSymbol);
+                    return new MetadataConstructorAdapter(methodSymbol, genericContext);
                 }
 
-                return new MetadataMethodAdapter(methodSymbol);
+                return new MetadataMethodAdapter(methodSymbol, genericContext);
             }
 
             throw new NotImplementedException();
@@ -108,23 +105,21 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public IMethod ResolveMethod(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IMethod ResolveMethod(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
             var methodHandle = MetadataTokens.Handle(token);
 
-            var context = genericTypeContextOpt != null ? ((MetadataTypeAdapter)genericTypeContextOpt).TypeDef as PENamedTypeSymbol : null;
-            var methodSymbol = new MetadataDecoder(peModuleSymbol, context).GetSymbolForILToken(methodHandle) as MethodSymbol;
-
+            var methodSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(methodHandle) as MethodSymbol;
             if (methodSymbol != null)
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(methodSymbol, genericTypeSpecializationContextOpt);
+                    return new MetadataConstructorAdapter(methodSymbol, genericContext);
                 }
 
-                return new MetadataMethodAdapter(methodSymbol, genericTypeSpecializationContextOpt);
+                return new MetadataMethodAdapter(methodSymbol, genericContext);
             }
 
             throw new KeyNotFoundException();
@@ -168,18 +163,16 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public IType ResolveType(int token, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IType ResolveType(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
             var typedefHandle = MetadataTokens.Handle(token);
 
-            var context = genericTypeContextOpt != null ? ((MetadataTypeAdapter)genericTypeContextOpt).TypeDef as PENamedTypeSymbol : null;
-            var typeSymbol = new MetadataDecoder(peModuleSymbol, context).GetSymbolForILToken(typedefHandle) as TypeSymbol;
-
-            if (typeSymbol != null)
+            var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typedefHandle) as TypeSymbol;
+            if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return typeSymbol.ResolveGeneric(genericTypeSpecializationContextOpt);
+                return typeSymbol.ResolveGeneric(genericContext);
             }
 
             throw new KeyNotFoundException();
@@ -197,13 +190,11 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public IType ResolveType(string fullName, IType genericTypeContextOpt, IType genericTypeSpecializationContextOpt)
+        public IType ResolveType(string fullName, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            var context = genericTypeContextOpt != null ? ((MetadataTypeAdapter)genericTypeContextOpt).TypeDef as PENamedTypeSymbol : null;
-            var typeSymbol = new MetadataDecoder(peModuleSymbol, context).GetTypeSymbolForSerializedType(fullName);
-
+            var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetTypeSymbolForSerializedType(fullName);
             if (typeSymbol.TypeKind == TypeKind.Error)
             {
                 // try to find it in CoreLib
@@ -213,7 +204,7 @@ namespace PEAssemblyReader
 
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return typeSymbol.ResolveGeneric(genericTypeSpecializationContextOpt);
+                return typeSymbol.ResolveGeneric(genericContext);
             }
 
             throw new KeyNotFoundException();
