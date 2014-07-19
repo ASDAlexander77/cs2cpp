@@ -184,14 +184,12 @@ namespace PEAssemblyReader
                     if (metadataType.IsGenericTypeDefinition)
                     {
                         var map = genericContext.TypeSpecialization.GenericMap();
-                        var mapFilteredByTypeParameters = map
-                                .Where(pair => namedTypeSymbol.TypeParameters
-                                                    .Select(t => t)
-                                                    .Any(tp => tp.Name == pair.Key.Name))
-                                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
+                        var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
+                            ? SelectGenericsFromArguments(namedTypeSymbol, map)
+                            : SelectGenericsFromParameters(namedTypeSymbol, map);
 
                         var newType = new ConstructedNamedTypeSymbol(
-                            namedTypeSymbol,
+                            namedTypeSymbol.ConstructedFrom,
                             ImmutableArray.Create(mapFilteredByTypeParameters));
 
                         return new MetadataTypeAdapter(newType);
@@ -200,6 +198,20 @@ namespace PEAssemblyReader
             }
 
             return effectiveType;
+        }
+
+        private static TypeSymbol[] SelectGenericsFromParameters(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
+        {
+            return map
+                .Where(pair => (namedTypeSymbol.TypeParameters).Select(t => t).Any(tp => tp.Name == pair.Key.Name))
+                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
+        }
+
+        private static TypeSymbol[] SelectGenericsFromArguments(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
+        {
+            return map
+                .Where(pair => (namedTypeSymbol.TypeArguments).Select(t => t).Any(tp => tp.Name == pair.Key.Name))
+                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
         }
 
         internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace)
