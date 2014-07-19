@@ -49,7 +49,15 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        IEnumerable<IType> GetGenericParameters();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IEnumerable<IType> GetGenericArguments();
+
+        IType ResolveTypeParameter(IType type);        
 
         /// <summary>
         /// </summary>

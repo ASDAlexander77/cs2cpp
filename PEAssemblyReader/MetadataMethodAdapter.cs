@@ -436,6 +436,31 @@ namespace PEAssemblyReader
             return base.Equals(obj);
         }
 
+        public IType ResolveTypeParameter(IType typeParameter)
+        {
+            var typeParameters = this.GetGenericParameters().ToList();
+            var typeArguments = this.GetGenericArguments().ToList();
+
+            for (var index = 0; index < typeArguments.Count; index++)
+            {
+                if (typeParameters[index].TypeEquals(typeParameter))
+                {
+                    return typeArguments[index];
+                }
+            }
+
+            throw new KeyNotFoundException();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> GetGenericParameters()
+        {
+            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>

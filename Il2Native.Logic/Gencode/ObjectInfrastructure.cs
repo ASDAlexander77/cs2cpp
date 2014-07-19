@@ -793,6 +793,18 @@ namespace Il2Native.Logic.Gencode
 
                 return result.ToString();
             }
+
+
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         /// <summary>
@@ -1123,6 +1135,18 @@ namespace Il2Native.Logic.Gencode
 
                 return result.ToString();
             }
+
+
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         /// <summary>
@@ -1418,6 +1442,18 @@ namespace Il2Native.Logic.Gencode
                 result.Append(')');
 
                 return result.ToString();
+            }
+
+
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
+            }
+
+
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
             }
         }
 

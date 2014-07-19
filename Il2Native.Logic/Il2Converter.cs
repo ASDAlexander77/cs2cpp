@@ -483,7 +483,9 @@ namespace Il2Native.Logic
                         {
                             // read method body to extract all types
                             var reader = new IlReader();
-                            foreach (var op in reader.OpCodes(method, null))
+
+                            var genericContext = new MetadataGenericContext(method);
+                            foreach (var op in reader.OpCodes(method, genericContext))
                             {
                                 // dummy body we just need to read body of a method
                             }

@@ -12,6 +12,21 @@ namespace PEAssemblyReader
         {
         }
 
+        public MetadataGenericContext(IType type)
+        {
+            this.Init(type);
+        }
+
+        public MetadataGenericContext(IMethod method)
+        {
+            this.Init(method.DeclaringType);
+            if (method.IsGenericMethod)
+            {
+                this.MethodDefinition = method;
+                this.MethodSpecialization = method;
+            }
+        }
+
         public bool IsEmpty
         {
             get
@@ -42,6 +57,19 @@ namespace PEAssemblyReader
         {
             get;
             set;
+        }
+
+        private void Init(IType type)
+        {
+            if (type.IsGenericTypeDefinition)
+            {
+                this.TypeDefinition = type;
+            }
+
+            if (type.IsGenericType)
+            {
+                this.TypeSpecialization = type;
+            }
         }
     }
 }

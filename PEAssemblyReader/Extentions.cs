@@ -18,6 +18,7 @@ namespace PEAssemblyReader
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -120,6 +121,30 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(typeSymbol);
         }
 
+        internal static IDictionary<IType, IType> GenericMap(this IType type)
+        {
+            return GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
+        }
+
+        internal static IDictionary<IType, IType> GenericMap(this IMethod method)
+        {
+            return GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
+        }
+
+        internal static IDictionary<IType, IType> GenericMap(IEnumerable<IType> parameters, IEnumerable<IType> arguments)
+        {
+            var typeParameters = parameters.ToList();
+            var typeArguments = arguments.ToList();
+
+            var map = new SortedDictionary<IType, IType>();
+            for (var index = 0; index < typeArguments.Count; index++)
+            {
+                map[typeParameters[index]] = typeArguments[index];
+            }
+
+            return map;
+        }
+
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
             IType effectiveType = new MetadataTypeAdapter(typeSymbol);
@@ -127,7 +152,23 @@ namespace PEAssemblyReader
             {
                 if (typeSymbol.IsTypeParameter())
                 {
-                    return genericContext.TypeSpecialization.ResolveTypeParameter(effectiveType);
+                    if (genericContext.TypeSpecialization != null)
+                    {
+                        var newType = genericContext.TypeSpecialization.ResolveTypeParameter(effectiveType);
+                        if (newType != null)
+                        {
+                            return newType;
+                        }
+                    }
+
+                    if (genericContext.MethodSpecialization != null)
+                    {
+                        var newType = genericContext.MethodSpecialization.ResolveTypeParameter(effectiveType);
+                        if (newType != null)
+                        {
+                            return newType;
+                        }
+                    }
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
@@ -142,9 +183,16 @@ namespace PEAssemblyReader
                     var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
                     if (metadataType.IsGenericTypeDefinition)
                     {
+                        var map = genericContext.TypeSpecialization.GenericMap();
+                        var mapFilteredByTypeParameters = map
+                                .Where(pair => namedTypeSymbol.TypeParameters
+                                                    .Select(t => t)
+                                                    .Any(tp => tp.Name == pair.Key.Name))
+                                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
+
                         var newType = new ConstructedNamedTypeSymbol(
-                            (typeSymbol as NamedTypeSymbol).ConstructedFrom,
-                            ImmutableArray.Create(genericContext.TypeSpecialization.GetGenericArguments().Select(a => (a as MetadataTypeAdapter).TypeDef).ToArray()));
+                            namedTypeSymbol,
+                            ImmutableArray.Create(mapFilteredByTypeParameters));
 
                         return new MetadataTypeAdapter(newType);
                     }
