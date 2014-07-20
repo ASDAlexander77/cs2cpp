@@ -230,43 +230,18 @@ namespace Il2Native.Logic
                         genericCtor = IlReader.Constructors(genericDefinition).First(gm => ctor.IsMatchingGeneric(gm));
                     }
 
-                    if (!ctor.IsGenericMethod)
+                    genericContext.TypeSpecialization = type.IsGenericType ? type : null;
+                    genericContext.MethodDefinition = genericCtor;
+                    genericContext.MethodSpecialization = null;
+
+                    codeWriter.WriteConstructorStart(ctor, genericContext);
+
+                    foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericContext))
                     {
-                        genericContext.TypeSpecialization = type.IsGenericType ? type : null;
-                        genericContext.MethodDefinition = genericCtor;
-                        genericContext.MethodSpecialization = null;
-
-                        codeWriter.WriteConstructorStart(ctor, genericContext);
-
-                        foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericContext))
-                        {
-                            codeWriter.Write(ilCode);
-                        }
-
-                        codeWriter.WriteConstructorEnd(ctor, genericContext);
+                        codeWriter.Write(ilCode);
                     }
-                    else
-                    {
-                        // write all specializations of a constructor
-                        foreach (var ctorSpec in genericMethodSpecializatons.Where(m => m is IConstructor).Cast<IConstructor>())
-                        {
-                            if (ctorSpec.NameEquals(ctor))
-                            {
-                                genericContext.TypeSpecialization = type.IsGenericType ? type : null;
-                                genericContext.MethodDefinition = ctor;
-                                genericContext.MethodSpecialization = ctorSpec;
 
-                                codeWriter.WriteConstructorStart(ctorSpec, genericContext);
-
-                                foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericContext))
-                                {
-                                    codeWriter.Write(ilCode);
-                                }
-
-                                codeWriter.WriteConstructorEnd(ctorSpec, genericContext);
-                            }
-                        }
-                    }
+                    codeWriter.WriteConstructorEnd(ctor, genericContext);
                 }
 
                 codeWriter.DisableWrite(false);

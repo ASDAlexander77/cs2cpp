@@ -348,7 +348,6 @@ namespace Il2Native.Logic
             this.usedGenericSpecialiazedTypes.Add(type);
         }
 
-
         void AddGenericSpecialiazedMethod(IMethod method)
         {
             if (method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
@@ -583,7 +582,6 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
-                        Debug.Assert(constructor != null);
                         AddGenericSpecialiazedType(constructor.DeclaringType);
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
