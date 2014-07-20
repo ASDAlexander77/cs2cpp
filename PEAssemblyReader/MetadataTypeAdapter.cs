@@ -486,7 +486,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType Clone()
         {
-            return this.typeDef.ToType();
+            return this.typeDef.ResolveGeneric(this.GenericContext);
         }
 
         /// <summary>

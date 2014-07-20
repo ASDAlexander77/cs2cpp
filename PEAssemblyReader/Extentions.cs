@@ -158,7 +158,7 @@ namespace PEAssemblyReader
 
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
-            IType effectiveType = new MetadataTypeAdapter(typeSymbol);
+            IType effectiveType = new MetadataTypeAdapter(typeSymbol, genericContext);
             if (genericContext != null && !genericContext.IsEmpty)
             {
                 if (typeSymbol.IsTypeParameter())
@@ -180,6 +180,8 @@ namespace PEAssemblyReader
                             return newType;
                         }
                     }
+
+                    Debug.Assert(false, "Generic parameter has not bee resolved");
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;

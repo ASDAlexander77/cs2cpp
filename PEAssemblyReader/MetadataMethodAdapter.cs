@@ -531,7 +531,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IParameter> GetParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p));
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
         }
 
         /// <summary>
