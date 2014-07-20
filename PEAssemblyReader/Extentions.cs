@@ -256,14 +256,38 @@ namespace PEAssemblyReader
             {
                 if (genericContext.MethodDefinition != null)
                 {
-                    var contextMethod = ((MetadataMethodAdapter)genericContext.MethodDefinition).MethodDef as PEMethodSymbol;
-                    return new MetadataDecoder(peModuleSymbol, contextMethod);
+                    var methodDef = ((MetadataMethodAdapter)genericContext.MethodDefinition).MethodDef;
+                    var contextMethod = methodDef as PEMethodSymbol;
+                    if (contextMethod != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextMethod);
+                    }
+
+                    var contextMethodOrig = methodDef.OriginalDefinition as PEMethodSymbol;
+                    if (contextMethodOrig != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextMethodOrig);
+                    }
+
+                    Debug.Assert(false, "Could not resolve Generic");
                 }
 
                 if (genericContext.TypeDefinition != null)
                 {
-                    var contextType = ((MetadataTypeAdapter)genericContext.TypeDefinition).TypeDef as PENamedTypeSymbol;
-                    return new MetadataDecoder(peModuleSymbol, contextType);
+                    var typeDef = ((MetadataTypeAdapter)genericContext.TypeDefinition).TypeDef;
+                    var contextType = typeDef as PENamedTypeSymbol;
+                    if (contextType != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextType);
+                    }
+
+                    var contextTypeOrig = typeDef.OriginalDefinition as PENamedTypeSymbol;
+                    if (contextTypeOrig != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextTypeOrig);
+                    }
+
+                    Debug.Assert(false, "Could not resolve Generic");
                 }
             }
 
