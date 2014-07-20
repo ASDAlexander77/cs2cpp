@@ -197,6 +197,11 @@ namespace PEAssemblyReader
                     if (metadataType.IsGenericTypeDefinition)
                     {
                         var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
+                        if (genericContext.MethodSpecialization != null)
+                        {
+                            map = genericContext.MethodSpecialization.GenericMap(map);
+                        }
+
                         var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
                             ? SelectGenericsFromArguments(namedTypeSymbol, map)
                             : SelectGenericsFromParameters(namedTypeSymbol, map);

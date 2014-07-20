@@ -115,9 +115,10 @@ namespace PEAssemblyReader
         {
             get
             {
-                var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                var peModule = peModuleSymbol.Module;
-                var peMethodSymbol = this.methodDef as PEMethodSymbol;
+                PEModuleSymbol peModuleSymbol;
+                PEMethodSymbol peMethodSymbol;
+                GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
                 if (peMethodSymbol != null)
                 {
                     var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
@@ -271,16 +272,18 @@ namespace PEAssemblyReader
                 var localInfo = default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
                 try
                 {
-                    var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-                    var peModule = peModuleSymbol.Module;
-                    var peMethodSymbol = this.methodDef as PEMethodSymbol;
+                    PEModuleSymbol peModuleSymbol;
+                    PEMethodSymbol peMethodSymbol;
+                    GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
                     if (peMethodSymbol != null)
                     {
                         var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                         if (methodBody != null && !methodBody.LocalSignature.IsNil)
                         {
-                            var signatureHandle = peModule.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
-                            var signatureReader = peModule.GetMemoryReaderOrThrow(signatureHandle);
+                            var module = peModuleSymbol.Module;
+                            var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                            var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
                             localInfo = peModuleSymbol.GetMetadataDecoder(this.GenericContext).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
@@ -485,9 +488,10 @@ namespace PEAssemblyReader
         /// </returns>
         public byte[] GetILAsByteArray()
         {
-            var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peModule = peModuleSymbol.Module;
-            var peMethodSymbol = this.methodDef as PEMethodSymbol;
+            PEModuleSymbol peModuleSymbol;
+            PEMethodSymbol peMethodSymbol;
+            GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
             if (peMethodSymbol != null)
             {
                 var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
@@ -500,14 +504,27 @@ namespace PEAssemblyReader
             return null;
         }
 
+        private void GetPEMethodSymbol(out PEModuleSymbol peModuleSymbol, out PEMethodSymbol peMethodSymbol)
+        {
+            peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+            var peModule = peModuleSymbol.Module;
+            peMethodSymbol = this.methodDef as PEMethodSymbol;
+            if (peMethodSymbol == null)
+            {
+                peMethodSymbol = this.methodDef.OriginalDefinition as PEMethodSymbol;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
         public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
-            var peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peMethodSymbol = this.methodDef as PEMethodSymbol;
+            PEModuleSymbol peModuleSymbol;
+            PEMethodSymbol peMethodSymbol;
+            GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
             if (peMethodSymbol != null)
             {
                 var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);

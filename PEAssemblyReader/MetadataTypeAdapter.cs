@@ -536,7 +536,7 @@ namespace PEAssemblyReader
                 }
             }
 
-            throw new KeyNotFoundException();
+            return null;
         }
 
         public IEnumerable<IType> GetAllInterfaces()
