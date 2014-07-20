@@ -121,22 +121,33 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(typeSymbol);
         }
 
-        internal static IDictionary<IType, IType> GenericMap(this IType type)
+        internal static IDictionary<IType, IType> GenericMap(this IType type, IDictionary<IType, IType> map)
         {
-            return GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
+            map.GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
+            if (type.DeclaringType != null)
+            {
+                map = type.DeclaringType.GenericMap(map);
+            }
+
+            return map;
         }
 
-        internal static IDictionary<IType, IType> GenericMap(this IMethod method)
+        internal static IDictionary<IType, IType> GenericMap(this IMethod method, IDictionary<IType, IType> map)
         {
-            return GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
+            map.GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
+            if (method.DeclaringType != null)
+            {
+                map = method.DeclaringType.GenericMap(map);
+            }
+
+            return map;
         }
 
-        internal static IDictionary<IType, IType> GenericMap(IEnumerable<IType> parameters, IEnumerable<IType> arguments)
+        internal static IDictionary<IType, IType> GenericMap(this IDictionary<IType, IType> map, IEnumerable<IType> parameters, IEnumerable<IType> arguments)
         {
             var typeParameters = parameters.ToList();
             var typeArguments = arguments.ToList();
 
-            var map = new SortedDictionary<IType, IType>();
             for (var index = 0; index < typeArguments.Count; index++)
             {
                 map[typeParameters[index]] = typeArguments[index];
@@ -183,7 +194,7 @@ namespace PEAssemblyReader
                     var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
                     if (metadataType.IsGenericTypeDefinition)
                     {
-                        var map = genericContext.TypeSpecialization.GenericMap();
+                        var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
                         var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
                             ? SelectGenericsFromArguments(namedTypeSymbol, map)
                             : SelectGenericsFromParameters(namedTypeSymbol, map);
@@ -192,7 +203,7 @@ namespace PEAssemblyReader
                             namedTypeSymbol.ConstructedFrom,
                             ImmutableArray.Create(mapFilteredByTypeParameters));
 
-                        return new MetadataTypeAdapter(newType);
+                        return new MetadataTypeAdapter(newType, genericContext);
                     }
                 }
             }
@@ -214,7 +225,7 @@ namespace PEAssemblyReader
                 .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
         }
 
-        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace)
+        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false)
         {
             sb.Append(@namespace);
             if (sb.Length > 0)
@@ -224,7 +235,7 @@ namespace PEAssemblyReader
 
             if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
             {
-                sb.Append(symbol.ContainingType.ToType().Name);
+                sb.Append(metadataName ? declaringType.MetadataName : declaringType.Name);
                 sb.Append('+');
             }
         }

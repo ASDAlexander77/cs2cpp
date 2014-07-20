@@ -34,5 +34,9 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         IMethod MethodSpecialization { get; }
+
+        /// <summary>
+        /// </summary>
+        IDictionary<IType, IType> Map { get; }
     }
 }

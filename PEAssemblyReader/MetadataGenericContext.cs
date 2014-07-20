@@ -10,14 +10,15 @@ namespace PEAssemblyReader
     {
         public MetadataGenericContext()
         {
+            this.Map = new SortedDictionary<IType, IType>();
         }
 
-        public MetadataGenericContext(IType type)
+        public MetadataGenericContext(IType type) : this()
         {
             this.Init(type);
         }
 
-        public MetadataGenericContext(IMethod method)
+        public MetadataGenericContext(IMethod method) : this()
         {
             this.Init(method.DeclaringType);
             if (method.IsGenericMethod)
@@ -70,6 +71,12 @@ namespace PEAssemblyReader
             {
                 this.TypeSpecialization = type;
             }
+        }
+
+        public IDictionary<IType, IType> Map
+        {
+            get;
+            private set;
         }
     }
 }

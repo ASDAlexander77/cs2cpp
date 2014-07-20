@@ -45,6 +45,16 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
+        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false)
+            : this(typeDef, isByRef)
+        {
+            this.GenericContext = genericContext;
+        }
+
+        /// <summary>
+        /// </summary>
+        public IGenericContext GenericContext { get; set; }
+
         internal TypeSymbol TypeDef
         {
             get { return typeDef; }
@@ -117,7 +127,12 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                if (this.typeDef.ContainingType == null)
+                {
+                    return null;
+                }
+
+                return this.typeDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
 
@@ -128,7 +143,7 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.typeDef.AppendFullNamespace(sb, this.Namespace);
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
                 sb.Append(this.Name);
                 return sb.ToString();
             }
@@ -398,7 +413,7 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.typeDef.AppendFullNamespace(sb, this.Namespace);
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
                 sb.Append(this.MetadataName);
 
                 return sb.ToString();

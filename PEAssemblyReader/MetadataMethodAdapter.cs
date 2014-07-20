@@ -385,7 +385,7 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.methodDef.AppendFullNamespace(sb, this.Namespace);
+                this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
                 sb.Append(this.MetadataName);
 
                 return sb.ToString();
