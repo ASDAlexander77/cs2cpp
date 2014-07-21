@@ -111,6 +111,12 @@ namespace Il2Native.Logic.Gencode
                 return LlvmWriter.PointerSize;
             }
 
+            if (type.IsArray)
+            {
+                // type*
+                return LlvmWriter.PointerSize;
+            }
+
             if (type.IsEnum)
             {
                 return type.GetEnumUnderlyingType().GetTypeSize();
