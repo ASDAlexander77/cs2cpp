@@ -72,11 +72,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
+        /// <param name="genericContext">
+        /// </param>
         void WriteConstructorEnd(IConstructor ctor, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>
         /// <param name="ctor">
+        /// </param>
+        /// <param name="genericContext">
         /// </param>
         void WriteConstructorStart(IConstructor ctor, IGenericContext genericContext);
 
@@ -124,11 +128,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
+        /// <param name="genericContext">
+        /// </param>
         void WriteMethodEnd(IMethod method, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>
         /// <param name="method">
+        /// </param>
+        /// <param name="genericContext">
         /// </param>
         void WriteMethodStart(IMethod method, IGenericContext genericContext);
 
@@ -159,7 +167,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="genericType">
+        /// <param name="genericContext">
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
     }

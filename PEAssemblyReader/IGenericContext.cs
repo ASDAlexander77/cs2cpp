@@ -9,7 +9,6 @@
 namespace PEAssemblyReader
 {
     using System.Collections.Generic;
-    using System.Reflection;
 
     /// <summary>
     /// </summary>
@@ -21,11 +20,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        IType TypeDefinition { get; }
-
-        /// <summary>
-        /// </summary>
-        IType TypeSpecialization { get; }
+        IDictionary<IType, IType> Map { get; }
 
         /// <summary>
         /// </summary>
@@ -37,6 +32,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        IDictionary<IType, IType> Map { get; }
+        IType TypeDefinition { get; }
+
+        /// <summary>
+        /// </summary>
+        IType TypeSpecialization { get; }
     }
 }

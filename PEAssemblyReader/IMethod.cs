@@ -28,6 +28,11 @@ namespace PEAssemblyReader
         bool IsConstructor { get; }
 
         /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsExternal { get; }
+
+        /// <summary>
         /// </summary>
         bool IsGenericMethod { get; }
 
@@ -37,13 +42,14 @@ namespace PEAssemblyReader
         bool IsInternalCall { get; }
 
         /// <summary>
-        /// custom field
         /// </summary>
-        bool IsExternal { get; }
+        IType ReturnType { get; }
 
         /// <summary>
         /// </summary>
-        IType ReturnType { get; }
+        /// <returns>
+        /// </returns>
+        IEnumerable<IType> GetGenericArguments();
 
         /// <summary>
         /// </summary>
@@ -53,14 +59,8 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        IEnumerable<IType> GetGenericArguments();
-
-        IType ResolveTypeParameter(IType type);        
-
-        /// <summary>
-        /// </summary>
+        /// <param name="genericContext">
+        /// </param>
         /// <returns>
         /// </returns>
         IMethodBody GetMethodBody(IGenericContext genericContext = null);
@@ -70,6 +70,14 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IParameter> GetParameters();
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IType ResolveTypeParameter(IType type);
 
         /// <summary>
         /// </summary>

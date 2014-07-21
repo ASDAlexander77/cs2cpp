@@ -10,11 +10,11 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Reflection;
     using System.Reflection.Metadata;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -48,11 +48,25 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="exceptionRegion">
+        /// </param>
+        /// <param name="catchType">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        internal MetadataExceptionHandlingClauseAdapter(ExceptionRegion exceptionRegion, TypeSymbol catchType, IGenericContext genericContext)
+            : this(exceptionRegion, catchType)
+        {
+            this.GenericContext = genericContext;
+        }
+
+        /// <summary>
+        /// </summary>
         public IType CatchType
         {
             get
             {
-                return this.catchType != null ? new MetadataTypeAdapter(this.catchType) : null;
+                return this.catchType != null ? new MetadataTypeAdapter(this.catchType, this.GenericContext) : null;
             }
         }
 
@@ -93,6 +107,10 @@ namespace PEAssemblyReader
                 throw new NotImplementedException();
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>

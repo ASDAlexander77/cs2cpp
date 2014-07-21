@@ -25,8 +25,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<IMethod>> virtualInterfaceTableLayoutByType =
-            new SortedDictionary<string, List<IMethod>>();
+        private static readonly IDictionary<string, List<IMethod>> virtualInterfaceTableLayoutByType = new SortedDictionary<string, List<IMethod>>();
 
         /// <summary>
         /// </summary>
@@ -35,11 +34,11 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
         /// <param name="thisType">
         /// </param>
         /// <param name="interface">
-        /// </param>
-        /// <param name="virtualTable">
         /// </param>
         public static void BuildVirtualInterfaceTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType, IType @interface)
         {
@@ -47,40 +46,15 @@ namespace Il2Native.Logic.Gencode
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic);
         }
 
-        private static void AddMethodsToVirtualInterfaceTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType @interface, IEnumerable<IMethod> allPublic)
-        {
-            var allInterfaces = @interface.GetInterfaces();
-            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
-            if (firstChildInterface != null)
-            {
-                // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allPublic);
-            }
-
-            // get all virtual methods in current type and replace or append
-            virtualTable.AddRange(
-                IlReader.Methods(@interface)
-                        .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
-                        .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
         public static void BuildVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface)
         {
             virtualTable.AddMethodsToVirtualInterfaceTableLayout(@interface);
-        }
-
-        private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface)
-        {
-            var allInterfaces = @interface.GetInterfaces();
-            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
-            if (firstChildInterface != null)
-            {
-                // get all virtual methods in current type and replace or append
-                virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface);
-            }
-
-            // get all virtual methods in current type and replace or append
-            virtualTable.AddRange(IlReader.Methods(@interface));
         }
 
         /// <summary>
@@ -153,6 +127,12 @@ namespace Il2Native.Logic.Gencode
             return virtualInterfaceTable;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="interface">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static List<IMethod> GetVirtualInterfaceTableLayout(this IType @interface)
         {
             List<IMethod> virtualInterfaceTableLayout;
@@ -183,21 +163,13 @@ namespace Il2Native.Logic.Gencode
             return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
         }
 
-        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo)
-        {
-            return thisType.GetVirtualTable().Select(v => v.Value).Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
-        }
-
-        public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
-        {
-            return thisType.GetMethods(BindingFlags.Instance).Any(method => methodInfo.IsMatchingExplicitInterfaceOverride(method));
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="thisType">
         /// </param>
         /// <param name="methodInfo">
+        /// </param>
+        /// <param name="requiredInterface">
         /// </param>
         /// <returns>
         /// </returns>
@@ -312,6 +284,32 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
+        {
+            return thisType.GetMethods(BindingFlags.Instance).Any(method => methodInfo.IsMatchingExplicitInterfaceOverride(method));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="thisType">
+        /// </param>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo)
+        {
+            return thisType.GetVirtualTable().Select(v => v.Value).Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="virtualTable">
         /// </param>
         /// <param name="llvmWriter">
@@ -365,6 +363,52 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.Indent--;
             writer.WriteLine("]");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <param name="allPublic">
+        /// </param>
+        private static void AddMethodsToVirtualInterfaceTable(
+            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType @interface, IEnumerable<IMethod> allPublic)
+        {
+            var allInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
+            if (firstChildInterface != null)
+            {
+                // get all virtual methods in current type and replace or append
+                virtualTable.AddMethodsToVirtualInterfaceTable(firstChildInterface, allPublic);
+            }
+
+            // get all virtual methods in current type and replace or append
+            virtualTable.AddRange(
+                IlReader.Methods(@interface)
+                        .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
+                        .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="virtualTable">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface)
+        {
+            var allInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
+            if (firstChildInterface != null)
+            {
+                // get all virtual methods in current type and replace or append
+                virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface);
+            }
+
+            // get all virtual methods in current type and replace or append
+            virtualTable.AddRange(IlReader.Methods(@interface));
         }
     }
 }

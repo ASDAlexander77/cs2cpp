@@ -1,10 +1,20 @@
-﻿namespace Ll2NativeTests
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MSTests.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Ll2NativeTests
 {
-    using System;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+
     using Il2Native.Logic;
+
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     /// <summary>
@@ -14,9 +24,21 @@
     public class MSTests
     {
 #if _DISK_C_
+
+        /// <summary>
+        /// </summary>
         private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
+
+        /// <summary>
+        /// </summary>
         private const string SourcePathCustom = @"C:\Temp\tests\";
+
+        /// <summary>
+        /// </summary>
         private const string OutputPath = @"C:\Temp\IlCTests\";
+
+        /// <summary>
+        /// </summary>
         private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
 #endif
 #if _DISK_D_
@@ -26,109 +48,109 @@
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
 #endif
 
-        public MSTests()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
+        public TestContext TestContext { get; set; }
 
         #region Additional test attributes
-        //
+
         // You can use the following additional attributes as you write your tests:
-        //
         // Use ClassInitialize to run code before running the first test in the class
         // [ClassInitialize()]
         // public static void MyClassInitialize(TestContext testContext) { }
-        //
         // Use ClassCleanup to run code after all tests in a class have run
         // [ClassCleanup()]
         // public static void MyClassCleanup() { }
-        //
         // Use TestInitialize to run code before running each test 
         // [TestInitialize()]
         // public void MyTestInitialize() { }
-        //
         // Use TestCleanup to run code after each test has run
         // [TestCleanup()]
         // public void MyTestCleanup() { }
-        //
         #endregion
 
+        /// <summary>
+        /// </summary>
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert(1, SourcePathCustom);
+            this.Convert(1, SourcePathCustom);
         }
 
+        /// <summary>
+        /// </summary>
         [TestMethod]
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath);
         }
 
+        /// <summary>
+        /// </summary>
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            var skip = new int[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 };
+            var skip = new[] { 10, 19, 27, 28, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
-                CompileAndRun(index);
+                this.CompileAndRun(index);
             }
         }
 
+        /// <summary>
+        /// </summary>
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
             // 21 - using default on Class causing Boxing of Reference type
             // 29 - boxing arrya and sends to WriteLine - causes crash
-            var skip = new int[] { 21, 29 };
+            var skip = new[] { 21, 29 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
-                GenCompileAndRun(index);
+                this.GenCompileAndRun(index);
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="index">
+        /// </param>
         private void CompileAndRun(int index)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Convert(index);
+            this.Convert(index);
 
             Trace.WriteLine("Executing LLVM for " + index);
 
             ExecCompile(index);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="index">
+        /// </param>
         private void GenCompileAndRun(int index)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Convert(index, SourcePath, "gtest", "000");
+            this.Convert(index, SourcePath, "gtest", "000");
 
             Trace.WriteLine("Executing LLVM for " + index);
 
             ExecCompile(index, "gtest", "000");
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="index">
+        /// </param>
+        /// <param name="fileName">
+        /// </param>
+        /// <param name="format">
+        /// </param>
         private static void ExecCompile(int index, string fileName = "test", string format = null)
         {
             /*
@@ -148,7 +170,6 @@
                 g++.exe -o test-%1.exe mscorlib.o test-%1.o -lstdc++ -march=i686
                 del test-%1.o
             */
-
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";
@@ -171,6 +192,16 @@
             Assert.AreEqual(0, piexecProc.ExitCode);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="number">
+        /// </param>
+        /// <param name="source">
+        /// </param>
+        /// <param name="fileName">
+        /// </param>
+        /// <param name="format">
+        /// </param>
         private void Convert(int number, string source = SourcePath, string fileName = "test", string format = null)
         {
             Il2Converter.Convert(

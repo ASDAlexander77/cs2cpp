@@ -1,24 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataGenericContext.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
 namespace PEAssemblyReader
 {
+    using System.Collections.Generic;
+
+    /// <summary>
+    /// </summary>
     public class MetadataGenericContext : IGenericContext
     {
+        /// <summary>
+        /// </summary>
         public MetadataGenericContext()
         {
             this.Map = new SortedDictionary<IType, IType>();
         }
 
-        public MetadataGenericContext(IType type) : this()
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public MetadataGenericContext(IType type)
+            : this()
         {
             this.Init(type);
         }
 
-        public MetadataGenericContext(IMethod method) : this()
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        public MetadataGenericContext(IMethod method)
+            : this()
         {
             this.Init(method.DeclaringType);
             if (method.IsGenericMethod)
@@ -28,6 +47,8 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsEmpty
         {
             get
@@ -36,30 +57,30 @@ namespace PEAssemblyReader
             }
         }
 
-        public IType TypeDefinition
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// </summary>
+        public IDictionary<IType, IType> Map { get; private set; }
 
-        public IType TypeSpecialization
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// </summary>
+        public IMethod MethodDefinition { get; set; }
 
-        public IMethod MethodDefinition
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// </summary>
+        public IMethod MethodSpecialization { get; set; }
 
-        public IMethod MethodSpecialization
-        {
-            get;
-            set;
-        }
+        /// <summary>
+        /// </summary>
+        public IType TypeDefinition { get; set; }
 
+        /// <summary>
+        /// </summary>
+        public IType TypeSpecialization { get; set; }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
         private void Init(IType type)
         {
             if (type.IsGenericTypeDefinition)
@@ -71,12 +92,6 @@ namespace PEAssemblyReader
             {
                 this.TypeSpecialization = type;
             }
-        }
-
-        public IDictionary<IType, IType> Map
-        {
-            get;
-            private set;
         }
     }
 }

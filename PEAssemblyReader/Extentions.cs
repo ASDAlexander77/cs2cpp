@@ -8,17 +8,16 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
 
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-    using System;
-    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -57,6 +56,20 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IMethodBody ResolveMethodBody(this IMethod methodInfo, IGenericContext genericContext)
+        {
+            return methodInfo.GetMethodBody()
+                   ?? (genericContext != null && genericContext.MethodDefinition != null ? genericContext.MethodDefinition.GetMethodBody(genericContext) : null);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <param name="other">
@@ -79,6 +92,33 @@ namespace PEAssemblyReader
         public static bool TypeNotEquals(this IType type, IType other)
         {
             return !type.TypeEquals(other);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="symbol">
+        /// </param>
+        /// <param name="sb">
+        /// </param>
+        /// <param name="namespace">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        /// <param name="metadataName">
+        /// </param>
+        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false)
+        {
+            sb.Append(@namespace);
+            if (sb.Length > 0)
+            {
+                sb.Append('.');
+            }
+
+            if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
+            {
+                sb.Append(metadataName ? declaringType.MetadataName : declaringType.Name);
+                sb.Append('+');
+            }
         }
 
         /// <summary>
@@ -116,11 +156,14 @@ namespace PEAssemblyReader
             return sb.ToString();
         }
 
-        internal static IType ToType(this TypeSymbol typeSymbol)
-        {
-            return new MetadataTypeAdapter(typeSymbol);
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static IDictionary<IType, IType> GenericMap(this IType type, IDictionary<IType, IType> map)
         {
             map.GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
@@ -132,6 +175,14 @@ namespace PEAssemblyReader
             return map;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static IDictionary<IType, IType> GenericMap(this IMethod method, IDictionary<IType, IType> map)
         {
             map.GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
@@ -143,6 +194,16 @@ namespace PEAssemblyReader
             return map;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="map">
+        /// </param>
+        /// <param name="parameters">
+        /// </param>
+        /// <param name="arguments">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static IDictionary<IType, IType> GenericMap(this IDictionary<IType, IType> map, IEnumerable<IType> parameters, IEnumerable<IType> arguments)
         {
             var typeParameters = parameters.ToList();
@@ -156,6 +217,68 @@ namespace PEAssemblyReader
             return map;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="peModuleSymbol">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        internal static MetadataDecoder GetMetadataDecoder(this PEModuleSymbol peModuleSymbol, IGenericContext genericContext)
+        {
+            if (genericContext != null)
+            {
+                var methodDefOrSpec = genericContext.MethodDefinition ?? genericContext.MethodSpecialization;
+                if (methodDefOrSpec != null)
+                {
+                    var methodDef = ((MetadataMethodAdapter)methodDefOrSpec).MethodDef;
+                    var contextMethod = methodDef as PEMethodSymbol;
+                    if (contextMethod != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextMethod);
+                    }
+
+                    var contextMethodOrig = methodDef.OriginalDefinition as PEMethodSymbol;
+                    if (contextMethodOrig != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextMethodOrig);
+                    }
+
+                    Debug.Assert(false, "Could not resolve Generic");
+                }
+
+                var typeDefOrSpec = genericContext.TypeDefinition ?? genericContext.TypeSpecialization;
+                if (typeDefOrSpec != null)
+                {
+                    var typeDef = ((MetadataTypeAdapter)typeDefOrSpec).TypeDef;
+                    var contextType = typeDef as PENamedTypeSymbol;
+                    if (contextType != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextType);
+                    }
+
+                    var contextTypeOrig = typeDef.OriginalDefinition as PENamedTypeSymbol;
+                    if (contextTypeOrig != null)
+                    {
+                        return new MetadataDecoder(peModuleSymbol, contextTypeOrig);
+                    }
+
+                    Debug.Assert(false, "Could not resolve Generic");
+                }
+            }
+
+            return new MetadataDecoder(peModuleSymbol);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="typeSymbol">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
             IType effectiveType = new MetadataTypeAdapter(typeSymbol, genericContext);
@@ -203,12 +326,12 @@ namespace PEAssemblyReader
                         }
 
                         var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
-                            ? SelectGenericsFromArguments(namedTypeSymbol, map)
-                            : SelectGenericsFromParameters(namedTypeSymbol, map);
+                                                              ? SelectGenericsFromArguments(namedTypeSymbol, map)
+                                                              : SelectGenericsFromParameters(namedTypeSymbol, map);
 
-                        var newType = new ConstructedNamedTypeSymbol(
-                            namedTypeSymbol.ConstructedFrom,
-                            ImmutableArray.Create(mapFilteredByTypeParameters));
+                        Debug.Assert(mapFilteredByTypeParameters.Count() > 0);
+
+                        var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
 
                         return new MetadataTypeAdapter(newType, genericContext);
                     }
@@ -218,85 +341,49 @@ namespace PEAssemblyReader
             return effectiveType;
         }
 
-        private static TypeSymbol[] SelectGenericsFromParameters(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
+        /// <summary>
+        /// </summary>
+        /// <param name="typeSymbol">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        internal static IType ToType(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
-            return map
-                .Where(pair => (namedTypeSymbol.TypeParameters).Select(t => t).Any(tp => tp.Name == pair.Key.Name))
-                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
+            return new MetadataTypeAdapter(typeSymbol, genericContext);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="namedTypeSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static TypeSymbol[] SelectGenericsFromArguments(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
         {
-            return map
-                .Where(pair => (namedTypeSymbol.TypeArguments).Select(t => t).Any(tp => tp.Name == pair.Key.Name))
-                .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef).ToArray();
+            return
+                map.Where(pair => namedTypeSymbol.TypeArguments.Select(t => t).Any(tp => tp.Name == pair.Key.Name))
+                   .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef)
+                   .ToArray();
         }
 
-        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false)
+        /// <summary>
+        /// </summary>
+        /// <param name="namedTypeSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static TypeSymbol[] SelectGenericsFromParameters(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
         {
-            sb.Append(@namespace);
-            if (sb.Length > 0)
-            {
-                sb.Append('.');
-            }
-
-            if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
-            {
-                sb.Append(metadataName ? declaringType.MetadataName : declaringType.Name);
-                sb.Append('+');
-            }
-        }
-
-        public static IMethodBody ResolveMethodBody(this IMethod methodInfo, IGenericContext genericContext)
-        {
-            return methodInfo.GetMethodBody()
-                            ?? (genericContext != null && genericContext.MethodDefinition != null
-                                ? genericContext.MethodDefinition.GetMethodBody(genericContext)
-                                : null);
-        }
-
-        internal static MetadataDecoder GetMetadataDecoder(this PEModuleSymbol peModuleSymbol, IGenericContext genericContext)
-        {
-            if (genericContext != null)
-            {
-                if (genericContext.MethodDefinition != null)
-                {
-                    var methodDef = ((MetadataMethodAdapter)genericContext.MethodDefinition).MethodDef;
-                    var contextMethod = methodDef as PEMethodSymbol;
-                    if (contextMethod != null)
-                    {
-                        return new MetadataDecoder(peModuleSymbol, contextMethod);
-                    }
-
-                    var contextMethodOrig = methodDef.OriginalDefinition as PEMethodSymbol;
-                    if (contextMethodOrig != null)
-                    {
-                        return new MetadataDecoder(peModuleSymbol, contextMethodOrig);
-                    }
-
-                    Debug.Assert(false, "Could not resolve Generic");
-                }
-
-                if (genericContext.TypeDefinition != null)
-                {
-                    var typeDef = ((MetadataTypeAdapter)genericContext.TypeDefinition).TypeDef;
-                    var contextType = typeDef as PENamedTypeSymbol;
-                    if (contextType != null)
-                    {
-                        return new MetadataDecoder(peModuleSymbol, contextType);
-                    }
-
-                    var contextTypeOrig = typeDef.OriginalDefinition as PENamedTypeSymbol;
-                    if (contextTypeOrig != null)
-                    {
-                        return new MetadataDecoder(peModuleSymbol, contextTypeOrig);
-                    }
-
-                    Debug.Assert(false, "Could not resolve Generic");
-                }
-            }
-
-            return new MetadataDecoder(peModuleSymbol);
+            return
+                map.Where(pair => namedTypeSymbol.TypeParameters.Select(t => t).Any(tp => tp.Name == pair.Key.Name))
+                   .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef)
+                   .ToArray();
         }
     }
 }

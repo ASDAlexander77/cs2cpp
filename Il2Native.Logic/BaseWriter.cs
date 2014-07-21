@@ -604,6 +604,18 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public virtual void StartProcess()
+        {
+            this.Ops.Clear();
+            this.Stack.Clear();
+            this.OpsByAddressStart.Clear();
+            this.OpsByAddressEnd.Clear();
+            this.OpsByGroupAddressStart.Clear();
+            this.OpsByGroupAddressEnd.Clear();
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         protected void AdjustTypes(OpCodePart opCode)
@@ -643,6 +655,7 @@ namespace Il2Native.Logic
 
             if (opCode.OpCodeOperands.Length == 2
                 && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
+                
                 
                 
                 /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
@@ -1228,6 +1241,8 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="methodInfo">
         /// </param>
+        /// <param name="genericContext">
+        /// </param>
         protected void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
         {
             this.Parameters = methodInfo.GetParameters().ToArray();
@@ -1253,8 +1268,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         /// <param name="type">
-        /// </param>
-        /// <param name="genericType">
         /// </param>
         protected void ReadTypeInfo(IType type)
         {
@@ -1319,18 +1332,6 @@ namespace Il2Native.Logic
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        public virtual void StartProcess()
-        {
-            this.Ops.Clear();
-            this.Stack.Clear();
-            this.OpsByAddressStart.Clear();
-            this.OpsByAddressEnd.Clear();
-            this.OpsByGroupAddressStart.Clear();
-            this.OpsByGroupAddressEnd.Clear();
         }
 
         /// <summary>

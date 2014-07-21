@@ -32,15 +32,17 @@ namespace PEAssemblyReader
             this.fieldDef = fieldDef;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="fieldDef">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
         internal MetadataFieldAdapter(FieldSymbol fieldDef, IGenericContext genericContext)
             : this(fieldDef)
         {
             this.GenericContext = genericContext;
         }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -84,6 +86,10 @@ namespace PEAssemblyReader
                 return metadataTypeName.FullName;
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -137,11 +143,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IModule Module
+        public string MetadataFullName
         {
             get
             {
-                return new MetadataModuleAdapter(this.fieldDef.ContainingModule);
+                return this.FullName;
             }
         }
 
@@ -157,11 +163,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public string MetadataFullName
+        public IModule Module
         {
             get
             {
-                return this.FullName;
+                return new MetadataModuleAdapter(this.fieldDef.ContainingModule);
             }
         }
 

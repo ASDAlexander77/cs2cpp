@@ -38,6 +38,43 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="genericTypeSpecializations">
+        /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
+        public static void DiscoverAllSpecializations(
+            this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
+        {
+            // read method body to extract all types
+            var reader = new IlReader();
+
+            var genericContext = new MetadataGenericContext(method);
+            foreach (var op in reader.OpCodes(method, genericContext))
+            {
+                // dummy body we just need to read body of a method
+            }
+
+            if (genericTypeSpecializations != null)
+            {
+                foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
+                {
+                    genericTypeSpecializations.Add(genericSpecializedType);
+                }
+            }
+
+            if (genericMethodSpecializations != null)
+            {
+                foreach (var genericSpecializedMethod in reader.UsedGenericSpecialiazedMethods)
+                {
+                    genericMethodSpecializations.Add(genericSpecializedMethod);
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="baseWriter">
         /// </param>
         /// <returns>
@@ -359,6 +396,24 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="genericMethod">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
+        {
+            if (method.Name == genericMethod.Name)
+            {
+                return method.IsMatchingGenericParamsAndReturnType(genericMethod);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="interfaceMember">
         /// </param>
         /// <param name="publicMethod">
@@ -398,24 +453,6 @@ namespace Il2Native.Logic
             if (method.Name == overridingMethod.Name)
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="genericMethod">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
-        {
-            if (method.Name == genericMethod.Name)
-            {
-                return method.IsMatchingGenericParamsAndReturnType(genericMethod);
             }
 
             return false;

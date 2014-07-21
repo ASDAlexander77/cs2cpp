@@ -9,6 +9,7 @@
 namespace PEAssemblyReader
 {
     using System.Diagnostics;
+
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
@@ -31,6 +32,12 @@ namespace PEAssemblyReader
             this.IsConstructor = true;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="methodDef">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
         internal MetadataConstructorAdapter(MethodSymbol methodDef, IGenericContext genericContext)
             : base(methodDef, genericContext)
         {

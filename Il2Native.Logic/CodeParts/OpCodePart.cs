@@ -15,8 +15,6 @@ namespace Il2Native.Logic.CodeParts
 
     using Il2Native.Logic.Exceptions;
 
-    using PEAssemblyReader;
-
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>

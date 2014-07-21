@@ -36,6 +36,8 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="paramDef">
         /// </param>
+        /// <param name="genericContext">
+        /// </param>
         internal MetadataParameterAdapter(ParameterSymbol paramDef, IGenericContext genericContext)
             : this(paramDef)
         {

@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MetadataTypeAdapter.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
@@ -45,19 +47,18 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="typeDef">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <param name="isByRef">
+        /// </param>
         internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false)
             : this(typeDef, isByRef)
         {
             this.GenericContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
-
-        internal TypeSymbol TypeDef
-        {
-            get { return typeDef; }
         }
 
         /// <summary>
@@ -97,7 +98,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.BaseType != null ? this.typeDef.BaseType.ToType() : null;
+                return this.typeDef.BaseType != null ? this.typeDef.BaseType.ToType(this.GenericContext) : null;
             }
         }
 
@@ -127,7 +128,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.typeDef.ContainingType == null)
+                if (!this.HasDeclaringType)
                 {
                     return null;
                 }
@@ -151,15 +152,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public int GenericParameterPosition
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -172,13 +165,17 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeArguments.Select(t => t.ToType());
+                    return namedTypeSymbol.TypeArguments.Select(t => t.ToType(this.GenericContext));
                 }
 
                 throw new NotImplementedException();
             }
         }
 
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
         public IEnumerable<IType> GenericTypeParameters
         {
             get
@@ -186,10 +183,20 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeParameters.Select(t => t.ToType());
+                    return namedTypeSymbol.TypeParameters.Select(t => t.ToType(this.GenericContext));
                 }
 
                 throw new NotImplementedException();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool HasDeclaringType
+        {
+            get
+            {
+                return this.typeDef.ContainingType != null;
             }
         }
 
@@ -388,6 +395,22 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public string MetadataFullName
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
+                sb.Append(this.MetadataName);
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string MetadataName
         {
             get
@@ -401,20 +424,6 @@ namespace PEAssemblyReader
                     sb.Append('`');
                     sb.Append(this.typeDef.GetArity());
                 }
-
-                return sb.ToString();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public string MetadataFullName
-        {
-            get
-            {
-                var sb = new StringBuilder();
-                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
-                sb.Append(this.MetadataName);
 
                 return sb.ToString();
             }
@@ -482,6 +491,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        internal TypeSymbol TypeDef
+        {
+            get
+            {
+                return this.typeDef;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         public IType Clone()
@@ -503,7 +522,34 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            return this.MetadataFullName.CompareTo(type.MetadataFullName);
+            var cmp = this.MetadataName.CompareTo(type.MetadataName);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            cmp = this.Namespace.CompareTo(type.Namespace);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            if (!this.HasDeclaringType && !type.HasDeclaringType)
+            {
+                return 0;
+            }
+
+            if (!this.HasDeclaringType)
+            {
+                return -1;
+            }
+
+            if (!type.HasDeclaringType)
+            {
+                return 1;
+            }
+
+            return this.GetDeclaringTypeOriginal().CompareTo(type.GetDeclaringTypeOriginal());
         }
 
         /// <summary>
@@ -523,25 +569,13 @@ namespace PEAssemblyReader
             return base.Equals(obj);
         }
 
-        public IType ResolveTypeParameter(IType typeParameter)
-        {
-            var typeParameters = this.GenericTypeParameters.ToList();
-            var typeArguments = this.GenericTypeArguments.ToList();
-
-            for (var index = 0; index < typeArguments.Count; index++)
-            {
-                if (typeParameters[index].TypeEquals(typeParameter))
-                {
-                    return typeArguments[index];
-                }
-            }
-
-            return null;
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IType> GetAllInterfaces()
         {
-            return this.typeDef.AllInterfaces.Select(i => i.ToType()).ToList();
+            return this.typeDef.AllInterfaces.Select(i => i.ToType(this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -555,7 +589,17 @@ namespace PEAssemblyReader
             return
                 this.typeDef.GetMembers()
                     .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
+                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
+        }
+
+        /// <summary>
+        /// To prevent resolving generic type before actually using resolved generic type
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType GetDeclaringTypeOriginal()
+        {
+            return new MetadataTypeAdapter(this.typeDef.ContainingType);
         }
 
         /// <summary>
@@ -566,17 +610,17 @@ namespace PEAssemblyReader
         {
             if (this.IsByRef)
             {
-                return this.typeDef.ToType();
+                return this.typeDef.ToType(this.GenericContext);
             }
 
             if (this.IsArray)
             {
-                return (this.typeDef as ArrayTypeSymbol).ElementType.ToType();
+                return (this.typeDef as ArrayTypeSymbol).ElementType.ToType(this.GenericContext);
             }
 
             if (this.IsPointer)
             {
-                return (this.typeDef as PointerTypeSymbol).PointedAtType.ToType();
+                return (this.typeDef as PointerTypeSymbol).PointedAtType.ToType(this.GenericContext);
             }
 
             Debug.Fail(string.Empty);
@@ -592,7 +636,7 @@ namespace PEAssemblyReader
         {
             if (this.typeDef.IsEnumType())
             {
-                return this.typeDef.EnumUnderlyingType().ToType();
+                return this.typeDef.EnumUnderlyingType().ToType(this.GenericContext);
             }
 
             if (this.IsDerivedFromEnum())
@@ -611,7 +655,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
-            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
         }
 
         /// <summary>
@@ -623,7 +667,7 @@ namespace PEAssemblyReader
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeArguments.Select(a => a.ToType());
+                return namedTypeSymbol.TypeArguments.Select(a => a.ToType(this.GenericContext));
             }
 
             return null;
@@ -645,9 +689,13 @@ namespace PEAssemblyReader
         public IEnumerable<IType> GetInterfaces()
         {
             // return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
-            return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ToType());
+            return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ToType(this.GenericContext));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IEnumerable<IType> GetInterfacesExcludingBaseAllInterfaces()
         {
             if (this.typeDef.BaseType == null)
@@ -656,7 +704,7 @@ namespace PEAssemblyReader
             }
 
             var baseInterfaces = this.typeDef.BaseType.AllInterfaces;
-            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => i.ToType()).ToList();
+            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => i.ToType(this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -670,7 +718,7 @@ namespace PEAssemblyReader
             foreach (var method in
                 this.typeDef.GetMembers()
                     .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
+                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol, this.GenericContext)))
             {
                 yield return method;
             }
@@ -699,7 +747,7 @@ namespace PEAssemblyReader
             var peType = this.typeDef as NamedTypeSymbol;
             if (peType != null)
             {
-                return peType.GetTypeMembers().Select(t => t.ToType());
+                return peType.GetTypeMembers().Select(t => t.ToType(this.GenericContext));
             }
 
             throw new NotImplementedException();
@@ -718,13 +766,35 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="typeParameter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType ResolveTypeParameter(IType typeParameter)
+        {
+            var typeParameters = this.GenericTypeParameters.ToList();
+            var typeArguments = this.GenericTypeArguments.ToList();
+
+            for (var index = 0; index < typeArguments.Count; index++)
+            {
+                if (typeParameters[index].TypeEquals(typeParameter))
+                {
+                    return typeArguments[index];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="rank">
         /// </param>
         /// <returns>
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            return new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank).ToType();
+            return new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank).ToType(this.GenericContext);
         }
 
         /// <summary>
@@ -733,7 +803,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToClass()
         {
-            var newType = this.typeDef.ToType();
+            var newType = this.typeDef.ToType(this.GenericContext);
             newType.UseAsClass = true;
             return newType;
         }
@@ -744,7 +814,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            var newType = this.typeDef.ToType();
+            var newType = this.typeDef.ToType(this.GenericContext);
             newType.UseAsClass = false;
             return newType;
         }
@@ -755,7 +825,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToPointerType()
         {
-            return new PointerTypeSymbol(this.typeDef).ToType();
+            return new PointerTypeSymbol(this.typeDef).ToType(this.GenericContext);
         }
 
         /// <summary>
@@ -812,6 +882,10 @@ namespace PEAssemblyReader
             return this.typeDef.CalculateNamespace();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private IEnumerable<TypeSymbol> EnumerableUniqueInterfaces()
         {
             TypeSymbol previous = null;
@@ -838,6 +912,10 @@ namespace PEAssemblyReader
             return source == methodKind1 || source == methodKind2;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private bool IsDerivedFromDelegateType()
         {
             return this.BaseType != null && (this.BaseType.FullName == "System.Delegate" || this.BaseType.FullName == "System.MulticastDelegate");

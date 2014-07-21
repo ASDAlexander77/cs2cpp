@@ -16,9 +16,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="token">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -28,9 +26,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="token">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -40,9 +36,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="token">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -60,9 +54,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="token">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -72,9 +64,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="s">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>

@@ -49,9 +49,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="invokeMethod">
         /// </param>
+        /// <param name="isStatic">
+        /// </param>
         /// <returns>
         /// </returns>
-        public static LlvmResult WriteCallInvokeMethod(this LlvmWriter llvmWriter, LlvmResult objectResult, LlvmResult methodResult, IMethod invokeMethod, bool isStatic)
+        public static LlvmResult WriteCallInvokeMethod(
+            this LlvmWriter llvmWriter, LlvmResult objectResult, LlvmResult methodResult, IMethod invokeMethod, bool isStatic)
         {
             var writer = llvmWriter.Output;
 
@@ -288,15 +291,15 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            private readonly bool isStatic;
+
+            /// <summary>
+            /// </summary>
             private readonly LlvmResult objectResult;
 
             /// <summary>
             /// </summary>
             private readonly LlvmWriter writer;
-
-            /// <summary>
-            /// </summary>
-            private readonly bool isStatic;
 
             /// <summary>
             /// </summary>
@@ -307,6 +310,8 @@ namespace Il2Native.Logic.Gencode
             /// <param name="methodResult">
             /// </param>
             /// <param name="invokeMethod">
+            /// </param>
+            /// <param name="isStatic">
             /// </param>
             public SynthesizedInvokeMethod(LlvmWriter writer, LlvmResult objectResult, LlvmResult methodResult, IMethod invokeMethod, bool isStatic)
             {
@@ -327,7 +332,7 @@ namespace Il2Native.Logic.Gencode
             {
                 get
                 {
-                    return this.isStatic ?  CallingConventions.Standard : CallingConventions.HasThis;
+                    return this.isStatic ? CallingConventions.Standard : CallingConventions.HasThis;
                 }
             }
 
@@ -368,26 +373,6 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return this.MethodResult.ToString();
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
                 }
             }
 
@@ -449,6 +434,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
                 }
             }
 
@@ -521,6 +526,17 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();
@@ -537,6 +553,8 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            /// <param name="genericContext">
+            /// </param>
             /// <returns>
             /// </returns>
             public IMethodBody GetMethodBody(IGenericContext genericContext = null)
@@ -551,6 +569,19 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IParameter> GetParameters()
             {
                 return this.invokeMethod.GetParameters();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
             }
 
             /// <summary>
@@ -573,17 +604,6 @@ namespace Il2Native.Logic.Gencode
             public override string ToString()
             {
                 return this.Name;
-            }
-
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
             }
         }
     }

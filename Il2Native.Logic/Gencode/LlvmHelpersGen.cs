@@ -43,13 +43,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="requiredType">
         /// </param>
         public static void GenerateVirtualCall(
-            this LlvmWriter llvmWriter,
-            OpCodePart opCodeMethodInfo,
-            IMethod methodInfo,
-            IType thisType,
-            OpCodePart opCodeFirstOperand,
-            BaseWriter.ReturnResult resultOfirstOperand,
-            ref LlvmResult virtualMethodAddressResultNumber,
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCodeMethodInfo, 
+            IMethod methodInfo, 
+            IType thisType, 
+            OpCodePart opCodeFirstOperand, 
+            BaseWriter.ReturnResult resultOfirstOperand, 
+            ref LlvmResult virtualMethodAddressResultNumber, 
             ref IType requiredType)
         {
             var writer = llvmWriter.Output;
@@ -70,8 +70,7 @@ namespace Il2Native.Logic.Gencode
 
             if (requiredInterface != null)
             {
-                llvmWriter.
-                    WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface);
+                llvmWriter.WriteInterfaceAccess(writer, opCodeMethodInfo.OpCodeOperands[0], effectiveType, requiredInterface);
                 opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
                 requiredType = requiredInterface;
             }
@@ -430,13 +429,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="tryClause">
         /// </param>
         public static void WriteCall(
-            this LlvmWriter llvmWriter,
-            OpCodePart opCodeMethodInfo,
-            IMethod methodBase,
-            bool isVirtual,
-            bool hasThis,
-            bool isCtor,
-            LlvmResult thisResultNumber,
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCodeMethodInfo, 
+            IMethod methodBase, 
+            bool isVirtual, 
+            bool hasThis, 
+            bool isCtor, 
+            LlvmResult thisResultNumber, 
             TryClause tryClause)
         {
             if (opCodeMethodInfo.HasResult)
@@ -446,8 +445,7 @@ namespace Il2Native.Logic.Gencode
 
             var methodInfo = methodBase;
 
-            if (methodInfo != null && methodInfo.ReturnType.IsStructureType()
-                && opCodeMethodInfo.UsedBy != null
+            if (methodInfo != null && methodInfo.ReturnType.IsStructureType() && opCodeMethodInfo.UsedBy != null
                 && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any)
                 && opCodeMethodInfo.Destination == null)
             {
@@ -496,7 +494,7 @@ namespace Il2Native.Logic.Gencode
                                                ? resultOfFirstOperand.IType
                                                : null;
 
-            bool rollbackType = false;
+            var rollbackType = false;
             var requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.IType : null;
             if (requiredType != null)
             {
@@ -504,10 +502,7 @@ namespace Il2Native.Logic.Gencode
                 rollbackType = true;
             }
 
-            if (isIndirectMethodCall
-                && methodBase.DeclaringType.TypeNotEquals(thisType)
-                && methodBase.DeclaringType.IsInterface
-                && !thisType.IsInterface
+            if (isIndirectMethodCall && methodBase.DeclaringType.TypeNotEquals(thisType) && methodBase.DeclaringType.IsInterface && !thisType.IsInterface
                 && thisType.HasExplicitInterfaceMethodOverride(methodBase))
             {
                 // this is explicit call of interface
@@ -641,16 +636,16 @@ namespace Il2Native.Logic.Gencode
             }
 
             llvmWriter.ActualWrite(
-                writer,
-                opCodeMethodInfo.OpCodeOperands,
-                methodBase.GetParameters(),
-                isVirtual,
-                hasThis,
-                isCtor,
-                preProcessedOperandDirectResults,
-                thisResultNumber,
-                thisType,
-                returnFullyDefinedReference,
+                writer, 
+                opCodeMethodInfo.OpCodeOperands, 
+                methodBase.GetParameters(), 
+                isVirtual, 
+                hasThis, 
+                isCtor, 
+                preProcessedOperandDirectResults, 
+                thisResultNumber, 
+                thisType, 
+                returnFullyDefinedReference, 
                 methodInfo != null ? methodInfo.ReturnType : null);
 
             if (tryClause != null)
@@ -752,12 +747,12 @@ namespace Il2Native.Logic.Gencode
         /// <exception cref="NotImplementedException">
         /// </exception>
         public static void WriteCast(
-            this LlvmWriter llvmWriter,
-            OpCodePart opCode,
-            IType fromType,
-            string custromName,
-            IType toType,
-            bool appendReference = false,
+            this LlvmWriter llvmWriter, 
+            OpCodePart opCode, 
+            IType fromType, 
+            string custromName, 
+            IType toType, 
+            bool appendReference = false, 
             bool doNotConvert = false)
         {
             var writer = llvmWriter.Output;

@@ -28,18 +28,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        string Name { get; }
-
-        /// <summary>
-        /// </summary>
-        string Namespace { get; }
-
-        /// <summary>
-        /// </summary>
         string MetadataFullName { get; }
 
         /// <summary>
         /// </summary>
         string MetadataName { get; }
+
+        /// <summary>
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
+        /// </summary>
+        string Namespace { get; }
     }
 }

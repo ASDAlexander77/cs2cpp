@@ -25,15 +25,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        int GenericParameterPosition { get; }
-
-        /// <summary>
-        /// </summary>
         IEnumerable<IType> GenericTypeArguments { get; }
 
         /// <summary>
         /// </summary>
         IEnumerable<IType> GenericTypeParameters { get; }
+
+        /// <summary>
+        /// </summary>
+        bool HasDeclaringType { get; }
 
         /// <summary>
         /// </summary>
@@ -106,8 +106,6 @@ namespace PEAssemblyReader
         /// </returns>
         IType Clone();
 
-        IType ResolveTypeParameter(IType type);        
-
         /// <summary>
         /// </summary>
         /// <returns>
@@ -121,6 +119,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags);
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType GetDeclaringTypeOriginal();
 
         /// <summary>
         /// </summary>
@@ -181,6 +185,14 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         bool IsAssignableFrom(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IType ResolveTypeParameter(IType type);
 
         /// <summary>
         /// </summary>

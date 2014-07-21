@@ -10,8 +10,6 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
-    using System.Linq;
     using System.Reflection;
     using System.Text;
 
@@ -569,31 +567,21 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
             public bool IsAbstract { get; private set; }
 
             /// <summary>
             /// </summary>
             public bool IsConstructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsExternal
+            {
+                get
+                {
+                    return false;
+                }
+            }
 
             /// <summary>
             /// </summary>
@@ -603,14 +591,6 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsInternalCall
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsExternal
             {
                 get
                 {
@@ -643,6 +623,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
                 }
             }
 
@@ -715,6 +715,17 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();
@@ -731,6 +742,8 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            /// <param name="genericContext">
+            /// </param>
             /// <returns>
             /// </returns>
             public IMethodBody GetMethodBody(IGenericContext genericContext = null)
@@ -745,6 +758,19 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IParameter> GetParameters()
             {
                 return new[] { new SynthesizedValueParameter(this.Type.ToNormal()) };
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
             }
 
             /// <summary>
@@ -792,18 +818,6 @@ namespace Il2Native.Logic.Gencode
                 result.Append(')');
 
                 return result.ToString();
-            }
-
-
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
             }
         }
 
@@ -917,31 +931,21 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
             public bool IsAbstract { get; private set; }
 
             /// <summary>
             /// </summary>
             public bool IsConstructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsExternal
+            {
+                get
+                {
+                    return false;
+                }
+            }
 
             /// <summary>
             /// </summary>
@@ -951,14 +955,6 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsInternalCall
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsExternal
             {
                 get
                 {
@@ -985,6 +981,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
                 }
             }
 
@@ -1057,6 +1073,17 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();
@@ -1073,6 +1100,8 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            /// <param name="genericContext">
+            /// </param>
             /// <returns>
             /// </returns>
             public IMethodBody GetMethodBody(IGenericContext genericContext = null)
@@ -1087,6 +1116,19 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IParameter> GetParameters()
             {
                 return new IParameter[0];
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
             }
 
             /// <summary>
@@ -1134,18 +1176,6 @@ namespace Il2Native.Logic.Gencode
                 result.Append(')');
 
                 return result.ToString();
-            }
-
-
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
             }
         }
 
@@ -1225,31 +1255,21 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
             public bool IsAbstract { get; private set; }
 
             /// <summary>
             /// </summary>
             public bool IsConstructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsExternal
+            {
+                get
+                {
+                    return false;
+                }
+            }
 
             /// <summary>
             /// </summary>
@@ -1259,14 +1279,6 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsInternalCall
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsExternal
             {
                 get
                 {
@@ -1293,6 +1305,26 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return new ILocalVariable[0];
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataFullName
+            {
+                get
+                {
+                    return this.FullName;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public string MetadataName
+            {
+                get
+                {
+                    return this.ExplicitName;
                 }
             }
 
@@ -1365,6 +1397,17 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IEnumerable<IType> GetGenericParameters()
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();
@@ -1381,6 +1424,8 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            /// <param name="genericContext">
+            /// </param>
             /// <returns>
             /// </returns>
             public IMethodBody GetMethodBody(IGenericContext genericContext = null)
@@ -1395,6 +1440,19 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IParameter> GetParameters()
             {
                 return new IParameter[0];
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
             }
 
             /// <summary>
@@ -1442,18 +1500,6 @@ namespace Il2Native.Logic.Gencode
                 result.Append(')');
 
                 return result.ToString();
-            }
-
-
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
             }
         }
 

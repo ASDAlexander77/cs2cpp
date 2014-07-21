@@ -62,8 +62,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
         public static void ProcessRequiredITypesForITypes(
-            IEnumerable<IType> types, HashSet<IType> typesAdded, List<IType> newListOfITypes, HashSet<IType> genericSpecializations, HashSet<IMethod> genericMethodSpecializations)
+            IEnumerable<IType> types, 
+            HashSet<IType> typesAdded, 
+            List<IType> newListOfITypes, 
+            HashSet<IType> genericSpecializations, 
+            HashSet<IMethod> genericMethodSpecializations)
         {
             foreach (var type in types)
             {
@@ -85,7 +91,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="type">
         /// </param>
-        /// <param name="genericDefinition">
+        /// <param name="genericContext">
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
@@ -154,15 +160,17 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genDefinitionsByMetadataName">
         /// </param>
+        /// <param name="genMethodSpec">
+        /// </param>
         /// <param name="mode">
         /// </param>
         private static void ConvertAllTypes(
-            IlReader ilReader,
-            string[] filter,
-            ICodeWriter codeWriter,
-            List<IType> newListOfITypes,
-            SortedDictionary<string, IType> genDefinitionsByMetadataName,
-            HashSet<IMethod> genMethodSpec,
+            IlReader ilReader, 
+            string[] filter, 
+            ICodeWriter codeWriter, 
+            List<IType> newListOfITypes, 
+            SortedDictionary<string, IType> genDefinitionsByMetadataName, 
+            HashSet<IMethod> genMethodSpec, 
             ConvertingMode mode)
         {
             foreach (var type in newListOfITypes)
@@ -198,9 +206,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericDefinition">
         /// </param>
+        /// <param name="genericMethodSpecializatons">
+        /// </param>
         /// <param name="mode">
         /// </param>
-        private static void ConvertIType(IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, ConvertingMode mode)
+        private static void ConvertIType(
+            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, ConvertingMode mode)
         {
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
@@ -331,6 +342,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericSpecializations">
         /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
         private static void DicoverGenericSpecializedIType(IType type, HashSet<IType> genericSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
             if (type == null || genericSpecializations == null || genericMethodSpecializations == null)
@@ -407,8 +420,10 @@ namespace Il2Native.Logic
                 codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
 
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Declaration);
-            ConvertAllTypes(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Definition);
+            ConvertAllTypes(
+                ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Declaration);
+            ConvertAllTypes(
+                ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializations, ConvertingMode.Definition);
 
             codeWriter.WriteEnd();
 
@@ -421,9 +436,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericTypeSpecializations">
         /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
         /// <returns>
         /// </returns>
-        private static IEnumerable<IType> GetAllRequiredITypesForIType(IType type, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
+        private static IEnumerable<IType> GetAllRequiredITypesForIType(
+            IType type, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
             if (type.BaseType != null)
             {
@@ -481,30 +499,7 @@ namespace Il2Native.Logic
 
                         if (genericTypeSpecializations != null || genericMethodSpecializations != null)
                         {
-                            // read method body to extract all types
-                            var reader = new IlReader();
-
-                            var genericContext = new MetadataGenericContext(method);
-                            foreach (var op in reader.OpCodes(method, genericContext))
-                            {
-                                // dummy body we just need to read body of a method
-                            }
-
-                            if (genericTypeSpecializations != null)
-                            {
-                                foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
-                                {
-                                    genericTypeSpecializations.Add(genericSpecializedType);
-                                }
-                            }
-
-                            if (genericMethodSpecializations != null)
-                            {
-                                foreach (var genericSpecializedMethod in reader.UsedGenericSpecialiazedMethods)
-                                {
-                                    genericMethodSpecializations.Add(genericSpecializedMethod);
-                                }
-                            }
+                            method.DiscoverAllSpecializations(genericTypeSpecializations, genericMethodSpecializations);
                         }
                     }
                 }
@@ -536,8 +531,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericTypeSpecializations">
         /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
         private static void ProcessNextRequiredITypes(
-            IType type, HashSet<IType> typesAdded, List<IType> requiredITypesToAdd, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
+            IType type, 
+            HashSet<IType> typesAdded, 
+            List<IType> requiredITypesToAdd, 
+            HashSet<IType> genericTypeSpecializations, 
+            HashSet<IMethod> genericMethodSpecializations)
         {
             var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).ToList();
             foreach (var requiredIType in requiredITypes)
@@ -554,6 +555,8 @@ namespace Il2Native.Logic
         /// <param name="types">
         /// </param>
         /// <param name="genericTypeSpecializations">
+        /// </param>
+        /// <param name="genericMethodSpecializations">
         /// </param>
         /// <returns>
         /// </returns>
@@ -592,6 +595,7 @@ namespace Il2Native.Logic
                 {
                     var requiredITypes = type.Item2;
                     requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
+
                     // remove not used types, for example System.Object which maybe not in current assembly
                     requiredITypes.RemoveAll(r => !allTypes.Any(n => n.TypeEquals(r)));
 
@@ -666,7 +670,7 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            Declaration,
+            Declaration, 
 
             /// <summary>
             /// </summary>

@@ -37,7 +37,16 @@ namespace PEAssemblyReader
             this.LocalIndex = index;
         }
 
-        internal MetadataLocalVariableAdapter(MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo, int index, IGenericContext genericContext)
+        /// <summary>
+        /// </summary>
+        /// <param name="localInfo">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        internal MetadataLocalVariableAdapter(
+            MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo, int index, IGenericContext genericContext)
             : this(localInfo, index)
         {
             this.GenericContext = genericContext;

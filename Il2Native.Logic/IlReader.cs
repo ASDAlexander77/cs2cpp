@@ -1,7 +1,9 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IlReader.cs" company="">
+//   
 // </copyright>
 // <summary>
+//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
@@ -11,7 +13,6 @@ namespace Il2Native.Logic
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -42,11 +43,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> usedGenericSpecialiazedTypes = new HashSet<IType>();
+        private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
+        private readonly HashSet<IType> usedGenericSpecialiazedTypes = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
@@ -320,15 +321,25 @@ namespace Il2Native.Logic
             }
         }
 
-        public HashSet<IType> UsedGenericSpecialiazedTypes
-        {
-            get { return usedGenericSpecialiazedTypes; }
-        }
-
+        /// <summary>
+        /// </summary>
         public HashSet<IMethod> UsedGenericSpecialiazedMethods
         {
-            get { return usedGenericSpecialiazedMethods; }
-        } 
+            get
+            {
+                return this.usedGenericSpecialiazedMethods;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<IType> UsedGenericSpecialiazedTypes
+        {
+            get
+            {
+                return this.usedGenericSpecialiazedTypes;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -337,26 +348,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected string Source { get; private set; }
-
-        void AddGenericSpecialiazedType(IType type)
-        {
-            if (type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
-            {
-                return;
-            }
-
-            this.usedGenericSpecialiazedTypes.Add(type);
-        }
-
-        void AddGenericSpecialiazedMethod(IMethod method)
-        {
-            if (method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
-            {
-                return;
-            }
-
-            this.usedGenericSpecialiazedMethods.Add(method);
-        }
 
         /// <summary>
         /// </summary>
@@ -413,9 +404,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="ctor">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -436,9 +425,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -461,9 +448,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="module">
         /// </param>
-        /// <param name="typeGenerics">
-        /// </param>
-        /// <param name="methodGenerics">
+        /// <param name="genericContext">
         /// </param>
         /// <returns>
         /// </returns>
@@ -582,7 +567,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
-                        AddGenericSpecialiazedType(constructor.DeclaringType);
+                        this.AddGenericSpecializedType(constructor.DeclaringType);
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
                     case Code.Call:
@@ -593,8 +578,8 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var member = module.ResolveMethod(token, genericContext);
-                        AddGenericSpecialiazedType(member.DeclaringType);
-                        AddGenericSpecialiazedMethod(member);
+                        this.AddGenericSpecializedType(member.DeclaringType);
+                        this.AddGenericSpecializedMethod(member);
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
                         continue;
                     case Code.Stfld:
@@ -609,13 +594,13 @@ namespace Il2Native.Logic
                         var field = module.ResolveField(token, genericContext);
                         if (field != null)
                         {
-                            this.AddGenericSpecialiazedType(field.FieldType);
+                            this.AddGenericSpecializedType(field.FieldType);
                         }
 
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
-                        
+
                         token = ReadInt32(enumerator, ref currentAddress);
                         @int32 = token;
                         yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, @int32);
@@ -638,7 +623,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
-                        this.AddGenericSpecialiazedType(type);
+                        this.AddGenericSpecializedType(type);
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
@@ -668,6 +653,12 @@ namespace Il2Native.Logic
             return this.lazyTypes.Value;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="source">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static IEnumerable<NamespaceSymbol> GetAllNamespaces(NamespaceSymbol source)
         {
             yield return source;
@@ -759,6 +750,49 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="method">
+        /// </param>
+        private void AddGenericSpecializedMethod(IMethod method)
+        {
+            if (method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
+            {
+                return;
+            }
+
+            this.usedGenericSpecialiazedMethods.Add(method);
+
+            // disover it again in specialized method
+            var genericTypeSpecializations = new HashSet<IType>();
+            var genericMethodSpecializations = new HashSet<IMethod>();
+            method.DiscoverAllSpecializations(genericTypeSpecializations, genericMethodSpecializations);
+
+            foreach (var genericTypeSpecialization in genericTypeSpecializations)
+            {
+                this.AddGenericSpecializedType(genericTypeSpecialization);
+            }
+
+            foreach (var genericMethodSpecialization in genericMethodSpecializations)
+            {
+                this.AddGenericSpecializedMethod(genericMethodSpecialization);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddGenericSpecializedType(IType type)
+        {
+            if (type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
+            {
+                return;
+            }
+
+            this.usedGenericSpecialiazedTypes.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="source">
         /// </param>
         /// <returns>
@@ -809,16 +843,19 @@ namespace Il2Native.Logic
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
             foreach (var coreAssemblySymbol in from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences
                                                where assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib"
-                                               select AssemblyMetadata.CreateFromImageStream(new FileStream(
-                                                    assemblyIdentity.Name == "CoreLib"
-                                                        ? this.CoreLibPath
-                                                        : typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
-                                                   into coreAssembly
-                                                   select new PEAssemblySymbol(
-                                                       coreAssembly.Assembly,
-                                                       DocumentationProvider.Default,
-                                                       isLinked: false,
-                                                       importOptions: MetadataImportOptions.All))
+                                               select
+                                                   AssemblyMetadata.CreateFromImageStream(
+                                                       new FileStream(
+                                                   assemblyIdentity.Name == "CoreLib" ? this.CoreLibPath : typeof(int).Assembly.Location, 
+                                                   FileMode.Open, 
+                                                   FileAccess.Read))
+                                               into coreAssembly
+                                               select
+                                                   new PEAssemblySymbol(
+                                                   coreAssembly.Assembly, 
+                                                   DocumentationProvider.Default, 
+                                                   isLinked: false, 
+                                                   importOptions: MetadataImportOptions.All))
             {
                 coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
