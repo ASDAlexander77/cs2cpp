@@ -542,6 +542,17 @@ namespace Il2Native.Logic
                 return this.IsDirectValue(opCode.OpCodeOperands[0]);
             }
 
+            if (opCode.Any(Code.Box))
+            {
+                var opCodeType = opCode as OpCodeTypePart;
+                if (opCodeType.Operand.IsValueType())
+                {
+                    return false;
+                }
+
+                return this.IsDirectValue(opCode.OpCodeOperands[0]);
+            }
+
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
                 Code.Ldc_I4_0, 
@@ -1011,10 +1022,19 @@ namespace Il2Native.Logic
                 var stored = this.ThisType.UseAsClass;
                 this.ThisType.UseAsClass = false;
 
-                if ((this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum) && this.ThisType.FullName != "System.Enum"
-                    && this.ThisType.FullName != "System.IntPtr" && this.ThisType.FullName != "System.UIntPtr")
+                var canBeBoxed = this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum;
+                var canBeUnboxed = canBeBoxed;
+                var excluded = this.ThisType.FullName == "System.Enum" 
+                    || this.ThisType.FullName == "System.IntPtr"
+                    || this.ThisType.FullName == "System.UIntPtr";
+
+                if (canBeBoxed && !excluded)
                 {
                     this.ThisType.WriteBoxMethod(this);
+                }
+
+                if (canBeUnboxed && !excluded)
+                {
                     this.ThisType.WriteUnboxMethod(this);
                 }
 
@@ -2874,15 +2894,25 @@ namespace Il2Native.Logic
                     break;
                 case Code.Box:
 
-                    var type = (opCode as OpCodeTypePart).Operand;
-                    type.WriteCallBoxObjectMethod(this, opCode);
+                    opCodeTypePart = opCode as OpCodeTypePart;
+                    var type = opCodeTypePart.Operand;
+                    if (type.IsValueType())
+                    {
+                        type.WriteCallBoxObjectMethod(this, opCode);
+                    }
+                    else
+                    {
+                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
+                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result;
+                    }
 
                     break;
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
 
-                    type = (opCode as OpCodeTypePart).Operand;
+                    opCodeTypePart = opCode as OpCodeTypePart;
+                    type = opCodeTypePart.Operand;
                     type.WriteCallUnboxObjectMethod(this, opCode);
 
                     break;
