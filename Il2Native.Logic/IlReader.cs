@@ -28,6 +28,7 @@ namespace Il2Native.Logic
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using Microsoft.CodeAnalysis.CSharp;
 
     /// <summary>
     /// </summary>
@@ -387,7 +388,7 @@ namespace Il2Native.Logic
         public void Load()
         {
             this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
-                                ? this.Compile(this.Source)
+                                ? this.CompileWithRoslyn(this.Source)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
         }
 
@@ -803,7 +804,7 @@ namespace Il2Native.Logic
         {
             var codeProvider = new CSharpCodeProvider();
             var icc = codeProvider.CreateCompiler();
-            var outDll = Path.Combine(Path.GetTempPath(), Path.GetTempFileName() + ".dll");
+            var outDll = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".dll");
 
             var parameters = new CompilerParameters();
             parameters.GenerateExecutable = false;
@@ -825,6 +826,36 @@ namespace Il2Native.Logic
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(results.PathToAssembly, FileMode.Open, FileAccess.Read));
+        }
+
+        private AssemblyMetadata CompileWithRoslyn(string source)
+        {
+            var baseName = Path.GetRandomFileName();
+            var nameDll = baseName + ".dll";
+            var namePdb = baseName + ".pdb";
+            var outDll = Path.Combine(Path.GetTempPath(), nameDll);
+            var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd());
+
+            //var coreLibRefAssembly = new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read));
+            var coreLibRefAssembly = new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+
+            var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true).WithOptimizations(true).WithRuntimeMetadataVersion("4.5");
+
+            var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);
+
+            using (FileStream dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
+            using (FileStream pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
+            {
+                var result = compilation.Emit(
+                   peStream: dllStream,
+                   pdbFilePath: outPdb,
+                   pdbStream: pdbStream);
+            }
+
+            // Successful Compile
+            return AssemblyMetadata.CreateFromImageStream(new FileStream(outDll, FileMode.Open, FileAccess.Read));
         }
 
         /// <summary>
