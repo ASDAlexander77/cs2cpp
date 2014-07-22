@@ -7,7 +7,6 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics;
 using System.Globalization;
 
 namespace System.Resources

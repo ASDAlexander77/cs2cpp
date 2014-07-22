@@ -845,8 +845,8 @@ namespace Il2Native.Logic
 
             var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);
 
-            using (FileStream dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
-            using (FileStream pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
+            using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
+            using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
             {
                 var result = compilation.Emit(
                    peStream: dllStream,
