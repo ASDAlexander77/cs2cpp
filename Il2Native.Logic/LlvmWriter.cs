@@ -2122,7 +2122,7 @@ namespace Il2Native.Logic
                 else
                 {
                     opCode.Destination = new FullyDefinedReference("%agg.result", methodReturnType);
-                    this.WriteLlvmLoad(opCode, opCodeOperand.Result.ToFullyDefinedReferenceAsNotmalType());
+                    this.WriteLlvmLoad(opCode, opCodeOperand.Result.ToFullyDefinedReferenceAsNormalType());
                 }
 
                 opts |= OperandOptions.IgnoreOperand;
@@ -2738,7 +2738,7 @@ namespace Il2Native.Logic
                     else if (opCode.OpCodeOperands[0].Result.Type.ToNormal().IsStructureType())
                     {
                         opCode.Destination = opCode.OpCodeOperands[0].Result.ToFullyDefinedReference();
-                        this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[1].Result.ToFullyDefinedReferenceAsNotmalType());
+                        this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[1].Result.ToFullyDefinedReferenceAsNormalType());
                     }
 
                     break;
@@ -3404,9 +3404,7 @@ namespace Il2Native.Logic
                 case Code.Initobj:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-
-                    ////this.WriteNew(writer, opCode, opCodeTypePart.Operand);
-                    writer.Write("; Initobj - TODO: finish");
+                    this.WriteInit(opCode, opCodeTypePart.Operand);
 
                     break;
 
@@ -3767,7 +3765,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetDirectName(OpCodePart opCodePart)
+        public string GetDirectName(OpCodePart opCodePart)
         {
             var output = this.Output;
 

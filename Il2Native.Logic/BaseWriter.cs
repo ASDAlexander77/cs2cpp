@@ -980,22 +980,24 @@ namespace Il2Native.Logic
 
                 // use Dup only once
                 opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
+
+                // respore stack for not used OpCodes
+                if (insertBack != null)
+                {
+                    insertBack.Reverse();
+                    foreach (var pushBack in insertBack)
+                    {
+                        this.Stack.Push(pushBack);
+                    }
+
+                    insertBack.Clear();
+                }
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
             foreach (var childCodePart in opCodeParts)
             {
                 childCodePart.UsedBy = opCodePart;
-            }
-
-            // respore stack for not used OpCodes
-            if (insertBack != null)
-            {
-                insertBack.Reverse();
-                foreach (var pushBack in insertBack)
-                {
-                    this.Stack.Push(pushBack);
-                }
             }
 
             this.AdjustTypes(opCodePart);

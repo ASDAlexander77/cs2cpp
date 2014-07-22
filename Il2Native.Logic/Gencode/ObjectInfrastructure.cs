@@ -355,6 +355,34 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
+        public static void WriteInit(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType)
+        {
+            if (opCodePart.HasResult)
+            {
+                return;
+            }
+
+            var writer = llvmWriter.Output;
+
+            declaringType.UseAsClass = true;
+
+            writer.WriteLine("; Init obj");
+
+            var fullyDefinedReference = 
+                llvmWriter.IsDirectValue(opCodePart.OpCodeOperands[0])
+                    ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType) 
+                    : opCodePart.OpCodeOperands[0].Result.ToFullyDefinedReference();
+
+            llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            writer.WriteLine(string.Empty);
+
+            var size = declaringType.GetTypeSize();
+            llvmWriter.WriteMemSet(declaringType, opCodePart.Result);
+            writer.WriteLine(string.Empty);
+
+            writer.Write("; end of init obj");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
