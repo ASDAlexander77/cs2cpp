@@ -6,9 +6,9 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Ll2NativeTests
 {
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -48,6 +48,8 @@ namespace Ll2NativeTests
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
 #endif
 
+        private const bool UsingRoslyn = true;
+
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
@@ -84,7 +86,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath);
+            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
         }
 
         /// <summary>
@@ -207,7 +209,31 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 string.Concat(source, string.Format("{1}-{0}.cs", format == null ? number.ToString() : number.ToString(format), fileName)), 
                 OutputPath, 
-                new[] { "corelib:" + Path.GetFullPath(CoreLibPath) });
+                GetConverterArgs(true));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="coreLib">
+        /// </param>
+        /// <param name="roslyn">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static string[] GetConverterArgs(bool coreLib, bool roslyn = UsingRoslyn)
+        {
+            var args = new List<string>();
+            if (coreLib)
+            {
+                args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
+            }
+
+            if (roslyn)
+            {
+                args.Add("roslyn");
+            }
+
+            return args.ToArray();
         }
     }
 }

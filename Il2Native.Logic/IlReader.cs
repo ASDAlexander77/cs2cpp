@@ -21,6 +21,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.CodeParts;
 
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
     using Microsoft.CSharp;
@@ -28,7 +29,6 @@ namespace Il2Native.Logic
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using Microsoft.CodeAnalysis.CSharp;
 
     /// <summary>
     /// </summary>
@@ -296,6 +296,7 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
+            this.UsingRoslyn = args != null ? args.Any(a => a == "roslyn") : false;
         }
 
         /// <summary>
@@ -344,6 +345,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool UsingRoslyn { get; set; }
+
+        /// <summary>
+        /// </summary>
         protected AssemblyMetadata Assembly { get; private set; }
 
         /// <summary>
@@ -388,7 +393,7 @@ namespace Il2Native.Logic
         public void Load()
         {
             this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
-                                ? this.CompileWithRoslyn(this.Source)
+                                ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Source) : this.Compile(this.Source)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
         }
 
@@ -828,6 +833,12 @@ namespace Il2Native.Logic
             return AssemblyMetadata.CreateFromImageStream(new FileStream(results.PathToAssembly, FileMode.Open, FileAccess.Read));
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="source">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private AssemblyMetadata CompileWithRoslyn(string source)
         {
             var baseName = Path.GetRandomFileName();
@@ -838,20 +849,21 @@ namespace Il2Native.Logic
 
             var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd());
 
-            //var coreLibRefAssembly = new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read));
-            var coreLibRefAssembly = new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
+            var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
+                                         ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
+                                         : new MetadataImageReference(new FileStream(this.CoreLibPath, FileMode.Open, FileAccess.Read));
 
-            var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true).WithOptimizations(true).WithRuntimeMetadataVersion("4.5");
+            var options =
+                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
+                                                                                 .WithOptimizations(true)
+                                                                                 .WithRuntimeMetadataVersion("4.5");
 
             var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);
 
             using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
             using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
             {
-                var result = compilation.Emit(
-                   peStream: dllStream,
-                   pdbFilePath: outPdb,
-                   pdbStream: pdbStream);
+                var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
             }
 
             // Successful Compile
