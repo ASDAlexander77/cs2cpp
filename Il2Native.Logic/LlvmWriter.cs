@@ -2607,8 +2607,11 @@ namespace Il2Native.Logic
                 case Code.Ldtoken:
 
                     // TODO: finish loading Token
-                    opCodeInt32 = opCode as OpCodeInt32Part;
+                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+
                     writer.Write("undef");
+
                     break;
                 case Code.Localloc:
                     writer.Write("alloca i32 ");
@@ -2617,7 +2620,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldfld:
 
-                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     // we wait when opCode.DestinationName is set;
                     var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.Destination == null;

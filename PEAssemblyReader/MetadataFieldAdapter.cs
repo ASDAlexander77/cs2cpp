@@ -10,9 +10,12 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Diagnostics;
+    using System.Reflection.Metadata;
+    using System.Reflection.PortableExecutable;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     /// <summary>
     /// </summary>
@@ -227,6 +230,73 @@ namespace PEAssemblyReader
         public override string ToString()
         {
             return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+
+        public byte[] GetFieldRVAData()
+        {
+            PEModuleSymbol peModuleSymbol;
+            PEFieldSymbol peFieldSymbol;
+            this.GetPEFieldSymbol(out peModuleSymbol, out peFieldSymbol);
+
+            if (peFieldSymbol != null)
+            {
+                return this.GetFieldBody(peModuleSymbol, peFieldSymbol);
+            }
+
+            return null;
+        }
+
+        private void GetPEFieldSymbol(out PEModuleSymbol peModuleSymbol, out PEFieldSymbol peMethodSymbol)
+        {
+            peModuleSymbol = this.fieldDef.ContainingModule as PEModuleSymbol;
+            peMethodSymbol = this.fieldDef as PEFieldSymbol;
+            if (peMethodSymbol == null)
+            {
+                peMethodSymbol = this.fieldDef.OriginalDefinition as PEFieldSymbol;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="peModuleSymbol">
+        /// </param>
+        /// <param name="peFieldSymbol">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private byte[] GetFieldBody(PEModuleSymbol peModuleSymbol, PEFieldSymbol peFieldSymbol)
+        {
+            var peModule = peModuleSymbol.Module;
+            if (peFieldSymbol != null)
+            {
+                var field = peModule.MetadataReader.GetField(peFieldSymbol.Handle);
+                return GetFieldBody(field.GetRelativeVirtualAddress(), peModule.PEReaderOpt);
+            }
+
+            return null;
+        }
+
+        public byte[] GetFieldBody(int relativeVirtualAddress, PEReader peReader)
+        {
+            var peHeaders = peReader.PEHeaders;
+
+            var containingSectionIndex = peHeaders.GetContainingSectionIndex(relativeVirtualAddress);
+            if (containingSectionIndex < 0)
+            {
+                return null;
+            }
+
+            var num = relativeVirtualAddress - peHeaders.SectionHeaders[containingSectionIndex].VirtualAddress;
+            var length = peHeaders.SectionHeaders[containingSectionIndex].VirtualSize - num;
+
+            IntPtr pointer;
+            int size;
+            peReader.GetEntireImage(out pointer, out size);
+
+            var reader = new BlobReader(pointer + peHeaders.SectionHeaders[containingSectionIndex].PointerToRawData, length);
+            var bytes = reader.ReadBytes(length);
+
+            return bytes;
         }
     }
 }

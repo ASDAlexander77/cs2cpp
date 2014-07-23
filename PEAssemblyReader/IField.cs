@@ -19,5 +19,9 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsLiteral { get; }
+
+        /// <summary>
+        /// </summary>
+        byte[] GetFieldRVAData();
     }
 }

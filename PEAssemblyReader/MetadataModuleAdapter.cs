@@ -155,13 +155,49 @@ namespace PEAssemblyReader
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
+        public object ResolveToken(int token, IGenericContext genericContext)
+        {
+            var peModuleSymbol = this.moduleDef as PEModuleSymbol;
+
+            var typeDefHandle = MetadataTokens.Handle(token);
+            var symbolForIlToken = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle);
+            var typeSymbol = symbolForIlToken as TypeSymbol;
+            if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
+            {
+                return typeSymbol.ResolveGeneric(genericContext);
+            }
+
+            var fieldSymbol = symbolForIlToken as FieldSymbol;
+            if (fieldSymbol != null)
+            {
+                return new MetadataFieldAdapter(fieldSymbol, genericContext);
+            }
+
+            var methodSymbol = symbolForIlToken as MethodSymbol;
+            if (methodSymbol != null)
+            {
+                return new MetadataMethodAdapter(methodSymbol, genericContext);
+            }
+
+            throw new KeyNotFoundException();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="token">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="KeyNotFoundException">
+        /// </exception>
         public IType ResolveType(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
 
-            var typedefHandle = MetadataTokens.Handle(token);
-
-            var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typedefHandle) as TypeSymbol;
+            var typeDefHandle = MetadataTokens.Handle(token);
+            var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle) as TypeSymbol;
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
                 return typeSymbol.ResolveGeneric(genericContext);

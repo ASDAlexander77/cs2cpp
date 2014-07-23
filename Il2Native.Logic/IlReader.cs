@@ -608,8 +608,31 @@ namespace Il2Native.Logic
                     case Code.Ldtoken: // can it be anything?
 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        @int32 = token;
-                        yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, @int32);
+                        
+                        var resolvedToken = module.ResolveToken(token, genericContext);
+
+                        var typeToken = resolvedToken as IType;
+                        if (typeToken != null)
+                        {
+                            yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
+                            continue;
+                        }
+
+                        var fieldMember = resolvedToken as IField;
+                        if (fieldMember != null)
+                        {
+                            yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
+                            continue;
+                        }
+
+                        var methodMember = resolvedToken as IMethod;
+                        if (methodMember != null)
+                        {
+                            yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
+                            continue;
+                        }
+
+                        yield return new OpCodeInt32Part(opCode, startAddress, currentAddress, token);
                         continue;
                     case Code.Newarr:
                     case Code.Ldelem:
@@ -864,6 +887,10 @@ namespace Il2Native.Logic
             using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
             {
                 var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
+                foreach (var diagnostic in result.Diagnostics)
+                {
+                    System.Diagnostics.Trace.WriteLine(diagnostic);
+                }
             }
 
             // Successful Compile

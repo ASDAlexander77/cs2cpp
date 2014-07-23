@@ -664,7 +664,6 @@ namespace PEAssemblyReader
         private void GetPEMethodSymbol(out PEModuleSymbol peModuleSymbol, out PEMethodSymbol peMethodSymbol)
         {
             peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            var peModule = peModuleSymbol.Module;
             peMethodSymbol = this.methodDef as PEMethodSymbol;
             if (peMethodSymbol == null)
             {

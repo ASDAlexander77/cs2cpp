@@ -58,6 +58,16 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
+        object ResolveToken(int token, IGenericContext genericContext);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="token">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
         IType ResolveType(int token, IGenericContext genericContext);
 
         /// <summary>
