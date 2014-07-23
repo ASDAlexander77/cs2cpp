@@ -293,7 +293,7 @@ namespace PEAssemblyReader
             int size;
             peReader.GetEntireImage(out pointer, out size);
 
-            var reader = new BlobReader(pointer + peHeaders.SectionHeaders[containingSectionIndex].PointerToRawData, length);
+            var reader = new BlobReader(pointer + peHeaders.SectionHeaders[containingSectionIndex].PointerToRawData + num, length);
             var bytes = reader.ReadBytes(length);
 
             return bytes;
