@@ -120,6 +120,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private int arrayIndexIncremental;
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<int, byte[]> arrayStorage = new SortedDictionary<int, byte[]>();
+
+        /// <summary>
+        /// </summary>
         private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
 
         /// <summary>
@@ -1786,6 +1794,17 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
+            // write set of array data
+            foreach (var pair in this.arrayStorage)
+            {
+                this.WriteArrayData(pair);
+            }
+
+            if (this.arrayStorage.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
             this.stringStorage.Clear();
         }
 
@@ -2606,9 +2625,9 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldtoken:
 
-                    // TODO: finish loading Token
-                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+                    // TODO: finish loading Token  
+                    ////var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    ////var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
 
                     writer.Write("undef");
 
@@ -2620,7 +2639,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldfld:
 
-                    opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     // we wait when opCode.DestinationName is set;
                     var skip = opCodeFieldInfoPart.Operand.FieldType.IsStructureType() && opCode.Destination == null;
@@ -2809,6 +2828,14 @@ namespace Il2Native.Logic
                 case Code.Callvirt:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
+
+                    // check if it is InitializeArray call
+                    if (code == Code.Call 
+                        && methodBase.IsItArrayInitialization())
+                    {
+                        this.WriteArrayInit(opCode);
+                    }
+                    
                     this.WriteCall(
                         opCodeMethodInfoPart, 
                         methodBase, 
@@ -2817,6 +2844,7 @@ namespace Il2Native.Logic
                         false, 
                         null, 
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+
                     break;
                 case Code.Add:
                 case Code.Add_Ovf:
@@ -3824,10 +3852,17 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private int GetStringIndex(string str)
+        public int GetStringIndex(string str)
         {
             var idx = ++this.stringIndexIncremental;
             this.stringStorage[idx] = str;
+            return idx;
+        }
+
+        public int GetArrayIndex(byte[] data)
+        {
+            var idx = ++this.arrayIndexIncremental;
+            this.arrayStorage[idx] = data;
             return idx;
         }
 
@@ -4640,6 +4675,36 @@ namespace Il2Native.Logic
 
             Il2Converter.WriteTypeDefinition(this, type, null, true);
             this.Output.WriteLine(string.Empty);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="pair">
+        /// </param>
+        private void WriteArrayData(KeyValuePair<int, byte[]> pair)
+        {
+            this.Output.Write(
+                "@.array{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [",
+                pair.Key,
+                pair.Value,
+                pair.Value.Length,
+                pair.Value.Length,
+                '{',
+                '}');
+
+            var index = 0;
+            foreach (var b in pair.Value)
+            {
+                if (index > 0)
+                {
+                    this.Output.Write(", ");
+                }
+
+                this.Output.Write("i8 {0}", b);
+                index++;
+            }
+
+            this.Output.WriteLine("] {0}, align 1", '}');
         }
 
         /// <summary>

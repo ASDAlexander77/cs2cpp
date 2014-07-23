@@ -114,5 +114,44 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; end of new array");
         }
+
+        public static bool IsItArrayInitialization(this IMethod methodBase)
+        {
+            if (methodBase.Name == "InitializeArray"
+                && methodBase.Namespace == "System.Runtime.CompilerServices")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void WriteArrayInit(this LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Init array with values");
+
+            var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
+            var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+
+            var arrayIndex = llvmWriter.GetArrayIndex(data);
+            var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring("__StaticArrayInitTypeSize=".Length));
+            var arrayData = string.Format(
+                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)",
+                arrayIndex,
+                data.Length,
+                '{',
+                '}');
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                opCode.OpCodeOperands[0].Result,
+                arrayData,
+                arrayLength,
+                LlvmWriter.PointerSize/*Align*/);
+
+            writer.WriteLine(string.Empty);
+        }
     }
 }
