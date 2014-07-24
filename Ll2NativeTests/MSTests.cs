@@ -104,7 +104,26 @@ namespace Ll2NativeTests
             // 36 - bug in execution (NotImplemented)
             // 37 - multi array
             // 39 - using Attributes
-            var skip = new List<int>(new[] { 10, 19, 28, 32, 33, 36, 39, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 });
+            // 43 - multi array
+            // 45 - NEED TO BE FIXED: arrays initialization
+            // 50 - missing
+            // 52 - bug in execution (NotImplemented, ArrayList, Hashtable)
+            // 53 - NEED TO BE FIXED
+            // 57 - bug in execution (NotImplemented, EventHandler)
+            // 66 - NEED TO BE FIXED (if exclude multi array, can't be compiled), multi array 
+            // 67 - missing
+            // 68 - NEED TO BE FIXED (can't be compiled), using enum
+            // 74 - using StreamReader
+            // 77 - using enum
+            // 83 - using System.Threading.Interlocked.CompareExchange
+            // 85 - using UnmanagedType
+            // 91 - using Reflection
+            // 95 - NEED TO BE FIXED, init double in a class
+            // 99 - using GetType
+            // 100 - using DllImport      
+            // 101 - using Reflection
+            // 102 - using Reflection
+            var skip = new List<int>(new[] { 10, 19, 28, 32, 33, 36, 39, 45, 50, 52, 53, 57, 66, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102 });
 
             if (UsingRoslyn)
             {
