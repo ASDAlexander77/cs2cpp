@@ -3688,7 +3688,7 @@ namespace Il2Native.Logic
                 else
                 {
                     castFrom = res1.IType;
-                    effectiveType = requiredType != null ? requiredType : this.ResolveType("System.Byte").ToPointerType();
+                    effectiveType = requiredType;
                 }
             }
             else if (requiredType != null)
@@ -4181,7 +4181,7 @@ namespace Il2Native.Logic
             this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
             writer.Write(", ");
 
-            destinationType.WriteTypePrefix(writer);
+            destinationType.WriteTypePrefix(writer, true);
             this.PostProcessOperand(writer, opCode, 0, directResult1);
         }
 

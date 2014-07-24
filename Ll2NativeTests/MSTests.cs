@@ -96,10 +96,15 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            // 10 not compilable
-            // 19 using Thread class
+            // 10 - not compilable
+            // 19 - using Thread class
+            // 28 - bug in execution (Hashtable)
             // 32 - multi array
-            var skip = new List<int>(new[] { 10, 19, 28, 32, 33, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 });
+            // 33 - using GetType
+            // 36 - bug in execution (NotImplemented)
+            // 37 - multi array
+            // 39 - using Attributes
+            var skip = new List<int>(new[] { 10, 19, 28, 32, 33, 36, 39, 43, 44, 45, 50, 52, 53, 57, 66, 67, 68, 74, 77, 83, 85, 91, 95, 99, 100, 101, 102 });
 
             if (UsingRoslyn)
             {
