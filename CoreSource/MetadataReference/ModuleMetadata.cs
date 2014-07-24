@@ -155,7 +155,7 @@ namespace Microsoft.CodeAnalysis
                 throw new ArgumentNullException("peStream");
             }
 
-            if (!peStream.CanRead || !peStream.CanSeek)
+            if (!peStream.CanRead || !peStream.CanSeek) 
             {
                 throw new ArgumentException(CodeAnalysisResources.StreamMustSupportReadAndSeek, "peImage");
             }

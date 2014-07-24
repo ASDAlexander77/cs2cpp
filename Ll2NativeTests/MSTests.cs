@@ -94,6 +94,25 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void TestCompile()
+        {
+            var skip = new List<int>(new int[] { 10, 19, 39, 50, 67 });
+
+            if (UsingRoslyn)
+            {
+                // 49 - bug in execution
+                skip.AddRange(new int[] { 83 });
+            }
+
+            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
+            {
+                Compile(index);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void TestCompileAndRunLlvm()
         {
             // 10 - not compilable
@@ -123,7 +142,10 @@ namespace Ll2NativeTests
             // 100 - using DllImport      
             // 101 - using Reflection
             // 102 - using Reflection
-            var skip = new List<int>(new[] { 10, 19, 28, 32, 33, 36, 39, 45, 50, 52, 53, 57, 66, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102 });
+            // 104 - System.Threading.Interlocked.Increment
+            // 105 - IAsyncResult (NotImplemented)
+            // 106 - IAsyncResult (NotImplemented)
+            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105 });
 
             if (UsingRoslyn)
             {
@@ -131,7 +153,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49 });
             }
 
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
             }
@@ -183,7 +205,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="format">
         /// </param>
-        private static void ExecCompile(int index, string fileName = "test", string format = null)
+        private static void ExecCompile(int index, string fileName = "test", string format = null, bool justCompile = false)
         {
             /*
                 call vcvars32.bat
@@ -213,15 +235,37 @@ namespace Ll2NativeTests
 
             Assert.AreEqual(0, process.ExitCode);
 
-            var execProcess = new ProcessStartInfo();
-            execProcess.WorkingDirectory = OutputPath;
-            execProcess.FileName = string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName);
+            if (!justCompile)
+            {
+                var execProcess = new ProcessStartInfo();
+                execProcess.WorkingDirectory = OutputPath;
+                execProcess.FileName = string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName);
 
-            var execProcessProc = Process.Start(execProcess);
+                var execProcessProc = Process.Start(execProcess);
 
-            execProcessProc.WaitForExit();
+                execProcessProc.WaitForExit();
 
-            Assert.AreEqual(0, execProcessProc.ExitCode);
+                Assert.AreEqual(0, execProcessProc.ExitCode);
+            }
+            else
+            {
+                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName))));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="index">
+        /// </param>
+        private static void Compile(int index)
+        {
+            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+
+            Convert(index);
+
+            Trace.WriteLine("Compiling LLVM for " + index);
+
+            ExecCompile(index, "test", null, true);
         }
 
         /// <summary>
@@ -234,7 +278,7 @@ namespace Ll2NativeTests
 
             Convert(index);
 
-            Trace.WriteLine("Executing LLVM for " + index);
+            Trace.WriteLine("Compiling/Executing LLVM for " + index);
 
             ExecCompile(index);
         }
