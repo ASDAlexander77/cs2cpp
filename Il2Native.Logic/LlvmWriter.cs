@@ -344,7 +344,7 @@ namespace Il2Native.Logic
             {
                 this.LlvmIntConvert(opCode, "zext", "i" + destType.IntTypeBitSize());
                 writer.WriteLine(string.Empty);
-                return false;
+                return true;
             }
 
             // pointer to int, int to pointerf
@@ -1792,6 +1792,7 @@ namespace Il2Native.Logic
             if (this.stringStorage.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
+                this.stringStorage.Clear();
             }
 
             // write set of array data
@@ -1803,9 +1804,8 @@ namespace Il2Native.Logic
             if (this.arrayStorage.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
+                this.arrayStorage.Clear();
             }
-
-            this.stringStorage.Clear();
         }
 
         /// <summary>
@@ -2183,7 +2183,9 @@ namespace Il2Native.Logic
             }
             else
             {
-                var opts = valueOperand == 1 ? OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes : OperandOptions.AdjustIntTypes;
+                var opts = valueOperand == 1
+                               ? OperandOptions.TypeIsInSecondOperand | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes
+                               : OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
 
                 this.ProcessOperator(writer, opCodePart, "store", fieldType, options: opts);
                 this.PostProcessOperand(writer, opCodePart, valueOperand, directResult1);
@@ -2718,7 +2720,11 @@ namespace Il2Native.Logic
                     else
                     {
                         this.ProcessOperator(
-                            writer, opCode, "store", operandType, options: OperandOptions.TypeIsInSecondOperand | OperandOptions.AdjustIntTypes);
+                            writer,
+                            opCode,
+                            "store",
+                            operandType,
+                            options: OperandOptions.TypeIsInSecondOperand | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                         this.PostProcessOperand(writer, opCode, 0, directResult1);
                         writer.Write(", ");
                         operandType.WriteTypePrefix(writer);
@@ -2729,6 +2735,13 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldobj:
+
+                    // to support settings exceptions
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        opCode.Result = new LlvmResult(this.resultNumberIncremental, opCode.ReadExceptionFromStackType);
+                        break;
+                    }
 
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
@@ -2980,7 +2993,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.UnaryOper(writer, opCode, "store", localType, options: OperandOptions.AdjustIntTypes);
+                        this.UnaryOper(writer, opCode, "store", localType, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                         writer.Write(", ");
                         this.WriteLlvmLocalVarAccess(index, true);
                     }
@@ -3108,7 +3121,7 @@ namespace Il2Native.Logic
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
-                    this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType, options: OperandOptions.AdjustIntTypes);
+                    this.UnaryOper(writer, opCode, "store", this.Parameters[actualIndex].ParameterType, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
 
@@ -3494,16 +3507,6 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
-
-                case Code.Nop:
-
-                    // to support settings exceptions
-                    if (opCode.ReadExceptionFromStack)
-                    {
-                        opCode.Result = new LlvmResult(this.resultNumberIncremental, null);
-                    }
-
-                    break;
             }
         }
 
@@ -3643,11 +3646,22 @@ namespace Il2Native.Logic
             // write type
             var effectiveType = this.ResolveType("System.Void");
 
-            if (options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res2 != null && res1.IsPointerAccessRequired
-                && res2.IsPointerAccessRequired)
+            var res1Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res1.IsPointerAccessRequired;
+            var res2Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res2 != null && res2.IsPointerAccessRequired;
+            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null && requiredType.IsPointer;
+
+            if (res1Pointer && (res2Pointer || requiredTypePointer))
             {
-                castFrom = res1.IType;
-                effectiveType = res2.IType;
+                if (res2 != null)
+                {
+                    castFrom = res1.IType;
+                    effectiveType = res2.IType;
+                }
+                else
+                {
+                    castFrom = res1.IType;
+                    effectiveType = requiredType != null ? requiredType : this.ResolveType("System.Byte").ToPointerType();
+                }
             }
             else if (requiredType != null)
             {
@@ -4057,15 +4071,30 @@ namespace Il2Native.Logic
             var operandIndex = 2;
 
             directResult1 = this.PreProcessOperand(writer, opCode, operandIndex);
-
             this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], directResult1, type);
 
-            this.ProcessOperator(writer, opCode, "store", type, operand1: 2, operand2: -1);
-            this.PostProcessOperand(writer, opCode, operandIndex, directResult1);
+            if (!type.IsStructureType())
+            {
+                this.ProcessOperator(writer, opCode, "store", type, operand1: 2, operand2: -1);
+                this.PostProcessOperand(writer, opCode, operandIndex, directResult1);
 
-            writer.Write(", ");
-            type.WriteTypePrefix(writer, type.IsStructureType());
-            writer.Write("* {0}", opCode.Result);
+                writer.Write(", ");
+                type.WriteTypePrefix(writer, type.IsStructureType());
+                writer.Write("* {0}", opCode.Result);
+            }
+            else
+            {
+                // copy struct
+                opCode.Destination = opCode.Result.ToFullyDefinedReference();
+                if (directResult1)
+                {
+                    this.WriteLlvmLoad(opCode, type, new FullyDefinedReference(this.GetDirectName(opCode.OpCodeOperands[operandIndex]), type));
+                }
+                else
+                {
+                    this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[operandIndex].Result);
+                }
+            }
         }
 
         /// <summary>
@@ -4129,7 +4158,7 @@ namespace Il2Native.Logic
 
             directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-            this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.AdjustIntTypes);
+            this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
             writer.Write(", ");
 
             destinationType.WriteTypePrefix(writer);
@@ -4354,12 +4383,13 @@ namespace Il2Native.Logic
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (!type.GetInterfacesExcludingBaseAllInterfaces().Contains(@interface))
+            while (!type.GetInterfacesExcludingBaseAllInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
             {
                 type = type.BaseType;
                 if (type == null)
                 {
-                    throw new IndexOutOfRangeException("Could not find an interface");
+                    //throw new IndexOutOfRangeException("Could not find an interface");
+                    break;
                 }
 
                 // first index is base type index
@@ -4657,7 +4687,7 @@ namespace Il2Native.Logic
         {
             this.Output.Write("%");
 
-            type.WriteTypeName(this.Output);
+            type.WriteTypeName(this.Output, false);
 
             this.Output.Write(" = type ");
         }

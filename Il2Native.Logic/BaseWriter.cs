@@ -904,10 +904,6 @@ namespace Il2Native.Logic
                     {
                         insertBack = new List<OpCodePart>();
                     }
-
-                    var opCodeNope = new OpCodePart(OpCodesEmit.Nop, opCodePart.AddressEnd + 1, opCodePart.AddressEnd + 1);
-                    opCodeNope.ReadExceptionFromStack = true;
-                    opCodePartUsed = opCodeNope;
                 }
                 else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
                          || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
@@ -919,11 +915,17 @@ namespace Il2Native.Logic
                     }
 
                     insertBack.Add(opCodePartUsed);
+
+                    // in case it is Pop and it jumps over Cond_Brunch or Brunch it means we should ignore this
+                    if (opCodePart.Any(Code.Pop)
+                        && (opCodePartUsed.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePartUsed.OpCode.FlowControl == FlowControl.Branch))
+                    {
+                        opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
+                        break;
+                    }
+
                     i--;
                     continue;
-
-                    // opCodeParts = RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
-                    // break;
                 }
                 else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush)
                 {
@@ -981,18 +983,11 @@ namespace Il2Native.Logic
                 // use Dup only once
                 opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
 
-                // respore stack for not used OpCodes
-                if (insertBack != null)
-                {
-                    insertBack.Reverse();
-                    foreach (var pushBack in insertBack)
-                    {
-                        this.Stack.Push(pushBack);
-                    }
-
-                    insertBack.Clear();
-                }
+                this.InsertBackStack(insertBack);
             }
+
+            // in case we did not return unused parts
+            this.InsertBackStack(insertBack);
 
             opCodePart.OpCodeOperands = opCodeParts;
             foreach (var childCodePart in opCodeParts)
@@ -1001,6 +996,21 @@ namespace Il2Native.Logic
             }
 
             this.AdjustTypes(opCodePart);
+        }
+
+        private void InsertBackStack(List<OpCodePart> insertBack)
+        {
+            // respore stack for not used OpCodes
+            if (insertBack != null)
+            {
+                insertBack.Reverse();
+                foreach (var pushBack in insertBack)
+                {
+                    this.Stack.Push(pushBack);
+                }
+
+                insertBack.Clear();
+            }
         }
 
         /// <summary>
@@ -1027,6 +1037,16 @@ namespace Il2Native.Logic
             this.Ops.Add(opCode);
 
             this.AddAddressIndex(opCode);
+
+            // insert result of exception
+            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
+            if (exceptionHandling != null && exceptionHandling.CatchType != null)
+            {
+                var opCodeNope = new OpCodePart(OpCodesEmit.Ldobj, opCode.AddressStart - 1, opCode.AddressStart - 1);
+                opCodeNope.ReadExceptionFromStack = true;
+                opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
+                this.Stack.Push(opCodeNope);
+            }
 
             var code = opCode.ToCode();
             switch (code)
@@ -1202,6 +1222,7 @@ namespace Il2Native.Logic
                 case Code.Starg:
                 case Code.Starg_S:
                 case Code.Localloc:
+                case Code.Pop:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:
@@ -1621,6 +1642,11 @@ namespace Il2Native.Logic
                 get
                 {
                     if ((this.IsReference ?? false) || (this.IsAddress ?? false) || (this.Boxed ?? false))
+                    {
+                        return true;
+                    }
+
+                    if (this.IType.IsPointer)
                     {
                         return true;
                     }

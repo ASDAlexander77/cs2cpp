@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.CodeParts
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -16,6 +17,7 @@ namespace Il2Native.Logic.CodeParts
     using Il2Native.Logic.Exceptions;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -187,6 +189,10 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public bool ReadExceptionFromStack { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public IType ReadExceptionFromStackType { get; set; }
 
         /// <summary>
         /// </summary>

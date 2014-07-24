@@ -30,13 +30,20 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
+
+        /// <summary>
+        /// </summary>
         private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
         static TypeGen()
         {
+            SystemPointerTypesToCTypes["Void"] = "i8";
+
             SystemTypesToCTypes["Void"] = "void";
+            SystemTypesToCTypes["Void*"] = "i8";
             SystemTypesToCTypes["Byte"] = "i8";
             SystemTypesToCTypes["SByte"] = "i8";
             SystemTypesToCTypes["Char"] = "i16";
@@ -67,6 +74,7 @@ namespace Il2Native.Logic.Gencode
             SystemTypesToCTypes["Boolean&"] = "i1*";
 
             SystemTypeSizes["Void"] = 0;
+            SystemTypeSizes["Void*"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Byte"] = 1;
             SystemTypeSizes["SByte"] = 1;
             SystemTypeSizes["Char"] = 2;
@@ -224,7 +232,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type)
+        public static string TypeToCType(this IType type, bool isPointer = false)
         {
             var effectiveType = type;
 
@@ -238,6 +246,12 @@ namespace Il2Native.Logic.Gencode
                 if (effectiveType.Namespace == "System")
                 {
                     string ctype;
+
+                    if (isPointer && SystemPointerTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
+                    {
+                        return ctype;
+                    }
+
                     if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
                     {
                         return ctype;
@@ -319,9 +333,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer)
+        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool isPointer)
         {
-            var typeBaseName = type.TypeToCType();
+            var typeBaseName = type.TypeToCType(isPointer);
 
             // clean name
             if (typeBaseName.EndsWith("&"))
@@ -367,7 +381,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // write base name
-            effectiveType.WriteTypeName(writer);
+            effectiveType.WriteTypeName(writer, type.IsPointer);
         }
     }
 }

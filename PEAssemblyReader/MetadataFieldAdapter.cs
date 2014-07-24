@@ -225,13 +225,39 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="relativeVirtualAddress">
+        /// </param>
+        /// <param name="peReader">
+        /// </param>
         /// <returns>
         /// </returns>
-        public override string ToString()
+        public byte[] GetFieldBody(int relativeVirtualAddress, PEReader peReader)
         {
-            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var peHeaders = peReader.PEHeaders;
+
+            var containingSectionIndex = peHeaders.GetContainingSectionIndex(relativeVirtualAddress);
+            if (containingSectionIndex < 0)
+            {
+                return null;
+            }
+
+            var num = relativeVirtualAddress - peHeaders.SectionHeaders[containingSectionIndex].VirtualAddress;
+            var length = peHeaders.SectionHeaders[containingSectionIndex].VirtualSize - num;
+
+            IntPtr pointer;
+            int size;
+            peReader.GetEntireImage(out pointer, out size);
+
+            var reader = new BlobReader(pointer + peHeaders.SectionHeaders[containingSectionIndex].PointerToRawData + num, length);
+            var bytes = reader.ReadBytes(length);
+
+            return bytes;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public byte[] GetFieldRVAData()
         {
             PEModuleSymbol peModuleSymbol;
@@ -246,14 +272,13 @@ namespace PEAssemblyReader
             return null;
         }
 
-        private void GetPEFieldSymbol(out PEModuleSymbol peModuleSymbol, out PEFieldSymbol peMethodSymbol)
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override string ToString()
         {
-            peModuleSymbol = this.fieldDef.ContainingModule as PEModuleSymbol;
-            peMethodSymbol = this.fieldDef as PEFieldSymbol;
-            if (peMethodSymbol == null)
-            {
-                peMethodSymbol = this.fieldDef.OriginalDefinition as PEFieldSymbol;
-            }
+            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
 
         /// <summary>
@@ -276,27 +301,16 @@ namespace PEAssemblyReader
             return null;
         }
 
-        public byte[] GetFieldBody(int relativeVirtualAddress, PEReader peReader)
+        /// <summary>
+        /// </summary>
+        /// <param name="peModuleSymbol">
+        /// </param>
+        /// <param name="peMethodSymbol">
+        /// </param>
+        private void GetPEFieldSymbol(out PEModuleSymbol peModuleSymbol, out PEFieldSymbol peMethodSymbol)
         {
-            var peHeaders = peReader.PEHeaders;
-
-            var containingSectionIndex = peHeaders.GetContainingSectionIndex(relativeVirtualAddress);
-            if (containingSectionIndex < 0)
-            {
-                return null;
-            }
-
-            var num = relativeVirtualAddress - peHeaders.SectionHeaders[containingSectionIndex].VirtualAddress;
-            var length = peHeaders.SectionHeaders[containingSectionIndex].VirtualSize - num;
-
-            IntPtr pointer;
-            int size;
-            peReader.GetEntireImage(out pointer, out size);
-
-            var reader = new BlobReader(pointer + peHeaders.SectionHeaders[containingSectionIndex].PointerToRawData + num, length);
-            var bytes = reader.ReadBytes(length);
-
-            return bytes;
+            peModuleSymbol = this.fieldDef.ContainingModule as PEModuleSymbol;
+            peMethodSymbol = this.fieldDef as PEFieldSymbol ?? this.fieldDef.OriginalDefinition as PEFieldSymbol;
         }
     }
 }

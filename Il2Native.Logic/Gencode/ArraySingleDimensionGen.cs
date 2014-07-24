@@ -8,6 +8,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.Gencode
 {
+    using System.Diagnostics;
+
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
@@ -16,6 +18,22 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ArraySingleDimensionGen
     {
+        /// <summary>
+        /// </summary>
+        /// <param name="methodBase">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsItArrayInitialization(this IMethod methodBase)
+        {
+            if (methodBase.Name == "InitializeArray" && methodBase.Namespace == "System.Runtime.CompilerServices")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -40,6 +58,51 @@ namespace Il2Native.Logic.Gencode
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, typeToLoad, resLen);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        public static void WriteArrayInit(this LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Init array with values");
+
+            var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
+            Debug.Assert(opCodeFieldInfoPart != null, "opCode is not OpCodeFieldInfoPart");
+            if (opCodeFieldInfoPart == null)
+            {
+                return;
+            }
+
+            var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+
+            var storedResult = opCode.OpCodeOperands[0].Result;
+            if (opCode.OpCodeOperands[0].Result.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
+            {
+                llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
+                writer.WriteLine(string.Empty);
+            }
+
+            var arrayIndex = llvmWriter.GetArrayIndex(data);
+            var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring("__StaticArrayInitTypeSize=".Length));
+            var arrayData = string.Format(
+                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)", arrayIndex, data.Length, '{', '}');
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
+                opCode.OpCodeOperands[0].Result, 
+                arrayData, 
+                arrayLength, 
+                LlvmWriter.PointerSize /*Align*/);
+
+            opCode.OpCodeOperands[0].Result = storedResult;
+
+            writer.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -113,45 +176,6 @@ namespace Il2Native.Logic.Gencode
             opCode.Result = new LlvmResult(opCode.Result.Number, declaringType.ToArrayType(1));
 
             writer.WriteLine("; end of new array");
-        }
-
-        public static bool IsItArrayInitialization(this IMethod methodBase)
-        {
-            if (methodBase.Name == "InitializeArray"
-                && methodBase.Namespace == "System.Runtime.CompilerServices")
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        public static void WriteArrayInit(this LlvmWriter llvmWriter, OpCodePart opCode)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.WriteLine("; Init array with values");
-
-            var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
-            var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
-
-            var arrayIndex = llvmWriter.GetArrayIndex(data);
-            var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring("__StaticArrayInitTypeSize=".Length));
-            var arrayData = string.Format(
-                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)",
-                arrayIndex,
-                data.Length,
-                '{',
-                '}');
-
-            writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                opCode.OpCodeOperands[0].Result,
-                arrayData,
-                arrayLength,
-                LlvmWriter.PointerSize/*Align*/);
-
-            writer.WriteLine(string.Empty);
         }
     }
 }

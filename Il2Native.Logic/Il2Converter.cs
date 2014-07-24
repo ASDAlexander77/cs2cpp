@@ -541,12 +541,9 @@ namespace Il2Native.Logic
             HashSet<IMethod> genericMethodSpecializations)
         {
             var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).ToList();
-            foreach (var requiredIType in requiredITypes)
+            foreach (var requiredIType in requiredITypes.Where(type.TypeNotEquals))
             {
-                if (type.TypeNotEquals(requiredIType))
-                {
-                    AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
-                }
+                AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
             }
         }
 
