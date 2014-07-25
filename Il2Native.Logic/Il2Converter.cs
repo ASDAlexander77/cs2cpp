@@ -497,9 +497,11 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        if (genericTypeSpecializations != null || genericMethodSpecializations != null)
+                        var usedStructTypes = new HashSet<IType>();
+                        method.DiscoverRequiredTypesAndMethods(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes);
+                        foreach (var usedStructType in usedStructTypes)
                         {
-                            method.DiscoverAllSpecializations(genericTypeSpecializations, genericMethodSpecializations);
+                            yield return usedStructType;
                         }
                     }
                 }

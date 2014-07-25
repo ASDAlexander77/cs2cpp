@@ -52,6 +52,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> usedStructTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         static IlReader()
         {
             OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
@@ -345,6 +349,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public HashSet<IType> UsedStructTypes
+        {
+            get
+            {
+                return this.usedStructTypes;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool UsingRoslyn { get; set; }
 
         /// <summary>
@@ -578,15 +592,29 @@ namespace Il2Native.Logic
                         continue;
                     case Code.Call:
                     case Code.Callvirt:
+
+                        // read token, next 
+                        token = ReadInt32(enumerator, ref currentAddress);
+                        var method = module.ResolveMethod(token, genericContext);
+                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedMethod(method);
+                        foreach (var methodParameter in method.GetParameters())
+                        {
+                            this.AddStructType(methodParameter.ParameterType);
+                        }
+
+                        yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
+                        continue;
+
                     case Code.Ldftn:
                     case Code.Ldvirtftn:
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        var member = module.ResolveMethod(token, genericContext);
-                        this.AddGenericSpecializedType(member.DeclaringType);
-                        this.AddGenericSpecializedMethod(member);
-                        yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, member);
+                        method = module.ResolveMethod(token, genericContext);
+                        this.AddGenericSpecializedType(method.DeclaringType);
+                        this.AddGenericSpecializedMethod(method);
+                        yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
                     case Code.Stfld:
                     case Code.Stsfld:
@@ -653,6 +681,11 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
                         this.AddGenericSpecializedType(type);
+                        if (code == Code.Box)
+                        {
+                            this.AddStructType(type);
+                        }
+
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:
@@ -793,7 +826,7 @@ namespace Il2Native.Logic
             // disover it again in specialized method
             var genericTypeSpecializations = new HashSet<IType>();
             var genericMethodSpecializations = new HashSet<IMethod>();
-            method.DiscoverAllSpecializations(genericTypeSpecializations, genericMethodSpecializations);
+            method.DiscoverRequiredTypesAndMethods(genericTypeSpecializations, genericMethodSpecializations, null);
 
             foreach (var genericTypeSpecialization in genericTypeSpecializations)
             {
@@ -818,6 +851,20 @@ namespace Il2Native.Logic
             }
 
             this.usedGenericSpecialiazedTypes.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddStructType(IType type)
+        {
+            if (type == null || !type.IsStructureType())
+            {
+                return;
+            }
+
+            this.usedStructTypes.Add(type);
         }
 
         /// <summary>

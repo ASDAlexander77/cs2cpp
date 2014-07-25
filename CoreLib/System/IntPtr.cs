@@ -9,6 +9,14 @@ namespace System
     [Serializable]
     public struct IntPtr
     {
+        unsafe private void* m_value;
+
+        public static readonly IntPtr Zero;
+
+        public unsafe IntPtr(int value)
+        {
+            m_value = (void*)value;
+        }
     }
 }
 

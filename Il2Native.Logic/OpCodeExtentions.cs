@@ -44,8 +44,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        public static void DiscoverAllSpecializations(
-            this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations)
+        public static void DiscoverRequiredTypesAndMethods(
+            this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations, HashSet<IType> requiredTypes)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -70,6 +70,14 @@ namespace Il2Native.Logic
                 {
                     genericMethodSpecializations.Add(genericSpecializedMethod);
                 }
+            }
+
+            if (requiredTypes != null)
+            {
+                foreach (var usedType in reader.UsedStructTypes)
+                {
+                    requiredTypes.Add(usedType);
+                }                
             }
         }
 
@@ -225,9 +233,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static int IntTypeBitSize(this IType thisType)
+        public static int IntTypeBitSize(this IType thisType, bool isPointer = false)
         {
-            var thisTypeString = thisType.TypeToCType();
+            var thisTypeString = thisType.TypeToCType(isPointer);
             return GetIntSize(thisTypeString);
         }
 

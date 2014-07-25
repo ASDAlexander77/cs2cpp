@@ -232,8 +232,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type, bool isPointer = false)
+        public static string TypeToCType(this IType type, bool? isPointerOpt = null)
         {
+            var isPointer = isPointerOpt.HasValue ? isPointerOpt.Value : type.IsPointer;
+
             var effectiveType = type;
 
             if (type.IsArray)

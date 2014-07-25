@@ -144,8 +144,9 @@ namespace Ll2NativeTests
             // 102 - using Reflection
             // 104 - System.Threading.Interlocked.Increment
             // 105 - IAsyncResult (NotImplemented)
-            // 106 - IAsyncResult (NotImplemented)
-            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105 });
+            // 106 - IAsyncResult (NotImplemented) (missing)
+            // 109 - DateTime.Now.ToString (NotImplemented)
+            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109 });
 
             if (UsingRoslyn)
             {
@@ -296,8 +297,8 @@ namespace Ll2NativeTests
         private static void Convert(int number, string source = SourcePath, string fileName = "test", string format = null)
         {
             Il2Converter.Convert(
-                string.Concat(source, string.Format("{1}-{0}.cs", format == null ? number.ToString() : number.ToString(format), fileName)), 
-                OutputPath, 
+                string.Concat(source, string.Format("{1}-{0}.cs", format == null ? number.ToString() : number.ToString(format), fileName)),
+                OutputPath,
                 GetConverterArgs(true));
         }
 

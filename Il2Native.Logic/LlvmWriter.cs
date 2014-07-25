@@ -357,7 +357,7 @@ namespace Il2Native.Logic
 
             if (opCode.Result.Type.IntTypeBitSize() > 0 && destType.IsPointer && !opCode.Result.Type.IsPointer)
             {
-                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.GetElementType().IntTypeBitSize() + "*");
+                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.GetElementType().IntTypeBitSize(true) + "*");
                 writer.WriteLine(string.Empty);
                 return true;
             }
@@ -915,7 +915,7 @@ namespace Il2Native.Logic
                 var changeType = this.AdjustIntConvertableTypes(
                     writer, 
                     opCode.OpCodeOperands[
-                        opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand
+                        operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand
                             ? operand2
                             : operand1], 
                     false, 
