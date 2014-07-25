@@ -171,7 +171,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             // save value 1
-            llvmWriter.WriteSaveToField(opCode, opCode.Result.Type, 0);
+            llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
             writer.WriteLine(string.Empty);
 
             // write access to a field 2
@@ -184,7 +184,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             // save value 2
-            llvmWriter.WriteSaveToField(opCode, opCode.Result.Type, 0);
+            llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
             writer.WriteLine(string.Empty);
 
             writer.WriteLine("ret void");

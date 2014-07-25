@@ -165,7 +165,7 @@ namespace Ll2NativeTests
         public void TestGenCompileAndRunLlvm()
         {
             // 21 - using default on Class causing Boxing of Reference type
-            // 29 - boxing arrya and sends to WriteLine - causes crash
+            // 29 - boxing array and sends to WriteLine - causes crash
             var skip = new[] { 21, 29 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {

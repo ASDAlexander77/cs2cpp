@@ -794,7 +794,8 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            return new ArrayTypeSymbol(this.typeDef.ContainingAssembly, this.typeDef, rank: rank).ToType(this.GenericContext);
+            var containingAssembly = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType.ContainingAssembly : this.typeDef.ContainingAssembly;
+            return new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank).ToType(this.GenericContext);
         }
 
         /// <summary>

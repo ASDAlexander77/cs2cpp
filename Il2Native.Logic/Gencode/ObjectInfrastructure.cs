@@ -106,7 +106,7 @@ namespace Il2Native.Logic.Gencode
 
             opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
             opCode.OpCodeOperands[0].Result = valueLoadResult;
-            llvmWriter.WriteSaveToField(opCode, fieldType, 0);
+            llvmWriter.SaveToField(opCode, fieldType, 0);
 
             if (isStruct)
             {
