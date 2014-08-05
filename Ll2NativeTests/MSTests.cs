@@ -46,6 +46,7 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"D:\Temp\tests\";
         private const string OutputPath = @"D:\Temp\IlCTests\";
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
+        private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibrary\bin\Debug\BabylonNativeCsLibrary.dll";
 #endif
 
         /// <summary>
@@ -89,6 +90,14 @@ namespace Ll2NativeTests
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestOpenGlLib()
+        {
+            Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(false));
         }
 
         /// <summary>

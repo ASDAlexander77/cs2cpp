@@ -43,7 +43,7 @@ namespace PEAssemblyReader
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
-            this.lazyNamespace = new Lazy<string>(this.calculateNamespace);
+            this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
         /// <summary>
@@ -285,7 +285,7 @@ namespace PEAssemblyReader
                             var module = peModuleSymbol.Module;
                             var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
-                            localInfo = peModuleSymbol.GetMetadataDecoder(this.GenericContext).DecodeLocalSignatureOrThrow(ref signatureReader);
+                            localInfo = peModuleSymbol.GetMetadataDecoder(this.GenericContext ?? GetDefaultGenericMetadataContext()).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
                         {
@@ -675,9 +675,25 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        private string calculateNamespace()
+        private string CalculateNamespace()
         {
             return this.methodDef.CalculateNamespace();
+        }
+
+
+        private MetadataGenericContext GetDefaultGenericMetadataContext()
+        {
+            if (this.IsGenericMethod)
+            {
+                return new MetadataGenericContext(this);
+            }
+
+            if (this.DeclaringType.IsGenericType)
+            {
+                return new MetadataGenericContext(this.DeclaringType);
+            }
+
+            return null;
         }
     }
 }
