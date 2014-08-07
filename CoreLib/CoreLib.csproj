@@ -43,6 +43,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="System\Action.cs" />
     <Compile Include="System\AppDomain.cs" />
     <Compile Include="System\AppDomainUnloadedException.cs" />
     <Compile Include="System\ApplicationException.cs" />
@@ -58,6 +59,7 @@
     <Compile Include="System\Boolean.cs" />
     <Compile Include="System\Byte.cs" />
     <Compile Include="System\Char.cs" />
+    <Compile Include="System\Collections\Generic\IEnumerator.cs" />
     <Compile Include="System\ComponentModel\EditorBrowsableAttribute.cs" />
     <Compile Include="System\Console.cs" />
     <Compile Include="System\Convert.cs" />
@@ -94,6 +96,7 @@
     <Compile Include="System\NonSerializedAttribute.cs" />
     <Compile Include="System\NotImplementedException.cs" />
     <Compile Include="System\NotSupportedException.cs" />
+    <Compile Include="System\Nullable.cs" />
     <Compile Include="System\NullReferenceException.cs" />
     <Compile Include="System\Number.cs" />
     <Compile Include="System\Object.cs" />

@@ -40,6 +40,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+
+        /// <summary>
+        /// </summary>
+        private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonWpf\bin\Debug\BabylonNativeCsLibrary.dll";
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
