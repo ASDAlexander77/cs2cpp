@@ -36,6 +36,16 @@ namespace System
             }
         }
 
+        public T GetValueOrDefault()
+        {
+            return value;
+        }
+
+        public T GetValueOrDefault(T defaultValue)
+        {
+            return HasValue ? value : defaultValue;
+        }
+
         public override bool Equals(object other)
         {
             if (!HasValue) return other == null;
