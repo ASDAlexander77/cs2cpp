@@ -355,7 +355,53 @@ namespace System
         
         public extern int IndexOf(String value, int startIndex, int count);
 
-        
+        public static bool IsNullOrEmpty(String value)
+        {
+            return (value == null || value.Length == 0);
+        }
+
+        public String Replace(String oldValue, String newValue)
+        {
+            if (oldValue == null)
+                throw new ArgumentNullException("oldValue");
+
+            StringBuilder sb = new StringBuilder(this, this.Length);
+            sb.Replace(oldValue, newValue);
+            return sb.ToString();
+        }
+
+        public static string Join(string separator, params Object[] values)
+        {
+            if (values == null)
+                throw new ArgumentNullException("values");
+
+            if (values.Length == 0 || values[0] == null)
+                return String.Empty;
+
+            if (separator == null)
+                separator = String.Empty;
+
+            StringBuilder result = new StringBuilder();
+
+            string value = values[0].ToString();
+            if (value != null)
+                result.Append(value);
+
+            for (int i = 1; i < values.Length; i++)
+            {
+                result.Append(separator);
+                if (values[i] != null)
+                {
+                    // handle the case where their ToString() override is broken
+                    value = values[i].ToString();
+                    if (value != null)
+                        result.Append(value);
+                }
+            }
+
+            return result.ToString();
+        }       
+
         public int LastIndexOf(char value)
         {
             throw new NotImplementedException();

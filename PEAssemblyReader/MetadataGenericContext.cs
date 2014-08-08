@@ -10,6 +10,7 @@
 namespace PEAssemblyReader
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -30,6 +31,7 @@ namespace PEAssemblyReader
             : this()
         {
             this.Init(type);
+            Debug.Assert(!this.IsEmpty);
         }
 
         /// <summary>
@@ -45,6 +47,8 @@ namespace PEAssemblyReader
                 this.MethodDefinition = method;
                 this.MethodSpecialization = method;
             }
+
+            Debug.Assert(!this.IsEmpty);
         }
 
         /// <summary>
@@ -76,6 +80,33 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         public IType TypeSpecialization { get; set; }
+
+        public static IGenericContext DiscoverFrom(IMethod method)
+        {
+            if (method.IsGenericMethod)
+            {
+                return new MetadataGenericContext(method);
+            }
+
+            var declType = method.DeclaringType;
+            while (declType != null)
+            {
+                if (declType.IsGenericType || declType.IsGenericTypeDefinition)
+                {
+                    return new MetadataGenericContext(declType);
+                }
+
+                if (declType.IsNested)
+                {
+                    declType = declType.DeclaringType;
+                    continue;
+                }
+
+                break;
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// </summary>

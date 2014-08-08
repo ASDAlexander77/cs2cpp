@@ -485,7 +485,7 @@ namespace Il2Native.Logic
                         DicoverGenericSpecializedIType(param.ParameterType, genericTypeSpecializations, genericMethodSpecializations);
                     }
 
-                    var methodBody = method.GetMethodBody();
+                    var methodBody = method.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
                     if (methodBody != null)
                     {
                         foreach (var localVar in methodBody.LocalVariables)

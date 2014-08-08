@@ -772,8 +772,13 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ResolveTypeParameter(IType typeParameter)
         {
-            var typeParameters = this.GenericTypeParameters.ToList();
-            var typeArguments = this.GenericTypeArguments.ToList();
+            return ResolveTypeParameter(this, typeParameter);
+        }
+
+        private static IType ResolveTypeParameter(IType source, IType typeParameter)
+        {
+            var typeParameters = source.GenericTypeParameters.ToList();
+            var typeArguments = source.GenericTypeArguments.ToList();
 
             for (var index = 0; index < typeArguments.Count; index++)
             {
@@ -783,7 +788,7 @@ namespace PEAssemblyReader
                 }
             }
 
-            return null;
+            return source.IsNested ? ResolveTypeParameter(source.DeclaringType, typeParameter) : null;
         }
 
         /// <summary>

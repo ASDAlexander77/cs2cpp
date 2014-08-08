@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -166,6 +167,11 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IDictionary<IType, IType> GenericMap(this IType type, IDictionary<IType, IType> map)
         {
+            if (type == null)
+            {
+                return map;
+            }
+
             map.GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
             if (type.DeclaringType != null)
             {
@@ -185,6 +191,11 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IDictionary<IType, IType> GenericMap(this IMethod method, IDictionary<IType, IType> map)
         {
+            if (method == null)
+            {
+                return map;
+            }
+
             map.GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
             if (method.DeclaringType != null)
             {
@@ -320,18 +331,9 @@ namespace PEAssemblyReader
                     if (metadataType.IsGenericTypeDefinition)
                     {
                         var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
-                        if (genericContext.MethodSpecialization != null)
-                        {
-                            map = genericContext.MethodSpecialization.GenericMap(map);
-                        }
+                        map = genericContext.MethodSpecialization.GenericMap(map);
 
-                        var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
-                                                              ? SelectGenericsFromArguments(namedTypeSymbol, map)
-                                                              : SelectGenericsFromParameters(namedTypeSymbol, map);
-
-                        Debug.Assert(mapFilteredByTypeParameters.Count() > 0);
-
-                        var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
+                        var newType = ConstructGenericTypeSymbol(namedTypeSymbol, map);
 
                         return new MetadataTypeAdapter(newType, genericContext);
                     }
@@ -339,6 +341,18 @@ namespace PEAssemblyReader
             }
 
             return effectiveType;
+        }
+
+        private static ConstructedNamedTypeSymbol ConstructGenericTypeSymbol(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
+        {
+            var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
+                                                  ? SelectGenericsFromArguments(namedTypeSymbol, map)
+                                                  : SelectGenericsFromParameters(namedTypeSymbol, map);
+
+            Debug.Assert(mapFilteredByTypeParameters.Count() > 0);
+
+            var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
+            return newType;
         }
 
         /// <summary>
@@ -364,10 +378,28 @@ namespace PEAssemblyReader
         /// </returns>
         private static TypeSymbol[] SelectGenericsFromArguments(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
         {
-            return
-                map.Where(pair => namedTypeSymbol.TypeArguments.Select(t => t).Any(tp => tp.Name == pair.Key.Name))
-                   .Select(pair => (pair.Value as MetadataTypeAdapter).TypeDef)
-                   .ToArray();
+            var resolvedTypes = new List<TypeSymbol>();
+
+            foreach (var typeSymbol in namedTypeSymbol.TypeArguments)
+            {
+                if (typeSymbol.Kind == SymbolKind.TypeParameter)
+                {
+                    var foundType = map.First(pair => pair.Key.Name == typeSymbol.Name);
+                    resolvedTypes.Add((foundType.Value as MetadataTypeAdapter).TypeDef);
+                    continue;
+                }
+
+                var subTypeNamedTypeSymbol = typeSymbol as NamedTypeSymbol;
+                if (subTypeNamedTypeSymbol != null)
+                {
+                    resolvedTypes.Add(ConstructGenericTypeSymbol(subTypeNamedTypeSymbol, map));
+                    continue;
+                }
+
+                throw new NotSupportedException();
+            }
+
+            return resolvedTypes.ToArray();
         }
 
         /// <summary>

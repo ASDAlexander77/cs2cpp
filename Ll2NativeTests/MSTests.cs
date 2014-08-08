@@ -43,7 +43,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonWpf\bin\Debug\BabylonNativeCsLibrary.dll";
+        private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -101,7 +101,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestOpenGlLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(false));
+            Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(true));
         }
 
         /// <summary>
@@ -219,13 +219,15 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="format">
         /// </param>
+        /// <param name="justCompile">
+        /// </param>
         private static void ExecCompile(int index, string fileName = "test", string format = null, bool justCompile = false)
         {
             /*
                 call vcvars32.bat
-                llc -mtriple i686-pc-win32 -filetype=obj mscorlib.ll
+                llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-win32 -filetype=obj test-%1.ll
-                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib mscorlib.obj test-%1.obj /OUT:test-%1.exe
+                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib corelib.obj test-%1.obj /OUT:test-%1.exe
                 del test-%1.obj
             */
 
@@ -233,9 +235,9 @@ namespace Ll2NativeTests
             // http://mingw-w64.sourceforge.net/download.php
             // Windows 32	DWARF	i686 - use this config to test exceptions on windows
             /*
-                llc -mtriple i686-pc-mingw32 -filetype=obj mscorlib.ll
+                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
-                g++.exe -o test-%1.exe mscorlib.o test-%1.o -lstdc++ -march=i686
+                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -march=i686
                 del test-%1.o
             */
             var pi = new ProcessStartInfo();
