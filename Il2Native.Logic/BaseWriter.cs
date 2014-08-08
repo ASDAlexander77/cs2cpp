@@ -860,6 +860,12 @@ namespace Il2Native.Logic
 
             for (var i = 1; i <= size; i++)
             {
+                if (opCodePart.ToCode() == Code.Ret && this.MethodReturnType == null)
+                {
+                    opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, null);
+                    break;
+                }
+
                 var opCodePartUsed = this.Stack.Pop();
                 if (opCodePartUsed.ToCode() == Code.Nop)
                 {
@@ -871,12 +877,6 @@ namespace Il2Native.Logic
                     insertBack.Add(opCodePartUsed);
                     i--;
                     continue;
-                }
-
-                if (opCodePart.ToCode() == Code.Ret && this.MethodReturnType == null)
-                {
-                    opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
-                    break;
                 }
 
                 var secondDup = false;
@@ -909,13 +909,6 @@ namespace Il2Native.Logic
                          || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
                          && ((OpCodeMethodInfoPart)opCodePartUsed).Operand.ReturnType.IsVoid())
                 {
-                    if (insertBack == null)
-                    {
-                        insertBack = new List<OpCodePart>();
-                    }
-
-                    insertBack.Add(opCodePartUsed);
-
                     // in case it is Pop and it jumps over Cond_Brunch or Brunch it means we should ignore this
                     if (opCodePart.Any(Code.Pop)
                         && (opCodePartUsed.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePartUsed.OpCode.FlowControl == FlowControl.Branch))
@@ -923,6 +916,13 @@ namespace Il2Native.Logic
                         opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
                         break;
                     }
+
+                    if (insertBack == null)
+                    {
+                        insertBack = new List<OpCodePart>();
+                    }
+
+                    insertBack.Add(opCodePartUsed);
 
                     i--;
                     continue;
@@ -964,7 +964,7 @@ namespace Il2Native.Logic
                 }
 
                 // ?? - test condition default expression
-                if (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack))
+                while (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack))
                 {
                     var newBlockOps = new List<OpCodePart>();
                     newBlockOps.Add(opCodePartUsed);
@@ -1320,7 +1320,11 @@ namespace Il2Native.Logic
 
             opCodeParts = newOpCodeParts.ToArray();
 
-            this.Stack.Push(opCodePartUsed);
+            if (opCodePartUsed != null)
+            {
+                this.Stack.Push(opCodePartUsed);
+            }
+
             return opCodeParts;
         }
 

@@ -1626,6 +1626,7 @@ namespace Il2Native.Logic
                 type = type.BaseType;
                 if (type == null)
                 {
+                    Debug.Assert(false, "could not find base class");
                     break;
                 }
 
@@ -3816,7 +3817,7 @@ namespace Il2Native.Logic
             // write type
             var effectiveType = this.ResolveType("System.Void");
 
-            if ((res2.IsConst ?? false) && !(res1.IsConst ?? false) || res2 == null)
+            if (res2 == null || (res2.IsConst ?? false) && !(res1.IsConst ?? false))
             {
                 effectiveType = res1.IType;
             }
