@@ -404,7 +404,7 @@ namespace Il2Native.Logic
 
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
-            foreach (var genDef in types.Where(t => t.IsGenericTypeDefinition))
+            foreach (var genDef in types.Where(t => IsGenericDefinition(t)))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
@@ -428,6 +428,22 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
+        }
+
+        private static bool IsGenericDefinition(IType type)
+        {
+            if (type.IsGenericTypeDefinition)
+            {
+                return true;
+            }
+
+            var current = type;
+            while (current != null && current.IsNested)
+            {
+                current = current.DeclaringType;
+            }
+
+            return current != null && current.IsGenericTypeDefinition;
         }
 
         /// <summary>

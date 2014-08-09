@@ -77,7 +77,7 @@ namespace Il2Native.Logic
                 foreach (var usedType in reader.UsedStructTypes)
                 {
                     requiredTypes.Add(usedType);
-                }                
+                }
             }
         }
 
@@ -821,31 +821,69 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        /// <param name="overridingMethod">
+        /// <param name="genericMethod">
         /// </param>
         /// <returns>
         /// </returns>
-        private static bool IsMatchingGenericParamsAndReturnType(this IMethod method, IMethod overridingMethod)
+        private static bool IsMatchingGenericParamsAndReturnType(this IMethod method, IMethod genericMethod)
         {
             var params1 = method.GetParameters().ToArray();
-            var params2 = overridingMethod.GetParameters().ToArray();
+            var genParams2 = genericMethod.GetParameters().ToArray();
 
-            if (params1.Length != params2.Length)
+            if (params1.Length != genParams2.Length)
             {
                 return false;
             }
 
-            if (method.ReturnType.IsVoid() && overridingMethod.ReturnType.IsVoid())
+            for (var i = 0; i < params1.Length; i++)
             {
-                return true;
+                if (params1[i].IsOut != genParams2[i].IsOut
+                    || params1[i].IsRef != genParams2[i].IsRef
+                    || !CompareTypeWithGenericType(params1[i].ParameterType, genParams2[i].ParameterType))
+                {
+                    return false;
+                }
             }
 
-            if (!method.ReturnType.IsVoid() && !overridingMethod.ReturnType.IsVoid())
+            if (CompareTypeWithGenericType(method.ReturnType, genericMethod.ReturnType, true))
             {
                 return true;
             }
 
             return false;
+        }
+
+        private static bool CompareTypeWithGenericType(IType type, IType genType, bool testVoid = false)
+        {
+            if (testVoid)
+            {
+                if (type.IsVoid() && genType.IsVoid())
+                {
+                    return true;
+                }
+
+                if (type.IsVoid() || genType.IsVoid())
+                {
+                    return false;
+                }
+            }
+
+            if (genType.IsArray && type.IsArray)
+            {
+                return true;
+            }
+
+            if (genType.IsPointer && type.IsPointer)
+            {
+                return true;
+            }
+
+            if (genType.MetadataFullName.Equals(type.MetadataFullName))
+            {
+                return true;
+            }
+
+            return genType.IsGenericParameter;
         }
 
         /// <summary>
