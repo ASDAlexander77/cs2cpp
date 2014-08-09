@@ -144,7 +144,11 @@ namespace PEAssemblyReader
             get
             {
                 var sb = new StringBuilder();
-                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
+                if (!this.IsGenericParameter)
+                {
+                    this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
+                }
+
                 sb.Append(this.Name);
                 return sb.ToString();
             }
@@ -449,7 +453,7 @@ namespace PEAssemblyReader
 
                 sb.Append(this.typeDef.Name);
 
-                if (this.IsGenericType)
+                if (this.IsGenericType && this.ContainsGenericParameters)
                 {
                     sb.Append('<');
 

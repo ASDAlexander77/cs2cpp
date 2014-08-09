@@ -234,7 +234,7 @@ namespace Il2Native.Logic
                 foreach (var ctor in IlReader.Constructors(type))
                 {
                     IConstructor genericCtor = null;
-                    if (type.IsGenericType)
+                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same constructor in generic class
                         Debug.Assert(genericDefinition != null);
@@ -276,7 +276,7 @@ namespace Il2Native.Logic
                 foreach (var method in IlReader.Methods(type))
                 {
                     IMethod genericMethod = null;
-                    if (type.IsGenericType)
+                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same method in generic class
                         Debug.Assert(genericDefinition != null);
