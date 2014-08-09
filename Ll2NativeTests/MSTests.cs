@@ -50,7 +50,7 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"D:\Temp\tests\";
         private const string OutputPath = @"D:\Temp\IlCTests\";
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
-        private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibrary\bin\Debug\BabylonNativeCsLibrary.dll";
+        private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
 #endif
 
         /// <summary>

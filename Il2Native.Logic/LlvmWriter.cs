@@ -2510,8 +2510,44 @@ namespace Il2Native.Logic
                 this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
                 writer.Write(',');
                 this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
+               
+                return;
+            }
 
-                block.Result = block.Result;
+            if (block.UseAsNullCoalescingExpression)
+            {
+                writer.WriteLine("; Null Coalescing Expression");
+
+                // start of phi blocks
+                writer.WriteLine("br label %.a{0}", block.OpCodes[0].GroupAddressStart);
+                writer.Indent--;
+                writer.WriteLine(".a{0}:", block.OpCodes[0].GroupAddressStart);
+                writer.Indent++;
+
+                this.ActualWriteBlockBody(writer, block);
+
+                // end of phi blocks
+                writer.WriteLine(string.Empty);
+                writer.WriteLine("br label %.a{0}", block.OpCodes.Last().GroupAddressEnd);
+                writer.Indent--;
+                writer.WriteLine(".a{0}:", block.OpCodes.Last().GroupAddressEnd);
+                writer.Indent++;
+
+                // apply PHI is condition is complex
+                this.ProcessOperator(writer, block, "phi", block.OpCodes[0].Result.Type, options: OperandOptions.GenerateResult);
+                var phiResult = block.Result;
+
+                for (var i = 0; i < block.OpCodes.Length; i+=3)
+                {
+                    if (i > 0)
+                    {
+                        writer.Write(',');
+                    }
+
+                    writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[i - ((i > 0) ? 1 : 0)].GroupAddressStart);
+                }
+
+                block.Result = phiResult;
 
                 return;
             }
@@ -2537,6 +2573,7 @@ namespace Il2Native.Logic
             foreach (var subOpCode in query)
             {
                 this.ActualWrite(writer, subOpCode);
+                writer.WriteLine(string.Empty);
             }
         }
 

@@ -556,7 +556,7 @@ namespace Il2Native.Logic
                     return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
                 case Code.Ldobj:
                     var opCodeTypePart = opCode as OpCodeTypePart;
-                    return new ReturnResult(opCodeTypePart.Operand);
+                    return new ReturnResult(opCode.ReadExceptionFromStack ? opCode.ReadExceptionFromStackType : opCodeTypePart.Operand);
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
@@ -967,13 +967,27 @@ namespace Il2Native.Logic
                 while (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack))
                 {
                     var newBlockOps = new List<OpCodePart>();
-                    newBlockOps.Add(opCodePartUsed);
+                    if (!opCodePartUsed.UseAsNullCoalescingExpression)
+                    {
+                        newBlockOps.Add(opCodePartUsed);
+                    }
+
                     for (var k = 0; k < 3; k++)
                     {
                         newBlockOps.Add(this.Stack.Pop());
                     }
 
                     newBlockOps.Reverse();
+
+                    if (opCodePartUsed.UseAsNullCoalescingExpression)
+                    {
+                        newBlockOps.AddRange(((OpCodeBlock)opCodePartUsed).OpCodes);
+                    }
+
+                    foreach(var usedOpInBlock in newBlockOps)
+                    {
+                        usedOpInBlock.Skip = true;
+                    }
 
                     var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray());
                     opCodeBlock.UseAsNullCoalescingExpression = true;
@@ -1560,7 +1574,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (second.JumpAddress() != opCodePart.GroupAddressStart)
+            if (second.JumpAddress() != (currentArgument.AddressEnd != 0 ? currentArgument.AddressEnd : currentArgument.GroupAddressEnd))
             {
                 // we do not have full expression
                 return false;
