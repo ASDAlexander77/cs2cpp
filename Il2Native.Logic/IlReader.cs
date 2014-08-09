@@ -45,6 +45,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyAllTypes;
+
+        /// <summary>
+        /// </summary>
         private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
 
         /// <summary>
@@ -285,7 +289,8 @@ namespace Il2Native.Logic
         /// </summary>
         public IlReader()
         {
-            this.lazyTypes = new Lazy<IEnumerable<IType>>(this.ReadTypes);
+            this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
+            this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
         }
 
         /// <summary>
@@ -716,6 +721,11 @@ namespace Il2Native.Logic
             return this.lazyTypes.Value;
         }
 
+        public IEnumerable<IType> AllTypes()
+        {
+            return this.lazyAllTypes.Value;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="source">
@@ -949,7 +959,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        private IEnumerable<IType> ReadTypes()
+        private IEnumerable<IType> ReadTypes(bool readAll = false)
         {
             var assemblySymbol = new PEAssemblySymbol(
                 this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
@@ -957,6 +967,25 @@ namespace Il2Native.Logic
             var moduleReferences = LoadReferences(assemblySymbol);
 
             // 3) Load Types
+            foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol, moduleReferences))
+            {
+                yield return metadataTypeAdapter;
+            }
+
+            if (readAll)
+            {
+                foreach (var moduleAssemblySymbol in moduleReferences.Symbols)
+                {
+                    foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol, moduleReferences))
+                    {
+                        yield return metadataTypeAdapter;
+                    }
+                }
+            }
+        }
+
+        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol, ModuleReferences<AssemblySymbol> moduleReferences)
+        {
             foreach (var module in assemblySymbol.Modules)
             {
                 module.SetReferences(moduleReferences);
@@ -966,10 +995,22 @@ namespace Il2Native.Logic
                                                     select new MetadataTypeAdapter(symbol))
                 {
                     yield return metadataTypeAdapter;
-                    foreach (var nestedType in metadataTypeAdapter.GetNestedTypes())
+                    foreach (var nestedType in EnumAllNestedTypes(metadataTypeAdapter))
                     {
                         yield return nestedType;
                     }
+                }
+            }
+        }
+
+        private static IEnumerable<IType> EnumAllNestedTypes(IType type)
+        {
+            foreach (var nestedType in type.GetNestedTypes())
+            {
+                yield return nestedType;
+                foreach (var subNestedType in EnumAllNestedTypes(nestedType))
+                {
+                    yield return subNestedType;
                 }
             }
         }
