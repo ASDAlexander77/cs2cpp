@@ -29,6 +29,7 @@ namespace Il2Native.Logic
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -636,7 +637,7 @@ namespace Il2Native.Logic
                     case Code.Ldtoken: // can it be anything?
 
                         token = ReadInt32(enumerator, ref currentAddress);
-                        
+
                         var resolvedToken = module.ResolveToken(token, genericContext);
 
                         var typeToken = resolvedToken as IType;
@@ -953,26 +954,50 @@ namespace Il2Native.Logic
             var assemblySymbol = new PEAssemblySymbol(
                 this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
 
-            // TODO: find mscorlib
+            var moduleReferences = LoadReferences(assemblySymbol);
+
+            // 3) Load Types
+            foreach (var module in assemblySymbol.Modules)
+            {
+                module.SetReferences(moduleReferences);
+
+                var peModuleSymbol = module as PEModuleSymbol;
+                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
+                                                    select new MetadataTypeAdapter(symbol))
+                {
+                    yield return metadataTypeAdapter;
+                    foreach (var nestedType in metadataTypeAdapter.GetNestedTypes())
+                    {
+                        yield return nestedType;
+                    }
+                }
+            }
+        }
+
+        private ModuleReferences<AssemblySymbol> LoadReferences(PEAssemblySymbol assemblySymbol)
+        {
+            // TODO: finish loading all Dlls (now it is loading only "CoreLib" or "mscorlib"
             // 1) set corelib
             var coreLibSet = false;
             var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
             var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
-            foreach (var coreAssemblySymbol in from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences
-                                               where assemblyIdentity.Name == "mscorlib" || assemblyIdentity.Name == "CoreLib"
-                                               select
-                                                   AssemblyMetadata.CreateFromImageStream(
-                                                       new FileStream(
-                                                   assemblyIdentity.Name == "CoreLib" ? this.CoreLibPath : typeof(int).Assembly.Location, 
-                                                   FileMode.Open, 
-                                                   FileAccess.Read))
-                                               into coreAssembly
-                                               select
-                                                   new PEAssemblySymbol(
-                                                   coreAssembly.Assembly, 
-                                                   DocumentationProvider.Default, 
-                                                   isLinked: false, 
-                                                   importOptions: MetadataImportOptions.All))
+
+            var coreLibQuery =
+                from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences
+                select AssemblyMetadata.CreateFromImageStream(
+                            new FileStream(
+                                this.ResolveReferencePath(assemblyIdentity),
+                                FileMode.Open,
+                                FileAccess.Read))
+                    into coreAssembly
+                    select
+                        new PEAssemblySymbol(
+                            coreAssembly.Assembly,
+                            DocumentationProvider.Default,
+                            isLinked: false,
+                            importOptions: MetadataImportOptions.All);
+
+            foreach (var coreAssemblySymbol in coreLibQuery)
             {
                 coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
 
@@ -991,26 +1016,26 @@ namespace Il2Native.Logic
 
             // 2) set references
             var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
-            var moduleReferences = new ModuleReferences<AssemblySymbol>(
-                this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
+            var moduleReferences = new ModuleReferences<AssemblySymbol>(this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
 
-            // 3) Load Types
-            foreach (var module in assemblySymbol.Modules)
+            return moduleReferences;
+        }
+
+        // TODO: finish it
+        private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
+        {
+            if (assemblyIdentity.Name == "CoreLib")
             {
-                module.SetReferences(moduleReferences);
-
-                var peModuleSymbol = module as PEModuleSymbol;
-                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
-                                                    where symbol.TypeKind != TypeKind.Error
-                                                    select new MetadataTypeAdapter(symbol))
-                {
-                    yield return metadataTypeAdapter;
-                    foreach (var nestedType in metadataTypeAdapter.GetNestedTypes())
-                    {
-                        yield return nestedType;
-                    }
-                }
+                return this.CoreLibPath;
             }
+
+            if (assemblyIdentity.Name == "mscorlib")
+            {
+                return typeof(int).Assembly.Location;
+            }
+
+            Debug.Fail("Not implemented yet");
+            return null;
         }
     }
 }

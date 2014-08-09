@@ -40,6 +40,7 @@ namespace PEAssemblyReader
         internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
         {
             Debug.Assert(typeDef != null);
+            Debug.Assert(typeDef.TypeKind != TypeKind.Error);
 
             this.typeDef = typeDef;
             this.IsByRef = isByRef;
