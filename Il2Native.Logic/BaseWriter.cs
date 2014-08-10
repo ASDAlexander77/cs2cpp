@@ -388,6 +388,8 @@ namespace Il2Native.Logic
                 case Code.Ble_Un_S:
                 case Code.Bgt_Un:
                 case Code.Bgt_Un_S:
+                case Code.Blt_Un:
+                case Code.Blt_Un_S:
                     return new ReturnResult(this.ResolveType("System.Boolean"));
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
