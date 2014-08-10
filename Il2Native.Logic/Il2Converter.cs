@@ -221,7 +221,10 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Declaration)
             {
-                WriteTypeDefinition(codeWriter, type, genericContext);
+                if (!codeWriter.IsProcessed(type))
+                {
+                    WriteTypeDefinition(codeWriter, type, genericContext);
+                }
 
                 codeWriter.WriteBeforeConstructors();
             }

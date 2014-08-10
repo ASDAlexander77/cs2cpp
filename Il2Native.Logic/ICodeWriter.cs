@@ -170,5 +170,11 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        bool IsProcessed(IType type);
     }
 }

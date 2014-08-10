@@ -4823,13 +4823,18 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
-            if (this.processedTypes.Contains(type))
+            if (IsProcessed(type))
             {
                 return;
             }
 
             Il2Converter.WriteTypeDefinition(this, type, null, true);
             this.Output.WriteLine(string.Empty);
+        }
+
+        public bool IsProcessed(IType type)
+        {
+            return this.processedTypes.Contains(type);
         }
 
         /// <summary>
