@@ -330,6 +330,8 @@ namespace PEAssemblyReader
                     var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
                     if (metadataType.IsGenericTypeDefinition)
                     {
+                        Debug.Assert(genericContext.TypeSpecialization != null || genericContext.MethodSpecialization != null);
+
                         var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
                         map = genericContext.MethodSpecialization.GenericMap(map);
 
@@ -390,13 +392,13 @@ namespace PEAssemblyReader
                 }
 
                 var subTypeNamedTypeSymbol = typeSymbol as NamedTypeSymbol;
-                if (subTypeNamedTypeSymbol != null)
+                if (subTypeNamedTypeSymbol != null && subTypeNamedTypeSymbol.Arity > 0)
                 {
                     resolvedTypes.Add(ConstructGenericTypeSymbol(subTypeNamedTypeSymbol, map));
                     continue;
                 }
 
-                throw new NotSupportedException();
+                resolvedTypes.Add(subTypeNamedTypeSymbol);
             }
 
             return resolvedTypes.ToArray();

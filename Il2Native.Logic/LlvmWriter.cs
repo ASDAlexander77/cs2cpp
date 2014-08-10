@@ -1621,7 +1621,8 @@ namespace Il2Native.Logic
             // first element for pointer (IType* + 0)
             writer.Write(", i32 0");
 
-            while (type.TypeNotEquals(targetType))
+            while (type.TypeNotEquals(targetType)) 
+
             {
                 type = type.BaseType;
                 if (type == null)
@@ -2537,8 +2538,13 @@ namespace Il2Native.Logic
                 this.ProcessOperator(writer, block, "phi", block.OpCodes[0].Result.Type, options: OperandOptions.GenerateResult);
                 var phiResult = block.Result;
 
-                for (var i = 0; i < block.OpCodes.Length; i+=3)
+                for (var i = 0; i < block.OpCodes.Length; i++)
                 {
+                    if (!block.OpCodes[i].Any(Code.Dup) && i != block.OpCodes.Length - 1)
+                    {
+                        continue;
+                    }
+
                     if (i > 0)
                     {
                         writer.Write(',');

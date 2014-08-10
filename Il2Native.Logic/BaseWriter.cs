@@ -655,9 +655,9 @@ namespace Il2Native.Logic
 
             if (opCode.OpCodeOperands.Length == 2
                 && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
-                
-                
-                
+
+
+
                 /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
             {
                 // types should be equal
@@ -708,10 +708,10 @@ namespace Il2Native.Logic
 
                     var catchOfFinallyClause = new CatchOfFinallyClause
                                                    {
-                                                       Flags = exceptionHandlingClause.Flags, 
-                                                       Offset = exceptionHandlingClause.HandlerOffset, 
-                                                       Length = exceptionHandlingClause.HandlerLength, 
-                                                       Catch = exceptionHandlingClause.CatchType, 
+                                                       Flags = exceptionHandlingClause.Flags,
+                                                       Offset = exceptionHandlingClause.HandlerOffset,
+                                                       Length = exceptionHandlingClause.HandlerLength,
+                                                       Catch = exceptionHandlingClause.CatchType,
                                                        OwnerTry = tryItem
                                                    };
 
@@ -964,7 +964,8 @@ namespace Il2Native.Logic
                 }
 
                 // ?? - test condition default expression
-                while (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack))
+                int expressionSize;
+                while (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack, out expressionSize))
                 {
                     var newBlockOps = new List<OpCodePart>();
                     if (!opCodePartUsed.UseAsNullCoalescingExpression)
@@ -972,7 +973,7 @@ namespace Il2Native.Logic
                         newBlockOps.Add(opCodePartUsed);
                     }
 
-                    for (var k = 0; k < 3; k++)
+                    for (var k = 0; k < expressionSize + 3; k++)
                     {
                         newBlockOps.Add(this.Stack.Pop());
                     }
@@ -984,7 +985,7 @@ namespace Il2Native.Logic
                         newBlockOps.AddRange(((OpCodeBlock)opCodePartUsed).OpCodes);
                     }
 
-                    foreach(var usedOpInBlock in newBlockOps)
+                    foreach (var usedOpInBlock in newBlockOps)
                     {
                         usedOpInBlock.Skip = true;
                     }
@@ -1289,7 +1290,7 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            
+
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
 
             this.NoBody = methodBody == null;
@@ -1391,7 +1392,7 @@ namespace Il2Native.Logic
         {
             var groups = new List<OpCodePart[]>();
 
-            for (var i = 0; i < conditions.Length;)
+            for (var i = 0; i < conditions.Length; )
             {
                 var group = new List<OpCodePart>();
 
@@ -1494,18 +1495,18 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart, 
-            OpCodePart currentArgument, 
-            Stack<OpCodePart> stack, 
-            out int sizeOfCondition, 
-            out OpCodePart firstCondition, 
+            OpCodePart opCodePart,
+            OpCodePart currentArgument,
+            Stack<OpCodePart> stack,
+            out int sizeOfCondition,
+            out OpCodePart firstCondition,
             out OpCodePart lastCondition)
         {
             sizeOfCondition = 3;
             firstCondition = null;
             lastCondition = null;
 
-            for (;;)
+            for (; ; )
             {
                 var subOpCodes = stack.Take(sizeOfCondition);
                 if (subOpCodes.Count() != sizeOfCondition)
@@ -1558,40 +1559,59 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="currentArgument">
         /// </param>
-        /// <param name="stack">
+        /// <param name="stackArray">
         /// </param>
         /// <returns>
         /// </returns>
-        private bool IsNullCoalescingExpression(OpCodePart opCodePart, OpCodePart currentArgument, Stack<OpCodePart> stack)
+        private bool IsNullCoalescingExpression(OpCodePart opCodePart, OpCodePart currentArgument, Stack<OpCodePart> stack, out int size)
         {
+            size = 0;
+
             if (stack.Count < 3)
             {
                 return false;
             }
 
-            if (!stack.First().Any(Code.Pop))
-            {
-                return false;
-            }
+            var index = 0;
+            var stackArray = stack.ToArray();
 
-            var second = stack.Skip(1).First();
-            if (!second.Any(Code.Brtrue, Code.Brtrue_S))
+            do
             {
-                return false;
-            }
+                if (!stackArray[index].Any(Code.Pop))
+                {
+                    if (stackArray[index].OpCode.StackBehaviourPush == StackBehaviour.Push0)
+                    {
+                        index++;
+                        continue;
+                    }
 
-            if (second.JumpAddress() != (currentArgument.AddressEnd != 0 ? currentArgument.AddressEnd : currentArgument.GroupAddressEnd))
-            {
-                // we do not have full expression
-                return false;
-            }
+                    return false;
+                }
 
-            if (!stack.Skip(2).First().Any(Code.Dup))
-            {
-                return false;
-            }
+                var second = stackArray[index + 1];
+                if (!second.Any(Code.Brtrue, Code.Brtrue_S))
+                {
+                    return false;
+                }
 
-            return true;
+                if (second.JumpAddress() != (currentArgument.AddressEnd != 0 ? currentArgument.AddressEnd : currentArgument.GroupAddressEnd))
+                {
+                    // we do not have full expression
+                    return false;
+                }
+
+                if (!stackArray[index + 2].Any(Code.Dup))
+                {
+                    return false;
+                }
+
+                size = index;
+
+                return true;
+            }
+            while (index < stack.Count - 3);
+
+            return false;
         }
 
         /// <summary>

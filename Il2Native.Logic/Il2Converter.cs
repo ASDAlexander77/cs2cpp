@@ -180,7 +180,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.IsGenericTypeDefinition || type.Name == "<Module>")
+                if (type.IsGenericDefinition() || type.Name == "<Module>")
                 {
                     continue;
                 }
@@ -241,7 +241,7 @@ namespace Il2Native.Logic
                         genericCtor = IlReader.Constructors(genericDefinition).First(gm => ctor.IsMatchingGeneric(gm));
                     }
 
-                    genericContext.TypeSpecialization = type.IsGenericType ? type : null;
+                    genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
                     genericContext.MethodDefinition = genericCtor;
                     genericContext.MethodSpecialization = null;
 
@@ -285,7 +285,7 @@ namespace Il2Native.Logic
 
                     if (!method.IsGenericMethod)
                     {
-                        genericContext.TypeSpecialization = type.IsGenericType ? type : null;
+                        genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
                         genericContext.MethodDefinition = genericMethod;
                         genericContext.MethodSpecialization = null;
 
@@ -405,7 +405,7 @@ namespace Il2Native.Logic
 
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
-            foreach (var genDef in allTypes.Where(t => IsGenericDefinition(t)))
+            foreach (var genDef in allTypes.Where(t => t.IsGenericDefinition()))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
@@ -429,22 +429,6 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
-        }
-
-        private static bool IsGenericDefinition(IType type)
-        {
-            if (type.IsGenericTypeDefinition)
-            {
-                return true;
-            }
-
-            var current = type;
-            while (current != null && current.IsNested)
-            {
-                current = current.DeclaringType;
-            }
-
-            return current != null && current.IsGenericTypeDefinition;
         }
 
         /// <summary>
