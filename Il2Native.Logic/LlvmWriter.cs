@@ -4069,7 +4069,12 @@ namespace Il2Native.Logic
 
                 var accessIndexResultNumber = opCode.Result;
                 opCode.Result = null;
-                this.WriteLlvmLoad(opCode, type, accessIndexResultNumber);
+
+                var isWaitingAllInfoToLoadStruct = type.IsStructureType() && opCode.Destination == null;
+                if (!isWaitingAllInfoToLoadStruct)
+                {
+                    this.WriteLlvmLoad(opCode, type, accessIndexResultNumber);
+                }
             }
         }
 

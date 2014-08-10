@@ -1289,12 +1289,18 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
+            
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
 
             this.NoBody = methodBody == null;
             if (methodBody != null)
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
+
+#if DEBUG
+                Debug.Assert(!LocalInfo.Any(li => li.LocalType.IsGenericParameter));
+#endif
+
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];
                 this.ExceptionHandlingClauses = methodBody.ExceptionHandlingClauses.ToArray();
             }
