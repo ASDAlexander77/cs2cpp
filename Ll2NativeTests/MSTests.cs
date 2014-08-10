@@ -101,6 +101,9 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestOpenGlLib()
         {
+            // todo: 
+            // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
+            // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
             Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(true));
         }
 

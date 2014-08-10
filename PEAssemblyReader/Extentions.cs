@@ -52,6 +52,11 @@ namespace PEAssemblyReader
                 t = t.BaseType;
             }
 
+            if (type.FullName == "System.Object")
+            {
+                return true;
+            }
+
             return false;
         }
 
