@@ -481,13 +481,8 @@ namespace Il2Native.Logic
                 case Code.Ldarga:
                 case Code.Ldarga_S:
                     var opCodeInt32Part = opCode as OpCodeInt32Part;
-                    if (opCodeInt32Part != null)
-                    {
-                        var parameterType = this.Parameters[opCodeInt32Part.Operand - (this.HasMethodThis ? 1 : 0)].ParameterType;
-                        return new ReturnResult(parameterType.IsValueType ? parameterType.ToPointerType() : parameterType);
-                    }
-
-                    throw new NotSupportedException();
+                    var parameterType = this.Parameters[opCodeInt32Part.Operand - (this.HasMethodThis ? 1 : 0)].ParameterType;
+                    return new ReturnResult(parameterType.ToPointerType());
                 case Code.Ldelem:
                 case Code.Ldelem_I:
                 case Code.Ldelem_I1:
@@ -499,21 +494,20 @@ namespace Il2Native.Logic
                 case Code.Ldelem_U1:
                 case Code.Ldelem_U2:
                 case Code.Ldelem_U4:
-
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.IType.GetElementType());
                 case Code.Ldelem_Ref:
                     result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult(null);
-                    result.IsReference = true;
                     return result;
                 case Code.Ldelema:
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
-                    return new ReturnResult(typeOfElement.IsValueType ? typeOfElement.ToPointerType() : typeOfElement);
+                    //var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
+                    var typeOfElement = result.IType.GetElementType();
+                    return new ReturnResult(typeOfElement.ToPointerType());
                 case Code.Ldc_I4_0:
                 case Code.Ldc_I4_1:
                 case Code.Ldc_I4_2:
@@ -536,33 +530,33 @@ namespace Il2Native.Logic
                 case Code.Ldstr:
                     return new ReturnResult(this.ResolveType("System.String"));
                 case Code.Ldind_I:
-                    return new ReturnResult(this.ResolveType("System.Int32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int32").ToPointerType());
                 case Code.Ldind_I1:
-                    return new ReturnResult(this.ResolveType("System.Byte")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
                 case Code.Ldind_I2:
-                    return new ReturnResult(this.ResolveType("System.Int16")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int16").ToPointerType());
                 case Code.Ldind_I4:
-                    return new ReturnResult(this.ResolveType("System.Int32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int32").ToPointerType());
                 case Code.Ldind_I8:
-                    return new ReturnResult(this.ResolveType("System.Int64")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Int64").ToPointerType());
                 case Code.Ldind_U1:
-                    return new ReturnResult(this.ResolveType("System.Byte")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
                 case Code.Ldind_U2:
-                    return new ReturnResult(this.ResolveType("System.UInt16")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.UInt16").ToPointerType());
                 case Code.Ldind_U4:
-                    return new ReturnResult(this.ResolveType("System.UInt32")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.UInt32").ToPointerType());
                 case Code.Ldind_R4:
-                    return new ReturnResult(this.ResolveType("System.Single")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Single").ToPointerType());
                 case Code.Ldind_R8:
-                    return new ReturnResult(this.ResolveType("System.Double")) { IsIndirect = true };
+                    return new ReturnResult(this.ResolveType("System.Double").ToPointerType());
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
-                    return new ReturnResult(resultType.GetElementType()) { IsIndirect = true, IsReference = true };
+                    return new ReturnResult(resultType.GetElementType().ToPointerType());
                 case Code.Ldflda:
                 case Code.Ldsflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     var fieldType = opCodeFieldInfoPart.Operand.FieldType;
-                    return new ReturnResult(fieldType.IsValueType ? fieldType.ToPointerType() : fieldType) { IsField = true };
+                    return new ReturnResult(fieldType.ToPointerType());
                 case Code.Ldobj:
                     var opCodeTypePart = opCode as OpCodeTypePart;
                     return new ReturnResult(opCode.ReadExceptionFromStack ? opCode.ReadExceptionFromStackType : opCodeTypePart.Operand);
@@ -572,7 +566,9 @@ namespace Il2Native.Logic
                     var res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        return new ReturnResult(res.IType) { Boxed = true };
+                        result = new ReturnResult(res.IType);
+                        result.IType.UseAsClass = true;
+                        return result;
                     }
                     else
                     {
@@ -586,7 +582,7 @@ namespace Il2Native.Logic
                     res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        return new ReturnResult(res.IType) { Unboxed = true };
+                        return new ReturnResult(res.IType);
                     }
                     else
                     {
@@ -1639,27 +1635,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="asReference">
-            /// </param>
-            public ReturnResult(IType type, bool asReference)
-                : this(type)
-            {
-                this.IsReference = asReference;
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool? Boxed { get; set; }
-
-            /// <summary>
-            /// </summary>
             public IType IType { get; set; }
-
-            /// <summary>
-            /// </summary>
-            public bool? IsArray { get; set; }
 
             /// <summary>
             /// </summary>
@@ -1667,24 +1643,11 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public bool? IsField { get; set; }
-
-            /// <summary>
-            /// </summary>
-            public bool? IsIndirect { get; set; }
-
-            /// <summary>
-            /// </summary>
             public bool IsPointerAccessRequired
             {
                 get
                 {
-                    if ((this.IsReference ?? false) || (this.Boxed ?? false))
-                    {
-                        return true;
-                    }
-
-                    if (this.IType.IsPointer)
+                    if (this.IType.IsPointer || this.IType.UseAsClass)
                     {
                         return true;
                     }
@@ -1700,21 +1663,13 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public bool? IsReference { get; set; }
-
-            /// <summary>
-            /// </summary>
-            public bool? Unboxed { get; set; }
-
-            /// <summary>
-            /// </summary>
             /// <param name="other">
             /// </param>
             /// <returns>
             /// </returns>
             public bool Equals(ReturnResult other)
             {
-                return this.IType.TypeEquals(other.IType) && this.IsReference == other.IsReference && this.IsField == other.IsField && this.Boxed == other.Boxed;
+                return this.IType.TypeEquals(other.IType) && this.IsConst == other.IsConst;
             }
 
             /// <summary>

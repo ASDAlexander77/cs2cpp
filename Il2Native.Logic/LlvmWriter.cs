@@ -569,8 +569,9 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Ldloca, Code.Ldloca_S))
             {
-                var localType = opCode.GetLocalType(this);
-                return localType.IsValueType;
+                ////var localType = opCode.GetLocalType(this);
+                ////return localType.IsValueType;
+                return true;
             }
 
             if (opCode.Any(Code.Ldarga, Code.Ldarga_S))
@@ -581,8 +582,9 @@ namespace Il2Native.Logic
                     return true;
                 }
 
-                var parameterType = this.GetArgType(index);
-                return parameterType.IsValueType;
+                ////var parameterType = this.GetArgType(index);
+                ////return parameterType.IsValueType;
+                return true;
             }
 
             if (opCode.Any(Code.Conv_U))
@@ -763,7 +765,7 @@ namespace Il2Native.Logic
         {
             writer.Write(' ');
 
-            if (directResult)
+            if (directResult && !operand.HasResult)
             {
                 if (forcedType != null)
                 {
@@ -1519,13 +1521,17 @@ namespace Il2Native.Logic
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
 
-            operand.IType.UseAsClass = true;
+            var effectiveType = operand.IType.IsPointer ? operand.IType.GetElementType() : operand.IType;
+            if (effectiveType.IsValueType)
+            {
+                effectiveType.UseAsClass = true;
+            }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", operand.IType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
 
-            this.CheckIfTypeIsRequiredForBody(operand.IType);
+            this.CheckIfTypeIsRequiredForBody(effectiveType);
 
-            this.WriteFieldIndex(writer, operand.IType, opCodeFieldInfoPart.Operand);
+            this.WriteFieldIndex(writer, effectiveType, opCodeFieldInfoPart.Operand);
         }
 
         /// <summary>
@@ -3118,14 +3124,14 @@ namespace Il2Native.Logic
 
                     // alloca generate pointer so we do not need to load value from pointer
                     localType = this.LocalInfo[index].LocalType;
-                    if (!localType.IsValueType)
-                    {
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%local", index), localType));
-                    }
-                    else
-                    {
+                    ////if (!localType.IsValueType)
+                    ////{
+                    ////    this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%local", index), localType));
+                    ////}
+                    ////else
+                    ////{
                         writer.Write(string.Concat("%local", index));
-                    }
+                    ////}
 
                     break;
                 case Code.Ldarg:
@@ -3182,14 +3188,14 @@ namespace Il2Native.Logic
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        if (!parameter.ParameterType.IsValueType)
-                        {
-                            this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType));
-                        }
-                        else
-                        {
+                        ////if (!parameter.ParameterType.IsValueType)
+                        ////{
+                        ////    this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType));
+                        ////}
+                        ////else
+                        ////{
                             writer.Write(string.Concat("%.", parameter.Name));
-                        }
+                        ////}
                     }
 
                     break;
@@ -3563,6 +3569,16 @@ namespace Il2Native.Logic
                 case Code.Constrained:
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
+
+                    opCodeTypePart = opCode as OpCodeTypePart;
+
+                    var nextOp = opCode.NextOpCode(this);
+                    var fullyDefinedReference = IsDirectValue(nextOp.OpCodeOperands[0])
+                        ? new FullyDefinedReference(GetDirectName(nextOp.OpCodeOperands[0]), opCodeTypePart.Operand)
+                        : nextOp.OpCodeOperands[0].Result.ToFullyDefinedReference();
+                         
+                    this.WriteLlvmLoad(nextOp.OpCodeOperands[0], fullyDefinedReference);
+
                     break;
 
                 case Code.Switch:
