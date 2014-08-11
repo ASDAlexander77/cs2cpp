@@ -2040,7 +2040,15 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                parameter.ParameterType.WriteTypePrefix(writer);
+                if (!parameter.ParameterType.IsStructureType())
+                {
+                    parameter.ParameterType.WriteTypePrefix(writer);
+                }
+                else
+                {
+                    parameter.ParameterType.ToClass().WriteTypePrefix(writer);
+                }
+
                 index++;
             }
 
