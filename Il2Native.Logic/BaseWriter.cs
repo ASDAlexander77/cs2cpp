@@ -450,7 +450,7 @@ namespace Il2Native.Logic
                 case Code.Ldloca:
                 case Code.Ldloca_S:
                     var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
-                    return new ReturnResult(localVarType) { IsAddress = true };
+                    return new ReturnResult(localVarType.IsValueType ? localVarType.ToPointerType() : localVarType);
                 case Code.Ldloc:
                 case Code.Ldloc_S:
                     localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
@@ -480,9 +480,14 @@ namespace Il2Native.Logic
                     return new ReturnResult(this.Parameters[this.HasMethodThis ? 2 : 3].ParameterType);
                 case Code.Ldarga:
                 case Code.Ldarga_S:
-                    var result = new ReturnResult(this.Parameters[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)].ParameterType);
-                    result.IsAddress = true;
-                    return result;
+                    var opCodeInt32Part = opCode as OpCodeInt32Part;
+                    if (opCodeInt32Part != null)
+                    {
+                        var parameterType = this.Parameters[opCodeInt32Part.Operand - (this.HasMethodThis ? 1 : 0)].ParameterType;
+                        return new ReturnResult(parameterType.IsValueType ? parameterType.ToPointerType() : parameterType);
+                    }
+
+                    throw new NotSupportedException();
                 case Code.Ldelem:
                 case Code.Ldelem_I:
                 case Code.Ldelem_I1:
@@ -495,7 +500,7 @@ namespace Il2Native.Logic
                 case Code.Ldelem_U2:
                 case Code.Ldelem_U4:
 
-                    result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.IType.GetElementType());
@@ -507,7 +512,8 @@ namespace Il2Native.Logic
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.IType.HasElementType ? result.IType.GetElementType() : result.IType) { IsAddress = true };
+                    var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
+                    return new ReturnResult(typeOfElement.IsValueType ? typeOfElement.ToPointerType() : typeOfElement);
                 case Code.Ldc_I4_0:
                 case Code.Ldc_I4_1:
                 case Code.Ldc_I4_2:
@@ -555,7 +561,8 @@ namespace Il2Native.Logic
                 case Code.Ldflda:
                 case Code.Ldsflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    return new ReturnResult(opCodeFieldInfoPart.Operand.FieldType) { IsField = true, IsAddress = true };
+                    var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                    return new ReturnResult(fieldType.IsValueType ? fieldType.ToPointerType() : fieldType) { IsField = true };
                 case Code.Ldobj:
                     var opCodeTypePart = opCode as OpCodeTypePart;
                     return new ReturnResult(opCode.ReadExceptionFromStack ? opCode.ReadExceptionFromStackType : opCodeTypePart.Operand);
@@ -1652,26 +1659,11 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public bool? IsAddress { get; set; }
-
-            /// <summary>
-            /// </summary>
             public bool? IsArray { get; set; }
 
             /// <summary>
             /// </summary>
             public bool? IsConst { get; set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsDotAccessRequired
-            {
-                get
-                {
-                    return this.IType != null && this.IType.IsValueType || ((this.IsAddress ?? false) && (this.IsField ?? false))
-                           || this.IType != null && this.IType.IsByRef && this.IType.GetElementType().IsValueType;
-                }
-            }
 
             /// <summary>
             /// </summary>
@@ -1687,7 +1679,7 @@ namespace Il2Native.Logic
             {
                 get
                 {
-                    if ((this.IsReference ?? false) || (this.IsAddress ?? false) || (this.Boxed ?? false))
+                    if ((this.IsReference ?? false) || (this.Boxed ?? false))
                     {
                         return true;
                     }

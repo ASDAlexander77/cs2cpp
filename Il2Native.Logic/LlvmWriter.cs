@@ -570,7 +570,7 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Ldloca, Code.Ldloca_S))
             {
                 var localType = opCode.GetLocalType(this);
-                return !localType.IsPointer;
+                return localType.IsValueType;
             }
 
             if (opCode.Any(Code.Ldarga, Code.Ldarga_S))
@@ -582,7 +582,7 @@ namespace Il2Native.Logic
                 }
 
                 var parameterType = this.GetArgType(index);
-                return !parameterType.IsPointer;
+                return parameterType.IsValueType;
             }
 
             if (opCode.Any(Code.Conv_U))
@@ -3118,7 +3118,7 @@ namespace Il2Native.Logic
 
                     // alloca generate pointer so we do not need to load value from pointer
                     localType = this.LocalInfo[index].LocalType;
-                    if (localType.IsPointer)
+                    if (!localType.IsValueType)
                     {
                         this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%local", index), localType));
                     }
@@ -3182,7 +3182,7 @@ namespace Il2Native.Logic
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        if (parameter.ParameterType.IsPointer)
+                        if (!parameter.ParameterType.IsValueType)
                         {
                             this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType));
                         }

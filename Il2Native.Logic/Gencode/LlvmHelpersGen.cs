@@ -539,10 +539,12 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
                 }
 
-                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveType();
+                var isPrimitive = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
                 if (isPrimitive)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
+
+                    var primitiveType = resultOfFirstOperand.IType.GetElementType();
 
                     ////llvmWriter.WriteConvertValueTypeToReferenceType(opCodeFirstOperand, thisType);
 
@@ -550,14 +552,14 @@ namespace Il2Native.Logic.Gencode
                     var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
                     toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
 
-                    llvmWriter.LoadIndirect(writer, toLoadValue, resultOfFirstOperand.IType);
+                    llvmWriter.LoadIndirect(writer, toLoadValue, primitiveType);
 
                     toLoadValue.Result.Type.UseAsClass = false;
                     opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
                     opCodeFirstOperand = toLoadValue;
 
                     // convert value to object
-                    resultOfFirstOperand.IType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
+                    primitiveType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
                     opCodeFirstOperand.Result = opCodeMethodInfo.Result;
                     writer.WriteLine(string.Empty);
 

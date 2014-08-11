@@ -368,10 +368,12 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Init obj");
 
-            var fullyDefinedReference = 
-                llvmWriter.IsDirectValue(opCodePart.OpCodeOperands[0])
-                    ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType) 
-                    : opCodePart.OpCodeOperands[0].Result.ToFullyDefinedReference();
+            //var isDirectValue = llvmWriter.IsDirectValue(opCodePart.OpCodeOperands[0]);
+            var isDirectValue = llvmWriter.PreProcessOperand(writer, opCodePart, 0);
+
+            var fullyDefinedReference = isDirectValue
+                                            ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType)
+                                            : opCodePart.OpCodeOperands[0].Result.ToFullyDefinedReference();
 
             llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.WriteLine(string.Empty);
