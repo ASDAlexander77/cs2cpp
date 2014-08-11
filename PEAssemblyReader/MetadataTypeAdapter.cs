@@ -430,6 +430,18 @@ namespace PEAssemblyReader
                     sb.Append(this.typeDef.GetArity());
                 }
 
+                if (this.IsArray)
+                {
+                    sb.Append(this.GetElementType().MetadataName);
+                    sb.Append("[]");
+                }
+
+                if (this.IsPointer)
+                {
+                    sb.Append(this.GetElementType().MetadataName);
+                    sb.Append("*");
+                }
+
                 return sb.ToString();
             }
         }
@@ -470,6 +482,18 @@ namespace PEAssemblyReader
                     }
 
                     sb.Append('>');
+                }
+
+                if (this.IsArray)
+                {
+                    sb.Append(this.GetElementType().Name);
+                    sb.Append("[]");
+                }
+
+                if (this.IsPointer)
+                {
+                    sb.Append(this.GetElementType().Name);
+                    sb.Append("*");
                 }
 
                 return sb.ToString();
@@ -766,7 +790,27 @@ namespace PEAssemblyReader
         /// </returns>
         public bool IsAssignableFrom(IType type)
         {
-            return type.IsDerivedFrom(this) || type.GetAllInterfaces().Contains(this);
+            if (type.IsDerivedFrom(this))
+            {
+                return true;
+            }
+            
+            if (type.GetAllInterfaces().Contains(this))
+            {
+                return true;
+            }
+
+            if (this.IsArray && type.IsArray && type.GetElementType().IsDerivedFrom(this.GetElementType()))
+            {
+                return true;
+            }
+
+            if (this.IsPointer && type.IsPointer && type.GetElementType().IsDerivedFrom(this.GetElementType()))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
