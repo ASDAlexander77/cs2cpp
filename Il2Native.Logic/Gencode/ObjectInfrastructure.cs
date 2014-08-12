@@ -368,7 +368,6 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Init obj");
 
-            //var isDirectValue = llvmWriter.IsDirectValue(opCodePart.OpCodeOperands[0]);
             var isDirectValue = llvmWriter.PreProcessOperand(writer, opCodePart, 0);
 
             var fullyDefinedReference = isDirectValue

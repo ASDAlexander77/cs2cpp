@@ -2755,6 +2755,12 @@ namespace Il2Native.Logic
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
                     }
+                    else if (opCode.UsedBy.Any(Code.Box))
+                    {
+                        // just load an address of a structure
+                        this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+                        writer.WriteLine(string.Empty);
+                    }
 
                     break;
                 case Code.Ldflda:

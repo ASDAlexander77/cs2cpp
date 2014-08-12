@@ -530,28 +530,28 @@ namespace Il2Native.Logic
                 case Code.Ldstr:
                     return new ReturnResult(this.ResolveType("System.String"));
                 case Code.Ldind_I:
-                    return new ReturnResult(this.ResolveType("System.Int32").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Int32"));
                 case Code.Ldind_I1:
-                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Byte"));
                 case Code.Ldind_I2:
-                    return new ReturnResult(this.ResolveType("System.Int16").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Int16"));
                 case Code.Ldind_I4:
-                    return new ReturnResult(this.ResolveType("System.Int32").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Int32"));
                 case Code.Ldind_I8:
-                    return new ReturnResult(this.ResolveType("System.Int64").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Int64"));
                 case Code.Ldind_U1:
-                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Byte"));
                 case Code.Ldind_U2:
-                    return new ReturnResult(this.ResolveType("System.UInt16").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.UInt16"));
                 case Code.Ldind_U4:
-                    return new ReturnResult(this.ResolveType("System.UInt32").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.UInt32"));
                 case Code.Ldind_R4:
-                    return new ReturnResult(this.ResolveType("System.Single").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Single"));
                 case Code.Ldind_R8:
-                    return new ReturnResult(this.ResolveType("System.Double").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Double"));
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
-                    return new ReturnResult(resultType.GetElementType().ToPointerType());
+                    return new ReturnResult(resultType.GetElementType());
                 case Code.Ldflda:
                 case Code.Ldsflda:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
