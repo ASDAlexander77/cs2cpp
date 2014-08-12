@@ -2374,13 +2374,8 @@ namespace Il2Native.Logic
         private static string GetFullFieldName(IField field)
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(field.DeclaringType.Namespace))
-            {
-                sb.Append(field.DeclaringType.Namespace);
-                sb.Append('.');
-            }
 
-            sb.Append(field.DeclaringType.Name);
+            sb.Append(field.DeclaringType);
             sb.Append('.');
             sb.Append(field.Name);
 
