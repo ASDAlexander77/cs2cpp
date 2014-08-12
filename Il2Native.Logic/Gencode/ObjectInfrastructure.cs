@@ -364,7 +364,10 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            declaringType.UseAsClass = true;
+            if (declaringType.IsValueType)
+            {
+                declaringType.UseAsClass = true;
+            }
 
             writer.WriteLine("; Init obj");
 
@@ -377,7 +380,6 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.WriteLine(string.Empty);
 
-            var size = declaringType.GetTypeSize();
             llvmWriter.WriteMemSet(declaringType, opCodePart.Result);
             writer.WriteLine(string.Empty);
 

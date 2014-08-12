@@ -837,6 +837,14 @@ namespace Il2Native.Logic
 
             for (var i = 0; i < params1.Length; i++)
             {
+                if (params1[i].Name != genParams2[i].Name)
+                {
+                    return false;
+                }
+            }
+
+            for (var i = 0; i < params1.Length; i++)
+            {
                 if (params1[i].IsOut != genParams2[i].IsOut
                     || params1[i].IsRef != genParams2[i].IsRef
                     || !CompareTypeWithGenericType(params1[i].ParameterType, genParams2[i].ParameterType))

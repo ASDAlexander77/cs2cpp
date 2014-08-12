@@ -2762,6 +2762,9 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+                    var fieldLoadResult = opCodeFieldInfoPart.Result;
+                    // convert return type of field to pointer of a field type
+                    opCodeFieldInfoPart.Result = new LlvmResult(fieldLoadResult.Number, fieldLoadResult.Type.ToPointerType());
 
                     break;
                 case Code.Ldsfld:
@@ -3130,17 +3133,7 @@ namespace Il2Native.Logic
 
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
-
-                    // alloca generate pointer so we do not need to load value from pointer
-                    localType = this.LocalInfo[index].LocalType;
-                    ////if (!localType.IsValueType)
-                    ////{
-                    ////    this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%local", index), localType));
-                    ////}
-                    ////else
-                    ////{
-                        writer.Write(string.Concat("%local", index));
-                    ////}
+                    writer.Write(string.Concat("%local", index));
 
                     break;
                 case Code.Ldarg:
@@ -3197,14 +3190,7 @@ namespace Il2Native.Logic
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        ////if (!parameter.ParameterType.IsValueType)
-                        ////{
-                        ////    this.WriteLlvmLoad(opCode, new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType));
-                        ////}
-                        ////else
-                        ////{
-                            writer.Write(string.Concat("%.", parameter.Name));
-                        ////}
+                        writer.Write(string.Concat("%.", parameter.Name));
                     }
 
                     break;
