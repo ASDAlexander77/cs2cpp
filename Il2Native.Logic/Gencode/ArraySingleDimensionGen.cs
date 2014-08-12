@@ -179,7 +179,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
             }
 
-            opCode.Result = new LlvmResult(opCode.Result.Number, declaringType.ToArrayType(1));
+            opCode.Result = opCode.Result.ToType(declaringType.ToArrayType(1));
 
             writer.WriteLine("; end of new array");
         }

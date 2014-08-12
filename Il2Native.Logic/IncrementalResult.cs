@@ -14,13 +14,13 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class LlvmResult
+    public class IncrementalResult : FullyDefinedReference
     {
         /// <summary>
         /// </summary>
         /// <param name="result">
         /// </param>
-        public LlvmResult(LlvmResult result)
+        public IncrementalResult(IncrementalResult result)
             : this(result.Number, result.Type)
         {
         }
@@ -35,7 +35,8 @@ namespace Il2Native.Logic
         /// </exception>
         /// <exception cref="ArgumentNullException">
         /// </exception>
-        public LlvmResult(int number, IType type)
+        public IncrementalResult(int number, IType type)
+            : base(type)
         {
             if (number <= 0)
             {
@@ -48,49 +49,11 @@ namespace Il2Native.Logic
             }
 
             this.Number = number;
-            this.Type = type;
         }
 
         /// <summary>
         /// </summary>
-        protected LlvmResult()
-        {
-        }
-
-        /// <summary>
-        /// </summary>
-        public int Number { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public IType Type { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public FullyDefinedReference ToFullyDefinedReference()
-        {
-            return new FullyDefinedReference(this.ToString(), this.Type);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public FullyDefinedReference ToFullyDefinedReferenceAsNormalType()
-        {
-            return new FullyDefinedReference(this.ToString(), this.Type.ToNormal());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public FullyDefinedReference ToFullyDefinedReferenceAsElementType()
-        {
-            return new FullyDefinedReference(this.ToString(), this.Type.GetElementType());
-        }
+        protected int Number { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -99,6 +62,11 @@ namespace Il2Native.Logic
         public override string ToString()
         {
             return string.Concat("%.r", this.Number);
+        }
+
+        public override FullyDefinedReference ToType(IType newType)
+        {
+            return new IncrementalResult(this.Number, newType);
         }
     }
 }

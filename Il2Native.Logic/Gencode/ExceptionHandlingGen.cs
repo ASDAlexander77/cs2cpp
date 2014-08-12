@@ -47,7 +47,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static LlvmResult WriteAllocateException(this LlvmWriter llvmWriter, OpCodePart opCode)
+        public static IncrementalResult WriteAllocateException(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
             var writer = llvmWriter.Output;
 

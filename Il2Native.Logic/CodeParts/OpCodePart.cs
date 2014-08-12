@@ -26,7 +26,7 @@ namespace Il2Native.Logic.CodeParts
     {
         /// <summary>
         /// </summary>
-        private LlvmResult result;
+        private FullyDefinedReference result;
 
         /// <summary>
         /// </summary>
@@ -196,7 +196,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public LlvmResult Result
+        public FullyDefinedReference Result
         {
             get
             {

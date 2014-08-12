@@ -96,7 +96,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference());
+                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result);
                 writer.WriteLine(string.Empty);
             }
 
@@ -375,7 +375,7 @@ namespace Il2Native.Logic.Gencode
 
             var fullyDefinedReference = isDirectValue
                                             ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType)
-                                            : opCodePart.OpCodeOperands[0].Result.ToFullyDefinedReference();
+                                            : opCodePart.OpCodeOperands[0].Result;
 
             llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.WriteLine(string.Empty);
@@ -499,7 +499,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result.ToFullyDefinedReference()))
+                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return;

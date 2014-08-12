@@ -48,8 +48,8 @@ namespace Il2Native.Logic.Gencode
             IMethod methodInfo, 
             IType thisType, 
             OpCodePart opCodeFirstOperand, 
-            BaseWriter.ReturnResult resultOfirstOperand, 
-            ref LlvmResult virtualMethodAddressResultNumber, 
+            BaseWriter.ReturnResult resultOfirstOperand,
+            ref FullyDefinedReference virtualMethodAddressResultNumber, 
             ref IType requiredType)
         {
             var writer = llvmWriter.Output;
@@ -301,29 +301,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="result">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result, IType toType)
-        {
-            var writer = llvmWriter.Output;
-
-            llvmWriter.WriteSetResultNumber(opCode, toType);
-            writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(writer, true);
-            writer.Write(" ");
-            llvmWriter.WriteResultNumber(result);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="source">
         /// </param>
         /// <param name="toType">
@@ -349,7 +326,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="result">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult result)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference result)
         {
             var writer = llvmWriter.Output;
 
@@ -369,33 +346,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="fromType">
         /// </param>
-        /// <param name="name">
-        /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, string name)
-        {
-            var writer = llvmWriter.Output;
-
-            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.Write("bitcast ");
-            fromType.WriteTypePrefix(writer, true);
-            writer.Write(" ");
-            writer.Write(name);
-            writer.Write(" to i8*");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
         /// <param name="result">
         /// </param>
         /// <param name="custom">
         /// </param>
-        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, LlvmResult result, string custom)
+        public static void WriteBitcast(this LlvmWriter llvmWriter, OpCodePart opCode, IType fromType, IncrementalResult result, string custom)
         {
             var writer = llvmWriter.Output;
 
@@ -434,8 +389,8 @@ namespace Il2Native.Logic.Gencode
             IMethod methodBase, 
             bool isVirtual, 
             bool hasThis, 
-            bool isCtor, 
-            LlvmResult thisResultNumber, 
+            bool isCtor,
+            FullyDefinedReference thisResultNumber, 
             TryClause tryClause)
         {
             if (opCodeMethodInfo.HasResult)
@@ -486,7 +441,7 @@ namespace Il2Native.Logic.Gencode
                                          : null;
             var resultOfFirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
 
-            LlvmResult virtualMethodAddressResultNumber = null;
+            FullyDefinedReference virtualMethodAddressResultNumber = null;
             var isIndirectMethodCall = isVirtual
                                        && (methodBase.IsAbstract || methodBase.IsVirtual
                                            || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.IType)));
@@ -583,7 +538,7 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
 
-            var returnFullyDefinedReference = opCodeMethodInfo.Result != null ? opCodeMethodInfo.Result.ToFullyDefinedReference() : null;
+            var returnFullyDefinedReference = opCodeMethodInfo.Result != null ? opCodeMethodInfo.Result : null;
 
             // allocate space for structure if return type is structure
             if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
@@ -597,7 +552,7 @@ namespace Il2Native.Logic.Gencode
                 else
                 {
                     Debug.Assert(opCodeMethodInfo.Destination.Type.TypeEquals(methodInfo.ReturnType));
-                    returnFullyDefinedReference = new FullyDefinedReference(opCodeMethodInfo.Destination.Name, methodInfo.ReturnType);
+                    returnFullyDefinedReference = opCodeMethodInfo.Destination.ToType(methodInfo.ReturnType);
                 }
             }
 
@@ -694,7 +649,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, LlvmResult fromResult, IType toType, bool appendReference = false)
+        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference fromResult, IType toType, bool appendReference = false)
         {
             var writer = llvmWriter.Output;
 
@@ -824,7 +779,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, LlvmResult source, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, IncrementalResult source, bool appendReference = true, bool structAsRef = false)
         {
             llvmWriter.WriteLlvmLoad(opCode, typeToLoad, new FullyDefinedReference(source.ToString(), source.Type), appendReference, structAsRef);
         }
@@ -886,7 +841,7 @@ namespace Il2Native.Logic.Gencode
                     // check if you need cast here
                     llvmWriter.WriteBitcast(opCode, source, typeToLoad);
                     writer.WriteLine(string.Empty);
-                    effectiveSource = opCode.Result.ToFullyDefinedReference();
+                    effectiveSource = opCode.Result;
                 }
 
                 if (dereferencedType == null && !source.Type.IsPointer && !source.Type.IsByRef && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize()
@@ -895,7 +850,7 @@ namespace Il2Native.Logic.Gencode
                     // check if you need cast here
                     llvmWriter.WriteIntToPtr(opCode, source, typeToLoad);
                     writer.WriteLine(string.Empty);
-                    effectiveSource = opCode.Result.ToFullyDefinedReference();
+                    effectiveSource = opCode.Result;
                 }
 
                 llvmWriter.WriteSetResultNumber(opCode, typeToLoad);
@@ -958,7 +913,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="op2">
         /// </param>
-        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, LlvmResult op1, LlvmResult op2)
+        public static void WriteMemCopy(this LlvmWriter llvmWriter, IType type, FullyDefinedReference op1, FullyDefinedReference op2)
         {
             var writer = llvmWriter.Output;
 
@@ -976,7 +931,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="op1">
         /// </param>
-        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, LlvmResult op1)
+        public static void WriteMemSet(this LlvmWriter llvmWriter, IType type, FullyDefinedReference op1)
         {
             var writer = llvmWriter.Output;
 
