@@ -17,6 +17,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.Gencode;
 
     using PEAssemblyReader;
+    using System.Text;
 
     /// <summary>
     /// </summary>
@@ -193,6 +194,23 @@ namespace Il2Native.Logic
 
             var localType = baseWriter.LocalInfo[index].LocalType;
             return localType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="field">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetFullName(this IField field)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(field.DeclaringType);
+            sb.Append('.');
+            sb.Append(field.Name);
+
+            return sb.ToString();
         }
 
         /// <summary>

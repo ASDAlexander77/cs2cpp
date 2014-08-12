@@ -478,9 +478,10 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                bool dynamicCastRequired;
+                var isPrimitive = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
 
-                if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                bool dynamicCastRequired = false;
+                if (!isPrimitive && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'This' parameter");
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -494,7 +495,6 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
                 }
 
-                var isPrimitive = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
                 if (isPrimitive)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");

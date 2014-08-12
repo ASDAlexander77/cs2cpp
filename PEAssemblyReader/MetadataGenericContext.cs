@@ -122,6 +122,7 @@ namespace PEAssemblyReader
             if (type.IsGenericType)
             {
                 this.TypeSpecialization = type;
+                this.TypeDefinition = type.GetTypeDefinition();
             }
         }
     }

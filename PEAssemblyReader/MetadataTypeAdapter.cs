@@ -29,6 +29,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IType> lazyBaseType;
+
+        /// <summary>
+        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -46,6 +50,7 @@ namespace PEAssemblyReader
             this.IsByRef = isByRef;
 
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
+            this.lazyBaseType = new Lazy<IType>(this.CalculateBaseType);
         }
 
         /// <summary>
@@ -99,7 +104,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.BaseType != null ? this.typeDef.BaseType.ToType(this.GenericContext) : null;
+                return this.lazyBaseType.Value;
             }
         }
 
@@ -170,7 +175,7 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeArguments.Select(t => t.ToType(this.GenericContext));
+                    return namedTypeSymbol.TypeArguments.Select(t => t.ResolveGeneric(this.GenericContext));
                 }
 
                 throw new NotImplementedException();
@@ -188,7 +193,8 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    return namedTypeSymbol.TypeParameters.Select(t => t.ToType(this.GenericContext));
+                    // TODO: you do not need to fix GenericTypeParameters (otherwise you will map ResolvedType to ResolvedType but you need to map Generic Param to ResolvedType
+                    return namedTypeSymbol.TypeParameters.Select(t => new MetadataTypeAdapter(t));
                 }
 
                 throw new NotImplementedException();
@@ -604,7 +610,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetAllInterfaces()
         {
-            return this.typeDef.AllInterfaces.Select(i => i.ToType(this.GenericContext)).ToList();
+            return this.typeDef.AllInterfaces.Select(i => i.ResolveGeneric(this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -631,6 +637,11 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(this.typeDef.ContainingType);
         }
 
+        public IType GetTypeDefinition()
+        {
+            return new MetadataTypeAdapter((this.typeDef as NamedTypeSymbol).ConstructedFrom);
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -639,17 +650,17 @@ namespace PEAssemblyReader
         {
             if (this.IsByRef)
             {
-                return this.typeDef.ToType(this.GenericContext);
+                return this.typeDef.ResolveGeneric(this.GenericContext);
             }
 
             if (this.IsArray)
             {
-                return (this.typeDef as ArrayTypeSymbol).ElementType.ToType(this.GenericContext);
+                return (this.typeDef as ArrayTypeSymbol).ElementType.ResolveGeneric(this.GenericContext);
             }
 
             if (this.IsPointer)
             {
-                return (this.typeDef as PointerTypeSymbol).PointedAtType.ToType(this.GenericContext);
+                return (this.typeDef as PointerTypeSymbol).PointedAtType.ResolveGeneric(this.GenericContext);
             }
 
             Debug.Fail(string.Empty);
@@ -665,7 +676,7 @@ namespace PEAssemblyReader
         {
             if (this.typeDef.IsEnumType())
             {
-                return this.typeDef.EnumUnderlyingType().ToType(this.GenericContext);
+                return this.typeDef.EnumUnderlyingType().ResolveGeneric(this.GenericContext);
             }
 
             if (this.IsDerivedFromEnum())
@@ -696,7 +707,7 @@ namespace PEAssemblyReader
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeArguments.Select(a => a.ToType(this.GenericContext));
+                return namedTypeSymbol.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
             }
 
             return null;
@@ -717,8 +728,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetInterfaces()
         {
-            // return this.typeDef.Interfaces.Select(i => new MetadataTypeAdapter(i)).ToList();
-            return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ToType(this.GenericContext));
+            return this.EnumerableUniqueInterfaces().Select(@interface => @interface.ResolveGeneric(this.GenericContext));
         }
 
         /// <summary>
@@ -733,7 +743,7 @@ namespace PEAssemblyReader
             }
 
             var baseInterfaces = this.typeDef.BaseType.AllInterfaces;
-            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => i.ToType(this.GenericContext)).ToList();
+            return this.EnumerableUniqueInterfaces().Where(i => !baseInterfaces.Contains(i)).Select(i => i.ResolveGeneric(this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -776,7 +786,7 @@ namespace PEAssemblyReader
             var peType = this.typeDef as NamedTypeSymbol;
             if (peType != null)
             {
-                return peType.GetTypeMembers().Select(t => t.ToType(this.GenericContext));
+                return peType.GetTypeMembers().Select(t => t.ResolveGeneric(this.GenericContext));
             }
 
             throw new NotImplementedException();
@@ -849,7 +859,7 @@ namespace PEAssemblyReader
         public IType ToArrayType(int rank)
         {
             var containingAssembly = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType.ContainingAssembly : this.typeDef.ContainingAssembly;
-            return new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank).ToType(this.GenericContext);
+            return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext);
         }
 
         /// <summary>
@@ -858,7 +868,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToClass()
         {
-            var newType = this.typeDef.ToType(this.GenericContext);
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext);
             newType.UseAsClass = true;
             return newType;
         }
@@ -869,7 +879,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            var newType = this.typeDef.ToType(this.GenericContext);
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext);
             newType.UseAsClass = false;
             return newType;
         }
@@ -880,7 +890,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToPointerType()
         {
-            return new PointerTypeSymbol(this.typeDef).ToType(this.GenericContext);
+            return new PointerTypeSymbol(this.typeDef).ResolveGeneric(this.GenericContext);
         }
 
         /// <summary>
@@ -935,6 +945,11 @@ namespace PEAssemblyReader
         private string CalculateNamespace()
         {
             return this.typeDef.CalculateNamespace();
+        }
+
+        private IType CalculateBaseType()
+        {
+            return this.typeDef.BaseType != null ? this.typeDef.BaseType.ResolveGeneric(this.GenericContext) : null;
         }
 
         /// <summary>

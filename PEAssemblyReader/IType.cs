@@ -130,6 +130,12 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        IType GetTypeDefinition();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType GetElementType();
 
         /// <summary>

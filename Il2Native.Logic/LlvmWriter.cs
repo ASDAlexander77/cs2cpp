@@ -1214,7 +1214,6 @@ namespace Il2Native.Logic
             var index = 0;
             foreach (var @interface in this.ThisType.GetInterfacesExcludingBaseAllInterfaces())
             {
-                ////this.WriteTypeDefinitionIfNotWrittenYet(@interface);
                 this.CheckIfExternalDeclarationIsRequired(@interface);
 
                 this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
@@ -1634,7 +1633,7 @@ namespace Il2Native.Logic
 
             // find index
             int index;
-            if (!this.indexByFieldInfo.TryGetValue(GetFullFieldName(fieldInfo), out index))
+            if (!this.indexByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
             {
                 index = this.CalculateFieldIndex(fieldInfo, type);
             }
@@ -2344,23 +2343,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="field">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static string GetFullFieldName(IField field)
-        {
-            var sb = new StringBuilder();
-
-            sb.Append(field.DeclaringType);
-            sb.Append('.');
-            sb.Append(field.Name);
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="isFloatingPoint">
         /// </param>
         /// <returns>
@@ -2753,7 +2735,7 @@ namespace Il2Native.Logic
                         opCode, null, OperandOptions.TypeIsInOperator, out castFrom, out intAdjustment, out intAdjustSecondOperand);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var destinationName = string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"');
+                    var destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
                     if (operandType.IsStructureType())
                     {
                         writer.Write(destinationName);
@@ -2767,7 +2749,7 @@ namespace Il2Native.Logic
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    writer.Write(string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"'));
+                    writer.Write(string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'));
 
                     break;
                 case Code.Stfld:
@@ -2781,7 +2763,7 @@ namespace Il2Native.Logic
 
                     var directResult1 = this.PreProcessOperand(writer, opCode, 0);
 
-                    destinationName = string.Concat("@\"", GetFullFieldName(opCodeFieldInfoPart.Operand), '"');
+                    destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
 
                     if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
@@ -3110,7 +3092,7 @@ namespace Il2Native.Logic
 
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
-                    opCode.Result = new FullyDefinedReference(string.Concat("%local", index), this.LocalInfo[index].LocalType.ToPointerType());
+                    opCode.Result = new FullyDefinedReference(GetLocalVarName(index), this.LocalInfo[index].LocalType.ToPointerType());
 
                     break;
                 case Code.Ldarg:
@@ -3639,7 +3621,7 @@ namespace Il2Native.Logic
 
             index += this.CalculateFirstFieldIndex(type);
 
-            this.indexByFieldInfo[GetFullFieldName(fieldInfo)] = index;
+            this.indexByFieldInfo[fieldInfo.GetFullName()] = index;
 
             return index;
         }
@@ -4641,7 +4623,7 @@ namespace Il2Native.Logic
             // after writing type you need to generate static members
             foreach (var field in this.staticFieldsInfo)
             {
-                this.Output.Write("@\"{0}\" = global ", GetFullFieldName(field));
+                this.Output.Write("@\"{0}\" = global ", field.GetFullName());
                 field.FieldType.WriteTypePrefix(this.Output, false);
                 if (field.FieldType.IsStructureType())
                 {

@@ -297,14 +297,13 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
         {
-            IType effectiveType = new MetadataTypeAdapter(typeSymbol, genericContext);
             if (genericContext != null && !genericContext.IsEmpty)
             {
                 if (typeSymbol.IsTypeParameter())
                 {
                     if (genericContext.TypeSpecialization != null)
                     {
-                        var newType = genericContext.TypeSpecialization.ResolveTypeParameter(effectiveType);
+                        var newType = genericContext.TypeSpecialization.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
                         if (newType != null)
                         {
                             return newType;
@@ -313,7 +312,7 @@ namespace PEAssemblyReader
 
                     if (genericContext.MethodSpecialization != null)
                     {
-                        var newType = genericContext.MethodSpecialization.ResolveTypeParameter(effectiveType);
+                        var newType = genericContext.MethodSpecialization.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
                         if (newType != null)
                         {
                             return newType;
@@ -347,7 +346,7 @@ namespace PEAssemblyReader
                 }
             }
 
-            return effectiveType;
+            return new MetadataTypeAdapter(typeSymbol, genericContext);
         }
 
         private static ConstructedNamedTypeSymbol ConstructGenericTypeSymbol(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
@@ -360,19 +359,6 @@ namespace PEAssemblyReader
 
             var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
             return newType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="typeSymbol">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        internal static IType ToType(this TypeSymbol typeSymbol, IGenericContext genericContext)
-        {
-            return new MetadataTypeAdapter(typeSymbol, genericContext);
         }
 
         /// <summary>
