@@ -165,7 +165,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             var tempRes = opCode.Result;
-            var resGetArr = llvmWriter.WriteSetResultNumber(opCode, intType);
+            var newArrayResult = llvmWriter.WriteSetResultNumber(opCode, intType);
             writer.Write("getelementptr ");
 
             // WriteTypePrefix(writer, declaringType);
@@ -175,11 +175,13 @@ namespace Il2Native.Logic.Gencode
 
             if (declaringType.TypeNotEquals(intType))
             {
-                llvmWriter.WriteCast(opCode, resGetArr, declaringType, !declaringType.IsValueType);
+                llvmWriter.WriteBitcast(opCode, newArrayResult, declaringType.ToArrayType(1));
                 writer.WriteLine(string.Empty);
             }
-
-            opCode.Result = opCode.Result.ToType(declaringType.ToArrayType(1));
+            else
+            {
+                opCode.Result = opCode.Result.ToType(declaringType.ToArrayType(1));
+            }
 
             writer.WriteLine("; end of new array");
         }

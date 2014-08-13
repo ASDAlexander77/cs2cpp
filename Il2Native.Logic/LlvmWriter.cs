@@ -335,7 +335,7 @@ namespace Il2Native.Logic
         /// </returns>
         public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, bool isDirectResult, IType destType)
         {
-            if (isDirectResult)
+            if (isDirectResult || !opCode.HasResult)
             {
                 return false;
             }
@@ -885,31 +885,19 @@ namespace Il2Native.Logic
             IType castFrom;
             IType intAdjustment;
             bool intAdjustSecondOperand;
+            
             var effectiveType = this.DetectTypePrefix(
                 opCode, requiredType, options, out castFrom, out intAdjustment, out intAdjustSecondOperand, operand1, operand2);
-            if (castFrom != null && opCode.OpCodeOperands[operand1].HasResult)
-            {
-                this.WriteCast(opCode.OpCodeOperands[operand1], opCode.OpCodeOperands[operand1].Result, effectiveType);
-            }
 
-            if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
-            {
-                var changeType = this.AdjustIntConvertableTypes(
-                    writer, 
-                    opCode.OpCodeOperands[
-                        operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand
-                            ? operand2
-                            : operand1], 
-                    false, 
-                    intAdjustment);
+            effectiveType = this.ApplyTypeAdjustment(
+                writer, opCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType, operand1, operand2);
 
-                if (changeType && resultType == null)
-                {
-                    resultType = intAdjustment;
-                    effectiveType = intAdjustment;
-                }
-            }
+            this.WriteResultAndFirstOperandType(writer, opCode, op, requiredType, resultType, options, effectiveType);
+        }
 
+        private void WriteResultAndFirstOperandType(
+            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, IType requiredType, IType resultType, OperandOptions options, IType effectiveType)
+        {
             if ((opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult)) && op != "store")
             {
                 var resultOf = this.ResultOf(opCode);
@@ -928,6 +916,31 @@ namespace Il2Native.Logic
                     writer.Write('*');
                 }
             }
+        }
+
+        private IType ApplyTypeAdjustment(LlvmIndentedTextWriter writer, OpCodePart opCode, IType effectiveType, IType castFrom, IType intAdjustment, bool intAdjustSecondOperand, ref IType resultType, int operand1 = 0, int operand2 = 1)
+        {
+            if (castFrom != null && opCode.OpCodeOperands[operand1].HasResult)
+            {
+                this.WriteCast(opCode.OpCodeOperands[operand1], opCode.OpCodeOperands[operand1].Result, effectiveType);
+            }
+
+            if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
+            {
+                var changeType = this.AdjustIntConvertableTypes(
+                    writer,
+                    opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1],
+                    false,
+                    intAdjustment);
+
+                if (changeType && resultType == null)
+                {
+                    resultType = intAdjustment;
+                    effectiveType = intAdjustment;
+                }
+            }
+
+            return effectiveType;
         }
 
         /// <summary>
@@ -2458,10 +2471,21 @@ namespace Il2Native.Logic
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
 
-                IType castFrom;
-                var effectiveType = this.DetectTypePrefix(opCode2, opCode3, out castFrom);
+                var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
+                dummyOpCode.OpCodeOperands = new[] { opCode2, opCode3 };
 
-                this.ProcessOperator(writer, block, "select", this.ResolveType("System.Boolean"), options: OperandOptions.GenerateResult);
+                var operandOptions = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
+
+                IType castFrom;
+                IType intAdjustment;
+                bool intAdjustSecondOperand;
+                var effectiveType = this.DetectTypePrefix(dummyOpCode, null, operandOptions, out castFrom, out intAdjustment, out intAdjustSecondOperand);
+
+                IType resultType = null;
+                effectiveType = this.ApplyTypeAdjustment(
+                    writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
+
+                this.WriteResultAndFirstOperandType(writer, block, "select", this.ResolveType("System.Boolean"), resultType, operandOptions, this.ResolveType("System.Boolean"));
 
                 this.PostProcess(writer, opCode1, directResult1);
                 writer.Write(',');
@@ -3795,43 +3819,6 @@ namespace Il2Native.Logic
                         }
                     }
                 }
-            }
-
-            return effectiveType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="operand1">
-        /// </param>
-        /// <param name="operand2">
-        /// </param>
-        /// <param name="castFrom">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private IType DetectTypePrefix(OpCodePart operand1, OpCodePart operand2, out IType castFrom)
-        {
-            castFrom = null;
-
-            var res1 = this.ResultOf(operand1);
-            var res2 = this.ResultOf(operand2);
-
-            // write type
-            var effectiveType = this.ResolveType("System.Void");
-
-            if (res2 == null || (res2.IsConst ?? false) && !(res1.IsConst ?? false))
-            {
-                effectiveType = res1.IType;
-            }
-            else
-            {
-                effectiveType = res2.IType;
-            }
-
-            if (res1 != null && res1.IType != effectiveType && (res1.IType.IsClass || res1.IType.IsArray) && effectiveType.IsAssignableFrom(res1.IType))
-            {
-                castFrom = res1.IType;
             }
 
             return effectiveType;
