@@ -469,19 +469,15 @@ namespace Il2Native.Logic.Gencode
                 thisType = methodBase.DeclaringType;
             }
 
-            if (isIndirectMethodCall)
-            {
-                llvmWriter.GenerateVirtualCall(
-                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref virtualMethodAddressResultNumber, ref requiredType);
-            }
-
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                var isPrimitive = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
+                Debug.Assert(!resultOfFirstOperand.IType.IsPrimitiveType());
+
+                var isPrimitivePointer = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
 
                 bool dynamicCastRequired = false;
-                if (!isPrimitive && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                if (!isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'This' parameter");
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -495,13 +491,11 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
                 }
 
-                if (isPrimitive)
+                if (isPrimitivePointer)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
 
                     var primitiveType = resultOfFirstOperand.IType.GetElementType();
-
-                    ////llvmWriter.WriteConvertValueTypeToReferenceType(opCodeFirstOperand, thisType);
 
                     // call Ldind to load value
                     var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
@@ -514,6 +508,7 @@ namespace Il2Native.Logic.Gencode
                     opCodeFirstOperand = toLoadValue;
 
                     // convert value to object
+                    opCodeMethodInfo.Result = null;
                     primitiveType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
                     opCodeFirstOperand.Result = opCodeMethodInfo.Result;
                     writer.WriteLine(string.Empty);
@@ -525,6 +520,12 @@ namespace Il2Native.Logic.Gencode
                         writer.WriteLine(string.Empty);
                     }
                 }
+            }
+
+            if (isIndirectMethodCall)
+            {
+                llvmWriter.GenerateVirtualCall(
+                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref virtualMethodAddressResultNumber, ref requiredType);
             }
 
             // check if you need to cast parameter

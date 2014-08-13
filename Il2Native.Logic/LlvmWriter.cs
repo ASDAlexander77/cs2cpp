@@ -567,17 +567,6 @@ namespace Il2Native.Logic
                 return opCodeString.StringIndex > 0;
             }
 
-            if (opCode.Any(Code.Ldarga, Code.Ldarga_S))
-            {
-                var index = opCode.GetArgIndex();
-                if (this.HasMethodThis && index == 0)
-                {
-                    return true;
-                }
-
-                return true;
-            }
-
             if (opCode.Any(Code.Conv_U))
             {
                 return opCode.OpCodeOperands[0].UseAsNull || opCode.OpCodeOperands[0].Any(Code.Ldloca, Code.Ldloca_S, Code.Ldarga, Code.Ldarga_S, Code.Ldflda);
@@ -3145,11 +3134,12 @@ namespace Il2Native.Logic
                     if (this.HasMethodThis && index == 0)
                     {
                         writer.Write("%.this");
+                        opCode.Result = new FullyDefinedReference("%.this", this.ThisType);
                     }
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        writer.Write(string.Concat("%.", parameter.Name));
+                        opCode.Result = new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType.ToPointerType());
                     }
 
                     break;
