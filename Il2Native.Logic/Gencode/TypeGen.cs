@@ -63,8 +63,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypesToCTypes["Int16&"] = "i16*";
             SystemTypesToCTypes["Int32&"] = "i32*";
             SystemTypesToCTypes["Int64&"] = "i64*";
-            SystemTypesToCTypes["IntPtr"] = "i32*";
-            SystemTypesToCTypes["UIntPtr"] = "i32*";
             SystemTypesToCTypes["UInt16&"] = "i16**";
             SystemTypesToCTypes["UInt32&"] = "i32**";
             SystemTypesToCTypes["UInt64&"] = "i64*";
@@ -94,8 +92,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Int16&"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Int32&"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Int64&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["IntPtr"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["UIntPtr"] = LlvmWriter.PointerSize;
             SystemTypeSizes["UInt16&"] = LlvmWriter.PointerSize;
             SystemTypeSizes["UInt32&"] = LlvmWriter.PointerSize;
             SystemTypeSizes["UInt64&"] = LlvmWriter.PointerSize;
