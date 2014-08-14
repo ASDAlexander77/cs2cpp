@@ -472,13 +472,13 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveType();
-                var isPrimitivePointer = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
+                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveTypeOrEnum();
+                var isPrimitivePointer = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveTypeOrEnum();
 
                 bool dynamicCastRequired = false;
                 if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
-                    writer.WriteLine("; Cast of 'This' parameter");
+                    writer.WriteLine("; Cast of 'This' parameter"); 
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
                     writer.WriteLine(string.Empty);
                 }

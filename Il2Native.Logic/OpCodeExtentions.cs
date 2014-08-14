@@ -517,6 +517,18 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        public static bool IsPrimitiveTypeOrEnum(this IType type)
+        {
+            return type != null && type.IsValueType && (type.IsPrimitive || type.IsEnum);
+        }
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static bool IsReal(this IType type)
         {
             return type.IsFloat() || type.IsDouble() || type.IsSingle();

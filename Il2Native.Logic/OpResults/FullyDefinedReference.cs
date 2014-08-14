@@ -11,9 +11,11 @@ namespace Il2Native.Logic
     using System;
 
     using PEAssemblyReader;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
+    [DebuggerDisplay("{ToString(),nq} ({Type.ToString(),nq})")]
     public class FullyDefinedReference
     {
         /// <summary>
