@@ -202,7 +202,7 @@ namespace Il2Native.Logic
                 writer.Write(' ');
                 if (resultNumberForReturn != null)
                 {
-                    WriteResultNumber(resultNumberForReturn);
+                    this.WriteResult(resultNumberForReturn);
                 }
             }
 
@@ -219,13 +219,13 @@ namespace Il2Native.Logic
                 writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
-                    WriteResultNumber(resultNumberForThis);
+                    this.WriteResult(resultNumberForThis);
                 }
                 else if (used != null && used.Length > 0)
                 {
                     if (used[0].HasResult)
                     {
-                        WriteResultNumber(used[0].Result);
+                        this.WriteResult(used[0].Result);
                     }
                     else if (isDirectValue[0])
                     {
@@ -260,7 +260,7 @@ namespace Il2Native.Logic
 
                 if (!isDirectValue[effectiveIndex])
                 {
-                    WriteResultNumber(used[effectiveIndex]);
+                    this.WriteResult(used[effectiveIndex]);
                 }
                 else
                 {
@@ -342,7 +342,7 @@ namespace Il2Native.Logic
 
             if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeCastRequired(opCode.Result.Type))
             {
-                this.LlvmIntConvert(opCode, "zext", "i" + destType.IntTypeBitSize());
+                this.LlvmIntConvert(opCode, destType.IsSignType() ? "sext" : "zext", "i" + destType.IntTypeBitSize());
                 writer.WriteLine(string.Empty);
                 return true;
             }
@@ -376,26 +376,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var mi = methodBase;
-            if (mi != null)
+            if (methodBase.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
             {
-                if (mi.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
-                {
-                    this.methodDeclRequired.Add(methodBase);
-                }
-
-                return;
-            }
-
-            var ci = methodBase as IConstructor;
-            if (ci != null)
-            {
-                if (ci.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
-                {
-                    this.methodDeclRequired.Add(methodBase);
-                }
-
-                return;
+                this.methodDeclRequired.Add(methodBase);
             }
         }
 
@@ -569,7 +552,7 @@ namespace Il2Native.Logic
 
             if (opCode.Any(Code.Conv_U))
             {
-                return opCode.OpCodeOperands[0].UseAsNull || opCode.OpCodeOperands[0].Any(Code.Ldloca, Code.Ldloca_S, Code.Ldarga, Code.Ldarga_S, Code.Ldflda);
+                return opCode.OpCodeOperands[0].UseAsNull;
             }
 
             if (opCode.Any(Code.Conv_I))
@@ -590,24 +573,6 @@ namespace Il2Native.Logic
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return opCode.Any(
-                Code.Ldc_I4_0,
-                Code.Ldc_I4_1,
-                Code.Ldc_I4_2,
-                Code.Ldc_I4_3,
-                Code.Ldc_I4_4,
-                Code.Ldc_I4_5,
-                Code.Ldc_I4_6,
-                Code.Ldc_I4_7,
-                Code.Ldc_I4_8,
-                Code.Ldc_I4_M1,
-                Code.Ldc_I4,
-                Code.Ldc_I4_S,
-                Code.Ldc_I8,
-                Code.Ldc_R4,
-                Code.Ldc_R8,
-                Code.Ldnull,
-                Code.Ldtoken,
-                Code.Ldsflda,
                 Code.Ldftn);
         }
 
@@ -778,7 +743,7 @@ namespace Il2Native.Logic
                     writer.Write(' ');
                 }
 
-                WriteResultNumber(operand.Result);
+                this.WriteResult(operand.Result);
             }
         }
 
@@ -983,7 +948,7 @@ namespace Il2Native.Logic
                 writer.Write(", ");
                 opCodePart.Result.Type.WriteTypePrefix(writer);
                 writer.Write("* ");
-                WriteResultNumber(opCodePart.Result);
+                this.WriteResult(opCodePart.Result);
             }
         }
 
@@ -1748,9 +1713,9 @@ namespace Il2Native.Logic
             writer.Write("getelementptr ");
             this.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
-            this.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber);
+            this.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
             writer.Write(", i32 ");
-            this.WriteResultNumber(offsetAddressAsIntResultNumber);
+            this.WriteResult(offsetAddressAsIntResultNumber);
             writer.WriteLine(string.Empty);
 
             // adjust 'this' pointer
@@ -1758,7 +1723,7 @@ namespace Il2Native.Logic
             writer.Write("bitcast ");
             this.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
-            this.WriteResultNumber(thisAddressFromInterfaceResultNumber);
+            this.WriteResult(thisAddressFromInterfaceResultNumber);
             writer.Write(" to ");
             thisType.WriteTypePrefix(writer);
             writer.WriteLine(string.Empty);
@@ -2169,7 +2134,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        public void WriteResultNumber(OpCodePart opCode)
+        public void WriteResult(OpCodePart opCode)
         {
             // write number of method
             this.Output.Write(opCode.Result);
@@ -2179,7 +2144,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="reference">
         /// </param>
-        public void WriteResultNumber(FullyDefinedReference reference)
+        public void WriteResult(FullyDefinedReference reference)
         {
             // write number of method
             this.Output.Write(reference);
@@ -2608,90 +2573,74 @@ namespace Il2Native.Logic
             switch (code)
             {
                 case Code.Ldc_I4_0:
-                    writer.Write(opCode.UseAsBoolean ? "false" : opCode.UseAsNull ? "null" : "0");
+                    opCode.Result = opCode.UseAsBoolean
+                                        ? new ConstValue(false, this.ResolveType("System.Boolean"))
+                                        : opCode.UseAsNull
+                                              ? new ConstValue(null, this.ResolveType("System.Object"))
+                                              : new ConstValue(0, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_1:
-                    writer.Write(opCode.UseAsBoolean ? "true" : "1");
+                    opCode.Result = opCode.UseAsBoolean
+                                        ? new ConstValue(true, this.ResolveType("System.Boolean"))
+                                        : new ConstValue(1, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_2:
-                    writer.Write("2");
-                    break;
                 case Code.Ldc_I4_3:
-                    writer.Write("3");
-                    break;
                 case Code.Ldc_I4_4:
-                    writer.Write("4");
-                    break;
                 case Code.Ldc_I4_5:
-                    writer.Write("5");
-                    break;
                 case Code.Ldc_I4_6:
-                    writer.Write("6");
-                    break;
                 case Code.Ldc_I4_7:
-                    writer.Write("7");
-                    break;
                 case Code.Ldc_I4_8:
-                    writer.Write("8");
+                    var asString = code.ToString();
+                    opCode.Result = new ConstValue(int.Parse(asString.Substring(asString.Length - 1, 1)), this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_M1:
-                    writer.Write("-1");
+                    opCode.Result = new ConstValue(-1, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4:
                     var opCodeInt32 = opCode as OpCodeInt32Part;
-                    writer.Write(opCodeInt32.Operand);
+                    opCode.Result = new ConstValue(opCodeInt32.Operand, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_S:
                     opCodeInt32 = opCode as OpCodeInt32Part;
-
-                    if (opCodeInt32.Operand > 127)
-                    {
-                        // negative
-                        writer.Write(-(256 - opCodeInt32.Operand));
-                    }
-                    else
-                    {
-                        writer.Write(opCodeInt32.Operand);
-                    }
-
+                    opCode.Result = new ConstValue(opCodeInt32.Operand > 127 ? -(256 - opCodeInt32.Operand) : opCodeInt32.Operand, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I8:
                     var opCodeInt64 = opCode as OpCodeInt64Part;
-                    writer.Write(opCodeInt64.Operand);
+                    opCode.Result = new ConstValue(opCodeInt64.Operand, this.ResolveType("System.Int64"));
                     break;
                 case Code.Ldc_R4:
                     var opCodeSingle = opCode as OpCodeSinglePart;
 
-                    if (opCodeSingle.Operand == float.PositiveInfinity)
+                    if (float.IsPositiveInfinity(opCodeSingle.Operand))
                     {
-                        writer.Write("0x7FF0000000000000");
+                        opCode.Result = new ConstValue("0x7FF0000000000000", this.ResolveType("System.Single"));
                     }
-                    else if (opCodeSingle.Operand == float.NegativeInfinity)
+                    else if (float.IsNegativeInfinity(opCodeSingle.Operand))
                     {
-                        writer.Write("0xFFF0000000000000");
+                        opCode.Result = new ConstValue("0xFFF0000000000000", this.ResolveType("System.Single"));
                     }
                     else
                     {
                         var g = BitConverter.DoubleToInt64Bits(opCodeSingle.Operand);
-                        writer.Write("0x{0}", g.ToString("X"));
+                        opCode.Result = new ConstValue(string.Format("0x{0}", g.ToString("X")), this.ResolveType("System.Single"));
                     }
 
                     break;
                 case Code.Ldc_R8:
                     var opCodeDouble = opCode as OpCodeDoublePart;
-
-                    if (opCodeDouble.Operand == double.PositiveInfinity)
+                    if (double.IsPositiveInfinity(opCodeDouble.Operand))
                     {
-                        writer.Write("0x7FF0000000000000");
+                        opCode.Result = new ConstValue("0x7FF0000000000000", this.ResolveType("System.Double"));
                     }
-                    else if (opCodeDouble.Operand == double.NegativeInfinity)
+                    else if (double.IsNegativeInfinity(opCodeDouble.Operand))
                     {
-                        writer.Write("0xFFF0000000000000");
+                        opCode.Result = new ConstValue("0xFFF0000000000000", this.ResolveType("System.Double"));
                     }
                     else
                     {
                         var g = BitConverter.DoubleToInt64Bits(opCodeDouble.Operand);
-                        writer.Write("0x{0}", g.ToString("X"));
+                        opCode.Result = new ConstValue(string.Format("0x{0}", g.ToString("X")), this.ResolveType("System.Double"));
                     }
 
                     break;
@@ -2724,14 +2673,14 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldnull:
-                    writer.Write("null");
+                    opCode.Result = new ConstValue(null, this.ResolveType("System.Object"));
                     break;
                 case Code.Ldtoken:
 
                     // TODO: finish loading Token  
                     ////var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     ////var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
-                    writer.Write("undef");
+                    opCode.Result = new ConstValue("undef", this.ResolveType("System.Object"));
 
                     break;
                 case Code.Localloc:
@@ -2794,7 +2743,8 @@ namespace Il2Native.Logic
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    writer.Write(string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'));
+                    opCodeFieldInfoPart.Result = new FullyDefinedReference(
+                        string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'), opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
 
                     break;
                 case Code.Stfld:
@@ -3074,7 +3024,7 @@ namespace Il2Native.Logic
                 case Code.Stloc_S:
 
                     code = opCode.ToCode();
-                    var asString = code.ToString();
+                    asString = code.ToString();
                     var index = 0;
                     if (code == Code.Stloc_S || code == Code.Stloc)
                     {
@@ -3479,7 +3429,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.LlvmConvert(opCode, "fptosi", "zext", "i64", false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
+                    this.LlvmConvert(opCode, "fptosi", "sext", "i64", false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
                     break;
 
                 case Code.Conv_U8:
@@ -3778,7 +3728,7 @@ namespace Il2Native.Logic
             }
             else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1)
             {
-                if (!(res1.IsConst ?? false) || res2 == null || (res2.IsConst ?? false))
+                if (!res1.IsConst || res2 == null || res2.IsConst)
                 {
                     effectiveType = res1.IType;
                 }
@@ -3796,14 +3746,14 @@ namespace Il2Native.Logic
 
             if (options.HasFlag(OperandOptions.AdjustIntTypes))
             {
-                var firstType = res1 != null && res1.IType != null && !(res1.IsConst ?? false)
+                var firstType = res1 != null && res1.IType != null && !res1.IsConst
                                     ? res1.IType
-                                    : res2 != null && res2.IType != null && !(res2.IsConst ?? false) ? res2.IType : null;
+                                    : res2 != null && res2.IType != null && !res2.IsConst ? res2.IType : null;
 
                 IType secondType = null;
                 if (firstType != null)
                 {
-                    if (res2 != null && res2.IType != null && !(res2.IsConst ?? false))
+                    if (res2 != null && res2.IType != null && !res2.IsConst)
                     {
                         secondType = res2.IType;
                     }
@@ -4447,7 +4397,7 @@ namespace Il2Native.Logic
             writer.Write("bitcast ");
             this.WriteMethodPointerType(writer, methodBase, thisType);
             writer.Write("* ");
-            WriteResultNumber(opCode.OpCodeOperands[0].Result);
+            this.WriteResult(opCode.OpCodeOperands[0].Result);
             writer.Write(" to ");
             this.ResolveType("System.Int32").ToPointerType().WriteTypePrefix(writer);
             writer.WriteLine(string.Empty);
@@ -4457,7 +4407,7 @@ namespace Il2Native.Logic
             writer.Write("getelementptr ");
             this.ResolveType("System.Int32").WriteTypePrefix(writer);
             writer.Write("* ");
-            WriteResultNumber(res);
+            this.WriteResult(res);
             writer.WriteLine(", i32 -{0}", ObjectInfrastructure.FunctionsOffsetInVirtualTable);
 
             opCode.Result = null;

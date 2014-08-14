@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(", ");
             opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(writer);
             writer.Write("* ");
-            llvmWriter.WriteResultNumber(opCode.Result);
+            llvmWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);
 
             return errorAllocationResultNumber;

@@ -57,7 +57,7 @@ namespace Il2Native.Logic.Gencode
             type.UseAsClass = true;
             type.WriteTypePrefix(writer);
             writer.Write(" ");
-            llvmWriter.WriteResultNumber(opCode.Result);
+            llvmWriter.WriteResult(opCode.Result);
 
             llvmWriter.WriteMethodEnd(method, null);
         }
@@ -265,7 +265,7 @@ namespace Il2Native.Logic.Gencode
                     FunctionsOffsetInVirtualTable);
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteResultNumber(opCode.Result);
+                    llvmWriter.WriteResult(opCode.Result);
                 }
 
                 writer.WriteLine(string.Empty);
@@ -302,7 +302,7 @@ namespace Il2Native.Logic.Gencode
                     virtualInterfaceTable.GetVirtualTableSize(), 
                     declaringType.GetVirtualInterfaceTableName(@interface), 
                     FunctionsOffsetInVirtualTable);
-                llvmWriter.WriteResultNumber(opCode.Result);
+                llvmWriter.WriteResult(opCode.Result);
                 writer.WriteLine(string.Empty);
 
                 // restore
@@ -465,7 +465,7 @@ namespace Il2Native.Logic.Gencode
             {
                 type.WriteTypePrefix(writer);
                 writer.Write(" ");
-                llvmWriter.WriteResultNumber(opCode.Result);
+                llvmWriter.WriteResult(opCode.Result);
             }
             else
             {

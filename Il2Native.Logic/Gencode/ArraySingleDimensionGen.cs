@@ -53,7 +53,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("getelementptr ");
             typeToLoad.WriteTypePrefix(writer);
             writer.Write("* ");
-            llvmWriter.WriteResultNumber(res);
+            llvmWriter.WriteResult(res);
             writer.WriteLine(", i32 -1");
 
             opCode.Result = null;
@@ -161,7 +161,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(", ");
             intType.WriteTypePrefix(writer);
             writer.Write("* ");
-            llvmWriter.WriteResultNumber(opCode.Result);
+            llvmWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);
 
             var tempRes = opCode.Result;
@@ -170,7 +170,7 @@ namespace Il2Native.Logic.Gencode
 
             // WriteTypePrefix(writer, declaringType);
             writer.Write("i32* ");
-            llvmWriter.WriteResultNumber(tempRes);
+            llvmWriter.WriteResult(tempRes);
             writer.WriteLine(", i32 1");
 
             if (declaringType.TypeNotEquals(intType))

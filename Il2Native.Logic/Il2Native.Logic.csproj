@@ -60,9 +60,10 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
     <Compile Include="Exceptions\TryClause.cs" />
-    <Compile Include="FullyDefinedReference.cs" />
+    <Compile Include="OpResults\FullyDefinedReference.cs" />
     <Compile Include="Gencode\ArraySingleDimensionGen.cs" />
     <Compile Include="Gencode\DelegateGen.cs" />
     <Compile Include="Gencode\ExceptionHandlingGen.cs" />
@@ -79,7 +80,7 @@
     <Compile Include="Instructions\Base\BaseInstruction.cs" />
     <Compile Include="Instructions\Base\BaseInstructionWithResult.cs" />
     <Compile Include="LlvmIndentedTextWriter.cs" />
-    <Compile Include="IncrementalResult.cs" />
+    <Compile Include="OpResults\IncrementalResult.cs" />
     <Compile Include="LlvmWriter.cs" />
     <Compile Include="OpCodeBlock.cs" />
     <Compile Include="OpCodeExtentions.cs" />

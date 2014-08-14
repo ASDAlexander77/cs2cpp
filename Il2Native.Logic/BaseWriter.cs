@@ -314,7 +314,7 @@ namespace Il2Native.Logic
         {
             if (!doNotUseCachedResult && opCode.HasResult)
             {
-                return new ReturnResult(opCode.Result.Type);
+                return new ReturnResult(opCode.Result);
             }
 
             var code = opCode.ToCode();
@@ -352,7 +352,7 @@ namespace Il2Native.Logic
                 case Code.Xor:
 
                     var op1 = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (!(op1.IsConst ?? false))
+                    if (!op1.IsConst)
                     {
                         return op1;
                     }
@@ -499,7 +499,7 @@ namespace Il2Native.Logic
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.IType.GetElementType());
                 case Code.Ldelem_Ref:
-                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult(null);
+                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
                     return result;
                 case Code.Ldelema:
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
@@ -520,7 +520,13 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_M1:
                 case Code.Ldc_I4:
                 case Code.Ldc_I4_S:
-                    return new ReturnResult(opCode.UseAsBoolean ? this.ResolveType("System.Boolean") : this.ResolveType("System.Int32")) { IsConst = true };
+                    return
+                        new ReturnResult(
+                            opCode.UseAsBoolean
+                                ? this.ResolveType("System.Boolean")
+                                : opCode.UseAsNull 
+                                    ? this.ResolveType("System.Object") 
+                                    : this.ResolveType("System.Int32")) { IsConst = true };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
                 case Code.Ldc_R4:
@@ -1628,6 +1634,16 @@ namespace Il2Native.Logic
             /// </summary>
             /// <param name="type">
             /// </param>
+            public ReturnResult(FullyDefinedReference result)
+            {
+                this.IType = result.Type;
+                this.IsConst = result is ConstValue;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
             public ReturnResult(IType type)
             {
                 this.IType = type;
@@ -1639,7 +1655,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            public bool? IsConst { get; set; }
+            public bool IsConst { get; set; }
 
             /// <summary>
             /// </summary>

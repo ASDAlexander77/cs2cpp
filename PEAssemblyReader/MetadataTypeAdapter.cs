@@ -897,6 +897,15 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IType ToDereferencedType()
+        {
+            return this.IsPointer ? GetElementType() : this.typeDef.ResolveGeneric(this.GenericContext);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public override string ToString()
         {
             var result = new StringBuilder();

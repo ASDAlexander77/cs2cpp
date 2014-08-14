@@ -257,6 +257,22 @@ namespace Il2Native.Logic
             return GetIntSize(thisTypeString);
         }
 
+        public static bool IsSignType(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.SByte":
+                case "System.Int16":
+                case "System.Int32":
+                case "System.Int64":
+                case "System.Single":
+                case "System.Double":
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">

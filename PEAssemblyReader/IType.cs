@@ -225,5 +225,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToPointerType();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToDereferencedType();
     }
 }

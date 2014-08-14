@@ -87,7 +87,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
-            llvmWriter.WriteResultNumber(pointerToInterfaceVirtualTablePointersResultNumber);
+            llvmWriter.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
             writer.WriteLine(string.Empty);
             var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("getelementptr inbounds ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
-            llvmWriter.WriteResultNumber(virtualTableOfMethodPointersResultNumber);
+            llvmWriter.WriteResult(virtualTableOfMethodPointersResultNumber);
             writer.WriteLine(", i64 {0}", methodIndex);
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
@@ -106,7 +106,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
-            llvmWriter.WriteResultNumber(pointerToFunctionPointerResultNumber);
+            llvmWriter.WriteResult(pointerToFunctionPointerResultNumber);
             writer.WriteLine(string.Empty);
 
             // remember virtual method address result
@@ -290,7 +290,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast ");
             opCode.Result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
-            llvmWriter.WriteResultNumber(opCode.Result);
+            llvmWriter.WriteResult(opCode.Result);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
         }
@@ -313,7 +313,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast ");
             source.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
-            llvmWriter.WriteResultNumber(source);
+            llvmWriter.WriteResult(source);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
         }
@@ -334,7 +334,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
-            llvmWriter.WriteResultNumber(result);
+            llvmWriter.WriteResult(result);
             writer.Write(" to i8*");
         }
 
@@ -358,7 +358,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(writer, true);
             writer.Write(' ');
-            llvmWriter.WriteResultNumber(result);
+            llvmWriter.WriteResult(result);
             writer.Write(" to ");
             writer.Write(custom);
 
@@ -582,7 +582,7 @@ namespace Il2Native.Logic.Gencode
 
             if (isIndirectMethodCall)
             {
-                llvmWriter.WriteResultNumber(virtualMethodAddressResultNumber);
+                llvmWriter.WriteResult(virtualMethodAddressResultNumber);
             }
             else
             {
@@ -672,7 +672,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("bitcast ");
                 fromResult.Type.WriteTypePrefix(writer, true);
                 writer.Write(' ');
-                llvmWriter.WriteResultNumber(fromResult);
+                llvmWriter.WriteResult(fromResult);
                 writer.Write(" to ");
                 toType.WriteTypePrefix(writer, true);
                 if (appendReference)
@@ -760,7 +760,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("inttoptr ");
             source.Type.WriteTypePrefix(writer);
             writer.Write(" ");
-            llvmWriter.WriteResultNumber(source);
+            llvmWriter.WriteResult(source);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
         }
