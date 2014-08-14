@@ -95,5 +95,14 @@ namespace Il2Native.Logic
         {
             return this.ToType(this.Type.ToPointerType());
         }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public FullyDefinedReference ToDereferencedType()
+        {
+            return this.ToType(this.Type.ToDereferencedType());
+        }
     }
 }

@@ -3522,12 +3522,17 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
 
-                    var nextOp = opCode.NextOpCode(this);
-                    var fullyDefinedReference = IsDirectValue(nextOp.OpCodeOperands[0])
-                        ? new FullyDefinedReference(GetDirectName(nextOp.OpCodeOperands[0]), opCodeTypePart.Operand)
-                        : nextOp.OpCodeOperands[0].Result;
+                    // if this is Struct we already have an address in LLVM
+                    if (!opCodeTypePart.Operand.IsStructureType())
+                    {
+                        var nextOp = opCode.NextOpCode(this);
+                        var fullyDefinedReference = IsDirectValue(nextOp.OpCodeOperands[0])
+                                                        ? new FullyDefinedReference(GetDirectName(nextOp.OpCodeOperands[0]), opCodeTypePart.Operand)
+                                                        : nextOp.OpCodeOperands[0].Result;
 
-                    this.WriteLlvmLoad(nextOp.OpCodeOperands[0], fullyDefinedReference);
+                        nextOp.OpCodeOperands[0].Result = null;
+                        this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
+                    }
 
                     break;
 
@@ -3702,7 +3707,7 @@ namespace Il2Native.Logic
 
             if (res1Pointer && (res2Pointer || requiredTypePointer))
             {
-                if (res2 != null)
+                if (res2 != null && (!res2.IsConst || res1.IsConst))
                 {
                     castFrom = res1.IType;
                     effectiveType = res2.IType;
@@ -3710,7 +3715,7 @@ namespace Il2Native.Logic
                 else
                 {
                     castFrom = res1.IType;
-                    effectiveType = requiredType;
+                    effectiveType = requiredTypePointer ? requiredType : res1.IType;
                 }
             }
             else if (requiredType != null)

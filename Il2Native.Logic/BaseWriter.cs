@@ -273,9 +273,10 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfTypeIsRequiredForBody(IType type)
         {
-            if (!type.IsArray)
+            var item = type.HasElementType ? type.GetElementType() : type;
+            if (!item.IsPrimitiveType())
             {
-                this.requiredTypesForBody.Add(type);
+                this.requiredTypesForBody.Add(item);
             }
         }
 

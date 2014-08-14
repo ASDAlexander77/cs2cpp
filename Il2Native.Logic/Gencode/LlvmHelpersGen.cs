@@ -472,12 +472,11 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                Debug.Assert(!resultOfFirstOperand.IType.IsPrimitiveType());
-
+                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveType();
                 var isPrimitivePointer = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveType();
 
                 bool dynamicCastRequired = false;
-                if (!isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'This' parameter");
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -491,21 +490,28 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
                 }
 
-                if (isPrimitivePointer)
+                if (isPrimitive || isPrimitivePointer)
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
 
-                    var primitiveType = resultOfFirstOperand.IType.GetElementType();
+                    var primitiveType = !isPrimitivePointer ? resultOfFirstOperand.IType : resultOfFirstOperand.IType.GetElementType();
 
-                    // call Ldind to load value
-                    var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
-                    toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                    if (isPrimitivePointer)
+                    {
+                        // call Ldind to load value
+                        ////var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
+                        ////toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
 
-                    llvmWriter.LoadIndirect(writer, toLoadValue, primitiveType);
+                        ////llvmWriter.LoadIndirect(writer, toLoadValue, primitiveType);
 
-                    toLoadValue.Result.Type.UseAsClass = false;
-                    opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
-                    opCodeFirstOperand = toLoadValue;
+                        ////toLoadValue.Result.Type.UseAsClass = false;
+                        ////opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
+                        ////opCodeFirstOperand = toLoadValue;
+
+                        var firstOperandResult = opCodeFirstOperand.Result;
+                        opCodeFirstOperand.Result = null;
+                        llvmWriter.WriteLlvmLoad(opCodeFirstOperand, firstOperandResult.Type.ToDereferencedType(), firstOperandResult);
+                    }
 
                     // convert value to object
                     opCodeMethodInfo.Result = null;
@@ -820,6 +826,8 @@ namespace Il2Native.Logic.Gencode
         public static void WriteLlvmLoad(
             this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
         {
+            // TODO: improve it, by checking if Source is Reference or Pointer
+
             var writer = llvmWriter.Output;
 
             Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.Destination != null);
