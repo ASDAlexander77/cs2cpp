@@ -104,6 +104,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> processedPostDeclataions = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         private int resultNumberIncremental;
 
         /// <summary>
@@ -1033,47 +1037,62 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
-        public void WriteAfterFields(int count, bool disablePostDeclarations = false)
+        public void WriteAfterFields(int count, bool disablePostDeclarations = false, bool skipTypeDeclaration = false)
         {
             this.Output.WriteLine(string.Empty);
 
-            this.Output.Indent--;
-            this.Output.WriteLine("}");
+            if (!skipTypeDeclaration)
+            {
+                this.Output.Indent--;
+                this.Output.WriteLine("}");
+            }
 
             if (!disablePostDeclarations)
             {
-                this.WritePostDeclarations();
-
-                this.Output.WriteLine(string.Empty);
-                this.ThisType.WriteRtti(this);
-
-                this.processedTypes.Add(this.ThisType);
-                this.processedRttiTypes.Add(this.ThisType);
-                this.processedRttiPointerTypes.Add(this.ThisType);
-
-                this.Output.WriteLine(string.Empty);
-                this.ThisType.WriteInitObjectMethod(this);
-
-                var stored = this.ThisType.UseAsClass;
-                this.ThisType.UseAsClass = false;
-
-                var canBeBoxed = this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum;
-                var canBeUnboxed = canBeBoxed;
-                var excluded = this.ThisType.FullName == "System.Enum" || this.ThisType.FullName == "System.IntPtr"
-                               || this.ThisType.FullName == "System.UIntPtr";
-
-                if (canBeBoxed && !excluded)
-                {
-                    this.ThisType.WriteBoxMethod(this);
-                }
-
-                if (canBeUnboxed && !excluded)
-                {
-                    this.ThisType.WriteUnboxMethod(this);
-                }
-
-                this.ThisType.UseAsClass = stored;
+                this.WritePostDeclarationsIfNotProcessedYet();
             }
+        }
+
+        private void WritePostDeclarationsIfNotProcessedYet()
+        {
+            if (this.processedPostDeclataions.Contains(this.ThisType))
+            {
+                return;
+            }
+
+            this.processedPostDeclataions.Add(this.ThisType);
+
+            this.WriteStaticFieldDeclarations();
+            this.WriteInterfaceVirtaulTables();
+
+            this.Output.WriteLine(string.Empty);
+            this.ThisType.WriteRtti(this);
+
+            this.processedTypes.Add(this.ThisType);
+            this.processedRttiTypes.Add(this.ThisType);
+            this.processedRttiPointerTypes.Add(this.ThisType);
+
+            this.Output.WriteLine(string.Empty);
+            this.ThisType.WriteInitObjectMethod(this);
+
+            var stored = this.ThisType.UseAsClass;
+            this.ThisType.UseAsClass = false;
+
+            var canBeBoxed = this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum;
+            var canBeUnboxed = canBeBoxed;
+            var excluded = this.ThisType.FullName == "System.Enum" || this.ThisType.FullName == "System.IntPtr" || this.ThisType.FullName == "System.UIntPtr";
+
+            if (canBeBoxed && !excluded)
+            {
+                this.ThisType.WriteBoxMethod(this);
+            }
+
+            if (canBeUnboxed && !excluded)
+            {
+                this.ThisType.WriteUnboxMethod(this);
+            }
+
+            this.ThisType.UseAsClass = stored;
         }
 
         /// <summary>
@@ -4592,9 +4611,36 @@ namespace Il2Native.Logic
             this.Output.Write(methodNumberIncremental);
         }
 
-        /// <summary>
-        /// </summary>
-        private void WritePostDeclarations()
+        private void WriteInterfaceVirtaulTables()
+        {
+            // write VirtualTable
+            if (!this.ThisType.IsInterface)
+            {
+                if (this.ThisType.HasAnyVirtualMethod())
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.Output.Write(this.ThisType.GetVirtualTableName());
+                    var virtualTable = this.ThisType.GetVirtualTable();
+                    virtualTable.WriteTableOfMethods(this, this.ThisType);
+
+                    foreach (var methodInVirtualTable in virtualTable)
+                    {
+                        this.CheckIfExternalDeclarationIsRequired(methodInVirtualTable.Value);
+                    }
+                }
+
+                var index = 1;
+                foreach (var @interface in this.ThisType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));
+                    var virtualInterfaceTable = this.ThisType.GetVirtualInterfaceTable(@interface);
+                    virtualInterfaceTable.WriteTableOfMethods(this, this.ThisType, index++);
+                }
+            }
+        }
+
+        private void WriteStaticFieldDeclarations()
         {
             // after writing type you need to generate static members
             foreach (var field in this.staticFieldsInfo)
@@ -4608,32 +4654,6 @@ namespace Il2Native.Logic
                 else
                 {
                     this.Output.WriteLine(" undef");
-                }
-            }
-
-            // write VirtualTable
-            if (!this.ThisType.IsInterface)
-            {
-                if (this.ThisType.HasAnyVirtualMethod())
-                {
-                    this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.ThisType.GetVirtualTableName());
-                    var virtualTable = this.ThisType.GetVirtualTable();
-                    virtualTable.WriteTableOfMethods(this, this.ThisType);
-
-                    foreach (var methodInVirtualTable in virtualTable)
-                    {
-                        CheckIfExternalDeclarationIsRequired(methodInVirtualTable.Value);
-                    }
-                }
-
-                var index = 1;
-                foreach (var @interface in this.ThisType.SelectAllTopAndAllNotFirstChildrenInterfaces())
-                {
-                    this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));
-                    var virtualInterfaceTable = this.ThisType.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, this.ThisType, index++);
                 }
             }
         }
@@ -4781,6 +4801,11 @@ namespace Il2Native.Logic
         public bool IsProcessed(IType type)
         {
             return this.processedTypes.Contains(type);
+        }
+
+        public bool IsPostDeclarationProcessed(IType type)
+        {
+            return this.processedPostDeclataions.Contains(type);
         }
 
         /// <summary>

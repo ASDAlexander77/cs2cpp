@@ -95,32 +95,34 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
-        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext, bool disablePostDeclarations = false)
+        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext, bool disablePostDeclarations = false, bool skipTypeDeclaration = false)
         {
-            codeWriter.WriteTypeStart(type, genericContext);
-
             var fields = IlReader.Fields(type);
             var count = fields.Count();
             var number = 1;
 
-            codeWriter.WriteBeforeFields(count);
-
-            if (!type.ToNormal().IsEnum)
+            if (!skipTypeDeclaration)
             {
-                foreach (var field in fields)
-                {
-                    codeWriter.WriteFieldStart(field, number, count);
-                    codeWriter.WriteFieldEnd(field, number, count);
+                codeWriter.WriteTypeStart(type, genericContext);
+                codeWriter.WriteBeforeFields(count);
 
-                    number++;
+                if (!type.ToNormal().IsEnum)
+                {
+                    foreach (var field in fields)
+                    {
+                        codeWriter.WriteFieldStart(field, number, count);
+                        codeWriter.WriteFieldEnd(field, number, count);
+
+                        number++;
+                    }
+                }
+                else
+                {
+                    codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
                 }
             }
-            else
-            {
-                codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
-            }
 
-            codeWriter.WriteAfterFields(count, disablePostDeclarations);
+            codeWriter.WriteAfterFields(count, disablePostDeclarations, skipTypeDeclaration);
         }
 
         /// <summary>
@@ -221,11 +223,7 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Declaration)
             {
-                if (!codeWriter.IsProcessed(type))
-                {
-                    WriteTypeDefinition(codeWriter, type, genericContext);
-                }
-
+                WriteTypeDefinition(codeWriter, type, genericContext, false, codeWriter.IsProcessed(type));
                 codeWriter.WriteBeforeConstructors();
             }
 
