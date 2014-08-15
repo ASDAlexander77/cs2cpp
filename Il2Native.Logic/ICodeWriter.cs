@@ -48,7 +48,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
-        void WriteAfterFields(int count, bool disablePostDeclarations = false, bool skipTypeDeclaration = false);
+        void WriteAfterFields(int count);
 
         /// <summary>
         /// </summary>

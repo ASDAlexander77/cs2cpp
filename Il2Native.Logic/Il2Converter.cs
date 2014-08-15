@@ -65,10 +65,10 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         public static void ProcessRequiredITypesForITypes(
-            IEnumerable<IType> types, 
-            HashSet<IType> typesAdded, 
-            List<IType> newListOfITypes, 
-            HashSet<IType> genericSpecializations, 
+            IEnumerable<IType> types,
+            HashSet<IType> typesAdded,
+            List<IType> newListOfITypes,
+            HashSet<IType> genericSpecializations,
             HashSet<IMethod> genericMethodSpecializations)
         {
             foreach (var type in types)
@@ -95,34 +95,31 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
-        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext, bool disablePostDeclarations = false, bool skipTypeDeclaration = false)
+        public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
             var fields = IlReader.Fields(type);
             var count = fields.Count();
             var number = 1;
 
-            if (!skipTypeDeclaration)
+            codeWriter.WriteTypeStart(type, genericContext);
+            codeWriter.WriteBeforeFields(count);
+
+            if (!type.ToNormal().IsEnum)
             {
-                codeWriter.WriteTypeStart(type, genericContext);
-                codeWriter.WriteBeforeFields(count);
-
-                if (!type.ToNormal().IsEnum)
+                foreach (var field in fields)
                 {
-                    foreach (var field in fields)
-                    {
-                        codeWriter.WriteFieldStart(field, number, count);
-                        codeWriter.WriteFieldEnd(field, number, count);
+                    codeWriter.WriteFieldStart(field, number, count);
+                    codeWriter.WriteFieldEnd(field, number, count);
 
-                        number++;
-                    }
-                }
-                else
-                {
-                    codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
+                    number++;
                 }
             }
+            else
+            {
+                codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
+            }
 
-            codeWriter.WriteAfterFields(count, disablePostDeclarations, skipTypeDeclaration);
+            codeWriter.WriteAfterFields(count);
         }
 
         /// <summary>
@@ -167,12 +164,12 @@ namespace Il2Native.Logic
         /// <param name="mode">
         /// </param>
         private static void ConvertAllTypes(
-            IlReader ilReader, 
-            string[] filter, 
-            ICodeWriter codeWriter, 
-            List<IType> newListOfITypes, 
-            SortedDictionary<string, IType> genDefinitionsByMetadataName, 
-            HashSet<IMethod> genMethodSpec, 
+            IlReader ilReader,
+            string[] filter,
+            ICodeWriter codeWriter,
+            List<IType> newListOfITypes,
+            SortedDictionary<string, IType> genDefinitionsByMetadataName,
+            HashSet<IMethod> genMethodSpec,
             ConvertingMode mode)
         {
             foreach (var type in newListOfITypes)
@@ -223,7 +220,11 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Declaration)
             {
-                WriteTypeDefinition(codeWriter, type, genericContext, false, codeWriter.IsProcessed(type));
+                if (!codeWriter.IsProcessed(type))
+                {
+                    WriteTypeDefinition(codeWriter, type, genericContext);
+                }
+
                 codeWriter.WriteBeforeConstructors();
             }
 
@@ -538,10 +539,10 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         private static void ProcessNextRequiredITypes(
-            IType type, 
-            HashSet<IType> typesAdded, 
-            List<IType> requiredITypesToAdd, 
-            HashSet<IType> genericTypeSpecializations, 
+            IType type,
+            HashSet<IType> typesAdded,
+            List<IType> requiredITypesToAdd,
+            HashSet<IType> genericTypeSpecializations,
             HashSet<IMethod> genericMethodSpecializations)
         {
             var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).ToList();
@@ -671,7 +672,7 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            Declaration, 
+            Declaration,
 
             /// <summary>
             /// </summary>

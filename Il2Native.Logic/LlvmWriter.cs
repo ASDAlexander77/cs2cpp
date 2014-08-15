@@ -104,10 +104,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> processedPostDeclataions = new HashSet<IType>();
-
-        /// <summary>
-        /// </summary>
         private int resultNumberIncremental;
 
         /// <summary>
@@ -1037,31 +1033,18 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="disablePostDeclarations">
         /// </param>
-        public void WriteAfterFields(int count, bool disablePostDeclarations = false, bool skipTypeDeclaration = false)
+        public void WriteAfterFields(int count)
         {
             this.Output.WriteLine(string.Empty);
 
-            if (!skipTypeDeclaration)
-            {
-                this.Output.Indent--;
-                this.Output.WriteLine("}");
-            }
+            this.Output.Indent--;
+            this.Output.WriteLine("}");
 
-            if (!disablePostDeclarations)
-            {
-                this.WritePostDeclarationsIfNotProcessedYet();
-            }
+            this.WritePostDeclarationsIfNotProcessedYet();
         }
 
         private void WritePostDeclarationsIfNotProcessedYet()
         {
-            if (this.processedPostDeclataions.Contains(this.ThisType))
-            {
-                return;
-            }
-
-            this.processedPostDeclataions.Add(this.ThisType);
-
             this.WriteStaticFieldDeclarations();
             this.WriteInterfaceVirtaulTables();
 
@@ -4794,18 +4777,13 @@ namespace Il2Native.Logic
                 return;
             }
 
-            Il2Converter.WriteTypeDefinition(this, type, null, true);
+            Il2Converter.WriteTypeDefinition(this, type, null);
             this.Output.WriteLine(string.Empty);
         }
 
         public bool IsProcessed(IType type)
         {
             return this.processedTypes.Contains(type);
-        }
-
-        public bool IsPostDeclarationProcessed(IType type)
-        {
-            return this.processedPostDeclataions.Contains(type);
         }
 
         /// <summary>
