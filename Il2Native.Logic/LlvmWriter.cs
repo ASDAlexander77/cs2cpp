@@ -284,7 +284,7 @@ namespace Il2Native.Logic
         /// </param>
         public void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
-            if (firstLevel)
+            if (firstLevel && !opCode.Skip)
             {
                 this.WriteCaseAndLabels(writer, opCode);
             }
@@ -2335,6 +2335,8 @@ namespace Il2Native.Logic
         {
             if (block.UseAsConditionalExpression)
             {
+                writer.WriteLine("; Conditional Expression");
+
                 var usePhi = block.OpCodes.Length > 4;
 
                 // thos os a hack for return () ? a : b; expressions
@@ -2416,7 +2418,11 @@ namespace Il2Native.Logic
                     block.OpCodes[lastCond - 1].Result = block.Result;
                 }
 
+                // TODO: try to get rid of Blocks and use 'phi' to fix some jump
+                this.WriteCaseAndLabels(writer, opCode2);
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
+                // to fix some jump
+                this.WriteCaseAndLabels(writer, opCode3);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
 
                 var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
@@ -2433,6 +2439,8 @@ namespace Il2Native.Logic
                 effectiveType = this.ApplyTypeAdjustment(
                     writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
 
+                writer.WriteLine("; select value");
+
                 this.WriteResultAndFirstOperandType(writer, block, "select", this.ResolveType("System.Boolean"), resultType, operandOptions, this.ResolveType("System.Boolean"));
 
                 this.PostProcess(writer, opCode1, directResult1);
@@ -2440,6 +2448,9 @@ namespace Il2Native.Logic
                 this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
                 writer.Write(',');
                 this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
+
+                writer.WriteLine(string.Empty);
+                writer.WriteLine("; End of Conditional Expression");
 
                 return;
             }
@@ -2534,6 +2545,7 @@ namespace Il2Native.Logic
 
             foreach (var subOpCode in query)
             {
+                this.WriteCaseAndLabels(writer, subOpCode);
                 this.ActualWrite(writer, subOpCode);
                 writer.WriteLine(string.Empty);
             }
@@ -4272,7 +4284,9 @@ namespace Il2Native.Logic
                 var splitBlock = previousOpCode == null
                                  || (previousOpCode != null
                                      && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call));
-                if (splitBlock)
+
+                // opCode.Skip to fix issue with using it in 'conditional expresions'
+                if (splitBlock || opCode.Skip)
                 {
                     // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
                     writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));
