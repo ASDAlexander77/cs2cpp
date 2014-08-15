@@ -238,6 +238,10 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 2, thisResult);
             writer.WriteLine(string.Empty);
 
+            // additional step to extract value from IntPtr structure
+            llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 1, opCode.Result);
+            writer.WriteLine(string.Empty);
+
             // load value 2
             var methodMemberAccessResultNumber = opCode.Result;
 

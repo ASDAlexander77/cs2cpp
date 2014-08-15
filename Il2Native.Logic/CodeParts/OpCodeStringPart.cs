@@ -31,6 +31,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        // TODO: temp solution
         public int StringIndex { get; set; }
     }
 }

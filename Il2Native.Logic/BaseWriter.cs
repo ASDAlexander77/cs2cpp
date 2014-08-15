@@ -602,7 +602,13 @@ namespace Il2Native.Logic
             {
                 if (opCodeBlock.UseAsConditionalExpression)
                 {
-                    return this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
+                    var op1 = this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
+                    if (!op1.IsConst)
+                    {
+                        return op1;
+                    }
+
+                    return this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 3]);
                 }
 
                 if (opCodeBlock.UseAsNullCoalescingExpression)

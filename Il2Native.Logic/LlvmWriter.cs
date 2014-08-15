@@ -517,37 +517,16 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (opCode.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
-            {
-                var localType = opCode.GetLocalType(this);
-                var skip = localType.IsStructureType() && opCode.Destination == null;
-                if (skip)
-                {
-                    // it means that we are working with a Struct and are going to pass it as an address
-                    return true;
-                }
-            }
-
-            if (opCode.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
-            {
-                var index = opCode.GetArgIndex();
-
-                if (!(this.HasMethodThis && index == 0))
-                {
-                    var parameterType = this.GetArgType(index);
-                    var skip = parameterType.IsStructureType() && opCode.Destination == null;
-                    if (skip)
-                    {
-                        // it means that we are working with a Struct and are going to pass it as an address
-                        return true;
-                    }
-                }
-            }
-
             if (opCode.Any(Code.Ldstr))
             {
                 var opCodeString = opCode as OpCodeStringPart;
                 return opCodeString.StringIndex > 0;
+            }
+
+            if (opCode.Any(Code.Ldftn))
+            {
+                var opCodeMethodInfo = opCode as OpCodeMethodInfoPart;
+                return opCodeMethodInfo.IntPtrCallingCtorStage;
             }
 
             if (opCode.Any(Code.Conv_U))
@@ -572,8 +551,7 @@ namespace Il2Native.Logic
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
-            return opCode.Any(
-                Code.Ldftn);
+            return false;
         }
 
         /// <summary>
@@ -2567,7 +2545,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void ActualWriteOpCode(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void ActualWriteOpCode(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
             switch (code)
@@ -3072,13 +3050,14 @@ namespace Il2Native.Logic
                     localType = this.LocalInfo[index].LocalType;
 
                     skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.Destination == null;
+                    var definedReference = new FullyDefinedReference(destinationName, localType);
                     if (!skip)
                     {
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(destinationName, localType));
+                        this.WriteLlvmLoad(opCode, definedReference);
                     }
                     else
                     {
-                        writer.Write(destinationName);
+                        opCode.Result = definedReference;
                     }
 
                     break;
@@ -3119,13 +3098,14 @@ namespace Il2Native.Logic
                         destinationName = string.Concat("%.", parameter.Name);
 
                         skip = parameter.ParameterType.IsStructureType() && opCode.Destination == null;
+                        var fullyDefinedReference = new FullyDefinedReference(destinationName, parameter.ParameterType);
                         if (!skip)
                         {
-                            this.WriteLlvmLoad(opCode, new FullyDefinedReference(destinationName, parameter.ParameterType));
+                            this.WriteLlvmLoad(opCode, fullyDefinedReference);
                         }
                         else
                         {
-                            writer.Write(destinationName);
+                            opCode.Result = fullyDefinedReference;
                         }
                     }
 
@@ -3171,11 +3151,29 @@ namespace Il2Native.Logic
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
-                    writer.Write("bitcast (");
-                    this.WriteMethodPointerType(writer, opCodeMethodInfoPart.Operand);
-                    writer.Write(" ");
-                    writer.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
-                    writer.Write(" to i32*)");
+                    if (!opCodeMethodInfoPart.IntPtrCallingCtorStage)
+                    {
+                        var intPtrType = this.ResolveType("System.IntPtr");
+
+                        // find constructor
+                        var constructorInfo =
+                            IlReader.Constructors(intPtrType)
+                                    .First(c => c.GetParameters().Count() == 1/* && c.GetParameters().First().ParameterType.ToString() == "Int"*/);
+
+                        this.WriteNewWithoutCallingConstructor(opCode, intPtrType);
+                        opCodeMethodInfoPart.IntPtrCallingCtorStage = true;
+                        opCode.OpCodeOperands = new[] { opCode };
+                        this.WriteCallConstructor(opCode, constructorInfo);
+                        opCodeMethodInfoPart.IntPtrCallingCtorStage = false;
+                    }
+                    else
+                    {
+                        writer.Write("bitcast (");
+                        this.WriteMethodPointerType(writer, opCodeMethodInfoPart.Operand);
+                        writer.Write(" ");
+                        writer.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
+                        writer.Write(" to i8*)");
+                    }
 
                     break;
 

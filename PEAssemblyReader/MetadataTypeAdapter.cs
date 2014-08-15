@@ -360,6 +360,13 @@ namespace PEAssemblyReader
 
                 if (this.typeDef.IsPrimitiveRecursiveStruct())
                 {
+                    switch (this.FullName)
+                    {
+                        case "System.IntPtr":
+                        case "System.UIntPtr":
+                            return false;
+                    }
+
                     return true;
                 }
 
@@ -375,8 +382,6 @@ namespace PEAssemblyReader
                     case "System.UInt16":
                     case "System.UInt32":
                     case "System.UInt64":
-                    case "System.IntPtr":
-                    case "System.UIntPtr":
                     case "System.SByte":
                     case "System.Single":
                         return true;

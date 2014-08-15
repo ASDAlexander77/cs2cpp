@@ -13,6 +13,11 @@ namespace System
 
         public static readonly IntPtr Zero;
 
+        public unsafe IntPtr(void* value)
+        {
+            m_value = value;
+        }
+
         public unsafe IntPtr(int value)
         {
             m_value = (void*)value;
