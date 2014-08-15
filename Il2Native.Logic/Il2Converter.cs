@@ -574,13 +574,7 @@ namespace Il2Native.Logic
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
-            // the same for generic specialized types
-            foreach (var type in genericTypeSpecializations)
-            {
-                var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, null, null);
-                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
-            }
+            ProcessGenericTypeToFindRequired(genericTypeSpecializations, typesWithRequired);
 
             var allTypes = new List<IType>();
             allTypes.AddRange(types);
@@ -633,6 +627,36 @@ namespace Il2Native.Logic
             }
 
             return newOrder;
+        }
+
+        private static void ProcessGenericTypeToFindRequired(HashSet<IType> genericTypeSpecializations, List<Tuple<IType, List<IType>>> typesWithRequired)
+        {
+            HashSet<IType> subSetGenericTypeSpecializations = new HashSet<IType>();
+            HashSet<IMethod> subSetGenericMethodSpecializations = null; // new HashSet<IMethod>();
+
+            // the same for generic specialized types
+            foreach (var type in genericTypeSpecializations)
+            {
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
+                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
+            }
+
+            if (subSetGenericTypeSpecializations.Count > 0)
+            {
+                foreach (var disoveredType in typesWithRequired.Select(t => t.Item1))
+                {
+                    subSetGenericTypeSpecializations.Remove(disoveredType);
+                }
+
+                ProcessGenericTypeToFindRequired(subSetGenericTypeSpecializations, typesWithRequired);
+
+                // join types
+                foreach (var disoveredType in subSetGenericTypeSpecializations)
+                {
+                    genericTypeSpecializations.Add(disoveredType);
+                }
+            }
         }
 
         /// <summary>
