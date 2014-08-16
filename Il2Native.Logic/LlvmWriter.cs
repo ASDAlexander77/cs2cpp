@@ -2370,9 +2370,9 @@ namespace Il2Native.Logic
                 // to support PHI                          
                 if (usePhi)
                 {
-                    writer.WriteLine("br label %.a{0}", block.OpCodes[0].GroupAddressStart);
+                    writer.WriteLine("br label %.a{0}", block.OpCodes[0].AddressStart);
                     writer.Indent--;
-                    writer.WriteLine(".a{0}:", block.OpCodes[0].GroupAddressStart);
+                    writer.WriteLine(".a{0}:", block.OpCodes[0].AddressStart);
                     writer.Indent++;
                 }
 
@@ -2383,7 +2383,7 @@ namespace Il2Native.Logic
 
                     if (usePhi)
                     {
-                        current.CustomJumpAddress = block.OpCodes[lastCond].GroupAddressStart;
+                        current.CustomJumpAddress = block.OpCodes[lastCond].AddressStart;
                     }
 
                     this.ActualWrite(writer, current);
@@ -2407,9 +2407,9 @@ namespace Il2Native.Logic
                 // check if PHI is required
                 if (usePhi)
                 {
-                    writer.WriteLine("br label %.a{0}", block.OpCodes[lastCond].GroupAddressStart);
+                    writer.WriteLine("br label %.a{0}", block.OpCodes[lastCond].AddressStart);
                     writer.Indent--;
-                    writer.WriteLine(".a{0}:", block.OpCodes[lastCond].GroupAddressStart);
+                    writer.WriteLine(".a{0}:", block.OpCodes[lastCond].AddressStart);
                     writer.Indent++;
 
                     // apply PHI is condition is complex
@@ -2426,10 +2426,10 @@ namespace Il2Native.Logic
 
                         // true. false, %result
                         var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
-                        writer.Write(" [ {0}, %.a{1} ]", phiValue, block.OpCodes[i].GroupAddressStart);
+                        writer.Write(" [ {0}, %.a{1} ]", phiValue, block.OpCodes[i].AddressEnd);
                     }
 
-                    writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 1].GroupAddressStart);
+                    writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 2].AddressEnd);
 
                     // hack
                     block.OpCodes[lastCond - 1].Result = block.Result;
@@ -2481,9 +2481,9 @@ namespace Il2Native.Logic
                 var nextOpCode1 = firstBlockOpCode.NextOpCode(this);
                 if (nextOpCode1 == null || !nextOpCode1.JumpProcessed)
                 {
-                    writer.WriteLine("br label %.a{0}", firstBlockOpCode.GroupAddressStart);
+                    writer.WriteLine("br label %.a{0}", firstBlockOpCode.AddressStart);
                     writer.Indent--;
-                    writer.WriteLine(".a{0}:", firstBlockOpCode.GroupAddressStart);
+                    writer.WriteLine(".a{0}:", firstBlockOpCode.AddressStart);
                     writer.Indent++;
                 }
 
@@ -2497,9 +2497,9 @@ namespace Il2Native.Logic
                 if (nextOpCode2 == null || !nextOpCode2.JumpProcessed)
                 {
                     writer.WriteLine(string.Empty);
-                    writer.WriteLine("br label %.a{0}", lastBlockOpCode.GroupAddressEnd);
+                    writer.WriteLine("br label %.a{0}", lastBlockOpCode.AddressEnd);
                     writer.Indent--;
-                    writer.WriteLine(".a{0}:", lastBlockOpCode.GroupAddressEnd);
+                    writer.WriteLine(".a{0}:", lastBlockOpCode.AddressEnd);
                     writer.Indent++;
 
                     lastBlockOpCode.JumpProcessed = true;
@@ -2524,11 +2524,11 @@ namespace Il2Native.Logic
 
                     if (i == 0)
                     {
-                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[i + ((i > 0) ? 1 : 0)].GroupAddressStart);
+                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[i + ((i > 0) ? 1 : 0)].AddressStart);
                     }
                     else
                     {
-                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[lastDupIndex + 2].GroupAddressStart);
+                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[lastDupIndex + 2].AddressStart);
                     }
 
                     lastDupIndex = i;
@@ -4399,9 +4399,9 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCondBranch(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            writer.WriteLine("br i1 {0}, label %.a{1}, label %.a{2}", opCode.Result, opCode.JumpAddress(), opCode.GroupAddressEnd);
+            writer.WriteLine("br i1 {0}, label %.a{1}, label %.a{2}", opCode.Result, opCode.JumpAddress(), opCode.AddressEnd);
             writer.Indent--;
-            writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
+            writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
             writer.Indent++;
 
             opCode.NextOpCode(this).JumpProcessed = true;

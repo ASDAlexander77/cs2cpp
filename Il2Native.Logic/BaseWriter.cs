@@ -186,69 +186,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="conditions">
-        /// </param>
-        /// <param name="startOfTrueExpression">
-        /// </param>
-        public static void ConditionsParseForIf(OpCodePart[] conditions, int startOfTrueExpression)
-        {
-            var nextJoinAnd = true;
-            var groups = BuildConditionGroups(conditions);
-            foreach (var group in groups)
-            {
-                // all Or
-                if (group.Last().JumpAddress() != startOfTrueExpression && group.First().JumpAddress() != startOfTrueExpression)
-                {
-                    foreach (var element in group)
-                    {
-                        element.InvertCondition = true;
-                        element.ConjunctionAndCondition = true;
-                    }
-
-                    nextJoinAnd = false;
-                    continue;
-                }
-
-                // TODO: var r1 = ok == 1 && ok == 2 || error == 3 && error == 4 && (ok == 10 || ok == 11 || ok ==12) ? 1 : 0;
-                // in this expression last  OR chain is not detected
-                var internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
-                if (internalAndJoin)
-                {
-                    foreach (var element in group)
-                    {
-                        element.ConjunctionAndCondition = true;
-                    }
-
-                    group.Last().InvertCondition = true;
-                }
-                else
-                {
-                    foreach (var element in group)
-                    {
-                        element.InvertCondition = false;
-                        element.ConjunctionOrCondition = true;
-                    }
-
-                    group.Last().InvertCondition = true;
-                }
-
-                if (nextJoinAnd)
-                {
-                    group[0].ConjunctionAndCondition = true;
-                    group[0].ConjunctionOrCondition = false;
-                }
-                else
-                {
-                    group[0].ConjunctionAndCondition = false;
-                    group[0].ConjunctionOrCondition = true;
-                }
-
-                nextJoinAnd = !internalAndJoin;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="parameters">
         /// </param>
         public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
