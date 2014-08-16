@@ -1056,7 +1056,7 @@ namespace Il2Native.Logic
         {
             this.WriteStaticFieldDeclarations();
 
-            if (this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+            if (!this.ThisType.IsGenericType && this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
             {
                 return;
             }
