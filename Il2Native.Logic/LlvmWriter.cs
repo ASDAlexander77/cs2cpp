@@ -2426,7 +2426,7 @@ namespace Il2Native.Logic
 
                         // true. false, %result
                         var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
-                        writer.Write(" [ {0}, %.a{1} ]", phiValue, block.OpCodes[i].AddressEnd);
+                        writer.Write(" [ {0}, %.a{1} ]", phiValue, i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart);
                     }
 
                     writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 2].AddressEnd);
