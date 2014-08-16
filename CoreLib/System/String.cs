@@ -342,16 +342,13 @@ namespace System
 
         
         public extern int IndexOfAny(char[] anyOf, int startIndex, int count);
-
-        
+       
         public int IndexOf(String value)
         {
             throw new NotImplementedException();
         }
-
         
         public extern int IndexOf(String value, int startIndex);
-
         
         public extern int IndexOf(String value, int startIndex, int count);
 
@@ -421,11 +418,12 @@ namespace System
 
         
         public extern int LastIndexOfAny(char[] anyOf, int startIndex, int count);
-
-        
-        public extern int LastIndexOf(String value);
-
-        
+       
+        public int LastIndexOf(String value)
+        {
+            throw new NotImplementedException();
+        }
+       
         public extern int LastIndexOf(String value, int startIndex);
 
         
