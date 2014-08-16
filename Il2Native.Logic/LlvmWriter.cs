@@ -914,7 +914,16 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteLlvmLoad(opCodePart, fieldType, opCodePart.OpCodeOperands[valueOperand].Result);
+                    var valueOp = opCodePart.OpCodeOperands[valueOperand];
+                    if (!valueOp.HasResult)
+                    {
+                        valueOp.Destination = opCodePart.Destination;
+                        this.ActualWriteOpCode(writer, valueOp);
+                    }
+                    else
+                    {
+                        this.WriteLlvmLoad(opCodePart, fieldType, valueOp.Result);
+                    }
                 }
             }
             else
@@ -1046,6 +1055,12 @@ namespace Il2Native.Logic
         private void WritePostDeclarationsIfNotProcessedYet()
         {
             this.WriteStaticFieldDeclarations();
+
+            if (this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+            {
+                return;
+            }
+
             this.WriteInterfaceVirtaulTables();
 
             this.Output.WriteLine(string.Empty);
@@ -2765,7 +2780,16 @@ namespace Il2Native.Logic
                         }
                         else
                         {
-                            this.WriteLlvmLoad(opCode, operandType, opCode.OpCodeOperands[0].Result);
+                            var valueOp = opCode.OpCodeOperands[0];
+                            if (!valueOp.HasResult)
+                            {
+                                valueOp.Destination = opCode.Destination;
+                                this.ActualWriteOpCode(writer, valueOp);
+                            }
+                            else
+                            {
+                                this.WriteLlvmLoad(opCode, operandType, valueOp.Result);
+                            }
                         }
                     }
                     else
@@ -4628,15 +4652,32 @@ namespace Il2Native.Logic
             // after writing type you need to generate static members
             foreach (var field in this.staticFieldsInfo)
             {
-                this.Output.Write("@\"{0}\" = global ", field.GetFullName());
-                field.FieldType.WriteTypePrefix(this.Output, false);
-                if (field.FieldType.IsStructureType())
+                var isExternal = this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName;
+                if (isExternal)
                 {
-                    this.Output.WriteLine(" zeroinitializer, align 4");
+                    this.Output.Write("@\"{0}\" = external global ", field.GetFullName());
                 }
                 else
                 {
-                    this.Output.WriteLine(" undef");
+                    this.Output.Write("@\"{0}\" = global ", field.GetFullName());
+                }
+
+                field.FieldType.WriteTypePrefix(this.Output, false);
+
+                if (!isExternal)
+                {
+                    if (field.FieldType.IsStructureType())
+                    {
+                        this.Output.WriteLine(" zeroinitializer, align 4");
+                    }
+                    else
+                    {
+                        this.Output.WriteLine(" undef");
+                    }
+                }
+                else
+                {
+                    this.Output.WriteLine(string.Empty);
                 }
             }
         }

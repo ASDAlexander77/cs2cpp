@@ -172,8 +172,14 @@ namespace Il2Native.Logic
             HashSet<IMethod> genMethodSpec,
             ConvertingMode mode)
         {
+            var i = 0;
+
             foreach (var type in newListOfITypes)
             {
+                Debug.WriteLine("Processing({1}): {0}", type.FullName, i);
+
+                i++;
+
                 if (filter != null && !filter.Contains(type.FullName))
                 {
                     continue;
