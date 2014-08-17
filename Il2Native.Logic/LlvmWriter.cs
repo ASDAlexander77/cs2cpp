@@ -373,7 +373,7 @@ namespace Il2Native.Logic
         {
             if (methodBase.Name.StartsWith("%"))
             {
-                return; 
+                return;
             }
 
             if (methodBase.DeclaringType.AssemblyQualifiedName != this.AssemblyQualifiedName)
@@ -1436,6 +1436,9 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
             this.Output.WriteLine("define internal void @_GLOBAL_CTORS_EXECUTE_() {");
             this.Output.Indent++;
+
+            this.SortStaticConstructorsByUsage();
+
             foreach (var staticCtor in this.StaticConstructors)
             {
                 this.Output.WriteLine("call void {0}()", this.GetFullMethodName(staticCtor));
@@ -1449,6 +1452,52 @@ namespace Il2Native.Logic
             {
                 this.WriteRequiredDeclarations();
             }
+        }
+
+        private void SortStaticConstructorsByUsage()
+        {
+            var staticConstructors = new Dictionary<IConstructor, HashSet<IType>>();
+            foreach (var staticCtor in this.StaticConstructors)
+            {
+                var usedTypes = new HashSet<IType>();
+                staticCtor.DiscoverRequiredStaticTypes(usedTypes);
+
+                var staticDeclType = staticCtor.DeclaringType;
+
+                // exclude itself and type which does not have static constructor
+                var usedTypesWhichHaveStaticCtor = new HashSet<IType>();
+                foreach (var usedType in usedTypes.Where(t => t.TypeNotEquals(staticDeclType) && IlReader.Constructors(t).Any(c => c.IsStatic)))
+                {
+                    usedTypesWhichHaveStaticCtor.Add(usedType);
+                }
+
+                staticConstructors.Add(staticCtor, usedTypesWhichHaveStaticCtor);
+            }
+
+            // rebuild order
+            var newStaticConstructors = new List<IConstructor>();
+
+            var countBefore = 0;
+            do
+            {
+                countBefore = staticConstructors.Count;
+                foreach (var staticConstructorPair in staticConstructors.ToList())
+                {
+                    if (staticConstructorPair.Value.Any(v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v))))
+                    {
+                        continue;
+                    }
+
+                    staticConstructors.Remove(staticConstructorPair.Key);
+                    newStaticConstructors.Add(staticConstructorPair.Key);
+                }
+            }
+            while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
+
+            // add rest as is
+            newStaticConstructors.AddRange(staticConstructors.Keys);
+
+            this.StaticConstructors = newStaticConstructors;
         }
 
         /// <summary>
@@ -4307,9 +4356,9 @@ namespace Il2Native.Logic
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
                 var previousOpCode = opCode.PreviousOpCode(this);
-                var splitBlock = previousOpCode == null 
-                                 || (previousOpCode != null 
-                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next 
+                var splitBlock = previousOpCode == null
+                                 || (previousOpCode != null
+                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next
                                          || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
                 // opCode.Skip to fix issue with using it in 'conditional expresions'

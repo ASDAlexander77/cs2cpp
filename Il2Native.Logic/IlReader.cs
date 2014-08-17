@@ -61,6 +61,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> usedTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         static IlReader()
         {
             OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
@@ -365,6 +369,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public HashSet<IType> UsedTypes
+        {
+            get
+            {
+                return this.usedTypes;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool UsingRoslyn { get; set; }
 
         /// <summary>
@@ -594,6 +608,9 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
                         this.AddGenericSpecializedType(constructor.DeclaringType);
+
+                        AddUsedType(constructor.DeclaringType);
+
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
                     case Code.Call:
@@ -609,6 +626,8 @@ namespace Il2Native.Logic
                             this.AddStructType(methodParameter.ParameterType);
                         }
 
+                        AddUsedType(method.DeclaringType);
+
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
 
@@ -620,6 +639,9 @@ namespace Il2Native.Logic
                         method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method);
+
+                        AddUsedType(method.DeclaringType);
+
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
                     case Code.Stfld:
@@ -637,6 +659,8 @@ namespace Il2Native.Logic
                             this.AddGenericSpecializedType(field.FieldType);
                         }
 
+                        AddUsedType(field.DeclaringType);
+
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
@@ -648,6 +672,8 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
+                            AddUsedType(typeToken);
+
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
                         }
@@ -655,6 +681,8 @@ namespace Il2Native.Logic
                         var fieldMember = resolvedToken as IField;
                         if (fieldMember != null)
                         {
+                            AddUsedType(fieldMember.DeclaringType);
+
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
                             continue;
                         }
@@ -662,6 +690,8 @@ namespace Il2Native.Logic
                         var methodMember = resolvedToken as IMethod;
                         if (methodMember != null)
                         {
+                            AddUsedType(methodMember.DeclaringType);
+
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
                         }
@@ -691,6 +721,8 @@ namespace Il2Native.Logic
                         {
                             this.AddStructType(type);
                         }
+
+                        AddUsedType(type);
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
@@ -876,6 +908,20 @@ namespace Il2Native.Logic
             }
 
             this.usedStructTypes.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddUsedType(IType type)
+        {
+            if (type == null)
+            {
+                return;
+            }
+
+            this.usedTypes.Add(type);
         }
 
         /// <summary>

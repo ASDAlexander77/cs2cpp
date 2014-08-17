@@ -82,6 +82,27 @@ namespace Il2Native.Logic
             }
         }
 
+        public static void DiscoverRequiredStaticTypes(
+            this IMethod method, HashSet<IType> requiredStaticTypes)
+        {
+            // read method body to extract all types
+            var reader = new IlReader();
+
+            var genericContext = MetadataGenericContext.DiscoverFrom(method);
+            foreach (var op in reader.OpCodes(method, genericContext))
+            {
+                // dummy body we just need to read body of a method
+            }
+
+            if (requiredStaticTypes != null)
+            {
+                foreach (var usedType in reader.UsedTypes)
+                {
+                    requiredStaticTypes.Add(usedType);
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="baseWriter">
