@@ -373,10 +373,10 @@ namespace Il2Native.Logic
         {
             if (methodBase.Name.StartsWith("%"))
             {
-                return;
+                return; 
             }
 
-            if (methodBase.DeclaringType.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+            if (methodBase.DeclaringType.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(methodBase);
             }
@@ -4304,12 +4304,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCaseAndLabels(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0)
+            if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
                 var previousOpCode = opCode.PreviousOpCode(this);
-                var splitBlock = previousOpCode == null
-                                 || (previousOpCode != null
-                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call));
+                var splitBlock = previousOpCode == null 
+                                 || (previousOpCode != null 
+                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next 
+                                         || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
                 // opCode.Skip to fix issue with using it in 'conditional expresions'
                 if (splitBlock || opCode.Skip)
