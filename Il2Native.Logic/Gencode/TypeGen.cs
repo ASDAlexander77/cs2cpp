@@ -115,7 +115,7 @@ namespace Il2Native.Logic.Gencode
                 return LlvmWriter.PointerSize;
             }
 
-            if (type.IsArray)
+            if (type.IsArray || type.IsPointer)
             {
                 // type*
                 return LlvmWriter.PointerSize;

@@ -6,11 +6,12 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+using System;
 namespace PEAssemblyReader
 {
     /// <summary>
     /// </summary>
-    public interface IField : IMember
+    public interface IField : IMember, IEquatable<IField>
     {
         /// <summary>
         /// </summary>

@@ -16,6 +16,7 @@ namespace PEAssemblyReader
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using System.Text;
 
     /// <summary>
     /// </summary>
@@ -85,8 +86,10 @@ namespace PEAssemblyReader
         {
             get
             {
-                var metadataTypeName = MetadataTypeName.FromNamespaceAndTypeName(this.fieldDef.ContainingNamespace.Name, this.fieldDef.Name);
-                return metadataTypeName.FullName;
+                var sb = new StringBuilder();
+                this.fieldDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, declTypeJoinChar: '.');
+                sb.Append(this.Name);
+                return sb.ToString();
             }
         }
 
@@ -208,19 +211,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var val = name.Name.CompareTo(this.Name);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            val = name.Namespace.CompareTo(this.Namespace);
-            if (val != 0)
-            {
-                return val;
-            }
-
-            return 0;
+            return name.FullName.CompareTo(this.FullName);
         }
 
         /// <summary>
@@ -283,6 +274,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return this.FullName.GetHashCode();
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="peModuleSymbol">
         /// </param>
         /// <param name="peFieldSymbol">
@@ -311,6 +311,11 @@ namespace PEAssemblyReader
         {
             peModuleSymbol = this.fieldDef.ContainingModule as PEModuleSymbol;
             peMethodSymbol = this.fieldDef as PEFieldSymbol ?? this.fieldDef.OriginalDefinition as PEFieldSymbol;
+        }
+
+        public bool Equals(IField other)
+        {
+            return this.FullName == other.FullName;
         }
     }
 }

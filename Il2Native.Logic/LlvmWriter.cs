@@ -132,6 +132,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IField> staticFieldExtrenalDeclRequired = new HashSet<IField>();
+
+        /// <summary>
+        /// </summary>
         /// <param name="fileName">
         /// </param>
         /// <param name="args">
@@ -393,7 +397,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.IsArray)
+            if (type.HasElementType)
             {
                 this.typeDeclRequired.Add(type.GetElementType());
             }
@@ -401,6 +405,20 @@ namespace Il2Native.Logic
             {
                 this.typeDeclRequired.Add(type);
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="field">
+        /// </param>
+        public void CheckIfExternalDeclarationIsRequired(IField field)
+        {
+            if (field == null || !field.IsStatic || field.DeclaringType.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            this.staticFieldExtrenalDeclRequired.Add(field);
         }
 
         /// <summary>
@@ -1054,13 +1072,12 @@ namespace Il2Native.Logic
 
         private void WritePostDeclarationsIfNotProcessedYet()
         {
-            this.WriteStaticFieldDeclarations();
-
             if (!this.ThisType.IsGenericType && this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
             {
                 return;
             }
 
+            this.WriteStaticFieldDeclarations();
             this.WriteInterfaceVirtaulTables();
 
             this.Output.WriteLine(string.Empty);
@@ -2795,12 +2812,16 @@ namespace Il2Native.Logic
                         this.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType));
                     }
 
+                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
+
                     break;
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     opCodeFieldInfoPart.Result = new FullyDefinedReference(
                         string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'), opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
+
+                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Stfld:
@@ -2857,6 +2878,8 @@ namespace Il2Native.Logic
                         writer.Write("* ");
                         writer.Write(destinationName);
                     }
+
+                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
 
@@ -4702,33 +4725,38 @@ namespace Il2Native.Logic
             // after writing type you need to generate static members
             foreach (var field in this.staticFieldsInfo)
             {
-                var isExternal = this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName;
-                if (isExternal)
+                WriteStaticFieldDeclaration(field);
+            }
+        }
+
+        private void WriteStaticFieldDeclaration(IField field, bool externalRef = false)
+        {
+            var isExternal = externalRef;
+            if (isExternal)
+            {
+                this.Output.Write("@\"{0}\" = external global ", field.GetFullName());
+            }
+            else
+            {
+                this.Output.Write("@\"{0}\" = global ", field.GetFullName());
+            }
+
+            field.FieldType.WriteTypePrefix(this.Output, false);
+
+            if (!isExternal)
+            {
+                if (field.FieldType.IsStructureType())
                 {
-                    this.Output.Write("@\"{0}\" = external global ", field.GetFullName());
+                    this.Output.WriteLine(" zeroinitializer, align 4");
                 }
                 else
                 {
-                    this.Output.Write("@\"{0}\" = global ", field.GetFullName());
+                    this.Output.WriteLine(" undef");
                 }
-
-                field.FieldType.WriteTypePrefix(this.Output, false);
-
-                if (!isExternal)
-                {
-                    if (field.FieldType.IsStructureType())
-                    {
-                        this.Output.WriteLine(" zeroinitializer, align 4");
-                    }
-                    else
-                    {
-                        this.Output.WriteLine(" undef");
-                    }
-                }
-                else
-                {
-                    this.Output.WriteLine(string.Empty);
-                }
+            }
+            else
+            {
+                this.Output.WriteLine(string.Empty);
             }
         }
 
@@ -4798,6 +4826,16 @@ namespace Il2Native.Logic
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }
+                }
+            }
+
+            if (this.staticFieldExtrenalDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+
+                foreach (var staticFieldExtrenalDecl in this.staticFieldExtrenalDeclRequired)
+                {
+                    WriteStaticFieldDeclaration(staticFieldExtrenalDecl, true);
                 }
             }
         }
