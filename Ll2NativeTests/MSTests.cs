@@ -143,11 +143,9 @@ namespace Ll2NativeTests
             // 45 - NEED TO BE FIXED: arrays initialization
             // 50 - missing
             // 52 - bug in execution (NotImplemented, ArrayList, Hashtable)
-            // 53 - NEED TO BE FIXED
             // 57 - bug in execution (NotImplemented, EventHandler)
-            // 66 - NEED TO BE FIXED (if exclude multi array, can't be compiled), multi array 
             // 67 - missing
-            // 68 - NEED TO BE FIXED (can't be compiled), using enum
+            // 68 - using enum
             // 74 - using StreamReader
             // 77 - using enum
             // 83 - using System.Threading.Interlocked.CompareExchange
@@ -162,7 +160,8 @@ namespace Ll2NativeTests
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
-            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109 });
+            // 115 - explicit cast (cast class without explicit operator should throw an exception)
+            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115 });
 
             if (UsingRoslyn)
             {
