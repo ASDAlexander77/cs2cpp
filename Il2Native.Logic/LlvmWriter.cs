@@ -1021,7 +1021,7 @@ namespace Il2Native.Logic
         {
             var directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
 
-            this.ProcessOperator(writer, opCode, op, requiredType, resultType, options, operand1: operandIndex);
+            this.ProcessOperator(writer, opCode, op, requiredType, resultType, options, operand1: operandIndex, operand2: -1);
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
@@ -4281,6 +4281,10 @@ namespace Il2Native.Logic
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
+            }
+            else if (destinationType.IsByRef && destinationType.GetElementType().TypeNotEquals(type))
+            {
+                type = destinationType.GetElementType();
             }
 
             if (!destinationType.IsPointer && destinationType.IntTypeBitSize() >= (PointerSize * 8) && destinationType.IntTypeBitSize() != type.IntTypeBitSize()
