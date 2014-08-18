@@ -97,6 +97,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public string CreatedLabel { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool DefaultCase { get; set; }
 
         /// <summary>

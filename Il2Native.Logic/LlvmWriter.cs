@@ -2590,11 +2590,11 @@ namespace Il2Native.Logic
 
                     if (i == 0)
                     {
-                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[i + ((i > 0) ? 1 : 0)].AddressStart);
+                        this.WritePhiNodeLabel(writer, block.OpCodes[i].Result, block.OpCodes[i], block.OpCodes[i]);
                     }
                     else
                     {
-                        writer.Write(" [ {0}, %.a{1} ]", block.OpCodes[i].Result, block.OpCodes[lastDupIndex + 2].AddressStart);
+                        this.WritePhiNodeLabel(writer, block.OpCodes[i].Result, block.OpCodes[lastDupIndex + 2], block.OpCodes[i]);
                     }
 
                     lastDupIndex = i;
@@ -2610,6 +2610,40 @@ namespace Il2Native.Logic
 
             // just array
             this.ActualWriteBlockBody(writer, block);
+        }
+
+        private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart labelBlock, OpCodePart lastBlockOpCode)
+        {
+            var customLabel = this.FindCustomLabel(labelBlock, lastBlockOpCode);
+            if (customLabel != null)
+            {
+                writer.Write(" [ {0}, %.{1} ]", result, customLabel);
+            }
+            else
+            {
+                writer.Write(" [ {0}, %.a{1} ]", result, labelBlock.AddressStart);
+            }
+        }
+
+        private string FindCustomLabel(OpCodePart opCodePart, OpCodePart lastBlockOpCode)
+        {
+            if (lastBlockOpCode == null)
+            {
+                return null;
+            }
+
+            var current = lastBlockOpCode;
+            while (current != null && current != opCodePart)
+            {
+                if (current.CreatedLabel != null)
+                {
+                    return current.CreatedLabel;
+                }
+
+                current = current.PreviousOpCode(this);
+            }
+
+            return null;
         }
 
         /// <summary>

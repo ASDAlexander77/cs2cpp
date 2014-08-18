@@ -615,29 +615,28 @@ namespace Il2Native.Logic.Gencode
 
             if (tryClause != null)
             {
-                var nextOpCode = opCodeMethodInfo.NextOpCode(llvmWriter);
-                var nextIsBrunch = nextOpCode.Any(Code.Br, Code.Br_S, Code.Leave, Code.Leave_S);
-                var nextAddress = nextIsBrunch ? nextOpCode.JumpAddress() : opCodeMethodInfo.AddressEnd;
+                var nextAddress = llvmWriter.GetBlockJumpAddress();
 
-                var useBlockJumpRandomAddress = false;
-                if (nextAddress == 0)
-                {
-                    useBlockJumpRandomAddress = true;
-                    nextAddress = llvmWriter.GetBlockJumpAddress();
-                }
+                var label = string.Concat("next", nextAddress);
 
                 writer.WriteLine(string.Empty);
                 writer.Indent++;
                 writer.WriteLine(
-                    "to label %.{0}{1} unwind label %.catch{2}", useBlockJumpRandomAddress ? "b" : "a", nextAddress, tryClause.Catches.First().Offset);
+                    "to label %.{0} unwind label %.catch{1}", label, tryClause.Catches.First().Offset);
                 writer.Indent--;
-                if (!nextIsBrunch)
+
+                writer.Indent--;
+                writer.WriteLine(
+                    ".{0}:", label);
+                writer.Indent++;
+
+                if (opCodeMethodInfo.AddressStart == 0)
                 {
-                    writer.Indent--;
-                    writer.WriteLine(
-                        ".{0}{1}:", useBlockJumpRandomAddress ? "b" : "a", useBlockJumpRandomAddress ? nextAddress : opCodeMethodInfo.GroupAddressEnd);
-                    writer.Indent++;
-                    opCodeMethodInfo.NextOpCode(llvmWriter).JumpProcessed = true;
+                    opCodeMethodInfo.UsedBy.CreatedLabel = label;
+                }
+                else
+                {
+                    opCodeMethodInfo.CreatedLabel = label;
                 }
             }
         }
