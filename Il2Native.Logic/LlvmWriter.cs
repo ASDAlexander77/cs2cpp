@@ -1995,6 +1995,8 @@ namespace Il2Native.Logic
                         writer.Write(" byval align " + PointerSize);
                         writer.Write(" %.");
                     }
+
+                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
                 }
                 else if (!noArgumentName)
                 {
