@@ -389,6 +389,15 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMemSet(declaringType, opCodePart.Result);
             writer.WriteLine(string.Empty);
 
+            if (declaringType.ToNormal().IsStructureType())
+            {
+                // init now
+                opCodePart.Result = fullyDefinedReference;
+
+                declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                writer.WriteLine(string.Empty);
+            }
+
             writer.Write("; end of init obj");
         }
 

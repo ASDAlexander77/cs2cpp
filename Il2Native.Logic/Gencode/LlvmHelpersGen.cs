@@ -649,7 +649,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="fromResult">
         /// </param>
-        /// <param name="toType">
+        /// <param name="effectiveToType">
         /// </param>
         /// <param name="appendReference">
         /// </param>
@@ -661,10 +661,11 @@ namespace Il2Native.Logic.Gencode
 
             if (toType.IsInterface)
             {
-                if (fromResult.Type.GetAllInterfaces().Contains(toType))
+                var bareType = fromResult.Type.ToBareType();
+                if (bareType.GetAllInterfaces().Contains(toType))
                 {
                     opCode.Result = fromResult;
-                    llvmWriter.WriteInterfaceAccess(writer, opCode, fromResult.Type, toType);
+                    llvmWriter.WriteInterfaceAccess(writer, opCode, bareType, toType);
                 }
                 else
                 {

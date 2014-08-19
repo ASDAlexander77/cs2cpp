@@ -397,14 +397,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.HasElementType)
-            {
-                this.typeDeclRequired.Add(type.GetElementType());
-            }
-            else
-            {
-                this.typeDeclRequired.Add(type);
-            }
+            this.typeDeclRequired.Add(type.ToBareType());
         }
 
         /// <summary>
@@ -1372,7 +1365,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteDynamicCast(LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType)
         {
-            this.WriteCast(opCodeTypePart, fromType, this.ResolveType("System.Byte"));
+            var effectiveFromType = fromType.ToDereferencedType();
+
+            this.WriteCast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
@@ -1380,8 +1375,8 @@ namespace Il2Native.Logic
             var dynamicCastResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Byte").ToPointerType());
 
             writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", firstCastToBytesResult);
-            fromType.Type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write("* @\"{0}\" to i8*), i8* bitcast (", fromType.Type.GetRttiInfoName());
+            effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
+            writer.Write("* @\"{0}\" to i8*), i8* bitcast (", effectiveFromType.Type.GetRttiInfoName());
             toType.WriteRttiClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i32 0)", toType.GetRttiInfoName());
             writer.WriteLine(string.Empty);
@@ -1389,7 +1384,7 @@ namespace Il2Native.Logic
             toType.UseAsClass = true;
             this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toType);
 
-            this.typeRttiDeclRequired.Add(fromType.Type);
+            this.typeRttiDeclRequired.Add(effectiveFromType.Type);
             this.typeRttiDeclRequired.Add(toType);
         }
 
@@ -1477,7 +1472,7 @@ namespace Il2Native.Logic
             foreach (var staticCtor in this.StaticConstructors)
             {
                 var usedTypes = new HashSet<IType>();
-                staticCtor.DiscoverRequiredStaticTypes(usedTypes);
+                staticCtor.DiscoverUsedTypes(usedTypes);
 
                 var staticDeclType = staticCtor.DeclaringType;
 

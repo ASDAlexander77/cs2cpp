@@ -311,7 +311,8 @@ namespace Il2Native.Logic
                         // write all specializations of a method
                         foreach (var methodSpec in genericMethodSpecializatons)
                         {
-                            if (methodSpec.NameEquals(method))
+                            if (methodSpec.DeclaringType.FullName == method.DeclaringType.FullName 
+                                && methodSpec.IsMatchingGeneric(method))
                             {
                                 genericContext.TypeSpecialization = type.IsGenericType ? type : null;
                                 genericContext.MethodDefinition = method;

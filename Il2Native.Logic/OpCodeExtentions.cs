@@ -82,8 +82,8 @@ namespace Il2Native.Logic
             }
         }
 
-        public static void DiscoverRequiredStaticTypes(
-            this IMethod method, HashSet<IType> requiredStaticTypes)
+        public static void DiscoverUsedTypes(
+            this IMethod method, HashSet<IType> usedTypes)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -94,11 +94,11 @@ namespace Il2Native.Logic
                 // dummy body we just need to read body of a method
             }
 
-            if (requiredStaticTypes != null)
+            if (usedTypes != null)
             {
                 foreach (var usedType in reader.UsedTypes)
                 {
-                    requiredStaticTypes.Add(usedType);
+                    usedTypes.Add(usedType);
                 }
             }
         }
@@ -467,7 +467,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
         {
-            if (method.Name == genericMethod.Name)
+            if (method.MetadataName == genericMethod.MetadataName && method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
             {
                 return method.IsMatchingGenericParamsAndReturnType(genericMethod);
             }
@@ -520,6 +520,22 @@ namespace Il2Native.Logic
 
             return false;
         }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public static IType ToBareType(this IType type)
+        {
+            var current = type;
+            while (current.HasElementType)
+            {
+                current = current.GetElementType();
+            }
+
+            return current;
+        }
+
 
         /// <summary>
         /// </summary>

@@ -657,6 +657,7 @@ namespace Il2Native.Logic
                         if (field != null)
                         {
                             this.AddGenericSpecializedType(field.FieldType);
+                            this.AddGenericSpecializedType(field.DeclaringType);
                         }
 
                         AddUsedType(field.DeclaringType);
