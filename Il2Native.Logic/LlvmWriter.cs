@@ -1366,6 +1366,7 @@ namespace Il2Native.Logic
         public void WriteDynamicCast(LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType)
         {
             var effectiveFromType = fromType.ToDereferencedType();
+            effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
 
             this.WriteCast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
