@@ -44,6 +44,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
+
+        /// <summary>
+        /// </summary>
+        private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -105,6 +109,14 @@ namespace Ll2NativeTests
             // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
             // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
             Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(true));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestOpenGlExe()
+        {
+            Il2Converter.Convert(Path.GetFullPath(OpenGlExePath), OutputPath, GetConverterArgs(true));
         }
 
         /// <summary>
@@ -200,16 +212,16 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        /// <param name="coreLib">
+        /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool coreLib, bool roslyn = UsingRoslyn)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn)
         {
             var args = new List<string>();
-            if (coreLib)
+            if (includeCoreLib)
             {
                 args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
             }
