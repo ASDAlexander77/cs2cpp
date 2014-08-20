@@ -60,6 +60,12 @@ namespace System
             throw new NotImplementedException();
         }
 
+
+        public static explicit operator IntPtr(Delegate source)
+        {
+            return source.methodPtr;
+        }
+
     }
 }
 
