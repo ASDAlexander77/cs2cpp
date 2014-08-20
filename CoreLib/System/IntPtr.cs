@@ -9,18 +9,23 @@ namespace System
     [Serializable]
     public struct IntPtr
     {
-        unsafe private void* m_value;
+        unsafe private void* _value;
 
         public static readonly IntPtr Zero;
 
         public unsafe IntPtr(void* value)
         {
-            m_value = value;
+            _value = value;
         }
 
         public unsafe IntPtr(int value)
         {
-            m_value = (void*)value;
+            _value = (void*)value;
+        }
+
+        public unsafe void* ToPointer()
+        {
+            return _value;
         }
     }
 }

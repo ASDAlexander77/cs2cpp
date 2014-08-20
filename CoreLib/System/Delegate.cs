@@ -19,7 +19,6 @@ namespace System
             throw new NotImplementedException();
         }
 
-
         public static Delegate Combine(Delegate a, Delegate b)
         {
             throw new NotImplementedException();
@@ -60,12 +59,10 @@ namespace System
             throw new NotImplementedException();
         }
 
-
-        public static explicit operator IntPtr(Delegate source)
+        public unsafe void* ToPointer()
         {
-            return source.methodPtr;
+            return methodPtr.ToPointer();
         }
-
     }
 }
 
