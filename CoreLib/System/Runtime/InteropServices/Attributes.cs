@@ -37,6 +37,28 @@ namespace System.Runtime.InteropServices
         }
     }
 
+    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    public unsafe sealed class DllImportAttribute : Attribute
+    {
+        internal String _val;
+
+        public DllImportAttribute(String dllName)
+        {
+            _val = dllName;
+        }
+        public String Value { get { return _val; } }
+
+        public String EntryPoint;
+        public CharSet CharSet;
+        public bool SetLastError;
+        public bool ExactSpelling;
+        public bool PreserveSig;
+        public CallingConvention CallingConvention;
+        public bool BestFitMapping;
+        public bool ThrowOnUnmappableChar;
+
+    }
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
     public sealed class StructLayoutAttribute : Attribute
     {

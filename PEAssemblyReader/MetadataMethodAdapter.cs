@@ -221,11 +221,29 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsInternalCall
+        public bool IsUnmanaged
         {
             get
             {
-                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ManagedMask);
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsDllImport
+        {
+            get
+            {
+                return this.methodDef.GetDllImportData() != null;
+            }
+        }
+
+        public DllImportData DllImportData
+        {
+            get
+            {
+                return this.methodDef.GetDllImportData();
             }
         }
 

@@ -18,6 +18,7 @@ namespace Il2Native.Logic.Gencode
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using Microsoft.CodeAnalysis;
 
     /// <summary>
     /// </summary>
@@ -636,11 +637,27 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// custom field
             /// </summary>
-            public bool IsInternalCall
+            public bool IsUnmanaged
             {
                 get
                 {
                     return false;
+                }
+            }
+
+            public bool IsDllImport
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public DllImportData DllImportData
+            {
+                get
+                {
+                    return null;
                 }
             }
 
@@ -1000,11 +1017,27 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// custom field
             /// </summary>
-            public bool IsInternalCall
+            public bool IsUnmanaged
             {
                 get
                 {
                     return false;
+                }
+            }
+
+            public bool IsDllImport
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public DllImportData DllImportData
+            {
+                get
+                {
+                    return null;
                 }
             }
 
@@ -1324,11 +1357,27 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// custom field
             /// </summary>
-            public bool IsInternalCall
+            public bool IsUnmanaged
             {
                 get
                 {
                     return false;
+                }
+            }
+
+            public bool IsDllImport
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public DllImportData DllImportData
+            {
+                get
+                {
+                    return null;
                 }
             }
 

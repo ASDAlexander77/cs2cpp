@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using Microsoft.CodeAnalysis;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -39,7 +40,16 @@ namespace PEAssemblyReader
         /// <summary>
         /// custom field
         /// </summary>
-        bool IsInternalCall { get; }
+        bool IsUnmanaged { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsDllImport { get; }
+
+        /// <summary>
+        /// </summary>
+        DllImportData DllImportData { get; }
 
         /// <summary>
         /// </summary>

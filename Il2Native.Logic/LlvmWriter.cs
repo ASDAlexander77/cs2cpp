@@ -2101,7 +2101,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodStart(IMethod method, IGenericContext genericContext)
         {
-            if (method.IsInternalCall && this.processedMethods.Any(m => m.Name == method.Name))
+            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Name == method.Name))
             {
                 return;
             }
@@ -2129,6 +2129,15 @@ namespace Il2Native.Logic
             if ((method.IsAbstract || this.NoBody) && !isDelegateBodyFunctions)
             {
                 this.Output.Write("declare ");
+
+                if (method.IsDllImport)
+                {
+                    this.Output.Write("dllimport ");
+                    if (method.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
+                    {
+                        this.Output.Write("x86_stdcallcc ");
+                    }
+                }
             }
             else
             {
@@ -3989,7 +3998,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
-            if (methodBase.IsInternalCall)
+            if (methodBase.IsUnmanaged || methodBase.IsDllImport)
             {
                 return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
             }

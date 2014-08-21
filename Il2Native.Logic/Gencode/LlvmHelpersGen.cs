@@ -498,16 +498,6 @@ namespace Il2Native.Logic.Gencode
 
                     if (isPrimitivePointer)
                     {
-                        // call Ldind to load value
-                        ////var toLoadValue = new OpCodePart(OpCodesEmit.Ldind_I, 0, 0);
-                        ////toLoadValue.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
-
-                        ////llvmWriter.LoadIndirect(writer, toLoadValue, primitiveType);
-
-                        ////toLoadValue.Result.Type.UseAsClass = false;
-                        ////opCodeMethodInfo.OpCodeOperands[0] = toLoadValue;
-                        ////opCodeFirstOperand = toLoadValue;
-
                         var firstOperandResult = opCodeFirstOperand.Result;
                         opCodeFirstOperand.Result = null;
                         llvmWriter.WriteLlvmLoad(opCodeFirstOperand, firstOperandResult.Type.ToDereferencedType(), firstOperandResult);
@@ -570,6 +560,14 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 writer.Write("call ");
+            }
+
+            if (methodInfo.IsDllImport)
+            {
+                if (methodInfo.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
+                {
+                    writer.Write("x86_stdcallcc ");
+                }
             }
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
