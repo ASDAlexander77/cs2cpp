@@ -1703,7 +1703,7 @@ namespace Il2Native.Logic
         {
             if (field.IsStatic)
             {
-                if (!field.IsLiteral)
+                if (!field.IsConst && !field.DeclaringType.IsEnum)
                 {
                     this.staticFieldsInfo.Add(field);
                 }

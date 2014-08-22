@@ -109,11 +109,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsLiteral
+        public bool IsConst
         {
             get
             {
-                return false;
+                return this.fieldDef.IsConst;
             }
         }
 

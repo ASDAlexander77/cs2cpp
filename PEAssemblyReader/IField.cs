@@ -19,7 +19,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsLiteral { get; }
+        bool IsConst { get; }
 
         /// <summary>
         /// </summary>
