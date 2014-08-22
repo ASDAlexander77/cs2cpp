@@ -536,7 +536,7 @@ namespace PEAssemblyReader
                 var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 if (methodBody != null && methodBody.GetILBytes() != null)
                 {
-                    if (genericContext != null && this.GenericContext == null)
+                    if (genericContext != null && !genericContext.IsEmpty && (this.GenericContext == null || this.GenericContext.IsEmpty))
                     {
                         this.GenericContext = genericContext;
                     }

@@ -2188,8 +2188,20 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteRequiredTypesForBody()
         {
-            // get all required types for methods bodies
-            foreach (var requiredType in this.requiredTypesForBody)
+            ////// get all required types for methods bodies
+            ////var count = 0;
+            ////do
+            ////{
+            ////    var requiredTypesForBodyToWrite = this.requiredTypesForBody.ToArray();
+            ////    count = requiredTypesForBodyToWrite.Length;
+            ////    foreach (var requiredType in requiredTypesForBodyToWrite)
+            ////    {
+            ////        this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            ////    }
+            ////}
+            ////while (count > 0 && this.requiredTypesForBody.Count != count);
+
+            foreach (var requiredType in this.requiredTypesForBody.ToArray())
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
