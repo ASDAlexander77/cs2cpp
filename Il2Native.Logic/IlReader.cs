@@ -49,6 +49,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyAllReferencedTypes;
+
+        /// <summary>
+        /// </summary>
         private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
 
         /// <summary>
@@ -303,6 +307,7 @@ namespace Il2Native.Logic
         {
             this.lazyTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes());
             this.lazyAllTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true));
+            this.lazyAllReferencedTypes = new Lazy<IEnumerable<IType>>(() => this.ReadTypes(true, true));
         }
 
         /// <summary>
@@ -767,6 +772,11 @@ namespace Il2Native.Logic
             return this.lazyAllTypes.Value;
         }
 
+        public IEnumerable<IType> AllReferencedTypes()
+        {
+            return this.lazyAllReferencedTypes.Value;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="source">
@@ -1066,14 +1076,17 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        private IEnumerable<IType> ReadTypes(bool readAll = false)
+        private IEnumerable<IType> ReadTypes(bool readAll = false, bool ignoreCurrent = false)
         {
             var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
 
-            // 3) Load Types
-            foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
+            if (!ignoreCurrent)
             {
-                yield return metadataTypeAdapter;
+                // 3) Load Types
+                foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
+                {
+                    yield return metadataTypeAdapter;
+                }
             }
 
             if (readAll)

@@ -54,6 +54,8 @@ namespace Il2Native.Logic
         /// </summary>
         void WriteAfterMethods();
 
+        void WritePostDeclarations(IType type);
+
         /// <summary>
         /// </summary>
         void WriteBeforeConstructors();
@@ -176,5 +178,11 @@ namespace Il2Native.Logic
         /// <param name="type">
         /// </param>
         bool IsProcessed(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        bool IsPostDeclarationsProcessed(IType type);
     }
 }

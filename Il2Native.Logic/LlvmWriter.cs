@@ -104,15 +104,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IType> postDeclarationsProcessedTypes = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
         private int resultNumberIncremental;
 
         /// <summary>
         /// </summary>
         private LlvmIndentedTextWriter savedOutput;
-
-        /// <summary>
-        /// </summary>
-        private readonly IList<IField> staticFieldsInfo = new List<IField>();
 
         /// <summary>
         /// </summary>
@@ -1059,13 +1059,16 @@ namespace Il2Native.Logic
 
             this.Output.Indent--;
             this.Output.WriteLine("}");
-
-            this.WritePostDeclarationsIfNotProcessedYet();
         }
 
-        private void WritePostDeclarationsIfNotProcessedYet()
+        public void WritePostDeclarations(IType type)
         {
-            if (!this.ThisType.IsGenericType && this.AssemblyQualifiedName != this.ThisType.AssemblyQualifiedName)
+            if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            if (postDeclarationsProcessedTypes.Contains(type))
             {
                 return;
             }
@@ -1074,33 +1077,33 @@ namespace Il2Native.Logic
             this.WriteInterfaceVirtaulTables();
 
             this.Output.WriteLine(string.Empty);
-            this.ThisType.WriteRtti(this);
+            type.WriteRtti(this);
 
-            this.processedTypes.Add(this.ThisType);
-            this.processedRttiTypes.Add(this.ThisType);
-            this.processedRttiPointerTypes.Add(this.ThisType);
+            this.postDeclarationsProcessedTypes.Add(type);
+            this.processedRttiTypes.Add(type);
+            this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
-            this.ThisType.WriteInitObjectMethod(this);
+            type.WriteInitObjectMethod(this);
 
-            var stored = this.ThisType.UseAsClass;
-            this.ThisType.UseAsClass = false;
+            var stored = type.UseAsClass;
+            type.UseAsClass = false;
 
-            var canBeBoxed = this.ThisType.IsPrimitiveType() || this.ThisType.IsStructureType() || this.ThisType.IsEnum;
+            var canBeBoxed = type.IsPrimitiveType() || type.IsStructureType() || type.IsEnum;
             var canBeUnboxed = canBeBoxed;
-            var excluded = this.ThisType.FullName == "System.Enum" || this.ThisType.FullName == "System.IntPtr" || this.ThisType.FullName == "System.UIntPtr";
+            var excluded = type.FullName == "System.Enum" || type.FullName == "System.IntPtr" || type.FullName == "System.UIntPtr";
 
             if (canBeBoxed && !excluded)
             {
-                this.ThisType.WriteBoxMethod(this);
+                type.WriteBoxMethod(this);
             }
 
             if (canBeUnboxed && !excluded)
             {
-                this.ThisType.WriteUnboxMethod(this);
+                type.WriteUnboxMethod(this);
             }
 
-            this.ThisType.UseAsClass = stored;
+            type.UseAsClass = stored;
         }
 
         /// <summary>
@@ -1703,11 +1706,6 @@ namespace Il2Native.Logic
         {
             if (field.IsStatic)
             {
-                if (!field.IsConst && !field.DeclaringType.IsEnum)
-                {
-                    this.staticFieldsInfo.Add(field);
-                }
-
                 return;
             }
 
@@ -2384,8 +2382,6 @@ namespace Il2Native.Logic
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(@interface);
             }
-
-            this.staticFieldsInfo.Clear();
 
             this.ReadTypeInfo(type);
 
@@ -4800,10 +4796,12 @@ namespace Il2Native.Logic
 
         private void WriteStaticFieldDeclarations()
         {
-            // after writing type you need to generate static members
-            foreach (var field in this.staticFieldsInfo)
+            if (!this.ThisType.IsEnum)
             {
-                WriteStaticFieldDeclaration(field);
+                foreach (var field in IlReader.Fields(this.ThisType).Where(f => f.IsStatic && !f.IsConst))
+                {
+                    WriteStaticFieldDeclaration(field);
+                }
             }
         }
 
@@ -4991,6 +4989,11 @@ namespace Il2Native.Logic
         public bool IsProcessed(IType type)
         {
             return this.processedTypes.Contains(type);
+        }
+
+        public bool IsPostDeclarationsProcessed(IType type)
+        {
+            return this.postDeclarationsProcessedTypes.Contains(type);
         }
 
         /// <summary>
