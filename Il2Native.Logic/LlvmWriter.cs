@@ -406,7 +406,7 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfExternalDeclarationIsRequired(IField field)
         {
-            if (field == null || !field.IsStatic || field.DeclaringType.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            if (field == null || !field.IsStatic || field.DeclaringType.AssemblyQualifiedName == this.AssemblyQualifiedName || field.DeclaringType.IsGenericType)
             {
                 return;
             }
@@ -1129,7 +1129,7 @@ namespace Il2Native.Logic
                 type.UseAsClass = true;
             }
 
-            this.Output.Write("%.{0} = ", name);
+            this.Output.Write("{0} = ", GetArgVarName(name));
 
             // for value types
             this.Output.Write("alloca ");
@@ -1139,11 +1139,11 @@ namespace Il2Native.Logic
 
             this.Output.Write("store ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
-            this.Output.Write(" %{0}", name);
+            this.Output.Write(" %arg.{0}", name);
             this.Output.Write(", ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
 
-            this.Output.Write("* %.{0}", name);
+            this.Output.Write("* {0}", GetArgVarName(name));
             this.Output.Write(", align " + PointerSize);
             this.Output.WriteLine(string.Empty);
         }
@@ -1967,7 +1967,7 @@ namespace Il2Native.Logic
 
                 if (!noArgumentName)
                 {
-                    writer.Write(" %this");
+                    writer.Write(" %arg.this");
                 }
             }
 
@@ -1986,17 +1986,16 @@ namespace Il2Native.Logic
 
                 if (parameter.ParameterType.IsStructureType())
                 {
+                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
                     if (!noArgumentName)
                     {
                         writer.Write(" byval align " + PointerSize);
-                        writer.Write(" %.");
+                        writer.Write(" %");
                     }
-
-                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
                 }
                 else if (!noArgumentName)
                 {
-                    writer.Write(" %");
+                    writer.Write(" %arg.");
                 }
 
                 if (!noArgumentName)
@@ -3252,13 +3251,13 @@ namespace Il2Native.Logic
                     if (this.HasMethodThis && index == 0)
                     {
                         this.ThisType.UseAsClass = true;
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference("%.this", this.ThisType), true, this.ThisType.IsStructureType());
+                        this.WriteLlvmLoad(opCode, new FullyDefinedReference("%this", this.ThisType), true, this.ThisType.IsStructureType());
                     }
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
 
-                        destinationName = string.Concat("%.", parameter.Name);
+                        destinationName = GetArgVarName(parameter);
 
                         skip = parameter.ParameterType.IsStructureType() && opCode.Destination == null;
                         var fullyDefinedReference = new FullyDefinedReference(destinationName, parameter.ParameterType);
@@ -3282,13 +3281,13 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        writer.Write("%.this");
-                        opCode.Result = new FullyDefinedReference("%.this", this.ThisType);
+                        writer.Write("%this");
+                        opCode.Result = new FullyDefinedReference("%this", this.ThisType);
                     }
                     else
                     {
                         var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        opCode.Result = new FullyDefinedReference(string.Concat("%.", parameter.Name), parameter.ParameterType.ToPointerType());
+                        opCode.Result = new FullyDefinedReference(GetArgVarName(parameter), parameter.ParameterType.ToPointerType());
                     }
 
                     break;
@@ -3997,7 +3996,29 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetArgVarName(int index)
         {
-            return string.Concat("%.", this.Parameters[index].Name);
+            return GetArgVarName(this.Parameters[index]);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="parameter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private string GetArgVarName(IParameter parameter)
+        {
+            return GetArgVarName(parameter.Name);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="parameter">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private string GetArgVarName(string name)
+        {
+            return string.Concat("%", name);
         }
 
         /// <summary>

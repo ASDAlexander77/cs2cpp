@@ -157,7 +157,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%.this", method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%this", method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
@@ -217,7 +217,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%.this", method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%this", method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
