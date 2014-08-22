@@ -65,6 +65,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly Dictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+
+        /// <summary>
+        /// </summary>
+        private readonly List<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+
+        /// <summary>
+        /// </summary>
         static IlReader()
         {
             OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
@@ -310,7 +318,8 @@ namespace Il2Native.Logic
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
-            this.UsingRoslyn = args != null ? args.Any(a => a == "roslyn") : false;
+            this.UsingRoslyn = args != null && args.Any(a => a == "roslyn");
+            this.DefaultDllLocations = this.Source.EndsWith(".dll") ? Path.GetDirectoryName(Path.GetFullPath(this.Source)) : null;
         }
 
         /// <summary>
@@ -380,6 +389,8 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool UsingRoslyn { get; set; }
+
+        public string DefaultDllLocations { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -654,13 +665,10 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericContext);
-                        if (field != null)
-                        {
-                            this.AddGenericSpecializedType(field.FieldType);
-                            this.AddGenericSpecializedType(field.DeclaringType);
-                        }
 
-                        AddUsedType(field.DeclaringType);
+                        this.AddGenericSpecializedType(field.FieldType);
+                        this.AddGenericSpecializedType(field.DeclaringType);
+                        this.AddUsedType(field.DeclaringType);
 
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
@@ -782,10 +790,62 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static AssemblySymbol MapAssemblyIdentityToResolvedSymbol(AssemblyIdentity identity, Dictionary<AssemblyIdentity, AssemblySymbol> map)
+        private AssemblySymbol LoadAssemblySymbolOrMissingAssemblySymbol(AssemblyIdentity identity)
         {
             AssemblySymbol symbol;
-            return map.TryGetValue(identity, out symbol) ? symbol : new MissingAssemblySymbol(identity);
+            if (this.cache.TryGetValue(identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var peAssemblySymbol = this.LoadAssemblySymbol(identity);
+            if (peAssemblySymbol != null)
+            {
+                return peAssemblySymbol;
+            }
+
+            return new MissingAssemblySymbol(identity);
+        }
+
+        private AssemblySymbol LoadAssemblySymbol(AssemblyIdentity identity)
+        {
+            AssemblySymbol symbol;
+            if (this.cache.TryGetValue(identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var assemblyMetadata = this.GetAssemblyMetadata(identity);
+            if (assemblyMetadata != null)
+            {
+                return this.LoadAssemblySymbol(assemblyMetadata);
+            }
+
+            return null;
+        }
+
+        private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata)
+        {
+            AssemblySymbol symbol;
+            if (this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var assemblySymbol = GetAssemblySymbol(assemblyMetadata);
+            
+            this.cache[assemblyMetadata.Assembly.Identity] = assemblySymbol;
+            this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.Assembly.Identity));
+
+            var moduleReferences = this.LoadReferences(assemblyMetadata);
+            foreach (var module in assemblySymbol.Modules)
+            {
+                module.SetReferences(moduleReferences);
+            }
+
+            this.SetCorLib(assemblySymbol);
+
+            return assemblySymbol;
         }
 
         /// <summary>
@@ -1008,22 +1068,20 @@ namespace Il2Native.Logic
         /// </returns>
         private IEnumerable<IType> ReadTypes(bool readAll = false)
         {
-            var assemblySymbol = new PEAssemblySymbol(
-                this.Assembly.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-
-            var moduleReferences = LoadReferences(assemblySymbol);
+            var assemblySymbol = this.LoadAssemblySymbol(this.Assembly);
 
             // 3) Load Types
-            foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol, moduleReferences))
+            foreach (var metadataTypeAdapter in this.EnumAllTypes(assemblySymbol as PEAssemblySymbol))
             {
                 yield return metadataTypeAdapter;
             }
 
             if (readAll)
             {
+                var moduleReferences = this.LoadReferences(this.Assembly);
                 foreach (var moduleAssemblySymbol in moduleReferences.Symbols)
                 {
-                    foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol, moduleReferences))
+                    foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol))
                     {
                         yield return metadataTypeAdapter;
                     }
@@ -1031,12 +1089,12 @@ namespace Il2Native.Logic
             }
         }
 
-        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol, ModuleReferences<AssemblySymbol> moduleReferences)
+        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol)
         {
+            Debug.Assert(assemblySymbol != null, "missing assembly");
+
             foreach (var module in assemblySymbol.Modules)
             {
-                module.SetReferences(moduleReferences);
-
                 var peModuleSymbol = module as PEModuleSymbol;
                 foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
                                                     select new MetadataTypeAdapter(symbol))
@@ -1062,54 +1120,57 @@ namespace Il2Native.Logic
             }
         }
 
-        private ModuleReferences<AssemblySymbol> LoadReferences(PEAssemblySymbol assemblySymbol)
+        private ModuleReferences<AssemblySymbol> LoadReferences(AssemblyMetadata assemblyMetadata)
         {
-            // TODO: finish loading all Dlls (now it is loading only "CoreLib" or "mscorlib"
-            // 1) set corelib
-            var coreLibSet = false;
-            var referencedAssembliesByIdentity = new Dictionary<AssemblyIdentity, AssemblySymbol>();
-            var unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+            var peReferences = ImmutableArray.CreateRange(assemblyMetadata.Assembly.AssemblyReferences.Select(this.LoadAssemblySymbolOrMissingAssemblySymbol));
 
-            var coreLibQuery =
-                from assemblyIdentity in this.Assembly.Assembly.AssemblyReferences
-                select AssemblyMetadata.CreateFromImageStream(
-                            new FileStream(
-                                this.ResolveReferencePath(assemblyIdentity),
-                                FileMode.Open,
-                                FileAccess.Read))
-                    into coreAssembly
-                    select
-                        new PEAssemblySymbol(
-                            coreAssembly.Assembly,
-                            DocumentationProvider.Default,
-                            isLinked: false,
-                            importOptions: MetadataImportOptions.All);
-
-            foreach (var coreAssemblySymbol in coreLibQuery)
-            {
-                coreAssemblySymbol.SetCorLibrary(coreAssemblySymbol);
-
-                assemblySymbol.SetCorLibrary(coreAssemblySymbol);
-
-                referencedAssembliesByIdentity[coreAssemblySymbol.Identity] = coreAssemblySymbol;
-                unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(coreAssemblySymbol, coreAssemblySymbol.Identity));
-                coreLibSet = true;
-                continue;
-            }
-
-            if (!coreLibSet)
-            {
-                assemblySymbol.SetCorLibrary(assemblySymbol);
-            }
-
-            // 2) set references
-            var peReferences = this.Assembly.Assembly.AssemblyReferences.SelectAsArray(MapAssemblyIdentityToResolvedSymbol, referencedAssembliesByIdentity);
-            var moduleReferences = new ModuleReferences<AssemblySymbol>(this.Assembly.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(unifiedAssemblies));
+            var moduleReferences = new ModuleReferences<AssemblySymbol>(
+                assemblyMetadata.Assembly.AssemblyReferences,
+                peReferences,
+                ImmutableArray.CreateRange(this.unifiedAssemblies));
 
             return moduleReferences;
         }
 
-        // TODO: finish it
+        private void SetCorLib(PEAssemblySymbol assemblySymbol)
+        {
+            if (!assemblySymbol.Assembly.AssemblyReferences.Any())
+            {
+                // this is the core lib
+                assemblySymbol.SetCorLibrary(assemblySymbol);
+                return;
+            }
+
+            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
+                if (!peRefAssembly.Assembly.AssemblyReferences.Any())
+                {
+                    assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
+                    return;
+                }
+            }
+
+            Debug.Fail("CoreLib not set");
+        }
+
+        private static PEAssemblySymbol GetAssemblySymbol(AssemblyMetadata assemblyMetadata)
+        {
+            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
+        }
+
+        private AssemblyMetadata GetAssemblyMetadata(AssemblyIdentity assemblyIdentity)
+        {
+            var resolveReferencePath = this.ResolveReferencePath(assemblyIdentity);
+            if (string.IsNullOrWhiteSpace(resolveReferencePath))
+            {
+                return null;
+            }
+
+            return AssemblyMetadata.CreateFromImageStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
+        }
+
         private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
         {
             if (assemblyIdentity.Name == "CoreLib")
@@ -1120,6 +1181,21 @@ namespace Il2Native.Logic
             if (assemblyIdentity.Name == "mscorlib")
             {
                 return typeof(int).Assembly.Location;
+            }
+
+            var dllFileName = string.Concat(assemblyIdentity.Name, ".dll");
+            if (File.Exists(dllFileName))
+            {
+                return Path.GetFullPath(dllFileName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(this.DefaultDllLocations))
+            {
+                var dllFullName = Path.Combine(this.DefaultDllLocations, dllFileName);
+                if (File.Exists(dllFullName))
+                {
+                    return dllFullName;
+                }
             }
 
             Debug.Fail("Not implemented yet");
