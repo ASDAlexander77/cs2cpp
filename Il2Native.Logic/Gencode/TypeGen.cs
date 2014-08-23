@@ -111,8 +111,8 @@ namespace Il2Native.Logic.Gencode
         {
             if (type.IsInterface)
             {
-                // i8** (...)
-                return LlvmWriter.PointerSize;
+                var sizeOfInterfaces = type.GetInterfacesExcludingBaseAllInterfaces().Sum(i => i.GetTypeSizeNotAligned());
+                return sizeOfInterfaces > 0 ? sizeOfInterfaces : LlvmWriter.PointerSize;;
             }
 
             if (type.IsArray || type.IsPointer)
@@ -123,7 +123,7 @@ namespace Il2Native.Logic.Gencode
 
             if (type.IsEnum)
             {
-                return type.GetEnumUnderlyingType().GetTypeSize();
+                return type.GetEnumUnderlyingType().GetTypeSizeNotAligned();
             }
 
             var size = 0;
@@ -136,17 +136,17 @@ namespace Il2Native.Logic.Gencode
 
             if (type.BaseType != null)
             {
-                size += type.BaseType.GetTypeSize();
+                size += type.BaseType.GetTypeSizeNotAligned();
             }
 
             // add shift for interfaces
-            size += type.GetInterfacesExcludingBaseAllInterfaces().Count() * LlvmWriter.PointerSize;
+            size += type.GetInterfacesExcludingBaseAllInterfaces().Sum(i => i.GetTypeSizeNotAligned());
 
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
                 if (field.FieldType.IsStructureType())
                 {
-                    size += field.FieldType.GetTypeSize();
+                    size += field.FieldType.GetTypeSizeNotAligned();
                 }
 
                 var fieldSize = 0;
@@ -161,7 +161,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    size += field.FieldType.GetTypeSize();
+                    size += field.FieldType.GetTypeSizeNotAligned();
                 }
             }
 
@@ -184,6 +184,13 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static int GetTypeSize(this IType type)
+        {
+            var size =  type.GetTypeSizeNotAligned();
+            size += LlvmWriter.PointerSize - size % LlvmWriter.PointerSize;
+            return size;
+        }
+
+        private static int GetTypeSizeNotAligned(this IType type)
         {
             // find index
             int size;
