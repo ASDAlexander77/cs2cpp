@@ -1073,17 +1073,20 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.WriteStaticFieldDeclarations();
-            this.WriteInterfaceVirtaulTables();
+            this.postDeclarationsProcessedTypes.Add(type);
+
+            this.WriteStaticFieldDeclarations(type);
+            this.WriteInterfaceVirtaulTables(type);
 
             this.Output.WriteLine(string.Empty);
+            
             type.WriteRtti(this);
 
-            this.postDeclarationsProcessedTypes.Add(type);
             this.processedRttiTypes.Add(type);
             this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
+            
             type.WriteInitObjectMethod(this);
 
             var stored = type.UseAsClass;
@@ -4765,17 +4768,17 @@ namespace Il2Native.Logic
             this.Output.Write(methodNumberIncremental);
         }
 
-        private void WriteInterfaceVirtaulTables()
+        private void WriteInterfaceVirtaulTables(IType type)
         {
             // write VirtualTable
-            if (!this.ThisType.IsInterface)
+            if (!type.IsInterface)
             {
-                if (this.ThisType.HasAnyVirtualMethod())
+                if (type.HasAnyVirtualMethod())
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.ThisType.GetVirtualTableName());
-                    var virtualTable = this.ThisType.GetVirtualTable();
-                    virtualTable.WriteTableOfMethods(this, this.ThisType);
+                    this.Output.Write(type.GetVirtualTableName());
+                    var virtualTable = type.GetVirtualTable();
+                    virtualTable.WriteTableOfMethods(this, type);
 
                     foreach (var methodInVirtualTable in virtualTable)
                     {
@@ -4784,21 +4787,21 @@ namespace Il2Native.Logic
                 }
 
                 var index = 1;
-                foreach (var @interface in this.ThisType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.Output.Write(this.ThisType.GetVirtualInterfaceTableName(@interface));
-                    var virtualInterfaceTable = this.ThisType.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, this.ThisType, index++);
+                    this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
+                    var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
+                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++);
                 }
             }
         }
 
-        private void WriteStaticFieldDeclarations()
+        private void WriteStaticFieldDeclarations(IType type)
         {
-            if (!this.ThisType.IsEnum)
+            if (!type.IsEnum)
             {
-                foreach (var field in IlReader.Fields(this.ThisType).Where(f => f.IsStatic && !f.IsConst))
+                foreach (var field in IlReader.Fields(type).Where(f => f.IsStatic && !f.IsConst))
                 {
                     WriteStaticFieldDeclaration(field);
                 }
