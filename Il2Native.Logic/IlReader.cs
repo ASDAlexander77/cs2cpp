@@ -53,19 +53,19 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IMethod> usedGenericSpecialiazedMethods = new HashSet<IMethod>();
+        private HashSet<IMethod> usedGenericSpecialiazedMethods;
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> usedGenericSpecialiazedTypes = new HashSet<IType>();
+        private HashSet<IType> usedGenericSpecialiazedTypes;
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> usedStructTypes = new HashSet<IType>();
+        private HashSet<IType> usedStructTypes;
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> usedTypes = new HashSet<IType>();
+        private HashSet<IType> usedTypes;
 
         /// <summary>
         /// </summary>
@@ -367,6 +367,11 @@ namespace Il2Native.Logic
             {
                 return this.usedGenericSpecialiazedMethods;
             }
+
+            set
+            {
+                this.usedGenericSpecialiazedMethods = value;
+            }
         }
 
         /// <summary>
@@ -376,6 +381,11 @@ namespace Il2Native.Logic
             get
             {
                 return this.usedGenericSpecialiazedTypes;
+            }
+
+            set
+            {
+                this.usedGenericSpecialiazedTypes = value;
             }
         }
 
@@ -387,6 +397,11 @@ namespace Il2Native.Logic
             {
                 return this.usedStructTypes;
             }
+
+            set
+            {
+                this.usedStructTypes = value;
+            }
         }
 
         /// <summary>
@@ -396,6 +411,11 @@ namespace Il2Native.Logic
             get
             {
                 return this.usedTypes;
+            }
+
+            set
+            {
+                this.usedTypes = value;
             }
         }
 
@@ -965,7 +985,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedMethod(IMethod method)
         {
-            if (method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
+            if (this.usedGenericSpecialiazedMethods  == null || method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
             {
                 return;
             }
@@ -994,7 +1014,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedType(IType type)
         {
-            if (type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
+            if (this.usedGenericSpecialiazedTypes == null || type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
             {
                 return;
             }
@@ -1008,7 +1028,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddStructType(IType type)
         {
-            if (type == null || !type.IsStructureType())
+            if (this.usedStructTypes == null || type == null || !type.IsStructureType())
             {
                 return;
             }
@@ -1022,7 +1042,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddUsedType(IType type)
         {
-            if (type == null)
+            if (this.usedTypes == null || type == null)
             {
                 return;
             }

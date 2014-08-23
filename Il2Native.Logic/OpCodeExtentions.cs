@@ -51,34 +51,14 @@ namespace Il2Native.Logic
             // read method body to extract all types
             var reader = new IlReader();
 
+            reader.UsedStructTypes = requiredTypes;
+            reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
+            reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
+
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
             foreach (var op in reader.OpCodes(method, genericContext))
             {
                 // dummy body we just need to read body of a method
-            }
-
-            if (genericTypeSpecializations != null)
-            {
-                foreach (var genericSpecializedType in reader.UsedGenericSpecialiazedTypes)
-                {
-                    genericTypeSpecializations.Add(genericSpecializedType);
-                }
-            }
-
-            if (genericMethodSpecializations != null)
-            {
-                foreach (var genericSpecializedMethod in reader.UsedGenericSpecialiazedMethods)
-                {
-                    genericMethodSpecializations.Add(genericSpecializedMethod);
-                }
-            }
-
-            if (requiredTypes != null)
-            {
-                foreach (var usedType in reader.UsedStructTypes)
-                {
-                    requiredTypes.Add(usedType);
-                }
             }
         }
 
