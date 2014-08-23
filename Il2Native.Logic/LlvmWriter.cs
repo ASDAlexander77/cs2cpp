@@ -1401,56 +1401,71 @@ namespace Il2Native.Logic
         {
             if (this.MainMethod != null)
             {
-                this.Output.Write("define i32 @main()");
-
-                this.WriteMethodNumber();
-
-                this.Output.WriteLine(" {");
-
-                this.Output.Indent++;
-
-                if (!this.MainMethod.ReturnType.IsVoid())
-                {
-                    this.Output.Write("%1 = call i32 ");
-                }
-                else
-                {
-                    this.Output.Write("call void ");
-                }
-
-                var parameters = this.MainMethod.GetParameters();
-
-                this.WriteMethodDefinitionName(this.Output, this.MainMethod);
-                this.Output.Write("(");
-
-                var index = 0;
-                foreach (var parameter in parameters)
-                {
-                    if (index > 0)
-                    {
-                        this.Output.Write(", ");
-                    }
-
-                    this.Output.Write("%\"System.String\"** null");
-
-                    index++;
-                }
-
-                this.Output.WriteLine(");");
-
-                if (!this.MainMethod.ReturnType.IsVoid())
-                {
-                    this.Output.WriteLine("ret i32 %1");
-                }
-                else
-                {
-                    this.Output.WriteLine("ret i32 0");
-                }
-
-                this.Output.Indent--;
-                this.Output.WriteLine("}");
+                this.WriteMainFunction();
             }
 
+            this.WriteGlobalConstructors();
+
+            if (!this.IncludeMiniCoreLib)
+            {
+                this.WriteRequiredDeclarations();
+            }
+        }
+
+        private void WriteMainFunction()
+        {
+            this.Output.Write("define i32 @main()");
+
+            this.WriteMethodNumber();
+
+            this.Output.WriteLine(" {");
+
+            this.Output.Indent++;
+
+            if (!this.MainMethod.ReturnType.IsVoid())
+            {
+                this.Output.Write("%1 = call i32 ");
+            }
+            else
+            {
+                this.Output.Write("call void ");
+            }
+
+            var parameters = this.MainMethod.GetParameters();
+
+            this.WriteMethodDefinitionName(this.Output, this.MainMethod);
+            this.Output.Write("(");
+
+            var index = 0;
+            foreach (var parameter in parameters)
+            {
+                if (index > 0)
+                {
+                    this.Output.Write(", ");
+                }
+
+                this.Output.Write("%\"System.String\"** null");
+
+                index++;
+            }
+
+            this.Output.WriteLine(");");
+
+            if (!this.MainMethod.ReturnType.IsVoid())
+            {
+                this.Output.WriteLine("ret i32 %1");
+            }
+            else
+            {
+                this.Output.WriteLine("ret i32 0");
+            }
+
+            this.Output.Indent--;
+            this.Output.WriteLine("}");
+        }
+
+        private void WriteGlobalConstructors()
+        {
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
             this.Output.WriteLine("define internal void @_GLOBAL_CTORS_EXECUTE_() {");
@@ -1466,11 +1481,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine("ret void");
             this.Output.Indent--;
             this.Output.WriteLine("}");
-
-            if (!this.IncludeMiniCoreLib)
-            {
-                this.WriteRequiredDeclarations();
-            }
         }
 
         private void SortStaticConstructorsByUsage()
@@ -1478,19 +1488,9 @@ namespace Il2Native.Logic
             var staticConstructors = new Dictionary<IConstructor, HashSet<IType>>();
             foreach (var staticCtor in this.StaticConstructors)
             {
-                var usedTypes = new HashSet<IType>();
-                staticCtor.DiscoverUsedTypes(usedTypes);
-
-                var staticDeclType = staticCtor.DeclaringType;
-
-                // exclude itself and type which does not have static constructor
-                var usedTypesWhichHaveStaticCtor = new HashSet<IType>();
-                foreach (var usedType in usedTypes.Where(t => t.TypeNotEquals(staticDeclType) && IlReader.Constructors(t).Any(c => c.IsStatic)))
-                {
-                    usedTypesWhichHaveStaticCtor.Add(usedType);
-                }
-
-                staticConstructors.Add(staticCtor, usedTypesWhichHaveStaticCtor);
+                var methodWalker = new MethodsWalker(staticCtor);
+                var reaquiredTypesWithStaticFields = methodWalker.DiscoverAllStaticFieldsDependencies();
+                staticConstructors.Add(staticCtor, reaquiredTypesWithStaticFields);
             }
 
             // rebuild order
@@ -1513,10 +1513,20 @@ namespace Il2Native.Logic
             }
             while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
 
+            Debug.Assert(staticConstructors.Keys.Count == 0, "Not All static constructors were resolved");
+
             // add rest as is
             newStaticConstructors.AddRange(staticConstructors.Keys);
 
             this.StaticConstructors = newStaticConstructors;
+        }
+
+        private static void MethodsWalker(IMethod method, HashSet<IType> usedTypes)
+        {
+            var calledMethods = new HashSet<IMethod>();
+            var readStaticFields = new HashSet<IField>();
+
+            method.DiscoverMethod(usedTypes, calledMethods, readStaticFields);
         }
 
         /// <summary>

@@ -82,8 +82,8 @@ namespace Il2Native.Logic
             }
         }
 
-        public static void DiscoverUsedTypes(
-            this IMethod method, HashSet<IType> usedTypes)
+        public static void DiscoverMethod(
+            this IMethod method, HashSet<IType> usedTypes, HashSet<IMethod> calledMethods, HashSet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -99,6 +99,22 @@ namespace Il2Native.Logic
                 foreach (var usedType in reader.UsedTypes)
                 {
                     usedTypes.Add(usedType);
+                }
+            }
+
+            if (calledMethods != null)
+            {
+                foreach (var calledMethod in reader.CalledMethods)
+                {
+                    calledMethods.Add(calledMethod);
+                }
+            }
+
+            if (readStaticFields != null)
+            {
+                foreach (var usedStaticFieldToRead in reader.UsedStaticFieldsToRead)
+                {
+                    readStaticFields.Add(usedStaticFieldToRead);
                 }
             }
         }

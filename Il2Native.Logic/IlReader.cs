@@ -69,6 +69,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly HashSet<IField> usedStaticFieldsToRead = new HashSet<IField>();
+
+        /// <summary>
+        /// </summary>
+        private readonly HashSet<IMethod> calledMethods = new HashSet<IMethod>();
+
+        /// <summary>
+        /// </summary>
         private readonly Dictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         /// <summary>
@@ -393,6 +401,26 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public HashSet<IField> UsedStaticFieldsToRead
+        {
+            get
+            {
+                return this.usedStaticFieldsToRead;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public HashSet<IMethod> CalledMethods
+        {
+            get
+            {
+                return this.calledMethods;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool UsingRoslyn { get; set; }
 
         public string DefaultDllLocations { get; private set; }
@@ -626,6 +654,7 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(constructor.DeclaringType);
 
                         AddUsedType(constructor.DeclaringType);
+                        AddCalledMethod(constructor);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
@@ -643,6 +672,7 @@ namespace Il2Native.Logic
                         }
 
                         AddUsedType(method.DeclaringType);
+                        AddCalledMethod(method);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -674,6 +704,11 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(field.FieldType);
                         this.AddGenericSpecializedType(field.DeclaringType);
                         this.AddUsedType(field.DeclaringType);
+
+                        if (code == Code.Ldsfld || code == Code.Ldsflda)
+                        {
+                            this.AddUsedStaticFieldToRead(field);
+                        }
 
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
@@ -993,6 +1028,26 @@ namespace Il2Native.Logic
             }
 
             this.usedTypes.Add(type);
+        }
+
+        private void AddUsedStaticFieldToRead(IField field)
+        {
+            if (field == null || !field.IsStatic)
+            {
+                return;
+            }
+
+            this.usedStaticFieldsToRead.Add(field);
+        }
+
+        private void AddCalledMethod(IMethod method)
+        {
+            if (method == null)
+            {
+                return;
+            }
+
+            this.calledMethods.Add(method);
         }
 
         /// <summary>
