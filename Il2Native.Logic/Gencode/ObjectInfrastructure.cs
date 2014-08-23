@@ -474,12 +474,20 @@ namespace Il2Native.Logic.Gencode
                 opCode.Destination = new FullyDefinedReference("%agg.result", normalType);
             }
 
-            llvmWriter.WriteUnboxObject(opCode, type.ToNormal());
+            llvmWriter.WriteUnboxObject(opCode, normalType);
 
             writer.Write("ret ");
             if (!isStruct)
             {
-                type.WriteTypePrefix(writer);
+                if (normalType.IsEnum)
+                {
+                    normalType.GetEnumUnderlyingType().WriteTypePrefix(writer);
+                }
+                else
+                {
+                    normalType.WriteTypePrefix(writer);
+                }
+
                 writer.Write(" ");
                 llvmWriter.WriteResult(opCode.Result);
             }
