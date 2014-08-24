@@ -24,6 +24,9 @@ namespace PEAssemblyReader
         /// </summary>
         private MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo;
 
+        // we are using it to replace Pinner IntPtr& with Void* to work with it as value
+        private IType localTypeReplaced;
+
         /// <summary>
         /// </summary>
         /// <param name="localInfo">
@@ -66,10 +69,20 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.localTypeReplaced != null)
+                {
+                    return this.localTypeReplaced;
+                }
+
                 var localType = this.localInfo.Type.ResolveGeneric(this.GenericContext);
                 localType.IsByRef = this.localInfo.IsByRef;
                 localType.IsPinned = this.localInfo.IsPinned;
                 return localType;
+            }
+
+            set
+            {
+                this.localTypeReplaced = value;
             }
         }
 

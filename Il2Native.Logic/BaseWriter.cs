@@ -1250,6 +1250,8 @@ namespace Il2Native.Logic
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
 
+                AdjustLocalVariableTypes();
+
 #if DEBUG
                 Debug.Assert(!LocalInfo.Any(li => li.LocalType.IsGenericParameter));
 #endif
@@ -1259,6 +1261,15 @@ namespace Il2Native.Logic
             }
 
             this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
+        }
+
+        private void AdjustLocalVariableTypes()
+        {
+            // replace pinned IntPtr& with Int
+            foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
+            {
+                localInfo.LocalType = this.ResolveType("System.Void").ToPointerType();
+            }
         }
 
         /// <summary>

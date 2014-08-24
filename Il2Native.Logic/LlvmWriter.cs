@@ -718,6 +718,8 @@ namespace Il2Native.Logic
                 }
 
                 this.ActualWrite(writer, operand);
+
+                this.WriteResult(operand.Result);
             }
             else
             {
@@ -4749,7 +4751,15 @@ namespace Il2Native.Logic
             foreach (var local in locals)
             {
                 this.Output.Write(string.Format("%local{0} = ", local.LocalIndex));
-                this.WriteAlloca(local.LocalType);
+                if (local.LocalType.IsPinned)
+                {
+                    this.WriteAlloca(this.ResolveType("System.Void").ToPointerType());
+                }
+                else
+                {
+                    this.WriteAlloca(local.LocalType);
+                }
+
                 this.Output.WriteLine(string.Empty);
             }
         }
