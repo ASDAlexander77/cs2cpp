@@ -37,6 +37,22 @@ namespace System.Runtime.InteropServices
         }
     }
 
+    [AttributeUsage(AttributeTargets.Delegate | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public sealed class UnmanagedFunctionPointerAttribute : Attribute
+    {
+        CallingConvention m_callingConvention;
+
+        public UnmanagedFunctionPointerAttribute(CallingConvention callingConvention) { m_callingConvention = callingConvention; }
+
+        public CallingConvention CallingConvention { get { return m_callingConvention; } }
+
+        public CharSet CharSet;
+        public bool BestFitMapping;
+        public bool ThrowOnUnmappableChar;
+        public bool SetLastError;
+        //public bool PreserveSig;
+    }
+
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
     public unsafe sealed class DllImportAttribute : Attribute
     {
