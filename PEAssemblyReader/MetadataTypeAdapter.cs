@@ -237,6 +237,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsPinned { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool IsClass
         {
             get

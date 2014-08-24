@@ -2710,7 +2710,7 @@ namespace Il2Native.Logic
                     opCode.Result = opCode.UseAsBoolean
                                         ? new ConstValue(false, this.ResolveType("System.Boolean"))
                                         : opCode.UseAsNull
-                                              ? new ConstValue(null, this.ResolveType("System.Object"))
+                                              ? new ConstValue(null, this.ResolveType("System.Void").ToPointerType())
                                               : new ConstValue(0, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_1:
@@ -2807,7 +2807,7 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldnull:
-                    opCode.Result = new ConstValue(null, this.ResolveType("System.Object"));
+                    opCode.Result = new ConstValue(null, this.ResolveType("System.Void").ToPointerType());
                     break;
                 case Code.Ldtoken:
 

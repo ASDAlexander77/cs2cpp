@@ -463,7 +463,7 @@ namespace Il2Native.Logic
                             opCode.UseAsBoolean
                                 ? this.ResolveType("System.Boolean")
                                 : opCode.UseAsNull 
-                                    ? this.ResolveType("System.Object") 
+                                    ? this.ResolveType("System.Void").ToPointerType() 
                                     : this.ResolveType("System.Int32")) { IsConst = true };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
@@ -540,7 +540,7 @@ namespace Il2Native.Logic
                 if (opCodeBlock.UseAsConditionalExpression)
                 {
                     var op1 = this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
-                    if (!op1.IsConst)
+                    if (op1 != null && !op1.IsConst)
                     {
                         return op1;
                     }
@@ -610,9 +610,6 @@ namespace Il2Native.Logic
 
             if (opCode.OpCodeOperands.Length == 2
                 && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
-
-
-
                 /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
             {
                 // types should be equal
