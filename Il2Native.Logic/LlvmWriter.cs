@@ -2191,7 +2191,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+                this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType, method.IsUnmanagedMethodReference);
             }
 
             if (method.IsUnmanagedMethodReference)
