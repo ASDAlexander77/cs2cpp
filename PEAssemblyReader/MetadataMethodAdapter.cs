@@ -231,11 +231,21 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsUnmanagedMethodReference
+        {
+            get
+            {
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ForwardRef);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsDllImport
         {
             get
             {
-                return this.methodDef.GetDllImportData() != null;
+                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null;
             }
         }
 

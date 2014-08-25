@@ -414,6 +414,17 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            /// <summary>
+            /// custom field
+            /// </summary>
+            public bool IsUnmanagedMethodReference
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
             public bool IsDllImport
             {
                 get

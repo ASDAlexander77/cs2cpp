@@ -653,6 +653,14 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            public bool IsUnmanagedMethodReference
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
             public bool IsDllImport
             {
                 get
@@ -1033,6 +1041,14 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            public bool IsUnmanagedMethodReference
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
             public bool IsDllImport
             {
                 get
@@ -1366,6 +1382,14 @@ namespace Il2Native.Logic.Gencode
             /// custom field
             /// </summary>
             public bool IsUnmanaged
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            public bool IsUnmanagedMethodReference
             {
                 get
                 {

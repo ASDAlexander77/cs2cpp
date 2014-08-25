@@ -2140,15 +2140,35 @@ namespace Il2Native.Logic
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || this.NoBody) && !isDelegateBodyFunctions)
             {
-                this.Output.Write("declare ");
+                if (!method.IsUnmanagedMethodReference)
+                {
+                    this.Output.Write("declare ");
+                }
+                else
+                {
+                    this.WriteMethodDefinitionName(this.Output, method);
+                    this.Output.Write(" = ");
+                }
 
                 if (method.IsDllImport)
                 {
                     this.Output.Write("dllimport ");
-                    if (method.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
-                    {
-                        this.Output.Write("x86_stdcallcc ");
-                    }
+                }
+                else if (method.IsUnmanagedMethodReference)
+                {
+                    this.Output.Write("external ");
+                }
+
+                if (method.IsUnmanagedMethodReference)
+                {
+                    this.Output.Write("global ");
+                }
+
+                if (!method.IsUnmanagedMethodReference 
+                    && method.DllImportData != null 
+                    && method.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
+                {
+                    this.Output.Write("x86_stdcallcc ");
                 }
             }
             else
@@ -2156,9 +2176,15 @@ namespace Il2Native.Logic
                 this.Output.Write("define ");
             }
 
+            // return type
             this.WriteMethodReturnType(this.Output, method);
 
-            this.WriteMethodDefinitionName(this.Output, method);
+            // name
+            if (!method.IsUnmanagedMethodReference)
+            {
+                this.WriteMethodDefinitionName(this.Output, method);
+            }
+
             if (method.IsExternalLibraryMethod())
             {
                 this.Output.Write("(...)");
@@ -2168,7 +2194,14 @@ namespace Il2Native.Logic
                 this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
             }
 
-            this.WriteMethodNumber();
+            if (method.IsUnmanagedMethodReference)
+            {
+                this.Output.Write("*");
+            }
+            else
+            {
+                this.WriteMethodNumber();
+            }
 
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);

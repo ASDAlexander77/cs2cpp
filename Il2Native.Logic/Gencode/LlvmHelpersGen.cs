@@ -88,6 +88,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
             llvmWriter.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
+            writer.Write(", align {0}", LlvmWriter.PointerSize);
             writer.WriteLine(string.Empty);
             var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
 
@@ -441,7 +442,7 @@ namespace Il2Native.Logic.Gencode
                                          : null;
             var resultOfFirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
 
-            FullyDefinedReference virtualMethodAddressResultNumber = null;
+            FullyDefinedReference methodAddressResultNumber = null;
             var isIndirectMethodCall = isVirtual
                                        && (methodBase.IsAbstract || methodBase.IsVirtual
                                            || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.IType)));
@@ -521,7 +522,22 @@ namespace Il2Native.Logic.Gencode
             if (isIndirectMethodCall)
             {
                 llvmWriter.GenerateVirtualCall(
-                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref virtualMethodAddressResultNumber, ref requiredType);
+                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref methodAddressResultNumber, ref requiredType);
+            }
+
+            // if this is external method reference we need to load reference first
+            if (methodInfo.IsUnmanagedMethodReference)
+            {
+                //  %4 = load i32 ()** @__glewCreateProgram, align 4
+                // load pointer
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+                writer.Write("load ");
+                llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
+                writer.Write("* ");
+                llvmWriter.WriteMethodDefinitionName(writer, methodInfo);
+                writer.Write(", align {0}", LlvmWriter.PointerSize);
+                writer.WriteLine(string.Empty);
+                methodAddressResultNumber = opCodeMethodInfo.Result;
             }
 
             // check if you need to cast parameter
@@ -562,12 +578,9 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("call ");
             }
 
-            if (methodInfo.IsDllImport)
+            if (methodInfo.DllImportData != null && methodInfo.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
             {
-                if (methodInfo.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
-                {
-                    writer.Write("x86_stdcallcc ");
-                }
+                writer.Write("x86_stdcallcc ");
             }
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
@@ -584,9 +597,9 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(' ');
 
-            if (isIndirectMethodCall)
+            if (isIndirectMethodCall || methodInfo.IsUnmanagedMethodReference)
             {
-                llvmWriter.WriteResult(virtualMethodAddressResultNumber);
+                llvmWriter.WriteResult(methodAddressResultNumber);
             }
             else
             {
