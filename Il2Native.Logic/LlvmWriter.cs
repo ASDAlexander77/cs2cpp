@@ -3921,6 +3921,11 @@ namespace Il2Native.Logic
                     castFrom = res1.IType;
                     effectiveType = requiredTypePointer ? requiredType : res1.IType;
                 }
+
+                if (effectiveType.TypeEquals(castFrom))
+                {
+                    castFrom = null;
+                }
             }
             else if (requiredType != null)
             {
