@@ -142,6 +142,11 @@ namespace Il2Native.Logic.Gencode
 
             if (type.GetInterfaces().Any())
             {
+                foreach (var @interface in type.GetInterfaces())
+                {
+                    llvmWriter.typeRttiDeclRequired.Add(@interface);
+                }
+
                 RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
                 return;
             }
