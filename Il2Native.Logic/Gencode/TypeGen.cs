@@ -38,6 +38,10 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        private static readonly IDictionary<string, int> fieldsShiftByType = new SortedDictionary<string, int>();
+
+        /// <summary>
+        /// </summary>
         static TypeGen()
         {
             SystemPointerTypesToCTypes["Void"] = "i8";
@@ -170,6 +174,19 @@ namespace Il2Native.Logic.Gencode
             return size;
         }
 
+        public static int CalculateFieldsShift(this IType type)
+        {
+            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
+            if (type.BaseType != null)
+            {
+                fieldsShift += type.BaseType.GetFieldsShift();
+            }
+
+            fieldsShiftByType[type.FullName] = fieldsShift;
+
+            return fieldsShift;
+        }
+
         /// <summary>
         /// </summary>
         public static void Clear()
@@ -190,7 +207,7 @@ namespace Il2Native.Logic.Gencode
             return size;
         }
 
-        private static int GetTypeSizeNotAligned(this IType type)
+        public static int GetTypeSizeNotAligned(this IType type)
         {
             // find index
             int size;
@@ -200,6 +217,18 @@ namespace Il2Native.Logic.Gencode
             }
 
             return size;
+        }
+
+        public static int GetFieldsShift(this IType type)
+        {
+            // find index
+            int fieldsShift;
+            if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
+            {
+                fieldsShift = type.CalculateFieldsShift();
+            }
+
+            return fieldsShift;
         }
 
         /// <summary>

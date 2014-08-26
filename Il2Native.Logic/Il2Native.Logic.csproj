@@ -60,6 +60,9 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="Gencode\RttiClassWithBaseAndInterfaces.cs" />
+    <Compile Include="Gencode\RttiClassWithBaseAndNoInterfaces.cs" />
+    <Compile Include="Gencode\RttiClassWithNoBaseAndNotInterfacesGen.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />

@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System.CodeDom.Compiler;
+    using System.Linq;
 
     using PEAssemblyReader;
 
@@ -16,10 +17,6 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class RttiClassGen
     {
-        /// <summary>
-        /// </summary>
-        private static bool generateClassNonVirtual = false;
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -109,22 +106,19 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
-            if (type.BaseType != null)
+            if (type.BaseType == null && !type.GetInterfaces().Any())
             {
-                // class without virtual members
-                if (generateClassNonVirtual)
-                {
-                    writer.Write("{ i8*, i8*, i32, i32, i8*, i32 }");
-                }
-                else
-                {
-                    writer.Write("{ i8*, i8*, i8* }");
-                }
+                RttiClassWithNoBaseAndNotInterfacesGen.WriteRttiClassInfoDeclaration(type, writer);
+                return;
             }
-            else
+
+            if (type.GetInterfaces().Any())
             {
-                writer.Write("{ i8*, i8* }");
+                RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDeclaration(type, writer);
+                return;
             }
+
+            RttiClassWithBaseAndNoInterfaces.WriteRttiClassInfoDeclaration(type, writer);
         }
 
         /// <summary>
@@ -135,49 +129,21 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDefinition(this IType type, LlvmWriter llvmWriter)
         {
-            var writer = llvmWriter.Output;
-
-            if (type.BaseType != null)
+            if (type.BaseType == null && !type.GetInterfaces().Any())
             {
-                if (generateClassNonVirtual)
-                {
-                    writer.WriteLine("{");
-                    writer.Indent++;
-                    writer.WriteLine("i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv121__vmi_class_type_infoE, i32 2) to i8*),");
-                    writer.WriteLine("i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),", type.GetRttiStringName(), type.StringLength());
-                    writer.WriteLine("i32 0,");
-                    writer.WriteLine("i32 1,");
-                    writer.Write("i8* bitcast (");
-                    type.BaseType.WriteRttiClassInfoDeclaration(writer);
-                    writer.WriteLine("* @\"{0}\" to i8*),", type.BaseType.GetRttiInfoName());
-                    writer.WriteLine("i32 0");
-                    writer.Indent--;
-                    writer.WriteLine("}");
-                }
-                else
-                {
-                    writer.WriteLine("{");
-                    writer.Indent++;
-                    writer.WriteLine("i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),");
-                    writer.WriteLine("i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),", type.GetRttiStringName(), type.StringLength());
-                    writer.Write("i8* bitcast (");
-                    type.BaseType.WriteRttiClassInfoDeclaration(writer);
-                    writer.WriteLine("* @\"{0}\" to i8*)", type.BaseType.GetRttiInfoName());
-                    writer.Indent--;
-                    writer.WriteLine("}");
-                }
+                RttiClassWithNoBaseAndNotInterfacesGen.WriteRttiClassInfoDefinition(type, llvmWriter);
+                return;
+            }
 
-                llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
-            }
-            else
+            llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
+
+            if (type.GetInterfaces().Any())
             {
-                writer.WriteLine("{");
-                writer.Indent++;
-                writer.WriteLine("i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv117__class_type_infoE, i32 2) to i8*),");
-                writer.WriteLine("i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0)", type.GetRttiStringName(), type.StringLength());
-                writer.Indent--;
-                writer.WriteLine("}");
+                RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
+                return;
             }
+
+            RttiClassWithBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
         }
 
         /// <summary>
@@ -189,10 +155,10 @@ namespace Il2Native.Logic.Gencode
         public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"", 
-                type.GetRttiStringName(), 
-                type.FullName, 
-                type.FullName.Length, 
+                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"",
+                type.GetRttiStringName(),
+                type.FullName,
+                type.FullName.Length,
                 type.StringLength());
         }
     }

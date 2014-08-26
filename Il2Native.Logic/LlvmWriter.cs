@@ -1387,7 +1387,7 @@ namespace Il2Native.Logic
             effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
             writer.Write("* @\"{0}\" to i8*), i8* bitcast (", effectiveFromType.Type.GetRttiInfoName());
             toType.WriteRttiClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*), i32 0)", toType.GetRttiInfoName());
+            writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), toType.IsInterface ? -2 : 0);
             writer.WriteLine(string.Empty);
 
             toType.UseAsClass = true;
