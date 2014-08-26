@@ -135,7 +135,10 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
+            if (type.BaseType != null)
+            {
+                llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
+            }
 
             if (type.GetInterfaces().Any())
             {
