@@ -1376,6 +1376,12 @@ namespace Il2Native.Logic
             var effectiveFromType = fromType.ToDereferencedType();
             effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
 
+            if (effectiveFromType.Type.TypeEquals(toType))
+            {
+                opCodeTypePart.Result = fromType;
+                return;
+            }
+
             this.WriteCast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
 
