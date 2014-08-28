@@ -1081,14 +1081,14 @@ namespace Il2Native.Logic
             this.WriteInterfaceVirtaulTables(type);
 
             this.Output.WriteLine(string.Empty);
-            
+
             type.WriteRtti(this);
 
             this.processedRttiTypes.Add(type);
             this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
-            
+
             type.WriteInitObjectMethod(this);
 
             var stored = type.UseAsClass;
@@ -2170,8 +2170,8 @@ namespace Il2Native.Logic
                     this.Output.Write("global ");
                 }
 
-                if (!method.IsUnmanagedMethodReference 
-                    && method.DllImportData != null 
+                if (!method.IsUnmanagedMethodReference
+                    && method.DllImportData != null
                     && method.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
                 {
                     this.Output.Write("x86_stdcallcc ");
@@ -3667,7 +3667,16 @@ namespace Il2Native.Logic
                     var fromType = opCodeTypePart.OpCodeOperands[0].Result;
                     var toType = opCodeTypePart.Operand;
 
-                    this.WriteDynamicCast(writer, opCodeTypePart, fromType, toType);
+                    bool dynamicCastRequired = false;
+                    var castRequired = toType.IsClassCastRequired(opCodeTypePart.OpCodeOperands[0], out dynamicCastRequired);
+                    if (dynamicCastRequired || !castRequired)
+                    {
+                        this.WriteDynamicCast(writer, opCodeTypePart, fromType, toType);
+                    }
+                    else
+                    {
+                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, toType);
+                    }
 
                     break;
 
