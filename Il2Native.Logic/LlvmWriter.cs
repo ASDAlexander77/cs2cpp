@@ -1371,7 +1371,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="toType">
         /// </param>
-        public void WriteDynamicCast(LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType)
+        public void WriteDynamicCast(LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType, bool checkNull = false)
         {
             var effectiveFromType = fromType.ToDereferencedType();
             effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
@@ -1380,6 +1380,20 @@ namespace Il2Native.Logic
             {
                 opCodeTypePart.Result = fromType;
                 return;
+            }
+
+            if (checkNull)
+            {
+                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
+                writer.Write("icmp eq ");
+                effectiveFromType.Type.WriteTypePrefix(writer);
+                writer.WriteLine(" {0}, null", fromType);
+
+                writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".dynamic_cast_not_null{0}:", opCodeTypePart.AddressStart);
+                writer.Indent++;
             }
 
             this.WriteCast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
@@ -1398,6 +1412,34 @@ namespace Il2Native.Logic
 
             toType.UseAsClass = true;
             this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toType);
+
+            var dynamicCastResult = opCodeTypePart.Result;
+
+            if (checkNull)
+            {
+                writer.WriteLine(string.Empty);
+
+                writer.WriteLine("br label %.dynamic_cast_end{0}", opCodeTypePart.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".dynamic_cast_null{0}:", opCodeTypePart.AddressStart);
+                writer.Indent++;
+
+                writer.WriteLine("br label %.dynamic_cast_end{0}", opCodeTypePart.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".dynamic_cast_end{0}:", opCodeTypePart.AddressStart);
+                writer.Indent++;
+
+                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, toType);
+                writer.Write("phi ");
+                toType.WriteTypePrefix(writer, true);
+                writer.Write(
+                    "[ {0}, {1} ], [ null, {2} ]",
+                    dynamicCastResult, 
+                    string.Format("%.dynamic_cast_not_null{0}", opCodeTypePart.AddressStart), 
+                    string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
+            }
 
             this.typeRttiDeclRequired.Add(effectiveFromType.Type);
             this.typeRttiDeclRequired.Add(toType);
@@ -3677,7 +3719,7 @@ namespace Il2Native.Logic
                     var castRequired = toType.IsClassCastRequired(opCodeTypePart.OpCodeOperands[0], out dynamicCastRequired);
                     if (dynamicCastRequired || !castRequired)
                     {
-                        this.WriteDynamicCast(writer, opCodeTypePart, fromType, toType);
+                        this.WriteDynamicCast(writer, opCodeTypePart, fromType, toType, true);
                     }
                     else
                     {
