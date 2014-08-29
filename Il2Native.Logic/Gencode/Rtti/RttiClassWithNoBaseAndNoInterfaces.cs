@@ -14,7 +14,7 @@ namespace Il2Native.Logic.Gencode
 
     /// <summary>
     /// </summary>
-    public class RttiClassWithNoBaseAndNotInterfacesGen
+    public class RttiClassWithNoBaseAndNoInterfaces
     {
         /// <summary>
         /// </summary>

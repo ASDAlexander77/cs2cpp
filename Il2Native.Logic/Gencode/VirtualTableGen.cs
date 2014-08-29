@@ -326,7 +326,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(" = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
             writer.Indent++;
-            writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex));
+            writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex * LlvmWriter.PointerSize));
 
             // RTTI info class
             writer.Write("i8* bitcast (");

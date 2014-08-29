@@ -60,9 +60,10 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
-    <Compile Include="Gencode\RttiClassWithBaseAndInterfaces.cs" />
-    <Compile Include="Gencode\RttiClassWithBaseAndNoInterfaces.cs" />
-    <Compile Include="Gencode\RttiClassWithNoBaseAndNotInterfacesGen.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndSingleInterface.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
@@ -73,8 +74,8 @@
     <Compile Include="Gencode\ExceptionHandlingGen.cs" />
     <Compile Include="Gencode\LlvmHelpersGen.cs" />
     <Compile Include="Gencode\ObjectInfrastructure.cs" />
-    <Compile Include="Gencode\RttiClassGen.cs" />
-    <Compile Include="Gencode\RttiPointerGen.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassGen.cs" />
+    <Compile Include="Gencode\Rtti\RttiPointerGen.cs" />
     <Compile Include="Gencode\TypeGen.cs" />
     <Compile Include="Gencode\VirtualTableGen.cs" />
     <Compile Include="ICodeWriter.cs" />

@@ -1393,7 +1393,7 @@ namespace Il2Native.Logic
             effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
             writer.Write("* @\"{0}\" to i8*), i8* bitcast (", effectiveFromType.Type.GetRttiInfoName());
             toType.WriteRttiClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), toType.IsInterface ? -2 : 0);
+            writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), toType.IsInterface && !effectiveFromType.Type.IsInterface ? -2 : 0);
             writer.WriteLine(string.Empty);
 
             toType.UseAsClass = true;
@@ -1784,21 +1784,27 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
             var offsetAddressAsIntResultNumber = opCodeMethodInfo.Result;
 
-            // get 'this' address
-            var thisAddressFromInterfaceResultNumber = this.WriteSetResultNumber(opCodeMethodInfo, thisType);
-            writer.Write("getelementptr ");
+            // convert to i8*
+            this.WriteSetResultNumber(opCodeMethodInfo, thisType);
+            writer.Write("bitcast ");
             this.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
             this.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
+            writer.Write(" to i8*");
+            writer.WriteLine(string.Empty);
+            var pointerToInterfaceVirtualTablePointersAsBytePointerResultNumber = opCodeMethodInfo.Result;
+
+            // get 'this' address
+            var thisAddressFromInterfaceResultNumber = this.WriteSetResultNumber(opCodeMethodInfo, thisType);
+            writer.Write("getelementptr i8* ");
+            this.WriteResult(pointerToInterfaceVirtualTablePointersAsBytePointerResultNumber);
             writer.Write(", i32 ");
             this.WriteResult(offsetAddressAsIntResultNumber);
             writer.WriteLine(string.Empty);
 
             // adjust 'this' pointer
             this.WriteSetResultNumber(opCodeMethodInfo, thisType);
-            writer.Write("bitcast ");
-            this.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("** ");
+            writer.Write("bitcast i8* ");
             this.WriteResult(thisAddressFromInterfaceResultNumber);
             writer.Write(" to ");
             thisType.WriteTypePrefix(writer);

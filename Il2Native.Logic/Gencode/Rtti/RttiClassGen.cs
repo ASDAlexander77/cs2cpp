@@ -106,13 +106,22 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
-            if (type.BaseType == null && !type.GetInterfaces().Any())
+            var interfaces = type.GetInterfaces();
+            var anyInterface = interfaces.Any();
+            var onlyInterface = interfaces.Count() == 1;
+            if (type.BaseType == null && !anyInterface)
             {
-                RttiClassWithNoBaseAndNotInterfacesGen.WriteRttiClassInfoDeclaration(type, writer);
+                RttiClassWithNoBaseAndNoInterfaces.WriteRttiClassInfoDeclaration(type, writer);
                 return;
             }
 
-            if (type.GetInterfaces().Any())
+            if (type.BaseType == null && onlyInterface)
+            {
+                RttiClassWithNoBaseAndSingleInterface.WriteRttiClassInfoDeclaration(type, writer);
+                return;
+            }
+
+            if (anyInterface)
             {
                 RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDeclaration(type, writer);
                 return;
@@ -129,9 +138,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDefinition(this IType type, LlvmWriter llvmWriter)
         {
-            if (type.BaseType == null && !type.GetInterfaces().Any())
+            var interfaces = type.GetInterfaces();
+            var anyInterface = interfaces.Any();
+            var onlyInterface = interfaces.Count() == 1;
+            if (type.BaseType == null && !anyInterface)
             {
-                RttiClassWithNoBaseAndNotInterfacesGen.WriteRttiClassInfoDefinition(type, llvmWriter);
+                RttiClassWithNoBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
                 return;
             }
 
@@ -140,11 +152,17 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
             }
 
-            if (type.GetInterfaces().Any())
+            if (anyInterface)
             {
                 foreach (var @interface in type.GetInterfaces())
                 {
                     llvmWriter.typeRttiDeclRequired.Add(@interface);
+                }
+
+                if (type.BaseType == null && onlyInterface)
+                {
+                    RttiClassWithNoBaseAndSingleInterface.WriteRttiClassInfoDefinition(type, llvmWriter);
+                    return;
                 }
 
                 RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
