@@ -139,57 +139,6 @@ namespace Ll2NativeTests
             }
         }
 
-        /*
-//
-// Tests the varios type conversions.
-//
-using System;
-
-public interface HTMLElement
-{
-    object document { get; set; }
-}
-
-public interface HTMLCanvasElement : HTMLElement
-{
-    object getContext(string contextId, params object[] args);
-}
-
-public class CanvasAdapter : HTMLCanvasElement
-{
-    public CanvasAdapter()
-    {
-    }
-
-    public object document
-    {
-        get;
-        set;
-    }
-
-    public object getContext(string contextId, params object[] args)
-    {
-        return null;
-    }
-}
-
-class X
-{
-    static int Main(string[] args)
-    {
-        var canvas = new CanvasAdapter();
-
-        if (!Object.ReferenceEquals((HTMLCanvasElement)(HTMLElement)canvas, (HTMLCanvasElement)canvas))
-        {
-            throw new Exception();
-        }
-
-        return 0;
-    }
-}
-          
-         */
-
         /// <summary>
         /// </summary>
         [TestMethod]

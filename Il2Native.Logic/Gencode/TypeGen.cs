@@ -203,7 +203,12 @@ namespace Il2Native.Logic.Gencode
         public static int GetTypeSize(this IType type)
         {
             var size =  type.GetTypeSizeNotAligned();
-            size += LlvmWriter.PointerSize - size % LlvmWriter.PointerSize;
+            var mod = size % LlvmWriter.PointerSize;
+            if (mod > 0)
+            {
+                size += LlvmWriter.PointerSize - mod;
+            }
+
             return size;
         }
 
