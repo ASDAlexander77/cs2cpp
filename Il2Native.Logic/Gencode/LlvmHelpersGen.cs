@@ -680,7 +680,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType);
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true);
                 }
             }
             else
