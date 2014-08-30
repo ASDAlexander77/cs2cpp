@@ -1229,11 +1229,11 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
+            var loadedRefAssemblies = from  assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
             foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
             {
                 var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
-                if (!peRefAssembly.Assembly.AssemblyReferences.Any())
+                if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
                 {
                     assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
                     return;

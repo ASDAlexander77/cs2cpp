@@ -105,73 +105,120 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static int CalculateSize(this IType type)
+        {
+            var left = LlvmWriter.PointerSize;
+
+            var totalSize = 0;
+            foreach (var itemSize in type.GetTypeSizes())
+            {
+                var size = itemSize;
+
+                totalSize += size;
+                if (left < size)
+                {
+                    totalSize += left;
+                    left = LlvmWriter.PointerSize;
+                }
+
+                while (size > LlvmWriter.PointerSize)
+                {
+                    size -= LlvmWriter.PointerSize;
+                }
+
+                left -= size;
+
+                if (left == 0)
+                {
+                    left = LlvmWriter.PointerSize;
+                }
+            }
+
+            if (left < LlvmWriter.PointerSize)
+            {
+                totalSize += left;
+            }
+
+            return totalSize;
+        }
+
+        public static IEnumerable<int> GetTypeSizes(this IType type)
         {
             if (type.IsInterface)
             {
-                var sizeOfInterfaces = type.GetInterfacesExcludingBaseAllInterfaces().Sum(i => i.GetTypeSizeNotAligned());
-                return sizeOfInterfaces > 0 ? sizeOfInterfaces : LlvmWriter.PointerSize;;
+                var any = false;
+                foreach (var interfaceItem in type.GetInterfacesExcludingBaseAllInterfaces())
+                {
+                    foreach (var item in interfaceItem.GetTypeSizes())
+                    {
+                        any = true;
+                        yield return item;
+                    }
+                }
+
+                if (!any)
+                {
+                    yield return LlvmWriter.PointerSize;
+                }
             }
 
             if (type.IsArray || type.IsPointer)
             {
                 // type*
-                return LlvmWriter.PointerSize;
+                yield return LlvmWriter.PointerSize;
             }
 
             if (type.IsEnum)
             {
-                return type.GetEnumUnderlyingType().GetTypeSizeNotAligned();
+                foreach (var item in type.GetEnumUnderlyingType().GetTypeSizes())
+                {
+                    yield return item;
+                }
             }
-
-            var size = 0;
 
             // add shift for virtual table
             if (type.IsRootOfVirtualTable())
             {
-                size += LlvmWriter.PointerSize;
+                yield return LlvmWriter.PointerSize;
             }
 
             if (type.BaseType != null)
             {
-                size += type.BaseType.GetTypeSizeNotAligned();
+                foreach (var item in type.BaseType.GetTypeSizes())
+                {
+                    yield return item;
+                }
             }
 
             // add shift for interfaces
-            size += type.GetInterfacesExcludingBaseAllInterfaces().Sum(i => i.GetTypeSizeNotAligned());
+            foreach (var interfaceItem in type.GetInterfacesExcludingBaseAllInterfaces())
+            {
+                foreach (var item in interfaceItem.GetTypeSizes())
+                {
+                    yield return item;
+                }
+            }
 
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
-                if (field.FieldType.IsStructureType())
-                {
-                    size += field.FieldType.GetTypeSizeNotAligned();
-                }
-
                 var fieldSize = 0;
                 if (field.FieldType.IsClass)
                 {
                     // pointer size
-                    size += LlvmWriter.PointerSize;
+                    yield return LlvmWriter.PointerSize;
                 }
                 else if (field.FieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
                 {
-                    size += fieldSize;
+                    yield return fieldSize;
                 }
                 else
                 {
-                    size += field.FieldType.GetTypeSizeNotAligned();
+                    foreach (var item in field.FieldType.GetTypeSizes())
+                    {
+                        yield return item;
+                    }
                 }
             }
-
-            sizeByType[type.FullName] = size;
-
-            return size;
         }
 
         public static int CalculateFieldsShift(this IType type)
@@ -194,31 +241,15 @@ namespace Il2Native.Logic.Gencode
             sizeByType.Clear();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
+
         public static int GetTypeSize(this IType type)
-        {
-            var size =  type.GetTypeSizeNotAligned();
-            var mod = size % LlvmWriter.PointerSize;
-            if (mod > 0)
-            {
-                size += LlvmWriter.PointerSize - mod;
-            }
-
-            return size;
-        }
-
-        public static int GetTypeSizeNotAligned(this IType type)
         {
             // find index
             int size;
             if (!sizeByType.TryGetValue(type.FullName, out size))
             {
                 size = type.CalculateSize();
+                sizeByType[type.FullName] = size;
             }
 
             return size;

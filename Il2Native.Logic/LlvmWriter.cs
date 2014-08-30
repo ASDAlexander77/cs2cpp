@@ -1435,7 +1435,7 @@ namespace Il2Native.Logic
                 writer.Write("phi ");
                 toType.WriteTypePrefix(writer, true);
                 writer.Write(
-                    "[ {0}, {1} ], [ null, {2} ]",
+                    " [ {0}, {1} ], [ null, {2} ]",
                     dynamicCastResult, 
                     string.Format("%.dynamic_cast_not_null{0}", opCodeTypePart.AddressStart), 
                     string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
@@ -4947,7 +4947,7 @@ namespace Il2Native.Logic
             {
                 if (field.FieldType.IsStructureType())
                 {
-                    this.Output.WriteLine(" zeroinitializer, align 4");
+                    this.Output.WriteLine(" zeroinitializer, align {0}", PointerSize);
                 }
                 else
                 {
