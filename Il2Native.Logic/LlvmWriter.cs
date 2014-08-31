@@ -2595,7 +2595,7 @@ namespace Il2Native.Logic
                     writer.Indent++;
 
                     // apply PHI is condition is complex
-                    this.ProcessOperator(writer, block, "phi", this.ResolveType("System.Boolean"), options: OperandOptions.GenerateResult);
+                    this.ProcessOperator(writer, block, "phi", this.ResolveType("System.Boolean"), this.ResolveType("System.Boolean"), options: OperandOptions.GenerateResult);
                     var phiResult = block.Result;
 
                     // write labels
@@ -2617,12 +2617,29 @@ namespace Il2Native.Logic
                     block.OpCodes[lastCond - 1].Result = block.Result;
                 }
 
-                // TODO: try to get rid of Blocks and use 'phi' to fix some jump
-                this.WriteCaseAndLabels(writer, opCode2);
-                var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
-                // to fix some jump
-                this.WriteCaseAndLabels(writer, opCode3);
-                var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
+                writer.WriteLine("; select value");
+
+                ////var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
+                ////dummyOpCode.OpCodeOperands = new[]  { opCode2, opCode3 };
+
+                ////var operandOptions = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
+
+                ////IType castFrom;
+                ////IType intAdjustment;
+                ////bool intAdjustSecondOperand;
+                ////var effectiveType = this.DetectTypePrefix(dummyOpCode, null, operandOptions, out castFrom, out intAdjustment, out intAdjustSecondOperand);
+
+                ////IType resultType = null;
+                ////effectiveType = this.ApplyTypeAdjustment(
+                ////    writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
+
+                ////this.WriteResultAndFirstOperandType(writer, block, "select", this.ResolveType("System.Boolean"), resultType, operandOptions, this.ResolveType("System.Boolean"));
+
+                ////this.PostProcess(writer, opCode1, directResult1);
+                ////writer.Write(',');
+                ////this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
+                ////writer.Write(',');
+                ////this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
 
                 var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
                 dummyOpCode.OpCodeOperands = new[] { opCode2, opCode3 };
@@ -2635,20 +2652,51 @@ namespace Il2Native.Logic
                 var effectiveType = this.DetectTypePrefix(dummyOpCode, null, operandOptions, out castFrom, out intAdjustment, out intAdjustSecondOperand);
 
                 IType resultType = null;
-                effectiveType = this.ApplyTypeAdjustment(
-                    writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
 
-                writer.WriteLine("; select value");
+                writer.Write("br");
+                this.PostProcess(writer, opCode1, directResult1, false, opCode1.Result.Type);
+                writer.WriteLine(", label %.select_true{0}, label %.select_false{0}", opCode1.AddressStart);
 
-                this.WriteResultAndFirstOperandType(writer, block, "select", this.ResolveType("System.Boolean"), resultType, operandOptions, this.ResolveType("System.Boolean"));
+                writer.Indent--;
+                writer.WriteLine(".select_true{0}:", opCode1.AddressStart);
+                writer.Indent++;
 
-                this.PostProcess(writer, opCode1, directResult1);
-                writer.Write(',');
-                this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
-                writer.Write(',');
-                this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
+                // value for true
+                this.WriteCaseAndLabels(writer, opCode2);
+                var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
 
-                writer.WriteLine(string.Empty);
+                if ((intAdjustment != null && !intAdjustSecondOperand) || castFrom != null)
+                {
+                    effectiveType = this.ApplyTypeAdjustment(
+                        writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
+                }
+
+                writer.WriteLine("br label %.select_end{0}", opCode1.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".select_false{0}:", opCode1.AddressStart);
+                writer.Indent++;
+
+                // value for true
+                this.WriteCaseAndLabels(writer, opCode3);
+                var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
+
+                if (intAdjustment != null && intAdjustSecondOperand)
+                {
+                    effectiveType = this.ApplyTypeAdjustment(
+                        writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
+                }
+
+                writer.WriteLine("br label %.select_end{0}", opCode1.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".select_end{0}:", opCode1.AddressStart);
+                writer.Indent++;
+
+                this.WriteResultAndFirstOperandType(writer, block, "phi", resultType ?? effectiveType, resultType ?? effectiveType, operandOptions, effectiveType);
+
+                writer.WriteLine(" [ {0}, %.select_true{2} ], [ {1}, %.select_false{2} ]", opCode2.Result, opCode3.Result, opCode1.AddressStart);
+
                 writer.WriteLine("; End of Conditional Expression");
 
                 return;
@@ -4005,7 +4053,7 @@ namespace Il2Native.Logic
             }
             else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1)
             {
-                if (!res1.IsConst || res2 == null || res2.IsConst)
+                if (!(res1 == null || res1.IsConst) || res2 == null || res2.IsConst)
                 {
                     effectiveType = res1.IType;
                 }
