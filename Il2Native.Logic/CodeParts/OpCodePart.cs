@@ -30,6 +30,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        private bool skip;
+
+        /// <summary>
+        /// </summary>
         /// <param name="opcode">
         /// </param>
         /// <param name="addressStart">
@@ -225,7 +229,28 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool Skip { get; set; }
+        public bool Skip
+        {
+            get
+            {
+                if (this.skip)
+                {
+                    return true;
+                }
+
+                if (this.UsedBy != null)
+                {
+                    return this.UsedBy.Skip;
+                }
+
+                return false;
+            }
+
+            set
+            {
+                this.skip = true;
+            }
+        }
 
         /// <summary>
         /// </summary>

@@ -3248,6 +3248,12 @@ namespace Il2Native.Logic
                     break;
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+
+                    if (opCode.OpCodeOperands[0].Result == null)
+                    {
+                        ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    }
+
                     tempOper = opCode.OpCodeOperands;
                     opCode.OpCodeOperands = new[]
                                                 {
