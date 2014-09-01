@@ -435,7 +435,7 @@ namespace Il2Native.Logic
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.IType.GetElementType());
+                    return new ReturnResult(result.Type.GetElementType());
                 case Code.Ldelem_Ref:
                     result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
                     return result;
@@ -444,7 +444,7 @@ namespace Il2Native.Logic
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     //var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
-                    var typeOfElement = result.IType.GetElementType();
+                    var typeOfElement = result.Type.GetElementType();
                     return new ReturnResult(typeOfElement.ToPointerType());
                 case Code.Ldc_I4_0:
                 case Code.Ldc_I4_1:
@@ -494,7 +494,7 @@ namespace Il2Native.Logic
                 case Code.Ldind_R8:
                     return new ReturnResult(this.ResolveType("System.Double"));
                 case Code.Ldind_Ref:
-                    var resultType = this.ResultOf(opCode.OpCodeOperands[0]).IType;
+                    var resultType = this.ResultOf(opCode.OpCodeOperands[0]).Type;
                     return new ReturnResult(resultType.GetElementType());
                 case Code.Ldflda:
                 case Code.Ldsflda:
@@ -510,8 +510,8 @@ namespace Il2Native.Logic
                     var res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        result = new ReturnResult(res.IType);
-                        result.IType.UseAsClass = true;
+                        result = new ReturnResult(res.Type);
+                        result.Type.UseAsClass = true;
                         return result;
                     }
                     else
@@ -526,7 +526,7 @@ namespace Il2Native.Logic
                     res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        return new ReturnResult(res.IType);
+                        return new ReturnResult(res.Type);
                     }
                     else
                     {
@@ -601,7 +601,7 @@ namespace Il2Native.Logic
                     }
                 }
 
-                if ((requiredType.IType.IsPointer || requiredType.IType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
+                if ((requiredType.Type.IsPointer || requiredType.Type.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
@@ -1588,7 +1588,7 @@ namespace Il2Native.Logic
             /// </param>
             public ReturnResult(FullyDefinedReference result)
             {
-                this.IType = result.Type;
+                this.Type = result.Type;
                 this.IsConst = result is ConstValue;
             }
 
@@ -1598,12 +1598,12 @@ namespace Il2Native.Logic
             /// </param>
             public ReturnResult(IType type)
             {
-                this.IType = type;
+                this.Type = type;
             }
 
             /// <summary>
             /// </summary>
-            public IType IType { get; set; }
+            public IType Type { get; set; }
 
             /// <summary>
             /// </summary>
@@ -1615,12 +1615,12 @@ namespace Il2Native.Logic
             {
                 get
                 {
-                    if (this.IType.IsPointer || this.IType.UseAsClass)
+                    if (this.Type.IsPointer || this.Type.UseAsClass)
                     {
                         return true;
                     }
 
-                    if (this.IType.IsValueType())
+                    if (this.Type.IsValueType())
                     {
                         return false;
                     }
@@ -1637,7 +1637,7 @@ namespace Il2Native.Logic
             /// </returns>
             public bool Equals(ReturnResult other)
             {
-                return this.IType.TypeEquals(other.IType) && this.IsConst == other.IsConst;
+                return this.Type.TypeEquals(other.Type) && this.IsConst == other.IsConst;
             }
 
             /// <summary>
@@ -1648,12 +1648,12 @@ namespace Il2Native.Logic
             /// </returns>
             public bool IsTypeOf(IType type)
             {
-                if (this.IType == null || type == null)
+                if (this.Type == null || type == null)
                 {
                     return false;
                 }
 
-                return this.IType.TypeEquals(type);
+                return this.Type.TypeEquals(type);
             }
         }
     }

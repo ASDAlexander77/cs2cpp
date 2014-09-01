@@ -54,7 +54,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            if (thisType.IsInterface && resultOfirstOperand.IType.TypeNotEquals(thisType))
+            if (thisType.IsInterface && resultOfirstOperand.Type.TypeNotEquals(thisType))
             {
                 // we need to extract interface from an object
                 requiredType = thisType;
@@ -149,14 +149,14 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
-            var areBothPointers = (resultOf.IType.IsPointer || resultOf.IType.IsByRef) && toAddress;
-            if (!typesToExclude.Any(t => resultOf.IType.TypeEquals(t)) && !areBothPointers)
+            var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
+            if (!typesToExclude.Any(t => resultOf.Type.TypeEquals(t)) && !areBothPointers)
             {
-                if (resultOf.IType.IsReal())
+                if (resultOf.Type.IsReal())
                 {
                     llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
-                else if (resultOf.IType.IsPointer || resultOf.IType.IsByRef)
+                else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
                     llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
                 }
@@ -183,11 +183,13 @@ namespace Il2Native.Logic.Gencode
                     else
                     {
                         llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
                     }
                 }
                 else
                 {
                     llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    opCode.Result = opCode.OpCodeOperands[0].Result;
                 }
             }
         }
@@ -445,14 +447,14 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference methodAddressResultNumber = null;
             var isIndirectMethodCall = isVirtual
                                        && (methodBase.IsAbstract || methodBase.IsVirtual
-                                           || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.IType)));
+                                           || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
 
-            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.IType)
-                                               ? resultOfFirstOperand.IType
+            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.Type)
+                                               ? resultOfFirstOperand.Type
                                                : null;
 
             var rollbackType = false;
-            var requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.IType : null;
+            var requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;
             if (requiredType != null)
             {
                 thisType = requiredType;
@@ -473,8 +475,8 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                var isPrimitive = resultOfFirstOperand.IType.IsPrimitiveTypeOrEnum();
-                var isPrimitivePointer = resultOfFirstOperand.IType.IsPointer && resultOfFirstOperand.IType.GetElementType().IsPrimitiveTypeOrEnum();
+                var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
+                var isPrimitivePointer = resultOfFirstOperand.Type.IsPointer && resultOfFirstOperand.Type.GetElementType().IsPrimitiveTypeOrEnum();
 
                 bool dynamicCastRequired = false;
                 if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
@@ -495,7 +497,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     writer.WriteLine("; Box Primitive type for 'This' parameter");
 
-                    var primitiveType = !isPrimitivePointer ? resultOfFirstOperand.IType : resultOfFirstOperand.IType.GetElementType();
+                    var primitiveType = !isPrimitivePointer ? resultOfFirstOperand.Type : resultOfFirstOperand.Type.GetElementType();
 
                     if (isPrimitivePointer)
                     {
@@ -641,14 +643,19 @@ namespace Il2Native.Logic.Gencode
                     ".{0}:", label);
                 writer.Indent++;
 
-                if (opCodeMethodInfo.AddressStart == 0)
-                {
-                    opCodeMethodInfo.UsedBy.CreatedLabel = label;
-                }
-                else
-                {
-                    opCodeMethodInfo.CreatedLabel = label;
-                }
+                SetCustomLabel(opCodeMethodInfo, label);
+            }
+        }
+
+        public static void SetCustomLabel(OpCodePart opCodePart, string label)
+        {
+            if (opCodePart.AddressStart == 0)
+            {
+                opCodePart.UsedBy.CreatedLabel = label;
+            }
+            else
+            {
+                opCodePart.CreatedLabel = label;
             }
         }
 

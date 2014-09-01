@@ -308,7 +308,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.Skip);
+                var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.SkipRecursive);
                 if (!skip)
                 {
                     this.ActualWriteOpCode(writer, opCode);
@@ -734,6 +734,12 @@ namespace Il2Native.Logic
                     writer.Write(' ');
                 }
 
+                // TODO: you need to remove it after removing using field Skip
+                if (operand.Result == null)
+                {
+                    this.ActualWrite(writer, operand);
+                }
+
                 this.WriteResult(operand.Result);
             }
         }
@@ -857,7 +863,7 @@ namespace Il2Native.Logic
             if ((opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || options.HasFlag(OperandOptions.GenerateResult)) && op != "store")
             {
                 var resultOf = this.ResultOf(opCode);
-                this.WriteSetResultNumber(opCode, resultType ?? (resultOf != null ? resultOf.IType : requiredType));
+                this.WriteSetResultNumber(opCode, resultType ?? (resultOf != null ? resultOf.Type : requiredType));
             }
 
             writer.Write(op);
@@ -1427,8 +1433,10 @@ namespace Il2Native.Logic
 
                 writer.WriteLine("br label %.dynamic_cast_end{0}", opCodeTypePart.AddressStart);
 
+                var label = string.Concat("dynamic_cast_end", opCodeTypePart.AddressStart);
+
                 writer.Indent--;
-                writer.WriteLine(".dynamic_cast_end{0}:", opCodeTypePart.AddressStart);
+                writer.WriteLine(".{0}:", label);
                 writer.Indent++;
 
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, toType);
@@ -1436,9 +1444,11 @@ namespace Il2Native.Logic
                 toType.WriteTypePrefix(writer, true);
                 writer.Write(
                     " [ {0}, {1} ], [ null, {2} ]",
-                    dynamicCastResult, 
-                    string.Format("%.dynamic_cast_not_null{0}", opCodeTypePart.AddressStart), 
+                    dynamicCastResult,
+                    string.Format("%.dynamic_cast_not_null{0}", opCodeTypePart.AddressStart),
                     string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
+
+                LlvmHelpersGen.SetCustomLabel(opCodeTypePart, label);
             }
 
             this.typeRttiDeclRequired.Add(effectiveFromType.Type);
@@ -1592,7 +1602,7 @@ namespace Il2Native.Logic
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
             var opts = OperandOptions.GenerateResult;
 
-            var effectiveType = operand.IType.IsPointer ? operand.IType.GetElementType() : operand.IType;
+            var effectiveType = operand.Type.IsPointer ? operand.Type.GetElementType() : operand.Type;
             if (effectiveType.IsValueType)
             {
                 effectiveType.UseAsClass = true;
@@ -1619,7 +1629,7 @@ namespace Il2Native.Logic
             writer.WriteLine("; Access to '#{0}' field", index);
             var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
 
-            var classType = operand.IType;
+            var classType = operand.Type;
 
             var opts = OperandOptions.GenerateResult;
             var fieldType = classType.GetFieldTypeByIndex(index);
@@ -2315,6 +2325,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteResult(OpCodePart opCode)
         {
+            Debug.Assert(opCode.Result != null && !string.IsNullOrWhiteSpace(opCode.Result.ToString()));
+
             // write number of method
             this.Output.Write(opCode.Result);
         }
@@ -2325,6 +2337,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteResult(FullyDefinedReference reference)
         {
+            Debug.Assert(reference != null && !string.IsNullOrWhiteSpace(reference.ToString()));
+
             // write number of method
             this.Output.Write(reference);
         }
@@ -2343,11 +2357,18 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
 
-            this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
-
-            if (methodReturnType.IsStructureType())
+            if (!methodReturnType.IsVoid())
             {
-                writer.Write("void");
+                this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
+
+                if (methodReturnType.IsStructureType())
+                {
+                    writer.Write("void");
+                }
+            }
+            else
+            {
+                writer.Write("ret void");
             }
         }
 
@@ -2664,6 +2685,11 @@ namespace Il2Native.Logic
                 // value for true
                 this.WriteCaseAndLabels(writer, opCode2);
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
+                // TODO: remove it when you remove field Skip
+                if (directResult2)
+                {
+                    ActualWrite(writer, opCode2);
+                }
 
                 if ((intAdjustment != null && !intAdjustSecondOperand) || castFrom != null)
                 {
@@ -2680,6 +2706,11 @@ namespace Il2Native.Logic
                 // value for true
                 this.WriteCaseAndLabels(writer, opCode3);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
+                // TODO: remove it when you remove field Skip
+                if (directResult3)
+                {
+                    ActualWrite(writer, opCode3);
+                }
 
                 if (intAdjustment != null && intAdjustSecondOperand)
                 {
@@ -2695,7 +2726,11 @@ namespace Il2Native.Logic
 
                 this.WriteResultAndFirstOperandType(writer, block, "phi", resultType ?? effectiveType, resultType ?? effectiveType, operandOptions, effectiveType);
 
-                writer.WriteLine(" [ {0}, %.select_true{2} ], [ {1}, %.select_false{2} ]", opCode2.Result, opCode3.Result, opCode1.AddressStart);
+                //writer.WriteLine(" [ {0}, %.select_true{2} ], [ {1}, %.select_false{2} ]", opCode2.Result, opCode3.Result, opCode1.AddressStart);
+                this.WritePhiNodeLabel(writer, opCode2.Result, opCode2, opCode2, string.Concat("select_true", opCode1.AddressStart));
+                writer.Write(",");
+                this.WritePhiNodeLabel(writer, opCode3.Result, opCode3, opCode3, string.Concat("select_false", opCode1.AddressStart));
+                writer.WriteLine(string.Empty);
 
                 writer.WriteLine("; End of Conditional Expression");
 
@@ -2754,11 +2789,17 @@ namespace Il2Native.Logic
 
                     if (i == 0)
                     {
-                        this.WritePhiNodeLabel(writer, block.OpCodes[i].Result, block.OpCodes[i], block.OpCodes[i]);
+                        this.WritePhiNodeLabel(
+                            writer, block.OpCodes[i].Result, block.OpCodes[i], block.OpCodes[i], string.Concat("a", block.OpCodes[i].AddressStart));
                     }
                     else
                     {
-                        this.WritePhiNodeLabel(writer, block.OpCodes[i].Result, block.OpCodes[lastDupIndex + 2], block.OpCodes[i]);
+                        this.WritePhiNodeLabel(
+                            writer,
+                            block.OpCodes[i].Result,
+                            block.OpCodes[lastDupIndex + 2],
+                            block.OpCodes[i],
+                            string.Concat("a", block.OpCodes[lastDupIndex + 2].AddressStart));
                     }
 
                     lastDupIndex = i;
@@ -2776,28 +2817,31 @@ namespace Il2Native.Logic
             this.ActualWriteBlockBody(writer, block);
         }
 
-        private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart labelBlock, OpCodePart lastBlockOpCode)
+        // start - beginning of Phi Block or after jump to phi opCode
+        // end - end of Phi Block or before jump to phi opCode (including jump)
+        private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart startOpCode, OpCodePart endOpCode, string label = "a")
         {
-            var customLabel = this.FindCustomLabel(labelBlock, lastBlockOpCode);
+            var customLabel = this.FindCustomLabel(startOpCode, endOpCode);
             if (customLabel != null)
             {
                 writer.Write(" [ {0}, %.{1} ]", result, customLabel);
             }
             else
             {
-                writer.Write(" [ {0}, %.a{1} ]", result, labelBlock.AddressStart);
+                writer.Write(" [ {0}, %.{1} ]", result, label);
             }
         }
 
-        private string FindCustomLabel(OpCodePart opCodePart, OpCodePart lastBlockOpCode)
+        // TODO: find better way to find custom labels for phi blocks
+        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode)
         {
-            if (lastBlockOpCode == null)
+            if (lastOpCode == null)
             {
                 return null;
             }
 
-            var current = lastBlockOpCode;
-            while (current != null && current != opCodePart)
+            var current = lastOpCode;
+            while (current != null && firstOpCode.GroupAddressStart <= current.AddressStart)
             {
                 if (current.CreatedLabel != null)
                 {
@@ -3249,6 +3293,7 @@ namespace Il2Native.Logic
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
 
+                    // TODO: should be removed in the future when Skip field is not used
                     if (opCode.OpCodeOperands[0].Result == null)
                     {
                         ActualWrite(writer, opCode.OpCodeOperands[0]);
@@ -3579,7 +3624,7 @@ namespace Il2Native.Logic
                     var opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
                     this.UnaryOper(writer, opCode, "icmp " + forTrue, options: opts);
 
-                    if (resultOf.IType.IsValueType() && !resultOf.IType.UseAsClass)
+                    if (resultOf.Type.IsValueType() && !resultOf.Type.UseAsClass)
                     {
                         writer.WriteLine(", 0");
                     }
@@ -4030,13 +4075,13 @@ namespace Il2Native.Logic
             {
                 if (res2 != null && (!res2.IsConst || res1.IsConst))
                 {
-                    castFrom = res1.IType;
-                    effectiveType = res2.IType;
+                    castFrom = res1.Type;
+                    effectiveType = res2.Type;
                 }
                 else
                 {
-                    castFrom = res1.IType;
-                    effectiveType = requiredTypePointer ? requiredType : res1.IType;
+                    castFrom = res1.Type;
+                    effectiveType = requiredTypePointer ? requiredType : res1.Type;
                 }
 
                 if (effectiveType.TypeEquals(castFrom))
@@ -4046,11 +4091,11 @@ namespace Il2Native.Logic
             }
             else if (requiredType != null)
             {
-                if (options.HasFlag(OperandOptions.AdjustIntTypes) && res1 != null && res1.IType != null && res2 != null && res2.IType != null
-                    && res1.IType.TypeEquals(res2.IType) && res1.IType.TypeNotEquals(requiredType) && res1.IType.TypeEquals(this.ResolveType("System.Boolean"))
+                if (options.HasFlag(OperandOptions.AdjustIntTypes) && res1 != null && res1.Type != null && res2 != null && res2.Type != null
+                    && res1.Type.TypeEquals(res2.Type) && res1.Type.TypeNotEquals(requiredType) && res1.Type.TypeEquals(this.ResolveType("System.Boolean"))
                     && requiredType.TypeEquals(this.ResolveType("System.Byte")))
                 {
-                    effectiveType = res1.IType;
+                    effectiveType = res1.Type;
                 }
                 else
                 {
@@ -4061,32 +4106,32 @@ namespace Il2Native.Logic
             {
                 if (!(res1 == null || res1.IsConst) || res2 == null || res2.IsConst)
                 {
-                    effectiveType = res1.IType;
+                    effectiveType = res1.Type;
                 }
                 else
                 {
-                    effectiveType = res2.IType;
+                    effectiveType = res2.Type;
                 }
             }
 
-            if (res1 != null && res1.IType.TypeNotEquals(effectiveType)
-                && (res1.IType.IsClass || res1.IType.IsArray || res1.IType.IsInterface || res1.IType.IsDelegate) && effectiveType.IsAssignableFrom(res1.IType))
+            if (res1 != null && res1.Type.TypeNotEquals(effectiveType)
+                && (res1.Type.IsClass || res1.Type.IsArray || res1.Type.IsInterface || res1.Type.IsDelegate) && effectiveType.IsAssignableFrom(res1.Type))
             {
-                castFrom = res1.IType;
+                castFrom = res1.Type;
             }
 
             if (options.HasFlag(OperandOptions.AdjustIntTypes))
             {
-                var firstType = res1 != null && res1.IType != null && !res1.IsConst
-                                    ? res1.IType
-                                    : res2 != null && res2.IType != null && !res2.IsConst ? res2.IType : null;
+                var firstType = res1 != null && res1.Type != null && !res1.IsConst
+                                    ? res1.Type
+                                    : res2 != null && res2.Type != null && !res2.IsConst ? res2.Type : null;
 
                 IType secondType = null;
                 if (firstType != null)
                 {
-                    if (res2 != null && res2.IType != null && !res2.IsConst)
+                    if (res2 != null && res2.Type != null && !res2.IsConst)
                     {
-                        secondType = res2.IType;
+                        secondType = res2.Type;
                     }
 
                     if (requiredType != null)
@@ -4237,9 +4282,10 @@ namespace Il2Native.Logic
             {
                 type = opCode.Result.Type;
             }
-            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 && opCode.OpCodeOperands[0].HasResult)
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
             {
-                type = opCode.OpCodeOperands[0].Result.Type;
+                var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
+                type = resultOf.Type;
             }
             else
             {
@@ -4277,12 +4323,12 @@ namespace Il2Native.Logic
             var op1ReturnResult = this.ResultOf(opCode);
 
             // TODO: result of unbox is null, fix it
-            if (op1ReturnResult == null || op1ReturnResult.IType == null)
+            if (op1ReturnResult == null || op1ReturnResult.Type == null)
             {
                 return false;
             }
 
-            var op1IsReal = op1ReturnResult.IType.IsReal();
+            var op1IsReal = op1ReturnResult.Type.IsReal();
             return op1IsReal;
         }
 
@@ -4629,7 +4675,7 @@ namespace Il2Native.Logic
                                          || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
                 // opCode.Skip to fix issue with using it in 'conditional expresions'
-                if (splitBlock || opCode.Skip)
+                if (splitBlock || opCode.SkipRecursive)
                 {
                     // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
                     writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));

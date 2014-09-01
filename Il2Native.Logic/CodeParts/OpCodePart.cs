@@ -30,10 +30,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        private bool skip;
-
-        /// <summary>
-        /// </summary>
         /// <param name="opcode">
         /// </param>
         /// <param name="addressStart">
@@ -135,7 +131,9 @@ namespace Il2Native.Logic.CodeParts
         {
             get
             {
-                return this.OpCodeOperands != null && this.OpCodeOperands.Length > 0 ? this.OpCodeOperands[0].GroupAddressStart : this.AddressStart;
+                return this.OpCodeOperands != null && this.OpCodeOperands.Length > 0 && this.OpCodeOperands[0] != this
+                           ? this.OpCodeOperands[0].GroupAddressStart
+                           : this.AddressStart;
             }
         }
 
@@ -227,28 +225,25 @@ namespace Il2Native.Logic.CodeParts
             }
         }
 
+        public bool Skip { get; set; }
+
         /// <summary>
         /// </summary>
-        public bool Skip
+        public bool SkipRecursive
         {
             get
             {
-                if (this.skip)
+                if (this.Skip)
                 {
                     return true;
                 }
 
                 if (this.UsedBy != null)
                 {
-                    return this.UsedBy.Skip;
+                    return this.UsedBy.SkipRecursive;
                 }
 
                 return false;
-            }
-
-            set
-            {
-                this.skip = true;
             }
         }
 

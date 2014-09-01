@@ -44,6 +44,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
+            // TODO: should be removed in the future when Skip field is not used
+            if (opCode.OpCodeOperands[0].Result == null)
+            {
+                llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+            }
+
             var typeToLoad = llvmWriter.ResolveType("System.Int32");
             llvmWriter.WriteBitcast(opCode, opCode.OpCodeOperands[0].Result, typeToLoad);
             writer.WriteLine(string.Empty);
