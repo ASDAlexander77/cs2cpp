@@ -179,7 +179,10 @@ namespace Ll2NativeTests
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
             // 115 - explicit cast (cast class without explicit operator should throw an exception)
-            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115 });
+            // 117 - not implemented Hashtable
+            // 118 - not implemented Attribute
+            // 120 - not implemented Attribute
+            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120 });
 
             if (UsingRoslyn)
             {
