@@ -219,18 +219,19 @@ namespace Il2Native.Logic.Gencode
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
                 var fieldSize = 0;
-                if (field.FieldType.IsClass || type.IsArray || type.IsPointer || type.IsDelegate)
+                var fieldType = field.FieldType;
+                if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
                 {
                     // pointer size
                     yield return LlvmWriter.PointerSize;
                 }
-                else if (field.FieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(field.FieldType.Name, out fieldSize))
+                else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
                 {
                     yield return fieldSize;
                 }
                 else
                 {
-                    foreach (var item in field.FieldType.GetTypeSizes())
+                    foreach (var item in fieldType.GetTypeSizes())
                     {
                         yield return item;
                     }
