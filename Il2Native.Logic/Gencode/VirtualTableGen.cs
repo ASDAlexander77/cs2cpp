@@ -319,14 +319,14 @@ namespace Il2Native.Logic.Gencode
         /// <param name="interfaceIndex">
         /// </param>
         public static void WriteTableOfMethods(
-            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, LlvmWriter llvmWriter, IType type, int interfaceIndex = 0)
+            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, LlvmWriter llvmWriter, IType type, int interfaceIndex, int baseTypeFieldsOffset)
         {
             var writer = llvmWriter.Output;
 
             writer.WriteLine(" = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
             writer.Indent++;
-            writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", interfaceIndex * LlvmWriter.PointerSize));
+            writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
 
             // RTTI info class
             writer.Write("i8* bitcast (");

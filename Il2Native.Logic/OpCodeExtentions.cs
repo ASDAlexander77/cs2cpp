@@ -798,9 +798,14 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IType> SelectAllNestedChildrenExceptFirstInterfaces(this IType type)
         {
-            foreach (var childInterface in type.GetInterfacesExcludingBaseAllInterfaces().Skip(1))
+            var index = 0;
+            foreach (var childInterface in type.GetInterfacesExcludingBaseAllInterfaces())
             {
-                yield return childInterface;
+                if (index++ != 0)
+                {
+                    yield return childInterface;
+                }
+
                 foreach (var subChildInterface in childInterface.SelectAllNestedChildrenExceptFirstInterfaces())
                 {
                     yield return subChildInterface;

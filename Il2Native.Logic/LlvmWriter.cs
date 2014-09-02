@@ -4994,26 +4994,30 @@ namespace Il2Native.Logic
             // write VirtualTable
             if (!type.IsInterface)
             {
+                var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize() : 0;
+
+                var index = 0;
                 if (type.HasAnyVirtualMethod())
                 {
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualTableName());
                     var virtualTable = type.GetVirtualTable();
-                    virtualTable.WriteTableOfMethods(this, type);
+                    virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
 
                     foreach (var methodInVirtualTable in virtualTable)
                     {
                         this.CheckIfExternalDeclarationIsRequired(methodInVirtualTable.Value);
                     }
+
+                    index++;
                 }
 
-                var index = 1;
                 foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
                 {
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                     var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++);
+                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++, baseTypeSize);
                 }
             }
         }
