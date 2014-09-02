@@ -107,30 +107,40 @@ namespace Il2Native.Logic.Gencode
 
         public static int CalculateSize(this IType type)
         {
-            var left = LlvmWriter.PointerSize;
-
+            var left = 0;
             var totalSize = 0;
             foreach (var itemSize in type.GetTypeSizes())
             {
                 var size = itemSize;
-
-                totalSize += size;
-                if (left < size)
+                while (size > 0)
                 {
-                    totalSize += left;
-                    left = LlvmWriter.PointerSize;
-                }
+                    if (left == 0)
+                    {
+                        left = LlvmWriter.PointerSize;
+                    }
 
-                while (size > LlvmWriter.PointerSize)
-                {
-                    size -= LlvmWriter.PointerSize;
-                }
+                    if (size <= left)
+                    {
+                        totalSize += size;
+                        left -= size;
+                        size = 0;
+                        continue;
+                    }
 
-                left -= size;
+                    if (left < LlvmWriter.PointerSize)
+                    {
+                        totalSize += left;
+                    }
 
-                if (left == 0)
-                {
-                    left = LlvmWriter.PointerSize;
+                    while (size >= LlvmWriter.PointerSize)
+                    {
+                        size -= LlvmWriter.PointerSize;
+                        totalSize += LlvmWriter.PointerSize;
+                    }
+
+                    left = LlvmWriter.PointerSize - size;
+                    totalSize += size;
+                    size = 0;
                 }
             }
 
@@ -160,20 +170,27 @@ namespace Il2Native.Logic.Gencode
                 {
                     yield return LlvmWriter.PointerSize;
                 }
+
+                yield break;
             }
 
-            if (type.IsArray || type.IsPointer)
+            if (type.IsArray || type.IsPointer || type.IsDelegate)
             {
                 // type*
                 yield return LlvmWriter.PointerSize;
+                yield break;
             }
 
             if (type.IsEnum)
             {
-                foreach (var item in type.GetEnumUnderlyingType().GetTypeSizes())
+                var enumUnderlyingType = type.GetEnumUnderlyingType();
+                int enumUnderlyingTypeFieldSize;
+                if (enumUnderlyingType.Namespace == "System" && SystemTypeSizes.TryGetValue(enumUnderlyingType.Name, out enumUnderlyingTypeFieldSize))
                 {
-                    yield return item;
+                    yield return enumUnderlyingTypeFieldSize;
                 }
+
+                yield break;
             }
 
             // add shift for virtual table
@@ -202,7 +219,7 @@ namespace Il2Native.Logic.Gencode
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
                 var fieldSize = 0;
-                if (field.FieldType.IsClass)
+                if (field.FieldType.IsClass || type.IsArray || type.IsPointer || type.IsDelegate)
                 {
                     // pointer size
                     yield return LlvmWriter.PointerSize;
