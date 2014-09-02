@@ -139,6 +139,119 @@ namespace Ll2NativeTests
             }
         }
 
+/*
+ #include <stdio.h>
+
+class Object
+{
+public:
+ virtual ~Object() {};
+};
+
+class Node : public Object
+{	
+public:
+    int* f1;
+    double f2;
+    int* f3;
+    int* f4;
+    int* f5;
+    int* f6;
+    int* f7;
+    int* f8;
+    bool b1;
+    bool b2;
+    int* f9;
+};
+
+class IDisposable
+{
+public:
+	virtual void test() = 0;
+};
+
+class IDisposable2
+{
+public:
+	virtual void test2() = 0;
+};
+ 
+class AbstractMesh : public Node, public IDisposable//, public IDisposable2
+{	
+public:
+    int * f1;
+    bool b1;
+    int * f2;
+    bool b2;
+    int* f3;
+    int f4;
+    double f5;
+    double f6;
+    double f7;
+    bool b3;
+    int* f8;
+    int * f9;
+    double f10;
+    int* f11;
+    bool b4;
+    int* f12;
+    int* f13;
+    bool b5;
+    bool b6;
+    int f14;
+    int* f15;
+    int* f139;
+    int f16;
+    int* f17;
+    int* f18;
+    int* f19;
+    bool b7;
+    bool b8;
+    int* f20;
+    bool b9;
+    bool b10;
+    bool b11;
+    int* f21;
+    int* f22;
+    int* f23;
+    int* f24;
+    int* f25;
+    bool b12;
+    bool b13;
+    int* f26;
+    int* f27;
+    int* f28;
+    int* f29;
+    int* f30;
+    int* f31;
+    int* f32;
+    int* f33;
+    int* f34;
+    int* f35;
+    bool b14;
+    int* f36;
+    int* f37;
+    int* f38;
+
+void test()
+{
+}
+
+void test2()
+{
+}
+
+};
+
+int main(int argc, char **argv) {
+	Object* obj = new Object();
+	Node* node = new Node();
+	AbstractMesh* absMesh = new AbstractMesh();
+
+	return 0;
+}
+*/
+
         /// <summary>
         /// </summary>
         [TestMethod]

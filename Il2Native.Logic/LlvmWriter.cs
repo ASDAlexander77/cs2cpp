@@ -1783,8 +1783,6 @@ namespace Il2Native.Logic
             }
 
             this.WriteFieldType(field.FieldType);
-
-            this.Output.Write("; {0}", field.Name);
         }
 
         /// <summary>

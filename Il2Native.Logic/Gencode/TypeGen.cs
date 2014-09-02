@@ -107,6 +107,9 @@ namespace Il2Native.Logic.Gencode
 
         public static int CalculateSize(this IType type)
         {
+            var fieldSizes = type.GetFieldsSizesRecursive().ToList();
+            var align = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
+
             var left = 0;
             var totalSize = 0;
             foreach (var itemSize in type.GetTypeSizes())
@@ -116,7 +119,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     if (left == 0)
                     {
-                        left = LlvmWriter.PointerSize;
+                        left = align;
                     }
 
                     if (size <= left)
@@ -127,24 +130,24 @@ namespace Il2Native.Logic.Gencode
                         continue;
                     }
 
-                    if (left < LlvmWriter.PointerSize)
+                    if (left < align)
                     {
                         totalSize += left;
                     }
 
-                    while (size >= LlvmWriter.PointerSize)
+                    while (size >= align)
                     {
-                        size -= LlvmWriter.PointerSize;
-                        totalSize += LlvmWriter.PointerSize;
+                        size -= align;
+                        totalSize += align;
                     }
 
-                    left = LlvmWriter.PointerSize - size;
+                    left = align - size;
                     totalSize += size;
                     size = 0;
                 }
             }
 
-            if (left < LlvmWriter.PointerSize)
+            if (left < align)
             {
                 totalSize += left;
             }
@@ -216,6 +219,14 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            foreach (var item in type.GetFieldsSizes())
+            {
+                yield return item;
+            }
+        }
+
+        public static IEnumerable<int> GetFieldsSizes(this IType type)
+        {
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
                 var fieldSize = 0;
@@ -236,6 +247,22 @@ namespace Il2Native.Logic.Gencode
                         yield return item;
                     }
                 }
+            }
+        }
+
+        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type)
+        {
+            if (type.BaseType != null)
+            {
+                foreach (var item in type.BaseType.GetFieldsSizes())
+                {
+                    yield return item;
+                }
+            }
+
+            foreach (var item in type.GetFieldsSizes())
+            {
+                yield return item;
             }
         }
 
