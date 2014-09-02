@@ -144,7 +144,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            if (left > 0 && left < LlvmWriter.PointerSize)
+            if (left < LlvmWriter.PointerSize)
             {
                 totalSize += left;
             }
