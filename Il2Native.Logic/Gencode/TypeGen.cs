@@ -151,7 +151,7 @@ namespace Il2Native.Logic.Gencode
                 yield break;
             }
 
-            if (type.IsArray || type.IsPointer || type.IsDelegate)
+            if (type.IsArray || type.IsPointer)
             {
                 // type*
                 yield return LlvmWriter.PointerSize;

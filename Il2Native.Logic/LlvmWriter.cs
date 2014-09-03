@@ -255,7 +255,7 @@ namespace Il2Native.Logic
                 var parameterInput = used[effectiveIndex];
 
                 parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
-                if (parameter.ParameterType.IsStructureType())
+                if (parameter.ParameterType.IsStructureType() && !parameter.IsOut)
                 {
                     writer.Write(" byval align " + PointerSize);
                 }
@@ -2066,7 +2066,11 @@ namespace Il2Native.Logic
                     this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
                     if (!noArgumentName)
                     {
-                        writer.Write(" byval align " + PointerSize);
+                        if (!parameter.IsOut)
+                        {
+                            writer.Write(" byval align " + PointerSize);
+                        }
+
                         writer.Write(" %");
                     }
                 }

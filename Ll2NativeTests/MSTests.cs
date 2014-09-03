@@ -182,7 +182,20 @@ namespace Ll2NativeTests
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            var skip = new List<int>(new[] { 10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120 });
+            // 126 - not implemented defualt ToString() to return type name
+            // 127 - using typeof
+            // 128 - using typeof
+            // 129 - using typeof
+            // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
+            // 132 - typeof, Reflection
+            // 135 - typeof, Reflection
+            var skip =
+                new List<int>(
+                    new[]
+                        {
+                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
+                            126, 127, 128, 129, 130, 132, 135
+                        });
 
             if (UsingRoslyn)
             {
@@ -210,7 +223,7 @@ namespace Ll2NativeTests
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
             // 57 - generic virtual methods in an interface
-            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56 };
+            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
