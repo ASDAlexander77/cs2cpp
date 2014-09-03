@@ -108,51 +108,25 @@ namespace Il2Native.Logic.Gencode
         public static int CalculateSize(this IType type)
         {
             var fieldSizes = type.GetFieldsSizesRecursive().ToList();
-            var align = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
+            var typeAlign = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
 
-            var left = 0;
-            var totalSize = 0;
-            foreach (var itemSize in type.GetTypeSizes())
+            var offset = 0;
+            foreach (var size in type.GetTypeSizes())
             {
-                var size = itemSize;
-                while (size > 0)
+                offset += size;
+                while (offset % size != 0)
                 {
-                    if (left == 0)
-                    {
-                        left = align;
-                    }
-
-                    if (size <= left)
-                    {
-                        totalSize += size;
-                        left -= size;
-                        size = 0;
-                        continue;
-                    }
-
-                    if (left < align)
-                    {
-                        totalSize += left;
-                    }
-
-                    while (size >= align)
-                    {
-                        size -= align;
-                        totalSize += align;
-                    }
-
-                    left = align - size;
-                    totalSize += size;
-                    size = 0;
+                    offset++;
                 }
             }
 
-            if (left < align)
+            var alignToApply = offset % typeAlign;
+            if (alignToApply > 0)
             {
-                totalSize += left;
+                offset += typeAlign - alignToApply;
             }
 
-            return totalSize;
+            return offset;
         }
 
         public static IEnumerable<int> GetTypeSizes(this IType type)
