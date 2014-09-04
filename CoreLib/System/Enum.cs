@@ -10,6 +10,15 @@ namespace System
     [Serializable]
     public abstract class Enum : ValueType
     {
+        public override bool Equals(object obj)
+        {
+            if (obj is Enum)
+            {
+                return this.GetHashCode() == obj.GetHashCode();
+            }
+
+            return base.Equals(obj);
+        }
 
         public override String ToString()
         {

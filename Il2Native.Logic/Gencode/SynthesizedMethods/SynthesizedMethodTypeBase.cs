@@ -52,7 +52,7 @@
         {
             get
             {
-                return string.Concat(this.Type.Name, ".", this.MethodName);
+                return this.MethodName;
             }
         }
 

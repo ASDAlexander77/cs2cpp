@@ -12,6 +12,8 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
     using System.Reflection;
 
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -63,11 +65,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public static void BuildVirtualTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType)
+        public static void BuildVirtualTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType, LlvmWriter llvmWriter)
         {
             if (thisType.BaseType != null)
             {
-                virtualTable.BuildVirtualTable(thisType.BaseType);
+                virtualTable.BuildVirtualTable(thisType.BaseType, llvmWriter);
             }
 
             // get all virtual methods in current type and replace or append
@@ -91,6 +93,15 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 baseMethod.Value = virtualOrAbstractMethod;
+            }
+
+            // append custom methods
+            // custom GetHashCode for Enums
+            if (thisType.ToNormal().IsEnum)
+            {
+                var getHashCodeMethod = new SynthesizedGetHashCodeMethod(thisType, llvmWriter);
+                var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getHashCodeMethod));
+                baseMethod.Value = getHashCodeMethod;
             }
         }
 
@@ -175,13 +186,13 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo, out IType requiredInterface)
+        public static int GetVirtualMethodIndex(this IType thisType, IMethod methodInfo, LlvmWriter llvmWriter, out IType requiredInterface)
         {
             requiredInterface = null;
 
             if (!thisType.IsInterface)
             {
-                var virtualTable = thisType.GetVirtualTable();
+                var virtualTable = thisType.GetVirtualTable(llvmWriter);
 
                 var index = 0;
                 foreach (var virtualMethod in virtualTable.Select(v => v.Value))
@@ -243,7 +254,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(this IType thisType)
+        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(this IType thisType, LlvmWriter llvmWriter)
         {
             List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
 
@@ -253,7 +264,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
-            virtualTable.BuildVirtualTable(thisType);
+            virtualTable.BuildVirtualTable(thisType, llvmWriter);
 
             virtualTableByType[thisType.FullName] = virtualTable;
 
@@ -303,9 +314,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo)
+        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo, LlvmWriter llvmWriter)
         {
-            return thisType.GetVirtualTable().Select(v => v.Value).Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
+            return thisType.GetVirtualTable(llvmWriter).Select(v => v.Value).Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
         }
 
         /// <summary>

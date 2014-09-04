@@ -265,7 +265,7 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine(string.Empty);
 
-                var virtualTable = declaringType.GetVirtualTable();
+                var virtualTable = declaringType.GetVirtualTable(llvmWriter);
 
                 writer.Write(
                     "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
@@ -617,8 +617,18 @@ namespace Il2Native.Logic.Gencode
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
-
             writer.WriteLine(string.Empty);
+
+            if (opCode.Result.Type.IntTypeBitSize() != llvmWriter.ResolveType("System.Int32").IntTypeBitSize())
+            {
+                var storeResult = opCode.Result;
+                var retResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Int32"));
+                opCode.Result = storeResult;
+                llvmWriter.AdjustIntConvertableTypes(writer, opCode, false, llvmWriter.ResolveType("System.Int32"));
+                opCode.Result = retResult;
+                writer.WriteLine(string.Empty);
+            }
+
             writer.WriteLine("; End of Getting data");
         }
     }

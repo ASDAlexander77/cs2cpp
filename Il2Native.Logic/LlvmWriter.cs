@@ -1100,7 +1100,8 @@ namespace Il2Native.Logic
             var stored = type.UseAsClass;
             type.UseAsClass = false;
 
-            var canBeBoxed = type.IsPrimitiveType() || type.IsStructureType() || type.IsEnum;
+            var isEnum = type.IsEnum;
+            var canBeBoxed = type.IsPrimitiveType() || type.IsStructureType() || isEnum;
             var canBeUnboxed = canBeBoxed;
             var excluded = type.FullName == "System.Enum" || type.FullName == "System.IntPtr" || type.FullName == "System.UIntPtr";
 
@@ -1114,7 +1115,7 @@ namespace Il2Native.Logic
                 type.WriteUnboxMethod(this);
             }
 
-            if (type.IsEnum)
+            if (isEnum)
             {
                 type.WriteGetHashCodeMethod(this);
             }
@@ -5010,7 +5011,7 @@ namespace Il2Native.Logic
                 {
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualTableName());
-                    var virtualTable = type.GetVirtualTable();
+                    var virtualTable = type.GetVirtualTable(this);
                     virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
 
                     foreach (var methodInVirtualTable in virtualTable)

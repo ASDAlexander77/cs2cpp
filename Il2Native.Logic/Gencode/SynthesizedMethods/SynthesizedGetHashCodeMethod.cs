@@ -1,5 +1,7 @@
 ﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Reflection;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -20,6 +22,16 @@
             : base(type, "GetHashCode")
         {
             this.writer = writer;
+        }
+
+        /// <summary>
+        /// </summary>
+        public override CallingConventions CallingConvention
+        {
+            get
+            {
+                return CallingConventions.HasThis;
+            }
         }
 
         /// <summary>

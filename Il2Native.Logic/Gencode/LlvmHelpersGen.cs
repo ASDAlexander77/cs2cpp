@@ -66,7 +66,7 @@ namespace Il2Native.Logic.Gencode
 
             IType requiredInterface;
             var effectiveType = requiredType ?? thisType;
-            var methodIndex = effectiveType.GetVirtualMethodIndex(methodInfo, out requiredInterface);
+            var methodIndex = effectiveType.GetVirtualMethodIndex(methodInfo, llvmWriter, out requiredInterface);
 
             if (requiredInterface != null)
             {
