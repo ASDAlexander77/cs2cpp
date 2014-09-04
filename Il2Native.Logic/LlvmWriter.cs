@@ -1114,6 +1114,11 @@ namespace Il2Native.Logic
                 type.WriteUnboxMethod(this);
             }
 
+            if (type.IsEnum)
+            {
+                type.WriteGetHashCodeMethod(this);
+            }
+
             type.UseAsClass = stored;
         }
 

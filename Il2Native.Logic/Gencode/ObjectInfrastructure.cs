@@ -9,21 +9,23 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
-    using System.Collections.Generic;
-    using System.Reflection;
-    using System.Text;
+    using System.Diagnostics;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using Microsoft.CodeAnalysis;
 
     /// <summary>
     /// </summary>
     public static class ObjectInfrastructure
     {
+        /// <summary>
+        /// </summary>
+        public const int FunctionsOffsetInVirtualTable = 2;
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -34,7 +36,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedBoxMethod(type, llvmWriter);
+            var method = new SynthesizedBoxMethod(type);
             writer.WriteLine("; Box method");
 
             type.UseAsClass = false;
@@ -139,7 +141,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedBoxMethod(type, llvmWriter);
+            var method = new SynthesizedBoxMethod(type);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Box Object method");
             llvmWriter.WriteCall(opCode, method, false, false, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
@@ -174,12 +176,12 @@ namespace Il2Native.Logic.Gencode
             var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
             llvmWriter.WriteCall(
-                opCodePart, 
-                methodBase, 
-                opCodePart.ToCode() == Code.Callvirt, 
-                true, 
-                true, 
-                resAlloc, 
+                opCodePart,
+                methodBase,
+                opCodePart.ToCode() == Code.Callvirt,
+                true,
+                true,
+                resAlloc,
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             opCodePart.Result = resAlloc;
         }
@@ -216,7 +218,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedUnboxMethod(type, llvmWriter);
+            var method = new SynthesizedUnboxMethod(type);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Unbox Object method");
             llvmWriter.WriteCall(opCode, method, false, true, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
@@ -266,9 +268,9 @@ namespace Il2Native.Logic.Gencode
                 var virtualTable = declaringType.GetVirtualTable();
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ", 
-                    virtualTable.GetVirtualTableSize(), 
-                    declaringType.GetVirtualTableName(), 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
+                    virtualTable.GetVirtualTableSize(),
+                    declaringType.GetVirtualTableName(),
                     FunctionsOffsetInVirtualTable);
                 if (opCode.HasResult)
                 {
@@ -305,9 +307,9 @@ namespace Il2Native.Logic.Gencode
                 var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
 
                 writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ", 
-                    virtualInterfaceTable.GetVirtualTableSize(), 
-                    declaringType.GetVirtualInterfaceTableName(@interface), 
+                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
+                    virtualInterfaceTable.GetVirtualTableSize(),
+                    declaringType.GetVirtualInterfaceTableName(@interface),
                     FunctionsOffsetInVirtualTable);
                 llvmWriter.WriteResult(opCode.Result);
                 writer.WriteLine(string.Empty);
@@ -459,7 +461,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedUnboxMethod(type, llvmWriter);
+            var method = new SynthesizedUnboxMethod(type);
             writer.WriteLine("; Unbox method");
 
             var opCode = OpCodePart.CreateNop;
@@ -495,6 +497,36 @@ namespace Il2Native.Logic.Gencode
             {
                 writer.WriteLine(" void");
             }
+
+            llvmWriter.WriteMethodEnd(method, null);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteGetHashCodeMethod(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedGetHashCodeMethod(type, llvmWriter);
+            writer.WriteLine("; default GetHashCode method");
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method, null);
+            llvmWriter.WriteLlvmLoad(opCode, type.ToClass(), new FullyDefinedReference("%this", llvmWriter.ThisType), true, true);
+            writer.WriteLine(string.Empty);
+
+            var normalType = type.ToNormal();
+
+            llvmWriter.WriteGetHashCodeObject(opCode, normalType);
+
+            writer.Write("ret i32");
+
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
 
             llvmWriter.WriteMethodEnd(method, null);
         }
@@ -544,1171 +576,50 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        public const int FunctionsOffsetInVirtualTable = 2;
-
-        /// <summary>
-        /// </summary>
-        private class SynthesizedBoxMethod : IMethod
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        public static void WriteGetHashCodeObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
         {
-            /// <summary>
-            /// </summary>
-            private LlvmWriter writer;
+            var writer = llvmWriter.Output;
 
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="writer">
-            /// </param>
-            public SynthesizedBoxMethod(IType type, LlvmWriter writer)
+            var isStruct = declaringType.IsStructureType();
+
+            writer.WriteLine("; Returning Hash Code");
+            writer.WriteLine(string.Empty);
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
+
+            writer.WriteLine("; Get data");
+
+            if (!isStruct)
             {
-                this.Type = type;
-                this.writer = writer;
-            }
-
-            /// <summary>
-            /// </summary>
-            public string AssemblyQualifiedName { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public CallingConventions CallingConvention
-            {
-                get
+                // write access to a field
+                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
                 {
-                    return CallingConventions.Standard;
+                    writer.WriteLine("; No data");
+                    return;
                 }
+
+                writer.WriteLine(string.Empty);
             }
-
-            /// <summary>
-            /// </summary>
-            public IType DeclaringType
+            else
             {
-                get
-                {
-                    return this.Type.Clone();
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string ExplicitName
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..box");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string FullName
-            {
-                get
-                {
-                    return string.Concat(this.Type.FullName, "..box");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsAbstract { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsConstructor { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsExternal
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsGenericMethod { get; private set; }
-
-            /// <summary>
-            /// custom field
-            /// </summary>
-            public bool IsUnmanaged
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsUnmanagedMethodReference
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsDllImport
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public DllImportData DllImportData
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOverride { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsStatic
-            {
-                get
-                {
-                    return true;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsVirtual { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IModule Module { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public string Name
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..box");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string Namespace { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IType ReturnType
-            {
-                get
-                {
-                    return this.Type.ToClass();
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType Type { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public int CompareTo(object obj)
-            {
+                Debug.Fail("Not implemented yet");
                 throw new NotImplementedException();
             }
 
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public override bool Equals(object obj)
-            {
-                return this.ToString().Equals(obj.ToString());
-            }
+            // load value from field
+            var memberAccessResultNumber = opCode.Result;
 
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IType> GetGenericArguments()
-            {
-                return null;
-            }
+            opCode.Result = null;
+            llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
 
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override int GetHashCode()
-            {
-                return this.ToString().GetHashCode();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="genericContext">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
-            {
-                return new SynthesizedDummyMethodBody();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IParameter> GetParameters()
-            {
-                return new[] { new SynthesizedValueParameter(this.Type.ToNormal()) };
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="ownerOfExplicitInterface">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public string ToString(IType ownerOfExplicitInterface)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override string ToString()
-            {
-                var result = new StringBuilder();
-
-                // write return type
-                result.Append(this.ReturnType);
-                result.Append(' ');
-
-                // write Full Name
-                result.Append(this.FullName);
-
-                // write Parameter Types
-                result.Append('(');
-                var index = 0;
-                foreach (var parameterType in this.GetParameters())
-                {
-                    if (index != 0)
-                    {
-                        result.Append(", ");
-                    }
-
-                    result.Append(parameterType);
-                    index++;
-                }
-
-                result.Append(')');
-
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public class SynthesizedDummyMethodBody : IMethodBody
-        {
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        private class SynthesizedInitMethod : IMethod
-        {
-            /// <summary>
-            /// </summary>
-            private readonly LlvmWriter writer;
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="writer">
-            /// </param>
-            public SynthesizedInitMethod(IType type, LlvmWriter writer)
-            {
-                this.Type = type;
-                this.writer = writer;
-            }
-
-            /// <summary>
-            /// </summary>
-            public string AssemblyQualifiedName { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public CallingConventions CallingConvention
-            {
-                get
-                {
-                    return CallingConventions.HasThis;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType DeclaringType
-            {
-                get
-                {
-                    return this.Type.Clone();
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string ExplicitName
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..init");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string FullName
-            {
-                get
-                {
-                    return string.Concat(this.Type.FullName, "..init");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsAbstract { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsConstructor { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsExternal
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsGenericMethod { get; private set; }
-
-            /// <summary>
-            /// custom field
-            /// </summary>
-            public bool IsUnmanaged
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsUnmanagedMethodReference
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsDllImport
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public DllImportData DllImportData
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOverride { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsStatic { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsVirtual { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IModule Module { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public string Name
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..init");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string Namespace { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IType ReturnType
-            {
-                get
-                {
-                    return this.writer.ResolveType("System.Void");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType Type { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public int CompareTo(object obj)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public override bool Equals(object obj)
-            {
-                return this.ToString().Equals(obj.ToString());
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IType> GetGenericArguments()
-            {
-                return null;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override int GetHashCode()
-            {
-                return this.ToString().GetHashCode();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="genericContext">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
-            {
-                return new SynthesizedDummyMethodBody();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IParameter> GetParameters()
-            {
-                return new IParameter[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="ownerOfExplicitInterface">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public string ToString(IType ownerOfExplicitInterface)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override string ToString()
-            {
-                var result = new StringBuilder();
-
-                // write return type
-                result.Append(this.ReturnType);
-                result.Append(' ');
-
-                // write Full Name
-                result.Append(this.FullName);
-
-                // write Parameter Types
-                result.Append('(');
-                var index = 0;
-                foreach (var parameterType in this.GetParameters())
-                {
-                    if (index != 0)
-                    {
-                        result.Append(", ");
-                    }
-
-                    result.Append(parameterType);
-                    index++;
-                }
-
-                result.Append(')');
-
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        private class SynthesizedUnboxMethod : IMethod
-        {
-            /// <summary>
-            /// </summary>
-            private LlvmWriter writer;
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="writer">
-            /// </param>
-            public SynthesizedUnboxMethod(IType type, LlvmWriter writer)
-            {
-                this.Type = type.ToNormal();
-                this.writer = writer;
-            }
-
-            /// <summary>
-            /// </summary>
-            public string AssemblyQualifiedName { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public CallingConventions CallingConvention
-            {
-                get
-                {
-                    return CallingConventions.HasThis;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType DeclaringType
-            {
-                get
-                {
-                    return this.Type.Clone();
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string ExplicitName
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..unbox");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string FullName
-            {
-                get
-                {
-                    return string.Concat(this.Type.FullName, "..unbox");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsAbstract { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsConstructor { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsExternal
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsGenericMethod { get; private set; }
-
-            /// <summary>
-            /// custom field
-            /// </summary>
-            public bool IsUnmanaged
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsUnmanagedMethodReference
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsDllImport
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public DllImportData DllImportData
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOverride { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsStatic { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsVirtual { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataFullName
-            {
-                get
-                {
-                    return this.FullName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string MetadataName
-            {
-                get
-                {
-                    return this.ExplicitName;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IModule Module { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public string Name
-            {
-                get
-                {
-                    return string.Concat(this.Type.Name, "..unbox");
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string Namespace { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public IType ReturnType
-            {
-                get
-                {
-                    return this.Type;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType Type { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public int CompareTo(object obj)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public override bool Equals(object obj)
-            {
-                return this.ToString().Equals(obj.ToString());
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IType> GetGenericArguments()
-            {
-                return null;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IEnumerable<IType> GetGenericParameters()
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override int GetHashCode()
-            {
-                return this.ToString().GetHashCode();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="genericContext">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public IMethodBody GetMethodBody(IGenericContext genericContext = null)
-            {
-                return new SynthesizedDummyMethodBody();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public IEnumerable<IParameter> GetParameters()
-            {
-                return new IParameter[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="ownerOfExplicitInterface">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public string ToString(IType ownerOfExplicitInterface)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override string ToString()
-            {
-                var result = new StringBuilder();
-
-                // write return type
-                result.Append(this.ReturnType);
-                result.Append(' ');
-
-                // write Full Name
-                result.Append(this.FullName);
-
-                // write Parameter Types
-                result.Append('(');
-                var index = 0;
-                foreach (var parameterType in this.GetParameters())
-                {
-                    if (index != 0)
-                    {
-                        result.Append(", ");
-                    }
-
-                    result.Append(parameterType);
-                    index++;
-                }
-
-                result.Append(')');
-
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        private class SynthesizedValueParameter : IParameter
-        {
-            /// <summary>
-            /// </summary>
-            private readonly IType type;
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            public SynthesizedValueParameter(IType type)
-            {
-                this.type = type.Clone();
-                this.type.UseAsClass = false;
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOut
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsRef
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public string Name
-            {
-                get
-                {
-                    return "value";
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IType ParameterType
-            {
-                get
-                {
-                    return this.type;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override string ToString()
-            {
-                var result = new StringBuilder();
-
-                if (this.IsRef)
-                {
-                    result.Append("Ref ");
-                }
-
-                if (this.IsOut)
-                {
-                    result.Append("Out ");
-                }
-
-                result.Append(this.ParameterType);
-                return result.ToString();
-            }
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; End of Getting data");
         }
     }
 }

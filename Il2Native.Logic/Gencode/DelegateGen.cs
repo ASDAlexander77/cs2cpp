@@ -14,6 +14,7 @@ namespace Il2Native.Logic.Gencode
     using System.Reflection;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
 
@@ -591,7 +592,7 @@ namespace Il2Native.Logic.Gencode
             /// </returns>
             public IMethodBody GetMethodBody(IGenericContext genericContext = null)
             {
-                return new ObjectInfrastructure.SynthesizedDummyMethodBody();
+                return new SynthesizedDummyMethodBody();
             }
 
             /// <summary>
