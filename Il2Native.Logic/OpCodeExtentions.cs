@@ -396,7 +396,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsIntValueTypeCastRequired(this IType thisType, IType type)
+        public static bool IsIntValueTypeExtCastRequired(this IType thisType, IType type)
         {
             var thisTypeString = thisType.TypeToCType();
             var typeString = type.TypeToCType();
@@ -410,6 +410,22 @@ namespace Il2Native.Logic
             }
 
             return thisTypeSize > typeSize;
+        }
+
+        public static bool IsIntValueTypeTruncCastRequired(this IType thisType, IType type)
+        {
+            var thisTypeString = thisType.TypeToCType();
+            var typeString = type.TypeToCType();
+
+            var thisTypeSize = GetIntSize(thisTypeString);
+            var typeSize = GetIntSize(typeString);
+
+            if (thisTypeSize == 0 || typeSize == 0)
+            {
+                return false;
+            }
+
+            return thisTypeSize < typeSize;
         }
 
         /// <summary>

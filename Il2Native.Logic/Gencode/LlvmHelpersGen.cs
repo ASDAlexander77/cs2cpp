@@ -252,7 +252,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
                 }
 
-                if (operand.HasResult && parameter.ParameterType.IsIntValueTypeCastRequired(operand.Result.Type))
+                if (operand.HasResult && parameter.ParameterType.IsIntValueTypeExtCastRequired(operand.Result.Type))
                 {
                     llvmWriter.AdjustIntConvertableTypes(writer, operand, preProcessedOperandDirectResults[index], parameter.ParameterType);
                 }

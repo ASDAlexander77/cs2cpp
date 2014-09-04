@@ -344,9 +344,16 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeCastRequired(opCode.Result.Type))
+            if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeExtCastRequired(opCode.Result.Type))
             {
                 this.LlvmIntConvert(opCode, destType.IsSignType() ? "sext" : "zext", "i" + destType.IntTypeBitSize());
+                writer.WriteLine(string.Empty);
+                return true;
+            }
+
+            if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeTruncCastRequired(opCode.Result.Type))
+            {
+                this.LlvmIntConvert(opCode, "trunc", "i" + destType.IntTypeBitSize());
                 writer.WriteLine(string.Empty);
                 return true;
             }
@@ -4151,13 +4158,13 @@ namespace Il2Native.Logic
 
                     if (secondType != null)
                     {
-                        if (firstType.IsIntValueTypeCastRequired(secondType))
+                        if (firstType.IsIntValueTypeExtCastRequired(secondType))
                         {
                             intAdjustSecondOperand = true;
                             intAdjustment = firstType;
                         }
 
-                        if (secondType.IsIntValueTypeCastRequired(firstType))
+                        if (secondType.IsIntValueTypeExtCastRequired(firstType))
                         {
                             intAdjustSecondOperand = false;
                             intAdjustment = secondType;
