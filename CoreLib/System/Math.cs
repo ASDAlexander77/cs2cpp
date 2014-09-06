@@ -29,6 +29,18 @@ namespace System
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double @llvm_sqrt_f64(double value);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double acos(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double asin(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double atan(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double atan2(double value);
+
         // Public Constants
 
         // Summary:
@@ -118,8 +130,7 @@ namespace System
 
         public static double Acos(double d)
         {
-            var div = (-d * d + 1.0);
-            return Atan(-d / (div * div)) + 2.0 * Atan(1.0);
+            return acos(d);
         }
         //
         // Summary:
@@ -135,8 +146,7 @@ namespace System
 
         public static double Asin(double d)
         {
-            var div = (-d * d + 1.0);
-            return Atan(d / (div * div));
+            return asin(d);
         }
         //
         // Summary:
@@ -154,7 +164,7 @@ namespace System
 
         public static double Atan(double x)
         {
-            return Atan2(x, 1.0);
+            return atan(x);
         }
         //
         // Summary:
@@ -177,36 +187,9 @@ namespace System
         //     negative, ? = p.  If y is positive and x is 0, ? = p/2.  If y is negative
         //     and x is 0, ? = -p/2.
 
-
-        const double CV_PI = 3.1415926535897932384626433832795;
-        const double atan2_p1 = 0.9997878412794807 * (180.0 / CV_PI);
-        const double atan2_p3 = -0.3258083974640975 * (180.0 / CV_PI);
-        const double atan2_p5 = 0.1555786518463281 * (180.0 / CV_PI);
-        const double atan2_p7 = -0.04432655554792128 * (180.0 / CV_PI);
-        const double DBL_EPSILON = 2.2204460492503131e-16;
-
         public static double Atan2(double y, double x)
         {
-            var ax = Abs(x);
-            var ay = Abs(y);
-            double a, c, c2;
-            if( ax >= ay )
-            {
-                c = ay/(ax + DBL_EPSILON);
-                c2 = c*c;
-                a = (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
-            }
-            else
-            {
-                c = ax/(ay + DBL_EPSILON);
-                c2 = c*c;
-                a = 90.0 - (((atan2_p7*c2 + atan2_p5)*c2 + atan2_p3)*c2 + atan2_p1)*c;
-            }
-            if( x < 0.0 )
-                a = 180.0 - a;
-            if( y < 0.0 )
-                a = 360.0 - a;
-            return a;
+            return atan2(x);
         }
         //
         // Summary:
@@ -222,7 +205,8 @@ namespace System
         //     System.Double.NegativeInfinity, or System.Double.PositiveInfinity, that value
         //     is returned.
 
-        public static extern double Ceiling(double d);        //
+        public static extern double Ceiling(double d);        
+        //
         // Summary:
         //     Returns the cosine of the specified angle.
         //
