@@ -1455,7 +1455,7 @@ namespace System.Text
                 {
                     //ThreadSafeCopy(value, this.m_ChunkChars, this.m_ChunkLength, count);
                     //System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, count);
-                    wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, valueCount);
+                    wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, count);
                     this.m_ChunkLength = this.m_ChunkChars.Length;
                 }
                 int minBlockCharCount = valueCount - count;

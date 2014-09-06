@@ -373,6 +373,7 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
+            var declaringTypeNormalType = declaringType.ToNormal();
             if (declaringType.IsValueType)
             {
                 declaringType.UseAsClass = true;
@@ -386,19 +387,30 @@ namespace Il2Native.Logic.Gencode
                                             ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType)
                                             : opCodePart.OpCodeOperands[0].Result;
 
-            llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.WriteLine(string.Empty);
-
-            llvmWriter.WriteMemSet(declaringType, opCodePart.Result);
-            writer.WriteLine(string.Empty);
-
-            if (declaringType.ToNormal().IsStructureType())
+            if (declaringTypeNormalType.IsValueType)
             {
-                // init now
-                opCodePart.Result = fullyDefinedReference;
-
-                declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
                 writer.WriteLine(string.Empty);
+
+                llvmWriter.WriteMemSet(declaringType, opCodePart.Result);
+                writer.WriteLine(string.Empty);
+
+                if (declaringTypeNormalType.IsStructureType())
+                {
+                    // init now
+                    opCodePart.Result = fullyDefinedReference;
+
+                    declaringType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                    writer.WriteLine(string.Empty);
+                }
+            }
+            else
+            {
+                // this is type reference, initialize it with null
+                llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+                writer.WriteLine(string.Empty);
+
+                writer.WriteLine("store i8* null, i8** {0}", opCodePart.Result);
             }
 
             writer.Write("; end of init obj");

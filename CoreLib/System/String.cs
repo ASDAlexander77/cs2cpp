@@ -48,6 +48,16 @@ namespace System
        
         public static bool Equals(String a, String b)
         {
+            if (a == null && b == null)
+            {
+                return true;
+            }
+
+            if (a == null || b == null)
+            {
+                return false;
+            }
+            
             var charsA = a.chars;
             var charsB = b.chars;
 
@@ -110,13 +120,13 @@ namespace System
 
         public static bool operator ==(String a, String b)
         {
-            return a.Equals(b);
+            return Equals(a, b);
         }
 
         
         public static bool operator !=(String a, String b)
         {
-            return !a.Equals(b);
+            return !Equals(a, b);
         }
 
         [System.Runtime.CompilerServices.IndexerName("Chars")]

@@ -12,12 +12,12 @@ namespace System
     {
         public override bool Equals(Object obj)
         {
-            return this.GetHashCode() == obj.GetHashCode();
+            throw new NotImplementedException();
         }
 
         public override int GetHashCode()
         {
-            return (int)this;
+            throw new NotImplementedException();
         }
 
         public override string ToString()
