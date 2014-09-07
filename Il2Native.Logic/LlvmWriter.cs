@@ -547,11 +547,6 @@ namespace Il2Native.Logic
                 return opCodeMethodInfo.IntPtrCallingCtorStage;
             }
 
-            if (opCode.Any(Code.Conv_U))
-            {
-                return opCode.OpCodeOperands[0].UseAsNull;
-            }
-
             if (opCode.Any(Code.Conv_I))
             {
                 return this.IsDirectValue(opCode.OpCodeOperands[0]);

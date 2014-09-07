@@ -633,6 +633,18 @@ namespace Il2Native.Logic
                     }
                 }
             }
+
+            if (opCode.Any(Code.Call, Code.Callvirt))
+            {
+                // todo: finish it, check required type of parameter
+                foreach (var usedOpCode in opCode.OpCodeOperands)
+                {
+                    if (usedOpCode.Any(Code.Conv_U) && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0))
+                    {
+                        usedOpCode.OpCodeOperands[0].UseAsNull = true;
+                    }
+                }
+            }
         }
 
         /// <summary>
