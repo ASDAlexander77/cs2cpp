@@ -170,8 +170,6 @@ namespace Il2Native.Logic
             List<IType> newListOfITypes,
             SortedDictionary<string, IType> genDefinitionsByMetadataName,
             HashSet<IMethod> genMethodSpec,
-            HashSet<IType> genDefinitionsByMetadataNameToExclude,
-            HashSet<IMethod> genMethodSpecToExclude,
             ConvertingMode mode)
         {
             var i = 0;
@@ -192,11 +190,6 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.IsGenericType && genDefinitionsByMetadataNameToExclude.Contains(type))
-                {
-                    continue;
-                }
-
                 IType genDef = null;
                 if (type.IsGenericType)
                 {
@@ -204,7 +197,7 @@ namespace Il2Native.Logic
                 }
 
                 type.UseAsClass = true;
-                ConvertIType(ilReader, codeWriter, type, genDef, genMethodSpec, genMethodSpecToExclude, mode);
+                ConvertIType(ilReader, codeWriter, type, genDef, genMethodSpec, mode);
             }
         }
 
@@ -223,7 +216,7 @@ namespace Il2Native.Logic
         /// <param name="mode">
         /// </param>
         private static void ConvertIType(
-            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, HashSet<IMethod> genericMethodSpecializatonsToExclude, ConvertingMode mode)
+            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, ConvertingMode mode)
         {
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
@@ -323,11 +316,6 @@ namespace Il2Native.Logic
                         // write all specializations of a method
                         foreach (var methodSpec in genericMethodSpecializatons)
                         {
-                            if (genericMethodSpecializatonsToExclude.Contains(methodSpec))
-                            {
-                                continue;
-                            }
-
                             if (methodSpec.DeclaringType.FullName == method.DeclaringType.FullName 
                                 && methodSpec.IsMatchingGeneric(method))
                             {
@@ -433,15 +421,6 @@ namespace Il2Native.Logic
                 genericTypeSpecializations, 
                 genericMethodSpecializations);
 
-            // types in referenced assemblies
-            var genericTypeSpecializationsInReferences = new HashSet<IType>();
-            var genericMethodSpecializationsInReferences = new HashSet<IMethod>();
-            var typesInReferences = ilReader.AllReferencedTypes().ToList();
-            var listOfTypesInReferences = ResortITypes(
-                typesInReferences.Where(t => !t.IsGenericTypeDefinition).ToList(),
-                genericTypeSpecializationsInReferences,
-                genericMethodSpecializationsInReferences);
-
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in allTypes.Where(t => t.IsGenericDefinition()))
@@ -467,8 +446,6 @@ namespace Il2Native.Logic
                 newListOfITypes, 
                 genDefinitionsByMetadataName, 
                 genericMethodSpecializations, 
-                genericTypeSpecializationsInReferences, 
-                genericMethodSpecializationsInReferences, 
                 ConvertingMode.Declaration);
 
             ConvertAllTypes(
@@ -478,8 +455,6 @@ namespace Il2Native.Logic
                 newListOfITypes, 
                 genDefinitionsByMetadataName, 
                 genericMethodSpecializations, 
-                genericTypeSpecializationsInReferences, 
-                genericMethodSpecializationsInReferences, 
                 ConvertingMode.Definition);
 
             codeWriter.WriteEnd();

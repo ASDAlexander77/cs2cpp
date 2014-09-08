@@ -1273,6 +1273,10 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
+                if (this.ThisType.IsGenericType)
+                {
+                    this.Output.Write("linkonce_odr ");
+                }
             }
 
             this.Output.Write("void ");
@@ -2250,6 +2254,10 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
+                if (this.ThisType.IsGenericType)
+                {
+                    this.Output.Write("linkonce_odr ");
+                }
             }
 
             // return type
@@ -5054,7 +5062,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.Output.Write("@\"{0}\" = global ", field.GetFullName());
+                this.Output.Write("@\"{0}\" = {1} global ", field.GetFullName(), field.DeclaringType.IsGenericType ? "linkonce_odr" : string.Empty);
             }
 
             field.FieldType.WriteTypePrefix(this.Output, false);
