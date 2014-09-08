@@ -182,18 +182,18 @@ namespace System
         //     The string representation of the value of this instance.        
         public override String ToString()
         {
-            if(IsPositiveInfinity(this))
-            {
-                return "Infinity";
-            }
-            else if(IsNegativeInfinity(this))
-            {
-                return "-Infinity";
-            }
-            else if(IsNaN(this))
-            {
-                return "NaN";
-            }
+            ////if(IsPositiveInfinity(this))
+            ////{
+            ////    return "Infinity";
+            ////}
+            ////else if(IsNegativeInfinity(this))
+            ////{
+            ////    return "-Infinity";
+            ////}
+            ////else if(IsNaN(this))
+            ////{
+            ////    return "NaN";
+            ////}
 
             return Number.Format(m_value, false, "G", NumberFormatInfo.CurrentInfo);
         }
@@ -214,18 +214,18 @@ namespace System
         //     format is invalid.
         public String ToString(String format)
         {
-            if (IsPositiveInfinity(this))
-            {
-                return "Infinity";
-            }
-            else if (IsNegativeInfinity(this))
-            {
-                return "-Infinity";
-            }
-            else if (IsNaN(this))
-            {
-                return "NaN";
-            }
+            ////if (IsPositiveInfinity(this))
+            ////{
+            ////    return "Infinity";
+            ////}
+            ////else if (IsNegativeInfinity(this))
+            ////{
+            ////    return "-Infinity";
+            ////}
+            ////else if (IsNaN(this))
+            ////{
+            ////    return "NaN";
+            ////}
 
             return Number.Format(m_value, false, format, NumberFormatInfo.CurrentInfo);
         }

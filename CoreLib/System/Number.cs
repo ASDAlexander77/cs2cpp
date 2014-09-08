@@ -7,6 +7,8 @@ namespace System
     using System;
     using System.Globalization;
     using System.Runtime.CompilerServices;
+    using System.Text;
+
     // The Number class implements methods for formatting and parsing
     // numeric values. To format and parse numeric values, applications should
     // use the Format and Parse methods provided by the numeric
@@ -279,7 +281,19 @@ namespace System
     //This class contains only static members and does not need to be serializable
     internal static class Number
     {
-        private static string NumberChars = "0123456789abcdef";
+        private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f' };
+        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'i' };
+
+        private static byte[] buffer = new byte[128];
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int sprintf(byte[] buffer, byte[] format, double d);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int sprintf(byte[] buffer, byte[] format, float d);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern int sprintf(byte[] buffer, byte[] format, int t);
 
         public static String Format(int value, bool isInteger, String format, NumberFormatInfo info)
         {
@@ -308,46 +322,14 @@ namespace System
 
         private static String FormatNative(int value, char format, int precision)
         {
-            var newChars = new char[32];
-
-            var @base = 10;
-            var i = 30;
-
-            if (value > 0)
-            {
-                for (; value > 0 && i > 0; --i, value /= @base)
-                {
-                    newChars[i] = NumberChars[value % @base];
-                }
-            }
-            else
-            {
-                newChars[i--] = NumberChars[0];
-            }
-
-            return new String(newChars, i + 1, 30 - i);
+            var size = sprintf(buffer, PrintInt, value);
+            return new String(Encoding.ASCII.GetChars(buffer), 0, size - 1);
         }
 
         private static String  FormatNative(double value, char format, int precision)
         {
-            var newChars = new char[80];
-
-            int m = (int) Math.Log10(value);
-            int digit;
-            int index = 0;
-
-            while (value > 0 + precision || m >= 0)
-            {
-                float weight = (float)Math.Pow(10.0f, m);
-                digit = (int)Math.Floor(value / weight);
-                value -= (digit * weight);
-                newChars[index++] = NumberChars[digit];
-                if (m == 0)
-                    newChars[index++] = '.';
-                m--; 
-            }
-
-            return new String(newChars, 0, index);
+            var size = sprintf(buffer, PrintDouble, value);
+            return new String(Encoding.ASCII.GetChars(buffer), 0, size - 1);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)
@@ -483,14 +465,14 @@ namespace System
 
         private static String ReplaceNegativeSign(String original, NumberFormatInfo info)
         {
-            if (original[0] == '-')
-            {
-                return info.NegativeSign + original.Substring(1);
-            }
-            else
-            {
+            //if (original[0] == '-')
+            //{
+            //    return info.NegativeSign + original.Substring(1);
+            //}
+            //else
+            //{
                 return original;
-            }
+            //}
         }
 
         private static String ReplaceDecimalSeperator(String original, NumberFormatInfo info)
