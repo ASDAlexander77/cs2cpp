@@ -460,10 +460,8 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_S:
                     return
                         new ReturnResult(
-                            opCode.UseAsBoolean
-                                ? this.ResolveType("System.Boolean")
-                                : opCode.UseAsNull 
-                                    ? this.ResolveType("System.Void").ToPointerType() 
+                                opCode.UseAsNull
+                                    ? this.ResolveType("System.Void").ToPointerType()
                                     : this.ResolveType("System.Int32")) { IsConst = true };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
@@ -592,45 +590,10 @@ namespace Il2Native.Logic
             if (requiredType != null)
             {
                 var receivingType = this.ResultOf(usedOpCode1);
-                if (requiredType != receivingType)
-                {
-                    if (requiredType.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
-                    {
-                        usedOpCode1.UseAsBoolean = true;
-                        return;
-                    }
-                }
-
                 if ((requiredType.Type.IsPointer || requiredType.Type.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
-                }
-            }
-
-            if (opCode.OpCodeOperands.Length == 2
-                && (opCode.OpCode.StackBehaviourPop == StackBehaviour.Pop1_pop1 || opCode.OpCode.StackBehaviourPop == StackBehaviour.Popi_popi)
-                /*&& (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push1 || opCode.OpCode.StackBehaviourPush == StackBehaviour.Pushi)*/)
-            {
-                // types should be equal
-                var usedOpCode2 = opCode.OpCodeOperands[1];
-
-                var type1 = this.ResultOf(usedOpCode1);
-                var type2 = this.ResultOf(usedOpCode2);
-
-                if (type1 != null && type2 != null && !type1.Equals(type2))
-                {
-                    if (type1.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode2.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
-                    {
-                        usedOpCode2.UseAsBoolean = true;
-                        return;
-                    }
-
-                    if (type2.IsTypeOf(this.ResolveType("System.Boolean")) && usedOpCode1.Any(Code.Ldc_I4_0, Code.Ldc_I4_1))
-                    {
-                        usedOpCode1.UseAsBoolean = true;
-                        return;
-                    }
                 }
             }
 

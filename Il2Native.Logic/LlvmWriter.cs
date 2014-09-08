@@ -2908,16 +2908,12 @@ namespace Il2Native.Logic
             switch (code)
             {
                 case Code.Ldc_I4_0:
-                    opCode.Result = opCode.UseAsBoolean
-                                        ? new ConstValue(false, this.ResolveType("System.Boolean"))
-                                        : opCode.UseAsNull
-                                              ? new ConstValue(null, this.ResolveType("System.Void").ToPointerType())
-                                              : new ConstValue(0, this.ResolveType("System.Int32"));
+                    opCode.Result = opCode.UseAsNull
+                                        ? new ConstValue(null, this.ResolveType("System.Void").ToPointerType())
+                                        : new ConstValue(0, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_1:
-                    opCode.Result = opCode.UseAsBoolean
-                                        ? new ConstValue(true, this.ResolveType("System.Boolean"))
-                                        : new ConstValue(1, this.ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(1, this.ResolveType("System.Int32"));
                     break;
                 case Code.Ldc_I4_2:
                 case Code.Ldc_I4_3:
