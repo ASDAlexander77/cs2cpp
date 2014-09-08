@@ -97,6 +97,14 @@ namespace System.Text
                 return new UTF8Encoding();
             }
         }
+
+        public static Encoding ASCII
+        {
+            get
+            {
+                return new ASCIIEncoding();
+            }
+        }
     }
 }
 
