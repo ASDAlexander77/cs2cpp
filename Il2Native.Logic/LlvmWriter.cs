@@ -2648,11 +2648,27 @@ namespace Il2Native.Logic
                         }
 
                         // true. false, %result
-                        var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
-                        writer.Write(" [ {0}, %.a{1} ]", phiValue, i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart);
+                        //var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
+                        //writer.Write(" [ {0}, %.a{1} ]", phiValue, i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart);
+                        this.WritePhiNodeLabel(
+                            writer,
+                            block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart
+                                ? new ConstValue(true, this.ResolveType("System.Boolean"))
+                                : new ConstValue(false, this.ResolveType("System.Boolean")),
+                            block.OpCodes[i],
+                            block.OpCodes[i],
+                            string.Concat("a", i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart));
                     }
 
-                    writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 2].AddressEnd);
+                    //writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 2].AddressEnd);
+                    writer.Write(",");
+                    this.WritePhiNodeLabel(
+                        writer,
+                        block.OpCodes[lastCond - 1].Result,
+                        block.OpCodes[lastCond - 1],
+                        block.OpCodes[lastCond - 1],
+                        string.Concat("a", block.OpCodes[lastCond - 2].AddressEnd));
+                    writer.WriteLine(string.Empty);
 
                     // hack
                     block.OpCodes[lastCond - 1].Result = block.Result;
@@ -2717,7 +2733,9 @@ namespace Il2Native.Logic
                         writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
                 }
 
-                writer.WriteLine("br label %.select_end{0}", opCode1.AddressStart);
+                var endLabel = string.Format("select_end{0}", opCode1.AddressStart);
+
+                writer.WriteLine("br label %.{0}", endLabel);
 
                 writer.Indent--;
                 writer.WriteLine(".select_false{0}:", opCode1.AddressStart);
@@ -2738,10 +2756,10 @@ namespace Il2Native.Logic
                         writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
                 }
 
-                writer.WriteLine("br label %.select_end{0}", opCode1.AddressStart);
+                writer.WriteLine("br label %.{0}", endLabel);
 
                 writer.Indent--;
-                writer.WriteLine(".select_end{0}:", opCode1.AddressStart);
+                writer.WriteLine(".{0}:", endLabel);
                 writer.Indent++;
 
                 this.WriteResultAndFirstOperandType(writer, block, "phi", resultType ?? effectiveType, resultType ?? effectiveType, operandOptions, effectiveType);
@@ -2753,6 +2771,8 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
 
                 writer.WriteLine("; End of Conditional Expression");
+
+                LlvmHelpersGen.SetCustomLabel(opCode3, endLabel);
 
                 return;
             }

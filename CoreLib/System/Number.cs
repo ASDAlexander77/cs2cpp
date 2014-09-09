@@ -281,8 +281,8 @@ namespace System
     //This class contains only static members and does not need to be serializable
     internal static class Number
     {
-        private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f' };
-        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'i' };
+        private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f', 0 };
+        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'i', 0 };
 
         private static byte[] buffer = new byte[128];
 

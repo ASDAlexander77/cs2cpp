@@ -145,9 +145,6 @@ namespace Ll2NativeTests
         public void TestCompileAndRunLlvm()
         {
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
-            // 2) ||| when using 2 .ll files and using the same generic class with the same types it will cause multiple definition of the same class (for example Action<int>)
-            //          - solution: you can append AssemblyName to each generic specialized type to make it unique withing an assemble
-
 
             // 10 - not compilable
             // 19 - using Thread class
