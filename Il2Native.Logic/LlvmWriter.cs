@@ -2676,28 +2676,6 @@ namespace Il2Native.Logic
 
                 writer.WriteLine("; select value");
 
-                ////var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
-                ////dummyOpCode.OpCodeOperands = new[]  { opCode2, opCode3 };
-
-                ////var operandOptions = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
-
-                ////IType castFrom;
-                ////IType intAdjustment;
-                ////bool intAdjustSecondOperand;
-                ////var effectiveType = this.DetectTypePrefix(dummyOpCode, null, operandOptions, out castFrom, out intAdjustment, out intAdjustSecondOperand);
-
-                ////IType resultType = null;
-                ////effectiveType = this.ApplyTypeAdjustment(
-                ////    writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
-
-                ////this.WriteResultAndFirstOperandType(writer, block, "select", this.ResolveType("System.Boolean"), resultType, operandOptions, this.ResolveType("System.Boolean"));
-
-                ////this.PostProcess(writer, opCode1, directResult1);
-                ////writer.Write(',');
-                ////this.PostProcess(writer, opCode2, directResult2, effectiveType == null, effectiveType);
-                ////writer.Write(',');
-                ////this.PostProcess(writer, opCode3, directResult3, effectiveType == null, effectiveType);
-
                 var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
                 dummyOpCode.OpCodeOperands = new[] { opCode2, opCode3 };
 
@@ -2710,16 +2688,31 @@ namespace Il2Native.Logic
 
                 IType resultType = null;
 
+                var trueLabel = string.Format("select_true{0}", opCode1.AddressStart);
+                var falseLabel = string.Format("select_false{0}", opCode1.AddressStart);
+                var endLabel = string.Format("select_end{0}", opCode1.AddressStart);
+
+                if (opCode2.JumpDestination != null && opCode2.JumpDestination.Any())
+                {
+                    // we need to adjust true label
+                    trueLabel = string.Format("a{0}", opCode2.AddressStart);
+                }
+
+                if (opCode3.JumpDestination != null && opCode3.JumpDestination.Any())
+                {
+                    // we need to adjust false label
+                    falseLabel = string.Format("a{0}", opCode3.AddressStart);
+                }
+
                 writer.Write("br");
                 this.PostProcess(writer, opCode1, directResult1, false, opCode1.Result.Type);
-                writer.WriteLine(", label %.select_true{0}, label %.select_false{0}", opCode1.AddressStart);
+                writer.WriteLine(", label %.{0}, label %.{1}", trueLabel, falseLabel);
 
                 writer.Indent--;
-                writer.WriteLine(".select_true{0}:", opCode1.AddressStart);
+                writer.WriteLine(".{0}:", trueLabel);
                 writer.Indent++;
 
                 // value for true
-                this.WriteCaseAndLabels(writer, opCode2);
                 var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
                 // TODO: remove it when you remove field Skip
                 if (directResult2)
@@ -2733,16 +2726,13 @@ namespace Il2Native.Logic
                         writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
                 }
 
-                var endLabel = string.Format("select_end{0}", opCode1.AddressStart);
-
                 writer.WriteLine("br label %.{0}", endLabel);
 
                 writer.Indent--;
-                writer.WriteLine(".select_false{0}:", opCode1.AddressStart);
+                writer.WriteLine(".{0}:", falseLabel);
                 writer.Indent++;
 
                 // value for true
-                this.WriteCaseAndLabels(writer, opCode3);
                 var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
                 // TODO: remove it when you remove field Skip
                 if (directResult3)
@@ -2765,9 +2755,9 @@ namespace Il2Native.Logic
                 this.WriteResultAndFirstOperandType(writer, block, "phi", resultType ?? effectiveType, resultType ?? effectiveType, operandOptions, effectiveType);
 
                 //writer.WriteLine(" [ {0}, %.select_true{2} ], [ {1}, %.select_false{2} ]", opCode2.Result, opCode3.Result, opCode1.AddressStart);
-                this.WritePhiNodeLabel(writer, opCode2.Result, opCode2, opCode2, string.Concat("select_true", opCode1.AddressStart));
+                this.WritePhiNodeLabel(writer, opCode2.Result, opCode2, opCode2, trueLabel);
                 writer.Write(",");
-                this.WritePhiNodeLabel(writer, opCode3.Result, opCode3, opCode3, string.Concat("select_false", opCode1.AddressStart));
+                this.WritePhiNodeLabel(writer, opCode3.Result, opCode3, opCode3, falseLabel);
                 writer.WriteLine(string.Empty);
 
                 writer.WriteLine("; End of Conditional Expression");
