@@ -3558,6 +3558,8 @@ namespace Il2Native.Logic
                         writer.Write(" ");
                         writer.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
                         writer.Write(" to i8*)");
+
+                        this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
                     }
 
                     break;

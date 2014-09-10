@@ -220,7 +220,8 @@ namespace Ll2NativeTests
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
             // 57 - generic virtual methods in an interface
-            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57 };
+            // 60 - generic virtual methods in an interface
+            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57, 60 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
