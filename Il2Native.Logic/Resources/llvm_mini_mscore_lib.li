@@ -1,0 +1,203 @@
+%"System.Object" = type {
+	i32 (...)**
+}
+
+@"System.Object Virtual Table" = linkonce_odr unnamed_addr constant [5 x i8*] [i8* null, i8* bitcast (i32 (%"System.Object"*)* @"Int32 System.Object.GetHashCode()" to i8*), i8* bitcast (i1 (%"System.Object"*, %"System.Object"*)* @"Boolean System.Object.Equals(System.Object)" to i8*), i8* bitcast (i8* (%"System.Object"*)* @"System.String System.Object.ToString()" to i8*), i8* bitcast (void (%"System.Object"*)* @"Void System.Object.Finalize()" to i8*)]
+
+define i8* @"System.String System.Object.ToString()"(%"System.Object"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.Object.Equals(System.Object)"(%"System.Object"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.Object.GetHashCode()"(%"System.Object"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.Object.Finalize()"(%"System.Object"* %this) #4 {
+    ret void
+}
+
+; RTTI class
+@"System.Object String Name" = linkonce_odr constant [16 x i8] c"14System.Object\00"
+@"System.Object Info" = linkonce_odr unnamed_addr constant { i8*, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv117__class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([16 x i8]* @"System.Object String Name", i32 0, i32 0)
+}
+; RTTI pointer
+@"System.Object Pointer String Name" = linkonce_odr constant [17 x i8] c"P14System.Object\00"
+@"System.Object Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([17 x i8]* @"System.Object Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
+}
+
+; Init Object method
+define void @"Void System.Object..init()"(%"System.Object"* %this) #1 {
+    %.this = alloca %"System.Object"*, align 4
+    store %"System.Object"* %this, %"System.Object"** %.this, align 4
+    %.r1 = load %"System.Object"** %.this, align 4
+    ; set virtual table
+    %.r2 = bitcast %"System.Object"* %.r1 to i8***
+    store i8** getelementptr inbounds ([5 x i8*]* @"System.Object Virtual Table", i64 0, i64 1), i8*** %.r2
+    ret void
+}
+
+%"System.ValueType" = type {
+    %"System.Object"
+}
+
+; RTTI class
+@"System.ValueType String Name" = linkonce_odr constant [19 x i8] c"16System.ValueType\00"
+@"System.ValueType Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i8* } 
+{
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([19 x i8]* @"System.ValueType String Name", i32 0, i32 0),
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
+}
+; RTTI pointer
+@"System.ValueType Pointer String Name" = linkonce_odr constant [20 x i8] c"P16System.ValueType\00"
+@"System.ValueType Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([20 x i8]* @"System.ValueType Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8*, i8* }* @"System.ValueType Info" to i8*)
+}
+
+define i8* @"System.String System.ValueType.ToString()"(%"System.ValueType"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.ValueType.Equals(System.Object)"(%"System.ValueType"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.ValueType.GetHashCode()"(%"System.ValueType"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.ValueType.Finalize()"(%"System.ValueType"* %this) #4 {
+    ret void
+}
+
+%"System.Exception" = type {
+    %"System.Object"
+}
+
+define i8* @"System.String System.Exception.ToString()"(%"System.Exception"* %this) #1 {
+    ret i8* null
+}
+
+define i1 @"Boolean System.Exception.Equals(System.Object)"(%"System.Exception"* %this, %"System.Object"* %obj) #2 {
+    ret i1 0
+}
+
+define i32 @"Int32 System.Exception.GetHashCode()"(%"System.Exception"* %this) #3 {
+    ret i32 0
+}
+
+define void @"Void System.Exception.Finalize()"(%"System.Exception"* %this) #4 {
+    ret void
+}
+
+@"System.Exception Virtual Table" = linkonce_odr unnamed_addr constant [5 x i8*] [i8* null, i8* bitcast (i8* (%"System.Object"*)* @"System.String System.Object.ToString()" to i8*), i8* bitcast (i1 (%"System.Object"*, %"System.Object"*)* @"Boolean System.Object.Equals(System.Object)" to i8*), i8* bitcast (i32 (%"System.Object"*)* @"Int32 System.Object.GetHashCode()" to i8*), i8* bitcast (void (%"System.Object"*)* @"Void System.Object.Finalize()" to i8*)]
+
+; RTTI class
+@"System.Exception String Name" = linkonce_odr constant [19 x i8] c"16System.Exception\00"
+@"System.Exception Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i8* } 
+{
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([19 x i8]* @"System.Exception String Name", i32 0, i32 0),
+    i8* bitcast ({ i8*, i8* }* @"System.Object Info" to i8*)
+}
+; RTTI pointer
+@"System.Exception Pointer String Name" = linkonce_odr constant [20 x i8] c"P16System.Exception\00"
+@"System.Exception Pointer Info" = linkonce_odr unnamed_addr constant { i8*, i8*, i32, i8* } {
+    i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),
+    i8* getelementptr inbounds ([20 x i8]* @"System.Exception Pointer String Name", i32 0, i32 0),
+    i32 0,
+    i8* bitcast ({ i8*, i8*, i8* }* @"System.Exception Info" to i8*)
+}
+
+; Init Object method
+define void @"Void System.Exception..init()"(%"System.Exception"* %this) #23 {
+    %.this = alloca %"System.Exception"*, align 4
+    store %"System.Exception"* %this, %"System.Exception"** %.this, align 4
+    %.r1 = load %"System.Exception"** %.this, align 4
+    ; set virtual table
+    %.r2 = bitcast %"System.Exception"* %.r1 to i8***
+    store i8** getelementptr inbounds ([5 x i8*]* @"System.Exception Virtual Table", i64 0, i64 1), i8*** %.r2
+    ret void
+}
+
+%"System.Enum" = type {
+    %"System.ValueType"
+}
+
+%"System.String" = type {
+    %"System.Object",
+    i8*
+}
+
+%"System.Array" = type {
+    %"System.Object",
+    i32,
+    i8*
+}
+
+%"System.MulticastDelegate" = type {
+    %"System.Object"
+}
+
+%"System.AsyncCallback" = type {
+    %"System.Object"
+}
+
+%"System.IAsyncResult" = type {
+    %"System.Object"
+}
+
+%"System.Attribute" = type {
+    %"System.Object"
+}
+
+define void @"Void System.Object..ctor()"(%"System.Object"* %.this) #99003 {
+    ret void
+}
+
+define void @"Void System.Console.WriteLine(System.String)"(i8* %str) #99005 {
+    %1 = call i32 (...)* @puts(i8* %str)
+    ret void
+}
+
+define void @"Void System.Console.Write(System.String)"(i8* %str) #99006 {
+    %1 = call i32 (...)* @puts(i8* %str)
+    ret void
+}
+
+define void @"Void System.Exception..ctor()"(%"System.Exception"* %.this) #99003 {
+    ret void
+}
+
+@.prni = private unnamed_addr constant [5 x i8] c"%i
+\00", align 1
+
+define void @"Void System.Console.WriteLine(Int32)"(i32 %i) #98001 {
+    %1 = call i32 (...)* @printf(i8* getelementptr inbounds ([5 x i8]* @.prni, i32 0, i32 0), i32 %i)
+    ret void
+}
+
+define i1 @"Boolean System.String.op_Equality(System.String, System.String)"(i8* %str1, i8* %str2) #97001 {
+    %1 = call i32 (i8*, i8*)* @strcmp(i8* %str1, i8* %str2)
+    %2 = icmp eq i32 %1, 0
+    ret i1 %2
+}
+
+define i1 @"Boolean System.String.op_Inequality(System.String, System.String)"(i8* %str1, i8* %str2) #97002 {
+    %1 = call i32 (i8*, i8*)* @strcmp(i8* %str1, i8* %str2)
+    %2 = icmp ne i32 %1, 0
+    ret i1 %2
+}
