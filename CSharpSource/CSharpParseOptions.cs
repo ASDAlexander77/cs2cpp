@@ -1,0 +1,193 @@
+﻿// Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using Roslyn.Utilities;
+
+namespace Microsoft.CodeAnalysis.CSharp
+{
+    /// <summary>
+    /// This class stores several source parsing related options and offers access to their values.
+    /// </summary>
+    public sealed class CSharpParseOptions : ParseOptions, IEquatable<CSharpParseOptions>
+    {
+        /// <summary>
+        /// The default parse options.
+        /// </summary>
+        public static readonly CSharpParseOptions Default = new CSharpParseOptions();
+
+        /// <summary>
+        /// Gets the language version.
+        /// </summary>
+        public LanguageVersion LanguageVersion { get; private set; }
+
+        internal ImmutableArray<string> PreprocessorSymbols { get; private set; }
+
+        /// <summary>
+        /// Gets the names of defined preprocessor symbols.
+        /// </summary>
+        public override IEnumerable<string> PreprocessorSymbolNames
+        {
+            get { return PreprocessorSymbols; }
+        }
+
+        public CSharpParseOptions(
+            LanguageVersion languageVersion = LanguageVersion.CSharp6,
+            DocumentationMode documentationMode = DocumentationMode.Parse,
+            SourceCodeKind kind = SourceCodeKind.Regular,
+            IEnumerable<string> preprocessorSymbols = null)
+            : this(languageVersion, documentationMode, kind, preprocessorSymbols.ToImmutableArrayOrEmpty())
+        {
+            if (!languageVersion.IsValid())
+            {
+                throw new ArgumentOutOfRangeException("languageVersion");
+            }
+
+            if (!kind.IsValid())
+            {
+                throw new ArgumentOutOfRangeException("kind");
+            }
+
+            if (preprocessorSymbols != null)
+            {
+                foreach (var preprocessorSymbol in preprocessorSymbols)
+                {
+                    if (!SyntaxFacts.IsValidIdentifier(preprocessorSymbol))
+                    {
+                        throw new ArgumentException("preprocessorSymbols");
+                    }
+                }
+            }
+        }
+
+        private CSharpParseOptions(CSharpParseOptions other) : this(
+            languageVersion: other.LanguageVersion,
+            documentationMode: other.DocumentationMode,
+            kind: other.Kind,
+            preprocessorSymbols: other.PreprocessorSymbols)
+        {
+        }
+
+        // No validation
+        internal CSharpParseOptions(
+            LanguageVersion languageVersion,
+            DocumentationMode documentationMode,
+            SourceCodeKind kind,
+            ImmutableArray<string> preprocessorSymbols)
+            : base(kind, documentationMode)
+        {
+            Debug.Assert(!preprocessorSymbols.IsDefault);
+            this.LanguageVersion = languageVersion;
+            this.PreprocessorSymbols = preprocessorSymbols;
+        }
+
+        public new CSharpParseOptions WithKind(SourceCodeKind kind)
+        {
+            if (kind == this.Kind)
+            {
+                return this;
+            }
+
+            if (!kind.IsValid())
+            {
+                throw new ArgumentOutOfRangeException("kind");
+            }
+
+            return new CSharpParseOptions(this) { Kind = kind };
+        }
+
+        public CSharpParseOptions WithLanguageVersion(LanguageVersion version)
+        {
+            if (version == this.LanguageVersion)
+            {
+                return this;
+            }
+
+            if (!version.IsValid())
+            {
+                throw new ArgumentOutOfRangeException("version");
+            }
+
+            return new CSharpParseOptions(this) { LanguageVersion = version };
+        }
+
+        public CSharpParseOptions WithPreprocessorSymbols(IEnumerable<string> preprocessorSymbols)
+        {
+            return WithPreprocessorSymbols(preprocessorSymbols.AsImmutableOrNull());
+        }
+
+        public CSharpParseOptions WithPreprocessorSymbols(params string[] preprocessorSymbols)
+        {
+            return WithPreprocessorSymbols(ImmutableArray.Create(preprocessorSymbols));
+        }
+
+        public CSharpParseOptions WithPreprocessorSymbols(ImmutableArray<string> symbols)
+        {
+            if (symbols.IsDefault)
+            {
+                symbols = ImmutableArray<string>.Empty;
+            }
+
+            if (symbols.Equals(this.PreprocessorSymbols))
+            {
+                return this;
+            }
+
+            return new CSharpParseOptions(this) { PreprocessorSymbols = symbols };
+        }
+
+        public new CSharpParseOptions WithDocumentationMode(DocumentationMode documentationMode)
+        {
+            if (documentationMode == this.DocumentationMode)
+            {
+                return this;
+            }
+
+            if (!documentationMode.IsValid())
+            {
+                throw new ArgumentOutOfRangeException("documentationMode");
+            }
+
+            return new CSharpParseOptions(this) { DocumentationMode = documentationMode };
+        }
+
+        protected override ParseOptions CommonWithKind(SourceCodeKind kind)
+        {
+            return WithKind(kind);
+        }
+
+        protected override ParseOptions CommonWithDocumentationMode(DocumentationMode documentationMode)
+        {
+            return WithDocumentationMode(documentationMode);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.Equals(obj as CSharpParseOptions);
+        }
+
+        public bool Equals(CSharpParseOptions other)
+        {
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
+            if (!base.EqualsHelper(other))
+            {
+                return false;
+            }
+
+            return this.LanguageVersion == other.LanguageVersion;
+        }
+
+        public override int GetHashCode()
+        {
+            return
+                Hash.Combine(base.GetHashCodeHelper(),
+                Hash.Combine((int)this.LanguageVersion, 0));
+        }
+    }
+}

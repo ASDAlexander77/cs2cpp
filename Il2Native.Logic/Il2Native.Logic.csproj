@@ -1,0 +1,141 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{8F2A92D0-8862-4CF7-9C95-120681F5A689}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Il2Native.Logic</RootNamespace>
+    <AssemblyName>Il2Native.Logic</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.20-beta\lib\portable-net45+win8\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseWriter.cs" />
+    <Compile Include="Code.cs" />
+    <Compile Include="CodeEnum.cs" />
+    <Compile Include="CodeParts\OpCodeBytePart.cs" />
+    <Compile Include="CodeParts\OpCodeConstructorInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeDoublePart.cs" />
+    <Compile Include="CodeParts\OpCodeFieldInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeInt16Part.cs" />
+    <Compile Include="CodeParts\OpCodeInt32Part.cs" />
+    <Compile Include="CodeParts\OpCodeInt64Part.cs" />
+    <Compile Include="CodeParts\OpCodeLabelPart.cs" />
+    <Compile Include="CodeParts\OpCodeLabelsPart.cs" />
+    <Compile Include="CodeParts\OpCodeLocalBuilderPart.cs" />
+    <Compile Include="CodeParts\OpCodeMethodInfoPart.cs" />
+    <Compile Include="CodeParts\OpCodeParamPart.cs" />
+    <Compile Include="CodeParts\OpCodePart.cs" />
+    <Compile Include="CodeParts\OpCodeSBytePart.cs" />
+    <Compile Include="CodeParts\OpCodeSinglePart.cs" />
+    <Compile Include="CodeParts\OpCodeStringPart.cs" />
+    <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndSingleInterface.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedBoxMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
+    <Compile Include="MethodsWalker.cs" />
+    <Compile Include="OpResults\ConstValue.cs" />
+    <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
+    <Compile Include="Exceptions\TryClause.cs" />
+    <Compile Include="OpResults\FullyDefinedReference.cs" />
+    <Compile Include="Gencode\ArraySingleDimensionGen.cs" />
+    <Compile Include="Gencode\DelegateGen.cs" />
+    <Compile Include="Gencode\ExceptionHandlingGen.cs" />
+    <Compile Include="Gencode\LlvmHelpersGen.cs" />
+    <Compile Include="Gencode\ObjectInfrastructure.cs" />
+    <Compile Include="Gencode\Rtti\RttiClassGen.cs" />
+    <Compile Include="Gencode\Rtti\RttiPointerGen.cs" />
+    <Compile Include="Gencode\TypeGen.cs" />
+    <Compile Include="Gencode\VirtualTableGen.cs" />
+    <Compile Include="ICodeWriter.cs" />
+    <Compile Include="Il2Converter.cs" />
+    <Compile Include="IlReader.cs" />
+    <Compile Include="Instructions\AllocaInstruction.cs" />
+    <Compile Include="Instructions\Base\BaseInstruction.cs" />
+    <Compile Include="Instructions\Base\BaseInstructionWithResult.cs" />
+    <Compile Include="LlvmIndentedTextWriter.cs" />
+    <Compile Include="OpResults\IncrementalResult.cs" />
+    <Compile Include="LlvmWriter.cs" />
+    <Compile Include="OpCodeBlock.cs" />
+    <Compile Include="OpCodeExtentions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\llvm_declarations.li" />
+    <None Include="Resources\llvm_mini_mscore_lib.li" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
+      <Project>{1ee8cad3-55f9-4d91-96b2-084641da9a6c}</Project>
+      <Name>CodeAnalysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CSharpSource\CSharpCodeAnalysis.csproj">
+      <Project>{b501a547-c911-4a05-ac6e-274a50dff30e}</Project>
+      <Name>CSharpCodeAnalysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PEAssemblyReader\PEAssemblyReader.csproj">
+      <Project>{278b563a-a934-489c-8dfc-39b021816c25}</Project>
+      <Name>PEAssemblyReader</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
