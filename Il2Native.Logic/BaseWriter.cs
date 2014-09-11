@@ -37,6 +37,7 @@ namespace Il2Native.Logic
             this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
             this.Stack = new Stack<OpCodePart>();
+            this.AlternativeStackValues = new SortedDictionary<int, List<Tuple<OpCodePart, OpCodePart>>>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -114,6 +115,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected IDictionary<int, List<Tuple<OpCodePart, OpCodePart>>> AlternativeStackValues { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -786,6 +791,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            var alternateStackValues = GetAlternativeStackValue(opCodePart);
+
             var opCodeParts = new OpCodePart[size];
 
             for (var i = 1; i <= size; i++)
@@ -793,17 +800,28 @@ namespace Il2Native.Logic
                 var opCodePartUsed = this.Stack.Pop();
 
                 var secondDup = false;
-                if (opCodePartUsed.ToCode() == Code.Dup && !opCodePartUsed.DupProcessedOnce)
+                if (opCodePartUsed.ToCode() == Code.Dup )
                 {
-                    opCodePartUsed.DupProcessedOnce = true;
-                }
-                else if (opCodePartUsed.ToCode() == Code.Dup)
-                {
-                    secondDup = true;
+                    if (!opCodePartUsed.DupProcessedOnce)
+                    {
+                        opCodePartUsed.DupProcessedOnce = true;
+                        this.Stack.Push(opCodePartUsed);
+                    }
+                    else
+                    {
+                        secondDup = true;
+                    }
                 }
 
                 // use Dup only once
                 opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
+
+                if (i == 1 && alternateStackValues != null)
+                {
+                    // TODO: check if you can use it as second operand and etc
+                    // set alternative values
+                    opCodeParts[size - i].AlternativeValues = alternateStackValues;
+                }
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
@@ -813,6 +831,49 @@ namespace Il2Native.Logic
             }
 
             this.AdjustTypes(opCodePart);
+
+            if (opCodePart.ToCode() == Code.Pop)
+            {
+                AddAlternativeStackValue(opCodePart);
+            }
+        }
+
+        private List<Tuple<OpCodePart, OpCodePart>> GetAlternativeStackValue(OpCodePart opCodePart)
+        {
+            List<Tuple<OpCodePart, OpCodePart>> phiValues;
+            if (this.AlternativeStackValues.TryGetValue(opCodePart.AddressStart, out phiValues))
+            {
+                return phiValues;
+            }
+
+            return null;
+        }
+
+        private void AddAlternativeStackValue(OpCodePart opCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = opCodePart.PreviousOpCode(this);
+            while (current != null
+                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCode(this);
+            };
+
+            if (current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
+            {
+                // found address
+
+                List<Tuple<OpCodePart, OpCodePart>> phiValues;
+                if (!this.AlternativeStackValues.TryGetValue(current.JumpAddress(), out phiValues))
+                {
+                    phiValues = new List<Tuple<OpCodePart, OpCodePart>>();
+                    this.AlternativeStackValues[current.JumpAddress()] = phiValues;
+                }
+
+                phiValues.Add(new Tuple<OpCodePart, OpCodePart>(opCodePart.OpCodeOperands[0], current));
+            }
         }
 
         /// <summary>
