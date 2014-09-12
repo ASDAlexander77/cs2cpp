@@ -37,7 +37,7 @@ namespace Il2Native.Logic
             this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
             this.Stack = new Stack<OpCodePart>();
-            this.AlternativeStackValues = new SortedDictionary<int, List<Tuple<OpCodePart, OpCodePart>>>();
+            this.AlternativeStackValues = new SortedDictionary<int, PhiNodes>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -118,7 +118,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IDictionary<int, List<Tuple<OpCodePart, OpCodePart>>> AlternativeStackValues { get; private set; }
+        protected IDictionary<int, PhiNodes> AlternativeStackValues { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -594,7 +594,6 @@ namespace Il2Native.Logic
             var requiredType = this.RequiredType(opCode);
             if (requiredType != null)
             {
-                var receivingType = this.ResultOf(usedOpCode1);
                 if ((requiredType.Type.IsPointer || requiredType.Type.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
@@ -605,12 +604,11 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Call, Code.Callvirt))
             {
                 // todo: finish it, check required type of parameter
-                foreach (var usedOpCode in opCode.OpCodeOperands)
+                foreach (var usedOpCode in opCode.OpCodeOperands
+                                                 .Where(usedOpCode => usedOpCode.Any(Code.Conv_U) 
+                                                                      && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0)))
                 {
-                    if (usedOpCode.Any(Code.Conv_U) && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0))
-                    {
-                        usedOpCode.OpCodeOperands[0].UseAsNull = true;
-                    }
+                    usedOpCode.OpCodeOperands[0].UseAsNull = true;
                 }
             }
         }
@@ -791,37 +789,37 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var alternateStackValues = GetAlternativeStackValue(opCodePart);
+            opCodePart.AlternativeValues = GetAlternativeStackValue(opCodePart);
 
             var opCodeParts = new OpCodePart[size];
 
             for (var i = 1; i <= size; i++)
             {
                 var opCodePartUsed = this.Stack.Pop();
-
-                var secondDup = false;
-                if (opCodePartUsed.ToCode() == Code.Dup )
+                // register second value
+                if (i == 1 && opCodePart.AlternativeValues != null)
                 {
-                    if (!opCodePartUsed.DupProcessedOnce)
-                    {
-                        opCodePartUsed.DupProcessedOnce = true;
-                        this.Stack.Push(opCodePartUsed);
-                    }
-                    else
-                    {
-                        secondDup = true;
-                    }
+                    opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                // use Dup only once
-                opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
-
-                if (i == 1 && alternateStackValues != null)
+                if (opCodePartUsed.ToCode() == Code.Dup && !opCodePartUsed.DupProcessedOnce)
                 {
-                    // TODO: check if you can use it as second operand and etc
-                    // set alternative values
-                    opCodeParts[size - i].AlternativeValues = alternateStackValues;
+                    opCodePartUsed.DupProcessedOnce = true;
+                    this.Stack.Push(opCodePartUsed);
                 }
+
+                // check here if you have conditional argument (cond) ? a1 : b1;
+                while (this.IsConditionalExpression(opCodePartUsed, this.Stack))
+                {
+                    var secondValue = this.Stack.Pop();
+                    this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
+
+                    // register second value
+                    opCodePart.AlternativeValues = GetAlternativeStackValue(opCodePart);
+                    opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
+                }
+
+                opCodeParts[size - i] = opCodePartUsed;
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
@@ -834,13 +832,13 @@ namespace Il2Native.Logic
 
             if (opCodePart.ToCode() == Code.Pop)
             {
-                AddAlternativeStackValue(opCodePart);
+                this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
             }
         }
 
-        private List<Tuple<OpCodePart, OpCodePart>> GetAlternativeStackValue(OpCodePart opCodePart)
+        private PhiNodes GetAlternativeStackValue(OpCodePart opCodePart)
         {
-            List<Tuple<OpCodePart, OpCodePart>> phiValues;
+            PhiNodes phiValues;
             if (this.AlternativeStackValues.TryGetValue(opCodePart.AddressStart, out phiValues))
             {
                 return phiValues;
@@ -849,11 +847,11 @@ namespace Il2Native.Logic
             return null;
         }
 
-        private void AddAlternativeStackValue(OpCodePart opCodePart)
+        private void AddAlternativeStackValueForNullCoalescingExpression(OpCodePart closerValue)
         {
             // add alternative stack value to and address
             // 1) find jump address
-            var current = opCodePart.PreviousOpCode(this);
+            var current = closerValue.PreviousOpCode(this);
             while (current != null
                    && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
                    && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
@@ -861,19 +859,56 @@ namespace Il2Native.Logic
                 current = current.PreviousOpCode(this);
             };
 
-            if (current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
+            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {
-                // found address
+                this.AddPhiValues(closerValue, current, closerValue.OpCodeOperands[0]);
+            }
+        }
 
-                List<Tuple<OpCodePart, OpCodePart>> phiValues;
-                if (!this.AlternativeStackValues.TryGetValue(current.JumpAddress(), out phiValues))
+        private void AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = closerValue.PreviousOpCode(this);
+            while (current != null
+                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCode(this);
+            };
+
+            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
+            {
+                this.AddPhiValues(closerValue, current, futherValue);
+            }
+        }
+
+        private void AddPhiValues(OpCodePart closerValue, OpCodePart closerValueJump, OpCodePart futherValue)
+        {
+            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
+
+            // found address
+            PhiNodes phiValues;
+            if (!this.AlternativeStackValues.TryGetValue(closerValueJump.JumpAddress(), out phiValues))
+            {
+                phiValues = new PhiNodes();
+
+                // create custom jump point
+                phiValues.Labels.Add(futherValue.AddressStart);
+                var jumpDestination = futherValue.JumpDestination;
+                if (jumpDestination == null)
                 {
-                    phiValues = new List<Tuple<OpCodePart, OpCodePart>>();
-                    this.AlternativeStackValues[current.JumpAddress()] = phiValues;
+                    jumpDestination = new List<OpCodePart>();
+                    futherValue.JumpDestination = jumpDestination;
                 }
 
-                phiValues.Add(new Tuple<OpCodePart, OpCodePart>(opCodePart.OpCodeOperands[0], current));
+                jumpDestination.Add(closerValue);
+
+                this.AlternativeStackValues[closerValueJump.JumpAddress()] = phiValues;
             }
+
+            phiValues.Values.Add(futherValue);
+            phiValues.Labels.Add(closerValue.AddressStart);
         }
 
         /// <summary>
@@ -1336,123 +1371,32 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart,
             OpCodePart currentArgument,
-            Stack<OpCodePart> stack,
-            out int sizeOfCondition,
-            out OpCodePart firstCondition,
-            out OpCodePart lastCondition)
+            Stack<OpCodePart> stack)
         {
-            sizeOfCondition = 3;
-            firstCondition = null;
-            lastCondition = null;
-
-            for (; ; )
-            {
-                var subOpCodes = stack.Take(sizeOfCondition);
-                if (subOpCodes.Count() != sizeOfCondition)
-                {
-                    break;
-                }
-
-                var first = subOpCodes.First();
-                var last = subOpCodes.Last();
-
-                var isFirstElementBranch = first.IsBranch() && first.IsJumpForward()
-                                           && first.JumpAddress().Equals(currentArgument.GroupAddressEnd /*opCodePart.GroupAddressStart*/);
-
-                // more checks need here. there should be second return
-                var beforeFirst = first.PreviousOpCodeGroup(this);
-                if (first.IsReturn() && first.OpCodeOperands != null && first.OpCodeOperands.Length == 1 && beforeFirst != null && beforeFirst.IsReturn()
-                    && beforeFirst.OpCodeOperands != null && beforeFirst.OpCodeOperands.Length == 1)
-                {
-                    isFirstElementBranch = true;
-                }
-
-                var isLastElementCondition = last.IsCondBranch() && last.IsJumpForward() && last.JumpAddress() <= first.GroupAddressEnd;
-
-                if (isFirstElementBranch && isLastElementCondition)
-                {
-                    // in reverse order
-                    firstCondition = last;
-                    lastCondition = first;
-
-                    sizeOfCondition++;
-                    continue;
-                }
-
-                break;
-            }
-
-            if (sizeOfCondition == 3)
+            if (!stack.Any())
             {
                 return false;
             }
 
-            --sizeOfCondition;
+            var firstValue = currentArgument;
+
+            var middleJump = firstValue.PreviousOpCode(this);
+            var isJumpForward = middleJump.IsBranch() && middleJump.IsJumpForward();
+            if (!isJumpForward)
+            {
+                return false;
+            }
+
+            var secondValue = stack.First();
+            var firstCondJump = secondValue.PreviousOpCode(this);
+            var isCondJumpForward = firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward();
+            if (!isCondJumpForward)
+            {
+                return false;
+            }
 
             return true;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="currentArgument">
-        /// </param>
-        /// <param name="stackArray">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private bool IsNullCoalescingExpression(OpCodePart opCodePart, OpCodePart currentArgument, Stack<OpCodePart> stack, out int size)
-        {
-            size = 0;
-
-            if (stack.Count < 3)
-            {
-                return false;
-            }
-
-            var index = 0;
-            var stackArray = stack.ToArray();
-
-            do
-            {
-                if (!stackArray[index].Any(Code.Pop))
-                {
-                    if (stackArray[index].OpCode.StackBehaviourPush == StackBehaviour.Push0)
-                    {
-                        index++;
-                        continue;
-                    }
-
-                    return false;
-                }
-
-                var second = stackArray[index + 1];
-                if (!second.Any(Code.Brtrue, Code.Brtrue_S))
-                {
-                    return false;
-                }
-
-                if (second.JumpAddress() != (currentArgument.AddressEnd != 0 ? currentArgument.AddressEnd : currentArgument.GroupAddressEnd))
-                {
-                    // we do not have full expression
-                    return false;
-                }
-
-                if (!stackArray[index + 2].Any(Code.Dup))
-                {
-                    return false;
-                }
-
-                size = index;
-
-                return true;
-            }
-            while (index < stack.Count - 3);
-
-            return false;
         }
 
         /// <summary>

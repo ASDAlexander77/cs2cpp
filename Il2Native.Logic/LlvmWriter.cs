@@ -290,8 +290,8 @@ namespace Il2Native.Logic
         {
             if (firstLevel && !opCode.Skip)
             {
-                this.WriteCaseAndLabels(writer, opCode);
-            }
+                this.WriteLabels(writer, opCode);
+            }          
 
             if (opCode.Any(Code.Leave, Code.Leave_S))
             {
@@ -308,6 +308,12 @@ namespace Il2Native.Logic
             }
             else
             {
+                // process Phi Nodes
+                if (opCode.AlternativeValues != null)
+                {
+                    this.WritePhi(writer, opCode);
+                }
+
                 var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.SkipRecursive);
                 if (!skip)
                 {
@@ -2565,6 +2571,38 @@ namespace Il2Native.Logic
             }
         }
 
+        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            writer.WriteLine(string.Empty);
+
+            var phiType = opCode.AlternativeValues.Values.First(v => !(v.Result is ConstValue)).Result.Type;
+
+            // apply PHI is condition is complex
+            var nopeCode = OpCodePart.CreateNop;
+            this.ProcessOperator(writer, nopeCode, "phi", phiType, phiType, options: OperandOptions.GenerateResult);
+
+            var count = opCode.AlternativeValues.Values.Count;
+            for (var index = 0; index < count; index++)
+            {
+                if (index > 0)
+                {
+                    writer.Write(",");
+                }
+
+                var values = opCode.AlternativeValues.Values;
+                this.WritePhiNodeLabel(
+                    writer,
+                    values[index].Result,
+                    values[index],
+                    values[index],
+                    string.Concat("a", opCode.AlternativeValues.Labels[index]));
+            }
+
+            writer.WriteLine(string.Empty);
+
+            opCode.AlternativeValues.Values.Last().Result = nopeCode.Result;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2900,7 +2938,7 @@ namespace Il2Native.Logic
 
             foreach (var subOpCode in query)
             {
-                this.WriteCaseAndLabels(writer, subOpCode);
+                this.WriteLabels(writer, subOpCode);
                 this.ActualWrite(writer, subOpCode);
                 writer.WriteLine(string.Empty);
             }
@@ -4692,7 +4730,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCaseAndLabels(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteLabels(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {

@@ -271,6 +271,6 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public OpCodePart UsedBy { get; set; }
 
-        public List<Tuple<OpCodePart, OpCodePart>> AlternativeValues { get; set; }
+        public PhiNodes AlternativeValues { get; set; }
     }
 }
