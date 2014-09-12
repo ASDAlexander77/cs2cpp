@@ -288,6 +288,8 @@ namespace Il2Native.Logic
         /// </param>
         public void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
+            // TODO: stop writing opCode if it it has result already
+
             if (firstLevel && !opCode.Skip)
             {
                 this.WriteLabels(writer, opCode);
@@ -2601,6 +2603,9 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
 
             opCode.AlternativeValues.Values.Last().Result = nopeCode.Result;
+
+            // clear it after processing
+            opCode.AlternativeValues = null;
         }
 
         /// <summary>

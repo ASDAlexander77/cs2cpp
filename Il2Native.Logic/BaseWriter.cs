@@ -37,7 +37,6 @@ namespace Il2Native.Logic
             this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
             this.Stack = new Stack<OpCodePart>();
-            this.AlternativeStackValues = new SortedDictionary<int, PhiNodes>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -115,10 +114,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected IDictionary<int, PhiNodes> AlternativeStackValues { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -724,8 +719,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            opCodePart.AlternativeValues = GetAlternativeStackValue(opCodePart);
-
             var opCodeParts = new OpCodePart[size];
 
             for (var i = 1; i <= size; i++)
@@ -747,8 +740,8 @@ namespace Il2Native.Logic
                 while (this.IsConditionalExpression(opCodePartUsed, this.Stack))
                 {
                     var secondValue = this.Stack.Pop();
-                    opCodePart.AlternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
-                    opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
+                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
+                    alternativeValues.Values.Add(opCodePartUsed);
                 }
 
                 opCodeParts[size - i] = opCodePartUsed;
@@ -766,17 +759,6 @@ namespace Il2Native.Logic
             {
                 this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
             }
-        }
-
-        private PhiNodes GetAlternativeStackValue(OpCodePart opCodePart)
-        {
-            PhiNodes phiValues;
-            if (this.AlternativeStackValues.TryGetValue(opCodePart.AddressStart, out phiValues))
-            {
-                return phiValues;
-            }
-
-            return null;
         }
 
         private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart closerValue)
@@ -823,14 +805,15 @@ namespace Il2Native.Logic
         {
             Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
 
+            var destJump = closerValueJump.JumpOpCode(this);
+
             // found address
-            PhiNodes phiValues;
-            if (!this.AlternativeStackValues.TryGetValue(closerValueJump.JumpAddress(), out phiValues))
+            if (destJump.AlternativeValues == null)
             {
-                phiValues = new PhiNodes();
+                destJump.AlternativeValues = new PhiNodes();
 
                 // create custom jump point
-                phiValues.Labels.Add(futherValue.AddressStart);
+                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
                 var jumpDestination = futherValue.JumpDestination;
                 if (jumpDestination == null)
                 {
@@ -839,14 +822,12 @@ namespace Il2Native.Logic
                 }
 
                 jumpDestination.Add(closerValue);
-
-                this.AlternativeStackValues[closerValueJump.JumpAddress()] = phiValues;
             }
 
-            phiValues.Values.Add(futherValue);
-            phiValues.Labels.Add(closerValue.AddressStart);
+            destJump.AlternativeValues.Values.Add(futherValue);
+            destJump.AlternativeValues.Labels.Add(closerValue.AddressStart);
 
-            return phiValues;
+            return destJump.AlternativeValues;
         }
 
         /// <summary>
