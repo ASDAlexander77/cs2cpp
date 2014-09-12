@@ -1055,8 +1055,7 @@ namespace Il2Native.Logic
         /// </param>
         public void Write(OpCodePart opCode)
         {
-            ////this.Output.WriteLine("; {0}", opCode.OpCode.Name);
-            this.Process(opCode);
+            this.AddOpCode(opCode);
         }
 
         /// <summary>

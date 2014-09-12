@@ -678,6 +678,14 @@ namespace Il2Native.Logic
             }
         }
 
+        protected void ProcessAll(OpCodePart[] opCodes)
+        {
+            foreach (var opCodePart in opCodes)
+            {
+                this.Process(opCodePart);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodes">
@@ -730,10 +738,9 @@ namespace Il2Native.Logic
                     opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                if (opCodePartUsed.ToCode() == Code.Dup && !opCodePartUsed.DupProcessedOnce)
+                if (opCodePartUsed.ToCode() == Code.Dup)
                 {
-                    opCodePartUsed.DupProcessedOnce = true;
-                    this.Stack.Push(opCodePartUsed);
+                    this.Stack.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
                 // check here if you have conditional argument (cond) ? a1 : b1;
@@ -761,11 +768,11 @@ namespace Il2Native.Logic
             }
         }
 
-        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart closerValue)
+        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
         {
             // add alternative stack value to and address
             // 1) find jump address
-            var current = closerValue.PreviousOpCode(this);
+            var current = popCodePart.PreviousOpCode(this);
             while (current != null
                    && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
                    && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
@@ -775,7 +782,7 @@ namespace Il2Native.Logic
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {
-                return this.AddPhiValues(closerValue, current, closerValue.OpCodeOperands[0]);
+                return this.AddPhiValues(popCodePart, current, popCodePart.OpCodeOperands[0]);
             }
 
             return null;
@@ -801,7 +808,7 @@ namespace Il2Native.Logic
             return null;
         }
 
-        private PhiNodes AddPhiValues(OpCodePart closerValue, OpCodePart closerValueJump, OpCodePart futherValue)
+        private PhiNodes AddPhiValues(OpCodePart beginOfBranch, OpCodePart closerValueJump, OpCodePart futherValue)
         {
             Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
 
@@ -821,11 +828,11 @@ namespace Il2Native.Logic
                     futherValue.JumpDestination = jumpDestination;
                 }
 
-                jumpDestination.Add(closerValue);
+                jumpDestination.Add(beginOfBranch);
             }
 
             destJump.AlternativeValues.Values.Add(futherValue);
-            destJump.AlternativeValues.Labels.Add(closerValue.AddressStart);
+            destJump.AlternativeValues.Labels.Add(beginOfBranch.AddressStart);
 
             return destJump.AlternativeValues;
         }
@@ -837,12 +844,17 @@ namespace Il2Native.Logic
         protected OpCodePart[] PrepareWritingMethodBody()
         {
             var ops = this.Ops.ToArray();
-
+            this.ProcessAll(ops);
             this.BuildGroupAddressIndexes(ops);
-            this.AssignExceptionsToOpCodes();
             this.AssignJumpBlocks(ops);
+            this.AssignExceptionsToOpCodes();
+            return ops;
+        }
 
-            return this.Ops.ToArray();
+        protected void AddOpCode(OpCodePart opCode)
+        {
+            this.Ops.Add(opCode);
+            this.AddAddressIndex(opCode);
         }
 
         /// <summary>
@@ -851,10 +863,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
-            this.Ops.Add(opCode);
-
-            this.AddAddressIndex(opCode);
-
             // insert result of exception
             var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
             if (exceptionHandling != null && exceptionHandling.CatchType != null)

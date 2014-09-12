@@ -109,10 +109,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool DupProcessedOnce { get; set; }
-
-        /// <summary>
-        /// </summary>
         public IList<CatchOfFinallyClause> ExceptionHandlers { get; set; }
 
         /// <summary>
