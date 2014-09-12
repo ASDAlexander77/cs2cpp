@@ -733,7 +733,8 @@ namespace Il2Native.Logic
             {
                 var opCodePartUsed = this.Stack.Pop();
                 // register second value
-                if (i == 1 && opCodePart.AlternativeValues != null)
+                // TODO: this is still hack, review the code
+                if (i == 1 && opCodePart.AlternativeValues != null && opCodePart.AlternativeValues.Values.Count != opCodePart.AlternativeValues.Labels.Count)
                 {
                     opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
                 }

@@ -2578,6 +2578,15 @@ namespace Il2Native.Logic
 
             var phiType = (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
+            // adjust types of constants
+            if (!phiType.IsValueType)
+            {
+                foreach (var val in opCode.AlternativeValues.Values.Where(v => v.Result is ConstValue && v.Any(Code.Ldc_I4_0)))
+                {
+                    val.Result = new ConstValue(null, this.ResolveType("System.Void").ToPointerType());
+                }
+            }
+
             // apply PHI is condition is complex
             var nopeCode = OpCodePart.CreateNop;
             this.ProcessOperator(writer, nopeCode, "phi", phiType, phiType, options: OperandOptions.GenerateResult);
