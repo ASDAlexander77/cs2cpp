@@ -126,71 +126,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="conditions">
-        /// </param>
-        /// <param name="startOfTrueExpression">
-        /// </param>
-        public static void ConditionsParseForConditionalExpression(OpCodePart[] conditions, int startOfTrueExpression)
-        {
-            var nextJoinAnd = true;
-            var groups = BuildConditionGroups(conditions);
-            foreach (var group in groups)
-            {
-                // all Or
-                if (group.Last().JumpAddress() == startOfTrueExpression && group.First().JumpAddress() == startOfTrueExpression)
-                {
-                    foreach (var element in group)
-                    {
-                        element.ConjunctionOrCondition = true;
-                    }
-
-                    nextJoinAnd = true;
-                    continue;
-                }
-
-                // TODO: var r1 = ok == 1 && ok == 2 || error == 3 && error == 4 && (ok == 10 || ok == 11 || ok ==12) ? 1 : 0;
-                // in this expression last  OR chain is not detected
-                var internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
-                if (internalAndJoin)
-                {
-                    foreach (var element in group)
-                    {
-                        element.InvertCondition = true;
-                        element.ConjunctionAndCondition = true;
-                    }
-
-                    group.Last().InvertCondition = false;
-                }
-                else
-                {
-                    group[0].OpenRoundBrackets++;
-
-                    foreach (var element in group)
-                    {
-                        element.ConjunctionOrCondition = true;
-                    }
-
-                    group.Last().InvertCondition = true;
-                    group.Last().CloseRoundBrackets++;
-                }
-
-                if (nextJoinAnd)
-                {
-                    group[0].ConjunctionAndCondition = true;
-                    group[0].ConjunctionOrCondition = false;
-                }
-                else
-                {
-                    group[0].ConjunctionAndCondition = false;
-                    group[0].ConjunctionOrCondition = true;
-                }
-
-                nextJoinAnd = !internalAndJoin;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="parameters">
         /// </param>
         public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
@@ -812,10 +747,7 @@ namespace Il2Native.Logic
                 while (this.IsConditionalExpression(opCodePartUsed, this.Stack))
                 {
                     var secondValue = this.Stack.Pop();
-                    this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
-
-                    // register second value
-                    opCodePart.AlternativeValues = GetAlternativeStackValue(opCodePart);
+                    opCodePart.AlternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
                     opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
                 }
 
@@ -847,7 +779,7 @@ namespace Il2Native.Logic
             return null;
         }
 
-        private void AddAlternativeStackValueForNullCoalescingExpression(OpCodePart closerValue)
+        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart closerValue)
         {
             // add alternative stack value to and address
             // 1) find jump address
@@ -861,11 +793,13 @@ namespace Il2Native.Logic
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {
-                this.AddPhiValues(closerValue, current, closerValue.OpCodeOperands[0]);
+                return this.AddPhiValues(closerValue, current, closerValue.OpCodeOperands[0]);
             }
+
+            return null;
         }
 
-        private void AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
         {
             // add alternative stack value to and address
             // 1) find jump address
@@ -879,11 +813,13 @@ namespace Il2Native.Logic
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
             {
-                this.AddPhiValues(closerValue, current, futherValue);
+                return this.AddPhiValues(closerValue, current, futherValue);
             }
+
+            return null;
         }
 
-        private void AddPhiValues(OpCodePart closerValue, OpCodePart closerValueJump, OpCodePart futherValue)
+        private PhiNodes AddPhiValues(OpCodePart closerValue, OpCodePart closerValueJump, OpCodePart futherValue)
         {
             Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
 
@@ -909,6 +845,8 @@ namespace Il2Native.Logic
 
             phiValues.Values.Add(futherValue);
             phiValues.Labels.Add(closerValue.AddressStart);
+
+            return phiValues;
         }
 
         /// <summary>
@@ -1260,98 +1198,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="conditions">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static OpCodePart[][] BuildConditionGroups(OpCodePart[] conditions)
-        {
-            var groups = new List<OpCodePart[]>();
-
-            for (var i = 0; i < conditions.Length; )
-            {
-                var group = new List<OpCodePart>();
-
-                var firstOfGroup = conditions[i];
-                var stopAddress = firstOfGroup.JumpAddress();
-
-                i++;
-                group.Add(firstOfGroup);
-
-                while (i < conditions.Length)
-                {
-                    var element = conditions[i];
-                    if (element.GroupAddressStart < stopAddress)
-                    {
-                        group.Add(element);
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                    i++;
-                }
-
-                groups.Add(group.ToArray());
-            }
-
-            return groups.ToArray();
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         private void AddAddressIndex(OpCodePart opCode)
         {
             this.OpsByAddressStart[opCode.AddressStart] = opCode;
             this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="condExpBlock">
-        /// </param>
-        /// <param name="firstCondition">
-        /// </param>
-        /// <param name="branchJump">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private OpCodePart[] ConditionalExpressionConditionsParse(OpCodePart[] condExpBlock, OpCodePart firstCondition, OpCodePart branchJump)
-        {
-            // calculate all addresses
-            var startOfTrueExpression = branchJump.GroupAddressEnd;
-
-            OpCodePart lastCondition = null;
-            foreach (var opCodePart in condExpBlock)
-            {
-                if (opCodePart.IsCondBranch())
-                {
-                    lastCondition = opCodePart;
-                    continue;
-                }
-
-                break;
-            }
-
-            var conditionsList = new List<OpCodePart>();
-
-            // adjust all condition conjunctions
-            foreach (var opCodePart in condExpBlock)
-            {
-                conditionsList.Add(opCodePart);
-
-                if (opCodePart == lastCondition)
-                {
-                    break;
-                }
-            }
-
-            ConditionsParseForConditionalExpression(conditionsList.ToArray(), startOfTrueExpression);
-
-            return condExpBlock;
         }
 
         /// <summary>
@@ -1390,7 +1242,7 @@ namespace Il2Native.Logic
 
             var secondValue = stack.First();
             var firstCondJump = secondValue.PreviousOpCode(this);
-            var isCondJumpForward = firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward();
+            var isCondJumpForward = firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
             if (!isCondJumpForward)
             {
                 return false;

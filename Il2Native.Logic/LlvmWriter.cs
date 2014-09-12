@@ -2575,7 +2575,7 @@ namespace Il2Native.Logic
         {
             writer.WriteLine(string.Empty);
 
-            var phiType = opCode.AlternativeValues.Values.First(v => !(v.Result is ConstValue)).Result.Type;
+            var phiType = (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
             // apply PHI is condition is complex
             var nopeCode = OpCodePart.CreateNop;
