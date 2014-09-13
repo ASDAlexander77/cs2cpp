@@ -199,6 +199,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public IType RequiredResultType { get; set; }
+
+        /// <summary>
+        /// </summary>
         public List<TryClause> TryBegin { get; set; }
 
         /// <summary>

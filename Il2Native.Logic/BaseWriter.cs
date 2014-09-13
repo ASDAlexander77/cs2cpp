@@ -673,7 +673,17 @@ namespace Il2Native.Logic
         {
             foreach (var opCodePart in opCodes)
             {
+                if (opCodePart.AlternativeValues == null)
+                {
+                    continue;
+                }
 
+                // detect required types in alternative values
+                var requiredType = RequiredType(opCodePart);
+                foreach (var val in opCodePart.AlternativeValues.Values)
+                {
+                    val.RequiredResultType = requiredType.Type;
+                }
             }
         }
 
