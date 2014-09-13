@@ -88,7 +88,7 @@ namespace Il2Native.Logic.Gencode
             var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
 
             var storedResult = opCode.OpCodeOperands[0].Result;
-            if (opCode.OpCodeOperands[0].Result.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
+            if (storedResult.Type.HasElementType && storedResult.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
             {
                 llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
                 writer.WriteLine(string.Empty);

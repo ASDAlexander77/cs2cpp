@@ -313,6 +313,8 @@ namespace Il2Native.Logic
                 this.ActualWriteOpCode(writer, opCode);
             }
 
+            AdjustResultType(opCode);
+
             if (!opCode.Any(Code.Leave, Code.Leave_S))
             {
                 this.WriteCatchFinnallyEnd(writer, opCode);
@@ -321,6 +323,19 @@ namespace Il2Native.Logic
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlers(writer, opCode);
+        }
+
+        private void AdjustResultType(OpCodePart opCode)
+        {
+            // cast result if required
+            if (opCode.RequiredResultType != null 
+                && opCode.Result != null 
+                && opCode.RequiredResultType.TypeNotEquals(opCode.Result.Type)
+                && !(opCode.Result is ConstValue))
+            {
+                this.Output.WriteLine(string.Empty);
+                this.WriteCast(opCode, opCode.Result, opCode.RequiredResultType);
+            }
         }
 
         /// <summary>
@@ -3094,7 +3109,7 @@ namespace Il2Native.Logic
                     else
                     {
                         this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result;
+                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result.ToClassType();
                     }
 
                     break;

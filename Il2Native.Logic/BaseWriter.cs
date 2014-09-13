@@ -504,7 +504,7 @@ namespace Il2Native.Logic
             var requiredType = this.RequiredType(opCode);
             if (requiredType != null)
             {
-                if ((requiredType.Type.IsPointer || requiredType.Type.IsByRef) && usedOpCode1.Any(Code.Conv_U)
+                if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
@@ -669,7 +669,7 @@ namespace Il2Native.Logic
             }
         }
 
-        protected void CalculateRequiredTypes(OpCodePart[] opCodes)
+        protected void CalculateRequiredTypesForAlternativeValues(OpCodePart[] opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -679,10 +679,11 @@ namespace Il2Native.Logic
                 }
 
                 // detect required types in alternative values
-                var requiredType = RequiredType(opCodePart);
+                var usedBy = opCodePart.UsedBy ?? opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
+                var requiredType = RequiredType(usedBy);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
-                    val.RequiredResultType = requiredType.Type;
+                    val.RequiredResultType = requiredType;
                 }
             }
         }
@@ -838,7 +839,7 @@ namespace Il2Native.Logic
         {
             var ops = this.Ops.ToArray();
             this.ProcessAll(ops);
-            this.CalculateRequiredTypes(ops);
+            this.CalculateRequiredTypesForAlternativeValues(ops);
             this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
             return ops;
@@ -1153,16 +1154,22 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected ReturnResult RequiredType(OpCodePart opCodePart)
+        protected IType RequiredType(OpCodePart opCodePart)
         {
+            // TODO: need a good review of required types etc
+            IType retType = null;
             if (opCodePart.Any(Code.Ret))
             {
-                return new ReturnResult(this.MethodReturnType);
+                retType = this.MethodReturnType;
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
             if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
             {
-                return new ReturnResult(opCodePart.GetLocalType(this));
+                retType = opCodePart.GetLocalType(this);
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
             if (opCodePart.Any(Code.Starg, Code.Starg_S))
@@ -1170,14 +1177,57 @@ namespace Il2Native.Logic
                 var index = opCodePart.GetArgIndex();
                 if (this.HasMethodThis && index == 0)
                 {
-                    return new ReturnResult(this.ThisType);
+                    retType = this.ThisType;
+                    ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                    return retType;
                 }
 
-                var parameterType = this.GetArgType(index);
-                return new ReturnResult(parameterType);
+                retType = this.GetArgType(index);
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
-            return null;
+            if (opCodePart.Any(Code.Stfld, Code.Stsfld))
+            {
+                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                ////opCodePart.OpCodeOperands[x].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Stobj))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Call, Code.Callvirt))
+            {
+                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                var parameters = opCodePartMethod.Operand.GetParameters();
+                var offset = opCodePartMethod.OpCodeOperands.Length - parameters.Count();
+                var index = 0;
+                foreach (var parameter in parameters)
+                {
+                    ////opCodePartMethod.OpCodeOperands[offset + index++].RequiredResultType = parameter.ParameterType;
+                }
+            }
+
+            return retType;
         }
 
         /// <summary>
