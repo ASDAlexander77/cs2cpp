@@ -288,12 +288,10 @@ namespace Il2Native.Logic
         /// </param>
         public void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
-            // TODO: stop writing opCode if it it has result already
-
-            if (firstLevel && !opCode.Skip)
+            if (firstLevel)
             {
                 this.WriteLabels(writer, opCode);
-            }          
+            }
 
             if (opCode.Any(Code.Leave, Code.Leave_S))
             {
@@ -303,24 +301,16 @@ namespace Il2Native.Logic
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
 
-            var block = opCode as OpCodeBlock;
-            if (block != null)
+            // process Phi Nodes
+            if (opCode.AlternativeValues != null)
             {
-                this.ActualWriteBlock(writer, block);
+                this.WritePhi(writer, opCode);
             }
-            else
-            {
-                // process Phi Nodes
-                if (opCode.AlternativeValues != null)
-                {
-                    this.WritePhi(writer, opCode);
-                }
 
-                var skip = firstLevel && (this.IsDirectValue(opCode) || opCode.SkipRecursive);
-                if (!skip)
-                {
-                    this.ActualWriteOpCode(writer, opCode);
-                }
+            var skip = firstLevel && this.IsDirectValue(opCode);
+            if (!skip)
+            {
+                this.ActualWriteOpCode(writer, opCode);
             }
 
             if (!opCode.Any(Code.Leave, Code.Leave_S))
@@ -528,11 +518,6 @@ namespace Il2Native.Logic
         /// </returns>
         public bool IsDirectValue(OpCodePart opCode)
         {
-            if (opCode is OpCodeBlock)
-            {
-                return false;
-            }
-
             if (opCode.Any(Code.Dup))
             {
                 return this.IsDirectValue(opCode.OpCodeOperands[0]);
@@ -1168,7 +1153,7 @@ namespace Il2Native.Logic
 
             this.Output.Write("store ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
-            this.Output.Write(" %arg.{0}", name);
+            this.Output.Write(" %\"arg.{0}\"", name);
             this.Output.Write(", ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
 
@@ -2090,17 +2075,18 @@ namespace Il2Native.Logic
                             writer.Write(" byval align " + PointerSize);
                         }
 
-                        writer.Write(" %");
+                        writer.Write(" %\"");
                     }
                 }
                 else if (!noArgumentName)
                 {
-                    writer.Write(" %arg.");
+                    writer.Write(" %\"arg.");
                 }
 
                 if (!noArgumentName)
                 {
                     writer.Write(parameter.Name);
+                    writer.Write("\"");
                 }
 
                 index++;
@@ -2616,288 +2602,6 @@ namespace Il2Native.Logic
             opCode.AlternativeValues = null;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="block">
-        /// </param>
-        private void ActualWriteBlock(LlvmIndentedTextWriter writer, OpCodeBlock block)
-        {
-            if (block.UseAsConditionalExpression)
-            {
-                writer.WriteLine("; Conditional Expression");
-
-                var usePhi = block.OpCodes.Length > 4;
-
-                // thos os a hack for return () ? a : b; expressions
-                var expressionPart = -1;
-                if (block.OpCodes[block.OpCodes.Length - 2].OpCode.FlowControl == FlowControl.Branch)
-                {
-                    expressionPart = 3;
-                }
-                else if (block.OpCodes[block.OpCodes.Length - 2].OpCode.FlowControl == FlowControl.Return)
-                {
-                    expressionPart = 2;
-                }
-
-                // to support PHI                          
-                if (usePhi)
-                {
-                    writer.WriteLine("br label %.a{0}", block.OpCodes[0].AddressStart);
-                    writer.Indent--;
-                    writer.WriteLine(".a{0}:", block.OpCodes[0].AddressStart);
-                    writer.Indent++;
-                }
-
-                var lastCond = block.OpCodes.Length - expressionPart;
-                for (var i = 0; i < lastCond - 1; i++)
-                {
-                    var current = block.OpCodes[i];
-
-                    if (usePhi)
-                    {
-                        current.CustomJumpAddress = block.OpCodes[lastCond].AddressStart;
-                    }
-
-                    this.ActualWrite(writer, current);
-
-                    if (usePhi)
-                    {
-                        current.CustomJumpAddress = null;
-                    }
-                }
-
-                var opCode1 = block.OpCodes[lastCond - 1];
-                opCode1.UseAsConditionalExpression = true;
-                var opCode2 = block.OpCodes[block.OpCodes.Length - 1];
-                var opCode3 = (expressionPart == 2)
-                                  ? block.OpCodes[block.OpCodes.Length - expressionPart].OpCodeOperands[0]
-                                  : block.OpCodes[block.OpCodes.Length - expressionPart];
-
-                // custom operand
-                var directResult1 = this.PreProcess(writer, opCode1, OperandOptions.None);
-
-                // check if PHI is required
-                if (usePhi)
-                {
-                    writer.WriteLine("br label %.a{0}", block.OpCodes[lastCond].AddressStart);
-                    writer.Indent--;
-                    writer.WriteLine(".a{0}:", block.OpCodes[lastCond].AddressStart);
-                    writer.Indent++;
-
-                    // apply PHI is condition is complex
-                    this.ProcessOperator(writer, block, "phi", this.ResolveType("System.Boolean"), this.ResolveType("System.Boolean"), options: OperandOptions.GenerateResult);
-                    var phiResult = block.Result;
-
-                    // write labels
-                    for (var i = lastCond - 2; i >= 0; i--)
-                    {
-                        if (i != (lastCond - 2))
-                        {
-                            writer.Write(",");
-                        }
-
-                        // true. false, %result
-                        //var phiValue = block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart ? "true" : "false";
-                        //writer.Write(" [ {0}, %.a{1} ]", phiValue, i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart);
-                        this.WritePhiNodeLabel(
-                            writer,
-                            block.OpCodes[i].JumpAddress() == opCode2.GroupAddressStart
-                                ? new ConstValue(true, this.ResolveType("System.Boolean"))
-                                : new ConstValue(false, this.ResolveType("System.Boolean")),
-                            block.OpCodes[i],
-                            block.OpCodes[i],
-                            string.Concat("a", i > 0 ? block.OpCodes[i - 1].AddressEnd : block.OpCodes[i].AddressStart));
-                    }
-
-                    //writer.WriteLine(", [ {0}, %.a{1} ]", block.OpCodes[lastCond - 1].Result, block.OpCodes[lastCond - 2].AddressEnd);
-                    writer.Write(",");
-                    this.WritePhiNodeLabel(
-                        writer,
-                        block.OpCodes[lastCond - 1].Result,
-                        block.OpCodes[lastCond - 1],
-                        block.OpCodes[lastCond - 1],
-                        string.Concat("a", block.OpCodes[lastCond - 2].AddressEnd));
-                    writer.WriteLine(string.Empty);
-
-                    // hack
-                    block.OpCodes[lastCond - 1].Result = block.Result;
-                }
-
-                writer.WriteLine("; select value");
-
-                var dummyOpCode = new OpCodePart(OpCodesEmit.Brtrue, 0, 0);
-                dummyOpCode.OpCodeOperands = new[] { opCode2, opCode3 };
-
-                var operandOptions = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
-
-                IType castFrom;
-                IType intAdjustment;
-                bool intAdjustSecondOperand;
-                var effectiveType = this.DetectTypePrefix(dummyOpCode, null, operandOptions, out castFrom, out intAdjustment, out intAdjustSecondOperand);
-
-                IType resultType = null;
-
-                var trueLabel = string.Format("select_true{0}", opCode1.AddressStart);
-                var falseLabel = string.Format("select_false{0}", opCode1.AddressStart);
-                var endLabel = string.Format("select_end{0}", opCode1.AddressStart);
-
-                if (opCode2.JumpDestination != null && opCode2.JumpDestination.Any())
-                {
-                    // we need to adjust true label
-                    trueLabel = string.Format("a{0}", opCode2.AddressStart);
-                }
-
-                if (opCode3.JumpDestination != null && opCode3.JumpDestination.Any())
-                {
-                    // we need to adjust false label
-                    falseLabel = string.Format("a{0}", opCode3.AddressStart);
-                }
-
-                writer.Write("br");
-                this.PostProcess(writer, opCode1, directResult1, false, opCode1.Result.Type);
-                writer.WriteLine(", label %.{0}, label %.{1}", trueLabel, falseLabel);
-
-                writer.Indent--;
-                writer.WriteLine(".{0}:", trueLabel);
-                writer.Indent++;
-
-                // value for true
-                var directResult2 = this.PreProcess(writer, opCode2, OperandOptions.None);
-                // TODO: remove it when you remove field Skip
-                if (directResult2)
-                {
-                    ActualWrite(writer, opCode2);
-                }
-
-                if ((intAdjustment != null && !intAdjustSecondOperand) || castFrom != null)
-                {
-                    effectiveType = this.ApplyTypeAdjustment(
-                        writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
-                }
-
-                writer.WriteLine("br label %.{0}", endLabel);
-
-                writer.Indent--;
-                writer.WriteLine(".{0}:", falseLabel);
-                writer.Indent++;
-
-                // value for true
-                var directResult3 = this.PreProcess(writer, opCode3, OperandOptions.None);
-                // TODO: remove it when you remove field Skip
-                if (directResult3)
-                {
-                    ActualWrite(writer, opCode3);
-                }
-
-                if (intAdjustment != null && intAdjustSecondOperand)
-                {
-                    effectiveType = this.ApplyTypeAdjustment(
-                        writer, dummyOpCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType);
-                }
-
-                writer.WriteLine("br label %.{0}", endLabel);
-
-                writer.Indent--;
-                writer.WriteLine(".{0}:", endLabel);
-                writer.Indent++;
-
-                this.WriteResultAndFirstOperandType(writer, block, "phi", resultType ?? effectiveType, resultType ?? effectiveType, operandOptions, effectiveType);
-
-                //writer.WriteLine(" [ {0}, %.select_true{2} ], [ {1}, %.select_false{2} ]", opCode2.Result, opCode3.Result, opCode1.AddressStart);
-                this.WritePhiNodeLabel(writer, opCode2.Result, opCode2, opCode2, trueLabel);
-                writer.Write(",");
-                this.WritePhiNodeLabel(writer, opCode3.Result, opCode3, opCode3, falseLabel);
-                writer.WriteLine(string.Empty);
-
-                writer.WriteLine("; End of Conditional Expression");
-
-                LlvmHelpersGen.SetCustomLabel(opCode3, endLabel);
-
-                return;
-            }
-
-            if (block.UseAsNullCoalescingExpression)
-            {
-                writer.WriteLine("; Null Coalescing Expression");
-                writer.WriteLine("; Begin of Phi");
-                // start of phi blocks
-                var firstBlockOpCode = block.OpCodes.First();
-                var nextOpCode1 = firstBlockOpCode.NextOpCode(this);
-                if (nextOpCode1 == null || !nextOpCode1.JumpProcessed)
-                {
-                    writer.WriteLine("br label %.a{0}", firstBlockOpCode.AddressStart);
-                    writer.Indent--;
-                    writer.WriteLine(".a{0}:", firstBlockOpCode.AddressStart);
-                    writer.Indent++;
-                }
-
-                this.ActualWriteBlockBody(writer, block);
-
-                // end of phi blocks
-                writer.WriteLine("; End of Phi");
-
-                var lastBlockOpCode = block.OpCodes.Last();
-                var nextOpCode2 = lastBlockOpCode.NextOpCode(this);
-                if (nextOpCode2 == null || !nextOpCode2.JumpProcessed)
-                {
-                    writer.WriteLine(string.Empty);
-                    writer.WriteLine("br label %.a{0}", lastBlockOpCode.AddressEnd);
-                    writer.Indent--;
-                    writer.WriteLine(".a{0}:", lastBlockOpCode.AddressEnd);
-                    writer.Indent++;
-
-                    lastBlockOpCode.JumpProcessed = true;
-                }
-
-                // apply PHI is condition is complex
-                this.ProcessOperator(writer, block, "phi", block.OpCodes[0].Result.Type, options: OperandOptions.GenerateResult);
-                var phiResult = block.Result;
-
-                var lastDupIndex = -1;
-                for (var i = 0; i < block.OpCodes.Length; i++)
-                {
-                    if (!block.OpCodes[i].Any(Code.Dup) && i != block.OpCodes.Length - 1)
-                    {
-                        continue;
-                    }
-
-                    if (i > 0)
-                    {
-                        writer.Write(',');
-                    }
-
-                    if (i == 0)
-                    {
-                        this.WritePhiNodeLabel(
-                            writer, block.OpCodes[i].Result, block.OpCodes[i], block.OpCodes[i], string.Concat("a", block.OpCodes[i].AddressStart));
-                    }
-                    else
-                    {
-                        this.WritePhiNodeLabel(
-                            writer,
-                            block.OpCodes[i].Result,
-                            block.OpCodes[lastDupIndex + 2],
-                            block.OpCodes[i],
-                            string.Concat("a", block.OpCodes[lastDupIndex + 2].AddressStart));
-                    }
-
-                    lastDupIndex = i;
-                }
-
-                writer.WriteLine(string.Empty);
-                writer.WriteLine("; End of Null Coalescing Expression");
-
-                block.Result = phiResult;
-
-                return;
-            }
-
-            // just array
-            this.ActualWriteBlockBody(writer, block);
-        }
-
         // start - beginning of Phi Block or after jump to phi opCode
         // end - end of Phi Block or before jump to phi opCode (including jump)
         private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart startOpCode, OpCodePart endOpCode, string label = "a")
@@ -2933,28 +2637,6 @@ namespace Il2Native.Logic
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="block">
-        /// </param>
-        /// <param name="skip">
-        /// </param>
-        /// <param name="reduce">
-        /// </param>
-        private void ActualWriteBlockBody(LlvmIndentedTextWriter writer, OpCodeBlock block, int skip = 0, int? reduce = null)
-        {
-            var query = reduce.HasValue ? block.OpCodes.Take(block.OpCodes.Length - reduce.Value).Skip(skip) : block.OpCodes.Skip(skip);
-
-            foreach (var subOpCode in query)
-            {
-                this.WriteLabels(writer, subOpCode);
-                this.ActualWrite(writer, subOpCode);
-                writer.WriteLine(string.Empty);
-            }
         }
 
         /// <summary>
@@ -4308,7 +3990,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetArgVarName(string name)
         {
-            return string.Concat("%", name);
+            return string.Format("%\"{0}\"", name);
         }
 
         /// <summary>
@@ -4754,7 +4436,7 @@ namespace Il2Native.Logic
                                          || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
                 // opCode.Skip to fix issue with using it in 'conditional expresions'
-                if (splitBlock || opCode.SkipRecursive)
+                if (splitBlock)
                 {
                     // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
                     writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));

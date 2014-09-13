@@ -467,26 +467,6 @@ namespace Il2Native.Logic
                     }
             }
 
-            var opCodeBlock = opCode as OpCodeBlock;
-            if (opCodeBlock != null)
-            {
-                if (opCodeBlock.UseAsConditionalExpression)
-                {
-                    var op1 = this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
-                    if (op1 != null && !op1.IsConst)
-                    {
-                        return op1;
-                    }
-
-                    return this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 3]);
-                }
-
-                if (opCodeBlock.UseAsNullCoalescingExpression)
-                {
-                    return this.ResultOf(opCodeBlock.OpCodes[0]);
-                }
-            }
-
             return null;
         }
 
@@ -535,7 +515,7 @@ namespace Il2Native.Logic
             {
                 // todo: finish it, check required type of parameter
                 foreach (var usedOpCode in opCode.OpCodeOperands
-                                                 .Where(usedOpCode => usedOpCode.Any(Code.Conv_U) 
+                                                 .Where(usedOpCode => usedOpCode.Any(Code.Conv_U)
                                                                       && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0)))
                 {
                     usedOpCode.OpCodeOperands[0].UseAsNull = true;
@@ -680,32 +660,33 @@ namespace Il2Native.Logic
 
         protected void ProcessAll(OpCodePart[] opCodes)
         {
+            this.OpsByGroupAddressStart.Clear();
+            this.OpsByGroupAddressEnd.Clear();
+
             foreach (var opCodePart in opCodes)
             {
                 this.Process(opCodePart);
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodes">
-        /// </param>
-        protected void BuildGroupAddressIndexes(OpCodePart[] opCodes)
+        protected void CalculateRequiredTypes(OpCodePart[] opCodes)
         {
-            this.OpsByGroupAddressStart.Clear();
-            this.OpsByGroupAddressEnd.Clear();
-
             foreach (var opCodePart in opCodes)
             {
-                if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
-                {
-                    this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
-                }
 
-                if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
-                {
-                    this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
-                }
+            }
+        }
+
+        private void BuildGroupIndex(OpCodePart opCodePart)
+        {
+            if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
+            {
+                this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
+            }
+
+            if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
+            {
+                this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
             }
         }
 
@@ -783,7 +764,7 @@ namespace Il2Native.Logic
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {
-                return this.AddPhiValues(popCodePart, current, popCodePart.OpCodeOperands[0]);
+                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
             }
 
             return null;
@@ -793,23 +774,23 @@ namespace Il2Native.Logic
         {
             // add alternative stack value to and address
             // 1) find jump address
-            var current = closerValue.PreviousOpCode(this);
+            var current = closerValue.PreviousOpCodeGroup(this);
             while (current != null
                    && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
                    && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
             {
-                current = current.PreviousOpCode(this);
+                current = current.PreviousOpCodeGroup(this);
             };
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
             {
-                return this.AddPhiValues(closerValue, current, futherValue);
+                return this.AddPhiValues(current.AddressEnd, current, futherValue);
             }
 
             return null;
         }
 
-        private PhiNodes AddPhiValues(OpCodePart beginOfBranch, OpCodePart closerValueJump, OpCodePart futherValue)
+        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
         {
             Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
 
@@ -829,11 +810,12 @@ namespace Il2Native.Logic
                     futherValue.JumpDestination = jumpDestination;
                 }
 
-                jumpDestination.Add(beginOfBranch);
+                // to force creating jump
+                jumpDestination.Add(closerValueJump);
             }
 
             destJump.AlternativeValues.Values.Add(futherValue);
-            destJump.AlternativeValues.Labels.Add(beginOfBranch.AddressStart);
+            destJump.AlternativeValues.Labels.Add(labelAddress);
 
             return destJump.AlternativeValues;
         }
@@ -846,7 +828,7 @@ namespace Il2Native.Logic
         {
             var ops = this.Ops.ToArray();
             this.ProcessAll(ops);
-            this.BuildGroupAddressIndexes(ops);
+            this.CalculateRequiredTypes(ops);
             this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
             return ops;
@@ -1083,6 +1065,8 @@ namespace Il2Native.Logic
                     break;
             }
 
+            this.BuildGroupIndex(opCode);
+
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
             {
@@ -1223,17 +1207,23 @@ namespace Il2Native.Logic
 
             var firstValue = currentArgument;
 
-            var middleJump = firstValue.PreviousOpCode(this);
-            var isJumpForward = middleJump.IsBranch() && middleJump.IsJumpForward();
+            var middleJump = firstValue.PreviousOpCodeGroup(this);
+            var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
             if (!isJumpForward)
             {
                 return false;
             }
 
             var secondValue = stack.First();
-            var firstCondJump = secondValue.PreviousOpCode(this);
-            var isCondJumpForward = firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
+            var firstCondJump = secondValue.PreviousOpCodeGroup(this);
+            var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
             if (!isCondJumpForward)
+            {
+                return false;
+            }
+
+            // expression is not full yet
+            if (firstValue.GroupAddressEnd != middleJump.JumpAddress())
             {
                 return false;
             }

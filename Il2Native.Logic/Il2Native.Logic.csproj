@@ -96,7 +96,6 @@
     <Compile Include="LlvmIndentedTextWriter.cs" />
     <Compile Include="OpResults\IncrementalResult.cs" />
     <Compile Include="LlvmWriter.cs" />
-    <Compile Include="OpCodeBlock.cs" />
     <Compile Include="OpCodeExtentions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">

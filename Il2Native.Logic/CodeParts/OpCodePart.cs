@@ -81,27 +81,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public int CloseRoundBrackets { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool ConjunctionAndCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool ConjunctionOrCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
         public int? CustomJumpAddress { get; set; }
 
         /// <summary>
         /// </summary>
         public string CreatedLabel { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool DefaultCase { get; set; }
 
         /// <summary>
         /// </summary>
@@ -166,10 +150,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool InvertCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
         public List<OpCodePart> JumpDestination { get; set; }
 
         /// <summary>
@@ -183,10 +163,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public OpCodePart[] OpCodeOperands { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public int OpenRoundBrackets { get; set; }
 
         /// <summary>
         /// </summary>
@@ -221,28 +197,6 @@ namespace Il2Native.Logic.CodeParts
             }
         }
 
-        public bool Skip { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool SkipRecursive
-        {
-            get
-            {
-                if (this.Skip)
-                {
-                    return true;
-                }
-
-                if (this.UsedBy != null)
-                {
-                    return this.UsedBy.SkipRecursive;
-                }
-
-                return false;
-            }
-        }
-
         /// <summary>
         /// </summary>
         public List<TryClause> TryBegin { get; set; }
@@ -267,6 +221,8 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public OpCodePart UsedBy { get; set; }
 
+        /// <summary>
+        /// </summary>
         public PhiNodes AlternativeValues { get; set; }
     }
 }
