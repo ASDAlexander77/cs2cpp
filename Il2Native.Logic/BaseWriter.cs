@@ -721,15 +721,14 @@ namespace Il2Native.Logic
 
             var opCodeParts = new OpCodePart[size];
 
+            PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size; i++)
             {
                 var opCodePartUsed = this.Stack.Pop();
+
                 // register second value
                 // TODO: this is still hack, review the code
-                if (i == 1 && opCodePart.AlternativeValues != null && opCodePart.AlternativeValues.Values.Count != opCodePart.AlternativeValues.Labels.Count)
-                {
-                    opCodePart.AlternativeValues.Values.Add(opCodePartUsed);
-                }
+                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed, this.Stack);
 
                 if (opCodePartUsed.ToCode() == Code.Dup)
                 {
@@ -747,6 +746,10 @@ namespace Il2Native.Logic
                 opCodeParts[size - i] = opCodePartUsed;
             }
 
+            // register second value
+            // TODO: this is still hack, review the code
+            lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, opCodeParts[0], this.Stack);
+
             opCodePart.OpCodeOperands = opCodeParts;
             foreach (var childCodePart in opCodeParts)
             {
@@ -759,6 +762,29 @@ namespace Il2Native.Logic
             {
                 this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
             }
+        }
+
+        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed, Stack<OpCodePart> stack)
+        {
+            OpCodePart opCodePartToAdd = null;
+            if (i == 1 && opCodePart.AlternativeValues != null)
+            {
+                lastPhiNodes = opCodePart.AlternativeValues;
+                opCodePartToAdd = opCodePartUsed;
+            }
+
+            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
+            {
+                lastPhiNodes.Values.Add(opCodePartToAdd ?? stack.Peek());
+            }
+
+            lastPhiNodes = null;
+            if (i > 0)
+            {
+                lastPhiNodes = opCodePartUsed.AlternativeValues;
+            }
+
+            return lastPhiNodes;
         }
 
         private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
