@@ -728,7 +728,7 @@ namespace Il2Native.Logic
 
                 // register second value
                 // TODO: this is still hack, review the code
-                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed, this.Stack);
+                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed);
 
                 if (opCodePartUsed.ToCode() == Code.Dup)
                 {
@@ -748,7 +748,10 @@ namespace Il2Native.Logic
 
             // register second value
             // TODO: this is still hack, review the code
-            lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, opCodeParts[0], this.Stack);
+            if (size > 0)
+            {
+                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
+            }
 
             opCodePart.OpCodeOperands = opCodeParts;
             foreach (var childCodePart in opCodeParts)
@@ -764,18 +767,16 @@ namespace Il2Native.Logic
             }
         }
 
-        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed, Stack<OpCodePart> stack)
+        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
         {
-            OpCodePart opCodePartToAdd = null;
             if (i == 1 && opCodePart.AlternativeValues != null)
             {
                 lastPhiNodes = opCodePart.AlternativeValues;
-                opCodePartToAdd = opCodePartUsed;
             }
 
             if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
             {
-                lastPhiNodes.Values.Add(opCodePartToAdd ?? stack.Peek());
+                lastPhiNodes.Values.Add(opCodePartUsed);
             }
 
             lastPhiNodes = null;
@@ -848,7 +849,7 @@ namespace Il2Native.Logic
                 }
 
                 // to force creating jump
-                jumpDestination.Add(closerValueJump);
+                jumpDestination.Add(OpCodePart.CreateNop);
             }
 
             destJump.AlternativeValues.Values.Add(futherValue);

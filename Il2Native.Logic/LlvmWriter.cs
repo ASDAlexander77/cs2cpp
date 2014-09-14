@@ -333,8 +333,21 @@ namespace Il2Native.Logic
                 && opCode.RequiredResultType.TypeNotEquals(opCode.Result.Type)
                 && !(opCode.Result is ConstValue))
             {
-                this.Output.WriteLine(string.Empty);
-                this.WriteCast(opCode, opCode.Result, opCode.RequiredResultType);
+                bool castRequired;
+                bool intAdjustmentRequired;
+                DetectConversion(opCode.Result.Type, opCode.RequiredResultType, out castRequired, out intAdjustmentRequired);
+
+                if (castRequired)
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.WriteCast(opCode, opCode.Result, opCode.RequiredResultType);
+                }
+
+                if (intAdjustmentRequired)
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, false, opCode.RequiredResultType);
+                }
             }
         }
 
@@ -2606,7 +2619,8 @@ namespace Il2Native.Logic
                     values[index].Result,
                     values[index],
                     values[index],
-                    string.Concat("a", opCode.AlternativeValues.Labels[index]));
+                    string.Concat("a", opCode.AlternativeValues.Labels[index]),
+                    opCode.AlternativeValues.Labels[index]);
             }
 
             writer.WriteLine(string.Empty);
@@ -2619,9 +2633,9 @@ namespace Il2Native.Logic
 
         // start - beginning of Phi Block or after jump to phi opCode
         // end - end of Phi Block or before jump to phi opCode (including jump)
-        private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart startOpCode, OpCodePart endOpCode, string label = "a")
+        private void WritePhiNodeLabel(LlvmIndentedTextWriter writer, FullyDefinedReference result, OpCodePart startOpCode, OpCodePart endOpCode, string label = "a", int stopAddress = 0)
         {
-            var customLabel = this.FindCustomLabel(startOpCode, endOpCode);
+            var customLabel = this.FindCustomLabel(startOpCode, endOpCode, stopAddress);
             if (customLabel != null)
             {
                 writer.Write(" [ {0}, %.{1} ]", result, customLabel);
@@ -2633,7 +2647,7 @@ namespace Il2Native.Logic
         }
 
         // TODO: find better way to find custom labels for phi blocks
-        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode)
+        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode, int stopAddress)
         {
             if (lastOpCode == null)
             {
@@ -2641,7 +2655,7 @@ namespace Il2Native.Logic
             }
 
             var current = lastOpCode;
-            while (current != null && firstOpCode.GroupAddressStart <= current.AddressStart)
+            while (current != null && firstOpCode.GroupAddressStart <= current.AddressStart && current.AddressStart >= stopAddress)
             {
                 if (current.CreatedLabel != null)
                 {
@@ -3958,6 +3972,52 @@ namespace Il2Native.Logic
             return effectiveType;
         }
 
+        private void DetectConversion(
+            IType sourceType,
+            IType requiredType,
+            out bool castRequired,
+            out bool intAdjustmentRequired)
+        {
+            castRequired = false;
+            intAdjustmentRequired = false;
+            // write type
+            IType effectiveType = null;
+
+            var sourceTypePointer = sourceType.IsPointer;
+            var requiredTypePointer = requiredType.IsPointer;
+
+            if (sourceTypePointer && requiredTypePointer)
+            {
+                effectiveType = requiredTypePointer ? requiredType : sourceType;
+            }
+            else
+            {
+                if (sourceType.TypeNotEquals(requiredType)
+                    && sourceType.TypeEquals(this.ResolveType("System.Boolean"))
+                    && requiredType.TypeEquals(this.ResolveType("System.Byte")))
+                {
+                    effectiveType = sourceType;
+                }
+                else
+                {
+                    effectiveType = requiredType;
+                }
+            }
+
+            castRequired = effectiveType.TypeNotEquals(sourceType);
+
+            if (requiredType.IsIntValueTypeExtCastRequired(sourceType))
+            {
+                intAdjustmentRequired = true;
+            }
+
+            // pointer to int, int to pointer
+            if (!sourceType.IsByRef && !sourceType.IsPointer && sourceType.IntTypeBitSize() > 0 && requiredType.IsPointer)
+            {
+                intAdjustmentRequired = true;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodeFieldInfoPart">
@@ -4459,9 +4519,7 @@ namespace Il2Native.Logic
 
                 if (splitBlock || !opCode.JumpProcessed)
                 {
-                    writer.Indent--;
-                    writer.WriteLine(string.Concat(".a", opCode.AddressStart, ':'));
-                    writer.Indent++;
+                    WriteLabel(writer, string.Concat(".a", opCode.AddressStart));
                 }
             }
         }

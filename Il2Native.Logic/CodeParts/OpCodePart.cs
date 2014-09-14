@@ -69,10 +69,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public List<OpCodePart> Cases { get; set; }
-
-        /// <summary>
-        /// </summary>
         public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
 
         /// <summary>
