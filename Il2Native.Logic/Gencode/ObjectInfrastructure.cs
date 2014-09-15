@@ -381,11 +381,9 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Init obj");
 
-            var isDirectValue = llvmWriter.PreProcessOperand(writer, opCodePart, 0);
+            llvmWriter.PreProcessOperand(writer, opCodePart, 0);
 
-            var fullyDefinedReference = isDirectValue
-                                            ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType)
-                                            : opCodePart.OpCodeOperands[0].Result;
+            var fullyDefinedReference = opCodePart.OpCodeOperands[0].Result;
 
             if (declaringTypeNormalType.IsValueType)
             {
@@ -636,7 +634,7 @@ namespace Il2Native.Logic.Gencode
                 var storeResult = opCode.Result;
                 var retResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Int32"));
                 opCode.Result = storeResult;
-                llvmWriter.AdjustIntConvertableTypes(writer, opCode, false, llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.ResolveType("System.Int32"));
                 opCode.Result = retResult;
                 writer.WriteLine(string.Empty);
             }

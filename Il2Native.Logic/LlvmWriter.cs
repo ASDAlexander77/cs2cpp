@@ -187,7 +187,6 @@ namespace Il2Native.Logic
             bool @isVirtual,
             bool hasThis,
             bool isCtor,
-            IList<bool> isDirectValue,
             FullyDefinedReference resultNumberForThis,
             IType thisType,
             FullyDefinedReference resultNumberForReturn,
@@ -231,10 +230,6 @@ namespace Il2Native.Logic
                     {
                         this.WriteResult(used[0].Result);
                     }
-                    else if (isDirectValue[0])
-                    {
-                        this.ActualWrite(writer, used[0]);
-                    }
                 }
             }
 
@@ -261,16 +256,7 @@ namespace Il2Native.Logic
                 }
 
                 writer.Write(' ');
-
-                if (!isDirectValue[effectiveIndex])
-                {
-                    this.WriteResult(used[effectiveIndex]);
-                }
-                else
-                {
-                    this.ActualWrite(writer, parameterInput);
-                }
-
+                this.WriteResult(used[effectiveIndex]);
                 index++;
             }
 
@@ -307,11 +293,7 @@ namespace Il2Native.Logic
                 this.WritePhi(writer, opCode);
             }
 
-            var skip = firstLevel && this.IsDirectValue(opCode);
-            if (!skip)
-            {
-                this.ActualWriteOpCode(writer, opCode);
-            }
+            this.ActualWriteOpCode(writer, opCode);
 
             AdjustResultType(opCode);
 
@@ -346,7 +328,7 @@ namespace Il2Native.Logic
                 if (intAdjustmentRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.AdjustIntConvertableTypes(this.Output, opCode, false, opCode.RequiredResultType);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredResultType);
                 }
             }
         }
@@ -363,9 +345,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, bool isDirectResult, IType destType)
+        public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, IType destType)
         {
-            if (isDirectResult || !opCode.HasResult)
+            if (!opCode.HasResult)
             {
                 return false;
             }
@@ -551,17 +533,6 @@ namespace Il2Native.Logic
             return idx;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool IsDirectValue(OpCodePart opCode)
-        {
-            // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
-            return false;
-        }
 
         /// <summary>
         /// </summary>
@@ -629,9 +600,7 @@ namespace Il2Native.Logic
         /// </param>
         public void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type)
         {
-            bool directResult1;
             FullyDefinedReference accessIndexResultNumber2;
-            directResult1 = false;
 
             // next code fixing issue with using Code.Ldind to load first value in value types
             var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
@@ -659,20 +628,13 @@ namespace Il2Native.Logic
                     resultOfOperand0.Type.UseAsClass = true;
                 }
 
-                directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                this.PreProcessOperand(writer, opCode, 0);
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
 
             opCode.Result = null;
 
-            if (directResult1)
-            {
-                this.WriteLlvmLoad(opCode, type, new FullyDefinedReference(this.GetDirectName(opCode.OpCodeOperands[0]), type));
-            }
-            else
-            {
-                this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2);
-            }
+            this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2);
 
             if (!isUsedAsClass && resultOfOperand0 != null)
             {
@@ -693,11 +655,11 @@ namespace Il2Native.Logic
         /// <param name="forcedType">
         /// </param>
         public void PostProcess(
-            LlvmIndentedTextWriter writer, OpCodePart operand, bool directResult, bool detectAndWriteTypePrefix = false, IType forcedType = null)
+            LlvmIndentedTextWriter writer, OpCodePart operand, bool detectAndWriteTypePrefix = false, IType forcedType = null)
         {
             writer.Write(' ');
 
-            if (directResult && !operand.HasResult)
+            if (!operand.HasResult)
             {
                 if (forcedType != null)
                 {
@@ -754,7 +716,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="detectAndWriteTypePrefix">
         /// </param>
-        public void PostProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool directResult, bool detectAndWriteTypePrefix = false)
+        public void PostProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool detectAndWriteTypePrefix = false)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
@@ -762,7 +724,7 @@ namespace Il2Native.Logic
             }
 
             var operand = opCode.OpCodeOperands[index];
-            this.PostProcess(writer, operand, directResult, detectAndWriteTypePrefix);
+            this.PostProcess(writer, operand, detectAndWriteTypePrefix);
         }
 
         /// <summary>
@@ -775,20 +737,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool PreProcess(LlvmIndentedTextWriter writer, OpCodePart operandOpCode, OperandOptions options = OperandOptions.None)
+        public void PreProcess(LlvmIndentedTextWriter writer, OpCodePart operandOpCode, OperandOptions options = OperandOptions.None)
         {
-            if (!this.IsDirectValue(operandOpCode))
+            // TODO: use it to sort out Result in future
+            ////Debug.Assert(operandOpCode.HasResult || operandOpCode.Destination != null || operandOpCode.Any(Code.Nop), "Should have result");
+            if (!operandOpCode.HasResult)
             {
-                if (!operandOpCode.HasResult)
-                {
-                    this.ActualWrite(writer, operandOpCode);
-                    writer.WriteLine(string.Empty);
-                }
-
-                return false;
+                this.ActualWrite(writer, operandOpCode);
+                writer.WriteLine(string.Empty);
+                return;
             }
-
-            return true;
         }
 
         /// <summary>
@@ -803,15 +761,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool PreProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, OperandOptions options = OperandOptions.None)
+        public void PreProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, OperandOptions options = OperandOptions.None)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
-                return false;
+                return;
             }
 
             var operandOpCode = opCode.OpCodeOperands[index];
-            return this.PreProcess(writer, operandOpCode, options: options);
+            this.PreProcess(writer, operandOpCode, options: options);
         }
 
         /// <summary>
@@ -890,7 +848,6 @@ namespace Il2Native.Logic
                 var changeType = this.AdjustIntConvertableTypes(
                     writer,
                     opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1],
-                    false,
                     intAdjustment);
 
                 if (changeType && resultType == null)
@@ -920,27 +877,18 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var directResult1 = this.IsDirectValue(opCodePart.OpCodeOperands[valueOperand]);
-
             if (fieldType.IsStructureType())
             {
                 opCodePart.Destination = opCodePart.Result;
-                if (directResult1)
+                var valueOp = opCodePart.OpCodeOperands[valueOperand];
+                if (!valueOp.HasResult)
                 {
-                    this.WriteLlvmLoad(opCodePart, fieldType, new FullyDefinedReference(this.GetDirectName(opCodePart.OpCodeOperands[valueOperand]), fieldType));
+                    valueOp.Destination = opCodePart.Destination;
+                    this.ActualWriteOpCode(writer, valueOp);
                 }
                 else
                 {
-                    var valueOp = opCodePart.OpCodeOperands[valueOperand];
-                    if (!valueOp.HasResult)
-                    {
-                        valueOp.Destination = opCodePart.Destination;
-                        this.ActualWriteOpCode(writer, valueOp);
-                    }
-                    else
-                    {
-                        this.WriteLlvmLoad(opCodePart, fieldType, valueOp.Result);
-                    }
+                    this.WriteLlvmLoad(opCodePart, fieldType, valueOp.Result);
                 }
             }
             else
@@ -948,7 +896,7 @@ namespace Il2Native.Logic
                 var opts = OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
 
                 this.ProcessOperator(writer, opCodePart, "store", fieldType, options: opts, operand1: valueOperand, operand2: -1);
-                this.PostProcessOperand(writer, opCodePart, valueOperand, directResult1);
+                this.PostProcessOperand(writer, opCodePart, valueOperand);
                 writer.Write(", ");
                 opCodePart.Result.Type.WriteTypePrefix(writer);
                 writer.Write("* ");
@@ -1018,13 +966,13 @@ namespace Il2Native.Logic
             IType resultType = null,
             OperandOptions options = OperandOptions.None)
         {
-            var directResult1 = this.PreProcessOperand(writer, opCode, operandIndex, options);
+            this.PreProcessOperand(writer, opCode, operandIndex, options);
 
             this.ProcessOperator(writer, opCode, op, requiredType, resultType, options, operand1: operandIndex, operand2: -1);
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
-                this.PostProcessOperand(writer, opCode, operandIndex, directResult1);
+                this.PostProcessOperand(writer, opCode, operandIndex);
             }
         }
 
@@ -1325,7 +1273,7 @@ namespace Il2Native.Logic
             writer.WriteLine("; Copy data");
 
             // write access to a field
-            var directResult1 = this.PreProcessOperand(writer, opCode, 0);
+            this.PreProcessOperand(writer, opCode, 0);
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
@@ -2838,7 +2786,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                    this.PreProcessOperand(writer, opCode, 0);
 
                     destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
@@ -2846,25 +2794,15 @@ namespace Il2Native.Logic
                     if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
                     {
                         opCode.Destination = new FullyDefinedReference(destinationName, operandType);
-                        if (this.IsDirectValue(opCode.OpCodeOperands[0]))
+                        var valueOp = opCode.OpCodeOperands[0];
+                        if (!valueOp.HasResult)
                         {
-                            this.WriteLlvmLoad(
-                                opCode,
-                                operandType,
-                                new FullyDefinedReference(this.GetDirectName(opCode.OpCodeOperands[0]), opCodeFieldInfoPart.Operand.FieldType));
+                            valueOp.Destination = opCode.Destination;
+                            this.ActualWriteOpCode(writer, valueOp);
                         }
                         else
                         {
-                            var valueOp = opCode.OpCodeOperands[0];
-                            if (!valueOp.HasResult)
-                            {
-                                valueOp.Destination = opCode.Destination;
-                                this.ActualWriteOpCode(writer, valueOp);
-                            }
-                            else
-                            {
-                                this.WriteLlvmLoad(opCode, operandType, valueOp.Result);
-                            }
+                            this.WriteLlvmLoad(opCode, operandType, valueOp.Result);
                         }
                     }
                     else
@@ -2877,7 +2815,7 @@ namespace Il2Native.Logic
                             options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
                             operand1: 1,
                             operand2: -1);
-                        this.PostProcessOperand(writer, opCode, 0, directResult1);
+                        this.PostProcessOperand(writer, opCode, 0);
                         writer.Write(", ");
                         operandType.WriteTypePrefix(writer);
                         writer.Write("* ");
@@ -2899,7 +2837,7 @@ namespace Il2Native.Logic
 
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
-                    directResult1 = this.PreProcessOperand(writer, opCode, 0);
+                    this.PreProcessOperand(writer, opCode, 0);
 
                     if (opCode.Destination != null || !opCode.OpCodeOperands[0].Result.Type.UseAsClass)
                     {
@@ -3049,7 +2987,9 @@ namespace Il2Native.Logic
                     break;
                 case Code.Not:
                     var tempOper = opCode.OpCodeOperands;
-                    opCode.OpCodeOperands = new[] { tempOper[0], new OpCodePart(OpCodesEmit.Ldc_I4_M1, 0, 0) };
+                    var secondOperand = new OpCodePart(OpCodesEmit.Ldc_I4_M1, 0, 0);
+                    this.ActualWrite(writer, secondOperand);
+                    opCode.OpCodeOperands = new[] { tempOper[0], secondOperand };
                     this.BinaryOper(writer, opCode, "xor");
                     opCode.OpCodeOperands = tempOper;
                     break;
@@ -3063,13 +3003,12 @@ namespace Il2Native.Logic
                     }
 
                     tempOper = opCode.OpCodeOperands;
-                    opCode.OpCodeOperands = new[]
-                                                {
-                                                    isFloatingPoint
-                                                        ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0)
-                                                        : GetTypedIntZeroCode(opCode.OpCodeOperands[0].Result.Type), 
-                                                    tempOper[0]
-                                                };
+
+                    var firstOperand = isFloatingPoint
+                                            ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0)
+                                            : GetTypedIntZeroCode(opCode.OpCodeOperands[0].Result.Type);
+                    this.ActualWrite(writer, firstOperand);
+                    opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
 
                     this.BinaryOper(
                         writer,
@@ -3666,10 +3605,7 @@ namespace Il2Native.Logic
                     if (!opCodeTypePart.Operand.IsStructureType())
                     {
                         var nextOp = opCode.NextOpCode(this);
-                        var fullyDefinedReference = IsDirectValue(nextOp.OpCodeOperands[0])
-                                                        ? new FullyDefinedReference(GetDirectName(nextOp.OpCodeOperands[0]), opCodeTypePart.Operand)
-                                                        : nextOp.OpCodeOperands[0].Result;
-
+                        var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
                         this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
                     }
@@ -3725,14 +3661,14 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var directResult1 = this.PreProcessOperand(writer, opCode, 0, options);
-            var directResult2 = this.PreProcessOperand(writer, opCode, 1, options);
+            this.PreProcessOperand(writer, opCode, 0, options);
+            this.PreProcessOperand(writer, opCode, 1, options);
 
             this.ProcessOperator(writer, opCode, op, options: options, resultType: resultType);
 
-            this.PostProcessOperand(writer, opCode, 0, directResult1);
+            this.PostProcessOperand(writer, opCode, 0);
             writer.Write(',');
-            this.PostProcessOperand(writer, opCode, 1, directResult2, options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
+            this.PostProcessOperand(writer, opCode, 1, options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
         }
 
         /// <summary>
@@ -4013,7 +3949,7 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            var directResult1 = this.PreProcessOperand(writer, opCodeFieldInfoPart, 1);
+            this.PreProcessOperand(writer, opCodeFieldInfoPart, 1);
             this.WriteFieldAccess(writer, opCodeFieldInfoPart);
             writer.WriteLine(string.Empty);
 
@@ -4243,7 +4179,6 @@ namespace Il2Native.Logic
         /// </param>
         private void SaveElement(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            bool directResult1;
             IType type = null;
 
             switch (opCode.ToCode())
@@ -4288,14 +4223,14 @@ namespace Il2Native.Logic
 
             var operandIndex = 2;
 
-            directResult1 = this.PreProcessOperand(writer, opCode, operandIndex);
+            this.PreProcessOperand(writer, opCode, operandIndex);
 
             if (!type.IsStructureType())
             {
-                this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], directResult1, type);
+                this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
 
                 this.ProcessOperator(writer, opCode, "store", type, operand1: 2, operand2: -1);
-                this.PostProcessOperand(writer, opCode, operandIndex, directResult1);
+                this.PostProcessOperand(writer, opCode, operandIndex);
 
                 writer.Write(", ");
                 type.WriteTypePrefix(writer, type.IsStructureType());
@@ -4370,13 +4305,13 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            directResult1 = this.PreProcessOperand(writer, opCode, 0);
+            this.PreProcessOperand(writer, opCode, 0);
 
             this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
             writer.Write(", ");
 
             destinationType.WriteTypePrefix(writer, true);
-            this.PostProcessOperand(writer, opCode, 0, directResult1);
+            this.PostProcessOperand(writer, opCode, 0);
         }
 
         /// <summary>
@@ -4414,10 +4349,8 @@ namespace Il2Native.Logic
         /// </param>
         private void SaveStructElement(LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex, IType type)
         {
-            var directResult1 = this.IsDirectValue(opCode.OpCodeOperands[operandIndex]);
-
             // copy struct
-            if (!directResult1 && !opCode.OpCodeOperands[operandIndex].HasResult)
+            if (!opCode.OpCodeOperands[operandIndex].HasResult)
             {
                 opCode.OpCodeOperands[operandIndex].Destination = opCode.Result;
                 this.ActualWrite(writer, opCode.OpCodeOperands[operandIndex]);
@@ -4425,9 +4358,7 @@ namespace Il2Native.Logic
             else
             {
                 opCode.Destination = opCode.Result;
-                var fullyDefinedRef = directResult1
-                                          ? new FullyDefinedReference(this.GetDirectName(opCode.OpCodeOperands[operandIndex]), type)
-                                          : opCode.OpCodeOperands[operandIndex].Result;
+                var fullyDefinedRef = opCode.OpCodeOperands[operandIndex].Result;
                 this.WriteLlvmLoad(opCode, type, fullyDefinedRef);
             }
         }

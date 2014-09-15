@@ -66,6 +66,11 @@ namespace Il2Native.Logic.Gencode
             opCodeNope.OpCodeOperands =
                 Enumerable.Range(0, invokeMethod.GetParameters().Count()).Select(p => new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + 1)).ToArray();
 
+            foreach (var generatedOperand in opCodeNope.OpCodeOperands)
+            {
+                llvmWriter.ActualWrite(writer, generatedOperand);
+            }
+
             // bitcast object to method
             var opCodeNopeForBitCast = OpCodePart.CreateNop;
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
