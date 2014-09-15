@@ -18,7 +18,16 @@ namespace System.Threading
         [System.Reflection.FieldNoReflection]
         private object m_AppDomain;
         private int    m_Id;
-        
+
+        static Thread()
+        {
+            CurrentThread = new Thread();
+        }
+
+        private Thread()
+        {
+        }
+
         public Thread(ThreadStart start)
         {
             throw new NotImplementedException();
@@ -31,20 +40,14 @@ namespace System.Threading
         extern public void Suspend();
         
         extern public void Resume();
-        extern public ThreadPriority Priority
-        {
-            
-            get;
 
-            
+        extern public ThreadPriority Priority
+        {            
+            get;           
             set;
         }
 
-        extern public int ManagedThreadId
-        {
-            
-            get;
-        }
+        public int ManagedThreadId { get; private set; }
 
         extern public bool IsAlive
         {
@@ -64,11 +67,7 @@ namespace System.Threading
             throw new NotImplementedException();
         }
 
-        extern public static Thread CurrentThread
-        {
-            
-            get;
-        }
+        public static Thread CurrentThread { get; private set; }
 
         extern public ThreadState ThreadState
         {

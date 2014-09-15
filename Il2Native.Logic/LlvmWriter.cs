@@ -551,11 +551,6 @@ namespace Il2Native.Logic
                 return this.IsDirectValue(opCode.OpCodeOperands[0]);
             }
 
-            if (opCode.Any(Code.Ldsfld) && (opCode as OpCodeFieldInfoPart).Operand.FieldType.IsStructureType())
-            {
-                return true;
-            }
-
             if (opCode.Any(Code.Ldstr))
             {
                 var opCodeString = opCode as OpCodeStringPart;
@@ -566,22 +561,6 @@ namespace Il2Native.Logic
             {
                 var opCodeMethodInfo = opCode as OpCodeMethodInfoPart;
                 return opCodeMethodInfo.IntPtrCallingCtorStage;
-            }
-
-            if (opCode.Any(Code.Conv_I))
-            {
-                return this.IsDirectValue(opCode.OpCodeOperands[0]);
-            }
-
-            if (opCode.Any(Code.Box))
-            {
-                var opCodeType = opCode as OpCodeTypePart;
-                if (opCodeType.Operand.IsValueType())
-                {
-                    return false;
-                }
-
-                return this.IsDirectValue(opCode.OpCodeOperands[0]);
             }
 
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
@@ -2838,11 +2817,7 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     var destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
-                    if (operandType.IsStructureType())
-                    {
-                        writer.Write(destinationName);
-                    }
-                    else
+                    if (!operandType.IsStructureType())
                     {
                         this.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType));
                     }
