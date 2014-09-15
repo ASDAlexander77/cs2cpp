@@ -35,6 +35,12 @@ namespace System
         int CompareTo(Object obj);
     }
 
+    // Generic version of IComparable.
+
+    public interface IComparable<T>
+    {
+        int CompareTo(T other);
+    }
 }
 
 

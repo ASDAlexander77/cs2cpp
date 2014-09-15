@@ -3113,7 +3113,15 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     type = opCodeTypePart.Operand;
-                    type.WriteCallUnboxObjectMethod(this, opCode);
+                    if (type.IsValueType())
+                    {
+                        type.WriteCallUnboxObjectMethod(this, opCode);
+                    }
+                    else
+                    {
+                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
+                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result.ToNormalType();
+                    }
 
                     break;
                 case Code.Ret:
