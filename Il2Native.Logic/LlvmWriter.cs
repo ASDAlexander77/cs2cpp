@@ -328,8 +328,8 @@ namespace Il2Native.Logic
         private void AdjustResultType(OpCodePart opCode)
         {
             // cast result if required
-            if (opCode.RequiredResultType != null 
-                && opCode.Result != null 
+            if (opCode.RequiredResultType != null
+                && opCode.Result != null
                 && opCode.RequiredResultType.TypeNotEquals(opCode.Result.Type)
                 && !(opCode.Result is ConstValue))
             {
@@ -514,6 +514,19 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
+        public string WriteToString(Action action)
+        {
+            var output = this.Output;
+
+            var sb = new StringBuilder();
+            this.Output = new LlvmIndentedTextWriter(new StringWriter(sb));
+
+            action();
+
+            this.Output = output;
+            return sb.ToString();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="index">
@@ -546,23 +559,6 @@ namespace Il2Native.Logic
         /// </returns>
         public bool IsDirectValue(OpCodePart opCode)
         {
-            if (opCode.Any(Code.Dup))
-            {
-                return this.IsDirectValue(opCode.OpCodeOperands[0]);
-            }
-
-            if (opCode.Any(Code.Ldstr))
-            {
-                var opCodeString = opCode as OpCodeStringPart;
-                return opCodeString.StringIndex > 0;
-            }
-
-            if (opCode.Any(Code.Ldftn))
-            {
-                var opCodeMethodInfo = opCode as OpCodeMethodInfoPart;
-                return opCodeMethodInfo.IntPtrCallingCtorStage;
-            }
-
             // TODO: when finish remove Ldtoken from the list of Direct Values and I think Ldstr as well
             return false;
         }
@@ -2573,7 +2569,7 @@ namespace Il2Native.Logic
             var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredResultType : null;
 
             var phiType = firstValueRequiredType
-                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) 
+                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue))
                                     ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
             // adjust types of constants
@@ -2733,30 +2729,29 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
-                    if (opCodeString.StringIndex == 0)
-                    {
-                        var stringType = this.ResolveType("System.String");
+                    var stringType = this.ResolveType("System.String");
 
-                        // find constructor
-                        var constructorInfo =
-                            IlReader.Constructors(stringType)
-                                    .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.ToString() == "Char[]");
+                    // find constructor
+                    var constructorInfo =
+                        IlReader.Constructors(stringType)
+                                .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.ToString() == "Char[]");
 
-                        this.WriteNewWithoutCallingConstructor(opCode, stringType);
-                        opCodeString.StringIndex = this.GetStringIndex(opCodeString.Operand);
-                        opCode.OpCodeOperands = new[] { opCode };
-                        this.WriteCallConstructor(opCode, constructorInfo);
-                        opCodeString.StringIndex = 0;
-                    }
-                    else
-                    {
-                        writer.Write(
+                    this.WriteNewWithoutCallingConstructor(opCode, stringType);
+                    var stringIndex = this.GetStringIndex(opCodeString.Operand);
+
+                    var dummyOpCodeWithStringIndex = OpCodePart.CreateNop;
+                    dummyOpCodeWithStringIndex.Result = new FullyDefinedReference(
+                        string.Format(
                             "bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)",
-                            opCodeString.StringIndex,
+                            stringIndex,
                             opCodeString.Operand.Length + 1,
                             '{',
-                            '}');
-                    }
+                            '}'),
+                        stringType);
+
+                    opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
+
+                    this.WriteCallConstructor(opCode, constructorInfo);
 
                     break;
                 case Code.Ldnull:
@@ -3286,31 +3281,32 @@ namespace Il2Native.Logic
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
-                    if (!opCodeMethodInfoPart.IntPtrCallingCtorStage)
+                    var intPtrType = this.ResolveType("System.IntPtr");
+
+                    // find constructor
+                    constructorInfo =
+                        IlReader.Constructors(intPtrType)
+                                .First(c => c.GetParameters().Count() == 1/* && c.GetParameters().First().ParameterType.ToString() == "Int"*/);
+
+                    this.WriteNewWithoutCallingConstructor(opCode, intPtrType);
+
+                    var convertString = WriteToString(() =>
                     {
-                        var intPtrType = this.ResolveType("System.IntPtr");
+                        this.Output.Write("bitcast (");
+                        this.WriteMethodPointerType(this.Output, opCodeMethodInfoPart.Operand);
+                        this.Output.Write(" ");
+                        this.Output.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
+                        this.Output.Write(" to i8*)");
 
-                        // find constructor
-                        var constructorInfo =
-                            IlReader.Constructors(intPtrType)
-                                    .First(c => c.GetParameters().Count() == 1/* && c.GetParameters().First().ParameterType.ToString() == "Int"*/);
+                    });
+                    var dummyOpCodeWithIntToPtrConversion = OpCodePart.CreateNop;
+                    dummyOpCodeWithIntToPtrConversion.Result = new FullyDefinedReference(convertString, intPtrType);
 
-                        this.WriteNewWithoutCallingConstructor(opCode, intPtrType);
-                        opCodeMethodInfoPart.IntPtrCallingCtorStage = true;
-                        opCode.OpCodeOperands = new[] { opCode };
-                        this.WriteCallConstructor(opCode, constructorInfo);
-                        opCodeMethodInfoPart.IntPtrCallingCtorStage = false;
-                    }
-                    else
-                    {
-                        writer.Write("bitcast (");
-                        this.WriteMethodPointerType(writer, opCodeMethodInfoPart.Operand);
-                        writer.Write(" ");
-                        writer.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
-                        writer.Write(" to i8*)");
+                    opCode.OpCodeOperands = new[] { dummyOpCodeWithIntToPtrConversion };
 
-                        this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
-                    }
+                    this.WriteCallConstructor(opCode, constructorInfo);
+
+                    this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
                     break;
 
