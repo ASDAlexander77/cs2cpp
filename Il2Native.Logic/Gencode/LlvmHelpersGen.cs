@@ -651,7 +651,7 @@ namespace Il2Native.Logic.Gencode
         {
             if (opCodePart.AddressStart == 0)
             {
-                opCodePart.UsedBy.CreatedLabel = label;
+                opCodePart.UsedBy.OpCode.CreatedLabel = label;
             }
             else
             {

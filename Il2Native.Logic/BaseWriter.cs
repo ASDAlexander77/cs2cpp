@@ -488,6 +488,8 @@ namespace Il2Native.Logic
         /// </param>
         protected void AdjustTypes(OpCodePart opCode)
         {
+            // TODO: review this function, I think I need to get rid of it
+
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
                 return;
@@ -679,8 +681,8 @@ namespace Il2Native.Logic
                 }
 
                 // detect required types in alternative values
-                var usedBy = opCodePart.UsedBy ?? opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
-                var requiredType = RequiredType(usedBy);
+                var usedBy = opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
+                var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
                     val.RequiredResultType = requiredType;
@@ -748,15 +750,16 @@ namespace Il2Native.Logic
 
             // register second value
             // TODO: this is still hack, review the code
-            if (size > 0)
+            if (size > 0 && this.Stack.Count > 0)
             {
-                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
+                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
             }
 
             opCodePart.OpCodeOperands = opCodeParts;
+            var operandPosition = 0;
             foreach (var childCodePart in opCodeParts)
             {
-                childCodePart.UsedBy = opCodePart;
+                childCodePart.UsedBy = new UsedByInfo(opCodePart, operandPosition++);
             }
 
             this.AdjustTypes(opCodePart);
@@ -1181,7 +1184,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredType(OpCodePart opCodePart)
+        protected IType RequiredType(OpCodePart opCodePart, int operandPosition = -1)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1250,7 +1253,13 @@ namespace Il2Native.Logic
                 var index = 0;
                 foreach (var parameter in parameters)
                 {
-                    ////opCodePartMethod.OpCodeOperands[offset + index++].RequiredResultType = parameter.ParameterType;
+                    if (index == operandPosition)
+                    {
+                        retType = parameter.ParameterType;
+                    }
+
+                    ////opCodePartMethod.OpCodeOperands[offset + index].RequiredResultType = parameter.ParameterType;
+                    index++;
                 }
             }
 

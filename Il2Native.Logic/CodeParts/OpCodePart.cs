@@ -219,7 +219,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public OpCodePart UsedBy { get; set; }
+        public UsedByInfo UsedBy { get; set; }
 
         /// <summary>
         /// </summary>

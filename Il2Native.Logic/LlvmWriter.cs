@@ -2590,7 +2590,12 @@ namespace Il2Native.Logic
         {
             writer.WriteLine(string.Empty);
 
-            var phiType = (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) ?? opCode.AlternativeValues.Values.First()).Result.Type;
+            var firstValueWithRequiredType = opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredResultType != null);
+            var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredResultType : null;
+
+            var phiType = firstValueRequiredType
+                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) 
+                                    ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
             // adjust types of constants
             if (!phiType.IsValueType)
@@ -3980,42 +3985,45 @@ namespace Il2Native.Logic
         {
             castRequired = false;
             intAdjustmentRequired = false;
-            // write type
-            IType effectiveType = null;
+            if (sourceType.TypeEquals(requiredType))
+            {
+                return;
+            }
 
             var sourceTypePointer = sourceType.IsPointer;
             var requiredTypePointer = requiredType.IsPointer;
-
             if (sourceTypePointer && requiredTypePointer)
             {
-                effectiveType = requiredTypePointer ? requiredType : sourceType;
+                castRequired = true;
+                return;
             }
-            else
+
+            var sourceIntType = sourceType.IntTypeBitSize() > 0;
+            var requiredIntType = requiredType.IntTypeBitSize() > 0;
+            if (sourceIntType && requiredIntType)
             {
-                if (sourceType.TypeNotEquals(requiredType)
-                    && sourceType.TypeEquals(this.ResolveType("System.Boolean"))
-                    && requiredType.TypeEquals(this.ResolveType("System.Byte")))
+                if (requiredType.IsIntValueTypeExtCastRequired(sourceType)
+                    || requiredType.IsIntValueTypeTruncCastRequired(sourceType))
                 {
-                    effectiveType = sourceType;
+                    intAdjustmentRequired = true;
                 }
-                else
+
+                // pointer to int, int to pointer
+                if (!sourceType.IsByRef && !sourceType.IsPointer && sourceType.IntTypeBitSize() > 0 && requiredType.IsPointer)
                 {
-                    effectiveType = requiredType;
+                    intAdjustmentRequired = true;
                 }
+
+                return;
             }
 
-            castRequired = effectiveType.TypeNotEquals(sourceType);
-
-            if (requiredType.IsIntValueTypeExtCastRequired(sourceType))
+            if (sourceType.TypeEquals(this.ResolveType("System.Boolean"))
+                && requiredType.TypeEquals(this.ResolveType("System.Byte")))
             {
-                intAdjustmentRequired = true;
+                return;
             }
 
-            // pointer to int, int to pointer
-            if (!sourceType.IsByRef && !sourceType.IsPointer && sourceType.IntTypeBitSize() > 0 && requiredType.IsPointer)
-            {
-                intAdjustmentRequired = true;
-            }
+            castRequired = true;
         }
 
         /// <summary>
