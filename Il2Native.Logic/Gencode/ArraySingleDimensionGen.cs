@@ -88,7 +88,7 @@ namespace Il2Native.Logic.Gencode
             var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
 
             var storedResult = opCode.OpCodeOperands[0].Result;
-            if (opCode.OpCodeOperands[0].Result.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
+            if (storedResult.Type.HasElementType && storedResult.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
             {
                 llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
                 writer.WriteLine(string.Empty);
@@ -152,8 +152,14 @@ namespace Il2Native.Logic.Gencode
             var resAdd = opCode.Result;
 
             var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.Write("call i8* @malloc(i32 {0})", resAdd);
+            writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
             writer.WriteLine(string.Empty);
+
+            writer.WriteLine(
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                resAlloc,
+                resAdd,
+                LlvmWriter.PointerSize /*Align*/);
 
             llvmWriter.WriteBitcast(opCode, resAlloc, intType);
             writer.WriteLine(string.Empty);

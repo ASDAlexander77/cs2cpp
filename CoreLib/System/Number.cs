@@ -282,7 +282,8 @@ namespace System
     internal static class Number
     {
         private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f', 0 };
-        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'i', 0 };
+
+        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'d', 0 };
 
         private static byte[] buffer = new byte[128];
 
@@ -323,13 +324,13 @@ namespace System
         private static String FormatNative(int value, char format, int precision)
         {
             var size = sprintf(buffer, PrintInt, value);
-            return new String(Encoding.ASCII.GetChars(buffer), 0, size - 1);
+            return new String(Encoding.ASCII.GetChars(buffer), 0, size);
         }
 
         private static String  FormatNative(double value, char format, int precision)
         {
             var size = sprintf(buffer, PrintDouble, value);
-            return new String(Encoding.ASCII.GetChars(buffer), 0, size - 1);
+            return new String(Encoding.ASCII.GetChars(buffer), 0, size);
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)

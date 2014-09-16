@@ -43,13 +43,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="requiredType">
         /// </param>
         public static void GenerateVirtualCall(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCodeMethodInfo, 
-            IMethod methodInfo, 
-            IType thisType, 
-            OpCodePart opCodeFirstOperand, 
+            this LlvmWriter llvmWriter,
+            OpCodePart opCodeMethodInfo,
+            IMethod methodInfo,
+            IType thisType,
+            OpCodePart opCodeFirstOperand,
             BaseWriter.ReturnResult resultOfirstOperand,
-            ref FullyDefinedReference virtualMethodAddressResultNumber, 
+            ref FullyDefinedReference virtualMethodAddressResultNumber,
             ref IType requiredType)
         {
             var writer = llvmWriter.Output;
@@ -173,18 +173,9 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                var isDirectValue = llvmWriter.IsDirectValue(opCode.OpCodeOperands[0]);
-                if (!isDirectValue)
+                if (opCode.OpCodeOperands[0].Result != null)
                 {
-                    if (opCode.OpCodeOperands[0].Result != null)
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
-                    else
-                    {
-                        llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                    }
+                    opCode.Result = opCode.OpCodeOperands[0].Result;
                 }
                 else
                 {
@@ -210,14 +201,14 @@ namespace Il2Native.Logic.Gencode
 
             var incomingResult = opCode.Result;
 
-            var directResult1 = llvmWriter.PreProcess(writer, opCode);
+            llvmWriter.PreProcess(writer, opCode);
             llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type);
 
             var returnResult = opCode.Result;
 
             opCode.Result = incomingResult;
 
-            llvmWriter.PostProcess(writer, opCode, directResult1);
+            llvmWriter.PostProcess(writer, opCode);
 
             writer.Write(" to {0}", toType);
 
@@ -234,8 +225,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="preProcessedOperandDirectResults">
         /// </param>
-        public static void PreProcessCallParameters(
-            this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodBase, IList<bool> preProcessedOperandDirectResults)
+        public static void PreProcessCallParameters(this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodBase)
         {
             var writer = llvmWriter.Output;
 
@@ -254,7 +244,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (operand.HasResult && parameter.ParameterType.IsIntValueTypeExtCastRequired(operand.Result.Type))
                 {
-                    llvmWriter.AdjustIntConvertableTypes(writer, operand, preProcessedOperandDirectResults[index], parameter.ParameterType);
+                    llvmWriter.AdjustIntConvertableTypes(writer, operand, parameter.ParameterType);
                 }
 
                 index++;
@@ -387,13 +377,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="tryClause">
         /// </param>
         public static void WriteCall(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCodeMethodInfo, 
-            IMethod methodBase, 
-            bool isVirtual, 
-            bool hasThis, 
+            this LlvmWriter llvmWriter,
+            OpCodePart opCodeMethodInfo,
+            IMethod methodBase,
+            bool isVirtual,
+            bool hasThis,
             bool isCtor,
-            FullyDefinedReference thisResultNumber, 
+            FullyDefinedReference thisResultNumber,
             TryClause tryClause)
         {
             if (opCodeMethodInfo.HasResult)
@@ -403,8 +393,8 @@ namespace Il2Native.Logic.Gencode
 
             var methodInfo = methodBase;
 
-            if (methodInfo != null 
-                && methodInfo.ReturnType.IsStructureType() 
+            if (methodInfo != null
+                && methodInfo.ReturnType.IsStructureType()
                 && opCodeMethodInfo.UsedBy != null && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any, Code.Pop)
                 && opCodeMethodInfo.Destination == null)
             {
@@ -418,14 +408,12 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(methodBase);
 
-            var preProcessedOperandDirectResults = new List<bool>();
-
             if (opCodeMethodInfo.OpCodeOperands != null)
             {
                 var index = 0;
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands)
                 {
-                    preProcessedOperandDirectResults.Add(llvmWriter.PreProcessOperand(writer, opCodeMethodInfo, index));
+                    llvmWriter.PreProcessOperand(writer, opCodeMethodInfo, index);
                     index++;
                 }
             }
@@ -481,7 +469,7 @@ namespace Il2Native.Logic.Gencode
                 bool dynamicCastRequired = false;
                 if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
                 {
-                    writer.WriteLine("; Cast of 'This' parameter"); 
+                    writer.WriteLine("; Cast of 'This' parameter");
                     llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
                     writer.WriteLine(string.Empty);
                 }
@@ -545,7 +533,7 @@ namespace Il2Native.Logic.Gencode
             // check if you need to cast parameter
             if (opCodeMethodInfo.OpCodeOperands != null)
             {
-                llvmWriter.PreProcessCallParameters(opCodeMethodInfo, methodBase, preProcessedOperandDirectResults);
+                llvmWriter.PreProcessCallParameters(opCodeMethodInfo, methodBase);
             }
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && opCodeMethodInfo.Destination == null)
@@ -614,16 +602,15 @@ namespace Il2Native.Logic.Gencode
             }
 
             llvmWriter.ActualWrite(
-                writer, 
-                opCodeMethodInfo.OpCodeOperands, 
-                methodBase.GetParameters(), 
-                isVirtual, 
-                hasThis, 
-                isCtor, 
-                preProcessedOperandDirectResults, 
-                thisResultNumber, 
-                thisType, 
-                returnFullyDefinedReference, 
+                writer,
+                opCodeMethodInfo.OpCodeOperands,
+                methodBase.GetParameters(),
+                isVirtual,
+                hasThis,
+                isCtor,
+                thisResultNumber,
+                thisType,
+                returnFullyDefinedReference,
                 methodInfo != null ? methodInfo.ReturnType : null);
 
             if (tryClause != null)
@@ -651,7 +638,7 @@ namespace Il2Native.Logic.Gencode
         {
             if (opCodePart.AddressStart == 0)
             {
-                opCodePart.UsedBy.CreatedLabel = label;
+                opCodePart.UsedBy.OpCode.CreatedLabel = label;
             }
             else
             {
@@ -730,12 +717,12 @@ namespace Il2Native.Logic.Gencode
         /// <exception cref="NotImplementedException">
         /// </exception>
         public static void WriteCast(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCode, 
-            IType fromType, 
-            string custromName, 
-            IType toType, 
-            bool appendReference = false, 
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType fromType,
+            string custromName,
+            IType toType,
+            bool appendReference = false,
             bool doNotConvert = false)
         {
             var writer = llvmWriter.Output;

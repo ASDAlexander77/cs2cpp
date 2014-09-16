@@ -69,27 +69,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public List<OpCodePart> Cases { get; set; }
-
-        /// <summary>
-        /// </summary>
         public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
 
         /// <summary>
         /// </summary>
         public CatchOfFinallyClause CatchOrFinallyEnd { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public int CloseRoundBrackets { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool ConjunctionAndCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool ConjunctionOrCondition { get; set; }
 
         /// <summary>
         /// </summary>
@@ -101,15 +85,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool DefaultCase { get; set; }
-
-        /// <summary>
-        /// </summary>
         public FullyDefinedReference Destination { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool DupProcessedOnce { get; set; }
 
         /// <summary>
         /// </summary>
@@ -170,10 +146,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool InvertCondition { get; set; }
-
-        /// <summary>
-        /// </summary>
         public List<OpCodePart> JumpDestination { get; set; }
 
         /// <summary>
@@ -187,10 +159,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public OpCodePart[] OpCodeOperands { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public int OpenRoundBrackets { get; set; }
 
         /// <summary>
         /// </summary>
@@ -225,27 +193,9 @@ namespace Il2Native.Logic.CodeParts
             }
         }
 
-        public bool Skip { get; set; }
-
         /// <summary>
         /// </summary>
-        public bool SkipRecursive
-        {
-            get
-            {
-                if (this.Skip)
-                {
-                    return true;
-                }
-
-                if (this.UsedBy != null)
-                {
-                    return this.UsedBy.SkipRecursive;
-                }
-
-                return false;
-            }
-        }
+        public IType RequiredResultType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -269,6 +219,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public OpCodePart UsedBy { get; set; }
+        public UsedByInfo UsedBy { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public PhiNodes AlternativeValues { get; set; }
     }
 }

@@ -121,71 +121,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="conditions">
-        /// </param>
-        /// <param name="startOfTrueExpression">
-        /// </param>
-        public static void ConditionsParseForConditionalExpression(OpCodePart[] conditions, int startOfTrueExpression)
-        {
-            var nextJoinAnd = true;
-            var groups = BuildConditionGroups(conditions);
-            foreach (var group in groups)
-            {
-                // all Or
-                if (group.Last().JumpAddress() == startOfTrueExpression && group.First().JumpAddress() == startOfTrueExpression)
-                {
-                    foreach (var element in group)
-                    {
-                        element.ConjunctionOrCondition = true;
-                    }
-
-                    nextJoinAnd = true;
-                    continue;
-                }
-
-                // TODO: var r1 = ok == 1 && ok == 2 || error == 3 && error == 4 && (ok == 10 || ok == 11 || ok ==12) ? 1 : 0;
-                // in this expression last  OR chain is not detected
-                var internalAndJoin = group.Last().JumpAddress() == startOfTrueExpression;
-                if (internalAndJoin)
-                {
-                    foreach (var element in group)
-                    {
-                        element.InvertCondition = true;
-                        element.ConjunctionAndCondition = true;
-                    }
-
-                    group.Last().InvertCondition = false;
-                }
-                else
-                {
-                    group[0].OpenRoundBrackets++;
-
-                    foreach (var element in group)
-                    {
-                        element.ConjunctionOrCondition = true;
-                    }
-
-                    group.Last().InvertCondition = true;
-                    group.Last().CloseRoundBrackets++;
-                }
-
-                if (nextJoinAnd)
-                {
-                    group[0].ConjunctionAndCondition = true;
-                    group[0].ConjunctionOrCondition = false;
-                }
-                else
-                {
-                    group[0].ConjunctionAndCondition = false;
-                    group[0].ConjunctionOrCondition = true;
-                }
-
-                nextJoinAnd = !internalAndJoin;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="parameters">
         /// </param>
         public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
@@ -532,26 +467,6 @@ namespace Il2Native.Logic
                     }
             }
 
-            var opCodeBlock = opCode as OpCodeBlock;
-            if (opCodeBlock != null)
-            {
-                if (opCodeBlock.UseAsConditionalExpression)
-                {
-                    var op1 = this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 1]);
-                    if (op1 != null && !op1.IsConst)
-                    {
-                        return op1;
-                    }
-
-                    return this.ResultOf(opCodeBlock.OpCodes[opCodeBlock.OpCodes.Length - 3]);
-                }
-
-                if (opCodeBlock.UseAsNullCoalescingExpression)
-                {
-                    return this.ResultOf(opCodeBlock.OpCodes[0]);
-                }
-            }
-
             return null;
         }
 
@@ -573,6 +488,8 @@ namespace Il2Native.Logic
         /// </param>
         protected void AdjustTypes(OpCodePart opCode)
         {
+            // TODO: review this function, I think I need to get rid of it
+
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
                 return;
@@ -589,8 +506,7 @@ namespace Il2Native.Logic
             var requiredType = this.RequiredType(opCode);
             if (requiredType != null)
             {
-                var receivingType = this.ResultOf(usedOpCode1);
-                if ((requiredType.Type.IsPointer || requiredType.Type.IsByRef) && usedOpCode1.Any(Code.Conv_U)
+                if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
@@ -600,12 +516,11 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Call, Code.Callvirt))
             {
                 // todo: finish it, check required type of parameter
-                foreach (var usedOpCode in opCode.OpCodeOperands)
+                foreach (var usedOpCode in opCode.OpCodeOperands
+                                                 .Where(usedOpCode => usedOpCode.Any(Code.Conv_U)
+                                                                      && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0)))
                 {
-                    if (usedOpCode.Any(Code.Conv_U) && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0))
-                    {
-                        usedOpCode.OpCodeOperands[0].UseAsNull = true;
-                    }
+                    usedOpCode.OpCodeOperands[0].UseAsNull = true;
                 }
             }
         }
@@ -745,26 +660,46 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodes">
-        /// </param>
-        protected void BuildGroupAddressIndexes(OpCodePart[] opCodes)
+        protected void ProcessAll(OpCodePart[] opCodes)
         {
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
             foreach (var opCodePart in opCodes)
             {
-                if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
+                this.Process(opCodePart);
+            }
+        }
+
+        protected void CalculateRequiredTypesForAlternativeValues(OpCodePart[] opCodes)
+        {
+            foreach (var opCodePart in opCodes)
+            {
+                if (opCodePart.AlternativeValues == null)
                 {
-                    this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
+                    continue;
                 }
 
-                if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
+                // detect required types in alternative values
+                var usedBy = opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
+                var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
+                foreach (var val in opCodePart.AlternativeValues.Values)
                 {
-                    this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
+                    val.RequiredResultType = requiredType;
                 }
+            }
+        }
+
+        private void BuildGroupIndex(OpCodePart opCodePart)
+        {
+            if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
+            {
+                this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
+            }
+
+            if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
+            {
+                this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
             }
         }
 
@@ -776,183 +711,154 @@ namespace Il2Native.Logic
         /// </param>
         protected void FoldNestedOpCodes(OpCodePart opCodePart, int size)
         {
-            if (this.Stack.Count == 0)
+            if (opCodePart.OpCode.StackBehaviourPop == StackBehaviour.Pop0)
             {
                 return;
             }
 
-            List<OpCodePart> insertBack = null;
+            if (opCodePart.ToCode() == Code.Ret && this.MethodReturnType == null)
+            {
+                return;
+            }
 
             var opCodeParts = new OpCodePart[size];
 
+            PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size; i++)
             {
-                if (opCodePart.ToCode() == Code.Ret && this.MethodReturnType == null)
-                {
-                    opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, null);
-                    break;
-                }
-
                 var opCodePartUsed = this.Stack.Pop();
-                if (opCodePartUsed.ToCode() == Code.Nop)
+
+                // register second value
+                // TODO: this is still hack, review the code
+                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed);
+
+                if (opCodePartUsed.ToCode() == Code.Dup)
                 {
-                    if (insertBack == null)
-                    {
-                        insertBack = new List<OpCodePart>();
-                    }
-
-                    insertBack.Add(opCodePartUsed);
-                    i--;
-                    continue;
-                }
-
-                var secondDup = false;
-                if (opCodePartUsed.ToCode() == Code.Dup && !opCodePartUsed.DupProcessedOnce)
-                {
-                    opCodePartUsed.DupProcessedOnce = true;
-
-                    if (insertBack == null)
-                    {
-                        insertBack = new List<OpCodePart>();
-                    }
-
-                    insertBack.Add(opCodePartUsed);
-                }
-                else if (opCodePartUsed.ToCode() == Code.Dup)
-                {
-                    secondDup = true;
-                }
-
-                if (opCodePartUsed.Any(Code.Leave, Code.Leave_S))
-                {
-                    opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i + 1, opCodePartUsed);
-
-                    if (insertBack == null)
-                    {
-                        insertBack = new List<OpCodePart>();
-                    }
-                }
-                else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Push0
-                         || opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCodePartUsed is OpCodeMethodInfoPart
-                         && ((OpCodeMethodInfoPart)opCodePartUsed).Operand.ReturnType.IsVoid())
-                {
-                    // in case it is Pop and it jumps over Cond_Brunch or Brunch it means we should ignore this
-                    if (opCodePart.Any(Code.Pop)
-                        && (opCodePartUsed.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePartUsed.OpCode.FlowControl == FlowControl.Branch))
-                    {
-                        opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
-                        break;
-                    }
-
-                    if (insertBack == null)
-                    {
-                        insertBack = new List<OpCodePart>();
-                    }
-
-                    insertBack.Add(opCodePartUsed);
-
-                    i--;
-                    continue;
-                }
-                else if (opCodePartUsed.OpCode.StackBehaviourPush == StackBehaviour.Varpush)
-                {
-                    var opCodeMethodPartUsed = opCodePartUsed as OpCodeMethodInfoPart;
-                    if (opCodeMethodPartUsed != null && opCodeMethodPartUsed.Operand.IsConstructor)
-                    {
-                        opCodeParts = this.RemoveUnusedOps(size, opCodeParts, i, opCodePartUsed);
-                        break;
-                    }
+                    this.Stack.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
                 // check here if you have conditional argument (cond) ? a1 : b1;
-                var sizeOfCondition = 0;
-                OpCodePart firstCondition = null;
-                OpCodePart branchJumpCondition = null;
-                while (this.IsConditionalExpression(opCodePart, opCodePartUsed, this.Stack, out sizeOfCondition, out firstCondition, out branchJumpCondition))
+                while (this.IsConditionalExpression(opCodePartUsed, this.Stack))
                 {
-                    var newBlockOps = new List<OpCodePart>();
-                    newBlockOps.Add(opCodePartUsed);
-                    for (var k = 0; k < sizeOfCondition; k++)
-                    {
-                        newBlockOps.Add(this.Stack.Pop());
-                    }
-
-                    // because it is used you do not need to process it twice
-                    foreach (var opCode in newBlockOps)
-                    {
-                        opCode.Skip = true;
-                    }
-
-                    newBlockOps.Reverse();
-
-                    var opCodeBlock = new OpCodeBlock(this.ConditionalExpressionConditionsParse(newBlockOps.ToArray(), firstCondition, branchJumpCondition));
-                    opCodeBlock.UseAsConditionalExpression = true;
-                    opCodePartUsed = opCodeBlock;
+                    var secondValue = this.Stack.Pop();
+                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
+                    alternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                // ?? - test condition default expression
-                int expressionSize;
-                while (this.IsNullCoalescingExpression(opCodePart, opCodePartUsed, this.Stack, out expressionSize))
-                {
-                    var newBlockOps = new List<OpCodePart>();
-                    if (!opCodePartUsed.UseAsNullCoalescingExpression)
-                    {
-                        newBlockOps.Add(opCodePartUsed);
-                    }
-
-                    for (var k = 0; k < expressionSize + 3; k++)
-                    {
-                        newBlockOps.Add(this.Stack.Pop());
-                    }
-
-                    newBlockOps.Reverse();
-
-                    if (opCodePartUsed.UseAsNullCoalescingExpression)
-                    {
-                        newBlockOps.AddRange(((OpCodeBlock)opCodePartUsed).OpCodes);
-                    }
-
-                    foreach (var usedOpInBlock in newBlockOps)
-                    {
-                        usedOpInBlock.Skip = true;
-                    }
-
-                    var opCodeBlock = new OpCodeBlock(newBlockOps.ToArray());
-                    opCodeBlock.UseAsNullCoalescingExpression = true;
-                    opCodePartUsed = opCodeBlock;
-                }
-
-                // use Dup only once
-                opCodeParts[size - i] = secondDup ? opCodePartUsed.OpCodeOperands[0] : opCodePartUsed;
-
-                this.InsertBackStack(insertBack);
+                opCodeParts[size - i] = opCodePartUsed;
             }
 
-            // in case we did not return unused parts
-            this.InsertBackStack(insertBack);
+            // register second value
+            // TODO: this is still hack, review the code
+            if (size > 0 && this.Stack.Count > 0)
+            {
+                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
+            }
 
             opCodePart.OpCodeOperands = opCodeParts;
+            var operandPosition = 0;
             foreach (var childCodePart in opCodeParts)
             {
-                childCodePart.UsedBy = opCodePart;
+                childCodePart.UsedBy = new UsedByInfo(opCodePart, operandPosition++);
             }
 
             this.AdjustTypes(opCodePart);
+
+            if (opCodePart.ToCode() == Code.Pop)
+            {
+                this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
+            }
         }
 
-        private void InsertBackStack(List<OpCodePart> insertBack)
+        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
         {
-            // respore stack for not used OpCodes
-            if (insertBack != null)
+            if (i == 1 && opCodePart.AlternativeValues != null)
             {
-                insertBack.Reverse();
-                foreach (var pushBack in insertBack)
+                lastPhiNodes = opCodePart.AlternativeValues;
+            }
+
+            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
+            {
+                lastPhiNodes.Values.Add(opCodePartUsed);
+            }
+
+            lastPhiNodes = null;
+            if (i > 0)
+            {
+                lastPhiNodes = opCodePartUsed.AlternativeValues;
+            }
+
+            return lastPhiNodes;
+        }
+
+        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = popCodePart.PreviousOpCode(this);
+            while (current != null
+                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCode(this);
+            };
+
+            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
+            {
+                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
+            }
+
+            return null;
+        }
+
+        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = closerValue.PreviousOpCodeGroup(this);
+            while (current != null
+                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCodeGroup(this);
+            };
+
+            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
+            {
+                return this.AddPhiValues(current.AddressEnd, current, futherValue);
+            }
+
+            return null;
+        }
+
+        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
+        {
+            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
+
+            var destJump = closerValueJump.JumpOpCode(this);
+
+            // found address
+            if (destJump.AlternativeValues == null)
+            {
+                destJump.AlternativeValues = new PhiNodes();
+
+                // create custom jump point
+                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
+                var jumpDestination = futherValue.JumpDestination;
+                if (jumpDestination == null)
                 {
-                    this.Stack.Push(pushBack);
+                    jumpDestination = new List<OpCodePart>();
+                    futherValue.JumpDestination = jumpDestination;
                 }
 
-                insertBack.Clear();
+                // to force creating jump
+                jumpDestination.Add(OpCodePart.CreateNop);
             }
+
+            destJump.AlternativeValues.Values.Add(futherValue);
+            destJump.AlternativeValues.Labels.Add(labelAddress);
+
+            return destJump.AlternativeValues;
         }
 
         /// <summary>
@@ -961,13 +867,18 @@ namespace Il2Native.Logic
         /// </returns>
         protected OpCodePart[] PrepareWritingMethodBody()
         {
-            var rest = this.Stack.Reverse().ToArray();
-
-            this.BuildGroupAddressIndexes(rest);
+            var ops = this.Ops.ToArray();
+            this.ProcessAll(ops);
+            this.CalculateRequiredTypesForAlternativeValues(ops);
+            this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
-            this.AssignJumpBlocks(rest);
+            return ops;
+        }
 
-            return this.Ops.ToArray();
+        protected void AddOpCode(OpCodePart opCode)
+        {
+            this.Ops.Add(opCode);
+            this.AddAddressIndex(opCode);
         }
 
         /// <summary>
@@ -976,10 +887,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
-            this.Ops.Add(opCode);
-
-            this.AddAddressIndex(opCode);
-
             // insert result of exception
             var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
             if (exceptionHandling != null && exceptionHandling.CatchType != null)
@@ -1199,7 +1106,21 @@ namespace Il2Native.Logic
                     break;
             }
 
-            this.Stack.Push(opCode);
+            this.BuildGroupIndex(opCode);
+
+            // add to stack
+            if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
+            {
+                return;
+            }
+
+            var isItMethodWithVoid =
+                opCode.OpCode.StackBehaviourPush == StackBehaviour.Varpush
+                && opCode is OpCodeMethodInfoPart && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
+            if (!isItMethodWithVoid)
+            {
+                this.Stack.Push(opCode);
+            }
         }
 
         /// <summary>
@@ -1259,50 +1180,26 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="size">
-        /// </param>
-        /// <param name="opCodeParts">
-        /// </param>
-        /// <param name="i">
-        /// </param>
-        /// <param name="opCodePartUsed">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected OpCodePart[] RemoveUnusedOps(int size, OpCodePart[] opCodeParts, int i, OpCodePart opCodePartUsed)
-        {
-            var newOpCodeParts = new List<OpCodePart>(opCodeParts);
-            for (var j = 0; j <= size - i; j++)
-            {
-                newOpCodeParts.RemoveAt(0);
-            }
-
-            opCodeParts = newOpCodeParts.ToArray();
-
-            if (opCodePartUsed != null)
-            {
-                this.Stack.Push(opCodePartUsed);
-            }
-
-            return opCodeParts;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
         /// </returns>
-        protected ReturnResult RequiredType(OpCodePart opCodePart)
+        protected IType RequiredType(OpCodePart opCodePart, int operandPosition = -1)
         {
+            // TODO: need a good review of required types etc
+            IType retType = null;
             if (opCodePart.Any(Code.Ret))
             {
-                return new ReturnResult(this.MethodReturnType);
+                retType = this.MethodReturnType;
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
             if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
             {
-                return new ReturnResult(opCodePart.GetLocalType(this));
+                retType = opCodePart.GetLocalType(this);
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
             if (opCodePart.Any(Code.Starg, Code.Starg_S))
@@ -1310,55 +1207,63 @@ namespace Il2Native.Logic
                 var index = opCodePart.GetArgIndex();
                 if (this.HasMethodThis && index == 0)
                 {
-                    return new ReturnResult(this.ThisType);
+                    retType = this.ThisType;
+                    ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                    return retType;
                 }
 
-                var parameterType = this.GetArgType(index);
-                return new ReturnResult(parameterType);
+                retType = this.GetArgType(index);
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
             }
 
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="conditions">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static OpCodePart[][] BuildConditionGroups(OpCodePart[] conditions)
-        {
-            var groups = new List<OpCodePart[]>();
-
-            for (var i = 0; i < conditions.Length; )
+            if (opCodePart.Any(Code.Stfld, Code.Stsfld))
             {
-                var group = new List<OpCodePart>();
-
-                var firstOfGroup = conditions[i];
-                var stopAddress = firstOfGroup.JumpAddress();
-
-                i++;
-                group.Add(firstOfGroup);
-
-                while (i < conditions.Length)
-                {
-                    var element = conditions[i];
-                    if (element.GroupAddressStart < stopAddress)
-                    {
-                        group.Add(element);
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                    i++;
-                }
-
-                groups.Add(group.ToArray());
+                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                ////opCodePart.OpCodeOperands[x].RequiredResultType = retType;
+                return retType;
             }
 
-            return groups.ToArray();
+            if (opCodePart.Any(Code.Stobj))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
+                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Call, Code.Callvirt))
+            {
+                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                var parameters = opCodePartMethod.Operand.GetParameters();
+                var offset = opCodePartMethod.OpCodeOperands.Length - parameters.Count();
+                var index = 0;
+                foreach (var parameter in parameters)
+                {
+                    if (index == operandPosition)
+                    {
+                        retType = parameter.ParameterType;
+                    }
+
+                    ////opCodePartMethod.OpCodeOperands[offset + index].RequiredResultType = parameter.ParameterType;
+                    index++;
+                }
+            }
+
+            return retType;
         }
 
         /// <summary>
@@ -1369,51 +1274,6 @@ namespace Il2Native.Logic
         {
             this.OpsByAddressStart[opCode.AddressStart] = opCode;
             this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="condExpBlock">
-        /// </param>
-        /// <param name="firstCondition">
-        /// </param>
-        /// <param name="branchJump">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private OpCodePart[] ConditionalExpressionConditionsParse(OpCodePart[] condExpBlock, OpCodePart firstCondition, OpCodePart branchJump)
-        {
-            // calculate all addresses
-            var startOfTrueExpression = branchJump.GroupAddressEnd;
-
-            OpCodePart lastCondition = null;
-            foreach (var opCodePart in condExpBlock)
-            {
-                if (opCodePart.IsCondBranch())
-                {
-                    lastCondition = opCodePart;
-                    continue;
-                }
-
-                break;
-            }
-
-            var conditionsList = new List<OpCodePart>();
-
-            // adjust all condition conjunctions
-            foreach (var opCodePart in condExpBlock)
-            {
-                conditionsList.Add(opCodePart);
-
-                if (opCodePart == lastCondition)
-                {
-                    break;
-                }
-            }
-
-            ConditionsParseForConditionalExpression(conditionsList.ToArray(), startOfTrueExpression);
-
-            return condExpBlock;
         }
 
         /// <summary>
@@ -1433,123 +1293,38 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private bool IsConditionalExpression(
-            OpCodePart opCodePart,
             OpCodePart currentArgument,
-            Stack<OpCodePart> stack,
-            out int sizeOfCondition,
-            out OpCodePart firstCondition,
-            out OpCodePart lastCondition)
+            Stack<OpCodePart> stack)
         {
-            sizeOfCondition = 3;
-            firstCondition = null;
-            lastCondition = null;
-
-            for (; ; )
-            {
-                var subOpCodes = stack.Take(sizeOfCondition);
-                if (subOpCodes.Count() != sizeOfCondition)
-                {
-                    break;
-                }
-
-                var first = subOpCodes.First();
-                var last = subOpCodes.Last();
-
-                var isFirstElementBranch = first.IsBranch() && first.IsJumpForward()
-                                           && first.JumpAddress().Equals(currentArgument.GroupAddressEnd /*opCodePart.GroupAddressStart*/);
-
-                // more checks need here. there should be second return
-                var beforeFirst = first.PreviousOpCodeGroup(this);
-                if (first.IsReturn() && first.OpCodeOperands != null && first.OpCodeOperands.Length == 1 && beforeFirst != null && beforeFirst.IsReturn()
-                    && beforeFirst.OpCodeOperands != null && beforeFirst.OpCodeOperands.Length == 1)
-                {
-                    isFirstElementBranch = true;
-                }
-
-                var isLastElementCondition = last.IsCondBranch() && last.IsJumpForward() && last.JumpAddress() <= first.GroupAddressEnd;
-
-                if (isFirstElementBranch && isLastElementCondition)
-                {
-                    // in reverse order
-                    firstCondition = last;
-                    lastCondition = first;
-
-                    sizeOfCondition++;
-                    continue;
-                }
-
-                break;
-            }
-
-            if (sizeOfCondition == 3)
+            if (!stack.Any())
             {
                 return false;
             }
 
-            --sizeOfCondition;
+            var firstValue = currentArgument;
+
+            var middleJump = firstValue.PreviousOpCodeGroup(this);
+            var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
+            if (!isJumpForward)
+            {
+                return false;
+            }
+
+            var secondValue = stack.First();
+            var firstCondJump = secondValue.PreviousOpCodeGroup(this);
+            var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
+            if (!isCondJumpForward)
+            {
+                return false;
+            }
+
+            // expression is not full yet
+            if (firstValue.GroupAddressEnd != middleJump.JumpAddress())
+            {
+                return false;
+            }
 
             return true;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="currentArgument">
-        /// </param>
-        /// <param name="stackArray">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private bool IsNullCoalescingExpression(OpCodePart opCodePart, OpCodePart currentArgument, Stack<OpCodePart> stack, out int size)
-        {
-            size = 0;
-
-            if (stack.Count < 3)
-            {
-                return false;
-            }
-
-            var index = 0;
-            var stackArray = stack.ToArray();
-
-            do
-            {
-                if (!stackArray[index].Any(Code.Pop))
-                {
-                    if (stackArray[index].OpCode.StackBehaviourPush == StackBehaviour.Push0)
-                    {
-                        index++;
-                        continue;
-                    }
-
-                    return false;
-                }
-
-                var second = stackArray[index + 1];
-                if (!second.Any(Code.Brtrue, Code.Brtrue_S))
-                {
-                    return false;
-                }
-
-                if (second.JumpAddress() != (currentArgument.AddressEnd != 0 ? currentArgument.AddressEnd : currentArgument.GroupAddressEnd))
-                {
-                    // we do not have full expression
-                    return false;
-                }
-
-                if (!stackArray[index + 2].Any(Code.Dup))
-                {
-                    return false;
-                }
-
-                size = index;
-
-                return true;
-            }
-            while (index < stack.Count - 3);
-
-            return false;
         }
 
         /// <summary>

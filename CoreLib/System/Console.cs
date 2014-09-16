@@ -10,7 +10,7 @@
         private static string NewLine = "\r\n";
         private static string PrintString = "%.*s";
         private static string PrintDouble = "%f";
-        private static string PrintInt = "%i";
+        private static string PrintInt = "%d";
         private static string PrintChar = "%c";
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]

@@ -63,6 +63,10 @@ namespace Ll2NativeTests
         private const bool UsingRoslyn = true;
 
         /// <summary>
+        /// </summary>
+        private const bool GcEnabled = true;
+
+        /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
@@ -220,7 +224,11 @@ namespace Ll2NativeTests
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
             // 57 - generic virtual methods in an interface
-            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57 };
+            // 60 - generic virtual methods in an interface
+            // 63 - Array.Length is not implemented
+            // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
+            // 66 - using typeof
+            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57, 60, 63, 65, 66 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
@@ -235,7 +243,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -246,6 +254,11 @@ namespace Ll2NativeTests
             if (roslyn)
             {
                 args.Add("roslyn");
+            }
+
+            if (gc)
+            {
+                args.Add("gc");
             }
 
             return args.ToArray();
@@ -274,12 +287,22 @@ namespace Ll2NativeTests
             // to test working try/catch with g++ compilation
             // http://mingw-w64.sourceforge.net/download.php
             // Windows 32	DWARF	i686 - use this config to test exceptions on windows
+            // GC - http://www.hboehm.info/gc/ (use git and cmake to compile libgc-lib.a file
             /*
                 llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
                 g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -march=i686
                 del test-%1.o
             */
+
+            /*
+             * if GC Enabled
+                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
+                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
+                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
+                del test-%1.o 
+             */
+
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";

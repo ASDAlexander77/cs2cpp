@@ -202,7 +202,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Init Object method");
             var opCodeNope = OpCodePart.CreateNop;
-            opCodeNope.UsedBy = opCode;
+            opCodeNope.UsedBy = new UsedByInfo(opCode);
             llvmWriter.WriteCall(opCodeNope, method, false, true, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
         }
 
@@ -381,11 +381,9 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Init obj");
 
-            var isDirectValue = llvmWriter.PreProcessOperand(writer, opCodePart, 0);
+            llvmWriter.PreProcessOperand(writer, opCodePart, 0);
 
-            var fullyDefinedReference = isDirectValue
-                                            ? new FullyDefinedReference(llvmWriter.GetDirectName(opCodePart.OpCodeOperands[0]), declaringType)
-                                            : opCodePart.OpCodeOperands[0].Result;
+            var fullyDefinedReference = opCodePart.OpCodeOperands[0].Result;
 
             if (declaringTypeNormalType.IsValueType)
             {
@@ -441,7 +439,7 @@ namespace Il2Native.Logic.Gencode
 
             var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
             var size = declaringType.GetTypeSize();
-            writer.WriteLine("call i8* @_Znwj(i32 {0})", size);
+            writer.WriteLine("call i8* @{1}(i32 {0})", size, llvmWriter.GetAllocator());
             llvmWriter.WriteMemSet(declaringType, mallocResult);
             writer.WriteLine(string.Empty);
 
@@ -636,7 +634,7 @@ namespace Il2Native.Logic.Gencode
                 var storeResult = opCode.Result;
                 var retResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Int32"));
                 opCode.Result = storeResult;
-                llvmWriter.AdjustIntConvertableTypes(writer, opCode, false, llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.ResolveType("System.Int32"));
                 opCode.Result = retResult;
                 writer.WriteLine(string.Empty);
             }

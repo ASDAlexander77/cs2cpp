@@ -406,7 +406,7 @@ namespace PEAssemblyReader
                     return false;
                 }
 
-                if (this.FullName == "System.Enum")
+                if (this.FullName == "System.Enum" || this.IsPointer)
                 {
                     return false;
                 }

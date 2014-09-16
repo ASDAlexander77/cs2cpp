@@ -413,7 +413,17 @@ namespace System
         //     value is equal to System.Double.NaN.
         //     is returned.
 
-        public static extern int Sign(double value);
+        public static int Sign(double value)
+        {
+            if (value < 0)
+                return -1;
+            else if (value > 0)
+                return 1;
+            else if (value == 0)
+                return 0;
+            throw new Exception();
+        }
+
         // Summary:
         //     Returns the sine of the specified angle.
         //

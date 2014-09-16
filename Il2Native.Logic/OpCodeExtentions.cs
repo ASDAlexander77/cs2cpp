@@ -708,11 +708,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static OpCodePart JumpOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
+        public static OpCodePart JumpOpCode(this OpCodePart opCode, BaseWriter baseWriter)
         {
             var jumpAddress = opCode.JumpAddress();
             OpCodePart stopForBranch;
-            if (baseWriter.OpsByGroupAddressStart.TryGetValue(jumpAddress, out stopForBranch))
+            if (baseWriter.OpsByAddressStart.TryGetValue(jumpAddress, out stopForBranch))
             {
                 return stopForBranch;
             }

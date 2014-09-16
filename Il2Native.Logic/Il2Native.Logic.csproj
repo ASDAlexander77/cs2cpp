@@ -60,6 +60,8 @@
     <Compile Include="CodeParts\OpCodeSinglePart.cs" />
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
+    <Compile Include="CodeParts\PhiNodes.cs" />
+    <Compile Include="CodeParts\UsedByInfo.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
@@ -95,7 +97,6 @@
     <Compile Include="LlvmIndentedTextWriter.cs" />
     <Compile Include="OpResults\IncrementalResult.cs" />
     <Compile Include="LlvmWriter.cs" />
-    <Compile Include="OpCodeBlock.cs" />
     <Compile Include="OpCodeExtentions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -112,10 +113,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\llvm_declarations.li" />
-    <None Include="Resources\llvm_mini_mscore_lib.li" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
       <Project>{1ee8cad3-55f9-4d91-96b2-084641da9a6c}</Project>
       <Name>CodeAnalysis</Name>
@@ -129,7 +126,10 @@
       <Name>PEAssemblyReader</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\llvm_declarations.ll" />
+    <None Include="Resources\llvm_gc_declarations.ll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
