@@ -21,6 +21,7 @@
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
+                Console.WriteLine("  /gc                     enable using Boehm garbage collector");
                 return;
             }
 

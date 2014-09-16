@@ -63,6 +63,10 @@ namespace Ll2NativeTests
         private const bool UsingRoslyn = true;
 
         /// <summary>
+        /// </summary>
+        private const bool GcEnabled = true;
+
+        /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
@@ -239,7 +243,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -250,6 +254,11 @@ namespace Ll2NativeTests
             if (roslyn)
             {
                 args.Add("roslyn");
+            }
+
+            if (gc)
+            {
+                args.Add("gc");
             }
 
             return args.ToArray();
@@ -278,12 +287,22 @@ namespace Ll2NativeTests
             // to test working try/catch with g++ compilation
             // http://mingw-w64.sourceforge.net/download.php
             // Windows 32	DWARF	i686 - use this config to test exceptions on windows
+            // GC - http://www.hboehm.info/gc/ (use git and cmake to compile libgc-lib.a file
             /*
                 llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
                 g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -march=i686
                 del test-%1.o
             */
+
+            /*
+             * if GC Enabled
+                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
+                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
+                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
+                del test-%1.o 
+             */
+
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";

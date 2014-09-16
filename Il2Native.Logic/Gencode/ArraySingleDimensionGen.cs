@@ -152,7 +152,7 @@ namespace Il2Native.Logic.Gencode
             var resAdd = opCode.Result;
 
             var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.Write("call i8* @malloc(i32 {0})", resAdd);
+            writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
             writer.WriteLine(string.Empty);
 
             llvmWriter.WriteBitcast(opCode, resAlloc, intType);

@@ -61,22 +61,46 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to declare i8* @malloc(i32) #99900
+        ///
+        ///; Function Attrs: nounwind
+        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+        ///declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
+        ///
+        ///attributes #88801 = { nounwind }
+        ///attributes #88802 = { nounwind }
+        ///
+        ///; Exception support - DWARF
+        ///declare i32 @__gxx_personality_v0(...) #78801
+        ///declare i8* @__cxa_allocate_exception(i32) #78802
+        ///declare void @__cxa_free_exception(i8*) #78803
+        ///declare void @__cxa_throw(i8*, i8*, [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] llvm_declarations {
+        internal static string llvm_declarations {
             get {
-                object obj = ResourceManager.GetObject("llvm_declarations", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("llvm_declarations", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
+        ///   Looks up a localized string similar to declare i8* @malloc(i32) #99900
+        ///
+        ///; Function Attrs: nounwind
+        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+        ///declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
+        ///
+        ///attributes #88801 = { nounwind }
+        ///attributes #88802 = { nounwind }
+        ///
+        ///; Exception support - DWARF
+        ///declare i32 @__gxx_personality_v0(...) #78801
+        ///declare i8* @__cxa_allocate_exception(i32) #78802
+        ///declare void @__cxa_free_exception(i8*) #78803
+        ///declare void @__cxa_throw(i8*, i8*, [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static byte[] llvm_mini_mscore_lib {
+        internal static string llvm_gc_declarations {
             get {
-                object obj = ResourceManager.GetObject("llvm_mini_mscore_lib", resourceCulture);
-                return ((byte[])(obj));
+                return ResourceManager.GetString("llvm_gc_declarations", resourceCulture);
             }
         }
     }

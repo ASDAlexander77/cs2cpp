@@ -113,10 +113,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\llvm_declarations.li" />
-    <None Include="Resources\llvm_mini_mscore_lib.li" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">
       <Project>{1ee8cad3-55f9-4d91-96b2-084641da9a6c}</Project>
       <Name>CodeAnalysis</Name>
@@ -130,7 +126,10 @@
       <Name>PEAssemblyReader</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Resources\llvm_declarations.ll" />
+    <None Include="Resources\llvm_gc_declarations.ll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
