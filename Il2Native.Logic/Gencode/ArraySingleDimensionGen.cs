@@ -155,6 +155,12 @@ namespace Il2Native.Logic.Gencode
             writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
             writer.WriteLine(string.Empty);
 
+            writer.WriteLine(
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                resAlloc,
+                resAdd,
+                LlvmWriter.PointerSize /*Align*/);
+
             llvmWriter.WriteBitcast(opCode, resAlloc, intType);
             writer.WriteLine(string.Empty);
 
