@@ -4645,10 +4645,20 @@ namespace Il2Native.Logic
 
                 foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
                 {
+                    var current = type;
+                    IType typeContainingInterface = null;
+                    while (current != null && current.GetAllInterfaces().Contains(@interface))
+                    {
+                        typeContainingInterface = current;
+                        current = current.BaseType;
+                    }
+
+                    var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null ? typeContainingInterface.BaseType.GetTypeSize() : 0;
+
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                     var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++, baseTypeSize);
+                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++, baseTypeSizeOfTypeContainingInterface);
                 }
             }
         }

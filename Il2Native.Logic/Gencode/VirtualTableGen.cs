@@ -303,7 +303,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
         {
-            return thisType.GetMethods(BindingFlags.Instance).Any(method => methodInfo.IsMatchingExplicitInterfaceOverride(method));
+            return thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride);
         }
 
         /// <summary>
