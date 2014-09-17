@@ -93,7 +93,7 @@ namespace System
         
         public static bool IsNaN(double d)
         {
-            throw new NotImplementedException();
+            return d != d;
         }
 
         //

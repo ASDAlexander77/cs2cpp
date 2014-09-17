@@ -295,8 +295,8 @@ namespace Ll2NativeTests
                 del test-%1.o
             */
 
+            // if GC Enabled
             /*
-             * if GC Enabled
                 llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
                 g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .

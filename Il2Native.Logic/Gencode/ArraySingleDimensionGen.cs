@@ -106,10 +106,10 @@ namespace Il2Native.Logic.Gencode
                 "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)", arrayIndex, data.Length, '{', '}');
 
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
-                opCode.OpCodeOperands[0].Result, 
-                arrayData, 
-                arrayLength, 
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                opCode.OpCodeOperands[0].Result,
+                arrayData,
+                arrayLength,
                 LlvmWriter.PointerSize /*Align*/);
 
             opCode.OpCodeOperands[0].Result = storedResult;
@@ -155,11 +155,14 @@ namespace Il2Native.Logic.Gencode
             writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
             writer.WriteLine(string.Empty);
 
-            writer.WriteLine(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                resAlloc,
-                resAdd,
-                LlvmWriter.PointerSize /*Align*/);
+            if (!llvmWriter.Gc)
+            {
+                writer.WriteLine(
+                   "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                   resAlloc,
+                   resAdd,
+                   LlvmWriter.PointerSize /*Align*/);
+            }
 
             llvmWriter.WriteBitcast(opCode, resAlloc, intType);
             writer.WriteLine(string.Empty);

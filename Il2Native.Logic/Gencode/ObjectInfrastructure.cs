@@ -358,8 +358,6 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            var writer = llvmWriter.Output;
-
             llvmWriter.WriteNewWithoutCallingConstructor(opCodeConstructorInfoPart, declaringType);
             llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
@@ -440,8 +438,11 @@ namespace Il2Native.Logic.Gencode
             var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @{1}(i32 {0})", size, llvmWriter.GetAllocator());
-            llvmWriter.WriteMemSet(declaringType, mallocResult);
-            writer.WriteLine(string.Empty);
+            if (!llvmWriter.Gc)
+            {
+                llvmWriter.WriteMemSet(declaringType, mallocResult);
+                writer.WriteLine(string.Empty);
+            }
 
             llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringType);
             writer.WriteLine(string.Empty);
