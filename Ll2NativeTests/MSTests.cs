@@ -303,6 +303,8 @@ namespace Ll2NativeTests
                 del test-%1.o 
              */
 
+            // Android target - target triple = "armv7-none-linux-androideabi"
+
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
             pi.FileName = "ll.bat";
