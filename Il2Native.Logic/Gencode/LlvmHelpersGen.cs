@@ -636,7 +636,7 @@ namespace Il2Native.Logic.Gencode
 
         public static void SetCustomLabel(OpCodePart opCodePart, string label)
         {
-            if (opCodePart.AddressStart == 0)
+            if (opCodePart.AddressStart == 0 && opCodePart.UsedBy != null)
             {
                 opCodePart.UsedBy.OpCode.CreatedLabel = label;
             }
@@ -679,7 +679,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                if (toType.IsPointer || bareType.IsDerivedFrom(toType))
+                if (toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType))
                 {
                     llvmWriter.WriteSetResultNumber(opCode, toType);
                     writer.Write("bitcast ");
