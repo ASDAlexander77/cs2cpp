@@ -255,7 +255,7 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
+                    llvmWriter.WriteBitcast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType().ToPointerType());
                 }
                 else
                 {
@@ -295,7 +295,7 @@ namespace Il2Native.Logic.Gencode
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;
-                    llvmWriter.WriteCast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(), true);
+                    llvmWriter.WriteBitcast(opCode, opCode.Result, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
                 }
                 else
                 {

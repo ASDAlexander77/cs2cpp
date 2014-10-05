@@ -660,13 +660,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference fromResult, IType toType, bool appendReference = false)
+        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference fromResult, IType toType, bool throwExceptionIfNull = false)
         {
             var writer = llvmWriter.Output;
 
+            var bareType = fromResult.Type.ToBareType();
             if (toType.IsInterface)
             {
-                var bareType = fromResult.Type.ToBareType();
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
                     opCode.Result = fromResult;
@@ -674,22 +674,24 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true);
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
                 }
             }
             else
             {
-                llvmWriter.WriteSetResultNumber(opCode, toType);
-                writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(writer, true);
-                writer.Write(' ');
-                llvmWriter.WriteResult(fromResult);
-                writer.Write(" to ");
-                toType.WriteTypePrefix(writer, true);
-                if (appendReference)
+                if (toType.IsPointer || bareType.IsDerivedFrom(toType))
                 {
-                    // result should be array
-                    writer.Write('*');
+                    llvmWriter.WriteSetResultNumber(opCode, toType);
+                    writer.Write("bitcast ");
+                    fromResult.Type.WriteTypePrefix(writer, true);
+                    writer.Write(' ');
+                    llvmWriter.WriteResult(fromResult);
+                    writer.Write(" to ");
+                    toType.WriteTypePrefix(writer, true);
+                }
+                else
+                {
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
                 }
             }
 
@@ -725,6 +727,8 @@ namespace Il2Native.Logic.Gencode
             bool appendReference = false,
             bool doNotConvert = false)
         {
+            // TODO: remove this one. use anather one
+
             var writer = llvmWriter.Output;
 
             if (!fromType.IsInterface && toType.IsInterface)

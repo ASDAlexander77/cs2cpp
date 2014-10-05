@@ -186,15 +186,15 @@ namespace Il2Native.Logic
         /// <param name="returnType">
         /// </param>
         public void ActualWrite(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart[] used, 
-            IEnumerable<IParameter> parameterInfos, 
-            bool @isVirtual, 
-            bool hasThis, 
-            bool isCtor, 
-            FullyDefinedReference resultNumberForThis, 
-            IType thisType, 
-            FullyDefinedReference resultNumberForReturn, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart[] used,
+            IEnumerable<IParameter> parameterInfos,
+            bool @isVirtual,
+            bool hasThis,
+            bool isCtor,
+            FullyDefinedReference resultNumberForThis,
+            IType thisType,
+            FullyDefinedReference resultNumberForReturn,
             IType returnType)
         {
             writer.Write("(");
@@ -406,11 +406,11 @@ namespace Il2Native.Logic
                     dummyOpCodeWithStringIndex.Result =
                         new FullyDefinedReference(
                             string.Format(
-                                "bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)", 
-                                stringIndex, 
-                                opCodeString.Operand.Length + 1, 
-                                '{', 
-                                '}'), 
+                                "bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)",
+                                stringIndex,
+                                opCodeString.Operand.Length + 1,
+                                '{',
+                                '}'),
                             stringType);
 
                     opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
@@ -525,12 +525,12 @@ namespace Il2Native.Logic
                     else
                     {
                         this.ProcessOperator(
-                            writer, 
-                            opCode, 
-                            "store", 
-                            operandType, 
-                            options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes, 
-                            operand1: 1, 
+                            writer,
+                            opCode,
+                            "store",
+                            operandType,
+                            options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                            operand1: 1,
                             operand2: -1);
                         this.PostProcessOperand(writer, opCode, 0);
                         writer.Write(", ");
@@ -649,12 +649,12 @@ namespace Il2Native.Logic
                     }
 
                     this.WriteCall(
-                        opCodeMethodInfoPart, 
-                        methodBase, 
-                        code == Code.Callvirt, 
-                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis), 
-                        false, 
-                        null, 
+                        opCodeMethodInfoPart,
+                        methodBase,
+                        code == Code.Callvirt,
+                        methodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
+                        false,
+                        null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
                     break;
@@ -920,10 +920,10 @@ namespace Il2Native.Logic
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
                     this.UnaryOper(
-                        writer, 
-                        opCode, 
-                        "store", 
-                        this.Parameters[actualIndex].ParameterType, 
+                        writer,
+                        opCode,
+                        "store",
+                        this.Parameters[actualIndex].ParameterType,
                         options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
@@ -944,13 +944,13 @@ namespace Il2Native.Logic
 
                     var convertString = this.WriteToString(
                         () =>
-                            {
-                                this.Output.Write("bitcast (");
-                                this.WriteMethodPointerType(this.Output, opCodeMethodInfoPart.Operand);
-                                this.Output.Write(" ");
-                                this.Output.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
-                                this.Output.Write(" to i8*)");
-                            });
+                        {
+                            this.Output.Write("bitcast (");
+                            this.WriteMethodPointerType(this.Output, opCodeMethodInfoPart.Operand);
+                            this.Output.Write(" ");
+                            this.Output.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
+                            this.Output.Write(" to i8*)");
+                        });
                     var dummyOpCodeWithIntToPtrConversion = OpCodePart.CreateNop;
                     dummyOpCodeWithIntToPtrConversion.Result = new FullyDefinedReference(convertString, intPtrType);
 
@@ -1098,41 +1098,41 @@ namespace Il2Native.Logic
                 case Code.Ceq:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(
-                        writer, 
-                        opCode, 
-                        isFloatingPoint ? "fcmp oeq" : "icmp eq", 
+                        writer,
+                        opCode,
+                        isFloatingPoint ? "fcmp oeq" : "icmp eq",
                         GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Clt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(
-                        writer, 
-                        opCode, 
-                        isFloatingPoint ? "fcmp olt" : "icmp slt", 
+                        writer,
+                        opCode,
+                        isFloatingPoint ? "fcmp olt" : "icmp slt",
                         GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Clt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(
-                        writer, 
-                        opCode, 
-                        isFloatingPoint ? "fcmp ult" : "icmp ult", 
+                        writer,
+                        opCode,
+                        isFloatingPoint ? "fcmp ult" : "icmp ult",
                         GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Cgt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(
-                        writer, 
-                        opCode, 
-                        isFloatingPoint ? "fcmp ogt" : "icmp sgt", 
+                        writer,
+                        opCode,
+                        isFloatingPoint ? "fcmp ogt" : "icmp sgt",
                         GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Cgt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(
-                        writer, 
-                        opCode, 
-                        isFloatingPoint ? "fcmp ugt" : "icmp ugt", 
+                        writer,
+                        opCode,
+                        isFloatingPoint ? "fcmp ugt" : "icmp ugt",
                         GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
 
@@ -1161,13 +1161,13 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
                     this.LlvmConvert(
-                        opCode, 
-                        "fptosi", 
-                        "trunc", 
-                        "i16", 
-                        false, 
-                        this.ResolveType("System.Int16"), 
-                        this.ResolveType("System.UInt16"), 
+                        opCode,
+                        "fptosi",
+                        "trunc",
+                        "i16",
+                        false,
+                        this.ResolveType("System.Int16"),
+                        this.ResolveType("System.UInt16"),
                         this.ResolveType("System.Char"));
                     break;
 
@@ -1175,13 +1175,13 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
                     this.LlvmConvert(
-                        opCode, 
-                        "fptoui", 
-                        "trunc", 
-                        "i16", 
-                        false, 
-                        this.ResolveType("System.Int16"), 
-                        this.ResolveType("System.UInt16"), 
+                        opCode,
+                        "fptoui",
+                        "trunc",
+                        "i16",
+                        false,
+                        this.ResolveType("System.Int16"),
+                        this.ResolveType("System.UInt16"),
                         this.ResolveType("System.Char"));
                     break;
 
@@ -1227,7 +1227,7 @@ namespace Il2Native.Logic
                     this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                     writer.WriteLine(string.Empty);
 
-                    this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand);
+                    this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
 
                     break;
 
@@ -1256,17 +1256,7 @@ namespace Il2Native.Logic
                 case Code.Newobj:
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
-
-                    this.CheckIfExternalDeclarationIsRequired(declaringType);
-
-                    this.WriteNew(opCodeConstructorInfoPart, declaringType);
-
-                    if (opCode.Destination != null)
-                    {
-                        opCode.Result.Type.UseAsClass = false;
-                        this.WriteLlvmLoad(opCode, opCode.Result);
-                    }
+                    this.WriteNewObject(opCodeConstructorInfoPart);
 
                     break;
 
@@ -1295,8 +1285,8 @@ namespace Il2Native.Logic
                 case Code.Rethrow:
 
                     this.WriteRethrow(
-                        opCode, 
-                        this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null, 
+                        opCode,
+                        this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
 
                     break;
@@ -1350,6 +1340,21 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
+            }
+        }
+
+        private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        {
+            var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
+
+            this.CheckIfExternalDeclarationIsRequired(declaringType);
+
+            this.WriteNew(opCodeConstructorInfoPart, declaringType);
+
+            if (opCodeConstructorInfoPart.Destination != null)
+            {
+                opCodeConstructorInfoPart.Result.Type.UseAsClass = false;
+                this.WriteLlvmLoad(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Result);
             }
         }
 
@@ -1807,13 +1812,13 @@ namespace Il2Native.Logic
         /// <param name="operand2">
         /// </param>
         public void ProcessOperator(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCode, 
-            string op, 
-            IType requiredType = null, 
-            IType resultType = null, 
-            OperandOptions options = OperandOptions.None, 
-            int operand1 = 0, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode,
+            string op,
+            IType requiredType = null,
+            IType resultType = null,
+            OperandOptions options = OperandOptions.None,
+            int operand1 = 0,
             int operand2 = 1)
         {
             IType castFrom;
@@ -1900,11 +1905,11 @@ namespace Il2Native.Logic
         /// <param name="options">
         /// </param>
         public void UnaryOper(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCode, 
-            string op, 
-            IType requiredType = null, 
-            IType resultType = null, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode,
+            string op,
+            IType requiredType = null,
+            IType resultType = null,
             OperandOptions options = OperandOptions.None)
         {
             this.UnaryOper(writer, opCode, 0, op, requiredType, resultType, options);
@@ -1932,12 +1937,12 @@ namespace Il2Native.Logic
         /// <param name="options">
         /// </param>
         public void UnaryOper(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCode, 
-            int operandIndex, 
-            string op, 
-            IType requiredType = null, 
-            IType resultType = null, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode,
+            int operandIndex,
+            string op,
+            IType requiredType = null,
+            IType resultType = null,
             OperandOptions options = OperandOptions.None)
         {
             this.PreProcessOperand(writer, opCode, operandIndex, options);
@@ -2253,7 +2258,7 @@ namespace Il2Native.Logic
         /// <param name="checkNull">
         /// </param>
         public void WriteDynamicCast(
-            LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType, bool checkNull = false)
+            LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType, bool checkNull = false, bool throwExceptionIfNull = false)
         {
             var effectiveFromType = fromType.ToDereferencedType();
             effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
@@ -2278,7 +2283,7 @@ namespace Il2Native.Logic
                 writer.Indent++;
             }
 
-            this.WriteCast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
+            this.WriteBitcast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
@@ -2291,6 +2296,44 @@ namespace Il2Native.Logic
             toType.WriteRttiClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), toType.IsInterface && !effectiveFromType.Type.IsInterface ? -2 : 0);
             writer.WriteLine(string.Empty);
+
+            if (throwExceptionIfNull)
+            {
+                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
+                writer.Write("icmp eq ");
+                writer.WriteLine("i8* {0}, null", dynamicCastResultNumber);
+
+                writer.WriteLine("br i1 {0}, label %.dynamic_cast_result_null{1}, label %.dynamic_cast_result_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".dynamic_cast_result_null{0}:", opCodeTypePart.AddressStart);
+                writer.Indent++;
+
+                opCodeTypePart.Result = dynamicCastResultNumber;
+
+                // throw InvalidCast result
+                writer.WriteLine(string.Empty);
+                var opCodeThrow = new OpCodePart(OpCodesEmit.Throw, 0, 0);
+
+                var invalidCastExceptionType = this.ResolveType("System.InvalidCastException");
+
+                // find constructor
+                var constructorInfo = IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
+
+                var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
+                opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
+
+                this.WriteNewObject(opCodeNewInstance);
+                
+                writer.WriteLine(string.Empty);
+                this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+
+                var label = string.Concat("dynamic_cast_result_not_null", opCodeTypePart.AddressStart);
+
+                writer.Indent--;
+                writer.WriteLine(".{0}:", label);
+                writer.Indent++;
+            }
 
             toType.UseAsClass = true;
             this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toType);
@@ -2319,9 +2362,9 @@ namespace Il2Native.Logic
                 writer.Write("phi ");
                 toType.WriteTypePrefix(writer, true);
                 writer.Write(
-                    " [ {0}, {1} ], [ null, {2} ]", 
-                    dynamicCastResult, 
-                    string.Format("%.dynamic_cast_not_null{0}", opCodeTypePart.AddressStart), 
+                    " [ {0}, {1} ], [ null, {2} ]",
+                    dynamicCastResult,
+                    string.Format("%.{1}{0}", opCodeTypePart.AddressStart, throwExceptionIfNull ? "dynamic_cast_result_not_null" : "dynamic_cast_not_null"),
                     string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
 
                 LlvmHelpersGen.SetCustomLabel(opCodeTypePart, label);
@@ -2579,10 +2622,10 @@ namespace Il2Native.Logic
         /// <param name="pointerToInterfaceVirtualTablePointersResultNumber">
         /// </param>
         public void WriteGetThisPointerFromInterfacePointer(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCodeMethodInfo, 
-            IMethod methodInfo, 
-            IType thisType, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCodeMethodInfo,
+            IMethod methodInfo,
+            IType thisType,
             FullyDefinedReference pointerToInterfaceVirtualTablePointersResultNumber)
         {
             writer.WriteLine("; Get 'this' from Interface Virtual Table");
@@ -3033,11 +3076,11 @@ namespace Il2Native.Logic
 
                 var values = opCode.AlternativeValues.Values;
                 this.WritePhiNodeLabel(
-                    writer, 
-                    values[index].Result, 
-                    values[index], 
-                    values[index], 
-                    string.Concat("a", opCode.AlternativeValues.Labels[index]), 
+                    writer,
+                    values[index].Result,
+                    values[index],
+                    values[index],
+                    string.Concat("a", opCode.AlternativeValues.Labels[index]),
                     opCode.AlternativeValues.Labels[index]);
             }
 
@@ -3441,14 +3484,14 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private IType ApplyTypeAdjustment(
-            LlvmIndentedTextWriter writer, 
-            OpCodePart opCode, 
-            IType effectiveType, 
-            IType castFrom, 
-            IType intAdjustment, 
-            bool intAdjustSecondOperand, 
-            ref IType resultType, 
-            int operand1 = 0, 
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCode,
+            IType effectiveType,
+            IType castFrom,
+            IType intAdjustment,
+            bool intAdjustSecondOperand,
+            ref IType resultType,
+            int operand1 = 0,
             int operand2 = 1)
         {
             if (castFrom != null && opCode.OpCodeOperands[operand1].HasResult)
@@ -3459,8 +3502,8 @@ namespace Il2Native.Logic
             if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
             {
                 var changeType = this.AdjustIntConvertableTypes(
-                    writer, 
-                    opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1], 
+                    writer,
+                    opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1],
                     intAdjustment);
 
                 if (changeType && resultType == null)
@@ -3636,13 +3679,13 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private IType DetectTypePrefix(
-            OpCodePart opCode, 
-            IType requiredType, 
-            OperandOptions options, 
-            out IType castFrom, 
-            out IType intAdjustment, 
-            out bool intAdjustSecondOperand, 
-            int operand1 = 0, 
+            OpCodePart opCode,
+            IType requiredType,
+            OperandOptions options,
+            out IType castFrom,
+            out IType intAdjustment,
+            out bool intAdjustSecondOperand,
+            int operand1 = 0,
             int operand2 = 1)
         {
             castFrom = null;
@@ -4015,10 +4058,10 @@ namespace Il2Native.Logic
             }
 
             this.BinaryOper(
-                writer, 
-                opCode, 
-                "getelementptr inbounds", 
-                options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand, 
+                writer,
+                opCode,
+                "getelementptr inbounds",
+                options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
                 resultType: type);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
@@ -4078,10 +4121,10 @@ namespace Il2Native.Logic
             }
 
             this.BinaryOper(
-                writer, 
-                opCode, 
-                "getelementptr inbounds", 
-                options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand, 
+                writer,
+                opCode,
+                "getelementptr inbounds",
+                options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
                 resultType: type);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
@@ -4295,12 +4338,12 @@ namespace Il2Native.Logic
         private void WriteArrayData(KeyValuePair<int, byte[]> pair)
         {
             this.Output.Write(
-                "@.array{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [", 
-                pair.Key, 
-                pair.Value, 
-                pair.Value.Length, 
-                pair.Value.Length, 
-                '{', 
+                "@.array{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [",
+                pair.Key,
+                pair.Value,
+                pair.Value.Length,
+                pair.Value.Length,
+                '{',
                 '}');
 
             var index = 0;
@@ -5123,12 +5166,12 @@ namespace Il2Native.Logic
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
             this.Output.Write(
-                "@.s{0} = private unnamed_addr constant {4} i32, [{2} x i16] {5} {4} i32 {3}, [{2} x i16] [", 
-                pair.Key, 
-                pair.Value, 
-                pair.Value.Length + 1, 
-                pair.Value.Length, 
-                '{', 
+                "@.s{0} = private unnamed_addr constant {4} i32, [{2} x i16] {5} {4} i32 {3}, [{2} x i16] [",
+                pair.Key,
+                pair.Value,
+                pair.Value.Length + 1,
+                pair.Value.Length,
+                '{',
                 '}');
 
             var index = 0;
@@ -5158,47 +5201,47 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            None = 0, 
+            None = 0,
 
             /// <summary>
             /// </summary>
-            GenerateResult = 1, 
+            GenerateResult = 1,
 
             /// <summary>
             /// </summary>
-            ToFloat = 2, 
+            ToFloat = 2,
 
             /// <summary>
             /// </summary>
-            ToInteger = 4, 
+            ToInteger = 4,
 
             /// <summary>
             /// </summary>
-            TypeIsInOperator = 16, 
+            TypeIsInOperator = 16,
 
             /// <summary>
             /// </summary>
-            NoTypePrefix = 32, 
+            NoTypePrefix = 32,
 
             /// <summary>
             /// </summary>
-            AppendPointer = 64, 
+            AppendPointer = 64,
 
             /// <summary>
             /// </summary>
-            IgnoreOperand = 128, 
+            IgnoreOperand = 128,
 
             /// <summary>
             /// </summary>
-            DetectAndWriteTypeInSecondOperand = 256, 
+            DetectAndWriteTypeInSecondOperand = 256,
 
             /// <summary>
             /// </summary>
-            CastPointersToBytePointer = 512, 
+            CastPointersToBytePointer = 512,
 
             /// <summary>
             /// </summary>
-            AdjustIntTypes = 1024, 
+            AdjustIntTypes = 1024,
         }
 
         /// <summary>
