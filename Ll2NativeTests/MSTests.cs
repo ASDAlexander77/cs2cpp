@@ -143,6 +143,78 @@ namespace Ll2NativeTests
             }
         }
 
+        /*
+         using System;
+
+public partial interface Event
+{
+    bool defaultPrevented { get; set; }
+}
+
+public partial interface UIEvent : Event
+{
+    int detail { get; set; }
+}
+
+public partial interface MouseEvent : UIEvent
+{
+    int button { get; set; }
+
+    double x { get; set; }
+
+    double y { get; set; }
+}
+
+public partial interface PointerEvent : MouseEvent
+{
+    int pointerId { get; set; }
+}
+
+public class MouseEventImpl : MouseEvent
+{
+    public bool defaultPrevented { get; set; }
+    public int detail { get; set; }
+    public int button { get; set; }
+    public double x { get; set; }
+    public double y { get; set; }
+}
+
+public class PointerEventImpl : MouseEventImpl, PointerEvent
+{
+    public int pointerId { get; set; }
+}
+
+class X
+{
+    static void Test(Event _event)
+    {
+        if (_event is MouseEvent)
+        {
+            return;
+        }
+
+        if (_event is PointerEvent)
+        {
+            return;
+        }
+
+        throw new Exception();
+    }
+
+    static int Main(string[] args)
+    {
+        var m = new MouseEventImpl();
+        var p = new PointerEventImpl();
+
+        Test(m);
+        Test(p);
+
+        return 0;
+    }
+}
+
+         */
+
         /// <summary>
         /// </summary>
         [TestMethod]
