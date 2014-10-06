@@ -2294,7 +2294,7 @@ namespace Il2Native.Logic
             effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
             writer.Write("* @\"{0}\" to i8*), i8* bitcast (", effectiveFromType.Type.GetRttiInfoName());
             toType.WriteRttiClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), toType.IsInterface && !effectiveFromType.Type.IsInterface ? -2 : 0);
+            writer.WriteLine("* @\"{0}\" to i8*), i32 {1})", toType.GetRttiInfoName(), CalculateDynamicCastInterfaceIndex(effectiveFromType.Type, toType));
             writer.WriteLine(string.Empty);
 
             if (throwExceptionIfNull)
@@ -2339,6 +2339,49 @@ namespace Il2Native.Logic
 
             this.typeRttiDeclRequired.Add(effectiveFromType.Type);
             this.typeRttiDeclRequired.Add(toType);
+        }
+
+        // TODO: if DynamicCast does not work for an interface then something wrong with this value, (it should return value equals to the number of inheritance route * pointer size, 
+        // if type can't be found in inheritance route it should return -2, if casts from type which inheritce more then one time it should return -3
+        // for inheritance root for objects equals 0 (as it is all the time first)
+        private static int CalculateDynamicCastInterfaceIndex(IType fromType, IType toType)
+        {
+            if (!fromType.IsInterface && toType.IsInterface)
+            {
+                return -2;
+            }
+
+            var allInterfaces = toType.GetAllInterfaces();
+            if (fromType.IsInterface && !toType.IsInterface && !allInterfaces.Contains(fromType))
+            {
+                return -2;
+            }
+
+            if (fromType.IsInterface && !toType.IsInterface && allInterfaces.Contains(fromType))
+            {
+                // caluclate interfaceRouteIndex
+                var interfaceRouteIndex = 0;
+                var index = 1; // + BaseType
+                foreach (var interafce in toType.GetInterfaces())
+                {
+                    if (interafce.GetAllInterfaces().Contains(fromType))
+                    {
+                        interfaceRouteIndex = index;
+                        break;
+                    }
+
+                    index++;
+                }
+
+                if (interfaceRouteIndex > 0 && toType.GetInterfaces().Contains(fromType))
+                {
+                    return -3;
+                }
+
+                return interfaceRouteIndex * LlvmWriter.PointerSize;
+            }
+
+            return 0;
         }
 
         public void WriteTestNullValue(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IncrementalResult resultToTest, string exceptionName, string labelPrefix)
