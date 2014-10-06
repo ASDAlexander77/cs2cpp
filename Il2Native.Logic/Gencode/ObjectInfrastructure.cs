@@ -351,14 +351,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
+        public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType, bool ignoreTestNullValue = false)
         {
             if (opCodeConstructorInfoPart.HasResult)
             {
                 return;
             }
 
-            llvmWriter.WriteNewWithoutCallingConstructor(opCodeConstructorInfoPart, declaringType);
+            llvmWriter.WriteNewWithoutCallingConstructor(opCodeConstructorInfoPart, declaringType, false, ignoreTestNullValue);
             llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
@@ -422,7 +422,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotCallInit">
         /// </param>
-        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType, bool doNotCallInit = false)
+        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType, bool doNotCallInit = false, bool doNotTestNullValue = false)
         {
             if (opCodePart.HasResult)
             {
@@ -438,6 +438,12 @@ namespace Il2Native.Logic.Gencode
             var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
             var size = declaringType.GetTypeSize();
             writer.WriteLine("call i8* @{1}(i32 {0})", size, llvmWriter.GetAllocator());
+
+            if (!doNotTestNullValue)
+            {
+                llvmWriter.WriteTestNullValue(writer, opCodePart, mallocResult, "System.OutOfMemoryException", "new_obj");
+            }
+
             if (!llvmWriter.Gc)
             {
                 llvmWriter.WriteMemSet(declaringType, mallocResult);

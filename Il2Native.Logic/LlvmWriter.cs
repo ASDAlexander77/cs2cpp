@@ -1343,13 +1343,13 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart)
+        private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart, bool ignoreTestNullValue = false)
         {
             var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
             this.CheckIfExternalDeclarationIsRequired(declaringType);
 
-            this.WriteNew(opCodeConstructorInfoPart, declaringType);
+            this.WriteNew(opCodeConstructorInfoPart, declaringType, ignoreTestNullValue);
 
             if (opCodeConstructorInfoPart.Destination != null)
             {
@@ -2299,40 +2299,7 @@ namespace Il2Native.Logic
 
             if (throwExceptionIfNull)
             {
-                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
-                writer.Write("icmp eq ");
-                writer.WriteLine("i8* {0}, null", dynamicCastResultNumber);
-
-                writer.WriteLine("br i1 {0}, label %.dynamic_cast_result_null{1}, label %.dynamic_cast_result_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
-
-                writer.Indent--;
-                writer.WriteLine(".dynamic_cast_result_null{0}:", opCodeTypePart.AddressStart);
-                writer.Indent++;
-
-                opCodeTypePart.Result = dynamicCastResultNumber;
-
-                // throw InvalidCast result
-                writer.WriteLine(string.Empty);
-                var opCodeThrow = new OpCodePart(OpCodesEmit.Throw, 0, 0);
-
-                var invalidCastExceptionType = this.ResolveType("System.InvalidCastException");
-
-                // find constructor
-                var constructorInfo = IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
-
-                var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
-                opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
-
-                this.WriteNewObject(opCodeNewInstance);
-                
-                writer.WriteLine(string.Empty);
-                this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
-
-                var label = string.Concat("dynamic_cast_result_not_null", opCodeTypePart.AddressStart);
-
-                writer.Indent--;
-                writer.WriteLine(".{0}:", label);
-                writer.Indent++;
+                this.WriteTestNullValue(writer, opCodeTypePart, dynamicCastResultNumber, "System.InvalidCastException", "dynamic_cast");
             }
 
             toType.UseAsClass = true;
@@ -2372,6 +2339,47 @@ namespace Il2Native.Logic
 
             this.typeRttiDeclRequired.Add(effectiveFromType.Type);
             this.typeRttiDeclRequired.Add(toType);
+        }
+
+        public void WriteTestNullValue(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IncrementalResult resultToTest, string exceptionName, string labelPrefix)
+        {
+            var testNullResultNumber = this.WriteSetResultNumber(opCodePart, this.ResolveType("System.Boolean"));
+            writer.Write("icmp eq ");
+            writer.WriteLine("i8* {0}, null", resultToTest);
+
+            writer.WriteLine(
+                "br i1 {0}, label %.{2}_result_null{1}, label %.{2}_result_not_null{1}", testNullResultNumber, opCodePart.AddressStart, labelPrefix);
+
+            writer.Indent--;
+            writer.WriteLine(".{1}_result_null{0}:", opCodePart.AddressStart, labelPrefix);
+            writer.Indent++;
+
+            opCodePart.Result = resultToTest;
+
+            // throw InvalidCast result
+            writer.WriteLine(string.Empty);
+            var opCodeThrow = new OpCodePart(OpCodesEmit.Throw, 0, 0);
+
+            var invalidCastExceptionType = this.ResolveType(exceptionName);
+
+            // find constructor
+            var constructorInfo = IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
+
+            var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
+            opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
+
+            this.WriteNewObject(opCodeNewInstance, true);
+
+            writer.WriteLine(string.Empty);
+            this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+
+            var label = string.Concat(labelPrefix, "_result_not_null", opCodePart.AddressStart);
+
+            writer.Indent--;
+            writer.WriteLine(".{0}:", label);
+            writer.Indent++;
+
+            LlvmHelpersGen.SetCustomLabel(opCodePart, label);
         }
 
         /// <summary>
