@@ -2346,6 +2346,16 @@ namespace Il2Native.Logic
         // for inheritance root for objects equals 0 (as it is all the time first)
         private static int CalculateDynamicCastInterfaceIndex(IType fromType, IType toType)
         {
+            if (!fromType.IsInterface && !toType.IsInterface)
+            {
+                if (toType.IsDerivedFrom(fromType))
+                {
+                    return 0;
+                }
+
+                return -2;
+            }
+
             if (!fromType.IsInterface && toType.IsInterface)
             {
                 return -2;
