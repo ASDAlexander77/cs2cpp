@@ -251,7 +251,7 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine("; set virtual table");
 
-                // initializw virtual table
+                // initialize virtual table
                 if (opCode.HasResult)
                 {
                     opCode.Result.Type.UseAsClass = true;

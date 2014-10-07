@@ -4677,44 +4677,12 @@ namespace Il2Native.Logic
 
             var indexes = new List<int>();
 
-            var currentInterface = type;
-
-            while (currentInterface != null)
+            var currentType = type;
+            while (currentType != null)
             {
-                var found = false;
-                var interfaceIndex = -1;
-                foreach (var subInterface in currentInterface.GetInterfaces().ToList())
-                {
-                    interfaceIndex++;
-
-                    if (subInterface.TypeEquals(@interface))
-                    {
-                        currentInterface = null;
-                        found = true;
-                        break;
-                    }
-
-                    if (subInterface.GetAllInterfaces().Contains(@interface))
-                    {
-                        currentInterface = subInterface;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    throw new KeyNotFoundException("interface can't be found");
-                }
-
-                if (indexes.Count > 0)
-                {
-                    indexes.Add(interfaceIndex);
-                }
-                else
-                {
-                    indexes.Add(index + interfaceIndex);
-                }
+                var interfaceIndex = FindInterfaceIndex(currentType, @interface, out currentType);
+                var indexToAdd = indexes.Count > 0 ? interfaceIndex : index + interfaceIndex;
+                indexes.Add(indexToAdd);
             }
 
             foreach (var i in indexes)
@@ -4724,6 +4692,38 @@ namespace Il2Native.Logic
             }
 
             return true;
+        }
+
+        public static int FindInterfaceIndex(IType currentType, IType @interface, out IType nextCurrentType)
+        {
+            nextCurrentType = currentType;
+            var found = false;
+            var interfaceIndex = -1;
+            foreach (var subInterface in currentType.GetInterfaces().ToList())
+            {
+                interfaceIndex++;
+
+                if (subInterface.TypeEquals(@interface))
+                {
+                    nextCurrentType = null;
+                    found = true;
+                    break;
+                }
+
+                if (subInterface.GetAllInterfaces().Contains(@interface))
+                {
+                    nextCurrentType = subInterface;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw new KeyNotFoundException("interface can't be found");
+            }
+
+            return interfaceIndex;
         }
 
         /// <summary>
@@ -4764,11 +4764,13 @@ namespace Il2Native.Logic
                     }
 
                     var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null ? typeContainingInterface.BaseType.GetTypeSize() : 0;
+                    IType dummyNextType;
+                    var interfaceIndex = FindInterfaceIndex(typeContainingInterface, @interface, out dummyNextType);                   
 
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                     var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, type, index++, baseTypeSizeOfTypeContainingInterface);
+                    virtualInterfaceTable.WriteTableOfMethods(this, type, index + interfaceIndex, baseTypeSizeOfTypeContainingInterface);
                 }
             }
         }
