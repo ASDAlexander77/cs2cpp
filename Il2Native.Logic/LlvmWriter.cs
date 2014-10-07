@@ -146,7 +146,7 @@ namespace Il2Native.Logic
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
-            this.Gc = args != null && args.Contains("gc");
+            this.Gc = args != null && args.Contains("gc-") ? false : true;
             var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
         }
@@ -4675,15 +4675,7 @@ namespace Il2Native.Logic
                 index++;
             }
 
-            var indexes = new List<int>();
-
-            var currentType = type;
-            while (currentType != null)
-            {
-                var interfaceIndex = FindInterfaceIndex(currentType, @interface, out currentType);
-                var indexToAdd = indexes.Count > 0 ? interfaceIndex : index + interfaceIndex;
-                indexes.Add(indexToAdd);
-            }
+            var indexes = FindInterfaceIndexes(type, @interface, index);
 
             foreach (var i in indexes)
             {
@@ -4694,7 +4686,22 @@ namespace Il2Native.Logic
             return true;
         }
 
-        public static int FindInterfaceIndex(IType currentType, IType @interface, out IType nextCurrentType)
+        private static List<int> FindInterfaceIndexes(IType type, IType @interface, int index)
+        {
+            var indexes = new List<int>();
+
+            var currentType = type;
+            while (currentType != null)
+            {
+                var interfaceIndex = FindInterfaceIndexForOneStep(currentType, @interface, out currentType);
+                var indexToAdd = indexes.Count > 0 ? interfaceIndex : index + interfaceIndex;
+                indexes.Add(indexToAdd);
+            }
+
+            return indexes;
+        }
+
+        public static int FindInterfaceIndexForOneStep(IType currentType, IType @interface, out IType nextCurrentType)
         {
             nextCurrentType = currentType;
             var found = false;
@@ -4764,13 +4771,12 @@ namespace Il2Native.Logic
                     }
 
                     var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null ? typeContainingInterface.BaseType.GetTypeSize() : 0;
-                    IType dummyNextType;
-                    var interfaceIndex = FindInterfaceIndex(typeContainingInterface, @interface, out dummyNextType);                   
+                    var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
 
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                     var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
-                    virtualInterfaceTable.WriteTableOfMethods(this, type, index + interfaceIndex, baseTypeSizeOfTypeContainingInterface);
+                    virtualInterfaceTable.WriteTableOfMethods(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface);
                 }
             }
         }
