@@ -70,7 +70,8 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("i32 {0}", nextFlag);
 
                 // apply fields shift + base item
-                nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
+                //nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
+                nextFlag += 1024 * (type.BaseType.GetTypeSize() / LlvmWriter.PointerSize);
             }
 
             foreach (var @interface in type.GetInterfaces())
