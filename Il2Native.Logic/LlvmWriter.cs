@@ -4686,6 +4686,7 @@ namespace Il2Native.Logic
             return true;
         }
 
+        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the interface belong to
         private static List<int> FindInterfaceIndexes(IType type, IType @interface, int index)
         {
             var indexes = new List<int>();
