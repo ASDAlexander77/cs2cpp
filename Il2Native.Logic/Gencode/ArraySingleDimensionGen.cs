@@ -154,6 +154,7 @@ namespace Il2Native.Logic.Gencode
             var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
 
+            writer.WriteLine(string.Empty);
             llvmWriter.WriteTestNullValue(writer, opCode, resAlloc, "System.OutOfMemoryException", "new_arr");
 
             writer.WriteLine(string.Empty);

@@ -4691,10 +4691,20 @@ namespace Il2Native.Logic
             var indexes = new List<int>();
 
             var currentType = type;
+
+            var baseCount = 0;
+            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
+            {
+                // add base index;
+                indexes.Add(0);
+                baseCount++;
+                currentType = currentType.BaseType;
+            }
+            
             while (currentType != null)
             {
                 var interfaceIndex = FindInterfaceIndexForOneStep(currentType, @interface, out currentType);
-                var indexToAdd = indexes.Count > 0 ? interfaceIndex : index + interfaceIndex;
+                var indexToAdd = indexes.Count > baseCount ? interfaceIndex : index + interfaceIndex;
                 indexes.Add(indexToAdd);
             }
 
