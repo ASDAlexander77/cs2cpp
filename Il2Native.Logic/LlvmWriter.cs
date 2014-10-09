@@ -556,7 +556,7 @@ namespace Il2Native.Logic
 
                     this.PreProcessOperand(writer, opCode, 0);
 
-                    if (opCode.Destination != null || !opCode.OpCodeOperands[0].Result.Type.UseAsClass)
+                    if (opCode.Destination != null || (!opCode.OpCodeOperands[0].Result.Type.UseAsClass && !opCode.OpCodeOperands[0].HasResult))
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
