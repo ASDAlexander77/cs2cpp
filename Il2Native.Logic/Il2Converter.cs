@@ -296,7 +296,7 @@ namespace Il2Native.Logic
                         genericMethod = IlReader.Methods(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
                     }
 
-                    if (!method.IsGenericMethod)
+                    if (!method.IsGenericMethodDefinition)
                     {
                         genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
                         genericContext.MethodDefinition = genericMethod;
@@ -360,7 +360,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void DicoverGenericSpecializedIType(IType type, HashSet<IType> genericSpecializations, HashSet<IMethod> genericMethodSpecializations)
         {
-            if (type == null || genericSpecializations == null || genericMethodSpecializations == null)
+            if (type == null || (genericSpecializations == null && genericMethodSpecializations == null))
             {
                 return;
             }

@@ -250,8 +250,8 @@ namespace Il2Native.Logic.Gencode
             writer.Indent++;
 
             llvmWriter.WriteLandingPad(
-                opCode, 
-                opCode.ExceptionHandlers.Any(eh => eh.Flags == ExceptionHandlingClauseOptions.Finally) ? LandingPadOptions.Cleanup : LandingPadOptions.None, 
+                opCode,
+                opCode.ExceptionHandlers.Any(eh => eh.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally) || eh.Flags.HasFlag(ExceptionHandlingClauseOptions.Fault)) ? LandingPadOptions.Cleanup : LandingPadOptions.None, 
                 opCode.ExceptionHandlers.Where(eh => eh.Flags == ExceptionHandlingClauseOptions.Clause).Select(eh => eh.Catch).ToArray());
 
             writer.WriteLine(string.Empty);

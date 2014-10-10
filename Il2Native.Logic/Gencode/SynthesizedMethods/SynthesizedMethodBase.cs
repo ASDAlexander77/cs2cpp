@@ -87,6 +87,10 @@
 
         /// <summary>
         /// </summary>
+        public bool IsGenericMethodDefinition { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool IsGenericMethod { get; private set; }
 
         /// <summary>
@@ -192,6 +196,11 @@
             {
                 return null;
             }
+        }
+
+        public IMethod GetMethodDefinition()
+        {
+            return null;
         }
 
         /// <summary>

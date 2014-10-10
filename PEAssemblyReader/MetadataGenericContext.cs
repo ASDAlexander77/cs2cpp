@@ -27,10 +27,10 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="type">
         /// </param>
-        public MetadataGenericContext(IType type)
+        public MetadataGenericContext(IType type, bool allowToUseDefinitionAsSpecialization = false)
             : this()
         {
-            this.Init(type);
+            this.Init(type, allowToUseDefinitionAsSpecialization);
             Debug.Assert(!this.IsEmpty);
         }
 
@@ -38,15 +38,11 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="method">
         /// </param>
-        public MetadataGenericContext(IMethod method)
+        public MetadataGenericContext(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
             : this()
         {
-            this.Init(method.DeclaringType);
-            if (method.IsGenericMethod)
-            {
-                this.MethodDefinition = method;
-                this.MethodSpecialization = method;
-            }
+            this.Init(method.DeclaringType, allowToUseDefinitionAsSpecialization);
+            this.Init(method, allowToUseDefinitionAsSpecialization);
 
             Debug.Assert(!this.IsEmpty);
         }
@@ -81,11 +77,11 @@ namespace PEAssemblyReader
         /// </summary>
         public IType TypeSpecialization { get; set; }
 
-        public static IGenericContext DiscoverFrom(IMethod method)
+        public static IGenericContext DiscoverFrom(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
         {
-            if (method.IsGenericMethod)
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
             {
-                return new MetadataGenericContext(method);
+                return new MetadataGenericContext(method, allowToUseDefinitionAsSpecialization);
             }
 
             var declType = method.DeclaringType;
@@ -93,7 +89,7 @@ namespace PEAssemblyReader
             {
                 if (declType.IsGenericType || declType.IsGenericTypeDefinition)
                 {
-                    return new MetadataGenericContext(declType);
+                    return new MetadataGenericContext(declType, allowToUseDefinitionAsSpecialization);
                 }
 
                 if (declType.IsNested)
@@ -112,17 +108,49 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void Init(IType type)
+        private void Init(IType type, bool allowToUseDefinitionAsSpecialization = false)
         {
             if (type.IsGenericTypeDefinition)
             {
                 this.TypeDefinition = type;
+                if (allowToUseDefinitionAsSpecialization)
+                {
+                    this.TypeSpecialization = type;
+                }
             }
 
             if (type.IsGenericType)
             {
                 this.TypeSpecialization = type;
-                this.TypeDefinition = type.GetTypeDefinition();
+                if (this.TypeDefinition == null)
+                {
+                    this.TypeDefinition = type.GetTypeDefinition();
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        private void Init(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
+        {
+            if (method.IsGenericMethodDefinition)
+            {
+                this.MethodDefinition = method;
+                if (allowToUseDefinitionAsSpecialization)
+                {
+                    this.MethodSpecialization = method;
+                }
+            }
+
+            if (method.IsGenericMethod)
+            {
+                this.MethodSpecialization = method;
+                if (this.MethodDefinition == null)
+                {
+                    this.MethodDefinition = method.GetMethodDefinition();
+                }
             }
         }
     }

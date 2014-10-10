@@ -319,7 +319,7 @@ namespace PEAssemblyReader
                         }
                     }
 
-                    Debug.Assert(false, "Generic parameter has not bee resolved");
+                    Debug.Assert(genericContext.TypeSpecialization == null && genericContext.MethodSpecialization == null, "Generic parameter has not bee resolved");
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
@@ -332,10 +332,8 @@ namespace PEAssemblyReader
                 if (namedTypeSymbol != null)
                 {
                     var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
-                    if (metadataType.IsGenericTypeDefinition)
+                    if (metadataType.IsGenericTypeDefinition && (genericContext.TypeSpecialization != null || genericContext.MethodSpecialization != null))
                     {
-                        Debug.Assert(genericContext.TypeSpecialization != null || genericContext.MethodSpecialization != null);
-
                         var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
                         map = genericContext.MethodSpecialization.GenericMap(map);
 

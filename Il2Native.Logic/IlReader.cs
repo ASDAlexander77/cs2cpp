@@ -985,7 +985,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedMethod(IMethod method)
         {
-            if (this.usedGenericSpecialiazedMethods  == null || method == null || method.DeclaringType.IsGenericTypeDefinition || !method.IsGenericMethod)
+            if (this.usedGenericSpecialiazedMethods == null || method == null || !method.IsGenericMethod)
             {
                 return;
             }

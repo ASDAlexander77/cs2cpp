@@ -35,6 +35,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsGenericMethodDefinition { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsGenericMethod { get; }
 
         /// <summary>
@@ -71,6 +75,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IType> GetGenericParameters();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IMethod GetMethodDefinition();
 
         /// <summary>
         /// </summary>

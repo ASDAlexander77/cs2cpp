@@ -407,6 +407,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsGenericMethodDefinition { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public bool IsGenericMethod { get; private set; }
 
             /// <summary>
@@ -525,6 +529,11 @@ namespace Il2Native.Logic.Gencode
                 {
                     return this.invokeMethod.ReturnType;
                 }
+            }
+
+            public IMethod GetMethodDefinition()
+            {
+                return null;
             }
 
             /// <summary>

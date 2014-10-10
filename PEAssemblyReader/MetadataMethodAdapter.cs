@@ -215,7 +215,17 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any();
+                return this.methodDef.TypeParameters.Any() && !this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsGenericMethodDefinition
+        {
+            get
+            {
+                return this.methodDef.TypeParameters.Any() && this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
             }
         }
 
@@ -360,7 +370,7 @@ namespace PEAssemblyReader
 
                 sb.Append(this.methodDef.Name);
 
-                if (this.IsGenericMethod)
+                if (this.IsGenericMethod || this.IsGenericMethodDefinition)
                 {
                     sb.Append('`');
                     sb.Append(this.methodDef.GetArity());
@@ -399,7 +409,7 @@ namespace PEAssemblyReader
                     sb.Append(this.methodDef.Name);
                 }
 
-                if (this.IsGenericMethod)
+                if (this.IsGenericMethod || this.IsGenericMethodDefinition)
                 {
                     sb.Append('<');
 
@@ -452,6 +462,18 @@ namespace PEAssemblyReader
             get
             {
                 return this.methodDef;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public bool ContainsGenericParameters
+        {
+            get
+            {
+                return methodDef.TypeArguments.Any();
             }
         }
 
@@ -574,6 +596,12 @@ namespace PEAssemblyReader
         public IEnumerable<IParameter> GetParameters()
         {
             return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
+        }
+
+
+        public IMethod GetMethodDefinition()
+        {
+            return new MetadataMethodAdapter(this.methodDef.ConstructedFrom);
         }
 
         /// <summary>
@@ -720,7 +748,7 @@ namespace PEAssemblyReader
 
         private MetadataGenericContext GetDefaultGenericMetadataContext()
         {
-            if (this.IsGenericMethod)
+            if (this.IsGenericMethodDefinition)
             {
                 return new MetadataGenericContext(this);
             }

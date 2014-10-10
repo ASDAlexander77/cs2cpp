@@ -439,7 +439,7 @@ namespace PEAssemblyReader
 
                 sb.Append(this.typeDef.Name);
 
-                if (this.IsGenericType)
+                if (this.IsGenericType || this.IsGenericTypeDefinition)
                 {
                     sb.Append('`');
                     sb.Append(this.typeDef.GetArity());
@@ -481,7 +481,7 @@ namespace PEAssemblyReader
 
                 sb.Append(this.typeDef.Name);
 
-                if (this.IsGenericType && this.ContainsGenericParameters)
+                if (this.IsGenericType || this.IsGenericTypeDefinition)
                 {
                     sb.Append('<');
 
