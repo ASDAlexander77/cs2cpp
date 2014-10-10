@@ -388,7 +388,16 @@ namespace PEAssemblyReader
             {
                 var sb = new StringBuilder();
 
-                sb.Append(this.methodDef.Name);
+                if (this.methodDef.ContainingType.IsGenericType && this.methodDef.IsExplicitInterfaceImplementation)
+                {
+                    var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.First();
+                    var resolveType = implMethodSymbol.ResolveGeneric(this.GenericContext);
+                    sb.Append(resolveType.FullName);
+                }
+                else
+                {
+                    sb.Append(this.methodDef.Name);
+                }
 
                 if (this.IsGenericMethod)
                 {

@@ -395,7 +395,7 @@ namespace Il2Native.Logic.Gencode
 
             if (methodInfo != null
                 && methodInfo.ReturnType.IsStructureType()
-                && opCodeMethodInfo.UsedBy != null && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any, Code.Pop)
+                && opCodeMethodInfo.UsedBy != null && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Newobj, Code.Box, Code.Unbox, Code.Unbox_Any, Code.Pop)
                 && opCodeMethodInfo.Destination == null)
             {
                 // You should not allocate it yourself, as result of function should be stored in DestinationName or in Return Value such as "agg.return"

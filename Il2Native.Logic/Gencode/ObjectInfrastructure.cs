@@ -173,7 +173,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
-            var resAlloc = opCodePart.Result;
+             var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
             llvmWriter.WriteCall(
                 opCodePart,
