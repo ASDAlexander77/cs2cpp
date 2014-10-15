@@ -54,6 +54,18 @@ namespace System.Threading
 
         
         public static extern int CompareExchange(ref int location1, int value, int comparand);
+
+        public static extern long CompareExchange(ref long location1, long value, long comparand);
+
+        public static extern float CompareExchange(ref float location1, float value, float comparand);
+
+        public static extern double CompareExchange(ref double location1, double value, double comparand);
+
+        public static extern object CompareExchange(ref object location1, object value, object comparand);
+
+        public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
+
+        public static extern T CompareExchange<T>(ref T location1, T value, T comparand) where T : class;
     }
 }
 

@@ -64,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool GcEnabled = false;
+        private const bool GcEnabled = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -149,6 +149,7 @@ namespace Ll2NativeTests
         public void TestCompileAndRunLlvm()
         {
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
+            // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
 
             // 10 - not compilable
             // 19 - using Thread class
@@ -179,7 +180,7 @@ namespace Ll2NativeTests
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
-            // 115 - explicit cast (cast class without explicit operator should throw an exception)
+            // 115 - NEED TO BE FIXED, BUG! code is executed when 'return 0' should interrupt execution , explicit cast (cast class without explicit operator should throw an exception)
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute

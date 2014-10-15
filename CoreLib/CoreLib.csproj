@@ -50,6 +50,7 @@
     <Compile Include="System\ArgumentException.cs" />
     <Compile Include="System\ArgumentNullException.cs" />
     <Compile Include="System\ArgumentOutOfRangeException.cs" />
+    <Compile Include="System\ArithmeticException.cs" />
     <Compile Include="System\Array.cs" />
     <Compile Include="System\AssemblyInfo2.cs" />
     <Compile Include="System\AsyncCallback.cs" />
@@ -73,6 +74,8 @@
     <Compile Include="System\Diagnostics\Debugger.cs" />
     <Compile Include="System\Double.cs" />
     <Compile Include="System\Enum.cs" />
+    <Compile Include="System\EventArgs.cs" />
+    <Compile Include="System\EventHandler.cs" />
     <Compile Include="System\Exception.cs" />
     <Compile Include="System\FlagsAttribute.cs" />
     <Compile Include="System\GC.cs" />
@@ -104,6 +107,7 @@
     <Compile Include="System\ObjectDisposedException.cs" />
     <Compile Include="System\ObsoleteAttribute.cs" />
     <Compile Include="System\OutOfMemoryException.cs" />
+    <Compile Include="System\OverflowException.cs" />
     <Compile Include="System\ParamArrayAttribute.cs" />
     <Compile Include="System\Random.cs" />
     <Compile Include="System\RuntimeArgumentHandle.cs" />
