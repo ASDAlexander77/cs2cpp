@@ -91,18 +91,21 @@
         [CLSCompliant(false)]
         public static void WriteLine(uint value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(long value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         [CLSCompliant(false)]
         public static void WriteLine(ulong value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
+            wprintf(NewLine.ToCharArray());
         }
 
         public static void WriteLine(object value)
@@ -216,18 +219,18 @@
         [CLSCompliant(false)]
         public static void Write(uint value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
         }
 
         public static void Write(long value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
         }
 
         [CLSCompliant(false)]
         public static void Write(ulong value)
         {
-            throw new NotImplementedException();
+            wprintf(PrintInt.ToCharArray(), value);
         }
 
         public static void Write(Object value)
