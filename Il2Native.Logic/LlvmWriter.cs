@@ -5107,7 +5107,7 @@ namespace Il2Native.Logic
             writer.Write(op);
             writer.Write(' ');
 
-            if (!options.HasFlag(OperandOptions.NoTypePrefix) && !options.HasFlag(OperandOptions.IgnoreOperand))
+            if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
                 var type = effectiveType ?? this.ResolveType("System.Void");
                 type.WriteTypePrefix(writer);
@@ -5299,10 +5299,6 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             TypeIsInOperator = 16,
-
-            /// <summary>
-            /// </summary>
-            NoTypePrefix = 32,
 
             /// <summary>
             /// </summary>
