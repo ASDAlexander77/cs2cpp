@@ -1359,15 +1359,24 @@ namespace Il2Native.Logic
                 OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes | OperandOptions.Template | OperandOptions.DetectAndWriteTypeInSecondOperand);
             writer.WriteLine(")");
 
-            this.WriteSetResultNumber(opCode, opCode.Result.Type);
-            writer.WriteLine("extractvalue {i32, i1} %res, 0");
+            var result = opCode.Result;
 
-            this.WriteSetResultNumber(opCode, opCode.Result.Type);
-            writer.WriteLine("%obit{0} = extractvalue {i32, i1} %res, 1");
+            var testResult = this.WriteSetResultNumber(opCode, this.ResolveType("System.Boolean"));
+            writer.Write("extractvalue { ");
+            result.Type.WriteTypePrefix(writer);
+            writer.Write(", i1 } ");
+            WriteResult(result);
+            writer.WriteLine(", 1");
+
+            var returnValue = this.WriteSetResultNumber(opCode, result.Type);
+            writer.Write("extractvalue { ");
+            result.Type.WriteTypePrefix(writer);
+            writer.Write(", i1 } ");
+            WriteResult(result);
+            writer.WriteLine(", 0");
 
             // throw exception
-            this.WriteBranchSwitchToThrowOrPass(
-                writer, opCode, new FullyDefinedReference("", this.ResolveType("System.Boolean")), "System.OverflowException", "arithm_overflow", "0");
+            this.WriteBranchSwitchToThrowOrPass(writer, opCode, testResult, "System.OverflowException", "arithm_overflow", "zero");
         }
 
         private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart, bool ignoreTestNullValue = false)
@@ -2442,6 +2451,8 @@ namespace Il2Native.Logic
         {
             writer.WriteLine("br i1 {0}, label %.{2}_result_{3}{1}, label %.{2}_result_not_{3}{1}", testValueResultNumber, opCodePart.AddressStart, labelPrefix, labelSuffix);
 
+            writer.WriteLine(string.Empty);
+
             writer.Indent--;
             writer.WriteLine(".{1}_result_{2}{0}:", opCodePart.AddressStart, labelPrefix, labelSuffix);
             writer.Indent++;
@@ -2463,7 +2474,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
             this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
 
-            var label = string.Concat(labelPrefix, "_result_not_null", opCodePart.AddressStart);
+            var label = string.Concat(labelPrefix, "_result_not_", labelSuffix, opCodePart.AddressStart);
 
             writer.Indent--;
             writer.WriteLine(".{0}:", label);

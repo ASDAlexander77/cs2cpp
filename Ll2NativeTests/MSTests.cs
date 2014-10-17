@@ -191,7 +191,6 @@ namespace Ll2NativeTests
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
             // 132 - typeof, Reflection
             // 135 - typeof, Reflection
-            // 141 - NEED TO BE FIXED: OverflowException, using check/uncheck
             // 142 - EventHandler
             // 146 - NEED TO BE FIXED: bug with i1 and i8 types
             var skip =
