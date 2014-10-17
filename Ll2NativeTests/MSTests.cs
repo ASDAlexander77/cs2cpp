@@ -191,14 +191,13 @@ namespace Ll2NativeTests
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
             // 132 - typeof, Reflection
             // 135 - typeof, Reflection
-            // 142 - EventHandler
             // 146 - NEED TO BE FIXED: bug with i1 and i8 types
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
-                            126, 127, 128, 129, 130, 132, 135, 141, 142, 146
+                            126, 127, 128, 129, 130, 132, 135, 141, 146
                         });
 
             if (UsingRoslyn)
