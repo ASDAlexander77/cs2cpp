@@ -660,32 +660,38 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Add:
+                    var isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fadd" : "add", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    break;
                 case Code.Add_Ovf:
                 case Code.Add_Ovf_Un:
-                    var isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fadd" : "add", GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                    this.WriteOverflowWithThrow(writer, opCode, "sadd");
                     break;
                 case Code.Mul:
+                    isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fmul" : "mul", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    break;
                 case Code.Mul_Ovf:
                 case Code.Mul_Ovf_Un:
-                    isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fmul" : "mul", GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                    this.WriteOverflowWithThrow(writer, opCode, "smul");
                     break;
                 case Code.Sub:
+                    isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fsub" : "sub", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    break;
                 case Code.Sub_Ovf:
                 case Code.Sub_Ovf_Un:
-                    isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fsub" : "sub", GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                    this.WriteOverflowWithThrow(writer, opCode, "ssub");
                     break;
                 case Code.Div:
                 case Code.Div_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fdiv" : "sdiv", GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "fdiv" : "sdiv", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
-                    this.BinaryOper(writer, opCode, isFloatingPoint ? "frem" : "srem", GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, isFloatingPoint ? "frem" : "srem", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.And:
                     this.BinaryOper(writer, opCode, "and", OperandOptions.AdjustIntTypes);
@@ -729,7 +735,7 @@ namespace Il2Native.Logic
                     opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
 
                     this.BinaryOper(
-                        writer, opCode, isFloatingPoint ? "fsub" : "sub", options: GetOperandOptions(isFloatingPoint) | OperandOptions.AdjustIntTypes);
+                        writer, opCode, isFloatingPoint ? "fsub" : "sub", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     opCode.OpCodeOperands = tempOper;
                     break;
                 case Code.Dup:
@@ -1032,7 +1038,7 @@ namespace Il2Native.Logic
                     }
 
                     this.BinaryOper(
-                        writer, opCode, oper, GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        writer, opCode, oper, OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     if (!opCode.UseAsConditionalExpression)
                     {
                         writer.WriteLine(string.Empty);
@@ -1102,7 +1108,7 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp oeq" : "icmp eq",
-                        GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Clt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1110,7 +1116,7 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp olt" : "icmp slt",
-                        GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Clt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1118,7 +1124,7 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ult" : "icmp ult",
-                        GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Cgt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1126,7 +1132,7 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ogt" : "icmp sgt",
-                        GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Cgt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1134,7 +1140,7 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ugt" : "icmp ugt",
-                        GetOperandOptions(isFloatingPoint) | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
 
                 case Code.Conv_R4:
@@ -1342,6 +1348,26 @@ namespace Il2Native.Logic
 
                     break;
             }
+        }
+
+        private void WriteOverflowWithThrow(LlvmIndentedTextWriter writer, OpCodePart opCode, string @operator)
+        {
+            this.BinaryOper(
+                writer,
+                opCode,
+                string.Concat("call { %R, i1 } @llvm.", @operator, ".with.overflow.%R("),
+                OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes | OperandOptions.Template | OperandOptions.DetectAndWriteTypeInSecondOperand);
+            writer.WriteLine(")");
+
+            this.WriteSetResultNumber(opCode, opCode.Result.Type);
+            writer.WriteLine("extractvalue {i32, i1} %res, 0");
+
+            this.WriteSetResultNumber(opCode, opCode.Result.Type);
+            writer.WriteLine("%obit{0} = extractvalue {i32, i1} %res, 1");
+
+            // throw exception
+            this.WriteBranchSwitchToThrowOrPass(
+                writer, opCode, new FullyDefinedReference("", this.ResolveType("System.Boolean")), "System.OverflowException", "arithm_overflow", "0");
         }
 
         private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart, bool ignoreTestNullValue = false)
@@ -2398,17 +2424,27 @@ namespace Il2Native.Logic
         public void WriteTestNullValue(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IncrementalResult resultToTest, string exceptionName, string labelPrefix)
         {
             var testNullResultNumber = this.WriteSetResultNumber(opCodePart, this.ResolveType("System.Boolean"));
+            opCodePart.Result = resultToTest;
+
             writer.Write("icmp eq ");
             writer.WriteLine("i8* {0}, null", resultToTest);
+            
+            this.WriteBranchSwitchToThrowOrPass(writer, opCodePart, testNullResultNumber, exceptionName, labelPrefix, "null");
+        }
 
-            writer.WriteLine(
-                "br i1 {0}, label %.{2}_result_null{1}, label %.{2}_result_not_null{1}", testNullResultNumber, opCodePart.AddressStart, labelPrefix);
+        public void WriteBranchSwitchToThrowOrPass(
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCodePart,
+            IncrementalResult testValueResultNumber,
+            string exceptionName,
+            string labelPrefix,
+            string labelSuffix)
+        {
+            writer.WriteLine("br i1 {0}, label %.{2}_result_{3}{1}, label %.{2}_result_not_{3}{1}", testValueResultNumber, opCodePart.AddressStart, labelPrefix, labelSuffix);
 
             writer.Indent--;
-            writer.WriteLine(".{1}_result_null{0}:", opCodePart.AddressStart, labelPrefix);
+            writer.WriteLine(".{1}_result_{2}{0}:", opCodePart.AddressStart, labelPrefix, labelSuffix);
             writer.Indent++;
-
-            opCodePart.Result = resultToTest;
 
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
@@ -3449,23 +3485,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="isFloatingPoint">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static OperandOptions GetOperandOptions(bool isFloatingPoint)
-        {
-            var operandOptions = OperandOptions.GenerateResult;
-            if (isFloatingPoint)
-            {
-                operandOptions |= OperandOptions.ToFloat;
-            }
-
-            return operandOptions;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="intType">
         /// </param>
         /// <returns>
@@ -4123,8 +4142,8 @@ namespace Il2Native.Logic
                 writer,
                 opCode,
                 "getelementptr inbounds",
-                options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
-                resultType: type);
+                OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
+                type);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -4702,7 +4721,7 @@ namespace Il2Native.Logic
                 baseCount++;
                 currentType = currentType.BaseType;
             }
-            
+
             while (currentType != null)
             {
                 var interfaceIndex = FindInterfaceIndexForOneStep(currentType, @interface, out currentType);
@@ -5104,8 +5123,34 @@ namespace Il2Native.Logic
                 this.WriteSetResultNumber(opCode, resultType ?? (resultOf != null ? resultOf.Type : requiredType));
             }
 
-            writer.Write(op);
-            writer.Write(' ');
+            if (options.HasFlag(OperandOptions.Template))
+            {
+                var parts = op.Split('%');
+                var index = 0;
+                foreach (var part in parts)
+                {
+                    var text = index++ == 0 ? part : part.Substring(1);
+                    var code = part.First();
+
+                    switch (code)
+                    {
+                        case 'R':
+                            if (effectiveType != null)
+                            {
+                                effectiveType.WriteTypePrefix(writer);
+                            }
+
+                            break;
+                    }
+
+                    writer.Write(text);
+                }
+            }
+            else
+            {
+                writer.Write(op);
+                writer.Write(' ');
+            }
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
@@ -5290,11 +5335,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            ToFloat = 2,
-
-            /// <summary>
-            /// </summary>
-            ToInteger = 4,
+            Template = 8,
 
             /// <summary>
             /// </summary>
