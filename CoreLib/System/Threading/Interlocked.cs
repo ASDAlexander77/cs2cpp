@@ -18,8 +18,9 @@ namespace System.Threading
          *                        long
          *****************************/
 
-        
         public static extern int Increment(ref int location);
+
+        public static extern int Increment(ref long location);
         /******************************
          * Decrement
          *   Implemented: int
@@ -28,7 +29,8 @@ namespace System.Threading
 
         
         public static extern int Decrement(ref int location);
-        //public static extern long Decrement(ref long location);
+        
+        public static extern long Decrement(ref long location);
 
         /******************************
          * Exchange
@@ -40,8 +42,19 @@ namespace System.Threading
          *                        IntPtr
          *****************************/
 
-        
         public static extern int Exchange(ref int location1, int value);
+
+        public static extern int Exchange(ref long location1, long value);
+
+        public static extern int Exchange(ref float location1, float value);
+
+        public static extern int Exchange(ref double location1, double value);
+
+        public static extern int Exchange(ref object location1, object value);
+
+        //public static extern int Exchange(ref IntPtr location1, IntPtr value);
+
+        public static extern T Exchange<T>(ref T location1, T value) where T : class;
         /******************************
          * CompareExchange
          *    Implemented: int
@@ -63,7 +76,7 @@ namespace System.Threading
 
         public static extern object CompareExchange(ref object location1, object value, object comparand);
 
-        public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
+        //public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
 
         public static extern T CompareExchange<T>(ref T location1, T value, T comparand) where T : class;
     }

@@ -393,13 +393,18 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
             {
-                methodAddressResultNumber = llvmWriter.GenerateVirtualCall(
-                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                methodAddressResultNumber = llvmWriter.GenerateVirtualCall(opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
             }
 
             methodInfo.WriteFunctionCallLoadFunctionAddress(opCodeMethodInfo, thisType, ref methodAddressResultNumber, llvmWriter);
 
             methodInfo.PreProcessCallParameters(opCodeMethodInfo, llvmWriter);
+
+            if (methodInfo.IsInterlockedFunction())
+            {
+                methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
+                return;
+            }
 
             var returnFullyDefinedReference = methodInfo.WriteFunctionCallResult(opCodeMethodInfo, llvmWriter);
 
@@ -575,6 +580,42 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="source">
+        /// </param>
+        /// <param name="toType">
+        /// </param>
+        public static void WritePtrToInt(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteSetResultNumber(opCode, toType);
+            writer.Write("ptrtoint ");
+            source.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResult(source);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer);
+        }
+
+        public static IType GetIntTypeByByteSize(this LlvmWriter llvmWriter, int byteSize)
+        {
+            IType toType = null;
+            switch (byteSize)
+            {
+                case 1: toType = llvmWriter.ResolveType("System.Byte"); break;
+                case 2: toType = llvmWriter.ResolveType("System.Int16"); break;
+                case 4: toType = llvmWriter.ResolveType("System.Int32"); break;
+                case 8: toType = llvmWriter.ResolveType("System.Int64"); break;
+            }
+            return toType;
         }
 
         /// <summary>

@@ -207,6 +207,7 @@
                     returnFullyDefinedReference = opCodeMethodInfo.Destination.ToType(methodInfo.ReturnType);
                 }
             }
+
             return returnFullyDefinedReference;
         }
 

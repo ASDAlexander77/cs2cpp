@@ -168,7 +168,6 @@ namespace Ll2NativeTests
             // 68 - using enum
             // 74 - using StreamReader
             // 77 - using enum
-            // 83 - using System.Threading.Interlocked.CompareExchange
             // 85 - using UnmanagedType
             // 91 - using Reflection
             // 95 - NEED TO BE FIXED, init double in a class
@@ -196,8 +195,8 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
-                            126, 127, 128, 129, 130, 132, 135, 141, 146
+                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
+                            126, 127, 128, 129, 130, 132, 135, 146
                         });
 
             if (UsingRoslyn)
