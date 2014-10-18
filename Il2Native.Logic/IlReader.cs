@@ -840,6 +840,24 @@ namespace Il2Native.Logic
             return this.lazyAllReferencedTypes.Value;
         }
 
+        public IEnumerable<string> AllReferences()
+        {
+            return this.AllReferencesHelper(this.Assembly);
+        }
+
+        public IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata)
+        {
+            foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
+            {
+                yield return reference.Name;
+
+                foreach (var referenceName in this.AllReferencesHelper(GetAssemblyMetadata(reference)))
+                {
+                    yield return referenceName;
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="source">

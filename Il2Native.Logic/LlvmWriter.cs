@@ -154,6 +154,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public string Target { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool Gc { get; private set; }
 
         /// <summary>
@@ -166,7 +170,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string Target { get; private set; }
+        public IEnumerable<string> AllReference { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -3307,10 +3311,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="assemblyName">
         /// </param>
-        public void WriteStart(string moduleName, string assemblyName, bool isCoreLib)
+        public void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference)
         {
             this.AssemblyQualifiedName = assemblyName;
             this.IsCoreLib = isCoreLib;
+            this.AllReference = allReference;
 
             this.Output.WriteLine(
                 "target datalayout = \"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32\"");
@@ -4574,6 +4579,11 @@ namespace Il2Native.Logic
 
         private string GetGlobalConstructorsFunctionName()
         {
+            return GetGlobalConstructorsFunctionName(this.AssemblyQualifiedName);
+        }
+
+        private string GetGlobalConstructorsFunctionName(string assemblyQualifiedName)
+        {
             return string.Concat("@\"Global Ctors for ", this.AssemblyQualifiedName, "\"");
         }
 
@@ -4819,7 +4829,20 @@ namespace Il2Native.Logic
 
         private void WriteCallGctors()
         {
+            var processed = new List<string>();
 
+            // get all references
+            foreach (var reference in this.AllReference.Reverse())
+            {
+                if (processed.Contains(reference))
+                {
+                    continue;
+                }
+
+                processed.Add(reference);
+
+                this.Output.WriteLine("call void " + GetGlobalConstructorsFunctionName(reference) + "();");
+            }
         }
 
         /// <summary>

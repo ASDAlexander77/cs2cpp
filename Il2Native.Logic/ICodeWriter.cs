@@ -11,6 +11,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
+    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -153,7 +154,7 @@ namespace Il2Native.Logic
         /// <param name="assemblyName">
         /// </param>
         /// ///
-        void WriteStart(string moduleName, string assemblyName, bool isCoreLib);
+        void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference);
 
         /// <summary>
         /// </summary>

@@ -48,6 +48,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
+
+        /// <summary>
+        /// </summary>
+        private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -56,6 +60,7 @@ namespace Ll2NativeTests
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
+        private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 #endif
 
         /// <summary>
@@ -65,6 +70,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const bool GcEnabled = true;
+
+        /// <summary>
+        /// </summary>
+        private const bool GctorsEnabled = false;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -122,6 +131,14 @@ namespace Ll2NativeTests
         public void TestOpenGlExe()
         {
             Il2Converter.Convert(Path.GetFullPath(OpenGlExePath), OutputPath, GetConverterArgs(true));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestAndroid()
+        {
+            Il2Converter.Convert(Path.GetFullPath(AndroidPath), OutputPath, GetConverterArgs(true));
         }
 
         /// <summary>
@@ -248,7 +265,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -264,6 +281,11 @@ namespace Ll2NativeTests
             if (!gc)
             {
                 args.Add("gc-");
+            }
+
+            if (!gctors)
+            {
+                args.Add("gctors-");
             }
 
             return args.ToArray();

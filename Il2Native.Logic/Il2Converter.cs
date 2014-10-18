@@ -395,6 +395,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
         {
+            
             var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
@@ -409,7 +410,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
-            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib);
+            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib, ilReader.AllReferences());
 
             // types in current assembly
             var genericTypeSpecializations = new HashSet<IType>();
