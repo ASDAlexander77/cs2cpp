@@ -21,8 +21,9 @@
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
-                Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi");
+                Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
+                Console.WriteLine("  /gctors-                Disable using global constructors (recommended for Android platform)");
                 return;
             }
 

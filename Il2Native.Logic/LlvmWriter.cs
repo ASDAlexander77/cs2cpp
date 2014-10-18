@@ -146,14 +146,19 @@ namespace Il2Native.Logic
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
-            this.Gc = args != null && args.Contains("gc-") ? false : true;
             var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
+            this.Gc = args != null && args.Contains("gc-") ? false : true;
+            this.Gctors = args != null && args.Contains("gctors-") ? false : true;
         }
 
         /// <summary>
         /// </summary>
         public bool Gc { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool Gctors { get; private set; }
 
         /// <summary>
         /// </summary>

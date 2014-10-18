@@ -190,7 +190,10 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
 
                 var opCodeNop = OpCodePart.CreateNop;
-                llvmWriter.WriteLandingPad(opCodeNop, LandingPadOptions.Cleanup, new[] { upperLevelExceptionHandlingClause.Catch });
+                llvmWriter.WriteLandingPad(
+                    opCodeNop, 
+                    LandingPadOptions.Cleanup, 
+                    new[] { upperLevelExceptionHandlingClause != null ? upperLevelExceptionHandlingClause.Catch : llvmWriter.ResolveType("System.Exception") });
                 writer.WriteLine(string.Empty);
             }
             else
@@ -203,7 +206,7 @@ namespace Il2Native.Logic.Gencode
             if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
                 var nextOp = opCode.NextOpCode(llvmWriter);
-                if (nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
+                if (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
                 {
                     writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
 

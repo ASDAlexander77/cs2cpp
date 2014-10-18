@@ -681,7 +681,14 @@ namespace Il2Native.Logic
                 }
 
                 // detect required types in alternative values
-                var usedBy = opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
+                var firstOpCode = opCodePart.AlternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                if (firstOpCode == null)
+                {
+                    // TODO: find out why it happens here (test-154.cs)
+                    continue;
+                }
+
+                var usedBy = firstOpCode.UsedBy;
                 var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
