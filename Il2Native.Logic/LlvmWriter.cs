@@ -162,6 +162,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool IsCoreLib { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public string Target { get; private set; }
 
         /// <summary>
@@ -2339,7 +2343,7 @@ namespace Il2Native.Logic
 
             writer.Write("icmp eq ");
             writer.WriteLine("i8* {0}, null", resultToTest);
-            
+
             this.WriteBranchSwitchToThrowOrPass(writer, opCodePart, testNullResultNumber, exceptionName, labelPrefix, "null");
         }
 
@@ -3303,19 +3307,23 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="assemblyName">
         /// </param>
-        public void WriteStart(string moduleName, string assemblyName)
+        public void WriteStart(string moduleName, string assemblyName, bool isCoreLib)
         {
             this.AssemblyQualifiedName = assemblyName;
+            this.IsCoreLib = isCoreLib;
 
             this.Output.WriteLine(
                 "target datalayout = \"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32\"");
             this.Output.WriteLine("target triple = \"{0}\"", string.IsNullOrWhiteSpace(this.Target) ? "i686-pc-win32" : this.Target);
             this.Output.WriteLine(string.Empty);
 
-            // Global ctors
-            this.Output.WriteLine(
-                "@llvm.global_ctors = appending global [1 x { i32, void ()* }] [{ i32, void ()* } { i32 65535, void ()* @_GLOBAL_CTORS_EXECUTE_ }]");
-            this.Output.WriteLine(string.Empty);
+            if (this.Gctors)
+            {
+                // Global ctors
+                this.Output.WriteLine(
+                    "@llvm.global_ctors = appending global [1 x { i32, void ()* }] [{ i32, void ()* } { i32 65535, void ()* " + this.GetGlobalConstructorsFunctionName() + " }]");
+                this.Output.WriteLine(string.Empty);
+            }
 
             // declarations
             this.Output.WriteLine(Resources.llvm_declarations);
@@ -4544,10 +4552,15 @@ namespace Il2Native.Logic
         {
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
-            this.Output.WriteLine("define internal void @_GLOBAL_CTORS_EXECUTE_() {");
+            this.Output.WriteLine("define {2} void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{", this.Gctors ? "internal" : string.Empty);
             this.Output.Indent++;
 
             this.SortStaticConstructorsByUsage();
+
+            if (this.Gc && this.IsCoreLib)
+            {
+                this.Output.WriteLine("call void @GC_init()");
+            }
 
             foreach (var staticCtor in this.StaticConstructors)
             {
@@ -4557,6 +4570,11 @@ namespace Il2Native.Logic
             this.Output.WriteLine("ret void");
             this.Output.Indent--;
             this.Output.WriteLine("}");
+        }
+
+        private string GetGlobalConstructorsFunctionName()
+        {
+            return string.Concat("@\"Global Ctors for ", this.AssemblyQualifiedName, "\"");
         }
 
         /// <summary>
@@ -4799,6 +4817,11 @@ namespace Il2Native.Logic
             }
         }
 
+        private void WriteCallGctors()
+        {
+
+        }
+
         /// <summary>
         /// </summary>
         private void WriteMainFunction()
@@ -4811,9 +4834,9 @@ namespace Il2Native.Logic
 
             this.Output.Indent++;
 
-            if (this.Gc)
+            if (!this.Gctors)
             {
-                this.Output.WriteLine("call void @GC_init()");
+                this.WriteCallGctors();
             }
 
             if (!this.MainMethod.ReturnType.IsVoid())

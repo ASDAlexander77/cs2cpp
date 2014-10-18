@@ -153,7 +153,7 @@ namespace Il2Native.Logic
         /// <param name="assemblyName">
         /// </param>
         /// ///
-        void WriteStart(string moduleName, string assemblyName);
+        void WriteStart(string moduleName, string assemblyName, bool isCoreLib);
 
         /// <summary>
         /// </summary>

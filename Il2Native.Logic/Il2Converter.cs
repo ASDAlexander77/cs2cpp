@@ -409,7 +409,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
-            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName);
+            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib);
 
             // types in current assembly
             var genericTypeSpecializations = new HashSet<IType>();

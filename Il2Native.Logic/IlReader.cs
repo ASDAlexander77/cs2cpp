@@ -345,6 +345,14 @@ namespace Il2Native.Logic
             }
         }
 
+        public bool IsCoreLib
+        {
+            get
+            {
+                return !this.Assembly.Assembly.AssemblyReferences.Any();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string CoreLibPath { get; set; }
