@@ -847,10 +847,10 @@ namespace Il2Native.Logic
 
         public IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata)
         {
+            yield return assemblyMetadata.Assembly.Identity.Name;
+
             foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
             {
-                yield return reference.Name;
-
                 foreach (var referenceName in this.AllReferencesHelper(GetAssemblyMetadata(reference)))
                 {
                     yield return referenceName;

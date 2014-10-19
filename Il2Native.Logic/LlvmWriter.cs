@@ -4584,7 +4584,7 @@ namespace Il2Native.Logic
 
         private string GetGlobalConstructorsFunctionName(string assemblyQualifiedName)
         {
-            return string.Concat("@\"Global Ctors for ", this.AssemblyQualifiedName, "\"");
+            return string.Concat("@\"Global Ctors for ", assemblyQualifiedName, "\"");
         }
 
         /// <summary>
@@ -4829,19 +4829,19 @@ namespace Il2Native.Logic
 
         private void WriteCallGctors()
         {
-            var processed = new List<string>();
-
             // get all references
-            foreach (var reference in this.AllReference.Reverse())
+            foreach (var reference in this.AllReference.Reverse().Distinct())
             {
-                if (processed.Contains(reference))
-                {
-                    continue;
-                }
-
-                processed.Add(reference);
-
                 this.Output.WriteLine("call void " + GetGlobalConstructorsFunctionName(reference) + "();");
+            }
+        }
+
+        private void WriteCallGctorsDeclarations()
+        {
+            // get all references
+            foreach (var reference in this.AllReference.Skip(1).Reverse().Distinct())
+            {
+                this.Output.WriteLine("declare void " + GetGlobalConstructorsFunctionName(reference) + "();");
             }
         }
 
@@ -4981,6 +4981,12 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteRequiredDeclarations()
         {
+            if (this.MainMethod != null && !this.Gctors)
+            {
+                this.Output.WriteLine(string.Empty);
+                this.WriteCallGctorsDeclarations();
+            }
+
             if (this.typeRttiDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
