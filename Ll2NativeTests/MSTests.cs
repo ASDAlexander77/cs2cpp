@@ -73,7 +73,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool GctorsEnabled = false;
+        private const bool GctorsEnabled = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -234,10 +234,10 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 21 - using default on Class causing Boxing of Reference type
+            // 21 - using GetType()
             // 29 - boxing array and sends to WriteLine - causes crash
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
-            // 46 - using Event, Debug Trace: (9,23): error CS0656: Missing compiler required member 'System.Threading.Interlocked.CompareExchange'
+            // 46 - Delegate.Combine not implemented
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'

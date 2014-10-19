@@ -168,8 +168,8 @@ namespace Il2Native.Logic
             string[] filter,
             ICodeWriter codeWriter,
             List<IType> newListOfITypes,
-            SortedDictionary<string, IType> genDefinitionsByMetadataName,
-            HashSet<IMethod> genMethodSpec,
+            IDictionary<string, IType> genDefinitionsByMetadataName,
+            IDictionary<IType, IEnumerable<IMethod>> genMethodSpec,
             ConvertingMode mode)
         {
             var i = 0;
@@ -216,7 +216,7 @@ namespace Il2Native.Logic
         /// <param name="mode">
         /// </param>
         private static void ConvertIType(
-            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, HashSet<IMethod> genericMethodSpecializatons, ConvertingMode mode)
+            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializatons, ConvertingMode mode)
         {
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
@@ -314,23 +314,26 @@ namespace Il2Native.Logic
                     else
                     {
                         // write all specializations of a method
-                        foreach (var methodSpec in genericMethodSpecializatons)
+                        IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
+                        if (genericMethodSpecializatons.TryGetValue(method.DeclaringType, out genericMethodSpecializatonsForType))
                         {
-                            if (methodSpec.DeclaringType.FullName == method.DeclaringType.FullName 
-                                && methodSpec.IsMatchingGeneric(method))
+                            foreach (var methodSpec in genericMethodSpecializatonsForType)
                             {
-                                genericContext.TypeSpecialization = type.IsGenericType ? type : null;
-                                genericContext.MethodDefinition = method;
-                                genericContext.MethodSpecialization = methodSpec;
-
-                                codeWriter.WriteMethodStart(methodSpec, genericContext);
-
-                                foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
+                                if (methodSpec.IsMatchingGeneric(method))
                                 {
-                                    codeWriter.Write(ilCode);
-                                }
+                                    genericContext.TypeSpecialization = type.IsGenericType ? type : null;
+                                    genericContext.MethodDefinition = method;
+                                    genericContext.MethodSpecialization = methodSpec;
 
-                                codeWriter.WriteMethodEnd(methodSpec, genericContext);
+                                    codeWriter.WriteMethodStart(methodSpec, genericContext);
+
+                                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
+                                    {
+                                        codeWriter.Write(ilCode);
+                                    }
+
+                                    codeWriter.WriteMethodEnd(methodSpec, genericContext);
+                                }
                             }
                         }
                     }
@@ -395,7 +398,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
         {
-            
+
             var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
@@ -418,8 +421,8 @@ namespace Il2Native.Logic
             var types = ilReader.Types().ToList();
             var allTypes = ilReader.AllTypes().ToList();
             var newListOfITypes = ResortITypes(
-                types.Where(t => !t.IsGenericTypeDefinition).ToList(), 
-                genericTypeSpecializations, 
+                types.Where(t => !t.IsGenericTypeDefinition).ToList(),
+                genericTypeSpecializations,
                 genericMethodSpecializations);
 
             // build quick access array for Generic Definitions
@@ -427,6 +430,14 @@ namespace Il2Native.Logic
             foreach (var genDef in allTypes.Where(t => t.IsGenericDefinition()))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
+            }
+
+            // group generic methods by Type
+            var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
+            var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
+            foreach (var group in genericMethodSpecializationsGroupedByType)
+            {
+                genericMethodSpecializationsSorted[group.Key] = group;
             }
 
             for (var index = 0; index < newListOfITypes.Count; index++)
@@ -441,21 +452,21 @@ namespace Il2Native.Logic
             }
 
             ConvertAllTypes(
-                ilReader, 
-                filter, 
-                codeWriter, 
-                newListOfITypes, 
-                genDefinitionsByMetadataName, 
-                genericMethodSpecializations, 
+                ilReader,
+                filter,
+                codeWriter,
+                newListOfITypes,
+                genDefinitionsByMetadataName,
+                genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
             ConvertAllTypes(
-                ilReader, 
-                filter, 
-                codeWriter, 
-                newListOfITypes, 
-                genDefinitionsByMetadataName, 
-                genericMethodSpecializations, 
+                ilReader,
+                filter,
+                codeWriter,
+                newListOfITypes,
+                genDefinitionsByMetadataName,
+                genericMethodSpecializationsSorted,
                 ConvertingMode.Definition);
 
             codeWriter.WriteEnd();
