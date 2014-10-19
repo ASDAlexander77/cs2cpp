@@ -196,8 +196,11 @@ namespace Il2Native.Logic
                     genDefinitionsByMetadataName.TryGetValue(type.MetadataFullName, out genDef);
                 }
 
+                IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
+                genMethodSpec.TryGetValue(type, out genericMethodSpecializatonsForType);
+
                 type.UseAsClass = true;
-                ConvertIType(ilReader, codeWriter, type, genDef, genMethodSpec, mode);
+                ConvertIType(ilReader, codeWriter, type, genDef, genericMethodSpecializatonsForType, mode);
             }
         }
 
@@ -216,7 +219,7 @@ namespace Il2Native.Logic
         /// <param name="mode">
         /// </param>
         private static void ConvertIType(
-            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializatons, ConvertingMode mode)
+            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, IEnumerable<IMethod> genericMethodSpecializatons, ConvertingMode mode)
         {
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
@@ -313,11 +316,11 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        Debug.Assert(genericMethodSpecializatons != null);
                         // write all specializations of a method
-                        IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
-                        if (genericMethodSpecializatons.TryGetValue(method.DeclaringType, out genericMethodSpecializatonsForType))
+                        if (genericMethodSpecializatons != null)
                         {
-                            foreach (var methodSpec in genericMethodSpecializatonsForType)
+                            foreach (var methodSpec in genericMethodSpecializatons)
                             {
                                 if (methodSpec.IsMatchingGeneric(method))
                                 {
