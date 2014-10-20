@@ -289,14 +289,14 @@ namespace Il2Native.Logic
                 codeWriter.DisableWrite(true);
 
                 // pre process step to get all used undefined structures
-                foreach (var method in IlReader.Methods(type))
+                foreach (var method in IlReader.MethodsOriginal(type))
                 {
                     IMethod genericMethod = null;
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same method in generic class
                         Debug.Assert(genericDefinition != null);
-                        genericMethod = IlReader.Methods(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
+                        genericMethod = IlReader.MethodsOriginal(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
                     }
 
                     if (!method.IsGenericMethodDefinition)
@@ -316,7 +316,6 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        Debug.Assert(genericMethodSpecializatons != null);
                         // write all specializations of a method
                         if (genericMethodSpecializatons != null)
                         {
@@ -442,6 +441,8 @@ namespace Il2Native.Logic
             {
                 genericMethodSpecializationsSorted[group.Key] = group;
             }
+
+            IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
 
             for (var index = 0; index < newListOfITypes.Count; index++)
             {
