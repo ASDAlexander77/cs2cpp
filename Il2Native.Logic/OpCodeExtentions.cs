@@ -525,7 +525,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingOverride(this IMethod method, IMethod overridingMethod)
         {
-            if (method.Name == overridingMethod.Name)
+            if (method.MetadataName == overridingMethod.MetadataName)
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
@@ -1015,13 +1015,30 @@ namespace Il2Native.Logic
             var count = params1.Length;
             for (var index = 0; index < count; index++)
             {
-                if (!params1[index].ParameterType.Equals(params2[index].ParameterType))
+                var p1 = params1[index].ParameterType;
+                var p2 = params2[index].ParameterType;
+                if (!CompareTypeParam(p1, p2))
                 {
                     return false;
                 }
             }
 
-            if (!method.ReturnType.Equals(overridingMethod.ReturnType))
+            return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+        }
+
+        private static bool CompareTypeParam(IType p1, IType p2)
+        {
+            if (p1.IsGenericParameter && p2.IsGenericParameter && !p1.Equals(p2))
+            {
+                return false;
+            }
+
+            if (p1.IsGenericParameter || p2.IsGenericParameter)
+            {
+                return true;
+            }
+
+            if (!p1.Equals(p2))
             {
                 return false;
             }

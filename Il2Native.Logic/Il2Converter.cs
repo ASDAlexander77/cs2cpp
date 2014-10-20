@@ -436,6 +436,25 @@ namespace Il2Native.Logic
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
 
+            // find all overide of generic methods 
+            var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            foreach (var overrideGenericMethod in allTypes.SelectMany(t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
+            {
+                foreach (var specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract))
+                {
+                    if (overrideGenericMethod.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType)
+                        && overrideGenericMethod.IsMatchingOverride(specializationMethod))
+                    {
+                        // TODO: finish it
+
+                        // add specialized method
+                        // 1) create specialized method
+
+                        // 2) add specialized method
+                    }
+                }
+            }
+
             // group generic methods by Type
             var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
             var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
@@ -446,6 +465,7 @@ namespace Il2Native.Logic
 
             IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
 
+            // write forward declaration
             for (var index = 0; index < newListOfITypes.Count; index++)
             {
                 var type = newListOfITypes[index];

@@ -170,37 +170,6 @@ namespace Ll2NativeTests
 
             // NEED TO BE FIXED, when you override generic method it does not generate correct vtable
 
-            /*
-using System;
-
-class V {
-	public virtual void Test<T>(T t)	
-	{
-		Console.WriteLine(t);
-	}
-}
-
-class D : V
-{
-	public override void Test<T>(T t)	
-	{
-		throw new Exception();
-	}
-}
-
-class X {
-
-	public static int Main (string [] args)
-	{
-		var d = new D();
-		d.Test<int>(10);
-		d.Test<string>("Hello");
-		return 0;
-	}
-}
-             
-             */
-
             // 10 - not compilable
             // 19 - using Thread class
             // 28 - bug in execution (Hashtable)
