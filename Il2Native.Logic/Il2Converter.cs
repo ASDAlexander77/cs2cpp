@@ -321,21 +321,23 @@ namespace Il2Native.Logic
                         {
                             foreach (var methodSpec in genericMethodSpecializatons)
                             {
-                                if (methodSpec.IsMatchingGeneric(method))
+                                if (!methodSpec.IsMatchingGeneric(method))
                                 {
-                                    genericContext.TypeSpecialization = type.IsGenericType ? type : null;
-                                    genericContext.MethodDefinition = method;
-                                    genericContext.MethodSpecialization = methodSpec;
-
-                                    codeWriter.WriteMethodStart(methodSpec, genericContext);
-
-                                    foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
-                                    {
-                                        codeWriter.Write(ilCode);
-                                    }
-
-                                    codeWriter.WriteMethodEnd(methodSpec, genericContext);
+                                    continue;
                                 }
+
+                                genericContext.TypeSpecialization = type.IsGenericType ? type : null;
+                                genericContext.MethodDefinition = method;
+                                genericContext.MethodSpecialization = methodSpec;
+
+                                codeWriter.WriteMethodStart(methodSpec, genericContext);
+
+                                foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
+                                {
+                                    codeWriter.Write(ilCode);
+                                }
+
+                                codeWriter.WriteMethodEnd(methodSpec, genericContext);
                             }
                         }
                     }

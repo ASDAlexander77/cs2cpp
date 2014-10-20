@@ -504,10 +504,22 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var cmp = this.MetadataName.CompareTo(type.MetadataName);
-            if (cmp != 0)
+            var cmp = 0;
+            if (this.IsGenericType && !this.IsGenericTypeDefinition && type.IsGenericType && !type.IsGenericTypeDefinition)
             {
-                return cmp;
+                cmp = this.Name.CompareTo(type.Name);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+            }
+            else
+            {
+                cmp = this.MetadataName.CompareTo(type.MetadataName);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
             }
 
             cmp = this.Namespace.CompareTo(type.Namespace);
@@ -751,7 +763,7 @@ namespace PEAssemblyReader
             {
                 return true;
             }
-            
+
             if (type.GetAllInterfaces().Contains(this))
             {
                 return true;
