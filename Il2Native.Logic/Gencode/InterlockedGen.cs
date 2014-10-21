@@ -9,7 +9,12 @@
     {
         public static bool IsInterlockedFunction(this IMethod method)
         {
-            if (!method.IsStatic && method.GetMethodBody() != null)
+            if (!method.IsStatic)
+            {
+                return false;
+            }
+
+            if (method.DeclaringType.FullName != "System.Threading.Interlocked")
             {
                 return false;
             }
@@ -30,8 +35,6 @@
 
         public static void WriteInterlockedFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
         {
-            var writer = llvmWriter.Output;
-
             switch (method.MetadataName)
             {
                 case "Increment":
@@ -44,12 +47,12 @@
 
                 case "Exchange`1":
                 case "Exchange":
-                    method.InterlockBase(opCodeMethodInfo, "atomicrmw xchg ", " acquire", llvmWriter);
+                    method.InterlockBase(opCodeMethodInfo, "atomicrmw xchg ", " acquire", false, llvmWriter);
                     break;
 
                 case "CompareExchange`1":
                 case "CompareExchange":
-                    method.InterlockBase(opCodeMethodInfo, "cmpxchg ", " acq_rel monotonic", llvmWriter);
+                    method.InterlockBase(opCodeMethodInfo, "cmpxchg ", " acq_rel monotonic", true, llvmWriter);
                     break;
             }
         }
@@ -86,7 +89,7 @@
             writer.WriteLine(attribs);
         }
 
-        private static void InterlockBase(this IMethod method, OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
+        private static void InterlockBase(this IMethod method, OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -115,10 +118,9 @@
                 }
             }
 
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, pointerIntSize ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+            var opResult = llvmWriter.WriteSetResultNumber(opCodeMethodInfo, pointerIntSize ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
 
             writer.Write(oper);
-            //i32* %ptr, i32 %cmp, i32 %squared 
 
             var index = 0;
             foreach (var operand in opCodeMethodInfo.OpCodeOperands)
@@ -134,6 +136,16 @@
             }
 
             writer.WriteLine(attribs);
+
+            if (extractValue)
+            {
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, pointerIntSize ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+                writer.Write("extractvalue { ");
+                opResult.Type.WriteTypePrefix(writer);
+                writer.Write(", i1 } ");
+                llvmWriter.WriteResult(opResult);
+                writer.WriteLine(", 0");
+            }
 
             if (pointerExchange)
             {
