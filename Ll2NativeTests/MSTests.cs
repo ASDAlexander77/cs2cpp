@@ -171,7 +171,7 @@ namespace Ll2NativeTests
             // NEED TO BE FIXED, when you override generic method it does not generate correct vtable
 
             // 10 - not compilable
-            // 19 - using Thread class
+            // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
             // 32 - multi array
             // 33 - using GetType
@@ -194,7 +194,6 @@ namespace Ll2NativeTests
             // 100 - using DllImport      
             // 101 - using Reflection
             // 102 - using Reflection
-            // 104 - System.Threading.Interlocked.Increment
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
@@ -202,9 +201,9 @@ namespace Ll2NativeTests
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            // 126 - not implemented defualt ToString() to return type name
+            // 126 - not implemented default ToString() to return type name
             // 127 - using typeof
-            // 128 - using typeof
+            // 128 - using typeof, using Attributes
             // 129 - using typeof
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
             // 132 - typeof, Reflection
@@ -215,7 +214,7 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
+                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 129, 130, 132, 135, 146, 149
                         });
 

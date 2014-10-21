@@ -166,7 +166,7 @@
         {
             get
             {
-                return this.ExplicitName;
+                return this.Name;
             }
         }
 

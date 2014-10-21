@@ -9,12 +9,7 @@
     {
         public static bool IsInterlockedFunction(this IMethod method)
         {
-            if (!method.IsStatic)
-            {
-                return false;
-            }
-
-            if (!method.IsExternal && !method.IsGenericMethod)
+            if (!method.IsStatic && method.GetMethodBody() != null)
             {
                 return false;
             }
