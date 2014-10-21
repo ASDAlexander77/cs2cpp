@@ -441,7 +441,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!doNotTestNullValue)
             {
-                llvmWriter.WriteTestNullValue(writer, opCodePart, mallocResult, "System.OutOfMemoryException", "new_obj");
+                llvmWriter.WriteTestNullValueAndThrowException(writer, opCodePart, mallocResult, "System.OutOfMemoryException", "new_obj");
             }
 
             if (!llvmWriter.Gc)

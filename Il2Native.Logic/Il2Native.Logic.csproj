@@ -71,11 +71,13 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
+    <Compile Include="Gencode\TypeInfrastructure.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />

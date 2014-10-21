@@ -2245,7 +2245,7 @@ namespace Il2Native.Logic
 
             if (throwExceptionIfNull)
             {
-                this.WriteTestNullValue(writer, opCodeTypePart, dynamicCastResultNumber, "System.InvalidCastException", "dynamic_cast");
+                this.WriteTestNullValueAndThrowException(writer, opCodeTypePart, dynamicCastResultNumber, "System.InvalidCastException", "dynamic_cast");
             }
 
             toType.UseAsClass = true;
@@ -2340,35 +2340,44 @@ namespace Il2Native.Logic
             return 0;
         }
 
-        public void WriteTestNullValue(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IncrementalResult resultToTest, string exceptionName, string labelPrefix)
+        public void WriteTestNullValueAndThrowException(LlvmIndentedTextWriter writer, OpCodePart opCodePart, IncrementalResult resultToTest, string exceptionName, string labelPrefix)
+        {
+            var testNullResultNumber = WriteTestNull(writer, opCodePart, resultToTest);
+            this.WriteBranchSwitchToThrowOrPass(writer, opCodePart, testNullResultNumber, exceptionName, labelPrefix, "null");
+        }
+
+        public IncrementalResult WriteTestNull(LlvmIndentedTextWriter writer, OpCodePart opCodePart, FullyDefinedReference resultToTest)
         {
             var testNullResultNumber = this.WriteSetResultNumber(opCodePart, this.ResolveType("System.Boolean"));
             opCodePart.Result = resultToTest;
 
             writer.Write("icmp eq ");
             writer.WriteLine("i8* {0}, null", resultToTest);
-
-            this.WriteBranchSwitchToThrowOrPass(writer, opCodePart, testNullResultNumber, exceptionName, labelPrefix, "null");
+            return testNullResultNumber;
         }
 
         public void WriteBranchSwitchToThrowOrPass(
             LlvmIndentedTextWriter writer,
             OpCodePart opCodePart,
-            IncrementalResult testValueResultNumber,
+            FullyDefinedReference testValueResultNumber,
             string exceptionName,
             string labelPrefix,
             string labelSuffix)
         {
-            writer.WriteLine("br i1 {0}, label %.{2}_result_{3}{1}, label %.{2}_result_not_{3}{1}", testValueResultNumber, opCodePart.AddressStart, labelPrefix, labelSuffix);
+            this.WriteBranchSwitchToExecute(writer,
+                opCodePart,
+                testValueResultNumber,
+                exceptionName,
+                labelPrefix,
+                labelSuffix,
+                () => this.WriteThrowException(writer, exceptionName));
+        }
 
-            writer.WriteLine(string.Empty);
-
-            writer.Indent--;
-            writer.WriteLine(".{1}_result_{2}{0}:", opCodePart.AddressStart, labelPrefix, labelSuffix);
-            writer.Indent++;
-
+        public void WriteThrowException(LlvmIndentedTextWriter writer, string exceptionName)
+        {
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
+
             var opCodeThrow = new OpCodePart(OpCodesEmit.Throw, 0, 0);
 
             var invalidCastExceptionType = this.ResolveType(exceptionName);
@@ -2382,7 +2391,47 @@ namespace Il2Native.Logic
             this.WriteNewObject(opCodeNewInstance, true);
 
             writer.WriteLine(string.Empty);
+
             this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+        }
+
+        public FullyDefinedReference WriteNew(LlvmIndentedTextWriter writer, string typeName)
+        {
+            // throw InvalidCast result
+            writer.WriteLine(string.Empty);
+
+            var typeToCreate = this.ResolveType(typeName);
+
+            // find constructor
+            var constructorInfo = IlReader.Constructors(typeToCreate).First(c => !c.GetParameters().Any());
+
+            var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
+
+            this.WriteNewObject(opCodeNewInstance, true);
+
+            writer.WriteLine(string.Empty);
+
+            return opCodeNewInstance.Result;
+        }
+
+        public void WriteBranchSwitchToExecute(
+            LlvmIndentedTextWriter writer,
+            OpCodePart opCodePart,
+            FullyDefinedReference testValueResultNumber,
+            string exceptionName,
+            string labelPrefix,
+            string labelSuffix,
+            Action action)
+        {
+            writer.WriteLine("br i1 {0}, label %.{2}_result_{3}{1}, label %.{2}_result_not_{3}{1}", testValueResultNumber, opCodePart.AddressStart, labelPrefix, labelSuffix);
+
+            writer.WriteLine(string.Empty);
+
+            writer.Indent--;
+            writer.WriteLine(".{1}_result_{2}{0}:", opCodePart.AddressStart, labelPrefix, labelSuffix);
+            writer.Indent++;
+
+            action();
 
             var label = string.Concat(labelPrefix, "_result_not_", labelSuffix, opCodePart.AddressStart);
 
@@ -3142,6 +3191,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
 
             type.WriteInitObjectMethod(this);
+            type.WriteGetTypeStaticMethod(this);
 
             var stored = type.UseAsClass;
             type.UseAsClass = false;
@@ -5178,6 +5228,9 @@ namespace Il2Native.Logic
                     this.WriteStaticFieldDeclaration(field);
                 }
             }
+
+            // add type infrastructure
+            type.WriteTypeStorageStaticField(this);
         }
 
         /// <summary>
