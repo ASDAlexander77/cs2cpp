@@ -510,6 +510,11 @@ namespace PEAssemblyReader
             return null;
         }
 
+        public IMethod ToSpecialization(IGenericContext genericContext)
+        {
+            return this.methodDef.ResolveGeneric(genericContext);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="genericContext">

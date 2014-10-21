@@ -344,5 +344,10 @@
 
             return result.ToString();
         }
+
+        public IMethod ToSpecialization(IGenericContext genericContext)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

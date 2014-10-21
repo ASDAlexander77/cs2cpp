@@ -438,22 +438,21 @@ namespace Il2Native.Logic
 
             // find all overide of generic methods 
             var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            var overrideSpecializedMethods = new List<IMethod>();
             foreach (var overrideGenericMethod in allTypes.SelectMany(t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
             {
-                foreach (var specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract))
-                {
-                    if (overrideGenericMethod.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType)
-                        && overrideGenericMethod.IsMatchingOverride(specializationMethod))
-                    {
-                        // TODO: finish it
-
-                        // add specialized method
-                        // 1) create specialized method
-
-                        // 2) add specialized method
-                    }
-                }
+                overrideSpecializedMethods.AddRange(
+                    from specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract)
+                    where overrideGenericMethod.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType)
+                          && overrideGenericMethod.IsMatchingOverride(specializationMethod)
+                    select overrideGenericMethod.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializationMethod)));
             }
+
+            // append to discovered
+            foreach (var overrideSpecializedMethod in overrideSpecializedMethods)
+            {
+                genericMethodSpecializations.Add(overrideSpecializedMethod);
+            }          
 
             // group generic methods by Type
             var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);

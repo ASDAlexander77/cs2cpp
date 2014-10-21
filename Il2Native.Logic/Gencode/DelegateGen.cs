@@ -652,6 +652,11 @@ namespace Il2Native.Logic.Gencode
             {
                 return this.Name;
             }
+
+            public IMethod ToSpecialization(IGenericContext genericContext)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

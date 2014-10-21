@@ -522,6 +522,11 @@ namespace PEAssemblyReader
                 }
             }
 
+            if (this.IsGenericParameter && type.IsGenericParameter)
+            {
+                return 0;
+            }
+
             cmp = this.Namespace.CompareTo(type.Namespace);
             if (cmp != 0)
             {
