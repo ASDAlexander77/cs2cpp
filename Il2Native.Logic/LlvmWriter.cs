@@ -150,6 +150,7 @@ namespace Il2Native.Logic
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args != null && args.Contains("gc-") ? false : true;
             this.Gctors = args != null && args.Contains("gctors-") ? false : true;
+            this.IsLlvm35OrLess = args != null && args.Contains("llvm36") ? false : true;
         }
 
         /// <summary>
@@ -175,6 +176,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public LlvmIndentedTextWriter Output { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool IsLlvm35OrLess { get; private set; }
 
         /// <summary>
         /// if true - suppress ; at the end of line

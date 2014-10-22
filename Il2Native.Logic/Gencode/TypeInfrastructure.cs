@@ -51,6 +51,8 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
             writer.WriteLine(string.Empty);
 
+            var result = opCode.Result;
+
             var testNullResultNumber = llvmWriter.WriteTestNull(writer, opCode, opCode.Result);
 
             llvmWriter.WriteBranchSwitchToExecute(writer,
@@ -74,7 +76,16 @@ namespace Il2Native.Logic.Gencode
                     opCode.Result = null;
                     llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
                     writer.WriteLine(string.Empty);
+
+
+
+                    writer.Write("ret ");
+                    opCode.Result.Type.WriteTypePrefix(writer);
+                    writer.Write(" ");
+                    llvmWriter.WriteResult(opCode.Result);
                 });
+
+            opCode.Result = result;
         }
 
         /// <summary>

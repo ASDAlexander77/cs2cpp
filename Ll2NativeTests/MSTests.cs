@@ -52,6 +52,8 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
+        private const bool Llvm36Support = true;
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -61,6 +63,8 @@ namespace Ll2NativeTests
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
+        private const bool Llvm36Support = false;
 #endif
 
         /// <summary>
@@ -264,7 +268,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -285,6 +289,11 @@ namespace Ll2NativeTests
             if (!gctors)
             {
                 args.Add("gctors-");
+            }
+
+            if (!llvm36Support)
+            {
+                args.Add("llvm36");
             }
 
             return args.ToArray();

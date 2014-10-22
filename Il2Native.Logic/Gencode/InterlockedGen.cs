@@ -38,26 +38,26 @@
             switch (method.MetadataName)
             {
                 case "Increment":
-                    method.IncDecInterlockBase(opCodeMethodInfo, "atomicrmw add ", " acquire", llvmWriter);
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", llvmWriter);
                     break;
 
                 case "Decrement":
-                    method.IncDecInterlockBase(opCodeMethodInfo, "atomicrmw sub ", " acquire", llvmWriter);
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", llvmWriter);
                     break;
 
                 case "Exchange`1":
                 case "Exchange":
-                    method.InterlockBase(opCodeMethodInfo, "atomicrmw xchg ", " acquire", false, llvmWriter);
+                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter);
                     break;
 
                 case "CompareExchange`1":
                 case "CompareExchange":
-                    method.InterlockBase(opCodeMethodInfo, "cmpxchg ", " acq_rel monotonic", true, llvmWriter);
+                    opCodeMethodInfo.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm35OrLess, llvmWriter);
                     break;
             }
         }
 
-        private static void IncDecInterlockBase(this IMethod method, OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
+        private static void IncDecInterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -89,7 +89,7 @@
             writer.WriteLine(attribs);
         }
 
-        private static void InterlockBase(this IMethod method, OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
+        private static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
