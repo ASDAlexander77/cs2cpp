@@ -103,6 +103,12 @@ namespace Il2Native.Logic.Gencode
                 var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getHashCodeMethod));
                 baseMethod.Value = getHashCodeMethod;
             }
+
+            // custom GetType
+            // TODO: you need to append it before processing custom methods
+            var getTypeMethod = new SynthesizedGetTypeMethod(thisType, llvmWriter);
+            var baseGetTypeMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getTypeMethod));
+            baseGetTypeMethod.Value = getTypeMethod;
         }
 
         /// <summary>

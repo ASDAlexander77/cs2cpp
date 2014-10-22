@@ -101,7 +101,7 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var systemType = llvmWriter.ResolveType("System.Type");
-            var method = new SynthesizedGetTypeMethod(type, systemType);
+            var method = new SynthesizedGetTypeStaticMethod(type, llvmWriter);
             writer.WriteLine("; Get Type Object method");
 
             type.UseAsClass = true;

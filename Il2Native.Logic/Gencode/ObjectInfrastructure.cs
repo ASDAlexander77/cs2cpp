@@ -546,6 +546,43 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteResult(opCode.Result);
 
             llvmWriter.WriteMethodEnd(method, null);
+
+            llvmWriter.methodsHaveDefinition.Add(method);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteGetTypeMethod(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedGetTypeMethod(type, llvmWriter);
+            writer.WriteLine("; default GetType method");
+
+            var systemType = llvmWriter.ResolveType("System.Type");
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method, null);
+            llvmWriter.WriteLlvmLoad(opCode, type.ToClass(), new FullyDefinedReference("%this", llvmWriter.ThisType), true, true);
+            writer.WriteLine(string.Empty);
+
+            var normalType = type.ToNormal();
+
+            llvmWriter.WriteGetTypeObject(opCode, normalType);
+
+            writer.Write("ret ");
+            systemType.WriteTypePrefix(writer);
+
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
+
+            llvmWriter.WriteMethodEnd(method, null);
+
+            llvmWriter.methodsHaveDefinition.Add(method);
         }
 
         /// <summary>
@@ -647,6 +684,34 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.WriteLine("; End of Getting data");
+        }
+
+        public static void WriteCallGetTypeObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedGetTypeStaticMethod(type, llvmWriter);
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; call .getType Object method");
+            var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.UsedBy = new UsedByInfo(opCode);
+            llvmWriter.WriteCall(opCodeNope, method, false, false, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCode.Result = opCodeNope.Result;
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; End of Getting data");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="declaringType">
+        /// </param>
+        public static void WriteGetTypeObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        {
+            declaringType.WriteCallGetTypeObjectMethod(llvmWriter, opCode);
         }
     }
 }

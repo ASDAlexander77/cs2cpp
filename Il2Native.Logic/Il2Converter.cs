@@ -234,10 +234,7 @@ namespace Il2Native.Logic
                     WriteTypeDefinition(codeWriter, type, genericContext);
                 }
 
-                if (!codeWriter.IsPostDeclarationsProcessed(type))
-                {
-                    codeWriter.WritePostDeclarations(type);
-                }
+                codeWriter.WritePostDeclarations(type);
 
                 codeWriter.WriteBeforeConstructors();
             }

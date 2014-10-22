@@ -1,13 +1,16 @@
 ﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Collections.Generic;
+    using System.Reflection;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedGetTypeMethod : SynthesizedMethodTypeBase
     {
-        private IType systemType;
+        /// <summary>
+        /// </summary>
+        private readonly LlvmWriter writer;
 
         /// <summary>
         /// </summary>
@@ -15,10 +18,20 @@
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedGetTypeMethod(IType type, IType systemType)
-            : base(type, ".getType")
+        public SynthesizedGetTypeMethod(IType type, LlvmWriter writer)
+            : base(type, "GetType")
         {
-            this.systemType = systemType;
+            this.writer = writer;
+        }
+
+        /// <summary>
+        /// </summary>
+        public override CallingConventions CallingConvention
+        {
+            get
+            {
+                return CallingConventions.HasThis;
+            }
         }
 
         /// <summary>
@@ -27,7 +40,7 @@
         {
             get
             {
-                return this.systemType;
+                return this.writer.ResolveType("System.Type");
             }
         }
     }

@@ -72,6 +72,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />

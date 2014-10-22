@@ -97,6 +97,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly HashSet<IMethod> methodsHaveDefinition = new HashSet<IMethod>();
+
+        /// <summary>
+        /// </summary>
         private readonly HashSet<IType> processedRttiPointerTypes = new HashSet<IType>();
 
         /// <summary>
@@ -1492,17 +1496,6 @@ namespace Il2Native.Logic
             var idx = ++this.stringIndexIncremental;
             this.stringStorage[idx] = str;
             return idx;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public bool IsPostDeclarationsProcessed(IType type)
-        {
-            return this.postDeclarationsProcessedTypes.Contains(type);
         }
 
         /// <summary>
@@ -3024,6 +3017,11 @@ namespace Il2Native.Logic
             {
                 if (!method.IsUnmanagedMethodReference)
                 {
+                    if (methodsHaveDefinition.Contains(method))
+                    {
+                        return;
+                    }
+
                     this.Output.Write("declare ");
                 }
                 else
@@ -3225,6 +3223,8 @@ namespace Il2Native.Logic
             {
                 type.WriteGetHashCodeMethod(this);
             }
+
+            type.WriteGetTypeMethod(this);
 
             type.UseAsClass = stored;
         }
