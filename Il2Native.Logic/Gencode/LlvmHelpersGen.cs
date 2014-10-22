@@ -169,6 +169,16 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
+                    var intSize = toType.GetIntSizeBits();
+                    if (intSize > 0)
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        if (llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.GetIntTypeByByteSize(intSize / 8)))
+                        {
+                            return;
+                        }
+                    }
+
                     llvmWriter.UnaryOper(writer, opCode, intConvert, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
 

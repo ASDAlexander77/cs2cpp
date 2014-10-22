@@ -100,7 +100,7 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            var arrayIndex = llvmWriter.GetArrayIndex(data);
+            var arrayIndex = llvmWriter.GetBytesIndex(data);
             var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length));
             var arrayData = string.Format(
                 "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)", arrayIndex, data.Length, '{', '}');

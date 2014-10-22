@@ -11,6 +11,10 @@ namespace System
     [Serializable()]
     internal sealed class RuntimeType : Type
     {
+        public RuntimeType(byte[] rttiData)
+        {
+
+        }
 
         public override MemberTypes MemberType
         {

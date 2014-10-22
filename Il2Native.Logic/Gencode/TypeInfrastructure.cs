@@ -64,7 +64,22 @@ namespace Il2Native.Logic.Gencode
                 () =>
                 {
                     // TODO: here send predifined byte array data with info for Type
-                    var newObjectResult = llvmWriter.WriteNewCallingDefaultConstructor(writer, operandType.FullName);
+                    var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
+                    var byteArrayType = llvmWriter.ResolveType("System.Byte").ToArrayType(1);
+                    var bytes = new byte[1];
+                    var bytesIndex = llvmWriter.GetBytesIndex(bytes);
+                    var firstParameterValue = new FullyDefinedReference(
+                            string.Format(
+                                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.bytes{0}, i32 0, i32 1) to i8*)",
+                                bytesIndex,
+                                bytes.Length,
+                                '{',
+                                '}'),
+                            byteArrayType);
+
+                    opCode.Result = null;
+                    var newObjectResult = llvmWriter.WriteNewWithCallingConstructor(opCode, runtimeType, byteArrayType, firstParameterValue);
+                    writer.WriteLine(string.Empty);
 
                     // call cmp exchnage
                     var noOpCmpXchg = OpCodePart.CreateNop;

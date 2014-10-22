@@ -271,7 +271,7 @@ namespace Il2Native.Logic
         public static int IntTypeBitSize(this IType thisType, bool isPointer = false)
         {
             var thisTypeString = thisType.TypeToCType(isPointer);
-            return GetIntSize(thisTypeString);
+            return GetIntSizeBits(thisTypeString);
         }
 
         public static bool IsSignType(this IType thisType)
@@ -401,8 +401,8 @@ namespace Il2Native.Logic
             var thisTypeString = thisType.TypeToCType();
             var typeString = type.TypeToCType();
 
-            var thisTypeSize = GetIntSize(thisTypeString);
-            var typeSize = GetIntSize(typeString);
+            var thisTypeSize = GetIntSizeBits(thisTypeString);
+            var typeSize = GetIntSizeBits(typeString);
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -417,8 +417,8 @@ namespace Il2Native.Logic
             var thisTypeString = thisType.TypeToCType();
             var typeString = type.TypeToCType();
 
-            var thisTypeSize = GetIntSize(thisTypeString);
-            var typeSize = GetIntSize(typeString);
+            var thisTypeSize = GetIntSizeBits(thisTypeString);
+            var typeSize = GetIntSizeBits(typeString);
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -906,7 +906,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static int GetIntSize(string thisTypeString)
+        public static int GetIntSizeBits(this string thisTypeString)
         {
             if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
             {

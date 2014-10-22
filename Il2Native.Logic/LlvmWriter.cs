@@ -69,11 +69,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private int arrayIndexIncremental;
+        private int bytesIndexIncremental;
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<int, byte[]> arrayStorage = new SortedDictionary<int, byte[]>();
+        private readonly IDictionary<int, byte[]> bytesStorage = new SortedDictionary<int, byte[]>();
 
         /// <summary>
         /// </summary>
@@ -312,29 +312,18 @@ namespace Il2Native.Logic
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
                     var stringType = this.ResolveType("System.String");
-
-                    // find constructor
-                    var constructorInfo =
-                        IlReader.Constructors(stringType)
-                                .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.ToString() == "Char[]");
-
-                    this.WriteNewWithoutCallingConstructor(opCode, stringType);
+                    var charArrayType = this.ResolveType("System.Char").ToArrayType(1);
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
-
-                    var dummyOpCodeWithStringIndex = OpCodePart.CreateNop;
-                    dummyOpCodeWithStringIndex.Result =
-                        new FullyDefinedReference(
+                    var firstParameterValue = new FullyDefinedReference(
                             string.Format(
                                 "bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)",
                                 stringIndex,
                                 opCodeString.Operand.Length + 1,
                                 '{',
                                 '}'),
-                            stringType);
+                            charArrayType);
 
-                    opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
-
-                    this.WriteCallConstructor(opCode, constructorInfo);
+                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
 
                     break;
                 case Code.Ldnull:
@@ -861,13 +850,7 @@ namespace Il2Native.Logic
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
                     var intPtrType = this.ResolveType("System.IntPtr");
-
-                    // find constructor
-                    constructorInfo = IlReader.Constructors(intPtrType)
-                                              .First(c => c.GetParameters().Count() == 1 /* && c.GetParameters().First().ParameterType.ToString() == "Int"*/);
-
-                    this.WriteNewWithoutCallingConstructor(opCode, intPtrType);
-
+                    var intType = this.ResolveType("System.Void").ToPointerType();
                     var convertString = this.WriteToString(
                         () =>
                         {
@@ -877,12 +860,9 @@ namespace Il2Native.Logic
                             this.Output.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
                             this.Output.Write(" to i8*)");
                         });
-                    var dummyOpCodeWithIntToPtrConversion = OpCodePart.CreateNop;
-                    dummyOpCodeWithIntToPtrConversion.Result = new FullyDefinedReference(convertString, intPtrType);
+                    var value = new FullyDefinedReference(convertString, this.ResolveType("System.Byte").ToPointerType());
 
-                    opCode.OpCodeOperands = new[] { dummyOpCodeWithIntToPtrConversion };
-
-                    this.WriteCallConstructor(opCode, constructorInfo);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, intType, value);
 
                     this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -1269,6 +1249,25 @@ namespace Il2Native.Logic
             }
         }
 
+        public FullyDefinedReference WriteNewWithCallingConstructor(OpCodePart opCode, IType stringType, IType firstParameterType, FullyDefinedReference firstParameterValue)
+        {
+            // find constructor
+            var constructorInfo =
+                IlReader.Constructors(stringType)
+                        .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+
+            this.WriteNewWithoutCallingConstructor(opCode, stringType);
+
+            var dummyOpCodeWithStringIndex = OpCodePart.CreateNop;
+            dummyOpCodeWithStringIndex.Result = firstParameterValue;
+
+            opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
+
+            this.WriteCallConstructor(opCode, constructorInfo);
+
+            return opCode.Result;
+        }
+
         private void WriteOverflowWithThrow(LlvmIndentedTextWriter writer, OpCodePart opCode, string @operator)
         {
             this.BinaryOper(
@@ -1439,10 +1438,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public int GetArrayIndex(byte[] data)
+        public int GetBytesIndex(byte[] data)
         {
-            var idx = ++this.arrayIndexIncremental;
-            this.arrayStorage[idx] = data;
+            var idx = ++this.bytesIndexIncremental;
+            this.bytesStorage[idx] = data;
             return idx;
         }
 
@@ -4402,10 +4401,10 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="pair">
         /// </param>
-        private void WriteArrayData(KeyValuePair<int, byte[]> pair)
+        private void WriteBytesData(KeyValuePair<int, byte[]> pair)
         {
             this.Output.Write(
-                "@.array{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [",
+                "@.bytes{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [",
                 pair.Key,
                 pair.Value,
                 pair.Value.Length,
@@ -4525,15 +4524,15 @@ namespace Il2Native.Logic
             }
 
             // write set of array data
-            foreach (var pair in this.arrayStorage)
+            foreach (var pair in this.bytesStorage)
             {
-                this.WriteArrayData(pair);
+                this.WriteBytesData(pair);
             }
 
-            if (this.arrayStorage.Count > 0)
+            if (this.bytesStorage.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
-                this.arrayStorage.Clear();
+                this.bytesStorage.Clear();
             }
         }
 
