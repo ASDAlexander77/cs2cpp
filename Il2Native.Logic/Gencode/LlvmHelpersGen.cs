@@ -406,6 +406,12 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            if (methodInfo.IsTypeOfCallFunction())
+            {
+                opCodeMethodInfo.WriteTypeOfFunction(llvmWriter);
+                return;
+            }
+
             var returnFullyDefinedReference = methodInfo.WriteFunctionCallResult(opCodeMethodInfo, llvmWriter);
 
             writer.WriteFunctionCall(tryClause);
@@ -416,6 +422,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(' ');
 
+            // extra support
             if (methodInfo.IsExternalLibraryMethod())
             {
                 writer.Write("(...)* ");

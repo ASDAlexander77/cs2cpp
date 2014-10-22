@@ -259,6 +259,7 @@
             }
             else
             {
+                // default method name
                 llvmWriter.WriteMethodDefinitionName(writer, methodInfo, ownerOfExplicitInterface);
             }
         }

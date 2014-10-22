@@ -118,5 +118,21 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteMethodEnd(method, null);
         }
 
+        public static bool IsTypeOfCallFunction(this IMethod method)
+        {
+            if (!method.IsStatic)
+            {
+                return false;
+            }
+
+            return method.FullName == "System.Type.GetTypeFromHandle";
+        }
+
+        public static void WriteTypeOfFunction(this OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        {
+            // call .getType
+            var typeInfo = opCodeMethodInfo.OpCodeOperands[0] as OpCodeTypePart;
+            typeInfo.Operand.WriteCallGetTypeObjectMethod(llvmWriter, opCodeMethodInfo);
+        }
     }
 }
