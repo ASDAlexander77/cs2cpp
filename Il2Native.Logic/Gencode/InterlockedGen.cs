@@ -57,7 +57,7 @@
             }
         }
 
-        private static void IncDecInterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
+        public static void IncDecInterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -89,9 +89,11 @@
             writer.WriteLine(attribs);
         }
 
-        private static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
+        public static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
+
+            writer.WriteLine("; {0} start", oper);
 
             IType pointerIntSize = null;
             IType originalType = null;
@@ -152,6 +154,9 @@
                 // cast back
                 llvmWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
             }
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; {0} end", oper);
         }
     }
 }

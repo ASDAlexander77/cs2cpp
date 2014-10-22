@@ -2357,7 +2357,8 @@ namespace Il2Native.Logic
             opCodePart.Result = resultToTest;
 
             writer.Write("icmp eq ");
-            writer.WriteLine("i8* {0}, null", resultToTest);
+            resultToTest.Type.WriteTypePrefix(writer);
+            writer.WriteLine(" {0}, null", resultToTest);
             return testNullResultNumber;
         }
 
@@ -2400,12 +2401,16 @@ namespace Il2Native.Logic
             this.WriteThrow(opCodeThrow, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
         }
 
-        public FullyDefinedReference WriteNew(LlvmIndentedTextWriter writer, string typeName)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(LlvmIndentedTextWriter writer, string typeName)
+        {
+            var typeToCreate = this.ResolveType(typeName);
+            return WriteNewCallingDefaultConstructor(writer, typeToCreate);
+        }
+
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(LlvmIndentedTextWriter writer, IType typeToCreate)
         {
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
-
-            var typeToCreate = this.ResolveType(typeName);
 
             // find constructor
             var constructorInfo = IlReader.Constructors(typeToCreate).First(c => !c.GetParameters().Any());

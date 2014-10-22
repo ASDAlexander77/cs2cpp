@@ -63,26 +63,28 @@ namespace Il2Native.Logic.Gencode
                 "new",
                 () =>
                 {
-                    var newObjectResult = llvmWriter.WriteNew(writer, operandType.FullName);
+                    // TODO: here send predifined byte array data with info for Type
+                    var newObjectResult = llvmWriter.WriteNewCallingDefaultConstructor(writer, operandType.FullName);
 
-                    // store new value
-                    writer.Write("store ");
-                    newObjectResult.Type.WriteTypePrefix(writer);
-                    writer.Write(" ");
-                    llvmWriter.WriteResult(newObjectResult);
-                    writer.Write(", ");
-                    newObjectResult.Type.WriteTypePrefix(writer);
-                    writer.WriteLine("* {0}", type.GetTypeStaticFieldName());
+                    // call cmp exchnage
+                    var noOpCmpXchg = OpCodePart.CreateNop;
+                    noOpCmpXchg.OpCodeOperands = new[] { OpCodePart.CreateNop, OpCodePart.CreateNop, OpCodePart.CreateNop };
+                    noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
+                    noOpCmpXchg.OpCodeOperands[1].Result = new ConstValue(null, operandType);
+                    noOpCmpXchg.OpCodeOperands[2].Result = newObjectResult;
+                    noOpCmpXchg.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm35OrLess, llvmWriter);
+                    writer.WriteLine(string.Empty);
+
+                    // load again
                     opCode.Result = null;
                     llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
                     writer.WriteLine(string.Empty);
-
-
 
                     writer.Write("ret ");
                     opCode.Result.Type.WriteTypePrefix(writer);
                     writer.Write(" ");
                     llvmWriter.WriteResult(opCode.Result);
+                    writer.WriteLine(string.Empty);
                 });
 
             opCode.Result = result;
