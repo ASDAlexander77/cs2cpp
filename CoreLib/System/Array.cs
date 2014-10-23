@@ -20,14 +20,12 @@ namespace System
         {
             Copy(sourceArray, 0, destinationArray, 0, length);
         }
-
         
         public static void Copy(Array sourceArray, int sourceIndex, Array destinationArray, int destinationIndex, int length)
         {
             throw new NotImplementedException();
         }
-
-        
+       
         public static void Clear(Array array, int index, int length)
         {
             throw new NotImplementedException();

@@ -176,7 +176,6 @@ namespace Ll2NativeTests
             // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
             // 32 - multi array
-            // 33 - using GetType
             // 36 - bug in execution (NotImplemented)
             // 37 - multi array
             // 39 - using Attributes
@@ -203,21 +202,19 @@ namespace Ll2NativeTests
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            // 126 - not implemented default ToString() to return type name
-            // 127 - using typeof
-            // 128 - using typeof, using Attributes
-            // 129 - using typeof
+            // 127 - IsDerined not implemented
+            // 128 - using Attributes
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
-            // 132 - typeof, Reflection
-            // 135 - typeof, Reflection
+            // 132 - Reflection
+            // 135 - Reflection
             // 146 - NEED TO BE FIXED: bug with i1 and i8 types
             // 149 - Delegate.Combine (NotImplemented)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            126, 127, 128, 129, 130, 132, 135, 146, 149
+                            10, 19, 28, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
+                            127, 128, 130, 132, 135, 146, 149
                         });
 
             if (UsingRoslyn)
@@ -237,7 +234,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 21 - using GetType()
             // 29 - boxing array and sends to WriteLine - causes crash
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
             // 46 - Delegate.Combine not implemented
@@ -247,11 +243,11 @@ namespace Ll2NativeTests
             // 56 - bug in execution (NotImplemented)
             // 63 - Array.Length is not implemented
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
-            // 66 - using typeof
+            // 66 - using typeof (typeof (Foo<>))
             // 72 - not implemented (DateTime to string)
             // 77 - file not found
             // 78 - not implemented
-            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78 };
+            var skip = new[] { 29, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);

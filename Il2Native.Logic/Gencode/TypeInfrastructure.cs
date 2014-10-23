@@ -108,7 +108,7 @@ namespace Il2Native.Logic.Gencode
 
         public static byte[] GenerateTypeInfoBytes(this IType type)
         {
-            return Encoding.UTF8.GetBytes(type.FullName);
+            return Encoding.ASCII.GetBytes(type.FullName);
         }
 
         /// <summary>

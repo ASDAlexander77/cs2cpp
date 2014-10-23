@@ -16,7 +16,7 @@ namespace System
 
         public RuntimeType(byte[] rttiData)
         {
-            this.fullName = new string(Encoding.UTF8.GetChars(rttiData));
+            this.fullName = new string(Encoding.ASCII.GetChars(rttiData));
         }
 
         public override MemberTypes MemberType
