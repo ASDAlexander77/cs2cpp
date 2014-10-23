@@ -100,10 +100,10 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            var arrayIndex = llvmWriter.GetBytesIndex(data);
+            var bytesIndex = llvmWriter.GetBytesIndex(data);
             var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length));
             var arrayData = string.Format(
-                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.array{0}, i32 0, i32 1) to i8*)", arrayIndex, data.Length, '{', '}');
+                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.bytes{0}, i32 0, i32 1) to i8*)", bytesIndex, data.Length, '{', '}');
 
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",

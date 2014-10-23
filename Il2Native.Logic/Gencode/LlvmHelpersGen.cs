@@ -172,9 +172,10 @@ namespace Il2Native.Logic.Gencode
                     var intSize = toType.GetIntSizeBits();
                     if (intSize > 0)
                     {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                        if (llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.GetIntTypeByByteSize(intSize / 8)))
+                        var toIntType = llvmWriter.GetIntTypeByByteSize(intSize / 8);
+                        if (llvmWriter.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], toIntType))
                         {
+                            opCode.Result = opCode.OpCodeOperands[0].Result;
                             return;
                         }
                     }
@@ -208,14 +209,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void LlvmIntConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string intConvert, string toType)
+        public static void LlvmIntConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string intConvert, IType toType)
         {
             var writer = llvmWriter.Output;
 
             var incomingResult = opCode.Result;
 
             llvmWriter.PreProcess(writer, opCode);
-            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type);
+            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type, toType);
 
             var returnResult = opCode.Result;
 
@@ -223,7 +224,8 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.PostProcess(writer, opCode);
 
-            writer.Write(" to {0}", toType);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer);
 
             opCode.Result = returnResult;
         }

@@ -1331,14 +1331,14 @@ namespace Il2Native.Logic
 
             if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeExtCastRequired(opCode.Result.Type))
             {
-                this.LlvmIntConvert(opCode, destType.IsSignType() ? "sext" : "zext", "i" + destType.IntTypeBitSize());
+                this.LlvmIntConvert(opCode, destType.IsSignType() ? "sext" : "zext", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
             if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeTruncCastRequired(opCode.Result.Type))
             {
-                this.LlvmIntConvert(opCode, "trunc", "i" + destType.IntTypeBitSize());
+                this.LlvmIntConvert(opCode, "trunc", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
@@ -1346,14 +1346,14 @@ namespace Il2Native.Logic
             // pointer to int, int to pointerf
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && opCode.Result.Type.IsPointer)
             {
-                this.LlvmIntConvert(opCode, "ptrtoint", "i" + destType.IntTypeBitSize());
+                this.LlvmIntConvert(opCode, "ptrtoint", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
             if (opCode.Result.Type.IntTypeBitSize() > 0 && destType.IsPointer && !opCode.Result.Type.IsPointer)
             {
-                this.LlvmIntConvert(opCode, "inttoptr", "i" + destType.GetElementType().IntTypeBitSize(true) + "*");
+                this.LlvmIntConvert(opCode, "inttoptr", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
