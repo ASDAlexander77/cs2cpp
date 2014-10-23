@@ -399,7 +399,6 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
         {
-
             var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
