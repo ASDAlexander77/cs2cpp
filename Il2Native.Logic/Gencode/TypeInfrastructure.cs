@@ -29,7 +29,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            writer.Write("{0} = global ", type.GetTypeStaticFieldName());
+            writer.Write("{0} = {1}global ", type.GetTypeStaticFieldName(), type.IsGenericType ? "linkonce_odr " : string.Empty);
             llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
             writer.WriteLine(" null");
         }
