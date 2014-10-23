@@ -10,6 +10,7 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Diagnostics;
+    using System.Text;
 
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -66,7 +67,7 @@ namespace Il2Native.Logic.Gencode
                     // TODO: here send predifined byte array data with info for Type
                     var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
                     var byteArrayType = llvmWriter.ResolveType("System.Byte").ToArrayType(1);
-                    var bytes = new byte[1];
+                    var bytes = type.GenerateTypeInfoBytes();
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
                     var firstParameterValue = new FullyDefinedReference(
                             string.Format(
@@ -103,6 +104,11 @@ namespace Il2Native.Logic.Gencode
                 });
 
             opCode.Result = result;
+        }
+
+        public static byte[] GenerateTypeInfoBytes(this IType type)
+        {
+            return Encoding.UTF8.GetBytes(type.FullName);
         }
 
         /// <summary>

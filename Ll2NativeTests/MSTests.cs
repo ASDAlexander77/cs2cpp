@@ -172,8 +172,6 @@ namespace Ll2NativeTests
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
             // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
 
-            // NEED TO BE FIXED, when you override generic method it does not generate correct vtable
-
             // 10 - not compilable
             // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
