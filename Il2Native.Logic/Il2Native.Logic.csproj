@@ -76,6 +76,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />

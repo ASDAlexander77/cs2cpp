@@ -1249,14 +1249,14 @@ namespace Il2Native.Logic
             }
         }
 
-        public FullyDefinedReference WriteNewWithCallingConstructor(OpCodePart opCode, IType stringType, IType firstParameterType, FullyDefinedReference firstParameterValue)
+        public FullyDefinedReference WriteNewWithCallingConstructor(OpCodePart opCode, IType type, IType firstParameterType, FullyDefinedReference firstParameterValue)
         {
             // find constructor
             var constructorInfo =
-                IlReader.Constructors(stringType)
+                IlReader.Constructors(type)
                         .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
 
-            this.WriteNewWithoutCallingConstructor(opCode, stringType);
+            type.WriteCallNewObjectMethod(this, opCode);
 
             var dummyOpCodeWithStringIndex = OpCodePart.CreateNop;
             dummyOpCodeWithStringIndex.Result = firstParameterValue;
@@ -1297,14 +1297,14 @@ namespace Il2Native.Logic
             this.WriteBranchSwitchToThrowOrPass(writer, opCode, testResult, "System.OverflowException", "arithm_overflow", "zero");
         }
 
-        private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart, bool ignoreTestNullValue = false)
+        private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
             var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
 
             this.CheckIfExternalDeclarationIsRequired(declaringType);
 
-            this.WriteNew(opCodeConstructorInfoPart, declaringType, ignoreTestNullValue);
-
+            this.WriteNew(opCodeConstructorInfoPart, declaringType);
+            
             if (opCodeConstructorInfoPart.Destination != null)
             {
                 opCodeConstructorInfoPart.Result.Type.UseAsClass = false;
@@ -2131,7 +2131,7 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
             this.CheckIfExternalDeclarationIsRequired(declaringType);
-            this.WriteNewWithoutCallingConstructor(opCode, declaringType);
+            declaringType.WriteCallNewObjectMethod(this, opCode);
 
             var newObjectResult = opCode.Result;
 
@@ -2386,7 +2386,7 @@ namespace Il2Native.Logic
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
             opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
 
-            this.WriteNewObject(opCodeNewInstance, true);
+            this.WriteNewObject(opCodeNewInstance);
 
             writer.WriteLine(string.Empty);
 
@@ -2409,7 +2409,7 @@ namespace Il2Native.Logic
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
 
-            this.WriteNewObject(opCodeNewInstance, true);
+            this.WriteNewObject(opCodeNewInstance);
 
             writer.WriteLine(string.Empty);
 
@@ -3196,6 +3196,12 @@ namespace Il2Native.Logic
             this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
+
+            // object oriented methods
+            if (!type.IsVoid())
+            {
+                type.WriteNewObjectMethod(this);
+            }
 
             type.WriteInitObjectMethod(this);
             type.WriteGetTypeStaticMethod(this);

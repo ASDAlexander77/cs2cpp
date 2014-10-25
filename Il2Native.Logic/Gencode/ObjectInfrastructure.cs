@@ -89,7 +89,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
-            llvmWriter.WriteNewWithoutCallingConstructor(opCode, declaringType, isStruct);
+            declaringType.WriteCallNewObjectMethod(llvmWriter, opCode);
 
             var newObjectResult = opCode.Result;
 
@@ -184,6 +184,19 @@ namespace Il2Native.Logic.Gencode
                 resAlloc,
                 llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             opCodePart.Result = resAlloc;
+        }
+
+        public static void WriteCallNewObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedNewMethod(type, llvmWriter);
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; call New Object method");
+            var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.UsedBy = new UsedByInfo(opCode);
+            llvmWriter.WriteCall(opCodeNope, method, false, false, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCode.Result = opCodeNope.Result;
         }
 
         /// <summary>
@@ -319,6 +332,29 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
+        public static void WriteNewObjectMethod(this IType type, LlvmWriter llvmWriter)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedNewMethod(type, llvmWriter);
+            writer.WriteLine("; New Object method");
+
+            type.UseAsClass = false;
+            var isStruct = type.IsStructureType();
+            type.UseAsClass = true;
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method, null);
+            llvmWriter.WriteNewMethodBody(opCode, type, isStruct);
+            writer.WriteLine(string.Empty);
+            writer.Write("ret ");
+            type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
+            writer.WriteLine(string.Empty);
+            llvmWriter.WriteMethodEnd(method, null);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -351,14 +387,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType, bool ignoreTestNullValue = false)
+        public static void WriteNew(this LlvmWriter llvmWriter, OpCodeConstructorInfoPart opCodeConstructorInfoPart, IType declaringType)
         {
             if (opCodeConstructorInfoPart.HasResult)
             {
                 return;
             }
 
-            llvmWriter.WriteNewWithoutCallingConstructor(opCodeConstructorInfoPart, declaringType, false, ignoreTestNullValue);
+            declaringType.WriteCallNewObjectMethod(llvmWriter, opCodeConstructorInfoPart);
             llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
@@ -422,7 +458,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotCallInit">
         /// </param>
-        public static void WriteNewWithoutCallingConstructor(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType, bool doNotCallInit = false, bool doNotTestNullValue = false)
+        public static void WriteNewMethodBody(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringType, bool doNotCallInit = false, bool doNotTestNullValue = false)
         {
             if (opCodePart.HasResult)
             {
