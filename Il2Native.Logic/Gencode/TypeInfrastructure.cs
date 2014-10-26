@@ -66,16 +66,12 @@ namespace Il2Native.Logic.Gencode
                 {
                     // TODO: here send predifined byte array data with info for Type
                     var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
-                    var byteArrayType = llvmWriter.ResolveType("System.Byte").ToArrayType(1);
+                    var byteType = llvmWriter.ResolveType("System.Byte");
+                    var byteArrayType = byteType.ToArrayType(1);
                     var bytes = type.GenerateTypeInfoBytes();
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
                     var firstParameterValue = new FullyDefinedReference(
-                            string.Format(
-                                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.bytes{0}, i32 0, i32 1) to i8*)",
-                                bytesIndex,
-                                bytes.Length,
-                                '{',
-                                '}'),
+                            llvmWriter.GetArrayTypeReference(string.Format("@.bytes{0}", bytesIndex), byteType, bytes.Length),
                             byteArrayType);
 
                     opCode.Result = null;

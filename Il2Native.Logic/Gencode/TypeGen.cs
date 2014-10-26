@@ -261,8 +261,13 @@ namespace Il2Native.Logic.Gencode
         }
 
 
-        public static int GetTypeSize(this IType type)
+        public static int GetTypeSize(this IType type, bool asValueType = false)
         {
+            if (asValueType && type.IsValueType() && type.Namespace == "System")
+            {
+                return SystemTypeSizes[type.Name];
+            }
+
             // find index
             int size;
             if (!sizeByType.TryGetValue(type.FullName, out size))
@@ -468,13 +473,28 @@ namespace Il2Native.Logic.Gencode
                 effectiveType = effectiveType.GetElementType();
             }
 
-            if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+            if (!type.IsArray)
             {
-                writer.Write('%');
-            }
+                if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+                {
+                    writer.Write('%');
+                }
 
-            // write base name
-            effectiveType.WriteTypeName(writer, type.IsPointer);
+                // write base name
+                effectiveType.WriteTypeName(writer, type.IsPointer);
+            }
+            else
+            {
+                writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
+                if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+                {
+                    writer.Write('%');
+                }
+
+                // write base name
+                effectiveType.WriteTypeName(writer, type.IsPointer);
+                writer.Write(" ] }");
+            }
         }
     }
 }

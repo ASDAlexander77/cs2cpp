@@ -312,15 +312,11 @@ namespace Il2Native.Logic
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
                     var stringType = this.ResolveType("System.String");
-                    var charArrayType = this.ResolveType("System.Char").ToArrayType(1);
+                    var charType = this.ResolveType("System.Char");
+                    var charArrayType = charType.ToArrayType(1);
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
                     var firstParameterValue = new FullyDefinedReference(
-                            string.Format(
-                                "bitcast ([{1} x i16]* getelementptr inbounds ({2} i32, [{1} x i16] {3}* @.s{0}, i32 0, i32 1) to i16*)",
-                                stringIndex,
-                                opCodeString.Operand.Length + 1,
-                                '{',
-                                '}'),
+                        this.GetArrayTypeReference(string.Format("@.s{0}", stringIndex), charType, opCodeString.Operand.Length + 1),
                             charArrayType);
 
                     this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
@@ -3600,8 +3596,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="resultType">
         /// </param>
-        private void BinaryOper(
-            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null)
+        public void BinaryOper(
+            LlvmIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null, string beforeSecondOperand = null)
         {
             if (opCode.HasResult)
             {
@@ -3614,7 +3610,12 @@ namespace Il2Native.Logic
             this.ProcessOperator(writer, opCode, op, options: options, resultType: resultType);
 
             this.PostProcessOperand(writer, opCode, 0);
-            writer.Write(',');
+            writer.Write(", ");
+            if (beforeSecondOperand != null)
+            {
+                writer.Write(beforeSecondOperand);
+            }
+
             this.PostProcessOperand(writer, opCode, 1, options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
         }
 
@@ -4134,7 +4135,8 @@ namespace Il2Native.Logic
                 opCode,
                 "getelementptr inbounds",
                 OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
-                type);
+                type,
+                beforeSecondOperand: type == null && opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -4410,13 +4412,13 @@ namespace Il2Native.Logic
         private void WriteBytesData(KeyValuePair<int, byte[]> pair)
         {
             this.Output.Write(
-                "@.bytes{0} = private unnamed_addr constant {4} i32, [{2} x i8] {5} {4} i32 {3}, [{2} x i8] [",
+                "@.bytes{0} = private unnamed_addr constant {1} {3} {2}",
                 pair.Key,
-                pair.Value,
-                pair.Value.Length,
-                pair.Value.Length,
-                '{',
-                '}');
+                this.GetArrayTypeHeader(this.ResolveType("System.Byte"), pair.Value.Length),
+                this.GetArrayValuesHeader(this.ResolveType("System.Byte"), pair.Value.Length, pair.Value.Length),
+                "{");
+
+            this.Output.Write(" [");
 
             var index = 0;
             foreach (var b in pair.Value)
@@ -5325,13 +5327,13 @@ namespace Il2Native.Logic
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
             this.Output.Write(
-                "@.s{0} = private unnamed_addr constant {4} i32, [{2} x i16] {5} {4} i32 {3}, [{2} x i16] [",
+                "@.bytes{0} = private unnamed_addr constant {1} {3} {2}",
                 pair.Key,
-                pair.Value,
-                pair.Value.Length + 1,
-                pair.Value.Length,
-                '{',
-                '}');
+                this.GetArrayTypeHeader(this.ResolveType("System.Char"), pair.Value.Length + 1),
+                this.GetArrayValuesHeader(this.ResolveType("System.Char"), pair.Value.Length, pair.Value.Length + 1),
+                "{");
+
+            this.Output.Write(" [");
 
             var index = 0;
             foreach (var c in pair.Value.ToCharArray())

@@ -138,15 +138,15 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New array");
 
-            var size = declaringType.GetTypeSize();
+            var sizeOfElement = declaringType.GetTypeSize(true);
             llvmWriter.UnaryOper(writer, opCode, "mul");
-            writer.WriteLine(", {0}", size);
+            writer.WriteLine(", {0}", sizeOfElement);
 
             var resMul = opCode.Result;
 
             var intType = llvmWriter.ResolveType("System.Int32");
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("add i32 4, {0}", resMul);
+            writer.Write("add i32 {1}, {0}", resMul, llvmWriter.ResolveType("System.Array").GetTypeSize() + 2 * 4); // add header size
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;
@@ -168,41 +168,107 @@ namespace Il2Native.Logic.Gencode
                    LlvmWriter.PointerSize /*Align*/);
             }
 
-            llvmWriter.WriteBitcast(opCode, resAlloc, intType);
-            writer.WriteLine(string.Empty);
-
             var opCodeTemp = OpCodePart.CreateNop;
             opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
 
-            // save array size
-            llvmWriter.ProcessOperator(writer, opCodeTemp, "store");
-            llvmWriter.PostProcessOperand(writer, opCode, 0, !opCode.OpCodeOperands[0].HasResult);
-            writer.Write(", ");
-            intType.WriteTypePrefix(writer);
-            writer.Write("* ");
+            // init System.Array
+            var arraySystemType = llvmWriter.ResolveType("System.Array");
+            llvmWriter.WriteBitcast(opCode, resAlloc, arraySystemType);
+            llvmWriter.ResolveType("System.Array").WriteCallInitObjectMethod(llvmWriter, opCode);
+            writer.WriteLine(string.Empty);
+
+            var arrayType = declaringType.ToArrayType(1);
+            llvmWriter.WriteBitcast(opCode, resAlloc, declaringType.ToArrayType(1));
+            writer.WriteLine(string.Empty);
+
+            var arrayInstanceResult = opCode.Result;
+
+            // save element size
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("getelementptr inbounds ");
+            arrayInstanceResult.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(arrayInstanceResult);
+            writer.Write(", i32 0, i32 3");
+            writer.WriteLine(string.Empty);
+
+            writer.Write("store ");
+            opCode.Result.Type.WriteTypePrefix(writer);
+            writer.Write(" {0}, ", sizeOfElement);
+            opCode.Result.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
             llvmWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);
 
-            var tempRes = opCode.Result;
-            var newArrayResult = llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("getelementptr ");
+            // save array size
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("getelementptr inbounds ");
+            arrayInstanceResult.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(arrayInstanceResult);
+            writer.Write(", i32 0, i32 4");
+            writer.WriteLine(string.Empty);
 
-            // WriteTypePrefix(writer, declaringType);
-            writer.Write("i32* ");
-            llvmWriter.WriteResult(tempRes);
-            writer.WriteLine(", i32 1");
-
-            if (declaringType.TypeNotEquals(intType))
-            {
-                llvmWriter.WriteBitcast(opCode, newArrayResult, declaringType.ToArrayType(1));
-                writer.WriteLine(string.Empty);
-            }
-            else
-            {
-                opCode.Result = opCode.Result.ToType(declaringType.ToArrayType(1));
-            }
+            writer.Write("store ");
+            length.Result.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(length.Result);
+            writer.Write(", ");
+            opCode.Result.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
+            writer.WriteLine(string.Empty);
 
             writer.WriteLine("; end of new array");
+
+            opCode.Result = arrayInstanceResult;
+        }
+
+        public static string GetArrayTypeReference(this LlvmWriter llvmWriter, string name, IType elementType, int length)
+        {
+            var convertString = llvmWriter.WriteToString(
+            () =>
+            {
+                var writer = llvmWriter.Output;
+
+                var array = elementType.ToArrayType(1);
+                writer.Write("bitcast (");
+                writer.Write("{1}* {0} to ", name, llvmWriter.GetArrayTypeHeader(elementType, length));
+                array.WriteTypePrefix(writer);
+                writer.Write(")");
+            });
+
+            return convertString;
+        }
+
+        public static string GetArrayPrefixDataType()
+        {
+            return "i32 (...)**, i32 (...)**, i32 (...)**, i32, i32";
+        }
+
+        public static string GetArrayTypeHeader(this LlvmWriter llvmWriter, IType elementType, int length)
+        {
+            var typeString = llvmWriter.WriteToString(
+            () =>
+            {
+                var writer = llvmWriter.Output;
+                elementType.WriteTypePrefix(writer);
+            });
+
+            return "{ " + GetArrayPrefixDataType() + ", [" + length + " x " + typeString + "] }";
+        }
+
+        // TODO: you need to init first 3 value with VTable of Object and interfaces, make it universal
+        public static string GetArrayValuesHeader(this LlvmWriter llvmWriter, IType elementType, int length, int storeLength)
+        {
+            var typeString = llvmWriter.WriteToString(
+            () =>
+            {
+                var writer = llvmWriter.Output;
+                elementType.WriteTypePrefix(writer);
+            });
+
+            return "i32 (...)** null, i32 (...)** null, i32 (...)** null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
         }
     }
 }
