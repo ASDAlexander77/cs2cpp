@@ -86,11 +86,8 @@ namespace Il2Native.Logic.Gencode
             var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
 
             var storedResult = opCode.OpCodeOperands[0].Result;
-            if (storedResult.Type.HasElementType && storedResult.Type.GetElementType().TypeNotEquals(llvmWriter.ResolveType("System.Byte")))
-            {
-                llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
-                writer.WriteLine(string.Empty);
-            }
+            llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
+            writer.WriteLine(string.Empty);
 
             var staticArrayInitTypeSizeLabel = "__StaticArrayInitTypeSize=";
             if (!opCodeFieldInfoPart.Operand.FieldType.MetadataName.Contains(staticArrayInitTypeSizeLabel))
@@ -99,14 +96,18 @@ namespace Il2Native.Logic.Gencode
             }
 
             var bytesIndex = llvmWriter.GetBytesIndex(data);
+            var byteType = llvmWriter.ResolveType("System.Byte");
             var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length));
-            var arrayData = string.Format(
-                "bitcast ([{1} x i8]* getelementptr inbounds ({2} i32, [{1} x i8] {3}* @.bytes{0}, i32 0, i32 1) to i8*)", bytesIndex, data.Length, '{', '}');
+            var arrayData = llvmWriter.GetArrayTypeReference(string.Concat("@.bytes", bytesIndex), byteType, data.Length);
+
+            var opCodeConvert = OpCodePart.CreateNop;
+            llvmWriter.WriteBitcast(opCodeConvert, new FullyDefinedReference(arrayData, byteType.ToArrayType(1)));
+            writer.WriteLine(string.Empty);
 
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
                 opCode.OpCodeOperands[0].Result,
-                arrayData,
+                opCodeConvert.Result,
                 arrayLength,
                 LlvmWriter.PointerSize /*Align*/);
 
@@ -176,7 +177,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             var arrayType = declaringType.ToArrayType(1);
-            llvmWriter.WriteBitcast(opCode, resAlloc, declaringType.ToArrayType(1));
+            llvmWriter.WriteBitcast(opCode, resAlloc, arrayType);
             writer.WriteLine(string.Empty);
 
             var arrayInstanceResult = opCode.Result;

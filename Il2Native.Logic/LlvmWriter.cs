@@ -4136,7 +4136,7 @@ namespace Il2Native.Logic
                 "getelementptr inbounds",
                 OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
                 type,
-                beforeSecondOperand: type == null && opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
+                beforeSecondOperand: opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -4199,7 +4199,8 @@ namespace Il2Native.Logic
                 opCode,
                 "getelementptr inbounds",
                 options: OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
-                resultType: type);
+                resultType: type,
+                beforeSecondOperand: opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -5327,10 +5328,10 @@ namespace Il2Native.Logic
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
             this.Output.Write(
-                "@.bytes{0} = private unnamed_addr constant {1} {3} {2}",
+                "@.s{0} = private unnamed_addr constant {1} {3} {2}",
                 pair.Key,
                 this.GetArrayTypeHeader(this.ResolveType("System.Char"), pair.Value.Length + 1),
-                this.GetArrayValuesHeader(this.ResolveType("System.Char"), pair.Value.Length, pair.Value.Length + 1),
+                this.GetArrayValuesHeader(this.ResolveType("System.Char"), pair.Value.Length + 1, pair.Value.Length),
                 "{");
 
             this.Output.Write(" [");

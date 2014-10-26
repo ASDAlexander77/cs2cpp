@@ -397,6 +397,12 @@ namespace Il2Native.Logic.Gencode
             var refChar = '*';
             var effectiveType = type;
 
+            if (type.IsArray)
+            {
+                writer.Write(refChar);
+                return;
+            }
+
             var level = 0;
             do
             {
@@ -486,13 +492,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
-                if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
-                {
-                    writer.Write('%');
-                }
-
-                // write base name
-                effectiveType.WriteTypeName(writer, type.IsPointer);
+                effectiveType.WriteTypePrefix(writer);
                 writer.Write(" ] }");
             }
         }
