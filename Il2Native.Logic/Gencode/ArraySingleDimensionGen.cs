@@ -50,20 +50,18 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
             }
 
-            var typeToLoad = llvmWriter.ResolveType("System.Int32");
-            llvmWriter.WriteBitcast(opCode, opCode.OpCodeOperands[0].Result, typeToLoad);
-            writer.WriteLine(string.Empty);
+            var intType = llvmWriter.ResolveType("System.Int32");
 
-            var res = opCode.Result;
-            var resLen = llvmWriter.WriteSetResultNumber(opCode, typeToLoad);
+            var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
+            var lengthResult = llvmWriter.WriteSetResultNumber(opCode, intType);
             writer.Write("getelementptr ");
-            typeToLoad.WriteTypePrefix(writer);
-            writer.Write("* ");
-            llvmWriter.WriteResult(res);
-            writer.WriteLine(", i32 -1");
+            arrayInstanceResult.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResult(arrayInstanceResult);
+            writer.WriteLine(", i32 0, i32 4");
 
             opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, typeToLoad, resLen);
+            llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
         }
 
         /// <summary>
