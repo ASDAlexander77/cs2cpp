@@ -208,12 +208,15 @@ namespace Ll2NativeTests
             // 135 - Reflection
             // 146 - NEED TO BE FIXED: bug with i1 and i8 types
             // 149 - Delegate.Combine (NotImplemented)
+            // 154 - generated many labels (can be fixed when llvm commands converted into classes)
+            // 157 - reflection, attributes
+            // 158 - reflection, attributes
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 146, 149
+                            127, 128, 130, 132, 135, 146, 149, 154, 157, 158
                         });
 
             if (UsingRoslyn)
@@ -247,7 +250,10 @@ namespace Ll2NativeTests
             // 72 - not implemented (DateTime to string)
             // 77 - file not found
             // 78 - not implemented
-            var skip = new[] { 29, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78 };
+            // 96 - NEED TO BE FIXED: generic methods nested referencing
+            // 99 - file not found
+            // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
+            var skip = new[] { 29, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
