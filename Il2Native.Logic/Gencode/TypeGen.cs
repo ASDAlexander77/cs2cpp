@@ -498,7 +498,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
-                effectiveType.WriteTypePrefix(writer);
+                type.GetElementType().WriteTypePrefix(writer);
                 writer.Write(" ] }");
             }
         }
