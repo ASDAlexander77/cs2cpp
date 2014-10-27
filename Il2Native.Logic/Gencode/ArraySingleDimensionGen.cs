@@ -18,6 +18,8 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ArraySingleDimensionGen
     {
+        public const int ArrayDataStartsWith = 5;
+
         /// <summary>
         /// </summary>
         /// <param name="methodBase">
@@ -52,16 +54,30 @@ namespace Il2Native.Logic.Gencode
 
             var intType = llvmWriter.ResolveType("System.Int32");
 
+            var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, 4);
+
+            opCode.Result = null;
+            llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
+        }
+
+        private static IncrementalResult GetArrayDataHelper(LlvmWriter llvmWriter, OpCodePart opCode, IType dataType, int dataIndex, int secondIndex = -1)
+        {
+            var writer = llvmWriter.Output;
+
             var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
-            var lengthResult = llvmWriter.WriteSetResultNumber(opCode, intType);
+            var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
             arrayInstanceResult.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
             llvmWriter.WriteResult(arrayInstanceResult);
-            writer.WriteLine(", i32 0, i32 4");
+            writer.Write(", i32 0, i32 {0}", dataIndex);
+            if (secondIndex != -1)
+            {
+                writer.Write(", i32 {0}", secondIndex);
+            }
 
-            opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
+            writer.WriteLine(string.Empty);
+            return result;
         }
 
         /// <summary>
@@ -91,22 +107,33 @@ namespace Il2Native.Logic.Gencode
                                   ? int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
                                   : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(true);
 
-            var storedResult = opCode.OpCodeOperands[0].Result;
-            llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
-            writer.WriteLine(string.Empty);
-
             var bytesIndex = llvmWriter.GetBytesIndex(data);
             var byteType = llvmWriter.ResolveType("System.Byte");
             var arrayData = llvmWriter.GetArrayTypeReference(string.Concat("@.bytes", bytesIndex), byteType, data.Length);
 
+            var storedResult = opCode.OpCodeOperands[0].Result;
+
             var opCodeConvert = OpCodePart.CreateNop;
-            llvmWriter.WriteBitcast(opCodeConvert, new FullyDefinedReference(arrayData, byteType.ToArrayType(1)));
+
+            // first array to i8*
+            var firstElementResult = GetArrayDataHelper(llvmWriter, opCode, storedResult.Type.GetElementType(), ArrayDataStartsWith, 0);
+            llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
+            var firstBytes = opCodeConvert.Result;
+            writer.WriteLine(string.Empty);
+
+            // second array to i8*
+            var opCodeDataHolder = OpCodePart.CreateNop;
+            opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
+            opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(arrayData, byteType.ToArrayType(1));
+            var secondFirstElementResult = GetArrayDataHelper(llvmWriter, opCodeDataHolder, byteType, ArrayDataStartsWith, 0);
+            llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
+            var secondBytes = opCodeConvert.Result;
             writer.WriteLine(string.Empty);
 
             writer.WriteLine(
                 "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                opCode.OpCodeOperands[0].Result,
-                opCodeConvert.Result,
+                firstBytes,
+                secondBytes,
                 arrayLength,
                 LlvmWriter.PointerSize /*Align*/);
 
