@@ -219,7 +219,8 @@ namespace Ll2NativeTests
             if (UsingRoslyn)
             {
                 // 49 - bug in execution
-                skip.AddRange(new[] { 49 });
+                // object o = -(2147483648); type is "int", not "long" in Roslyn
+                skip.AddRange(new[] { 49, 129 });
             }
 
             foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
