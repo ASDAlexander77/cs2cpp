@@ -14,19 +14,19 @@
         private static string PrintChar = "%c";
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] chars);
+        public unsafe static extern int wprintf(char* chars);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] format, int length, char[] chars);
+        public unsafe static extern int wprintf(char* format, int length, char* chars);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] format, double d);
+        public unsafe static extern int wprintf(char* format, double d);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] format, float d);
+        public unsafe static extern int wprintf(char* format, float d);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int wprintf(char[] format, int t);
+        public unsafe static extern int wprintf(char* format, int t);
 
         public static int Read()
         {
@@ -39,8 +39,14 @@
         }
 
         public static void WriteLine()
-        { 
-            wprintf(NewLine.ToCharArray());
+        {
+            unsafe
+            {
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(bool value)
@@ -50,14 +56,29 @@
 
         public static void WriteLine(char value)
         {
-            wprintf(PrintChar.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pc = &PrintChar.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pc, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(char[] buffer)
         {
-            wprintf(PrintString.ToCharArray(), buffer.Length, buffer);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* ps = &PrintString.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* b = &buffer[0])
+                {
+                    wprintf(ps, buffer.Length, b);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(char[] buffer, int index, int count)
@@ -72,40 +93,82 @@
 
         public static void WriteLine(double value)
         {
-            wprintf(PrintDouble.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pd, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(float value)
         {
-            wprintf(PrintDouble.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pd, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(int value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         [CLSCompliant(false)]
         public static void WriteLine(uint value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(long value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         [CLSCompliant(false)]
         public static void WriteLine(ulong value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(object value)
@@ -116,8 +179,16 @@
         public static void WriteLine(string value)
         {
             var chars = value.ToCharArray();
-            wprintf(PrintString.ToCharArray(), chars.Length, chars);
-            wprintf(NewLine.ToCharArray());
+            unsafe
+            {
+                fixed (char* ps = &PrintString.ToCharArray()[0])
+                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* c = &chars[0])
+                {
+                    wprintf(ps, chars.Length, c);
+                    wprintf(nl);
+                }
+            }
         }
 
         public static void WriteLine(String format, Object arg0)
@@ -183,12 +254,24 @@
 
         public static void Write(char value)
         {
-            wprintf(PrintChar.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pc = &PrintChar.ToCharArray()[0])
+                {
+                    wprintf(pc, value);
+                }
+            }
         }
 
         public static void Write(char[] buffer)
         {
-            wprintf(buffer);
+            unsafe
+            {
+                fixed (char* b = &buffer[0])
+                {
+                    wprintf(b);
+                }
+            }
         }
 
         public static void Write(char[] buffer, int index, int count)
@@ -198,7 +281,13 @@
 
         public static void Write(double value)
         {
-            wprintf(PrintDouble.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                {
+                    wprintf(pd, value);
+                }
+            }
         }
 
         public static void Write(decimal value)
@@ -208,29 +297,59 @@
 
         public static void Write(float value)
         {
-            wprintf(PrintDouble.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                {
+                    wprintf(pd, value);
+                }
+            }
         }
 
         public static void Write(int value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                }
+            }
         }
 
         [CLSCompliant(false)]
         public static void Write(uint value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                }
+            }
         }
 
         public static void Write(long value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                }
+            }
         }
 
         [CLSCompliant(false)]
         public static void Write(ulong value)
         {
-            wprintf(PrintInt.ToCharArray(), value);
+            unsafe
+            {
+                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                {
+                    wprintf(pi, value);
+                }
+            }
         }
 
         public static void Write(Object value)
@@ -240,7 +359,13 @@
 
         public static void Write(String value)
         {
-            wprintf(value.ToCharArray());
+            unsafe
+            {
+                fixed (char* p = &value.ToCharArray()[0])
+                {
+                    wprintf(p);
+                }
+            }
         }
     }
 }

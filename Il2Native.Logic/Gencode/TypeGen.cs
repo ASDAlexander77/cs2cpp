@@ -400,6 +400,12 @@ namespace Il2Native.Logic.Gencode
             if (type.IsArray)
             {
                 writer.Write(refChar);
+
+                if (type.IsByRef)
+                {
+                    writer.Write(refChar);
+                }
+
                 return;
             }
 

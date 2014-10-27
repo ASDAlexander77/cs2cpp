@@ -83,21 +83,20 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            var staticArrayInitTypeSizeLabel = "__StaticArrayInitTypeSize=";
+            var hasSize = opCodeFieldInfoPart.Operand.FieldType.MetadataName.Contains(staticArrayInitTypeSizeLabel);
+
             var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+            var arrayLength = hasSize
+                                  ? int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
+                                  : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(true);
 
             var storedResult = opCode.OpCodeOperands[0].Result;
             llvmWriter.WriteBitcast(opCode.OpCodeOperands[0], opCode.OpCodeOperands[0].Result);
             writer.WriteLine(string.Empty);
 
-            var staticArrayInitTypeSizeLabel = "__StaticArrayInitTypeSize=";
-            if (!opCodeFieldInfoPart.Operand.FieldType.MetadataName.Contains(staticArrayInitTypeSizeLabel))
-            {
-                return;
-            }
-
             var bytesIndex = llvmWriter.GetBytesIndex(data);
             var byteType = llvmWriter.ResolveType("System.Byte");
-            var arrayLength = int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length));
             var arrayData = llvmWriter.GetArrayTypeReference(string.Concat("@.bytes", bytesIndex), byteType, data.Length);
 
             var opCodeConvert = OpCodePart.CreateNop;

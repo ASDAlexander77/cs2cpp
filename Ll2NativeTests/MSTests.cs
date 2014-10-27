@@ -180,7 +180,6 @@ namespace Ll2NativeTests
             // 37 - multi array
             // 39 - using Attributes
             // 43 - multi array
-            // 45 - NEED TO BE FIXED: arrays initialization
             // 50 - missing
             // 52 - bug in execution (NotImplemented, ArrayList, Hashtable)
             // 57 - bug in execution (NotImplemented, EventHandler)
@@ -213,7 +212,7 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 36, 39, 45, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
+                            10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             127, 128, 130, 132, 135, 146, 149
                         });
 

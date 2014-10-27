@@ -4881,10 +4881,10 @@ namespace Il2Native.Logic
         {
             foreach (var local in locals)
             {
-                this.Output.Write(string.Format("%local{0} = ", local.LocalIndex));
+                this.Output.Write("%local{0} = ", local.LocalIndex);
                 if (local.LocalType.IsPinned)
                 {
-                    this.WriteAlloca(this.ResolveType("System.Void").ToPointerType());
+                    this.WriteAlloca(local.LocalType.ToPointerType());
                 }
                 else
                 {
@@ -4952,7 +4952,8 @@ namespace Il2Native.Logic
                     this.Output.Write(", ");
                 }
 
-                this.Output.Write("%\"System.String\"** null");
+                parameter.ParameterType.WriteTypePrefix(this.Output);
+                this.Output.Write(" null");
 
                 index++;
             }
