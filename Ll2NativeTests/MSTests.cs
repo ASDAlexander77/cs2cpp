@@ -237,7 +237,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 29 - boxing array and sends to WriteLine - causes crash
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
             // 46 - Delegate.Combine not implemented
             // 47 - not compilable
@@ -253,7 +252,7 @@ namespace Ll2NativeTests
             // 96 - NEED TO BE FIXED: generic methods nested referencing
             // 99 - file not found
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
-            var skip = new[] { 29, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102 };
+            var skip = new[] { 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);

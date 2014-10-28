@@ -268,7 +268,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetArrayPrefixDataType()
         {
-            return "i32 (...)**, i32 (...)**, i32 (...)**, i32, i32";
+            return "i8*, i8*, i8*, i32, i32";
         }
 
         public static string GetArrayTypeHeader(this LlvmWriter llvmWriter, IType elementType, int length)
@@ -293,7 +293,15 @@ namespace Il2Native.Logic.Gencode
                 elementType.WriteTypePrefix(writer);
             });
 
-            return "i32 (...)** null, i32 (...)** null, i32 (...)** null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
+            ////var arrayType = llvmWriter.ResolveType("System.Array");
+            ////var cloneableType = llvmWriter.ResolveType("System.ICloneable");
+            ////var listType = llvmWriter.ResolveType("System.Collections.IList");
+            ////return "i8** " + arrayType.GetVirtualTableReference(llvmWriter) + ", i8** " + arrayType.GetVirtualTableReference(cloneableType) + ", i8** "
+            ////       + arrayType.GetVirtualTableReference(listType) + ", i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
+            ////       + typeString + "]";
+
+            return "i8* null, i8* null, i8* null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
+                   + typeString + "]";
         }
     }
 }

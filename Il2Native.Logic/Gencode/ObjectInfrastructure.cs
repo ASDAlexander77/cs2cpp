@@ -173,7 +173,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
-             var resAlloc = opCodePart.Result;
+            var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
             llvmWriter.WriteCall(
                 opCodePart,
@@ -278,13 +278,7 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine(string.Empty);
 
-                var virtualTable = declaringType.GetVirtualTable(llvmWriter);
-
-                writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
-                    virtualTable.GetVirtualTableSize(),
-                    declaringType.GetVirtualTableName(),
-                    FunctionsOffsetInVirtualTable);
+                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(llvmWriter));
                 if (opCode.HasResult)
                 {
                     llvmWriter.WriteResult(opCode.Result);
@@ -317,19 +311,34 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine(string.Empty);
 
-                var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
-
-                writer.Write(
-                    "store i8** getelementptr inbounds ([{0} x i8*]* {1}, i64 0, i64 {2}), i8*** ",
-                    virtualInterfaceTable.GetVirtualTableSize(),
-                    declaringType.GetVirtualInterfaceTableName(@interface),
-                    FunctionsOffsetInVirtualTable);
+                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface));
                 llvmWriter.WriteResult(opCode.Result);
                 writer.WriteLine(string.Empty);
 
                 // restore
                 opCode.Result = opCodeResult;
             }
+        }
+
+        public static string GetVirtualTableReference(this IType declaringType, LlvmWriter llvmWriter)
+        {
+            var virtualTable = declaringType.GetVirtualTable(llvmWriter);
+
+            return string.Format(
+                "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
+                virtualTable.GetVirtualTableSize(),
+                declaringType.GetVirtualTableName(),
+                FunctionsOffsetInVirtualTable);
+        }
+
+        public static string GetVirtualTableReference(this IType declaringType, IType @interface)
+        {
+            var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
+            return string.Format(
+                "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
+                virtualInterfaceTable.GetVirtualTableSize(),
+                declaringType.GetVirtualInterfaceTableName(@interface),
+                FunctionsOffsetInVirtualTable);
         }
 
         public static void WriteNewObjectMethod(this IType type, LlvmWriter llvmWriter)
