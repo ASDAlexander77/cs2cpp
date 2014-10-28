@@ -1040,23 +1040,23 @@ namespace Il2Native.Logic
 
                 case Code.Conv_R4:
                 case Code.Conv_R_Un:
-                    this.LlvmConvert(opCode, "fptrunc", "sitofp", "float", false, this.ResolveType("System.Single"));
+                    this.LlvmConvert(opCode, "fptrunc", "sitofp", this.ResolveType("System.Single"), false, this.ResolveType("System.Single"));
                     break;
 
                 case Code.Conv_R8:
-                    this.LlvmConvert(opCode, "fpext", "sitofp", "double", false, this.ResolveType("System.Double"));
+                    this.LlvmConvert(opCode, "fpext", "sitofp", this.ResolveType("System.Double"), false, this.ResolveType("System.Double"));
                     break;
 
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i8", false, this.ResolveType("System.SByte"), this.ResolveType("System.Byte"));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", this.ResolveType("System.SByte"), false, this.ResolveType("System.SByte"), this.ResolveType("System.Byte"));
                     break;
 
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i8", false, this.ResolveType("System.SByte"), this.ResolveType("System.Byte"));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", this.ResolveType("System.Byte"), false, this.ResolveType("System.SByte"), this.ResolveType("System.Byte"));
                     break;
 
                 case Code.Conv_I2:
@@ -1066,7 +1066,7 @@ namespace Il2Native.Logic
                         opCode,
                         "fptosi",
                         "trunc",
-                        "i16",
+                        this.ResolveType("System.Int16"),
                         false,
                         this.ResolveType("System.Int16"),
                         this.ResolveType("System.UInt16"),
@@ -1080,7 +1080,7 @@ namespace Il2Native.Logic
                         opCode,
                         "fptoui",
                         "trunc",
-                        "i16",
+                        this.ResolveType("System.UInt16"),
                         false,
                         this.ResolveType("System.Int16"),
                         this.ResolveType("System.UInt16"),
@@ -1090,37 +1090,37 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", true, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", this.ResolveType("System.Void").ToPointerType(), true, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
 
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", "i32", false, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
+                    this.LlvmConvert(opCode, "fptoui", "trunc", this.ResolveType("System.Int32"), false, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
                     break;
 
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", true, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", this.ResolveType("System.Void").ToPointerType(), true, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
 
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", "i32", false, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
+                    this.LlvmConvert(opCode, "fptosi", "trunc", this.ResolveType("System.UInt32"), false, this.ResolveType("System.Int32"), this.ResolveType("System.UInt32"));
                     break;
 
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.LlvmConvert(opCode, "fptosi", "sext", "i64", false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
+                    this.LlvmConvert(opCode, "fptosi", "sext", this.ResolveType("System.Int64"), false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
                     break;
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    this.LlvmConvert(opCode, "fptoui", "zext", "i64", false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
+                    this.LlvmConvert(opCode, "fptoui", "zext", this.ResolveType("System.UInt64"), false, this.ResolveType("System.Int64"), this.ResolveType("System.UInt64"));
                     break;
 
                 case Code.Castclass:
@@ -4168,7 +4168,7 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Stelem_I:
-                    type = this.ResolveType("System.Int32");
+                    type = this.ResolveType("System.Void").ToPointerType();
                     break;
                 case Code.Stelem_I1:
                     type = this.ResolveType("System.SByte");

@@ -147,7 +147,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="typesToExclude">
         /// </param>
         public static void LlvmConvert(
-            this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, bool toAddress, params IType[] typesToExclude)
+            this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, IType toType, bool toAddress, params IType[] typesToExclude)
         {
             var writer = llvmWriter.Output;
 
@@ -157,19 +157,19 @@ namespace Il2Native.Logic.Gencode
             {
                 if (resultOf.Type.IsReal())
                 {
-                    llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, realConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
-                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
-                else if (toType.EndsWith("*") || toType.EndsWith("&"))
+                else if (toType.IsPointer || toType.IsByRef)
                 {
-                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else
                 {
-                    var intSize = toType.GetIntSizeBits();
+                    var intSize = toType.IntTypeBitSize();
                     if (intSize > 0)
                     {
                         var toIntType = llvmWriter.GetIntTypeByByteSize(intSize / 8);
@@ -180,10 +180,11 @@ namespace Il2Native.Logic.Gencode
                         }
                     }
 
-                    llvmWriter.UnaryOper(writer, opCode, intConvert, options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, intConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
 
-                writer.Write(" to {0}", toType);
+                writer.Write(" to ");
+                toType.WriteTypePrefix(writer);
             }
             else
             {
