@@ -4884,7 +4884,11 @@ namespace Il2Native.Logic
                 this.Output.Write("%local{0} = ", local.LocalIndex);
                 if (local.LocalType.IsPinned)
                 {
-                    this.WriteAlloca(local.LocalType.ToPointerType());
+                    var localPinnedType = local.LocalType.FullName == "System.IntPtr"
+                                              ? this.ResolveType("System.Void").ToPointerType()
+                                              : local.LocalType.ToPointerType();
+
+                    this.WriteAlloca(localPinnedType);
                 }
                 else
                 {

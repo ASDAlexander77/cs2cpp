@@ -1171,7 +1171,9 @@ namespace Il2Native.Logic
             // replace pinned IntPtr& with Int
             foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
             {
-                localInfo.LocalType = localInfo.LocalType.ToPointerType();
+                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
+                                          ? this.ResolveType("System.Void").ToPointerType()
+                                          : localInfo.LocalType.ToPointerType();
             }
         }
 
