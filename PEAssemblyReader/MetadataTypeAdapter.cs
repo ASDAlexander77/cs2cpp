@@ -822,7 +822,13 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            var containingAssembly = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType.ContainingAssembly : this.typeDef.ContainingAssembly;
+            var type = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType : this.typeDef;
+            while (type.IsPointerType())
+            {
+                type = (type as PointerTypeSymbol).PointedAtType;
+            }
+
+            var containingAssembly = type.ContainingAssembly;
             return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext);
         }
 
