@@ -461,7 +461,9 @@ namespace Il2Native.Logic
                     this.PreProcessOperand(writer, opCode, 0);
 
                     var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
-                    if (opCode.Destination != null || (!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef))
+                    if (opCode.Destination != null 
+                        || (!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef)
+                        || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef))
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
