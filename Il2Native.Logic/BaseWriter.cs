@@ -1200,14 +1200,12 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ret))
             {
                 retType = this.MethodReturnType;
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
             {
                 retType = opCodePart.GetLocalType(this);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
@@ -1217,40 +1215,34 @@ namespace Il2Native.Logic
                 if (this.HasMethodThis && index == 0)
                 {
                     retType = this.ThisType;
-                    ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                     return retType;
                 }
 
                 retType = this.GetArgType(index);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stfld, Code.Stsfld))
             {
                 retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
-                ////opCodePart.OpCodeOperands[x].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stobj))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Box))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
@@ -1258,7 +1250,6 @@ namespace Il2Native.Logic
             {
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
                 var parameters = opCodePartMethod.Operand.GetParameters();
-                var offset = opCodePartMethod.OpCodeOperands.Length - parameters.Count();
                 var index = 0;
                 foreach (var parameter in parameters)
                 {
@@ -1267,7 +1258,6 @@ namespace Il2Native.Logic
                         retType = parameter.ParameterType;
                     }
 
-                    ////opCodePartMethod.OpCodeOperands[offset + index].RequiredResultType = parameter.ParameterType;
                     index++;
                 }
             }

@@ -163,15 +163,17 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New array");
 
+            var arraySystemType = llvmWriter.ResolveType("System.Array");
+            var intType = llvmWriter.ResolveType("System.Int32");
+
             var sizeOfElement = declaringType.GetTypeSize(true);
-            llvmWriter.UnaryOper(writer, opCode, "mul");
+            llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes);
             writer.WriteLine(", {0}", sizeOfElement);
 
             var resMul = opCode.Result;
 
-            var intType = llvmWriter.ResolveType("System.Int32");
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("add i32 {1}, {0}", resMul, llvmWriter.ResolveType("System.Array").GetTypeSize() + 2 * 4); // add header size
+            writer.Write("add i32 {1}, {0}", resMul, arraySystemType.GetTypeSize() + 2 * intType.GetTypeSize(true)); // add header size
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;
@@ -197,9 +199,8 @@ namespace Il2Native.Logic.Gencode
             opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
 
             // init System.Array
-            var arraySystemType = llvmWriter.ResolveType("System.Array");
             llvmWriter.WriteBitcast(opCode, resAlloc, arraySystemType);
-            llvmWriter.ResolveType("System.Array").WriteCallInitObjectMethod(llvmWriter, opCode);
+            arraySystemType.WriteCallInitObjectMethod(llvmWriter, opCode);
             writer.WriteLine(string.Empty);
 
             var arrayType = declaringType.ToArrayType(1);
