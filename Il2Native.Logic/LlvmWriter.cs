@@ -353,7 +353,7 @@ namespace Il2Native.Logic
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
                     }
-                    else if (opCode.UsedBy.Any(Code.Box, Code.Call, Code.Callvirt))
+                    else if (opCode.UsedBy.Any(Code.Box, Code.Call, Code.Callvirt, Code.Ldfld))
                     {
                         // just load an address of a structure
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
@@ -649,7 +649,11 @@ namespace Il2Native.Logic
                         opCode.OpCodeOperands[0].Destination = opCode.Destination;
                     }
 
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    if (!opCode.OpCodeOperands[0].HasResult)
+                    {
+                        this.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                    }
+
                     break;
                 case Code.Box:
 
@@ -846,7 +850,7 @@ namespace Il2Native.Logic
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
                     var intPtrType = this.ResolveType("System.IntPtr");
-                    var intType = this.ResolveType("System.Void").ToPointerType();
+                    var voidPtrType = this.ResolveType("System.Void").ToPointerType();
                     var convertString = this.WriteToString(
                         () =>
                         {
@@ -858,7 +862,45 @@ namespace Il2Native.Logic
                         });
                     var value = new FullyDefinedReference(convertString, this.ResolveType("System.Byte").ToPointerType());
 
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, intType, value);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
+
+                    this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
+
+                    break;
+
+                case Code.Ldvirtftn:
+
+                    opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
+
+                    var methodInfo = opCodeMethodInfoPart.Operand;
+
+                    IType thisType;
+                    bool hasThisArgument;
+                    OpCodePart opCodeFirstOperand;
+                    BaseWriter.ReturnResult resultOfFirstOperand;
+                    bool isIndirectMethodCall;
+                    IType ownerOfExplicitInterface;
+                    IType requiredType;
+                    methodInfo.WriteFunctionCallProlog(opCodeMethodInfoPart, true, true, this, out thisType, out hasThisArgument, out opCodeFirstOperand, out resultOfFirstOperand, out isIndirectMethodCall, out ownerOfExplicitInterface, out requiredType);
+
+                    var methodAddressResultNumber = this.GenerateVirtualCall(
+                        opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+
+                    // bitcast method function address to Byte*
+                    this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
+                    writer.Write("bitcast ");
+                    this.WriteMethodPointerType(writer, methodInfo, thisType);
+                    writer.Write(" ");
+                    this.WriteResult(methodAddressResultNumber);
+                    writer.Write(" to i8*");
+                    writer.WriteLine(string.Empty);
+
+                    methodAddressResultNumber = opCode.Result;
+                    opCode.Result = null;
+
+                    intPtrType = this.ResolveType("System.IntPtr");
+                    voidPtrType = this.ResolveType("System.Void").ToPointerType();
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
 
                     this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -1126,8 +1168,11 @@ namespace Il2Native.Logic
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                    writer.WriteLine(string.Empty);
+                    if (!opCodeTypePart.OpCodeOperands[0].HasResult)
+                    {
+                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
+                        writer.WriteLine(string.Empty);
+                    }
 
                     this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
 

@@ -1079,6 +1079,7 @@ namespace Il2Native.Logic
                 case Code.Starg_S:
                 case Code.Localloc:
                 case Code.Pop:
+                case Code.Ldvirtftn:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:

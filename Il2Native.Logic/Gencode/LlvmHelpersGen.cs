@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
                 requiredType = requiredInterface;
             }
 
-            llvmWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType);
+            llvmWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType ?? thisType);
             writer.Write(" to ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.WriteLine("**");
