@@ -211,12 +211,13 @@ namespace Ll2NativeTests
             // 154 - generated many labels (can be fixed when llvm commands converted into classes)
             // 157 - reflection, attributes
             // 158 - reflection, attributes
+            // 171 - Roslyn can't handle it!!!
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 146, 149, 154, 157, 158
+                            127, 128, 130, 132, 135, 146, 149, 154, 157, 158, 171
                         });
 
             if (UsingRoslyn)
