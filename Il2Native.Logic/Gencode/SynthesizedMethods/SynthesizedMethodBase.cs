@@ -112,6 +112,16 @@
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool IsExplicitInterfaceImplementation
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         public bool IsDllImport
         {
             get

@@ -54,6 +54,11 @@ namespace PEAssemblyReader
         /// <summary>
         /// custom field
         /// </summary>
+        bool IsExplicitInterfaceImplementation { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
         bool IsDllImport { get; }
 
         /// <summary>

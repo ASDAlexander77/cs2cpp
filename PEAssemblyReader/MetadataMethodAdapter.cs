@@ -303,6 +303,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsExplicitInterfaceImplementation
+        {
+            get
+            {
+                return this.methodDef.IsExplicitInterfaceImplementation;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables
         {
             get
