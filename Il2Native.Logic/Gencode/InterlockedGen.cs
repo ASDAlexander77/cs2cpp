@@ -52,7 +52,7 @@
 
                 case "CompareExchange`1":
                 case "CompareExchange":
-                    opCodeMethodInfo.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm35OrLess, llvmWriter);
+                    opCodeMethodInfo.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm36OrHigher, llvmWriter);
                     break;
             }
         }

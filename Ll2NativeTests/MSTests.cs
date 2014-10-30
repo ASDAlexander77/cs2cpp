@@ -290,7 +290,7 @@ namespace Ll2NativeTests
                 args.Add("gctors-");
             }
 
-            if (!llvm36Support)
+            if (llvm36Support)
             {
                 args.Add("llvm36");
             }
