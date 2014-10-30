@@ -75,6 +75,7 @@
     <Compile Include="System\DivideByZeroException.cs" />
     <Compile Include="System\Double.cs" />
     <Compile Include="System\Enum.cs" />
+    <Compile Include="System\Environment.cs" />
     <Compile Include="System\EventArgs.cs" />
     <Compile Include="System\EventHandler.cs" />
     <Compile Include="System\Exception.cs" />

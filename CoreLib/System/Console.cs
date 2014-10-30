@@ -367,5 +367,59 @@
                 }
             }
         }
+
+        public static class Out
+        {
+            public static void WriteLine(object value)
+            {
+                WriteLine(value.ToString());
+            }
+
+            public static void WriteLine(String format, params Object[] arg)
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat(format, arg);
+                WriteLine(sb.ToString());
+            }
+
+            public static void Write(object value)
+            {
+                Write(value.ToString());
+            }
+
+            public static void Write(String format, params Object[] arg)
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat(format, arg);
+                Write(sb.ToString());
+            }
+        }
+
+        public static class Error
+        {
+            public static void WriteLine(object value)
+            {
+                WriteLine(value.ToString());
+            }
+
+            public static void WriteLine(String format, params Object[] arg)
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat(format, arg);
+                WriteLine(sb.ToString());
+            }
+
+            public static void Write(object value)
+            {
+                Write(value.ToString());
+            }
+
+            public static void Write(String format, params Object[] arg)
+            {
+                var sb = new StringBuilder();
+                sb.AppendFormat(format, arg);
+                Write(sb.ToString());
+            }
+        }
     }
 }

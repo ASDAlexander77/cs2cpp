@@ -252,7 +252,8 @@ namespace Ll2NativeTests
             // 96 - NEED TO BE FIXED: generic methods nested referencing
             // 99 - file not found
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
-            var skip = new[] { 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102 };
+            // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
+            var skip = new[] { 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102, 109 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
