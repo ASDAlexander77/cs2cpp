@@ -604,8 +604,13 @@ namespace Il2Native.Logic
 
                     if (this.OpsByAddressEnd.TryGetValue(catchOrFinally.Offset + catchOrFinally.Length, out opCodePart))
                     {
-                        Debug.Assert(opCodePart.CatchOrFinallyEnd == null);
-                        opCodePart.CatchOrFinallyEnd = catchOrFinally;
+                        //Debug.Assert(opCodePart.CatchOrFinallyEnds == null);
+                        if (opCodePart.CatchOrFinallyEnds == null)
+                        {
+                            opCodePart.CatchOrFinallyEnds = new List<CatchOfFinallyClause>();
+                        }
+
+                        opCodePart.CatchOrFinallyEnds.Add(catchOrFinally);
                     }
                 }
             }
@@ -1249,14 +1254,28 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Call, Code.Callvirt))
             {
+                var effectiveoperandPosition = operandPosition;
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                {
+                    if (operandPosition == 0)
+                    {
+                        return opCodePartMethod.Operand.DeclaringType;
+                    }
+                    else
+                    {
+                        effectiveoperandPosition--;
+                    }
+                }
+
                 var parameters = opCodePartMethod.Operand.GetParameters();
                 var index = 0;
                 foreach (var parameter in parameters)
                 {
-                    if (index == operandPosition)
+                    if (index == effectiveoperandPosition)
                     {
                         retType = parameter.ParameterType;
+                        break;
                     }
 
                     index++;

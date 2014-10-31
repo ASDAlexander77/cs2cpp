@@ -4567,13 +4567,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCatchFinnallyCleanUpEnd(OpCodePart opCode)
         {
-            if (opCode.CatchOrFinallyEnd == null)
+            if (opCode.CatchOrFinallyEnds == null)
             {
                 return;
             }
 
-            var eh = opCode.CatchOrFinallyEnd;
-            opCode.CatchOrFinallyEnd = null;
+            var eh = opCode.CatchOrFinallyEnds;
+            opCode.CatchOrFinallyEnds = null;
             var ehPopped = this.catchScopes.Pop();
             Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
         }
@@ -4586,15 +4586,18 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCatchFinnallyEnd(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.CatchOrFinallyEnd == null)
+            if (opCode.CatchOrFinallyEnds == null)
             {
                 return;
             }
 
-            var eh = opCode.CatchOrFinallyEnd;
-            opCode.CatchOrFinallyEnd = null;
+            var ehs = opCode.CatchOrFinallyEnds;
+            opCode.CatchOrFinallyEnds = null;
             writer.WriteLine(string.Empty);
-            this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+            foreach (var eh in ehs)
+            {
+                this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+            }
         }
 
         /// <summary>

@@ -189,11 +189,12 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            var startOfHandlerAddress = exceptionHandlingClause.Offset;
             var endOfHandlerAddress = exceptionHandlingClause.Offset + exceptionHandlingClause.Length;
 
             if (exceptionHandlingClause.RethrowCatchWithCleanUpRequired)
             {
-                llvmWriter.WriteLabel(writer, string.Format(".catch_with_cleanup{0}", endOfHandlerAddress));
+                llvmWriter.WriteLabel(writer, string.Format(".catch_with_cleanup_{0}_{1}", startOfHandlerAddress, endOfHandlerAddress));
 
                 var opCodeNop = OpCodePart.CreateNop;
                 llvmWriter.WriteLandingPad(
@@ -599,7 +600,7 @@ namespace Il2Native.Logic.Gencode
             if (exceptionHandlingClause != null)
             {
                 writer.Indent++;
-                writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+                writer.WriteLine("to label %.unreachable unwind label %.catch_with_cleanup_{0}_{1}", exceptionHandlingClause.Offset, exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
                 writer.Indent--;
                 exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;
             }

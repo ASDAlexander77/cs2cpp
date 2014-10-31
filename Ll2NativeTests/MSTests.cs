@@ -157,14 +157,15 @@ namespace Ll2NativeTests
             // 300 - typeof of C[] (Array, will be fixed when using __Array__<T> implementation
             // 304 - the same as 300
             // 324 - bug NEED TO BE FIXED.
+            // 353 - does not have Main method
             var skip =
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 304
+                            100, 251, 294, 300, 304, 353
                         });
 
-            foreach (var index in Enumerable.Range(304, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(400, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
@@ -215,12 +216,16 @@ namespace Ll2NativeTests
             // 157 - reflection, attributes
             // 158 - reflection, attributes
             // 171 - Roslyn can't handle it!!!
+            // 177 - using Reflection
+            // 178 - using Reflection
+            // 180 - not compilable (9,38): error CS1503: Argument 1: cannot convert from 'System.Enum' to 'string'
+            // 181 - using Reflection
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 177, 178, 180, 181
                         });
 
             if (UsingRoslyn)
