@@ -308,6 +308,12 @@ namespace Il2Native.Logic.Gencode
             if (opCodePart.HasResult)
             {
                 var other = opCodePart.Result.Type.ToDereferencedType();
+                var constValue = opCodePart.Result as ConstValue;
+                if (constValue != null && constValue.IsNull)
+                {
+                    return false;
+                }
+
                 if (requiredType.TypeNotEquals(other))
                 {
                     if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
