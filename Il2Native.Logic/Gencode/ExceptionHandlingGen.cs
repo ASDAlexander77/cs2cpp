@@ -215,7 +215,7 @@ namespace Il2Native.Logic.Gencode
                 var nextOp = opCode.NextOpCode(llvmWriter);
                 if (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
                 {
-                    if (nextOp != null)
+                    if (nextOp != null && nextOp.CatchOrFinallyBegin == null)
                     {
                         writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
                         llvmWriter.WriteLabel(writer, string.Concat(".exit", endOfHandlerAddress));

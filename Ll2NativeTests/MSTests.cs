@@ -199,7 +199,6 @@ namespace Ll2NativeTests
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
-            // 115 - NEED TO BE FIXED, BUG! code is executed when 'return 0' should interrupt execution , explicit cast (cast class without explicit operator should throw an exception)
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute

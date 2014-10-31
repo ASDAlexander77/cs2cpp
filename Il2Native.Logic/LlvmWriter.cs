@@ -4972,6 +4972,8 @@ namespace Il2Native.Logic
                     this.WriteAlloca(local.LocalType);
                 }
 
+                CheckIfExternalDeclarationIsRequired(local.LocalType);
+
                 this.Output.WriteLine(string.Empty);
             }
         }
