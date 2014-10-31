@@ -160,7 +160,7 @@ namespace Ll2NativeTests
                             100
                         });
 
-            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(230, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
@@ -208,7 +208,6 @@ namespace Ll2NativeTests
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
             // 132 - Reflection
             // 135 - Reflection
-            // 146 - NEED TO BE FIXED: bug with i1 and i8 types
             // 149 - Delegate.Combine (NotImplemented)
             // 154 - generated many labels (can be fixed when llvm commands converted into classes)
             // 157 - reflection, attributes
@@ -219,7 +218,7 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 146, 149, 154, 157, 158, 171
+                            127, 128, 130, 132, 135, 149, 154, 157, 158, 171
                         });
 
             if (UsingRoslyn)
