@@ -1020,25 +1020,7 @@ namespace Il2Native.Logic
                 case Code.Leave:
                 case Code.Leave_S:
 
-                    writer.WriteLine("; Leave ");
-                    if (this.tryScopes.Count > 0)
-                    {
-                        var tryClause = this.tryScopes.Peek();
-                        var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
-                        if (finallyClause != null)
-                        {
-                            finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                            this.WriteFinallyLeave(finallyClause);
-                        }
-                        else
-                        {
-                            writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
-                        }
-                    }
-                    else
-                    {
-                        writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
-                    }
+                    this.WriteLeave(writer, opCode);
 
                     break;
                 case Code.Ceq:
@@ -1241,7 +1223,10 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Endfilter:
+                    break;
+
                 case Code.Endfinally:
+                    this.WriteEndFinally(writer, opCode);
                     break;
 
                 case Code.Pop:
@@ -1289,6 +1274,42 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
+            }
+        }
+
+        private void WriteLeave(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            writer.WriteLine("; Leave ");
+            if (this.tryScopes.Count > 0)
+            {
+                var tryClause = this.tryScopes.Peek();
+                var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                if (finallyClause != null)
+                {
+                    finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
+                    this.WriteFinallyLeave(finallyClause);
+                }
+                else
+                {
+                    writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                }
+            }
+            else
+            {
+                writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+            }
+        }
+
+        private void WriteEndFinally(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            writer.WriteLine("; EndFinally ");
+            if (this.catchScopes.Count > 0)
+            {
+                var finallyClause = catchScopes.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                if (finallyClause != null)
+                {
+                    this.WriteEndFinally(finallyClause);
+                }
             }
         }
 

@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Ll2NativeTests
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -150,13 +151,14 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompile()
         {
-            var skip = new List<int>(new int[] { 10, 19, 39, 50, 67 });
+            // 100 - using DllImport      
 
-            if (UsingRoslyn)
-            {
-                // 49 - bug in execution
-                skip.AddRange(new int[] { 83 });
-            }
+            var skip =
+                new List<int>(
+                    new[]
+                        {
+                            100
+                        });
 
             foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
             {
@@ -378,7 +380,15 @@ namespace Ll2NativeTests
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Convert(index);
+            try
+            {
+                Convert(index);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return;
+            }
 
             Trace.WriteLine("Compiling LLVM for " + index);
 
