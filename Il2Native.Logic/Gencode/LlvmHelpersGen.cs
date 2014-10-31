@@ -487,7 +487,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var bareType = fromResult.Type.ToBareType();
+            var bareType = !fromResult.Type.IsArray ? fromResult.Type.ToBareType() : llvmWriter.ResolveType("System.Array");
             if (toType.IsInterface)
             {
                 if (bareType.GetAllInterfaces().Contains(toType))

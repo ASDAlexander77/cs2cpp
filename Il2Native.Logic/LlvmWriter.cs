@@ -434,7 +434,7 @@ namespace Il2Native.Logic
                             "store",
                             operandType,
                             options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
-                            operand1: 1,
+                            operand1: 0,
                             operand2: -1);
                         this.PostProcessOperand(writer, opCode, 0);
                         writer.Write(", ");
@@ -1020,25 +1020,7 @@ namespace Il2Native.Logic
                 case Code.Leave:
                 case Code.Leave_S:
 
-                    writer.WriteLine("; Leave ");
-                    if (this.tryScopes.Count > 0)
-                    {
-                        var tryClause = this.tryScopes.Peek();
-                        var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
-                        if (finallyClause != null)
-                        {
-                            finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                            this.WriteFinallyLeave(finallyClause);
-                        }
-                        else
-                        {
-                            writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
-                        }
-                    }
-                    else
-                    {
-                        writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
-                    }
+                    this.WriteLeave(writer, opCode);
 
                     break;
                 case Code.Ceq:
@@ -1241,7 +1223,10 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Endfilter:
+                    break;
+
                 case Code.Endfinally:
+                    this.WriteEndFinally(writer, opCode);
                     break;
 
                 case Code.Pop:
@@ -1289,6 +1274,42 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
+            }
+        }
+
+        private void WriteLeave(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            writer.WriteLine("; Leave ");
+            if (this.tryScopes.Count > 0)
+            {
+                var tryClause = this.tryScopes.Peek();
+                var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                if (finallyClause != null)
+                {
+                    finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
+                    this.WriteFinallyLeave(finallyClause);
+                }
+                else
+                {
+                    writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                }
+            }
+            else
+            {
+                writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+            }
+        }
+
+        private void WriteEndFinally(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            writer.WriteLine("; EndFinally ");
+            if (this.catchScopes.Count > 0)
+            {
+                var finallyClause = catchScopes.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+                if (finallyClause != null)
+                {
+                    this.WriteEndFinally(finallyClause);
+                }
             }
         }
 
@@ -1797,7 +1818,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="operand2">
         /// </param>
-        public void ProcessOperator(
+        public FullyDefinedReference ProcessOperator(
             LlvmIndentedTextWriter writer,
             OpCodePart opCode,
             string op,
@@ -1815,9 +1836,13 @@ namespace Il2Native.Logic
                 opCode, requiredType, options, out castFrom, out intAdjustment, out intAdjustSecondOperand, operand1, operand2);
 
             effectiveType = this.ApplyTypeAdjustment(
-                writer, opCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType, operand1, operand2);
+                writer, opCode, effectiveType, castFrom, intAdjustment, intAdjustSecondOperand, ref resultType, options, operand1, operand2);
+
+            var castResult = options.HasFlag(OperandOptions.TypeIsInOperator) ? opCode.Result : null;
 
             this.WriteResultAndFirstOperandType(writer, opCode, op, requiredType, resultType, options, effectiveType);
+
+            return castResult;
         }
 
         /// <summary>
@@ -2248,7 +2273,6 @@ namespace Il2Native.Logic
         {
             var effectiveFromType = fromType.ToDereferencedType();
             effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
-
             if (effectiveFromType.Type.TypeEquals(toType))
             {
                 opCodeTypePart.Result = fromType;
@@ -2793,10 +2817,10 @@ namespace Il2Native.Logic
 
             declaringType.UseAsClass = true;
 
-            this.ProcessOperator(
+            var castedResult = this.ProcessOperator(
                 writer, opCode, "getelementptr inbounds", declaringType, @interface, OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
             writer.Write(' ');
-            writer.Write(objectResult);
+            writer.Write(castedResult ?? objectResult);
 
             this.CheckIfTypeIsRequiredForBody(declaringType);
 
@@ -3162,14 +3186,20 @@ namespace Il2Native.Logic
         /// </param>
         public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
+            if (opCode.AlternativeValues.Values.Count != opCode.AlternativeValues.Labels.Count)
+            {
+                // phi is not full
+                return;
+            }
+
             writer.WriteLine(string.Empty);
 
             var firstValueWithRequiredType = opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredResultType != null);
             var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredResultType : null;
 
             var phiType = firstValueRequiredType
-                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) ?? opCode.AlternativeValues.Values.First()).Result
-                                                                                                                                                        .Type;
+                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) 
+                          ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
             // adjust types of constants
             if (!phiType.IsValueType)
@@ -3606,19 +3636,30 @@ namespace Il2Native.Logic
             IType intAdjustment,
             bool intAdjustSecondOperand,
             ref IType resultType,
+            OperandOptions options,
             int operand1 = 0,
             int operand2 = 1)
         {
-            if (castFrom != null && opCode.OpCodeOperands[operand1].HasResult)
+            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && opCode.OpCodeOperands == null)
             {
-                this.WriteCast(opCode.OpCodeOperands[operand1], opCode.OpCodeOperands[operand1].Result, effectiveType);
+                return effectiveType;
             }
 
-            if (intAdjustment != null && opCode.OpCodeOperands[operand1].HasResult)
+            var operator1 = options.HasFlag(OperandOptions.TypeIsInOperator) ? opCode : opCode.OpCodeOperands[operand1];
+            var operator2 = !options.HasFlag(OperandOptions.TypeIsInOperator)
+                                ? opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1]
+                                : null;
+
+            if (castFrom != null && operator1.HasResult)
+            {
+                this.WriteCast(operator1, operator1.Result, effectiveType);
+            }
+
+            if (intAdjustment != null && operator1.HasResult)
             {
                 var changeType = this.AdjustIntConvertableTypes(
                     writer,
-                    opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1],
+                    operator2,
                     intAdjustment);
 
                 if (changeType && resultType == null)
@@ -4142,7 +4183,10 @@ namespace Il2Native.Logic
                     type = this.ResolveType("System.Int32");
                     break;
                 case Code.Ldelem_I1:
-                    type = this.ResolveType("System.SByte");
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
                     break;
                 case Code.Ldelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4151,7 +4195,10 @@ namespace Il2Native.Logic
                     type = this.ResolveType("System.Int32");
                     break;
                 case Code.Ldelem_U1:
-                    type = this.ResolveType("System.Byte");
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.Byte");
+                    result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
                     break;
                 case Code.Ldelem_U2:
                     type = this.ResolveType("System.UInt16");
@@ -4218,7 +4265,10 @@ namespace Il2Native.Logic
                     type = this.ResolveType("System.Void").ToPointerType();
                     break;
                 case Code.Stelem_I1:
-                    type = this.ResolveType("System.SByte");
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
                     break;
                 case Code.Stelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4941,6 +4991,8 @@ namespace Il2Native.Logic
                 {
                     this.WriteAlloca(local.LocalType);
                 }
+
+                CheckIfExternalDeclarationIsRequired(local.LocalType);
 
                 this.Output.WriteLine(string.Empty);
             }

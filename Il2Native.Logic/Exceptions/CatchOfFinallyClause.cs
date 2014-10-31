@@ -64,5 +64,9 @@ namespace Il2Native.Logic.Exceptions
         /// <summary>
         /// </summary>
         public bool RethrowCatchWithCleanUpRequired { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool EmptyFinallyRethrowRequired { get; set; }
     }
 }
