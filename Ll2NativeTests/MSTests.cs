@@ -221,6 +221,7 @@ namespace Ll2NativeTests
             // 157 - reflection, attributes
             // 158 - reflection, attributes
             // 171 - Roslyn can't handle it!!!
+            // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
             // 177 - using Reflection
             // 178 - using Reflection
             // 180 - not compilable (9,38): error CS1503: Argument 1: cannot convert from 'System.Enum' to 'string'
@@ -230,7 +231,7 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 177, 178, 180, 181
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181
                         });
 
             if (UsingRoslyn)

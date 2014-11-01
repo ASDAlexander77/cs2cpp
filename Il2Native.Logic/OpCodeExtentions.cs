@@ -305,7 +305,7 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public bool IsUnsigned(this OpCodePart opCode)
+        public static bool IsUnsigned(this OpCodePart opCode)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {

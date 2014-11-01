@@ -931,6 +931,7 @@ namespace Il2Native.Logic
 
                     // we need to invert all comare command
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    var sign = opCode.IsUnsigned() ? "u" : "s";
                     var oper = string.Empty;
                     switch (opCode.ToCode())
                     {
@@ -944,7 +945,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Blt:
                         case Code.Blt_S:
-                            oper = isFloatingPoint ? "fcmp olt" : "icmp slt";
+                            oper = isFloatingPoint ? "fcmp olt" : "icmp {0}lt";
                             break;
                         case Code.Blt_Un:
                         case Code.Blt_Un_S:
@@ -952,7 +953,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Ble:
                         case Code.Ble_S:
-                            oper = isFloatingPoint ? "fcmp ole" : "icmp sle";
+                            oper = isFloatingPoint ? "fcmp ole" : "icmp {0}le";
                             break;
                         case Code.Ble_Un:
                         case Code.Ble_Un_S:
@@ -960,7 +961,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Bgt:
                         case Code.Bgt_S:
-                            oper = isFloatingPoint ? "fcmp ogt" : "icmp sgt";
+                            oper = isFloatingPoint ? "fcmp ogt" : "icmp {0}gt";
                             break;
                         case Code.Bgt_Un:
                         case Code.Bgt_Un_S:
@@ -968,7 +969,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Bge:
                         case Code.Bge_S:
-                            oper = isFloatingPoint ? "fcmp oge" : "icmp sge";
+                            oper = isFloatingPoint ? "fcmp oge" : "icmp {0}ge";
                             break;
                         case Code.Bge_Un:
                         case Code.Bge_Un_S:
@@ -977,7 +978,7 @@ namespace Il2Native.Logic
                     }
 
                     this.BinaryOper(
-                        writer, opCode, oper, OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        writer, opCode, string.Format(oper, sign), OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     if (!opCode.UseAsConditionalExpression)
                     {
                         writer.WriteLine(string.Empty);
