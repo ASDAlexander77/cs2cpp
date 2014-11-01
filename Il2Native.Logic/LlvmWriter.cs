@@ -1116,7 +1116,9 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    this.LlvmConvert(opCode, "fptoui", "trunc", this.ResolveType("System.Void").ToPointerType(), true, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
+                    var intPtrOper = IsUsedByArithm(opCode);
+                    var nativeIntType = intPtrOper ? this.ResolveType("System.Int32") : this.ResolveType("System.Void").ToPointerType();
+                    this.LlvmConvert(opCode, "fptoui", "trunc", nativeIntType, !intPtrOper, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
 
                 case Code.Conv_I4:
@@ -1128,7 +1130,9 @@ namespace Il2Native.Logic
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    this.LlvmConvert(opCode, "fptosi", "trunc", this.ResolveType("System.Void").ToPointerType(), true, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
+                    intPtrOper = IsUsedByArithm(opCode);
+                    nativeIntType = intPtrOper ? this.ResolveType("System.Int32") : this.ResolveType("System.Void").ToPointerType();
+                    this.LlvmConvert(opCode, "fptosi", "trunc", nativeIntType, !intPtrOper, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
 
                 case Code.Conv_U4:
@@ -1275,6 +1279,12 @@ namespace Il2Native.Logic
 
                     break;
             }
+        }
+
+        private bool IsUsedByArithm(OpCodePart opCode)
+        {
+            var result = opCode.UsedBy.Any(Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un);
+            return result;
         }
 
         private void WriteLeave(LlvmIndentedTextWriter writer, OpCodePart opCode)
