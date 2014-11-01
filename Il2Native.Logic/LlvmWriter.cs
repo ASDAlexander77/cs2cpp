@@ -1405,7 +1405,7 @@ namespace Il2Native.Logic
 
             if (!destType.IsPointer && !opCode.Result.Type.IsPointer && destType.IsIntValueTypeExtCastRequired(opCode.Result.Type))
             {
-                this.LlvmIntConvert(opCode, destType.IsSignType() ? "sext" : "zext", destType);
+                this.LlvmIntConvert(opCode, destType.IsSignedType() ? "sext" : "zext", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }

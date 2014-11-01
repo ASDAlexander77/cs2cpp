@@ -274,7 +274,7 @@ namespace Il2Native.Logic
             return GetIntSizeBits(thisTypeString);
         }
 
-        public static bool IsSignType(this IType thisType)
+        public static bool IsSignedType(this IType thisType)
         {
             switch (thisType.FullName)
             {
@@ -288,6 +288,43 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        public static bool IsUnsignedType(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.Byte":
+                case "System.Char":
+                case "System.UInt16":
+                case "System.UInt32":
+                case "System.UInt64":
+                    return true;
+            }
+
+            return false;
+        }
+
+        public bool IsUnsigned(this OpCodePart opCode)
+        {
+            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
+            {
+                return false;
+            }
+
+            var result1 = opCode.OpCodeOperands[0].Result;
+            var result2 = opCode.OpCodeOperands[1].Result;
+            if (result2 is ConstValue)
+            {
+                return result1.Type.IsUnsignedType();
+            }
+
+            if (result1 is ConstValue)
+            {
+                return result2.Type.IsUnsignedType();
+            }
+
+            return result1.Type.IsUnsignedType() && result2.Type.IsUnsignedType();
         }
 
         /// <summary>
