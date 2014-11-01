@@ -1398,7 +1398,7 @@ namespace Il2Native.Logic
         /// </returns>
         public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, IType destType)
         {
-            if (!opCode.HasResult)
+            if (!opCode.HasResult || opCode.Result is ConstValue)
             {
                 return false;
             }
