@@ -151,6 +151,11 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompile()
         {
+            // test-400.cs 
+            // %.r13 = load i32* %local1, align 4
+            // %.r14 = load i32* %local1, align 4
+
+
             // 100 - using DllImport      
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
             // 294 - lock (Missing Monitor.Enter/Exit)

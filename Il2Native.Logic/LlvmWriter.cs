@@ -3985,6 +3985,21 @@ namespace Il2Native.Logic
                             }
                         }
                     }
+                    else
+                    {
+                        // if it is pointer operation with integer adjust it to integer
+                        if (res1.Type.IsPointer && res2.IsConst)
+                        {
+                            intAdjustment = res2.Type;
+                            intAdjustSecondOperand = false;
+                        }
+
+                        if (res2.Type.IsPointer && res1.IsConst)
+                        {
+                            intAdjustment = res1.Type;
+                            intAdjustSecondOperand = true;
+                        }
+                    }
                 }
             }
 
