@@ -357,7 +357,7 @@ namespace Il2Native.Logic
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
                     }
-                    else if (opCode.UsedBy.Any(Code.Box, Code.Call, Code.Callvirt, Code.Ldfld))
+                    else if (opCode.UsedBy.Any(Code.Box, Code.Call, Code.Callvirt, Code.Ldfld, Code.Ldsfld))
                     {
                         // just load an address of a structure
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
@@ -385,9 +385,14 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     var destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
+                    var reference = new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType);
                     if (!operandType.IsStructureType())
                     {
-                        this.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType));
+                        this.WriteLlvmLoad(opCode, operandType, reference);
+                    }
+                    else
+                    {
+                        opCode.Result = reference;
                     }
 
                     CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
