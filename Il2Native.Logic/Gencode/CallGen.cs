@@ -356,7 +356,7 @@
                 var effectiveIndex = index + (@isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0);
 
                 parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
-                if (parameter.ParameterType.IsStructureType() && !parameter.IsOut)
+                if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
                 {
                     writer.Write(" byval align " + LlvmWriter.PointerSize);
                 }

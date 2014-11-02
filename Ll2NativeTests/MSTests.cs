@@ -170,7 +170,7 @@ namespace Ll2NativeTests
                             100, 251, 294, 300, 304, 353
                         });
 
-            foreach (var index in Enumerable.Range(400, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(407, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
@@ -226,12 +226,13 @@ namespace Ll2NativeTests
             // 178 - using Reflection
             // 180 - not compilable (9,38): error CS1503: Argument 1: cannot convert from 'System.Enum' to 'string'
             // 181 - using Reflection
+            // 183 - using BeginInvoke
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183
                         });
 
             if (UsingRoslyn)

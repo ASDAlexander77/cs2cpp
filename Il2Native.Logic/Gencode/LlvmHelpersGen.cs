@@ -153,8 +153,7 @@ namespace Il2Native.Logic.Gencode
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
             var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
-            if (!typesToExclude.Any(t => resultOf.Type.TypeEquals(t)) && !areBothPointers
-                && !(opCode.OpCodeOperands[0].Result is ConstValue))
+            if (!typesToExclude.Any(t => resultOf.Type.TypeEquals(t)) && !areBothPointers)
             {
                 if (resultOf.Type.IsReal())
                 {
@@ -181,6 +180,13 @@ namespace Il2Native.Logic.Gencode
                         }
                     }
 
+                    // if types are equals then
+                    if (opCode.OpCodeOperands[0].Result.Type.TypeEquals(toType))
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        return;
+                    }
+
                     llvmWriter.UnaryOper(writer, opCode, intConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
 
@@ -189,15 +195,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                if (opCode.OpCodeOperands[0].Result != null)
-                {
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
-                }
-                else
-                {
-                    llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
-                }
+                opCode.Result = opCode.OpCodeOperands[0].Result;
             }
         }
 

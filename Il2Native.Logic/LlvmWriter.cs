@@ -334,9 +334,13 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Localloc:
-                    writer.Write("alloca i32 ");
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    writer.Write(", align " + PointerSize);
+
+                    this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
+                    writer.Write("alloca i8, ");
+                    opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(this.Output);
+                    writer.Write(" ");
+                    this.WriteResult(opCode.OpCodeOperands[0]);
+                    writer.Write(", align 1");
                     break;
                 case Code.Ldfld:
 
@@ -1034,10 +1038,11 @@ namespace Il2Native.Logic
                     break;
                 case Code.Clt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    sign = opCode.IsUnsigned() ? "u" : "s";
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fcmp olt" : "icmp slt",
+                        isFloatingPoint ? "fcmp olt" : string.Format("icmp {0}lt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Clt_Un:
@@ -1050,10 +1055,11 @@ namespace Il2Native.Logic
                     break;
                 case Code.Cgt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    sign = opCode.IsUnsigned() ? "u" : "s";
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fcmp ogt" : "icmp sgt",
+                        isFloatingPoint ? "fcmp ogt" : string.Format("icmp {0}gt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Cgt_Un:
@@ -1601,7 +1607,7 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Ldind_I:
-                    type = this.ResolveType("System.Int32");
+                    type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Ldind_I1:
                     type = this.ResolveType("System.SByte");
@@ -2949,7 +2955,7 @@ namespace Il2Native.Logic
                     this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
                     if (!noArgumentName)
                     {
-                        if (!parameter.IsOut)
+                        if (!parameter.IsOut && !parameter.IsRef)
                         {
                             writer.Write(" byval align " + PointerSize);
                         }
@@ -3935,10 +3941,9 @@ namespace Il2Native.Logic
                 var firstType = res1 != null && res1.Type != null && !res1.IsConst
                                     ? res1.Type
                                     : res2 != null && res2.Type != null && !res2.IsConst ? res2.Type : null;
-
-                IType secondType = null;
                 if (firstType != null)
                 {
+                    IType secondType = null;
                     if (res2 != null && res2.Type != null && !res2.IsConst)
                     {
                         secondType = res2.Type;
@@ -4148,7 +4153,7 @@ namespace Il2Native.Logic
                 type = this.ResolveType("System.Byte").ToPointerType();
             }
 
-            if (type.IsArray || type.IsByRef)
+            if (type.IsArray || type.IsByRef || type.IsPointer)
             {
                 return type.GetElementType();
             }
@@ -4363,7 +4368,7 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Stind_I:
-                    type = this.ResolveType("System.Int32");
+                    type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stind_I1:
                     type = this.ResolveType("System.Byte");
