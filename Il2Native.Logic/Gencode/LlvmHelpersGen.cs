@@ -690,7 +690,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false, bool indirect = false)
         {
             // TODO: improve it, by checking if Source is Reference or Pointer
 
@@ -698,7 +698,7 @@ namespace Il2Native.Logic.Gencode
 
             Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.Destination != null);
 
-            if (!typeToLoad.IsStructureType() || structAsRef || opCode.Destination == null)
+            if (!typeToLoad.IsStructureType() || structAsRef || opCode.Destination == null || indirect)
             {
                 if (opCode.HasResult)
                 {
@@ -719,8 +719,7 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result;
                 }
 
-                if (dereferencedType == null && !source.Type.IsPointer && !source.Type.IsByRef && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize()
-                    && typeToLoad.IntTypeBitSize() > 0)
+                if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
                 {
                     // check if you need cast here
                     llvmWriter.WriteIntToPtr(opCode, source, typeToLoad);

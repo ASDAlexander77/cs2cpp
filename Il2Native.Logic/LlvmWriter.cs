@@ -1661,6 +1661,8 @@ namespace Il2Native.Logic
         {
             FullyDefinedReference accessIndexResultNumber2;
 
+            var indirect = true;
+
             // next code fixing issue with using Code.Ldind to load first value in value types
             var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
             var isUsedAsClass = resultOfOperand0 != null && resultOfOperand0.Type.UseAsClass;
@@ -1679,6 +1681,8 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
                 accessIndexResultNumber2 = opCode.Result;
                 type = opCode.Result.Type;
+                // TODO: needs to be fixed, WriteFieldAccess shouls return Pointer type
+                indirect = false;
             }
             else
             {
@@ -1693,7 +1697,7 @@ namespace Il2Native.Logic
 
             opCode.Result = null;
 
-            this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2);
+            this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
 
             if (!isUsedAsClass && resultOfOperand0 != null)
             {
