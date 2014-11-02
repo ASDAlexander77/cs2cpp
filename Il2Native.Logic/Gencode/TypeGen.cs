@@ -15,6 +15,7 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
+    using System;
 
     /// <summary>
     /// </summary>
@@ -107,14 +108,16 @@ namespace Il2Native.Logic.Gencode
 
         public static int CalculateSize(this IType type)
         {
-            var fieldSizes = type.GetFieldsSizesRecursive().ToList();
+            var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
             var typeAlign = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
 
             var offset = 0;
             foreach (var size in type.GetTypeSizes())
             {
+                var effectiveSize = Math.Min(typeAlign, size);
+
                 offset += size;
-                while (offset % size != 0)
+                while (offset % effectiveSize != 0)
                 {
                     offset++;
                 }
@@ -199,7 +202,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizes(this IType type)
+        public static IEnumerable<int> GetFieldsSizes(this IType type, bool excludingStructs = false)
         {
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
@@ -209,6 +212,10 @@ namespace Il2Native.Logic.Gencode
                 {
                     // pointer size
                     yield return LlvmWriter.PointerSize;
+                }
+                else if (!excludingStructs && fieldType.IsStructureType())
+                {
+                    yield return fieldType.GetTypeSize();
                 }
                 else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
                 {
@@ -224,17 +231,17 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type)
+        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
         {
             if (type.BaseType != null)
             {
-                foreach (var item in type.BaseType.GetFieldsSizes())
+                foreach (var item in type.BaseType.GetFieldsSizes(excludingStructs))
                 {
                     yield return item;
                 }
             }
 
-            foreach (var item in type.GetFieldsSizes())
+            foreach (var item in type.GetFieldsSizes(excludingStructs))
             {
                 yield return item;
             }
