@@ -1285,6 +1285,11 @@ namespace Il2Native.Logic
                     opCode.NextOpCode(this).JumpProcessed = true;
 
                     break;
+
+                case Code.Sizeof:
+                    opCodeTypePart = opCode as OpCodeTypePart;
+                    opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.ResolveType("System.Int32"));
+                    break;
             }
         }
 
