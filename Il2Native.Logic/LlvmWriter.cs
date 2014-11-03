@@ -3868,12 +3868,19 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if ((sourceType.IsByRef && requiredType.IsPointer || requiredType.IsByRef && sourceType.IsPointer)
+                && sourceType.GetElementType().Equals(requiredType.GetElementType()))
+            {
+                return;
+            }
+
             if (sourceIntType && requiredType.IsPointer || requiredIntType && sourceType.IsPointer)
             {
                 intAdjustmentRequired = true;
                 return;
             }
 
+            // TODO: review it
             if (sourceType.TypeEquals(this.ResolveType("System.Boolean")) && requiredType.TypeEquals(this.ResolveType("System.Byte")))
             {
                 return;
