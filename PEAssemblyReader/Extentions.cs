@@ -114,16 +114,18 @@ namespace PEAssemblyReader
         /// </param>
         internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false, char declTypeJoinChar = '+')
         {
-            sb.Append(@namespace);
-            if (sb.Length > 0)
-            {
-                sb.Append('.');
-            }
-
             if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
             {
-                sb.Append(metadataName ? declaringType.MetadataName : declaringType.Name);
+                sb.Append(metadataName ? declaringType.MetadataFullName : declaringType.FullName);
                 sb.Append(declTypeJoinChar);
+            }
+            else
+            {
+                sb.Append(@namespace);
+                if (sb.Length > 0)
+                {
+                    sb.Append('.');
+                }
             }
         }
 

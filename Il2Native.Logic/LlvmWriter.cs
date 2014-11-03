@@ -470,7 +470,7 @@ namespace Il2Native.Logic
                     this.PreProcessOperand(writer, opCode, 0);
 
                     var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
-                    if (opCode.Destination != null 
+                    if (opCode.Destination != null
                         || (!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef)
                         || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef))
                     {
@@ -1395,7 +1395,7 @@ namespace Il2Native.Logic
             this.CheckIfExternalDeclarationIsRequired(declaringType);
 
             this.WriteNew(opCodeConstructorInfoPart, declaringType);
-            
+
             if (opCodeConstructorInfoPart.Destination != null)
             {
                 opCodeConstructorInfoPart.Result.Type.UseAsClass = false;
@@ -3245,7 +3245,7 @@ namespace Il2Native.Logic
             var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredResultType : null;
 
             var phiType = firstValueRequiredType
-                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) 
+                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue))
                           ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
             // adjust types of constants
@@ -4659,7 +4659,11 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
             foreach (var eh in ehs)
             {
-                this.WriteCatchEnd(opCode, eh, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+                var upperLevelExceptionHandlingClause 
+                    = this.tryScopes.Count > 0
+                        ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
+                        : null;
+                this.WriteCatchEnd(opCode, eh, upperLevelExceptionHandlingClause);
             }
         }
 

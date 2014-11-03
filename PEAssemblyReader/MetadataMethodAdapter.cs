@@ -758,14 +758,8 @@ namespace PEAssemblyReader
         private string CalculateFullName()
         {
             var result = new StringBuilder();
-
-            if (!string.IsNullOrWhiteSpace(this.Namespace))
-            {
-                result.Append(this.Namespace);
-                result.Append('.');
-            }
-
-            result.Append(this.ExplicitName);
+            this.methodDef.AppendFullNamespace(result, this.Namespace, this.DeclaringType, false, '.');
+            result.Append(this.Name);
 
             return result.ToString();
         }
@@ -809,7 +803,7 @@ namespace PEAssemblyReader
         private string CalculateMetadataFullName()
         {
             var sb = new StringBuilder();
-            this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
+            this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true, '.');
             sb.Append(this.MetadataName);
 
             return sb.ToString();

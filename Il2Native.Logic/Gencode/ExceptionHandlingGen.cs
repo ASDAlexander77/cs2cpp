@@ -412,13 +412,15 @@ namespace Il2Native.Logic.Gencode
                 foreach (var catchType in @catch)
                 {
                     writer.Indent++;
+
                     writer.Write("catch i8* bitcast (");
                     catchType.WriteRttiPointerClassInfoDeclaration(writer);
                     writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
-                    writer.Indent--;
 
                     llvmWriter.typeRttiPointerDeclRequired.Add(catchType);
                     llvmWriter.CheckIfExternalDeclarationIsRequired(catchType);
+
+                    writer.Indent--;
                 }
             }
             else if (finallyOrFaultClause != null)
