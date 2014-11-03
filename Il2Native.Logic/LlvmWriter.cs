@@ -790,13 +790,14 @@ namespace Il2Native.Logic
                     if (this.HasMethodThis && index == 0)
                     {
                         this.ThisType.UseAsClass = true;
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference("%this", this.ThisType), true, this.ThisType.IsStructureType());
+                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType), true, this.ThisType.IsStructureType());
                     }
                     else
                     {
-                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
+                        var parameterIndex = index - (this.HasMethodThis ? 1 : 0);
+                        var parameter = this.Parameters[parameterIndex];
 
-                        destinationName = GetArgVarName(parameter);
+                        destinationName = GetArgVarName(parameter, index);
 
                         skip = parameter.ParameterType.IsStructureType() && opCode.Destination == null;
                         var fullyDefinedReference = new FullyDefinedReference(destinationName, parameter.ParameterType);
@@ -820,13 +821,14 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        writer.Write("%this");
-                        opCode.Result = new FullyDefinedReference("%this", this.ThisType);
+                        writer.Write(this.GetThisName());
+                        opCode.Result = new FullyDefinedReference(this.GetThisName(), this.ThisType);
                     }
                     else
                     {
-                        var parameter = this.Parameters[index - (this.HasMethodThis ? 1 : 0)];
-                        opCode.Result = new FullyDefinedReference(GetArgVarName(parameter), parameter.ParameterType.ToPointerType());
+                        var parameterIndex = index - (this.HasMethodThis ? 1 : 0);
+                        var parameter = this.Parameters[parameterIndex];
+                        opCode.Result = new FullyDefinedReference(GetArgVarName(parameter, index), parameter.ParameterType.ToPointerType());
                     }
 
                     break;
@@ -844,7 +846,7 @@ namespace Il2Native.Logic
                         this.Parameters[actualIndex].ParameterType,
                         options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
-                    this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), true);
+                    this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), index, true);
 
                     break;
 
@@ -2039,7 +2041,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="isThis">
         /// </param>
-        public void WriteArgumentCopyDeclaration(string name, IType type, bool isThis = false)
+        public void WriteArgumentCopyDeclaration(string name, int index, IType type, bool isThis = false)
         {
             if (!isThis && type.IsStructureType())
             {
@@ -2051,7 +2053,9 @@ namespace Il2Native.Logic
                 type.UseAsClass = true;
             }
 
-            this.Output.Write("{0} = ", GetArgVarName(name));
+            var paramFullName = isThis ? GetThisName() : GetArgVarName(name, index);
+            var paramArgFullName = isThis ? GetThisName(true) : GetArgVarName(name, index, true);
+            this.Output.Write("{0} = ", paramFullName);
 
             // for value types
             this.Output.Write("alloca ");
@@ -2061,11 +2065,11 @@ namespace Il2Native.Logic
 
             this.Output.Write("store ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
-            this.Output.Write(" %\"arg.{0}\"", name);
+            this.Output.Write(" {0}", paramArgFullName);
             this.Output.Write(", ");
             type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
 
-            this.Output.Write("* {0}", GetArgVarName(name));
+            this.Output.Write("* {0}", paramFullName);
             this.Output.Write(", align " + PointerSize);
             this.Output.WriteLine(string.Empty);
         }
@@ -2939,11 +2943,12 @@ namespace Il2Native.Logic
 
                 if (!noArgumentName)
                 {
-                    writer.Write(" %arg.this");
+                    writer.Write(" {0}", this.GetThisName(true));
                 }
             }
 
             var index = start;
+            var parameterIndex = start;
             foreach (var parameter in parameterInfos)
             {
                 this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
@@ -2966,12 +2971,12 @@ namespace Il2Native.Logic
                             writer.Write(" byval align " + PointerSize);
                         }
 
-                        writer.Write(" %\"");
+                        writer.Write(" %\"{0}.", parameterIndex);
                     }
                 }
                 else if (!noArgumentName)
                 {
-                    writer.Write(" %\"arg.");
+                    writer.Write(" %\"arg.{0}.", parameterIndex++);
                 }
 
                 if (!noArgumentName)
@@ -4059,7 +4064,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetArgVarName(int index)
         {
-            return this.GetArgVarName(this.Parameters[index]);
+            return this.GetArgVarName(this.Parameters[index], index);
         }
 
         /// <summary>
@@ -4068,9 +4073,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetArgVarName(IParameter parameter)
+        private string GetArgVarName(IParameter parameter, int index)
         {
-            return GetArgVarName(parameter.Name);
+            return GetArgVarName(parameter.Name, index);
         }
 
         /// <summary>
@@ -4079,9 +4084,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetArgVarName(string name)
+        public string GetArgVarName(string name, int index, bool arg = false)
         {
-            return string.Format("%\"{0}\"", name);
+            return string.Format("%\"{2}{1}.{0}\"", name, index, arg ? "arg." : string.Empty);
+        }
+
+        public string GetThisName(bool arg = false)
+        {
+            return string.Format("%\"{0}0.this\"", arg ? "arg." : string.Empty);
         }
 
         /// <summary>
@@ -4518,12 +4528,13 @@ namespace Il2Native.Logic
         {
             if (hasThis)
             {
-                this.WriteArgumentCopyDeclaration("this", this.ThisType, true);
+                this.WriteArgumentCopyDeclaration(null, 0, this.ThisType, true);
             }
 
+            var index = hasThis ? 1 : 0;
             foreach (var parameterInfo in parametersInfo)
             {
-                this.WriteArgumentCopyDeclaration(parameterInfo.Name, parameterInfo.ParameterType);
+                this.WriteArgumentCopyDeclaration(parameterInfo.Name, index++, parameterInfo.ParameterType);
             }
         }
 
@@ -4986,16 +4997,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="asReference">
         /// </param>
-        private void WriteLlvmArgVarAccess(LlvmIndentedTextWriter writer, int index, bool asReference = false)
+        private void WriteLlvmArgVarAccess(LlvmIndentedTextWriter writer, int index, int argIndex, bool asReference = false)
         {
-            this.Parameters[index].ParameterType.WriteTypePrefix(writer, false);
+            this.Parameters[index].ParameterType.WriteTypePrefix(writer);
             if (asReference)
             {
                 writer.Write('*');
             }
 
             writer.Write(' ');
-            writer.Write(this.GetArgVarName(index));
+            writer.Write(this.GetArgVarName(argIndex));
 
             // TODO: optional do we need to calculate it propertly?
             writer.Write(", align " + PointerSize);

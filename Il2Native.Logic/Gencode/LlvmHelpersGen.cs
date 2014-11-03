@@ -153,7 +153,8 @@ namespace Il2Native.Logic.Gencode
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
             var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
-            if (!typesToExclude.Any(t => resultOf.Type.TypeEquals(t)) && !areBothPointers)
+            var typeToTest = resultOf.Type.IsEnum ? resultOf.Type.GetEnumUnderlyingType() : resultOf.Type;
+            if (!typesToExclude.Any(typeToTest.TypeEquals) && !areBothPointers)
             {
                 if (resultOf.Type.IsReal())
                 {

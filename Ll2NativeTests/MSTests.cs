@@ -164,19 +164,19 @@ namespace Ll2NativeTests
             // 324 - bug NEED TO BE FIXED.
             // 353 - does not have Main method
             // 444 - codepage 65001 is used (can't be compiled)
-            // 494 - clash of parameter names
             // 524 - (Missing Monitor.Enter/Exit
             // 528 - using typeof(object[]) (Array, will be fixed when using __Array__<T> implementation
             // 550 - codepage 65001 is used (can't be compiled)
             // 551 - multiple definition of Int32 (but all issues are fixed)
+            // 616 - test to compile Object (but it should be compiled without any Assembly reference)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 304, 353, 444, 482, 494, 524, 528, 550, 551
+                            100, 251, 294, 300, 304, 353, 444, 482, 524, 528, 550, 551, 616
                         });
 
-            foreach (var index in Enumerable.Range(586, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(644, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }

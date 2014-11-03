@@ -156,14 +156,14 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             // create this variable
-            llvmWriter.WriteArgumentCopyDeclaration("this", method.DeclaringType, true);
+            llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
             for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
             {
-                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), llvmWriter.GetArgType(i));
+                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%this", method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
@@ -216,14 +216,14 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             // create this variable
-            llvmWriter.WriteArgumentCopyDeclaration("this", method.DeclaringType, true);
+            llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
             for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
             {
-                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), llvmWriter.GetArgType(i));
+                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference("%this", method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
