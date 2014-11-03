@@ -172,10 +172,8 @@
                     llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
                 }
 
-                if (operand.HasResult && parameter.ParameterType.IsIntValueTypeExtCastRequired(operand.Result.Type))
-                {
-                    llvmWriter.AdjustIntConvertableTypes(writer, operand, parameter.ParameterType);
-                }
+                operand.RequiredResultType = parameter.ParameterType;
+                llvmWriter.AdjustResultType(operand);
 
                 index++;
             }

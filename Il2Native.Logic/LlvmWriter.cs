@@ -1122,7 +1122,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    var intPtrOper = IsUsedByArithm(opCode);
+                    var intPtrOper = this.IntTypeRequired(opCode);
                     var nativeIntType = intPtrOper ? this.ResolveType("System.Int32") : this.ResolveType("System.Void").ToPointerType();
                     this.LlvmConvert(opCode, "fptoui", "trunc", nativeIntType, !intPtrOper, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
@@ -1136,7 +1136,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    intPtrOper = IsUsedByArithm(opCode);
+                    intPtrOper = this.IntTypeRequired(opCode);
                     nativeIntType = intPtrOper ? this.ResolveType("System.Int32") : this.ResolveType("System.Void").ToPointerType();
                     this.LlvmConvert(opCode, "fptosi", "trunc", nativeIntType, !intPtrOper, this.ResolveType("System.IntPtr"), this.ResolveType("System.UIntPtr"));
                     break;
@@ -1292,10 +1292,53 @@ namespace Il2Native.Logic
             }
         }
 
-        private bool IsUsedByArithm(OpCodePart opCode)
+        private bool IsPointerArithmetic(OpCodePart opCode)
         {
-            var result = opCode.UsedBy.Any(Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un);
-            return result;
+            if (opCode == null || opCode.OpCodeOperands == null)
+            {
+                return false;
+            }
+
+            if (!opCode.OpCodeOperands.Any(o => o.HasResult && o.Result.Type.IsPointer))
+            {
+                return false;
+            }
+
+            if (opCode.Any(
+                Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool IntTypeRequired(OpCodePart opCode)
+        {
+            if (opCode == null || opCode.UsedBy == null)
+            {
+                return false;
+            }
+
+            if (opCode.UsedBy.Any(
+                Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un))
+            {
+                return true;
+            }
+
+            if (opCode.UsedBy.OperandPosition == 1 &&
+                opCode.UsedBy.Any(Code.Ldelem, Code.Ldelem_I, Code.Ldelem_I1, Code.Ldelem_I2, Code.Ldelem_I4, Code.Ldelem_I8, Code.Ldelem_R4, Code.Ldelem_R8, Code.Ldelem_Ref, Code.Ldelem_U1, Code.Ldelem_U2, Code.Ldelem_U4, Code.Ldelema))
+            {
+                return true;
+            }
+                
+            if (opCode.UsedBy.OperandPosition == 1 &&
+                opCode.UsedBy.Any(Code.Stelem, Code.Stelem_I, Code.Stelem_I1, Code.Stelem_I2, Code.Stelem_I4, Code.Stelem_I8, Code.Stelem_R4, Code.Stelem_R8, Code.Stelem_Ref))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void WriteLeave(LlvmIndentedTextWriter writer, OpCodePart opCode)
@@ -2976,7 +3019,7 @@ namespace Il2Native.Logic
                 }
                 else if (!noArgumentName)
                 {
-                    writer.Write(" %\"arg.{0}.", parameterIndex++);
+                    writer.Write(" %\"arg.{0}.", parameterIndex);
                 }
 
                 if (!noArgumentName)
@@ -2986,6 +3029,7 @@ namespace Il2Native.Logic
                 }
 
                 index++;
+                parameterIndex++;
             }
 
             if (varArgs)
@@ -3595,7 +3639,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        private void AdjustResultType(OpCodePart opCode)
+        public void AdjustResultType(OpCodePart opCode)
         {
             // cast result if required
             if (opCode.RequiredResultType != null && opCode.Result != null && opCode.RequiredResultType.TypeNotEquals(opCode.Result.Type)
@@ -3824,6 +3868,12 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (sourceIntType && requiredType.IsPointer || requiredIntType && sourceType.IsPointer)
+            {
+                intAdjustmentRequired = true;
+                return;
+            }
+
             if (sourceType.TypeEquals(this.ResolveType("System.Boolean")) && requiredType.TypeEquals(this.ResolveType("System.Byte")))
             {
                 return;
@@ -3999,6 +4049,22 @@ namespace Il2Native.Logic
                         if (res2.Type.IsPointer && res1.IsConst)
                         {
                             intAdjustment = res1.Type;
+                            intAdjustSecondOperand = true;
+                        }
+                    }
+
+                    if (this.IsPointerArithmetic(opCode))
+                    {
+                        requiredType = this.GetIntTypeByByteSize(PointerSize);
+                        if (res1.Type.IsPointer && res2.IsConst)
+                        {
+                            intAdjustment = requiredType;
+                            intAdjustSecondOperand = false;
+                        }
+
+                        if (res2.Type.IsPointer && res1.IsConst)
+                        {
+                            intAdjustment = requiredType;
                             intAdjustSecondOperand = true;
                         }
                     }
