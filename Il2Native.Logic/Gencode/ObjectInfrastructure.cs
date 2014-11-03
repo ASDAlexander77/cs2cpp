@@ -99,7 +99,12 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result);
+                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                {
+                    writer.WriteLine("; No data");
+                    return;
+                }
+
                 writer.WriteLine(string.Empty);
             }
 
@@ -538,7 +543,7 @@ namespace Il2Native.Logic.Gencode
                 opCode.Destination = new FullyDefinedReference("%agg.result", normalType);
             }
 
-            llvmWriter.WriteUnboxObject(opCode, normalType);
+            var resultPresents = llvmWriter.WriteUnboxObject(opCode, normalType);
 
             writer.Write("ret ");
             if (!isStruct)
@@ -553,7 +558,15 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 writer.Write(" ");
-                llvmWriter.WriteResult(opCode.Result);
+
+                if (resultPresents)
+                {
+                    llvmWriter.WriteResult(opCode.Result);
+                }
+                else
+                {
+                    writer.WriteLine(" undef");
+                }
             }
             else
             {
@@ -638,7 +651,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteUnboxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static bool WriteUnboxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
         {
             var writer = llvmWriter.Output;
 
@@ -657,7 +670,7 @@ namespace Il2Native.Logic.Gencode
                 if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
                 {
                     writer.WriteLine("; No data");
-                    return;
+                    return false;
                 }
 
                 writer.WriteLine(string.Empty);
@@ -671,6 +684,8 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
+
+            return true;
         }
 
         /// <summary>

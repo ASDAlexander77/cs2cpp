@@ -501,7 +501,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType))
+                if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType) || fromResult is ConstValue)
                 {
                     llvmWriter.WriteSetResultNumber(opCode, toType);
                     writer.Write("bitcast ");
@@ -696,9 +696,9 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.Destination != null);
+            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsByRef || typeToLoad.IsStructureType() && !typeToLoad.IsByRef && opCode.Destination != null);
 
-            if (!typeToLoad.IsStructureType() || structAsRef || opCode.Destination == null || indirect)
+            if (!typeToLoad.IsStructureType() || typeToLoad.IsByRef || structAsRef || opCode.Destination == null || indirect)
             {
                 if (opCode.HasResult)
                 {

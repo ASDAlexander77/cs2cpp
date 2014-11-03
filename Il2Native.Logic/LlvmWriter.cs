@@ -635,18 +635,12 @@ namespace Il2Native.Logic
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
 
-                    // TODO: should be removed in the future when Skip field is not used
-                    if (opCode.OpCodeOperands[0].Result == null)
-                    {
-                        this.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    }
-
                     tempOper = opCode.OpCodeOperands;
 
-                    var firstOperand = isFloatingPoint
-                                           ? new OpCodeDoublePart(OpCodesEmit.Ldc_R8, 0, 0, 0.0)
-                                           : GetTypedIntZeroCode(opCode.OpCodeOperands[0].Result.Type);
-                    this.ActualWrite(writer, firstOperand);
+                    var firstOperand = OpCodePart.CreateNop;
+                    firstOperand.Result = isFloatingPoint
+                                              ? new ConstValue(0.0, opCode.OpCodeOperands[0].Result.Type)
+                                              : new ConstValue(0, opCode.OpCodeOperands[0].Result.Type);
                     opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
 
                     this.BinaryOper(
@@ -724,7 +718,7 @@ namespace Il2Native.Logic
 
                     var localType = this.LocalInfo[index].LocalType;
 
-                    if (localType.IsStructureType())
+                    if (localType.IsStructureType() && !localType.IsByRef)
                     {
                         opCode.OpCodeOperands[0].Destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                         this.ActualWrite(writer, opCode.OpCodeOperands[0]);
@@ -755,10 +749,8 @@ namespace Il2Native.Logic
                     }
 
                     destinationName = this.GetLocalVarName(index);
-
                     localType = this.LocalInfo[index].LocalType;
-
-                    skip = this.LocalInfo[index].LocalType.IsStructureType() && opCode.Destination == null;
+                    skip = localType.IsStructureType() && !localType.IsByRef && opCode.Destination == null;
                     var definedReference = new FullyDefinedReference(destinationName, localType);
                     if (!skip)
                     {
@@ -3596,37 +3588,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="intType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static OpCodePart GetTypedIntZeroCode(IType intType)
-        {
-            switch (intType.IntTypeBitSize())
-            {
-                case 64:
-                    return new OpCodeInt64Part(OpCodesEmit.Ldc_I8, 0, 0, 0);
-                default:
-                    return new OpCodePart(OpCodesEmit.Ldc_I4_0, 0, 0);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="usedTypes">
-        /// </param>
-        private static void MethodsWalker(IMethod method, HashSet<IType> usedTypes)
-        {
-            var calledMethods = new HashSet<IMethod>();
-            var readStaticFields = new HashSet<IField>();
-
-            method.DiscoverMethod(usedTypes, calledMethods, readStaticFields);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         private void AdjustResultType(OpCodePart opCode)
@@ -4659,7 +4620,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
             foreach (var eh in ehs)
             {
-                var upperLevelExceptionHandlingClause 
+                var upperLevelExceptionHandlingClause
                     = this.tryScopes.Count > 0
                         ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
                         : null;

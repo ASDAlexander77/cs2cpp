@@ -167,14 +167,16 @@ namespace Ll2NativeTests
             // 494 - clash of parameter names
             // 524 - (Missing Monitor.Enter/Exit
             // 528 - using typeof(object[]) (Array, will be fixed when using __Array__<T> implementation
+            // 550 - codepage 65001 is used (can't be compiled)
+            // 551 - multiple definition of Int32 (but all issues are fixed)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 304, 353, 444, 482, 494, 524, 528
+                            100, 251, 294, 300, 304, 353, 444, 482, 494, 524, 528, 550, 551
                         });
 
-            foreach (var index in Enumerable.Range(537, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(586, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
