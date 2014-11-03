@@ -622,6 +622,15 @@ namespace PEAssemblyReader
                 index++;
             }
 
+            if (this.CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                {
+                    result.Append(", ");
+                }
+
+                result.Append("__arglist");
+            }
+
             result.Append(')');
 
             return result.ToString();

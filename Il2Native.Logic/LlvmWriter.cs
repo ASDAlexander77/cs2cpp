@@ -395,7 +395,7 @@ namespace Il2Native.Logic
                         opCode.Result = reference;
                     }
 
-                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
+                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Ldsflda:
@@ -404,7 +404,7 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart.Result = new FullyDefinedReference(
                         string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'), opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
 
-                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
+                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Stfld:
@@ -452,7 +452,7 @@ namespace Il2Native.Logic
                         writer.Write(destinationName);
                     }
 
-                    CheckIfExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
+                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
 
@@ -1487,7 +1487,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="field">
         /// </param>
-        public void CheckIfExternalDeclarationIsRequired(IField field)
+        public void CheckIfStaticFieldExternalDeclarationIsRequired(IField field)
         {
             if (field == null || !field.IsStatic || field.DeclaringType.AssemblyQualifiedName == this.AssemblyQualifiedName || field.DeclaringType.IsGenericType)
             {
@@ -2914,7 +2914,7 @@ namespace Il2Native.Logic
         /// <param name="noArgumentName">
         /// </param>
         public void WriteMethodParamsDef(
-            LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false)
+            LlvmIndentedTextWriter writer, IEnumerable<IParameter> parameterInfos, bool hasThis, IType thisType, IType returnType, bool noArgumentName = false, bool varArgs = false)
         {
             writer.Write("(");
 
@@ -2989,6 +2989,16 @@ namespace Il2Native.Logic
                 }
 
                 index++;
+            }
+
+            if (varArgs)
+            {
+                if (hasParameterWritten)
+                {
+                    writer.Write(", ");
+                }
+
+                writer.Write("...");
             }
 
             writer.Write(")");
@@ -3171,7 +3181,13 @@ namespace Il2Native.Logic
             else
             {
                 this.WriteMethodParamsDef(
-                    this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType, method.IsUnmanagedMethodReference);
+                    this.Output,
+                    method.GetParameters(),
+                    this.HasMethodThis,
+                    this.ThisType,
+                    method.ReturnType,
+                    method.IsUnmanagedMethodReference,
+                    varArgs: method.CallingConvention.HasFlag(CallingConventions.VarArgs));
             }
 
             if (method.IsUnmanagedMethodReference)
@@ -4225,7 +4241,8 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Ldelem_I:
-                    type = this.ResolveType("System.Int32");
+                    //type = this.ResolveType("System.Int32");
+                    type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Ldelem_I1:
                     // it can be Bool or Byte, leave it null
@@ -4307,7 +4324,8 @@ namespace Il2Native.Logic
             switch (opCode.ToCode())
             {
                 case Code.Stelem_I:
-                    type = this.ResolveType("System.Void").ToPointerType();
+                    //type = this.ResolveType("System.Void").ToPointerType();
+                    type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stelem_I1:
                     // it can be Bool or Byte, leave it null
@@ -5367,6 +5385,7 @@ namespace Il2Native.Logic
             }
 
             field.FieldType.WriteTypePrefix(this.Output, false);
+            CheckIfExternalDeclarationIsRequired(field.FieldType);
 
             if (!isExternal)
             {

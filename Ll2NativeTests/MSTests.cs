@@ -163,14 +163,15 @@ namespace Ll2NativeTests
             // 304 - the same as 300
             // 324 - bug NEED TO BE FIXED.
             // 353 - does not have Main method
+            // 444 - codepage 65001 is used (can't be compiled)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 304, 353
+                            100, 251, 294, 300, 304, 353, 444, 482
                         });
 
-            foreach (var index in Enumerable.Range(439, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(494, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
