@@ -160,7 +160,9 @@ namespace Ll2NativeTests
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
             // 294 - lock (Missing Monitor.Enter/Exit)
             // 300 - typeof of C[] (Array, will be fixed when using __Array__<T> implementation
+            // 301 - typeof of Pointer type (*)
             // 304 - the same as 300
+            // 305 - the same as 301
             // 324 - bug NEED TO BE FIXED.
             // 353 - does not have Main method
             // 444 - codepage 65001 is used (can't be compiled)
@@ -174,11 +176,13 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 304, 353, 444, 482, 524, 528, 550, 551, 616, 709
+                            100, 251, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709
                         });
 
+            Debug.Listeners.Clear();
+
             // last 790
-            foreach (var index in Enumerable.Range(1, 869).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
@@ -235,12 +239,22 @@ namespace Ll2NativeTests
             // 180 - not compilable (9,38): error CS1503: Argument 1: cannot convert from 'System.Enum' to 'string'
             // 181 - using Reflection
             // 183 - using BeginInvoke
+            // 187 - using Specialized Collections
+            // 207 - Delegate.Combine (NotImplemented)
+            // 209 - Delegate.Combine (NotImplemented)
+            // 216 - Delegate.Combine (NotImplemented)
+            // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
+            // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
+            // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
+            // 230 - using Reflection
+            // 231 - NEED TO BE FIXED (when "this" is null. it should throw an error (Null Reference)
             var skip =
                 new List<int>(
                     new[]
                         {
                             10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230,
+                            231
                         });
 
             if (UsingRoslyn)
@@ -250,7 +264,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(229, 869).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
             }

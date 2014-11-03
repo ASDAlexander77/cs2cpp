@@ -68,5 +68,9 @@ namespace Il2Native.Logic.Exceptions
         /// <summary>
         /// </summary>
         public bool EmptyFinallyRethrowRequired { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public FullyDefinedReference ExceptionResult { get; set; }
     }
 }

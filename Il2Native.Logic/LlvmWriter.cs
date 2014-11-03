@@ -461,7 +461,7 @@ namespace Il2Native.Logic
                     // to support settings exceptions
                     if (opCode.ReadExceptionFromStack)
                     {
-                        opCode.Result = new IncrementalResult(this.resultNumberIncremental, opCode.ReadExceptionFromStackType);
+                        opCode.Result = this.catchScopes.First().ExceptionResult;
                         break;
                     }
 
@@ -639,7 +639,7 @@ namespace Il2Native.Logic
 
                     var firstOperand = OpCodePart.CreateNop;
                     firstOperand.Result = isFloatingPoint
-                                              ? new ConstValue(0.0, opCode.OpCodeOperands[0].Result.Type)
+                                              ? new ConstValue("0.0", opCode.OpCodeOperands[0].Result.Type)
                                               : new ConstValue(0, opCode.OpCodeOperands[0].Result.Type);
                     opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
 
@@ -846,7 +846,7 @@ namespace Il2Native.Logic
                         this.Parameters[actualIndex].ParameterType,
                         options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                     writer.Write(", ");
-                    this.WriteLlvmArgVarAccess(writer, index - (this.HasMethodThis ? 1 : 0), index, true);
+                    this.WriteLlvmArgVarAccess(writer, actualIndex, index, true);
 
                     break;
 
@@ -1331,7 +1331,7 @@ namespace Il2Native.Logic
             {
                 return true;
             }
-                
+
             if (opCode.UsedBy.OperandPosition == 1 &&
                 opCode.UsedBy.Any(Code.Stelem, Code.Stelem_I, Code.Stelem_I1, Code.Stelem_I2, Code.Stelem_I4, Code.Stelem_I8, Code.Stelem_R4, Code.Stelem_R8, Code.Stelem_Ref))
             {
@@ -4074,6 +4074,16 @@ namespace Il2Native.Logic
                             intAdjustment = requiredType;
                             intAdjustSecondOperand = true;
                         }
+
+                        if (res1.Type.IsPointer && res2.Type.IsPointer)
+                        {
+                            opCode.OpCodeOperands[operand1].RequiredResultType = requiredType;
+                            opCode.OpCodeOperands[operand2].RequiredResultType = requiredType;
+                            AdjustResultType(opCode.OpCodeOperands[operand1]);
+                            AdjustResultType(opCode.OpCodeOperands[operand2]);
+
+                            effectiveType = requiredType;
+                        }
                     }
                 }
             }
@@ -4135,9 +4145,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string GetArgVarName(int index)
+        private string GetArgVarName(int parameterIndex, int argIndex)
         {
-            return this.GetArgVarName(this.Parameters[index], index);
+            return this.GetArgVarName(this.Parameters[parameterIndex], argIndex);
         }
 
         /// <summary>
@@ -4706,7 +4716,8 @@ namespace Il2Native.Logic
             {
                 var upperLevelExceptionHandlingClause
                     = this.tryScopes.Count > 0
-                        ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
+                        ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause) 
+                            ?? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                         : null;
                 this.WriteCatchEnd(opCode, eh, upperLevelExceptionHandlingClause);
             }
@@ -5079,7 +5090,7 @@ namespace Il2Native.Logic
             }
 
             writer.Write(' ');
-            writer.Write(this.GetArgVarName(argIndex));
+            writer.Write(this.GetArgVarName(index, argIndex));
 
             // TODO: optional do we need to calculate it propertly?
             writer.Write(", align " + PointerSize);

@@ -107,6 +107,8 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteBitcast(opCodeNone, beginCatchResultNumber, catchType);
                 writer.WriteLine(string.Empty);
+
+                exceptionHandlingClause.ExceptionResult = opCodeNone.Result;
             }
 
             if (isFinally)
@@ -236,7 +238,14 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                writer.WriteLine("br label %.exception_switch{0}", upperLevelExceptionHandlingClause.Offset);
+                if (!upperLevelExceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+                {
+                    writer.WriteLine("br label %.exception_switch{0}", upperLevelExceptionHandlingClause.Offset);
+                }
+                else
+                {
+                    writer.WriteLine("br label %.finally_no_error_entry{0}", upperLevelExceptionHandlingClause.Offset);
+                }
             }
 
             if (isFinally)
@@ -413,12 +422,19 @@ namespace Il2Native.Logic.Gencode
                 {
                     writer.Indent++;
 
-                    writer.Write("catch i8* bitcast (");
-                    catchType.WriteRttiPointerClassInfoDeclaration(writer);
-                    writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
+                    if (catchType != null)
+                    {
+                        writer.Write("catch i8* bitcast (");
+                        catchType.WriteRttiPointerClassInfoDeclaration(writer);
+                        writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
 
-                    llvmWriter.typeRttiPointerDeclRequired.Add(catchType);
-                    llvmWriter.CheckIfExternalDeclarationIsRequired(catchType);
+                        llvmWriter.typeRttiPointerDeclRequired.Add(catchType);
+                        llvmWriter.CheckIfExternalDeclarationIsRequired(catchType);
+                    }
+                    else
+                    {
+                        writer.Write("catch i8* null");
+                    }
 
                     writer.Indent--;
                 }

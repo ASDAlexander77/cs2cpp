@@ -104,8 +104,10 @@
 
                 // convert value to object
                 opCodeMethodInfo.Result = null;
-                primitiveType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
-                opCodeFirstOperand.Result = opCodeMethodInfo.Result;
+                var opCodeNone = OpCodePart.CreateNop;
+                opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                primitiveType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeNone);
+                opCodeFirstOperand.Result = opCodeNone.Result;
                 writer.WriteLine(string.Empty);
 
                 if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
