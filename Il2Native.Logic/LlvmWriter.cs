@@ -4396,11 +4396,12 @@ namespace Il2Native.Logic
                     break;
             }
 
-            var destinationType = opCode.OpCodeOperands[0].Result.Type;
+            var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
+            var destinationType = resultOfOperand0.Type;
             if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteBitcast(opCode, opCode.OpCodeOperands[0].Result, type);
+                this.WriteBitcast(opCode, resultOfOperand0, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
@@ -4410,11 +4411,10 @@ namespace Il2Native.Logic
                 type = destinationType.GetElementType();
             }
 
-            if (!destinationType.IsPointer && destinationType.IntTypeBitSize() >= (PointerSize * 8) && destinationType.IntTypeBitSize() != type.IntTypeBitSize()
-                && !opCode.OpCodeOperands[0].Result.Type.IsPointer && !opCode.OpCodeOperands[0].Result.Type.IsByRef)
+            if (!destinationType.IsPointer && !resultOfOperand0.Type.IsPointer && !resultOfOperand0.Type.IsByRef)
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteIntToPtr(opCode, opCode.OpCodeOperands[0].Result, type);
+                this.WriteIntToPtr(opCode, resultOfOperand0, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);

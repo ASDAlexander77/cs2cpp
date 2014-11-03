@@ -176,7 +176,7 @@ namespace Ll2NativeTests
                             100, 251, 294, 300, 304, 353, 444, 482, 524, 528, 550, 551, 616
                         });
 
-            foreach (var index in Enumerable.Range(644, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(653, 729).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
