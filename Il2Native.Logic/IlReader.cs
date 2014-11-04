@@ -1055,20 +1055,14 @@ namespace Il2Native.Logic
 
             this.usedGenericSpecialiazedMethods.Add(method);
 
+            // add all generic types in parameters
+            foreach (var parameter in method.GetParameters())
+            {
+                AddGenericSpecializedType(parameter.ParameterType);
+            }
+
             // disover it again in specialized method
-            var genericTypeSpecializations = new HashSet<IType>();
-            var genericMethodSpecializations = new HashSet<IMethod>();
-            method.DiscoverRequiredTypesAndMethods(genericTypeSpecializations, genericMethodSpecializations, null);
-
-            foreach (var genericTypeSpecialization in genericTypeSpecializations)
-            {
-                this.AddGenericSpecializedType(genericTypeSpecialization);
-            }
-
-            foreach (var genericMethodSpecialization in genericMethodSpecializations)
-            {
-                this.AddGenericSpecializedMethod(genericMethodSpecialization);
-            }
+            method.DiscoverRequiredTypesAndMethods(usedGenericSpecialiazedTypes, usedGenericSpecialiazedMethods, null);
         }
 
         /// <summary>

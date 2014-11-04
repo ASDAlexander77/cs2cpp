@@ -5023,7 +5023,7 @@ namespace Il2Native.Logic
                     index++;
                 }
 
-                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
                 {
                     var current = type;
                     IType typeContainingInterface = null;

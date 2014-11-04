@@ -378,7 +378,7 @@ namespace Il2Native.Logic
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations).ToArray();
+                foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations));
             }
         }
 
@@ -428,7 +428,7 @@ namespace Il2Native.Logic
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
-
+            
             // find all overide of generic methods 
             var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
             var overrideSpecializedMethods = new List<IMethod>();
