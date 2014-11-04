@@ -474,6 +474,10 @@ namespace Il2Native.Logic
         public static bool IsJumpForward(this OpCodePart opCodePart)
         {
             var opCode = opCodePart as OpCodeInt32Part;
+            if (opCode == null)
+            {
+                return false;
+            }
 
             if (opCode.OpCode.OperandType == OperandType.ShortInlineBrTarget && (opCode.Operand & 0x80) == 0x80)
             {

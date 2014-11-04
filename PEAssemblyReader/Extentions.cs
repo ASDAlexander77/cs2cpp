@@ -321,7 +321,7 @@ namespace PEAssemblyReader
                         }
                     }
 
-                    Debug.Assert(genericContext.TypeSpecialization == null && genericContext.MethodSpecialization == null, "Generic parameter has not bee resolved");
+                    Debug.Assert(genericContext.TypeSpecialization == null && genericContext.MethodSpecialization == null, "Generic parameter has not been resolved");
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;

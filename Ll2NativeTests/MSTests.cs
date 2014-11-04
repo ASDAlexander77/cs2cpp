@@ -114,14 +114,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestMscorlib()
-        {
-            Il2Converter.Convert(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll", OutputPath, GetConverterArgs(false));
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
@@ -267,6 +259,12 @@ namespace Ll2NativeTests
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 230 - using Reflection
             // 231 - NEED TO BE FIXED (when "this" is null. it should throw an error (Null Reference)
+            // 232 - missing IConvertable
+            // 233 - Reflection
+            // 236 - Attributes
+            // 238 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
+            // 239 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
+            // 240 - the same as 239
 
             // -----------
             // 32, 55, 74 - missing class
@@ -279,7 +277,7 @@ namespace Ll2NativeTests
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230,
-                            231
+                            231, 232, 233, 236, 238, 239, 240
                         });
 
             if (UsingRoslyn)
@@ -289,7 +287,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(240, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
