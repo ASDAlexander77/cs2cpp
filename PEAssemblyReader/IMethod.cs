@@ -35,6 +35,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsGenericMethodDefinition { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsGenericMethod { get; }
 
         /// <summary>
@@ -46,6 +50,11 @@ namespace PEAssemblyReader
         /// custom field
         /// </summary>
         bool IsUnmanagedMethodReference { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsExplicitInterfaceImplementation { get; }
 
         /// <summary>
         /// custom field
@@ -74,6 +83,12 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        IMethod GetMethodDefinition();
+
+        /// <summary>
+        /// </summary>
         /// <param name="genericContext">
         /// </param>
         /// <returns>
@@ -93,6 +108,14 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ResolveTypeParameter(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IMethod ToSpecialization(IGenericContext genericContext);
 
         /// <summary>
         /// </summary>

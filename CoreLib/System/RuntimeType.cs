@@ -1,16 +1,20 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
 
     using System;
     using System.Reflection;
     using System.Runtime.CompilerServices;
+    using System.Text;
 
     [Serializable()]
     internal sealed class RuntimeType : Type
     {
+        private string fullName;
+
+        public RuntimeType(byte[] rttiData)
+        {
+            this.fullName = new string(Encoding.ASCII.GetChars(rttiData));
+        }
 
         public override MemberTypes MemberType
         {
@@ -43,7 +47,7 @@ namespace System
             
             get
             {
-                throw new NotImplementedException();
+                return this.fullName;
             }
         }
 

@@ -1,8 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-using System.Runtime.CompilerServices;
 
 namespace System.Collections
 {
@@ -11,6 +9,7 @@ namespace System.Collections
     {
         private Object[] _items;
         private int _size;
+        private int _version;
 
         // Keep in-sync with c_DefaultCapacity in CLR_RT_HeapBlock_ArrayList in TinyCLR_Runtime__HeapBlock.h
         private const int _defaultCapacity = 4;
@@ -28,10 +27,30 @@ namespace System.Collections
                 SetCapacity(value);
             }
         }
-        
+
         private void SetCapacity(int capacity)
         {
-            throw new NotImplementedException();
+            if (capacity != _items.Length)
+            {
+                if (capacity < _size)
+                {
+                    throw new ArgumentOutOfRangeException("value");
+                }
+
+                if (capacity > 0)
+                {
+                    Object[] newItems = new Object[capacity];
+                    if (_size > 0)
+                    {
+                        Array.Copy(_items, 0, newItems, 0, _size);
+                    }
+                    _items = newItems;
+                }
+                else
+                {
+                    _items = new Object[_defaultCapacity];
+                }
+            }
         }
 
         public virtual int Count
@@ -61,22 +80,29 @@ namespace System.Collections
 
         public virtual Object this[int index]
         {
-            
+
             get
             {
-                throw new NotImplementedException();
+                if (index < 0 || index >= _size) throw new ArgumentOutOfRangeException("index");
+                return _items[index];
+
             }
-            
+
             set
             {
-                throw new NotImplementedException();
+                if (index < 0 || index >= _size) throw new ArgumentOutOfRangeException("index");
+                _items[index] = value;
+                _version++;
             }
         }
 
-        
+
         public virtual int Add(Object value)
         {
-            throw new NotImplementedException();
+            if (_size == _items.Length) EnsureCapacity(_size + 1);
+            _items[_size] = value;
+            _version++;
+            return _size++;
         }
 
         public virtual int BinarySearch(Object value, IComparer comparer)
@@ -84,10 +110,12 @@ namespace System.Collections
             return Array.BinarySearch(_items, 0, _size, value, comparer);
         }
 
-        
+
         public virtual void Clear()
         {
-            throw new NotImplementedException();
+            Array.Clear(_items, 0, _size); // Don't need to doc this but we clear the elements so that the gc can reclaim the references.
+            _size = 0;
+            _version++;
         }
 
         public virtual Object Clone()
@@ -108,7 +136,21 @@ namespace System.Collections
 
         public virtual bool Contains(Object item)
         {
-            return Array.IndexOf(_items, item, 0, _size) >= 0;
+            //return Array.IndexOf(_items, item, 0, _size) >= 0;
+            if (item == null)
+            {
+                for (int i = 0; i < _size; i++)
+                    if (_items[i] == null)
+                        return true;
+                return false;
+            }
+            else
+            {
+                for (int i = 0; i < _size; i++)
+                    if ((_items[i] != null) && (_items[i].Equals(item)))
+                        return true;
+                return false;
+            }
         }
 
         public virtual void CopyTo(Array array)
@@ -141,10 +183,19 @@ namespace System.Collections
             return Array.IndexOf(_items, value, startIndex, count);
         }
 
-        
+
         public virtual void Insert(int index, Object value)
         {
-            throw new NotImplementedException();
+            // Note that insertions at the end are legal.
+            if (index < 0 || index > _size) throw new ArgumentOutOfRangeException("index");
+            if (_size == _items.Length) EnsureCapacity(_size + 1);
+            if (index < _size)
+            {
+                Array.Copy(_items, index, _items, index + 1, _size - index);
+            }
+            _items[index] = value;
+            _size++;
+            _version++;
         }
 
         public virtual void Remove(Object obj)
@@ -156,10 +207,17 @@ namespace System.Collections
             }
         }
 
-        
+
         public virtual void RemoveAt(int index)
         {
-            throw new NotImplementedException();
+            if (index < 0 || index >= _size) throw new ArgumentOutOfRangeException("index");
+            _size--;
+            if (index < _size)
+            {
+                Array.Copy(_items, index + 1, _items, index, _size - index);
+            }
+            _items[_size] = null;
+            _version++;
         }
 
         public virtual Object[] ToArray()
@@ -174,6 +232,20 @@ namespace System.Collections
             Array.Copy(_items, 0, array, 0, _size);
 
             return array;
+        }
+
+        // Ensures that the capacity of this list is at least the given minimum
+        // value. If the currect capacity of the list is less than min, the
+        // capacity is increased to twice the current capacity or to min,
+        // whichever is larger.
+        private void EnsureCapacity(int min)
+        {
+            if (_items.Length < min)
+            {
+                int newCapacity = _items.Length == 0 ? _defaultCapacity : _items.Length * 2;
+                if (newCapacity < min) newCapacity = min;
+                Capacity = newCapacity;
+            }
         }
     }
 }

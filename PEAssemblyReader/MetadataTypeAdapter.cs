@@ -25,11 +25,35 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyFullName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataFullName;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
         /// </summary>
         private readonly Lazy<IType> lazyBaseType;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyAssemblyQualifiedName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyToString;
 
         /// <summary>
         /// </summary>
@@ -49,8 +73,14 @@ namespace PEAssemblyReader
             this.typeDef = typeDef;
             this.IsByRef = isByRef;
 
+            this.lazyName = new Lazy<string>(this.CalculateName);
+            this.lazyFullName = new Lazy<string>(this.CalculateFullName);
+            this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
+            this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyBaseType = new Lazy<IType>(this.CalculateBaseType);
+            this.lazyAssemblyQualifiedName = new Lazy<string>(this.CalculateAssemblyQualifiedName);
+            this.lazyToString = new Lazy<string>(this.CalculateToString);
         }
 
         /// <summary>
@@ -73,28 +103,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var effective = this.typeDef;
-
-                while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
-                {
-                    var arrayType = effective as ArrayTypeSymbol;
-                    if (arrayType != null)
-                    {
-                        effective = arrayType.ElementType;
-                        continue;
-                    }
-
-                    var pointerType = effective as PointerTypeSymbol;
-                    if (pointerType != null)
-                    {
-                        effective = pointerType.PointedAtType;
-                        continue;
-                    }
-
-                    break;
-                }
-
-                return effective.ContainingAssembly.Identity.Name;
+                return this.lazyAssemblyQualifiedName.Value;
             }
         }
 
@@ -149,14 +158,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-                if (!this.IsGenericParameter)
-                {
-                    this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
-                }
-
-                sb.Append(this.Name);
-                return sb.ToString();
+                return this.lazyFullName.Value;
             }
         }
 
@@ -421,11 +423,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
-                sb.Append(this.MetadataName);
-
-                return sb.ToString();
+                return this.lazyMetadataFullName.Value;
             }
         }
 
@@ -435,29 +433,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-
-                sb.Append(this.typeDef.Name);
-
-                if (this.IsGenericType)
-                {
-                    sb.Append('`');
-                    sb.Append(this.typeDef.GetArity());
-                }
-
-                if (this.IsArray)
-                {
-                    sb.Append(this.GetElementType().MetadataName);
-                    sb.Append("[]");
-                }
-
-                if (this.IsPointer)
-                {
-                    sb.Append(this.GetElementType().MetadataName);
-                    sb.Append("*");
-                }
-
-                return sb.ToString();
+                return this.lazyMetadataName.Value;
             }
         }
 
@@ -477,41 +453,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-
-                sb.Append(this.typeDef.Name);
-
-                if (this.IsGenericType && this.ContainsGenericParameters)
-                {
-                    sb.Append('<');
-
-                    var index = 0;
-                    foreach (var genArg in this.GetGenericArguments())
-                    {
-                        if (index++ > 0)
-                        {
-                            sb.Append(", ");
-                        }
-
-                        sb.Append(genArg.FullName);
-                    }
-
-                    sb.Append('>');
-                }
-
-                if (this.IsArray)
-                {
-                    sb.Append(this.GetElementType().Name);
-                    sb.Append("[]");
-                }
-
-                if (this.IsPointer)
-                {
-                    sb.Append(this.GetElementType().Name);
-                    sb.Append("*");
-                }
-
-                return sb.ToString();
+                return this.lazyName.Value;
             }
         }
 
@@ -521,11 +463,7 @@ namespace PEAssemblyReader
         {
             get
             {
-#if DEBUG
-                return this.typeDef.CalculateNamespace();
-#else
                 return this.lazyNamespace.Value;
-#endif
             }
         }
 
@@ -566,10 +504,27 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            var cmp = this.MetadataName.CompareTo(type.MetadataName);
-            if (cmp != 0)
+            var cmp = 0;
+            if (this.IsGenericType && !this.IsGenericTypeDefinition && type.IsGenericType && !type.IsGenericTypeDefinition)
             {
-                return cmp;
+                cmp = this.Name.CompareTo(type.Name);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+            }
+            else
+            {
+                cmp = this.MetadataName.CompareTo(type.MetadataName);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+            }
+
+            if (this.IsGenericParameter && type.IsGenericParameter)
+            {
+                return 0;
             }
 
             cmp = this.Namespace.CompareTo(type.Namespace);
@@ -813,7 +768,7 @@ namespace PEAssemblyReader
             {
                 return true;
             }
-            
+
             if (type.GetAllInterfaces().Contains(this))
             {
                 return true;
@@ -867,7 +822,13 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            var containingAssembly = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType.ContainingAssembly : this.typeDef.ContainingAssembly;
+            var type = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType : this.typeDef;
+            while (type.IsPointerType())
+            {
+                type = (type as PointerTypeSymbol).PointedAtType;
+            }
+
+            var containingAssembly = type.ContainingAssembly;
             return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext);
         }
 
@@ -916,6 +877,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public override string ToString()
+        {
+            return this.lazyToString.Value;
+        }
+
+        private string CalculateToString()
         {
             var result = new StringBuilder();
 
@@ -968,6 +934,119 @@ namespace PEAssemblyReader
         private IType CalculateBaseType()
         {
             return this.typeDef.BaseType != null ? this.typeDef.BaseType.ResolveGeneric(this.GenericContext) : null;
+        }
+
+        private string CalculateName()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(this.typeDef.Name);
+
+            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            {
+                sb.Append('<');
+
+                var index = 0;
+                foreach (var genArg in this.GetGenericArguments())
+                {
+                    if (index++ > 0)
+                    {
+                        sb.Append(", ");
+                    }
+
+                    sb.Append(genArg.FullName);
+                }
+
+                sb.Append('>');
+            }
+
+            if (this.IsArray)
+            {
+                sb.Append(this.GetElementType().Name);
+                sb.Append("[]");
+            }
+
+            if (this.IsPointer)
+            {
+                sb.Append(this.GetElementType().Name);
+                sb.Append("*");
+            }
+
+            return sb.ToString();
+        }
+
+        private string CalculateFullName()
+        {
+            var sb = new StringBuilder();
+            if (!this.IsGenericParameter)
+            {
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
+            }
+
+            sb.Append(this.Name);
+            return sb.ToString();
+        }
+
+        private string CalculateMetadataName()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(this.typeDef.Name);
+
+            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            {
+                sb.Append('`');
+                sb.Append(this.typeDef.GetArity());
+            }
+
+            if (this.IsArray)
+            {
+                sb.Append(this.GetElementType().MetadataName);
+                sb.Append("[]");
+            }
+
+            if (this.IsPointer)
+            {
+                sb.Append(this.GetElementType().MetadataName);
+                sb.Append("*");
+            }
+
+            return sb.ToString();
+        }
+
+        private string CalculateMetadataFullName()
+        {
+            var sb = new StringBuilder();
+            this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
+            sb.Append(this.MetadataName);
+
+            return sb.ToString();
+        }
+
+        private string CalculateAssemblyQualifiedName()
+        {
+            var effective = this.typeDef;
+
+            while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
+            {
+                var arrayType = effective as ArrayTypeSymbol;
+                if (arrayType != null)
+                {
+                    effective = arrayType.ElementType;
+                    continue;
+                }
+
+                var pointerType = effective as PointerTypeSymbol;
+                if (pointerType != null)
+                {
+                    effective = pointerType.PointedAtType;
+                    continue;
+                }
+
+                break;
+            }
+
+            return effective.ContainingAssembly.Identity.Name;
         }
 
         /// <summary>

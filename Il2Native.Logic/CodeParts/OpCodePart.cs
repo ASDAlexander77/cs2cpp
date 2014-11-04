@@ -73,7 +73,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public CatchOfFinallyClause CatchOrFinallyEnd { get; set; }
+        public IList<CatchOfFinallyClause> CatchOrFinallyEnds { get; set; }
 
         /// <summary>
         /// </summary>

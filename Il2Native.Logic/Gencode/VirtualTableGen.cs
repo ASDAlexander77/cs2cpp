@@ -103,6 +103,12 @@ namespace Il2Native.Logic.Gencode
                 var baseMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getHashCodeMethod));
                 baseMethod.Value = getHashCodeMethod;
             }
+
+            // custom GetType
+            // TODO: you need to append it before processing custom methods
+            var getTypeMethod = new SynthesizedGetTypeMethod(thisType, llvmWriter);
+            var baseGetTypeMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getTypeMethod));
+            baseGetTypeMethod.Value = getTypeMethod;
         }
 
         /// <summary>
@@ -224,7 +230,7 @@ namespace Il2Native.Logic.Gencode
                     index++;
                 }
 
-                // try to find an method in all interfaces
+                // try to find a method in all interfaces
                 foreach (var @interface in thisType.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
                 {
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout();
@@ -303,7 +309,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool HasExplicitInterfaceMethodOverride(this IType thisType, IMethod methodInfo)
         {
-            return thisType.GetMethods(BindingFlags.Instance).Any(method => methodInfo.IsMatchingExplicitInterfaceOverride(method));
+            return thisType.GetMethods(BindingFlags.Instance).Any(methodInfo.IsMatchingExplicitInterfaceOverride);
         }
 
         /// <summary>
@@ -398,7 +404,9 @@ namespace Il2Native.Logic.Gencode
             // get all virtual methods in current type and replace or append
             virtualTable.AddRange(
                 IlReader.Methods(@interface)
-                        .Select(interfaceMember => allPublic.First(interfaceMember.IsMatchingInterfaceOverride))
+                        .Select(
+                            interfaceMember =>
+                            allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
                         .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
         }
 

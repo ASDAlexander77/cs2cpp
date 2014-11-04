@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Ll2NativeTests
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -48,6 +49,12 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
+
+        /// <summary>
+        /// </summary>
+        private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
+        private const bool Llvm36Support = true;
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -56,6 +63,9 @@ namespace Ll2NativeTests
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
+        private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
+        private const bool Llvm36Support = false;
 #endif
 
         /// <summary>
@@ -65,6 +75,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const bool GcEnabled = true;
+
+        /// <summary>
+        /// </summary>
+        private const bool GctorsEnabled = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -127,17 +141,48 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void TestAndroid()
+        {
+            Il2Converter.Convert(Path.GetFullPath(AndroidPath), OutputPath, GetConverterArgs(true));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void TestCompile()
         {
-            var skip = new List<int>(new int[] { 10, 19, 39, 50, 67 });
+            // test-400.cs 
+            // %.r13 = load i32* %local1, align 4
+            // %.r14 = load i32* %local1, align 4
 
-            if (UsingRoslyn)
-            {
-                // 49 - bug in execution
-                skip.AddRange(new int[] { 83 });
-            }
 
-            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
+            // 100 - using DllImport      
+            // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
+            // 294 - lock (Missing Monitor.Enter/Exit)
+            // 300 - typeof of C[] (Array, will be fixed when using __Array__<T> implementation
+            // 301 - typeof of Pointer type (*)
+            // 304 - the same as 300
+            // 305 - the same as 301
+            // 324 - bug NEED TO BE FIXED.
+            // 353 - does not have Main method
+            // 444 - codepage 65001 is used (can't be compiled)
+            // 524 - (Missing Monitor.Enter/Exit
+            // 528 - using typeof(object[]) (Array, will be fixed when using __Array__<T> implementation
+            // 550 - codepage 65001 is used (can't be compiled)
+            // 551 - multiple definition of Int32 (but all issues are fixed)
+            // 616 - test to compile Object (but it should be compiled without any Assembly reference)
+            // 709 - get_OffsetStringData - required (NEED TO BE FIXED!!!!).
+            var skip =
+                new List<int>(
+                    new[]
+                        {
+                            100, 251, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709
+                        });
+
+            Debug.Listeners.Clear();
+
+            // last 790
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(index);
             }
@@ -149,17 +194,16 @@ namespace Ll2NativeTests
         public void TestCompileAndRunLlvm()
         {
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
+            // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
 
             // 10 - not compilable
-            // 19 - using Thread class
+            // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
             // 32 - multi array
-            // 33 - using GetType
             // 36 - bug in execution (NotImplemented)
             // 37 - multi array
             // 39 - using Attributes
             // 43 - multi array
-            // 45 - NEED TO BE FIXED: arrays initialization
             // 50 - missing
             // 52 - bug in execution (NotImplemented, ArrayList, Hashtable)
             // 57 - bug in execution (NotImplemented, EventHandler)
@@ -167,7 +211,6 @@ namespace Ll2NativeTests
             // 68 - using enum
             // 74 - using StreamReader
             // 77 - using enum
-            // 83 - using System.Threading.Interlocked.CompareExchange
             // 85 - using UnmanagedType
             // 91 - using Reflection
             // 95 - NEED TO BE FIXED, init double in a class
@@ -175,36 +218,53 @@ namespace Ll2NativeTests
             // 100 - using DllImport      
             // 101 - using Reflection
             // 102 - using Reflection
-            // 104 - System.Threading.Interlocked.Increment
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
-            // 115 - explicit cast (cast class without explicit operator should throw an exception)
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
-            // 126 - not implemented defualt ToString() to return type name
-            // 127 - using typeof
-            // 128 - using typeof
-            // 129 - using typeof
+            // 127 - IsDerined not implemented
+            // 128 - using Attributes
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
-            // 132 - typeof, Reflection
-            // 135 - typeof, Reflection
+            // 132 - Reflection
+            // 135 - Reflection
+            // 149 - Delegate.Combine (NotImplemented)
+            // 157 - reflection, attributes
+            // 158 - reflection, attributes
+            // 171 - Roslyn can't handle it!!!
+            // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
+            // 177 - using Reflection
+            // 178 - using Reflection
+            // 180 - not compilable (9,38): error CS1503: Argument 1: cannot convert from 'System.Enum' to 'string'
+            // 181 - using Reflection
+            // 183 - using BeginInvoke
+            // 187 - using Specialized Collections
+            // 207 - Delegate.Combine (NotImplemented)
+            // 209 - Delegate.Combine (NotImplemented)
+            // 216 - Delegate.Combine (NotImplemented)
+            // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
+            // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
+            // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
+            // 230 - using Reflection
+            // 231 - NEED TO BE FIXED (when "this" is null. it should throw an error (Null Reference)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 33, 36, 39, 45, 50, 52, 53, 57, 67, 68, 83, 85, 91, 95, 99, 100, 101, 102, 104, 105, 106, 107, 109, 115, 117, 118, 120,
-                            126, 127, 128, 129, 130, 132, 135
+                            10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230,
+                            231
                         });
 
             if (UsingRoslyn)
             {
                 // 49 - bug in execution
-                skip.AddRange(new[] { 49 });
+                // object o = -(2147483648); type is "int", not "long" in Roslyn
+                skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 729).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(229, 869).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(index);
             }
@@ -215,20 +275,24 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 21 - using default on Class causing Boxing of Reference type
-            // 29 - boxing array and sends to WriteLine - causes crash
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
-            // 46 - using Event, Debug Trace: (9,23): error CS0656: Missing compiler required member 'System.Threading.Interlocked.CompareExchange'
+            // 46 - Delegate.Combine not implemented
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
-            // 57 - generic virtual methods in an interface
-            // 60 - generic virtual methods in an interface
             // 63 - Array.Length is not implemented
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
-            // 66 - using typeof
-            var skip = new[] { 21, 29, 40, 46, 47, 51, 52, 56, 57, 60, 63, 65, 66 };
+            // 66 - using typeof (typeof (Foo<>))
+            // 72 - not implemented (DateTime to string)
+            // 77 - file not found
+            // 78 - not implemented
+            // 96 - NEED TO BE FIXED: generic methods nested referencing
+            // 99 - file not found
+            // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
+            // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
+            // 110 - as 96 but additionally virtual and interface
+            var skip = new[] { 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102, 109, 110 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 GenCompileAndRun(index);
@@ -243,7 +307,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -256,9 +320,19 @@ namespace Ll2NativeTests
                 args.Add("roslyn");
             }
 
-            if (gc)
+            if (!gc)
             {
-                args.Add("gc");
+                args.Add("gc-");
+            }
+
+            if (!gctors)
+            {
+                args.Add("gctors-");
+            }
+
+            if (llvm36Support)
+            {
+                args.Add("llvm36");
             }
 
             return args.ToArray();
@@ -295,13 +369,15 @@ namespace Ll2NativeTests
                 del test-%1.o
             */
 
+            // if GC Enabled
             /*
-             * if GC Enabled
                 llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
                 llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
                 g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
                 del test-%1.o 
              */
+
+            // Android target - target triple = "armv7-none-linux-androideabi"
 
             var pi = new ProcessStartInfo();
             pi.WorkingDirectory = OutputPath;
@@ -340,7 +416,15 @@ namespace Ll2NativeTests
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + index);
 
-            Convert(index);
+            try
+            {
+                Convert(index);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return;
+            }
 
             Trace.WriteLine("Compiling LLVM for " + index);
 

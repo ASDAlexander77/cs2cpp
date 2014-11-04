@@ -87,6 +87,10 @@
 
         /// <summary>
         /// </summary>
+        public bool IsGenericMethodDefinition { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool IsGenericMethod { get; private set; }
 
         /// <summary>
@@ -101,6 +105,16 @@
         }
 
         public bool IsUnmanagedMethodReference
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsExplicitInterfaceImplementation
         {
             get
             {
@@ -162,7 +176,7 @@
         {
             get
             {
-                return this.ExplicitName;
+                return this.Name;
             }
         }
 
@@ -192,6 +206,11 @@
             {
                 return null;
             }
+        }
+
+        public IMethod GetMethodDefinition()
+        {
+            return null;
         }
 
         /// <summary>
@@ -334,6 +353,11 @@
             result.Append(')');
 
             return result.ToString();
+        }
+
+        public IMethod ToSpecialization(IGenericContext genericContext)
+        {
+            throw new NotImplementedException();
         }
     }
 }

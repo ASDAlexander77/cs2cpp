@@ -29,6 +29,26 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyExplicitName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyFullName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataFullName;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
@@ -43,6 +63,11 @@ namespace PEAssemblyReader
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
+            this.lazyName = new Lazy<string>(this.CalculateName);
+            this.lazyExplicitName = new Lazy<string>(this.CalculateExplicitName);
+            this.lazyFullName = new Lazy<string>(this.CalculateFullName);
+            this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
+            this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
         }
 
@@ -139,23 +164,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var result = new StringBuilder();
-
-                if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
-                {
-                    if (this.methodDef.ContainingType.IsNestedType())
-                    {
-                        result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                        result.Append('+');
-                    }
-
-                    result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                    result.Append('.');
-                }
-
-                result.Append(this.Name);
-
-                return result.ToString();
+                return this.lazyExplicitName.Value;
             }
         }
 
@@ -167,17 +176,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var result = new StringBuilder();
-
-                if (!string.IsNullOrWhiteSpace(this.Namespace))
-                {
-                    result.Append(this.Namespace);
-                    result.Append('.');
-                }
-
-                result.Append(this.ExplicitName);
-
-                return result.ToString();
+                return this.lazyFullName.Value;
             }
         }
 
@@ -215,7 +214,17 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any();
+                return this.methodDef.TypeParameters.Any() && !this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsGenericMethodDefinition
+        {
+            get
+            {
+                return this.methodDef.TypeParameters.Any() && this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
             }
         }
 
@@ -294,6 +303,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsExplicitInterfaceImplementation
+        {
+            get
+            {
+                return this.methodDef.IsExplicitInterfaceImplementation;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables
         {
             get
@@ -342,11 +361,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-                this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
-                sb.Append(this.MetadataName);
-
-                return sb.ToString();
+                return this.lazyMetadataFullName.Value;
             }
         }
 
@@ -356,17 +371,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-
-                sb.Append(this.methodDef.Name);
-
-                if (this.IsGenericMethod)
-                {
-                    sb.Append('`');
-                    sb.Append(this.methodDef.GetArity());
-                }
-
-                return sb.ToString();
+                return this.lazyMetadataName.Value;
             }
         }
 
@@ -386,29 +391,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var sb = new StringBuilder();
-
-                sb.Append(this.methodDef.Name);
-
-                if (this.IsGenericMethod)
-                {
-                    sb.Append('<');
-
-                    var index = 0;
-                    foreach (var genArg in this.GetGenericArguments())
-                    {
-                        if (index++ > 0)
-                        {
-                            sb.Append(", ");
-                        }
-
-                        sb.Append(genArg.FullName);
-                    }
-
-                    sb.Append('>');
-                }
-
-                return sb.ToString();
+                return this.lazyName.Value;
             }
         }
 
@@ -418,11 +401,7 @@ namespace PEAssemblyReader
         {
             get
             {
-#if DEBUG
-                return this.methodDef.CalculateNamespace();
-#else
                 return this.lazyNamespace.Value;
-#endif
             }
         }
 
@@ -443,6 +422,18 @@ namespace PEAssemblyReader
             get
             {
                 return this.methodDef;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public bool ContainsGenericParameters
+        {
+            get
+            {
+                return methodDef.TypeArguments.Any();
             }
         }
 
@@ -529,6 +520,11 @@ namespace PEAssemblyReader
             return null;
         }
 
+        public IMethod ToSpecialization(IGenericContext genericContext)
+        {
+            return this.methodDef.ResolveGeneric(genericContext);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="genericContext">
@@ -565,6 +561,12 @@ namespace PEAssemblyReader
         public IEnumerable<IParameter> GetParameters()
         {
             return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
+        }
+
+
+        public IMethod GetMethodDefinition()
+        {
+            return new MetadataMethodAdapter(this.methodDef.ConstructedFrom);
         }
 
         /// <summary>
@@ -618,6 +620,15 @@ namespace PEAssemblyReader
 
                 result.Append(parameterType);
                 index++;
+            }
+
+            if (this.CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                {
+                    result.Append(", ");
+                }
+
+                result.Append("__arglist");
             }
 
             result.Append(')');
@@ -708,10 +719,99 @@ namespace PEAssemblyReader
             return this.methodDef.CalculateNamespace();
         }
 
+        private string CalculateName()
+        {
+            var sb = new StringBuilder();
+
+            if (this.methodDef.ContainingType.IsGenericType && this.methodDef.IsExplicitInterfaceImplementation)
+            {
+                var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.First();
+                var resolveType = implMethodSymbol.ResolveGeneric(this.GenericContext);
+                sb.Append(resolveType.FullName);
+            }
+            else
+            {
+                sb.Append(this.methodDef.Name);
+            }
+
+            if (this.IsGenericMethod || this.IsGenericMethodDefinition)
+            {
+                sb.Append('<');
+
+                var index = 0;
+                foreach (var genArg in this.GetGenericArguments())
+                {
+                    if (index++ > 0)
+                    {
+                        sb.Append(", ");
+                    }
+
+                    sb.Append(genArg.FullName);
+                }
+
+                sb.Append('>');
+            }
+
+            return sb.ToString();
+        }
+
+        private string CalculateFullName()
+        {
+            var result = new StringBuilder();
+            this.methodDef.AppendFullNamespace(result, this.Namespace, this.DeclaringType, false, '.');
+            result.Append(this.Name);
+
+            return result.ToString();
+        }
+
+        private string CalculateExplicitName()
+        {
+            var result = new StringBuilder();
+
+            if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
+            {
+                if (this.methodDef.ContainingType.IsNestedType())
+                {
+                    result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                    result.Append('+');
+                }
+
+                result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                result.Append('.');
+            }
+
+            result.Append(this.Name);
+
+            return result.ToString();
+        }
+
+        private string CalculateMetadataName()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(this.methodDef.Name);
+
+            if (this.IsGenericMethod || this.IsGenericMethodDefinition)
+            {
+                sb.Append('`');
+                sb.Append(this.methodDef.GetArity());
+            }
+
+            return sb.ToString();
+        }
+
+        private string CalculateMetadataFullName()
+        {
+            var sb = new StringBuilder();
+            this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true, '.');
+            sb.Append(this.MetadataName);
+
+            return sb.ToString();
+        }
 
         private MetadataGenericContext GetDefaultGenericMetadataContext()
         {
-            if (this.IsGenericMethod)
+            if (this.IsGenericMethodDefinition)
             {
                 return new MetadataGenericContext(this);
             }

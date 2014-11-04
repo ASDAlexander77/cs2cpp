@@ -604,8 +604,13 @@ namespace Il2Native.Logic
 
                     if (this.OpsByAddressEnd.TryGetValue(catchOrFinally.Offset + catchOrFinally.Length, out opCodePart))
                     {
-                        Debug.Assert(opCodePart.CatchOrFinallyEnd == null);
-                        opCodePart.CatchOrFinallyEnd = catchOrFinally;
+                        //Debug.Assert(opCodePart.CatchOrFinallyEnds == null);
+                        if (opCodePart.CatchOrFinallyEnds == null)
+                        {
+                            opCodePart.CatchOrFinallyEnds = new List<CatchOfFinallyClause>();
+                        }
+
+                        opCodePart.CatchOrFinallyEnds.Add(catchOrFinally);
                     }
                 }
             }
@@ -681,7 +686,14 @@ namespace Il2Native.Logic
                 }
 
                 // detect required types in alternative values
-                var usedBy = opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
+                var firstOpCode = opCodePart.AlternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                if (firstOpCode == null)
+                {
+                    // TODO: find out why it happens here (test-154.cs)
+                    continue;
+                }
+
+                var usedBy = firstOpCode.UsedBy;
                 var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
@@ -1072,6 +1084,7 @@ namespace Il2Native.Logic
                 case Code.Starg_S:
                 case Code.Localloc:
                 case Code.Pop:
+                case Code.Ldvirtftn:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:
@@ -1164,7 +1177,9 @@ namespace Il2Native.Logic
             // replace pinned IntPtr& with Int
             foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
             {
-                localInfo.LocalType = this.ResolveType("System.Void").ToPointerType();
+                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
+                                          ? this.ResolveType("System.Void").ToPointerType()
+                                          : localInfo.LocalType.ToPointerType();
             }
         }
 
@@ -1191,14 +1206,12 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ret))
             {
                 retType = this.MethodReturnType;
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
             {
                 retType = opCodePart.GetLocalType(this);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
@@ -1208,57 +1221,63 @@ namespace Il2Native.Logic
                 if (this.HasMethodThis && index == 0)
                 {
                     retType = this.ThisType;
-                    ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                     return retType;
                 }
 
                 retType = this.GetArgType(index);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stfld, Code.Stsfld))
             {
                 retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
-                ////opCodePart.OpCodeOperands[x].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stobj))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Box))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Call, Code.Callvirt))
             {
+                var effectiveoperandPosition = operandPosition;
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                {
+                    if (operandPosition == 0)
+                    {
+                        return opCodePartMethod.Operand.DeclaringType;
+                    }
+                    else
+                    {
+                        effectiveoperandPosition--;
+                    }
+                }
+
                 var parameters = opCodePartMethod.Operand.GetParameters();
-                var offset = opCodePartMethod.OpCodeOperands.Length - parameters.Count();
                 var index = 0;
                 foreach (var parameter in parameters)
                 {
-                    if (index == operandPosition)
+                    if (index == effectiveoperandPosition)
                     {
                         retType = parameter.ParameterType;
+                        break;
                     }
 
-                    ////opCodePartMethod.OpCodeOperands[offset + index].RequiredResultType = parameter.ParameterType;
                     index++;
                 }
             }

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
@@ -288,13 +288,13 @@ namespace System
         private static byte[] buffer = new byte[128];
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int sprintf(byte[] buffer, byte[] format, double d);
+        public unsafe static extern int sprintf(byte* buffer, byte* format, double d);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int sprintf(byte[] buffer, byte[] format, float d);
+        public unsafe static extern int sprintf(byte* buffer, byte* format, float d);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern int sprintf(byte[] buffer, byte[] format, int t);
+        public unsafe static extern int sprintf(byte* buffer, byte* format, int t);
 
         public static String Format(int value, bool isInteger, String format, NumberFormatInfo info)
         {
@@ -323,14 +323,28 @@ namespace System
 
         private static String FormatNative(int value, char format, int precision)
         {
-            var size = sprintf(buffer, PrintInt, value);
-            return new String(Encoding.ASCII.GetChars(buffer), 0, size);
+            unsafe
+            {
+                fixed (byte* b = &buffer[0])
+                fixed (byte* pi = &PrintInt[0])
+                {
+                    var size = sprintf(b, pi, value);
+                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
+                }
+            }
         }
 
-        private static String  FormatNative(double value, char format, int precision)
+        private static String FormatNative(double value, char format, int precision)
         {
-            var size = sprintf(buffer, PrintDouble, value);
-            return new String(Encoding.ASCII.GetChars(buffer), 0, size);
+            unsafe
+            {
+                fixed (byte* b = &buffer[0])
+                fixed (byte* pd = &PrintDouble[0])
+                {
+                    var size = sprintf(b, pd, value);
+                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
+                }
+            }
         }
 
         private static void ValidateFormat(String format, out char formatCh, out int precision)
@@ -404,7 +418,7 @@ namespace System
                     {
                         int len = result.Length;
 
-                        if(value is sbyte)
+                        if (value is sbyte)
                         {
                             if (len > 2)
                             {
@@ -420,7 +434,7 @@ namespace System
                         }
                     }
                     break;
-                
+
                 case 'N':
                     // InsertGroupSeperators, AppendTrailingZeros, ReplaceNegativeSign
                     result = InsertGroupSeperators(result, info);
@@ -472,7 +486,7 @@ namespace System
             //}
             //else
             //{
-                return original;
+            return original;
             //}
         }
 
@@ -486,7 +500,7 @@ namespace System
             //}
             //else
             //{
-                return original;
+            return original;
             //}
         }
 
