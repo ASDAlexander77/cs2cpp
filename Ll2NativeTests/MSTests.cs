@@ -108,7 +108,15 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert(1, SourcePathCustom);
+            Convert("test-1", SourcePathCustom);
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlib()
+        {
+            Il2Converter.Convert(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll", OutputPath, GetConverterArgs(false));
         }
 
         /// <summary>
@@ -117,6 +125,17 @@ namespace Ll2NativeTests
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+
+            var piCoreLibObj = new ProcessStartInfo();
+            piCoreLibObj.WorkingDirectory = OutputPath;
+            piCoreLibObj.FileName = "llc";
+            piCoreLibObj.Arguments = "-filetype=obj CoreLib.ll";
+            piCoreLibObj.CreateNoWindow = true;
+            piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
+
+            var processCoreLibObj = Process.Start(piCoreLibObj);
+            processCoreLibObj.WaitForExit();
+            Assert.AreEqual(0, processCoreLibObj.ExitCode);
         }
 
         /// <summary>
@@ -184,7 +203,7 @@ namespace Ll2NativeTests
             // last 790
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
-                Compile(index);
+                Compile(string.Format("test-{0}", index));
             }
         }
 
@@ -248,11 +267,17 @@ namespace Ll2NativeTests
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 230 - using Reflection
             // 231 - NEED TO BE FIXED (when "this" is null. it should throw an error (Null Reference)
+
+            // -----------
+            // 32, 55, 74 - missing class
+            // 37, 42, 43, 44, 45, 66 - multiarray
+            // 77 - enum to string
+
             var skip =
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 36, 39, 50, 52, 53, 57, 67, 68, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
+                            10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230,
                             231
                         });
@@ -264,9 +289,9 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(229, 869).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
-                CompileAndRun(index);
+                CompileAndRun(string.Format("test-{0}", index));
             }
         }
 
@@ -295,7 +320,7 @@ namespace Ll2NativeTests
             var skip = new[] { 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102, 109, 110 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
-                GenCompileAndRun(index);
+                CompileAndRun(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -348,7 +373,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        private static void ExecCompile(int index, string fileName = "test", string format = null, bool justCompile = false)
+        private static void ExecCompile(string fileName, string output = OutputPath, bool justCompile = false)
         {
             /*
                 call vcvars32.bat
@@ -379,32 +404,66 @@ namespace Ll2NativeTests
 
             // Android target - target triple = "armv7-none-linux-androideabi"
 
-            var pi = new ProcessStartInfo();
-            pi.WorkingDirectory = OutputPath;
-            pi.FileName = "ll.bat";
-            pi.Arguments = string.Format("{1}-{0}", format == null ? index.ToString() : index.ToString(format), fileName);
+            // compile CoreLib
+            if (!File.Exists(Path.Combine(OutputPath, "CoreLib.o")))
+            {
+                if (!File.Exists(Path.Combine(OutputPath, "CoreLib.ll")))
+                {
+                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+                }
 
-            var process = Process.Start(pi);
+                var piCoreLibObj = new ProcessStartInfo();
+                piCoreLibObj.WorkingDirectory = OutputPath;
+                piCoreLibObj.FileName = "llc";
+                piCoreLibObj.Arguments = "-filetype=obj CoreLib.ll";
+                piCoreLibObj.CreateNoWindow = true;
+                piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
 
-            process.WaitForExit();
+                var processCoreLibObj = Process.Start(piCoreLibObj);
+                processCoreLibObj.WaitForExit();
+                Assert.AreEqual(0, processCoreLibObj.ExitCode);
+            }
 
-            Assert.AreEqual(0, process.ExitCode);
+            // file obj
+            var piFileObj = new ProcessStartInfo();
+            piFileObj.WorkingDirectory = OutputPath;
+            piFileObj.FileName = "llc";
+            piFileObj.Arguments = string.Format("-filetype=obj {0}.ll", fileName);
+            piFileObj.CreateNoWindow = true;
+            piFileObj.WindowStyle = ProcessWindowStyle.Hidden;
+
+            var processFileObj = Process.Start(piFileObj);
+            processFileObj.WaitForExit();
+            Assert.AreEqual(0, processFileObj.ExitCode);
 
             if (!justCompile)
             {
+                // file exe
+                var piFileExe = new ProcessStartInfo();
+                piFileExe.WorkingDirectory = OutputPath;
+                piFileExe.FileName = "g++";
+                piFileExe.Arguments = string.Format("-o {0}.exe CoreLib.o {0}.o -lstdc++ -lgc-lib -march=i686 -L .", fileName);
+                piFileExe.CreateNoWindow = true;
+                piFileExe.WindowStyle = ProcessWindowStyle.Hidden;
+
+                var processFileExe = Process.Start(piFileExe);
+                processFileExe.WaitForExit();
+                Assert.AreEqual(0, processFileExe.ExitCode);
+
+                // test execution
                 var execProcess = new ProcessStartInfo();
                 execProcess.WorkingDirectory = OutputPath;
-                execProcess.FileName = string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName);
+                execProcess.FileName = string.Format("{0}.exe", fileName);
+                execProcess.CreateNoWindow = true;
+                execProcess.WindowStyle = ProcessWindowStyle.Hidden;
 
                 var execProcessProc = Process.Start(execProcess);
-
                 execProcessProc.WaitForExit();
-
                 Assert.AreEqual(0, execProcessProc.ExitCode);
             }
             else
             {
-                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{1}{2}-{0}.exe", format == null ? index.ToString() : index.ToString(format), OutputPath, fileName))));
+                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.o", OutputPath, fileName))));
             }
         }
 
@@ -412,13 +471,13 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void Compile(int index)
+        private static void Compile(string fileName, string source = SourcePath, string output = OutputPath)
         {
-            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
             try
             {
-                Convert(index);
+                Convert(fileName);
             }
             catch (Exception ex)
             {
@@ -426,24 +485,24 @@ namespace Ll2NativeTests
                 return;
             }
 
-            Trace.WriteLine("Compiling LLVM for " + index);
+            Trace.WriteLine("Compiling LLVM for " + fileName);
 
-            ExecCompile(index, "test", null, true);
+            ExecCompile(fileName, justCompile: true);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void CompileAndRun(int index)
+        private static void CompileAndRun(string fileName, string source = SourcePath, string output = OutputPath)
         {
-            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
+            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
-            Convert(index);
+            Convert(fileName, source);
 
-            Trace.WriteLine("Compiling/Executing LLVM for " + index);
+            Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 
-            ExecCompile(index);
+            ExecCompile(fileName, output);
         }
 
         /// <summary>
@@ -456,27 +515,12 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="format">
         /// </param>
-        private static void Convert(int number, string source = SourcePath, string fileName = "test", string format = null)
+        private static void Convert(string fileName, string source = SourcePath)
         {
             Il2Converter.Convert(
-                string.Concat(source, string.Format("{1}-{0}.cs", format == null ? number.ToString() : number.ToString(format), fileName)),
+                string.Concat(source, string.Format("{0}.cs", fileName)),
                 OutputPath,
                 GetConverterArgs(true));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="index">
-        /// </param>
-        private static void GenCompileAndRun(int index)
-        {
-            Trace.WriteLine("Generating LLVM BC(ll) for " + index);
-
-            Convert(index, SourcePath, "gtest", "000");
-
-            Trace.WriteLine("Executing LLVM for " + index);
-
-            ExecCompile(index, "gtest", "000");
         }
     }
 }
