@@ -74,29 +74,9 @@ namespace Il2Native.Logic
                 // dummy body we just need to read body of a method
             }
 
-            if (usedTypes != null)
-            {
-                foreach (var usedType in reader.UsedTypes)
-                {
-                    usedTypes.Add(usedType);
-                }
-            }
-
-            if (calledMethods != null)
-            {
-                foreach (var calledMethod in reader.CalledMethods)
-                {
-                    calledMethods.Add(calledMethod);
-                }
-            }
-
-            if (readStaticFields != null)
-            {
-                foreach (var usedStaticFieldToRead in reader.UsedStaticFieldsToRead)
-                {
-                    readStaticFields.Add(usedStaticFieldToRead);
-                }
-            }
+            reader.UsedTypes = usedTypes;
+            reader.CalledMethods = calledMethods;
+            reader.UsedStaticFieldsToRead = readStaticFields;
         }
 
         /// <summary>

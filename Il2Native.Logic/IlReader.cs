@@ -73,11 +73,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IField> usedStaticFieldsToRead = new HashSet<IField>();
+        private HashSet<IField> usedStaticFieldsToRead;
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IMethod> calledMethods = new HashSet<IMethod>();
+        private HashSet<IMethod> calledMethods;
 
         /// <summary>
         /// </summary>
@@ -447,6 +447,11 @@ namespace Il2Native.Logic
             {
                 return this.usedStaticFieldsToRead;
             }
+
+            set
+            {
+                this.usedStaticFieldsToRead = value;
+            }
         }
 
         /// <summary>
@@ -456,6 +461,11 @@ namespace Il2Native.Logic
             get
             {
                 return this.calledMethods;
+            }
+
+            set
+            {
+                this.calledMethods = value;
             }
         }
 
@@ -1109,7 +1119,7 @@ namespace Il2Native.Logic
 
         private void AddUsedStaticFieldToRead(IField field)
         {
-            if (field == null || !field.IsStatic)
+            if (this.usedStaticFieldsToRead == null || field == null || !field.IsStatic)
             {
                 return;
             }
@@ -1119,7 +1129,7 @@ namespace Il2Native.Logic
 
         private void AddCalledMethod(IMethod method)
         {
-            if (method == null)
+            if (this.calledMethods == null || method == null)
             {
                 return;
             }
