@@ -340,8 +340,10 @@ namespace PEAssemblyReader
                         map = genericContext.MethodSpecialization.GenericMap(map);
 
                         var newType = ConstructGenericTypeSymbol(namedTypeSymbol, map);
-
-                        return new MetadataTypeAdapter(newType, genericContext);
+                        if (newType != null)
+                        {
+                            return new MetadataTypeAdapter(newType, genericContext);
+                        }
                     }
                 }
             }
@@ -375,7 +377,11 @@ namespace PEAssemblyReader
                                                   ? SelectGenericsFromArguments(namedTypeSymbol, map)
                                                   : SelectGenericsFromParameters(namedTypeSymbol, map);
 
-            Debug.Assert(mapFilteredByTypeParameters.Any());
+            Debug.Assert(mapFilteredByTypeParameters != null && mapFilteredByTypeParameters.Any());
+            if (mapFilteredByTypeParameters == null)
+            {
+                return null;
+            }
 
             var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
             return newType;
@@ -413,22 +419,26 @@ namespace PEAssemblyReader
         private static TypeSymbol[] SelectGenericsFromArguments(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
         {
             var resolvedTypes = new List<TypeSymbol>();
-            SelectGenericsFromArgumentsForOneLevel(namedTypeSymbol, map, resolvedTypes);
+            if (!SelectGenericsFromArgumentsForOneLevel(namedTypeSymbol, map, resolvedTypes))
+            {
+                return null;
+            }
+
             return resolvedTypes.ToArray();
         }
 
-        private static void SelectGenericsFromArgumentsForOneLevel(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map, List<TypeSymbol> resolvedTypes)
+        private static bool SelectGenericsFromArgumentsForOneLevel(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map, List<TypeSymbol> resolvedTypes)
         {
-            ////if (namedTypeSymbol.IsNestedType())
-            ////{
-            ////    SelectGenericsFromArgumentsForOneLevel(namedTypeSymbol.ContainingType, map, resolvedTypes);
-            ////}
-
             foreach (var typeSymbol in namedTypeSymbol.TypeArguments)
             {
                 if (typeSymbol.Kind == SymbolKind.TypeParameter)
                 {
-                    var foundType = map.First(pair => pair.Key.Name == typeSymbol.Name);
+                    var foundType = map.FirstOrDefault(pair => pair.Key.Name == typeSymbol.Name);
+                    if (foundType.Key == null)
+                    {
+                        return false;
+                    }
+
                     resolvedTypes.Add((foundType.Value as MetadataTypeAdapter).TypeDef);
                     continue;
                 }
@@ -442,6 +452,8 @@ namespace PEAssemblyReader
 
                 resolvedTypes.Add(subTypeNamedTypeSymbol);
             }
+
+            return true;
         }
 
         private static TypeSymbol[] SelectGenericsFromArguments(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
