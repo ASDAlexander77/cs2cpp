@@ -56,10 +56,7 @@ namespace Il2Native.Logic
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
-            foreach (var op in reader.OpCodes(method, genericContext))
-            {
-                // dummy body we just need to read body of a method
-            }
+            foreach (var op in reader.OpCodes(method, genericContext)) ;
         }
 
         public static void DiscoverMethod(
@@ -69,10 +66,7 @@ namespace Il2Native.Logic
             var reader = new IlReader();
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext))
-            {
-                // dummy body we just need to read body of a method
-            }
+            foreach (var op in reader.OpCodes(method, genericContext)) ;
 
             reader.UsedTypes = usedTypes;
             reader.CalledMethods = calledMethods;

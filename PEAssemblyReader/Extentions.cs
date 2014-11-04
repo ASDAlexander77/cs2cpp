@@ -203,7 +203,7 @@ namespace PEAssemblyReader
                 return map;
             }
 
-            map.GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
+            map.GenericMap(method.GetGenericParameters(true), method.GetGenericArguments());
             if (method.DeclaringType != null)
             {
                 map = method.DeclaringType.GenericMap(map);
@@ -229,6 +229,7 @@ namespace PEAssemblyReader
 
             for (var index = 0; index < typeArguments.Count; index++)
             {
+                Debug.Assert(typeParameters[index].IsGenericParameter);
                 map[typeParameters[index]] = typeArguments[index];
             }
 

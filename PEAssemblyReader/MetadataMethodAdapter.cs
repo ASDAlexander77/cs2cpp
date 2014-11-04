@@ -475,18 +475,28 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IType> GetGenericArguments()
+        public IEnumerable<IType> GetGenericArguments(bool doNotResolve = false)
         {
-            return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+            if (doNotResolve)
+            {
+                return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IType> GetGenericParameters()
+        public IEnumerable<IType> GetGenericParameters(bool doNotResolve = false)
         {
-            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+            if (doNotResolve)
+            {
+                return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return this.methodDef.TypeParameters.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
         /// <summary>
@@ -579,8 +589,8 @@ namespace PEAssemblyReader
         /// </exception>
         public IType ResolveTypeParameter(IType typeParameter)
         {
-            var typeParameters = this.GetGenericParameters().ToList();
-            var typeArguments = this.GetGenericArguments().ToList();
+            var typeParameters = this.GetGenericParameters(true).ToList();
+            var typeArguments = this.GetGenericArguments(true).ToList();
 
             for (var index = 0; index < typeArguments.Count; index++)
             {

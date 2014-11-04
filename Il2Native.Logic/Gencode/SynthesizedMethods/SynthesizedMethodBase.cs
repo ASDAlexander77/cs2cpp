@@ -241,7 +241,7 @@
         /// </summary>
         /// <returns>
         /// </returns>
-        public virtual IEnumerable<IType> GetGenericArguments()
+        public virtual IEnumerable<IType> GetGenericArguments(bool doNotResolve = false)
         {
             return null;
         }
@@ -252,7 +252,7 @@
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public virtual IEnumerable<IType> GetGenericParameters()
+        public virtual IEnumerable<IType> GetGenericParameters(bool doNotResolve = false)
         {
             throw new NotImplementedException();
         }
