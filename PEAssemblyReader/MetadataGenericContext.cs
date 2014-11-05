@@ -53,7 +53,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null && this.MethodSpecialization == null;
+                return this.Map.Count == 0 && this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null && this.MethodSpecialization == null;
             }
         }
 
@@ -102,6 +102,14 @@ namespace PEAssemblyReader
             }
 
             return null;
+        }
+
+        public static IGenericContext CreateMap(IMethod definitionMethod, IMethod specializationMethod)
+        {
+            var context = new MetadataGenericContext();
+            context.Map.GenericMap(definitionMethod.GetGenericParameters(), specializationMethod.GetGenericArguments());
+            context.Map.GenericMap(definitionMethod.DeclaringType.GenericTypeParameters, specializationMethod.DeclaringType.GenericTypeArguments);
+            return context;
         }
 
         /// <summary>

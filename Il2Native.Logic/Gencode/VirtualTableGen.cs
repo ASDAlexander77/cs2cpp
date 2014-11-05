@@ -44,7 +44,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void BuildVirtualInterfaceTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType, IType @interface)
         {
-            var allPublic = thisType.GetMethods(BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+            var allPublic = IlReader.Methods(thisType, BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic);
         }
 

@@ -483,6 +483,7 @@ namespace Il2Native.Logic
             }
 
             IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
+
             return genericMethodSpecializationsSorted;
         }
 
@@ -498,7 +499,7 @@ namespace Il2Native.Logic
                 overrideSpecializedMethods.AddRange(
                     from specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract)
                     where method.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType) && method.IsMatchingOverride(specializationMethod)
-                    select overrideGenericMethod.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializationMethod)));
+                    select overrideGenericMethod.ToSpecialization(MetadataGenericContext.CreateMap(overrideGenericMethod, specializationMethod)));
             }
 
             // append to discovered
@@ -522,7 +523,7 @@ namespace Il2Native.Logic
                     foreach (var genericMethodOfInterface in
                         types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
                     {
-                        genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializedTypeMethod)));
+                        genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.CreateMap(genericMethodOfInterface, specializedTypeMethod)));
                     }
                 }
             }
