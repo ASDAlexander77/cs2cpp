@@ -530,19 +530,22 @@ namespace Il2Native.Logic
                 }
             }
 
-            foreach (var specializedTypeMethod in allSpecializedMethodsOfInterfacesGroupedByType.Select(m => m.))
+            foreach (var specializedTypeMethods in allSpecializedMethodsOfInterfacesGroupedByType)
             {
                 ISet<IType> types;
-                if (!map.TryGetValue(specializedTypeMethod.Key, out types))
+                if (!map.TryGetValue(specializedTypeMethods.Key, out types))
                 {
                     continue;
                 }
 
-                var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
-                foreach (var genericMethodOfInterface in
-                    types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
+                foreach (var specializedTypeMethod in specializedTypeMethods)
                 {
-                    genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializedTypeMethod)));
+                    var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
+                    foreach (var genericMethodOfInterface in
+                        types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
+                    {
+                        genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializedTypeMethod)));
+                    }
                 }
             }
         }
