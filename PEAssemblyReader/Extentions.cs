@@ -321,8 +321,6 @@ namespace PEAssemblyReader
                             return newType;
                         }
                     }
-
-                    Debug.Assert(genericContext.TypeSpecialization == null && genericContext.MethodSpecialization == null, "Generic parameter has not been resolved");
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
@@ -377,8 +375,6 @@ namespace PEAssemblyReader
             var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
                                                   ? SelectGenericsFromArguments(namedTypeSymbol, map)
                                                   : SelectGenericsFromParameters(namedTypeSymbol, map);
-
-            Debug.Assert(mapFilteredByTypeParameters != null && mapFilteredByTypeParameters.Any());
             if (mapFilteredByTypeParameters == null)
             {
                 return null;

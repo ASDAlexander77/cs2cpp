@@ -220,7 +220,7 @@ namespace Il2Native.Logic
         {
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
-            genericContext.TypeSpecialization = null;
+            genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
             genericContext.MethodDefinition = null;
             genericContext.MethodSpecialization = null;
 
@@ -251,7 +251,6 @@ namespace Il2Native.Logic
                         genericCtor = IlReader.Constructors(genericDefinition).First(gm => ctor.IsMatchingGeneric(gm));
                     }
 
-                    genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
                     genericContext.MethodDefinition = genericCtor;
                     genericContext.MethodSpecialization = null;
 
@@ -295,9 +294,8 @@ namespace Il2Native.Logic
 
                     if (!method.IsGenericMethodDefinition)
                     {
-                        genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
                         genericContext.MethodDefinition = genericMethod;
-                        genericContext.MethodSpecialization = null;
+                        genericContext.MethodSpecialization = genericMethod != null ? method : null;
 
                         codeWriter.WriteMethodStart(method, genericContext);
 
@@ -320,7 +318,6 @@ namespace Il2Native.Logic
                                     continue;
                                 }
 
-                                genericContext.TypeSpecialization = type.IsGenericType ? type : null;
                                 genericContext.MethodDefinition = method;
                                 genericContext.MethodSpecialization = methodSpec;
 

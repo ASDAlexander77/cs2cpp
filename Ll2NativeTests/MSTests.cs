@@ -26,35 +26,17 @@ namespace Ll2NativeTests
     {
 #if _DISK_C_
 
-        /// <summary>
-        /// </summary>
         private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-
-        /// <summary>
-        /// </summary>
         private const string SourcePathCustom = @"C:\Temp\tests\";
-
-        /// <summary>
-        /// </summary>
         private const string OutputPath = @"C:\Temp\IlCTests\";
-
-        /// <summary>
-        /// </summary>
         private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
-
-        /// <summary>
-        /// </summary>
         private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
-
-        /// <summary>
-        /// </summary>
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
-
-        /// <summary>
-        /// </summary>
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm36Support = true;
+        private const string OutputObjectFileExt = "obj";
+        private const string Target = "i686-w64-mingw32";
 #endif
 #if _DISK_D_
         private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -66,6 +48,8 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm36Support = false;
+        private const string OutputObjectFileExt = "o";
+        private const string Target = "i686-pc-mingw32";
 #endif
 
         /// <summary>
@@ -121,7 +105,7 @@ namespace Ll2NativeTests
             var piCoreLibObj = new ProcessStartInfo();
             piCoreLibObj.WorkingDirectory = OutputPath;
             piCoreLibObj.FileName = "llc";
-            piCoreLibObj.Arguments = "-filetype=obj CoreLib.ll";
+            piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
             piCoreLibObj.CreateNoWindow = true;
             piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
 
@@ -288,7 +272,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(240, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
@@ -311,15 +295,13 @@ namespace Ll2NativeTests
             // 72 - not implemented (DateTime to string)
             // 77 - file not found
             // 78 - not implemented
-            // 96 - NEED TO BE FIXED: generic methods nested referencing
             // 99 - file not found
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
-            // 110 - as 96 but additionally virtual and interface
 
             // 13, 17, 31, 47 - with Libs
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 96, 99, 102, 109, 110 };
+            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 56, 63, 65, 66, 72, 77, 78, 99, 102, 109 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
@@ -407,7 +389,7 @@ namespace Ll2NativeTests
             // Android target - target triple = "armv7-none-linux-androideabi"
 
             // compile CoreLib
-            if (!File.Exists(Path.Combine(OutputPath, "CoreLib.o")))
+            if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
             {
                 if (!File.Exists(Path.Combine(OutputPath, "CoreLib.ll")))
                 {
@@ -417,7 +399,7 @@ namespace Ll2NativeTests
                 var piCoreLibObj = new ProcessStartInfo();
                 piCoreLibObj.WorkingDirectory = OutputPath;
                 piCoreLibObj.FileName = "llc";
-                piCoreLibObj.Arguments = "-filetype=obj CoreLib.ll";
+                piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
                 piCoreLibObj.CreateNoWindow = true;
                 piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
 
@@ -430,7 +412,7 @@ namespace Ll2NativeTests
             var piFileObj = new ProcessStartInfo();
             piFileObj.WorkingDirectory = OutputPath;
             piFileObj.FileName = "llc";
-            piFileObj.Arguments = string.Format("-filetype=obj {0}.ll", fileName);
+            piFileObj.Arguments = string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target);
             piFileObj.CreateNoWindow = true;
             piFileObj.WindowStyle = ProcessWindowStyle.Hidden;
 
@@ -444,7 +426,7 @@ namespace Ll2NativeTests
                 var piFileExe = new ProcessStartInfo();
                 piFileExe.WorkingDirectory = OutputPath;
                 piFileExe.FileName = "g++";
-                piFileExe.Arguments = string.Format("-o {0}.exe CoreLib.o {0}.o -lstdc++ -lgc-lib -march=i686 -L .", fileName);
+                piFileExe.Arguments = string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt);
                 piFileExe.CreateNoWindow = true;
                 piFileExe.WindowStyle = ProcessWindowStyle.Hidden;
 
@@ -465,7 +447,7 @@ namespace Ll2NativeTests
             }
             else
             {
-                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.o", OutputPath, fileName))));
+                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
             }
         }
 

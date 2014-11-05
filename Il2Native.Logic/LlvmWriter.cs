@@ -152,8 +152,8 @@ namespace Il2Native.Logic
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
             var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
-            this.Gc = args != null && args.Contains("gc-") ? false : true;
-            this.Gctors = args != null && args.Contains("gctors-") ? false : true;
+            this.Gc = args == null || !args.Contains("gc-");
+            this.Gctors = args == null || !args.Contains("gctors-");
             this.IsLlvm36OrHigher = args != null && args.Contains("llvm36");
         }
 
@@ -4716,7 +4716,7 @@ namespace Il2Native.Logic
             {
                 var upperLevelExceptionHandlingClause
                     = this.tryScopes.Count > 0
-                        ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause) 
+                        ? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
                             ?? this.tryScopes.Peek().Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                         : null;
                 this.WriteCatchEnd(opCode, eh, upperLevelExceptionHandlingClause);
