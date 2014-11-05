@@ -513,31 +513,9 @@ namespace Il2Native.Logic
             var allSpecializedMethodsOfInterfaces = genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod).Distinct().ToList();
             var allSpecializedMethodsOfInterfacesGroupedByType = allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
 
-            // prebuild dictionary with interface -> type
-            var map = new SortedDictionary<IType, ISet<IType>>();
-            foreach (var @interface in allSpecializedMethodsOfInterfacesGroupedByType.Select(i => i.Key).Distinct())
-            {
-                foreach (var typeContainsInterface in allTypes.Where(t => t.GetAllInterfaces().Contains(@interface)))
-                {
-                    ISet<IType> types;
-                    if (!map.TryGetValue(@interface, out types))
-                    {
-                        types = new HashSet<IType>();
-                        map[@interface] = types;
-                    }
-
-                    types.Add(typeContainsInterface);
-                }
-            }
-
             foreach (var specializedTypeMethods in allSpecializedMethodsOfInterfacesGroupedByType)
             {
-                ISet<IType> types;
-                if (!map.TryGetValue(specializedTypeMethods.Key, out types))
-                {
-                    continue;
-                }
-
+                var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
                 foreach (var specializedTypeMethod in specializedTypeMethods)
                 {
                     var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
