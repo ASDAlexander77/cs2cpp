@@ -375,7 +375,7 @@ namespace Il2Native.Logic
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations));
+                foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations)) ;
             }
         }
 
@@ -425,46 +425,14 @@ namespace Il2Native.Logic
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
-            
-            // find all overide of generic methods 
-            var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-            var overrideSpecializedMethods = new List<IMethod>();
-            foreach (var overrideGenericMethod in allTypes.SelectMany(t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
-            {
-                overrideSpecializedMethods.AddRange(
-                    from specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract)
-                    where overrideGenericMethod.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType)
-                          && overrideGenericMethod.IsMatchingOverride(specializationMethod)
-                    select overrideGenericMethod.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializationMethod)));
-            }
 
-            // append to discovered
-            foreach (var overrideSpecializedMethod in overrideSpecializedMethods)
-            {
-                genericMethodSpecializations.Add(overrideSpecializedMethod);
-            }          
+            DiscoverAllGenericVirtualMethods(allTypes, genericMethodSpecializations);
 
-            // group generic methods by Type
-            var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
-            var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
-            foreach (var group in genericMethodSpecializationsGroupedByType)
-            {
-                genericMethodSpecializationsSorted[group.Key] = group;
-            }
+            DiscoverAllGenericMethodsOfInterfaces(allTypes, genericMethodSpecializations);
 
-            IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
+            var genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
 
-            // write forward declaration
-            for (var index = 0; index < newListOfITypes.Count; index++)
-            {
-                var type = newListOfITypes[index];
-                if (type.IsGenericTypeDefinition)
-                {
-                    continue;
-                }
-
-                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
-            }
+            WriteForwardDeclarations(codeWriter, newListOfITypes);
 
             ConvertAllTypes(
                 ilReader,
@@ -487,6 +455,96 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
+        }
+
+        private static void WriteForwardDeclarations(ICodeWriter codeWriter, List<IType> newListOfITypes)
+        {
+            // write forward declaration
+            for (var index = 0; index < newListOfITypes.Count; index++)
+            {
+                var type = newListOfITypes[index];
+                if (type.IsGenericTypeDefinition)
+                {
+                    continue;
+                }
+
+                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
+            }
+        }
+
+        private static SortedDictionary<IType, IEnumerable<IMethod>> GroupGenericMethodsByType(HashSet<IMethod> genericMethodSpecializations)
+        {
+            // group generic methods by Type
+            var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
+            var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
+            foreach (var group in genericMethodSpecializationsGroupedByType)
+            {
+                genericMethodSpecializationsSorted[@group.Key] = @group;
+            }
+
+            IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
+            return genericMethodSpecializationsSorted;
+        }
+
+        private static void DiscoverAllGenericVirtualMethods(IEnumerable<IType> allTypes, ISet<IMethod> genericMethodSpecializations)
+        {
+            // find all override of generic methods 
+            var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+            var overrideSpecializedMethods = new List<IMethod>();
+            foreach (var overrideGenericMethod in
+                allTypes.SelectMany(t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
+            {
+                var method = overrideGenericMethod;
+                overrideSpecializedMethods.AddRange(
+                    from specializationMethod in genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract)
+                    where method.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType) && method.IsMatchingOverride(specializationMethod)
+                    select overrideGenericMethod.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializationMethod)));
+            }
+
+            // append to discovered
+            foreach (var overrideSpecializedMethod in overrideSpecializedMethods)
+            {
+                genericMethodSpecializations.Add(overrideSpecializedMethod);
+            }
+        }
+
+        private static void DiscoverAllGenericMethodsOfInterfaces(IEnumerable<IType> allTypes, ISet<IMethod> genericMethodSpecializations)
+        {
+            var allSpecializedMethodsOfInterfaces = genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod).Distinct().ToList();
+            var allSpecializedMethodsOfInterfacesGroupedByType = allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
+
+            // prebuild dictionary with interface -> type
+            var map = new SortedDictionary<IType, ISet<IType>>();
+            foreach (var @interface in allSpecializedMethodsOfInterfacesGroupedByType.Select(i => i.Key).Distinct())
+            {
+                foreach (var typeContainsInterface in allTypes.Where(t => t.GetAllInterfaces().Contains(@interface)))
+                {
+                    ISet<IType> types;
+                    if (!map.TryGetValue(@interface, out types))
+                    {
+                        types = new HashSet<IType>();
+                        map[@interface] = types;
+                    }
+
+                    types.Add(typeContainsInterface);
+                }
+            }
+
+            foreach (var specializedTypeMethod in allSpecializedMethodsOfInterfacesGroupedByType.Select(m => m.))
+            {
+                ISet<IType> types;
+                if (!map.TryGetValue(specializedTypeMethod.Key, out types))
+                {
+                    continue;
+                }
+
+                var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
+                foreach (var genericMethodOfInterface in
+                    types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
+                {
+                    genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.DiscoverFrom(specializedTypeMethod)));
+                }
+            }
         }
 
         /// <summary>
