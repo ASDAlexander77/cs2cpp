@@ -214,7 +214,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any() && !this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
+                return this.methodDef.TypeParameters.Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
             }
         }
 
@@ -224,7 +224,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any() && this.methodDef.TypeArguments.Any(tp => tp.Kind == SymbolKind.TypeParameter);
+                return this.methodDef.TypeParameters.Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
             }
         }
 
@@ -475,13 +475,8 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IType> GetGenericArguments(bool doNotResolve = false)
+        public IEnumerable<IType> GetGenericArguments()
         {
-            if (doNotResolve)
-            {
-                return this.methodDef.TypeArguments.Select(a => new MetadataTypeAdapter(a));
-            }
-
             return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
@@ -489,14 +484,9 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IType> GetGenericParameters(bool doNotResolve = false)
+        public IEnumerable<IType> GetGenericParameters()
         {
-            if (doNotResolve)
-            {
-                return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
-            }
-
-            return this.methodDef.TypeParameters.Select(a => a.ResolveGeneric(this.GenericContext));
+            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
         }
 
         /// <summary>
@@ -589,8 +579,8 @@ namespace PEAssemblyReader
         /// </exception>
         public IType ResolveTypeParameter(IType typeParameter)
         {
-            var typeParameters = this.GetGenericParameters(true).ToList();
-            var typeArguments = this.GetGenericArguments(true).ToList();
+            var typeParameters = this.GetGenericParameters().ToList();
+            var typeArguments = this.GetGenericArguments().ToList();
 
             for (var index = 0; index < typeArguments.Count; index++)
             {

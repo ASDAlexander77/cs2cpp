@@ -203,7 +203,7 @@ namespace PEAssemblyReader
                 return map;
             }
 
-            map.GenericMap(method.GetGenericParameters(true), method.GetGenericArguments());
+            map.GenericMap(method.GetGenericParameters(), method.GetGenericArguments());
             if (method.DeclaringType != null)
             {
                 map = method.DeclaringType.GenericMap(map);

@@ -1063,13 +1063,21 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (this.usedGenericSpecialiazedMethods.Contains(method))
+            {
+                return;
+            }
+
             this.usedGenericSpecialiazedMethods.Add(method);
 
             // add all generic types in parameters
             foreach (var parameter in method.GetParameters())
             {
-                AddGenericSpecializedType(parameter.ParameterType);
+                this.AddGenericSpecializedType(parameter.ParameterType);
             }
+
+            // add return type
+            this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
             method.DiscoverRequiredTypesAndMethods(usedGenericSpecialiazedTypes, usedGenericSpecialiazedMethods, null);

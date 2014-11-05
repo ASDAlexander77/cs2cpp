@@ -574,7 +574,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
-            public IEnumerable<IType> GetGenericArguments(bool doNotResolve = false)
+            public IEnumerable<IType> GetGenericArguments()
             {
                 return null;
             }
@@ -585,7 +585,7 @@ namespace Il2Native.Logic.Gencode
             /// </returns>
             /// <exception cref="NotImplementedException">
             /// </exception>
-            public IEnumerable<IType> GetGenericParameters(bool doNotResolve = false)
+            public IEnumerable<IType> GetGenericParameters()
             {
                 throw new NotImplementedException();
             }

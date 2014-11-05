@@ -73,13 +73,13 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IEnumerable<IType> GetGenericArguments(bool doNotResolve = false);
+        IEnumerable<IType> GetGenericArguments();
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        IEnumerable<IType> GetGenericParameters(bool doNotResolve = false);
+        IEnumerable<IType> GetGenericParameters();
 
         /// <summary>
         /// </summary>
