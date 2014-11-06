@@ -100,15 +100,14 @@ namespace PEAssemblyReader
         IModule Module { get; }
 
         /// <summary>
-        /// to disable optimazing for the type
         /// </summary>
-        bool UseAsClass { get; set; }
+        bool UseAsClass { get; }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        IType Clone();
+        IType Clone(bool setUseAsClass = false, bool value = false);
 
         /// <summary>
         /// </summary>

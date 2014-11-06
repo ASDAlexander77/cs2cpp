@@ -196,8 +196,7 @@ namespace Il2Native.Logic
                 IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
                 genMethodSpec.TryGetValue(type, out genericMethodSpecializatonsForType);
 
-                type.UseAsClass = true;
-                ConvertIType(ilReader, codeWriter, type, genDef, genericMethodSpecializatonsForType, mode);
+                ConvertIType(ilReader, codeWriter, type.ToClass(), genDef, genericMethodSpecializatonsForType, mode);
             }
         }
 

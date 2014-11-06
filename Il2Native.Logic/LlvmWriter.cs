@@ -789,8 +789,7 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.ThisType.UseAsClass = true;
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType), true, this.ThisType.IsStructureType());
+                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true);
                     }
                     else
                     {
@@ -1435,8 +1434,7 @@ namespace Il2Native.Logic
 
             if (opCodeConstructorInfoPart.Destination != null)
             {
-                opCodeConstructorInfoPart.Result.Type.UseAsClass = false;
-                this.WriteLlvmLoad(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Result);
+                this.WriteLlvmLoad(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Result.ToClassType());
             }
         }
 
@@ -1710,14 +1708,12 @@ namespace Il2Native.Logic
             var isUsedAsClass = resultOfOperand0 != null && resultOfOperand0.Type.UseAsClass;
             if (isUsedAsClass)
             {
-                resultOfOperand0.Type.UseAsClass = false;
+                resultOfOperand0 = resultOfOperand0.ToNormalType();
             }
 
             var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
             if (isValueType && isUsedAsClass)
             {
-                resultOfOperand0.Type.UseAsClass = true;
-
                 // write first field access
                 this.WriteFieldAccess(writer, opCode, 1);
                 writer.WriteLine(string.Empty);
@@ -1728,11 +1724,6 @@ namespace Il2Native.Logic
             }
             else
             {
-                if (isUsedAsClass)
-                {
-                    resultOfOperand0.Type.UseAsClass = true;
-                }
-
                 this.PreProcessOperand(writer, opCode, 0);
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
@@ -1740,11 +1731,6 @@ namespace Il2Native.Logic
             opCode.Result = null;
 
             this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
-
-            if (!isUsedAsClass && resultOfOperand0 != null)
-            {
-                resultOfOperand0.Type.UseAsClass = false;
-            }
         }
 
         /// <summary>
@@ -2084,17 +2070,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="isThis">
         /// </param>
-        public void WriteArgumentCopyDeclaration(string name, int index, IType type, bool isThis = false)
+        public void WriteArgumentCopyDeclaration(string name, int index, IType typeIn, bool isThis = false)
         {
-            if (!isThis && type.IsStructureType())
+            if (!isThis && typeIn.IsStructureType())
             {
                 return;
             }
 
-            if (isThis)
-            {
-                type.UseAsClass = true;
-            }
+            var type = (isThis) ? typeIn.ToClass() : typeIn;
 
             var paramFullName = isThis ? GetThisName() : GetArgVarName(name, index);
             var paramArgFullName = isThis ? GetThisName(true) : GetArgVarName(name, index, true);
@@ -2287,15 +2270,13 @@ namespace Il2Native.Logic
 
             var fieldType = declaringType;
 
-            fieldType.UseAsClass = false;
-
-            this.SaveToField(opCode, fieldType, 0);
+            this.SaveToField(opCode, fieldType.ToNormal(), 0);
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
 
             opCode.Result = newObjectResult;
-            opCode.Result.Type.UseAsClass = true;
+            opCode.Result = opCode.Result.ToClassType();
         }
 
         /// <summary>
@@ -2341,8 +2322,7 @@ namespace Il2Native.Logic
         public void WriteDynamicCast(
             LlvmIndentedTextWriter writer, OpCodePart opCodeTypePart, FullyDefinedReference fromType, IType toType, bool checkNull = false, bool throwExceptionIfNull = false)
         {
-            var effectiveFromType = fromType.ToDereferencedType();
-            effectiveFromType.Type.UseAsClass = fromType.Type.UseAsClass;
+            var effectiveFromType = fromType.Type.UseAsClass ? fromType.ToDereferencedType().ToClassType() : fromType.ToDereferencedType();
             if (effectiveFromType.Type.TypeEquals(toType))
             {
                 opCodeTypePart.Result = fromType;
@@ -2382,8 +2362,8 @@ namespace Il2Native.Logic
                 this.WriteTestNullValueAndThrowException(writer, opCodeTypePart, dynamicCastResultNumber, "System.InvalidCastException", "dynamic_cast");
             }
 
-            toType.UseAsClass = true;
-            this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toType);
+            var toClassType = toType.ToClass();
+            this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toClassType);
 
             var dynamicCastResult = opCodeTypePart.Result;
 
@@ -2405,9 +2385,9 @@ namespace Il2Native.Logic
                 writer.WriteLine(".{0}:", label);
                 writer.Indent++;
 
-                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, toType);
+                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, toClassType);
                 writer.Write("phi ");
-                toType.WriteTypePrefix(writer, true);
+                toClassType.WriteTypePrefix(writer, true);
                 writer.Write(
                     " [ {0}, {1} ], [ null, {2} ]",
                     dynamicCastResult,
@@ -2611,7 +2591,7 @@ namespace Il2Native.Logic
             var effectiveType = operand.Type.IsPointer ? operand.Type.GetElementType() : operand.Type;
             if (effectiveType.IsValueType)
             {
-                effectiveType.UseAsClass = true;
+                effectiveType = effectiveType.ToClass();
             }
 
             this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
@@ -2635,11 +2615,11 @@ namespace Il2Native.Logic
             writer.WriteLine("; Access to '#{0}' field", index);
             var operand = this.ResultOf(opCodePart.OpCodeOperands[0]);
 
-            var classType = operand.Type;
+            var classType = operand.Type.ToClass();
 
             var opts = OperandOptions.GenerateResult;
             var fieldType = classType.GetFieldTypeByIndex(index);
-            classType.UseAsClass = true;
+
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, options: opts);
 
             this.CheckIfTypeIsRequiredForBody(classType);
@@ -2879,13 +2859,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="interface">
         /// </param>
-        public void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringType, IType @interface)
+        public void WriteInterfaceAccess(LlvmIndentedTextWriter writer, OpCodePart opCode, IType declaringTypeIn, IType @interface)
         {
             var objectResult = opCode.Result;
 
-            writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringType);
+            writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringTypeIn);
 
-            declaringType.UseAsClass = true;
+            var declaringType = declaringTypeIn.ToClass();
 
             var castedResult = this.ProcessOperator(
                 writer, opCode, "getelementptr inbounds", declaringType, @interface, OperandOptions.TypeIsInOperator | OperandOptions.GenerateResult);
@@ -2979,9 +2959,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                thisType.UseAsClass = true;
-
-                thisType.WriteTypePrefix(writer, true);
+                thisType.ToClass().WriteTypePrefix(writer, true);
                 hasParameterWritten = true;
 
                 if (!noArgumentName)
@@ -3367,32 +3345,29 @@ namespace Il2Native.Logic
             type.WriteInitObjectMethod(this);
             type.WriteGetTypeStaticMethod(this);
 
-            var stored = type.UseAsClass;
-            type.UseAsClass = false;
+            var normalType = type.ToNormal();
 
-            var isEnum = type.IsEnum;
-            var canBeBoxed = type.IsPrimitiveType() || type.IsStructureType() || isEnum;
+            var isEnum = normalType.IsEnum;
+            var canBeBoxed = normalType.IsPrimitiveType() || normalType.IsStructureType() || isEnum;
             var canBeUnboxed = canBeBoxed;
-            var excluded = type.FullName == "System.Enum" || type.FullName == "System.IntPtr" || type.FullName == "System.UIntPtr";
+            var excluded = normalType.FullName == "System.Enum" || normalType.FullName == "System.IntPtr" || normalType.FullName == "System.UIntPtr";
 
             if (canBeBoxed && !excluded)
             {
-                type.WriteBoxMethod(this);
+                normalType.WriteBoxMethod(this);
             }
 
             if (canBeUnboxed && !excluded)
             {
-                type.WriteUnboxMethod(this);
+                normalType.WriteUnboxMethod(this);
             }
 
             if (isEnum)
             {
-                type.WriteGetHashCodeMethod(this);
+                normalType.WriteGetHashCodeMethod(this);
             }
 
-            type.WriteGetTypeMethod(this);
-
-            type.UseAsClass = stored;
+            normalType.WriteGetTypeMethod(this);
         }
 
         /// <summary>
@@ -5311,10 +5286,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
                 foreach (var opaqueType in this.typeDeclRequired.Where(opaqueType => !this.processedTypes.Contains(opaqueType) && !opaqueType.IsArray))
                 {
-                    opaqueType.UseAsClass = true;
-                    this.WriteTypeDeclarationStart(opaqueType);
-                    opaqueType.UseAsClass = false;
-
+                    this.WriteTypeDeclarationStart(opaqueType.ToClass());
                     this.Output.WriteLine("opaque");
                 }
             }

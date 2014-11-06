@@ -483,15 +483,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType Clone()
-        {
-            return this.typeDef.ResolveGeneric(this.GenericContext);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="obj">
         /// </param>
         /// <returns>
@@ -809,11 +800,24 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IType Clone(bool setUseAsClass = false, bool value = false)
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext);
+            if (setUseAsClass)
+            {
+                typeAdapter.UseAsClass = value;
+            }
+
+            return typeAdapter;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IType ToClass()
         {
-            var newType = this.typeDef.ResolveGeneric(this.GenericContext);
-            newType.UseAsClass = true;
-            return newType;
+            return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, true);
         }
 
         /// <summary>
@@ -822,9 +826,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            var newType = this.typeDef.ResolveGeneric(this.GenericContext);
-            newType.UseAsClass = false;
-            return newType;
+            return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, false);
         }
 
         /// <summary>

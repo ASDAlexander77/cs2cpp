@@ -443,8 +443,7 @@ namespace Il2Native.Logic
                     var res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        result = new ReturnResult(res.Type);
-                        result.Type.UseAsClass = true;
+                        result = new ReturnResult(res.Type.ToClass());
                         return result;
                     }
                     else

@@ -109,23 +109,23 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
+        /// <param name="classType">
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteGetTypeStaticMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteGetTypeStaticMethod(this IType typeIn, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
-            var systemType = llvmWriter.ResolveType("System.Type");
-            var method = new SynthesizedGetTypeStaticMethod(type, llvmWriter);
-            writer.WriteLine("; Get Type Object method");
+            var classType = typeIn.ToClass();
 
-            type.UseAsClass = true;
+            var systemType = llvmWriter.ResolveType("System.Type");
+            var method = new SynthesizedGetTypeStaticMethod(classType, llvmWriter);
+            writer.WriteLine("; Get Type Object method");
 
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteGetTypeStaticObject(opCode, type, systemType);
+            llvmWriter.WriteGetTypeStaticObject(opCode, classType, systemType);
 
             writer.Write("ret ");
             systemType.WriteTypePrefix(writer);

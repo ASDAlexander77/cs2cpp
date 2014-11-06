@@ -12,8 +12,7 @@
     {
         public static void WriteFunctionCallProlog(this IMethod methodInfo, OpCodePart opCodeMethodInfo, bool isVirtual, bool hasThis, LlvmWriter llvmWriter, out IType thisType, out bool hasThisArgument, out OpCodePart opCodeFirstOperand, out BaseWriter.ReturnResult resultOfFirstOperand, out bool isIndirectMethodCall, out IType ownerOfExplicitInterface, out IType requiredType)
         {
-            thisType = methodInfo.DeclaringType;
-            thisType.UseAsClass = true;
+            thisType = methodInfo.DeclaringType.ToClass();
 
             hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length - methodInfo.GetParameters().Count() > 0;
             opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
@@ -324,9 +323,7 @@
                     writer.Write(", ");
                 }
 
-                thisType.UseAsClass = true;
-
-                thisType.WriteTypePrefix(writer, thisType.IsStructureType());
+                thisType.ToClass().WriteTypePrefix(writer);
                 writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
