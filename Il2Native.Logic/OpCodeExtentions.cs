@@ -45,7 +45,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        public static void DiscoverRequiredTypesAndMethods(
+        public static void DiscoverRequiredTypesAndMethodsInMethodBody(
             this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations, HashSet<IType> requiredTypes)
         {
             // read method body to extract all types

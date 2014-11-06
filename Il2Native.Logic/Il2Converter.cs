@@ -598,7 +598,7 @@ namespace Il2Native.Logic
                         }
 
                         var usedStructTypes = new HashSet<IType>();
-                        method.DiscoverRequiredTypesAndMethods(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes);
+                        method.DiscoverRequiredTypesAndMethodsInMethodBody(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes);
                         foreach (var usedStructType in usedStructTypes)
                         {
                             yield return usedStructType;
@@ -671,7 +671,7 @@ namespace Il2Native.Logic
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
-            ProcessGenericTypeToFindRequired(genericTypeSpecializations, typesWithRequired);
+            ProcessGenericTypeToFindRequiredTypes(genericTypeSpecializations, typesWithRequired);
 
             var allTypes = new List<IType>();
             allTypes.AddRange(types);
@@ -726,7 +726,7 @@ namespace Il2Native.Logic
             return newOrder;
         }
 
-        private static void ProcessGenericTypeToFindRequired(HashSet<IType> genericTypeSpecializations, List<Tuple<IType, List<IType>>> typesWithRequired)
+        private static void ProcessGenericTypeToFindRequiredTypes(ISet<IType> genericTypeSpecializations, ICollection<Tuple<IType, List<IType>>> requiredTypes)
         {
             HashSet<IType> subSetGenericTypeSpecializations = new HashSet<IType>();
             HashSet<IMethod> subSetGenericMethodSpecializations = null; // new HashSet<IMethod>();
@@ -736,17 +736,17 @@ namespace Il2Native.Logic
             {
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
-                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
+                requiredTypes.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
             }
 
             if (subSetGenericTypeSpecializations.Count > 0)
             {
-                foreach (var disoveredType in typesWithRequired.Select(t => t.Item1))
+                foreach (var disoveredType in requiredTypes.Select(t => t.Item1))
                 {
                     subSetGenericTypeSpecializations.Remove(disoveredType);
                 }
 
-                ProcessGenericTypeToFindRequired(subSetGenericTypeSpecializations, typesWithRequired);
+                ProcessGenericTypeToFindRequiredTypes(subSetGenericTypeSpecializations, requiredTypes);
 
                 // join types
                 foreach (var disoveredType in subSetGenericTypeSpecializations)

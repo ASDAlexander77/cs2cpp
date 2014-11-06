@@ -1068,8 +1068,18 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedMethod(IMethod method)
         {
-            if (this.usedGenericSpecialiazedMethods == null || method == null || !method.IsGenericMethod)
+            if (this.usedGenericSpecialiazedMethods == null || method == null)
             {
+                return;
+            }
+
+            if (!method.IsGenericMethod)
+            {
+                if (method.DeclaringType.IsGenericType)
+                {
+                    this.DiscoverRequiredTypesAndMethodsInMethod(method);
+                }
+
                 return;
             }
 
@@ -1080,6 +1090,11 @@ namespace Il2Native.Logic
 
             this.usedGenericSpecialiazedMethods.Add(method);
 
+            this.DiscoverRequiredTypesAndMethodsInMethod(method);
+        }
+
+        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method)
+        {
             // add all generic types in parameters
             foreach (var parameter in method.GetParameters())
             {
@@ -1090,7 +1105,7 @@ namespace Il2Native.Logic
             this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethods(usedGenericSpecialiazedTypes, usedGenericSpecialiazedMethods, null);
+            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null);
         }
 
         /// <summary>
