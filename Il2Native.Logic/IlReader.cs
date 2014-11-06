@@ -1104,20 +1104,8 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var current = type;
-            while (current != null)
+            if (type.IsGenericTypeDefinition || !type.IsGenericType)
             {
-                if (!current.IsGenericTypeDefinition && current.IsGenericType)
-                {
-                    break;
-                }
-
-                if (current.IsNested)
-                {
-                    current = current.DeclaringType;
-                    continue;
-                }
-
                 return;
             }
 

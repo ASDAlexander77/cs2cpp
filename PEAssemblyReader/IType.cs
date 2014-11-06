@@ -77,6 +77,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsGenericTypeLocal { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsGenericTypeDefinitionLocal { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsInterface { get; }
 
         /// <summary>

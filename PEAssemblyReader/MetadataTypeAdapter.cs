@@ -291,23 +291,71 @@ namespace PEAssemblyReader
             }
         }
 
-        /// <summary>
-        /// </summary>
         public bool IsGenericType
         {
             get
             {
-                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
+                IType current = this;
+                while (current != null)
+                {
+                    if (current.IsGenericTypeLocal)
+                    {
+                        return true;
+                    }
+
+                    if (!current.IsNested)
+                    {
+                        break;
+                    }
+
+                    current = current.DeclaringType;
+                }
+
+                return false;
+            }
+        }
+
+        public bool IsGenericTypeDefinition
+        {
+            get
+            {
+                IType current = this;
+                while (current != null)
+                {
+                    if (current.IsGenericTypeDefinitionLocal)
+                    {
+                        return true;
+                    }
+
+                    if (!current.IsNested)
+                    {
+                        break;
+                    }
+
+                    current = current.DeclaringType;
+                }
+
+                return false;
             }
         }
 
         /// <summary>
         /// </summary>
-        public bool IsGenericTypeDefinition
+        public bool IsGenericTypeLocal
         {
             get
             {
-                return this.GetGenericParameters().Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
+                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsGenericTypeDefinitionLocal
+        {
+            get
+            {
+                return this.GetGenericParameters().Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 

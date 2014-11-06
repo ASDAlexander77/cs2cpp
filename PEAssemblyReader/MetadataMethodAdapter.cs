@@ -214,7 +214,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
+                return this.methodDef.TypeParameters.Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -224,7 +224,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.TypeParameters.Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
+                return this.methodDef.TypeParameters.Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 

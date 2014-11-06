@@ -1060,52 +1060,5 @@ namespace Il2Native.Logic
 
             return true;
         }
-
-        public static bool IsGenericDefinitionIncludingDeclaring(this IType type)
-        {
-            var current = type;
-            while (current != null)
-            {
-                if (current.IsGenericTypeDefinition)
-                {
-                    return true;
-                }
-
-                if (!current.IsNested)
-                {
-                    break;
-                }
-
-                current = current.DeclaringType;
-            }
-
-            return false;
-        }
-
-        public static bool IsGenericTypeIncludingDeclaring(this IType type)
-        {
-            if (type.IsGenericType)
-            {
-                return true;
-            }
-
-            var current = type;
-            while (current != null)
-            {
-                if (current.IsGenericType)
-                {
-                    return true;
-                }
-
-                if (!current.IsNested)
-                {
-                    break;
-                }
-
-                current = current.DeclaringType;
-            }
-
-            return false;
-        }
     }
 }
