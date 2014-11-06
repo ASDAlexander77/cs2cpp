@@ -14,6 +14,8 @@ namespace PEAssemblyReader
     /// </summary>
     public interface IMethodBody
     {
+        bool HasBody { get; }
+
         /// <summary>
         /// </summary>
         IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses { get; }

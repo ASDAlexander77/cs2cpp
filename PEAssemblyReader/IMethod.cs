@@ -14,7 +14,7 @@ namespace PEAssemblyReader
 
     /// <summary>
     /// </summary>
-    public interface IMethod : IMember, IMethodBody
+    public interface IMethod : IMember
     {
         /// <summary>
         /// </summary>

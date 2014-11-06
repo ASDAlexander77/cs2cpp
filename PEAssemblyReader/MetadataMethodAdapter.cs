@@ -130,34 +130,7 @@ namespace PEAssemblyReader
                 return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-        {
-            get
-            {
-                PEModuleSymbol peModuleSymbol;
-                PEMethodSymbol peMethodSymbol;
-                this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-                if (peMethodSymbol != null)
-                {
-                    var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                    if (methodBodyBlock != null)
-                    {
-                        return
-                            methodBodyBlock.ExceptionRegions.Select(
-                                er =>
-                                new MetadataExceptionHandlingClauseAdapter(
-                                    er, !er.CatchType.IsNil ? new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType) : null, this.GenericContext));
-                    }
-                }
-
-                return new IExceptionHandlingClause[0];
-            }
-        }
-
+        
         /// <summary>
         /// </summary>
         public string ExplicitName
@@ -313,50 +286,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IEnumerable<ILocalVariable> LocalVariables
-        {
-            get
-            {
-                var localInfo = default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
-                try
-                {
-                    PEModuleSymbol peModuleSymbol;
-                    PEMethodSymbol peMethodSymbol;
-                    this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-                    if (peMethodSymbol != null)
-                    {
-                        var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                        if (methodBody != null && !methodBody.LocalSignature.IsNil)
-                        {
-                            var module = peModuleSymbol.Module;
-                            var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
-                            var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
-                            localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
-                        }
-                        else
-                        {
-                            localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
-                        }
-                    }
-                }
-                catch (UnsupportedSignatureContent)
-                {
-                }
-                catch (BadImageFormatException)
-                {
-                }
-
-                var index = 0;
-                foreach (var li in localInfo)
-                {
-                    yield return new MetadataLocalVariableAdapter(li, index++, this.GenericContext);
-                }
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public string MetadataFullName
         {
             get
@@ -498,28 +427,6 @@ namespace PEAssemblyReader
             return this.ToString().GetHashCode();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public byte[] GetILAsByteArray()
-        {
-            PEModuleSymbol peModuleSymbol;
-            PEMethodSymbol peMethodSymbol;
-            this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-            if (peMethodSymbol != null)
-            {
-                var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                if (methodBody != null)
-                {
-                    return methodBody.GetILBytes();
-                }
-            }
-
-            return null;
-        }
-
         public IMethod ToSpecialization(IGenericContext genericContext)
         {
             return this.methodDef.ResolveGeneric(genericContext);
@@ -533,25 +440,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
-            PEModuleSymbol peModuleSymbol;
-            PEMethodSymbol peMethodSymbol;
-            this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-            if (peMethodSymbol != null)
-            {
-                var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                if (methodBody != null && methodBody.GetILBytes() != null)
-                {
-                    if (genericContext != null && !genericContext.IsEmpty && (this.GenericContext == null || this.GenericContext.IsEmpty))
-                    {
-                        this.GenericContext = genericContext;
-                    }
-
-                    return this;
-                }
-            }
-
-            return null;
+            return new MetadataMethodBodyAdapter(this.methodDef, genericContext ?? this.GenericContext);
         }
 
         /// <summary>
@@ -672,42 +561,6 @@ namespace PEAssemblyReader
             result.Append(')');
 
             return result.ToString();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="peModuleSymbol">
-        /// </param>
-        /// <param name="peMethodSymbol">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private MethodBodyBlock GetMethodBodyBlock(PEModuleSymbol peModuleSymbol, PEMethodSymbol peMethodSymbol)
-        {
-            var peModule = peModuleSymbol.Module;
-            if (peMethodSymbol != null)
-            {
-                Debug.Assert(peModule.HasIL);
-                return peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="peModuleSymbol">
-        /// </param>
-        /// <param name="peMethodSymbol">
-        /// </param>
-        private void GetPEMethodSymbol(out PEModuleSymbol peModuleSymbol, out PEMethodSymbol peMethodSymbol)
-        {
-            peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            peMethodSymbol = this.methodDef as PEMethodSymbol;
-            if (peMethodSymbol == null)
-            {
-                peMethodSymbol = this.methodDef.OriginalDefinition as PEMethodSymbol;
-            }
         }
 
         /// <summary>

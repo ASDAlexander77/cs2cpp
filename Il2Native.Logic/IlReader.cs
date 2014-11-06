@@ -618,7 +618,7 @@ namespace Il2Native.Logic
         /// </returns>
         public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IGenericContext genericContext)
         {
-            if (methodBody == null)
+            if (!methodBody.HasBody)
             {
                 yield break;
             }

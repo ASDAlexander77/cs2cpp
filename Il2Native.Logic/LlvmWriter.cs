@@ -2223,7 +2223,7 @@ namespace Il2Native.Logic
 
             // write local declarations
             var methodBase = ctor.ResolveMethodBody(genericContext);
-            if (methodBase != null)
+            if (methodBase.HasBody)
             {
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
@@ -2293,8 +2293,6 @@ namespace Il2Native.Logic
         {
             Debug.Assert(source.Type.TypeEquals(dest.Type));
 
-            var storeResult = opCode.Result;
-
             this.WriteBitcast(opCode, dest);
             var op1 = opCode.Result;
             writer.WriteLine(string.Empty);
@@ -2304,7 +2302,7 @@ namespace Il2Native.Logic
 
             this.WriteMemCopy(dest.Type, op1, op2);
 
-            opCode.Result = storeResult;
+            opCode.Result = dest;
         }
 
         /// <summary>
@@ -3220,7 +3218,7 @@ namespace Il2Native.Logic
 
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
-            if (methodBodyBytes != null)
+            if (methodBodyBytes.HasBody)
             {
                 this.Output.WriteLine(" {");
 
@@ -3793,7 +3791,7 @@ namespace Il2Native.Logic
             }
 
             // add shift for interfaces
-            index += type.GetInterfaces().Count();
+            index += type.GetInterfacesExcludingBaseAllInterfaces().Count(); 
 
             return index;
         }
@@ -4761,7 +4759,7 @@ namespace Il2Native.Logic
                 this.WriteUnreachable();
             }
 
-            if (method.ExceptionHandlingClauses.Any())
+            if (method.GetMethodBody().ExceptionHandlingClauses.Any())
             {
                 this.WriteResume();
             }

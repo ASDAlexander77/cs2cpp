@@ -1152,9 +1152,8 @@ namespace Il2Native.Logic
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
 
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
-
-            this.NoBody = methodBody == null;
-            if (methodBody != null)
+            this.NoBody = !methodBody.HasBody;
+            if (!this.NoBody)
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
 
