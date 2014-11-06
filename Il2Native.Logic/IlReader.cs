@@ -732,6 +732,11 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
                         this.AddGenericSpecializedType(constructor.DeclaringType);
+                        this.AddGenericSpecializedMethod(constructor);
+                        foreach (var methodParameter in constructor.GetParameters())
+                        {
+                            this.AddStructType(methodParameter.ParameterType);
+                        }
 
                         AddUsedType(constructor.DeclaringType);
                         AddCalledMethod(constructor);
@@ -1094,8 +1099,25 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedType(IType type)
         {
-            if (this.usedGenericSpecialiazedTypes == null || type == null || type.IsGenericTypeDefinition || !type.IsGenericType)
+            if (this.usedGenericSpecialiazedTypes == null || type == null)
             {
+                return;
+            }
+
+            var current = type;
+            while (current != null)
+            {
+                if (!current.IsGenericTypeDefinition && current.IsGenericType)
+                {
+                    break;
+                }
+
+                if (current.IsNested)
+                {
+                    current = current.DeclaringType;
+                    continue;
+                }
+
                 return;
             }
 

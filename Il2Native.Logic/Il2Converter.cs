@@ -182,13 +182,13 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.IsGenericDefinition() || type.Name == "<Module>")
+                if (type.IsGenericDefinitionIncludingDeclaring() || type.Name == "<Module>")
                 {
                     continue;
                 }
 
                 IType genDef = null;
-                if (type.IsGenericType)
+                if (type.IsGenericTypeIncludingDeclaring())
                 {
                     genDefinitionsByMetadataName.TryGetValue(type.MetadataFullName, out genDef);
                 }
@@ -217,9 +217,13 @@ namespace Il2Native.Logic
         private static void ConvertIType(
             IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, IEnumerable<IMethod> genericMethodSpecializatons, ConvertingMode mode)
         {
+            var isGenericTypeIncludingDeclaring = type.IsGenericTypeIncludingDeclaring();
+            var isGenericDefinitionIncludingDeclating = type.IsGenericDefinitionIncludingDeclaring();
+            var typeSpecialization = isGenericTypeIncludingDeclaring && !isGenericDefinitionIncludingDeclating ? type : null;
+
             var genericContext = new MetadataGenericContext();
             genericContext.TypeDefinition = genericDefinition;
-            genericContext.TypeSpecialization = type.IsGenericType && !type.IsGenericDefinition() ? type : null;
+            genericContext.TypeSpecialization = typeSpecialization;
             genericContext.MethodDefinition = null;
             genericContext.MethodSpecialization = null;
 
@@ -243,7 +247,7 @@ namespace Il2Native.Logic
                 foreach (var ctor in IlReader.Constructors(type))
                 {
                     IConstructor genericCtor = null;
-                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
+                    if (isGenericTypeIncludingDeclaring && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same constructor in generic class
                         Debug.Assert(genericDefinition != null);
@@ -284,7 +288,7 @@ namespace Il2Native.Logic
                 foreach (var method in IlReader.MethodsOriginal(type))
                 {
                     IMethod genericMethod = null;
-                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
+                    if (isGenericTypeIncludingDeclaring && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same method in generic class
                         Debug.Assert(genericDefinition != null);
@@ -420,7 +424,7 @@ namespace Il2Native.Logic
 
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
-            foreach (var genDef in allTypes.Where(t => t.IsGenericDefinition()))
+            foreach (var genDef in allTypes.Where(t => t.IsGenericDefinitionIncludingDeclaring()))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }

@@ -297,13 +297,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    return namedTypeSymbol.IsGenericType;
-                }
-
-                return false;
+                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
             }
         }
 
@@ -313,13 +307,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    return namedTypeSymbol.TypeArguments.Any(t => t.TypeKind == TypeKind.TypeParameter);
-                }
-
-                return false;
+                return this.GetGenericParameters().Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter);
             }
         }
 
@@ -665,7 +653,22 @@ namespace PEAssemblyReader
                 return namedTypeSymbol.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
             }
 
-            return null;
+            return new IType[0];
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> GetGenericParameters()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return new IType[0];
         }
 
         /// <summary>
