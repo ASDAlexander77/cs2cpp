@@ -19,8 +19,13 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         public MetadataGenericContext()
+            : this(new SortedDictionary<IType, IType>())
         {
-            this.Map = new SortedDictionary<IType, IType>();
+        }
+
+        public MetadataGenericContext(IDictionary<IType, IType> map)
+        {
+            this.Map = map;
         }
 
         /// <summary>
@@ -30,8 +35,11 @@ namespace PEAssemblyReader
         public MetadataGenericContext(IType type, bool allowToUseDefinitionAsSpecialization = false)
             : this()
         {
-            this.Init(type, allowToUseDefinitionAsSpecialization);
-            Debug.Assert(!this.IsEmpty);
+            this.Init(type, allowToUseDefinitionAsSpecialization);           
+            if (this.TypeSpecialization != null)
+            {
+                this.TypeSpecialization.GenericMap(this.Map);
+            }
         }
 
         /// <summary>
@@ -39,12 +47,13 @@ namespace PEAssemblyReader
         /// <param name="method">
         /// </param>
         public MetadataGenericContext(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
-            : this()
+            : this(method.DeclaringType, allowToUseDefinitionAsSpecialization)
         {
-            this.Init(method.DeclaringType, allowToUseDefinitionAsSpecialization);
             this.Init(method, allowToUseDefinitionAsSpecialization);
-
-            Debug.Assert(!this.IsEmpty);
+            if (this.MethodSpecialization != null)
+            {
+                MethodSpecialization.GenericMap(this.Map);
+            }
         }
 
         /// <summary>
@@ -110,6 +119,17 @@ namespace PEAssemblyReader
             context.Map.GenericMap(definitionMethod.GetGenericParameters(), specializationMethod.GetGenericArguments());
             context.Map.GenericMap(definitionMethod.DeclaringType.GenericTypeParameters, specializationMethod.DeclaringType.GenericTypeArguments);
             return context;
+        }
+
+        public IType ResolveTypeParameter(IType typeParameter)
+        {
+            IType resolved = null;
+            if (Map.TryGetValue(typeParameter, out resolved))
+            {
+                return resolved;
+            }
+
+            return typeParameter;
         }
 
         /// <summary>

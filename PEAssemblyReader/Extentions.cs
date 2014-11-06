@@ -304,23 +304,7 @@ namespace PEAssemblyReader
             {
                 if (typeSymbol.IsTypeParameter())
                 {
-                    if (genericContext.TypeSpecialization != null)
-                    {
-                        var newType = genericContext.TypeSpecialization.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
-                        if (newType != null)
-                        {
-                            return newType;
-                        }
-                    }
-
-                    if (genericContext.MethodSpecialization != null)
-                    {
-                        var newType = genericContext.MethodSpecialization.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
-                        if (newType != null)
-                        {
-                            return newType;
-                        }
-                    }
+                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
@@ -333,16 +317,9 @@ namespace PEAssemblyReader
                 if (namedTypeSymbol != null)
                 {
                     var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
-                    if (metadataType.IsGenericTypeDefinition && (genericContext.TypeSpecialization != null || genericContext.MethodSpecialization != null))
+                    if (metadataType.IsGenericTypeDefinition && !genericContext.IsEmpty)
                     {
-                        var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
-                        map = genericContext.MethodSpecialization.GenericMap(map);
-
-                        var newType = ConstructGenericTypeSymbol(namedTypeSymbol, map);
-                        if (newType != null)
-                        {
-                            return new MetadataTypeAdapter(newType, genericContext);
-                        }
+                        return new MetadataTypeAdapter(namedTypeSymbol, genericContext);
                     }
                 }
             }
@@ -352,21 +329,6 @@ namespace PEAssemblyReader
 
         internal static IMethod ResolveGeneric(this MethodSymbol methodSymbol, IGenericContext genericContext)
         {
-            if (genericContext != null && !genericContext.IsEmpty)
-            {
-                if (methodSymbol.ContainingType.IsGenericType || methodSymbol.IsGenericMethod)
-                {
-                    Debug.Assert(genericContext.TypeSpecialization != null || genericContext.MethodSpecialization != null);
-
-                    var map = genericContext.TypeSpecialization.GenericMap(genericContext.Map);
-                    map = genericContext.MethodSpecialization.GenericMap(map);
-
-                    var newMethod = ConstructGenericMethodSymbol(methodSymbol, map);
-
-                    return new MetadataMethodAdapter(newMethod, genericContext);
-                }
-            }
-
             return new MetadataMethodAdapter(methodSymbol, genericContext);
         }
 

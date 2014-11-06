@@ -198,14 +198,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        IType ResolveTypeParameter(IType type);
-
-        /// <summary>
-        /// </summary>
         /// <param name="rank">
         /// </param>
         /// <returns>

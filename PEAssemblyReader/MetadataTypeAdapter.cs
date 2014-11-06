@@ -789,33 +789,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="typeParameter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public IType ResolveTypeParameter(IType typeParameter)
-        {
-            return ResolveTypeParameter(this, typeParameter);
-        }
-
-        private static IType ResolveTypeParameter(IType source, IType typeParameter)
-        {
-            var typeParameters = source.GenericTypeParameters.ToList();
-            var typeArguments = source.GenericTypeArguments.ToList();
-
-            for (var index = 0; index < typeArguments.Count; index++)
-            {
-                if (typeParameters[index].TypeEquals(typeParameter))
-                {
-                    return typeArguments[index];
-                }
-            }
-
-            return source.IsNested ? ResolveTypeParameter(source.DeclaringType, typeParameter) : null;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="rank">
         /// </param>
         /// <returns>
