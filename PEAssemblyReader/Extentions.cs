@@ -246,6 +246,7 @@ namespace PEAssemblyReader
         /// </returns>
         internal static MetadataDecoder GetMetadataDecoder(this PEModuleSymbol peModuleSymbol, IGenericContext genericContext)
         {
+            // TODO: make a review as you did for LocalVariables, so check if you need to use new MetadataDecoder(peModuleSymbol, peMethodSymbol) or new MetadataDecoder(peModuleSymbol, peTypeSymbol)
             if (genericContext != null)
             {
                 var methodDefOrSpec = genericContext.MethodDefinition ?? genericContext.MethodSpecialization;

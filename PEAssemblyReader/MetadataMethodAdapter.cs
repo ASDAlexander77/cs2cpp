@@ -332,7 +332,7 @@ namespace PEAssemblyReader
                             var module = peModuleSymbol.Module;
                             var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                             var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
-                            localInfo = peModuleSymbol.GetMetadataDecoder(this.GenericContext ?? GetDefaultGenericMetadataContext()).DecodeLocalSignatureOrThrow(ref signatureReader);
+                            localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
                         }
                         else
                         {
