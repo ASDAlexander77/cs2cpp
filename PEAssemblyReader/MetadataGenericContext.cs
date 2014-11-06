@@ -16,6 +16,10 @@ namespace PEAssemblyReader
     /// </summary>
     public class MetadataGenericContext : IGenericContext
     {
+        private IType typeSpecialization;
+
+        private IMethod methodSpecialization;
+
         /// <summary>
         /// </summary>
         public MetadataGenericContext()
@@ -62,7 +66,8 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.Map.Count == 0 && this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null && this.MethodSpecialization == null;
+                return this.Map.Count == 0 && this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null
+                       && this.MethodSpecialization == null;
             }
         }
 
@@ -76,7 +81,22 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IMethod MethodSpecialization { get; set; }
+        public IMethod MethodSpecialization
+        {
+            get
+            {
+                return this.methodSpecialization;
+            }
+
+            set
+            {
+                this.methodSpecialization = value;
+                if (this.MethodSpecialization != null)
+                {
+                    this.MethodSpecialization.GenericMap(this.Map);
+                }
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -84,7 +104,22 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IType TypeSpecialization { get; set; }
+        public IType TypeSpecialization
+        {
+            get
+            {
+                return this.typeSpecialization;
+            }
+
+            set
+            {
+                this.typeSpecialization = value;
+                if (this.TypeSpecialization != null)
+                {
+                    this.TypeSpecialization.GenericMap(this.Map);
+                }
+            }
+        }
 
         public static IGenericContext DiscoverFrom(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
         {
