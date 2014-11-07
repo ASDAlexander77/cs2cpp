@@ -290,7 +290,7 @@ namespace Il2Native.Logic
                     {
                         // find the same method in generic class
                         Debug.Assert(genericDefinition != null);
-                        genericMethod = IlReader.MethodsOriginal(genericDefinition).First(gm => method.IsMatchingGeneric(gm));
+                        genericMethod = IlReader.MethodsOriginal(genericDefinition).First(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)));
                     }
 
                     if (!method.IsGenericMethodDefinition)

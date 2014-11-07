@@ -3791,7 +3791,7 @@ namespace Il2Native.Logic
             }
 
             // add shift for interfaces
-            index += type.GetInterfacesExcludingBaseAllInterfaces().Count(); 
+            index += type.GetInterfacesExcludingBaseAllInterfaces().Count();
 
             return index;
         }
@@ -4193,16 +4193,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private IType GetTypeOfReference(OpCodePart opCode)
+        private IType GetTypeOfReference(OpCodePart opCode, int operandIndex = 0)
         {
             IType type = null;
             if (opCode.HasResult)
             {
                 type = opCode.Result.Type;
             }
-            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0)
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
             {
-                var resultOf = this.ResultOf(opCode.OpCodeOperands[0]);
+                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
                 type = resultOf.Type;
             }
             else
@@ -4356,12 +4356,12 @@ namespace Il2Native.Logic
             {
                 case Code.Stelem_I:
                     //type = this.ResolveType("System.Void").ToPointerType();
-                    type = this.GetTypeOfReference(opCode);
+                    type = this.GetTypeOfReference(opCode, 2);
                     break;
                 case Code.Stelem_I1:
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.SByte");
-                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    var result = this.ResultOf(opCode.OpCodeOperands[2]);
                     type = result.Type.GetElementType();
                     break;
                 case Code.Stelem_I2:
@@ -4381,8 +4381,13 @@ namespace Il2Native.Logic
                     break;
                 case Code.Stelem:
                 case Code.Stelem_Ref:
-                    type = this.GetTypeOfReference(opCode);
+                    type = this.GetTypeOfReference(opCode, 2);
                     break;
+            }
+
+            if (type.UseAsClass)
+            {
+                type = type.ToNormal();
             }
 
             this.BinaryOper(

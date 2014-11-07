@@ -1006,7 +1006,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            return genType.IsGenericParameter;
+            return genType.IsGenericParameter || type.IsGenericParameter;
         }
 
         /// <summary>
