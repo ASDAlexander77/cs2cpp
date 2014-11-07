@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="System\Action.cs" />
+    <Compile Include="System\Activator.cs" />
     <Compile Include="System\AppDomain.cs" />
     <Compile Include="System\AppDomainUnloadedException.cs" />
     <Compile Include="System\ApplicationException.cs" />

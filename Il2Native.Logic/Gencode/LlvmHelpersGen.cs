@@ -811,7 +811,11 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", op1, type.GetTypeSize(), LlvmWriter.PointerSize /*Align*/);
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                op1,
+                type.GetTypeSize(type.IsPrimitiveType() && !type.UseAsClass),
+                LlvmWriter.PointerSize
+                /*Align*/);
         }
     }
 }

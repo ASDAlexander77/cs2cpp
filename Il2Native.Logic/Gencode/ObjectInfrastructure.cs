@@ -424,7 +424,7 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.WriteBitcast(opCodePart, fullyDefinedReference, llvmWriter.ResolveType("System.Byte").ToPointerType());
                 writer.WriteLine(string.Empty);
 
-                llvmWriter.WriteMemSet(declaringTypeClass, opCodePart.Result);
+                llvmWriter.WriteMemSet(declaringTypeNormal, opCodePart.Result);
                 writer.WriteLine(string.Empty);
 
                 if (declaringTypeNormal.IsStructureType())

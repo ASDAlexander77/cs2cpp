@@ -4335,6 +4335,10 @@ namespace Il2Native.Logic
                 {
                     this.WriteLlvmLoad(opCode, type, accessIndexResultNumber);
                 }
+                else
+                {
+                    opCode.Result = accessIndexResultNumber;
+                }
             }
         }
 
