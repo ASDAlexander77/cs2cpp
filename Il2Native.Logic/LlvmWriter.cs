@@ -4356,12 +4356,12 @@ namespace Il2Native.Logic
             {
                 case Code.Stelem_I:
                     //type = this.ResolveType("System.Void").ToPointerType();
-                    type = this.GetTypeOfReference(opCode, 2);
+                    type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stelem_I1:
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.SByte");
-                    var result = this.ResultOf(opCode.OpCodeOperands[2]);
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
                     break;
                 case Code.Stelem_I2:
@@ -4381,7 +4381,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Stelem:
                 case Code.Stelem_Ref:
-                    type = this.GetTypeOfReference(opCode, 2);
+                    type = this.GetTypeOfReference(opCode);
                     break;
             }
 
@@ -4389,6 +4389,8 @@ namespace Il2Native.Logic
             {
                 type = type.ToNormal();
             }
+
+            Debug.Assert(!type.IsVoid());
 
             this.BinaryOper(
                 writer,

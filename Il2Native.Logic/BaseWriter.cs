@@ -1160,7 +1160,7 @@ namespace Il2Native.Logic
                 AdjustLocalVariableTypes();
 
 #if DEBUG
-                Debug.Assert(!LocalInfo.Any(li => li.LocalType.IsGenericParameter));
+                Debug.Assert(genericContext == null || !LocalInfo.Any(li => li.LocalType.IsGenericParameter));
 #endif
 
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];
