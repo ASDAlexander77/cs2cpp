@@ -215,10 +215,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsNullCoalescingExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
         public UsedByInfo UsedBy { get; set; }
 
         /// <summary>

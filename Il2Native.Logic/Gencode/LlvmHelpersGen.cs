@@ -413,15 +413,8 @@ namespace Il2Native.Logic.Gencode
 
             methodInfo.PreProcessCallParameters(opCodeMethodInfo, llvmWriter);
 
-            if (methodInfo.IsInterlockedFunction())
+            if (llvmWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
-                methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
-                return;
-            }
-
-            if (methodInfo.IsTypeOfCallFunction())
-            {
-                opCodeMethodInfo.WriteTypeOfFunction(llvmWriter);
                 return;
             }
 
@@ -455,6 +448,32 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter);
 
             tryClause.WriteFunctionCallUnwind(opCodeMethodInfo, llvmWriter);
+        }
+
+        public static bool ProcessPluggableMethodCall(this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo)
+        {
+            // TODO: it seems, you can preprocess MSIL code and replace all functions with MSIL code blocks to stop writing the code manually.
+            // for example call System.Activator.CreateInstance<X>() can be replace with "Code.NewObj x"
+            // the same interlocked functions and the same for TypeOf operators
+            if (methodInfo.IsTypeOfCallFunction())
+            {
+                opCodeMethodInfo.WriteTypeOfFunction(llvmWriter);
+                return true;
+            }
+
+            if (methodInfo.IsInterlockedFunction())
+            {
+                methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
+            if (methodInfo.IsCreateInstanceFunction())
+            {
+                methodInfo.WriteCreateInstanceFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
+            return false;
         }
 
         public static void SetCustomLabel(OpCodePart opCodePart, string label)

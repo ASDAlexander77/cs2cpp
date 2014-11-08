@@ -1328,11 +1328,25 @@ namespace Il2Native.Logic
             }
 
             var secondValue = stack.First();
-            var firstCondJump = secondValue.PreviousOpCodeGroup(this);
-            var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
-            if (!isCondJumpForward)
+            while (true)
             {
-                return false;
+                var firstCondJump = secondValue.PreviousOpCodeGroup(this);
+                if (firstCondJump == null)
+                {
+                    return false;
+                }
+
+                var isCondJumpForward = firstCondJump != null
+                                        && firstCondJump.IsCondBranch()
+                                        && firstCondJump.IsJumpForward()
+                                        && firstCondJump.JumpAddress() == middleJump.AddressEnd;
+                if (!isCondJumpForward)
+                {
+                    secondValue = firstCondJump;
+                    continue;
+                }
+
+                break;
             }
 
             // expression is not full yet
