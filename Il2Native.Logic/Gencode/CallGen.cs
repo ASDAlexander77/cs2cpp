@@ -184,30 +184,26 @@
         {
             var writer = llvmWriter.Output;
 
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && opCodeMethodInfo.Destination == null)
+            var isReturnStructType = methodInfo != null && methodInfo.ReturnType.IsStructureType();
+            var isReturnVoidType = methodInfo != null && methodInfo.ReturnType.IsVoid();
+
+            // allocate space for structure if return type is structure
+            if (isReturnStructType)
+            {
+                // TODO: for optimization, when it is used by Code.Stfld etc you can optimaze sending reference to a structure without allocating it in stack
+                // todo so you need to request a destination reference as you did before
+
+                // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
+                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
+                llvmWriter.WriteAlloca(methodInfo.ReturnType);
+                writer.WriteLine(string.Empty);
+            }
+            else if (!isReturnVoidType)
             {
                 llvmWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
 
-            var returnFullyDefinedReference = opCodeMethodInfo.Result != null ? opCodeMethodInfo.Result : null;
-
-            // allocate space for structure if return type is structure
-            if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
-            {
-                if (opCodeMethodInfo.Destination == null)
-                {
-                    // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
-                    llvmWriter.WriteAlloca(methodInfo.ReturnType);
-                    writer.WriteLine(string.Empty);
-                }
-                else
-                {
-                    Debug.Assert(opCodeMethodInfo.Destination.Type.TypeEquals(methodInfo.ReturnType));
-                    returnFullyDefinedReference = opCodeMethodInfo.Destination.ToType(methodInfo.ReturnType);
-                }
-            }
-
-            return returnFullyDefinedReference;
+            return opCodeMethodInfo.Result;
         }
 
         public static void WriteFunctionCall(this LlvmIndentedTextWriter writer, TryClause tryClause)

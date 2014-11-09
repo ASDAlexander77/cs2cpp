@@ -234,10 +234,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Unbox Object method");
             llvmWriter.WriteCall(opCode, method, false, true, false, null, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            if (opCode.Result != null)
-            {
-                opCode.Result = opCode.Result.ToClassType();
-            }
         }
 
         /// <summary>
@@ -528,7 +524,7 @@ namespace Il2Native.Logic.Gencode
             var isStruct = normalType.IsStructureType();
             if (isStruct)
             {
-                opCode.Destination = new FullyDefinedReference("%agg.result", normalType);
+                opCode.Result = new FullyDefinedReference("%agg.result", normalType);
             }
 
             var resultPresents = llvmWriter.WriteUnboxObject(opCode, normalType);
@@ -667,7 +663,11 @@ namespace Il2Native.Logic.Gencode
             // load value from field
             var memberAccessResultNumber = opCode.Result;
 
-            opCode.Result = null;
+            if (!isStruct)
+            {
+                opCode.Result = null;
+            }
+
             llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
 
             writer.WriteLine(string.Empty);

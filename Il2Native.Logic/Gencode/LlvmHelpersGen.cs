@@ -371,17 +371,6 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (methodInfo != null
-                && methodInfo.ReturnType.IsStructureType()
-                && opCodeMethodInfo.UsedBy != null && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldsfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Newobj, Code.Box, Code.Unbox, Code.Unbox_Any, Code.Pop)
-                && opCodeMethodInfo.Destination == null)
-            {
-                // You should not allocate it yourself, as result of function should be stored in DestinationName or in Return Value such as "agg.return"
-                // so if Destination is null means that call is not ready and will be ready later when DestinationName is set
-                // note: if method which returns structure used by "Field" when we need to generate temp result of a function in stack
-                return;
-            }
-
             var writer = llvmWriter.Output;
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo);
@@ -716,9 +705,9 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsByRef || typeToLoad.IsStructureType() && !typeToLoad.IsByRef && opCode.Destination != null);
+            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsByRef || typeToLoad.IsStructureType() && !typeToLoad.IsByRef && opCode.Result != null);
 
-            if (!typeToLoad.IsStructureType() || typeToLoad.IsByRef || structAsRef || opCode.Destination == null || indirect)
+            if (!typeToLoad.IsStructureType() || typeToLoad.IsByRef || structAsRef || opCode.Result == null || indirect)
             {
                 if (opCode.HasResult)
                 {
@@ -766,7 +755,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, source, opCode.Destination);
+                llvmWriter.WriteCopyStruct(writer, opCode, source, opCode.Result);
             }
         }
 
