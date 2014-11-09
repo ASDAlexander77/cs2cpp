@@ -1234,19 +1234,19 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stobj))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                retType = ((OpCodeTypePart)opCodePart).Operand;
                 return retType;
             }
 
-            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
+                retType = ((OpCodeTypePart)opCodePart).Operand;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Box))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
+                retType = ((OpCodeTypePart)opCodePart).Operand;
                 return retType;
             }
 
