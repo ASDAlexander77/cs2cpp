@@ -3230,6 +3230,13 @@ namespace Il2Native.Logic
                           ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue))
                           ?? opCode.AlternativeValues.Values.First()).Result.Type;
 
+            var structUsed = false;
+            if (phiType.IsStructureType())
+            {
+                phiType = phiType.ToClass();
+                structUsed = true;
+            }
+
             // adjust types of constants
             if (!phiType.IsValueType)
             {
@@ -3263,7 +3270,7 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
 
-            opCode.AlternativeValues.Values.Last().Result = nopeCode.Result;
+            opCode.AlternativeValues.Values.Last().Result = structUsed ? nopeCode.Result.ToNormalType() : nopeCode.Result;
 
             // clear it after processing
             opCode.AlternativeValues = null;
