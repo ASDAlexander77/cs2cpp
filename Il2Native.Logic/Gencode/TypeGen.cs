@@ -270,7 +270,7 @@ namespace Il2Native.Logic.Gencode
 
         public static int GetTypeSize(this IType type, bool asValueType = false)
         {
-            if (asValueType && type.IsValueType() && type.Namespace == "System")
+            if (asValueType && type.IsPrimitiveType())
             {
                 return SystemTypeSizes[type.Name];
             }

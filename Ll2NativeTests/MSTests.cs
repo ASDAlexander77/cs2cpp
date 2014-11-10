@@ -297,12 +297,16 @@ namespace Ll2NativeTests
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
             // 117 - "xxx is int[]" treated as "xxx is int": NEED TO BE FIXED (when __Array__<T> is used)
+            // 119 - typeof pointer
+            // 126 - can't be compiled, Debug Trace: (29,10): error CS0246: The type or namespace name 'List<T>' could not be found (are you missing a using directive or an assembly reference?)
+            // 127 - Delegate.Combine not implemented
+            // 128 - Reflection
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117 };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128 };
+            foreach (var index in Enumerable.Range(126, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }

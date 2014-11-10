@@ -659,14 +659,13 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     type = opCodeTypePart.Operand;
-                    if (type.IsValueType())
+                    if (type.IsValueType() || type.IsStructureType())
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
                     }
                     else
                     {
-                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result.ToNormalType();
+                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
                     }
 
                     break;
