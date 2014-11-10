@@ -613,7 +613,7 @@ namespace Il2Native.Logic
                         }
 
                         var usedStructTypes = new HashSet<IType>();
-                        method.DiscoverRequiredTypesAndMethodsInMethodBody(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes);
+                        method.DiscoverRequiredTypesAndMethodsInMethodBody(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes, new Queue<IMethod>());
                         foreach (var usedStructType in usedStructTypes)
                         {
                             yield return usedStructType;

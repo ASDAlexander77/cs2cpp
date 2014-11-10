@@ -572,14 +572,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IGenericContext genericContext)
+        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IGenericContext genericContext, Queue<IMethod> stackCall = null)
         {
             if (ctor == null)
             {
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, genericContext))
+            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, genericContext, stackCall))
             {
                 yield return opCode;
             }
@@ -593,14 +593,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IMethod method, IGenericContext genericContext)
+        public IEnumerable<OpCodePart> OpCodes(IMethod method, IGenericContext genericContext, Queue<IMethod> stackCall = null)
         {
             if (method == null)
             {
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, genericContext))
+            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, genericContext, stackCall))
             {
                 yield return opCode;
             }
@@ -616,7 +616,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IGenericContext genericContext)
+        public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IGenericContext genericContext, Queue<IMethod> stackCall)
         {
             if (!methodBody.HasBody)
             {
@@ -732,7 +732,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var constructor = module.ResolveMember(token, genericContext) as IConstructor;
                         this.AddGenericSpecializedType(constructor.DeclaringType);
-                        this.AddGenericSpecializedMethod(constructor);
+                        this.AddGenericSpecializedMethod(constructor, stackCall);
                         foreach (var methodParameter in constructor.GetParameters())
                         {
                             this.AddStructType(methodParameter.ParameterType);
@@ -750,7 +750,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
-                        this.AddGenericSpecializedMethod(method);
+                        this.AddGenericSpecializedMethod(method, stackCall);
                         foreach (var methodParameter in method.GetParameters())
                         {
                             this.AddStructType(methodParameter.ParameterType);
@@ -769,7 +769,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
-                        this.AddGenericSpecializedMethod(method);
+                        this.AddGenericSpecializedMethod(method, stackCall);
 
                         AddUsedType(method.DeclaringType);
 
@@ -1066,7 +1066,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        private void AddGenericSpecializedMethod(IMethod method)
+        private void AddGenericSpecializedMethod(IMethod method, Queue<IMethod> stackCall)
         {
             if (this.usedGenericSpecialiazedMethods == null || method == null)
             {
@@ -1075,9 +1075,9 @@ namespace Il2Native.Logic
 
             if (!method.IsGenericMethod)
             {
-                if (method.DeclaringType.IsGenericType)
+                if (method.DeclaringType.IsGenericType && !stackCall.Contains(method))
                 {
-                    this.DiscoverRequiredTypesAndMethodsInMethod(method);
+                    this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);
                 }
 
                 return;
@@ -1090,11 +1090,13 @@ namespace Il2Native.Logic
 
             this.usedGenericSpecialiazedMethods.Add(method);
 
-            this.DiscoverRequiredTypesAndMethodsInMethod(method);
+            this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);
         }
 
-        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method)
+        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
         {
+            stackCall.Enqueue(method);
+
             // add all generic types in parameters
             foreach (var parameter in method.GetParameters())
             {
@@ -1105,7 +1107,9 @@ namespace Il2Native.Logic
             this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null);
+            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, stackCall);
+
+            stackCall.Dequeue();
         }
 
         /// <summary>
@@ -1185,11 +1189,16 @@ namespace Il2Native.Logic
         /// </exception>
         private AssemblyMetadata Compile(string source)
         {
-            var codeProvider = new CSharpCodeProvider();
-            var icc = codeProvider.CreateCompiler();
+            var language = "CSharp";
+            var codeProvider = CodeDomProvider.IsDefinedLanguage(language) ? CodeDomProvider.CreateProvider(language) : null;
+            if (codeProvider == null)
+            {
+                throw new NotSupportedException(string.Format("language '{0}' is not supported", language));
+            }
+
             var outDll = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".dll");
 
-            var parameters = new CompilerParameters();
+            var parameters = CodeDomProvider.GetCompilerInfo(language).CreateDefaultCompilerParameters();
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = string.Concat(
@@ -1197,7 +1206,7 @@ namespace Il2Native.Logic
             parameters.OutputAssembly = outDll;
 
             // parameters.CompilerOptions = "/optimize-";
-            var results = icc.CompileAssemblyFromFile(parameters, source);
+            var results = codeProvider.CompileAssemblyFromFile(parameters, source);
 
             if (results.Errors.Count > 0)
             {
