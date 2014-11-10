@@ -116,12 +116,6 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.SaveToField(opCode, fieldType, 0);
 
-            if (isStruct)
-            {
-                // init now
-                declaringType.WriteCallInitObjectMethod(llvmWriter, opCode);
-            }
-
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
 
@@ -340,11 +334,9 @@ namespace Il2Native.Logic.Gencode
             var method = new SynthesizedNewMethod(type, llvmWriter);
             writer.WriteLine("; New Object method");
 
-            var isStruct = type.ToNormal().IsStructureType();
-
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteNewMethodBody(opCode, type, isStruct);
+            llvmWriter.WriteNewMethodBody(opCode, type);
             writer.WriteLine(string.Empty);
             writer.Write("ret ");
             type.WriteTypePrefix(writer);
