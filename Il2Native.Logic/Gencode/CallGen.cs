@@ -48,23 +48,6 @@
             }
         }
 
-        public static void WriteCallFunctionPreProcessOperands(this OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
-        {
-            if (opCodeMethodInfo.OpCodeOperands == null)
-            {
-                return;
-            }
-
-            var writer = llvmWriter.Output;
-
-            var index = 0;
-            foreach (var operand in opCodeMethodInfo.OpCodeOperands)
-            {
-                llvmWriter.PreProcessOperand(writer, opCodeMethodInfo, index);
-                index++;
-            }
-        }
-
         public static void WriteFunctionCallPrepareThisExpression(this OpCodePart opCodeMethodInfo, IType thisType, OpCodePart opCodeFirstOperand, BaseWriter.ReturnResult resultOfFirstOperand, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
@@ -327,10 +310,7 @@
                 }
                 else if (used != null && used.Length > 0)
                 {
-                    if (used[0].HasResult)
-                    {
-                        llvmWriter.WriteResult(used[0].Result);
-                    }
+                    llvmWriter.WriteResult(used[0].Result);
                 }
             }
 

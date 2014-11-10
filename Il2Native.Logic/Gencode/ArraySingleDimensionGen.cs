@@ -46,12 +46,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            // TODO: should be removed in the future when Skip field is not used
-            if (opCode.OpCodeOperands[0].Result == null)
-            {
-                llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-            }
-
             var intType = llvmWriter.ResolveType("System.Int32");
 
             var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, 4);
@@ -154,11 +148,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteNewArray(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType, OpCodePart length)
         {
-            if (opCode.HasResult)
-            {
-                return;
-            }
-
             var writer = llvmWriter.Output;
 
             writer.WriteLine("; New array");

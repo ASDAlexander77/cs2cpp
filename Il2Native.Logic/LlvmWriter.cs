@@ -409,8 +409,6 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    this.PreProcessOperand(writer, opCode, 0);
-
                     destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
 
@@ -451,8 +449,6 @@ namespace Il2Native.Logic
 
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
-                    this.PreProcessOperand(writer, opCode, 0);
-
                     var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
                     if ((!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef)
                         || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef))
@@ -468,9 +464,6 @@ namespace Il2Native.Logic
 
                 case Code.Stobj:
                     opCodeTypePart = opCode as OpCodeTypePart;
-
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    writer.WriteLine(string.Empty);
 
                     var ooperandIndex = 1;
                     this.SaveStruct(writer, opCode, ooperandIndex);
@@ -630,14 +623,10 @@ namespace Il2Native.Logic
                         writer, opCode, isFloatingPoint ? "fsub" : "sub", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     opCode.OpCodeOperands = tempOper;
                     break;
+                
                 case Code.Dup:
-
-                    if (!opCode.OpCodeOperands[0].HasResult)
-                    {
-                        this.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    }
-
                     break;
+
                 case Code.Box:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
@@ -765,7 +754,7 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true);
+                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true, true);
                     }
                     else
                     {
@@ -1135,14 +1124,7 @@ namespace Il2Native.Logic
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    if (!opCodeTypePart.OpCodeOperands[0].HasResult)
-                    {
-                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                        writer.WriteLine(string.Empty);
-                    }
-
                     this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
-
                     break;
 
                 case Code.Isinst:
@@ -1272,7 +1254,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (!opCode.OpCodeOperands.Any(o => o.HasResult && o.Result.Type.IsPointer))
+            if (!opCode.OpCodeOperands.Any(o => o.Result.Type.IsPointer))
             {
                 return false;
             }
@@ -1401,15 +1383,8 @@ namespace Il2Native.Logic
         private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
             var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
-
             this.CheckIfExternalDeclarationIsRequired(declaringType);
-
             this.WriteNew(opCodeConstructorInfoPart, declaringType);
-
-            if (opCodeConstructorInfoPart.Result.Type.IsSignedType())
-            {
-                this.WriteLlvmLoad(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Result.ToClassType());
-            }
         }
 
         /// <summary>
@@ -1424,7 +1399,7 @@ namespace Il2Native.Logic
         /// </returns>
         public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, IType destType)
         {
-            if (!opCode.HasResult || opCode.Result is ConstValue)
+            if (opCode.Result is ConstValue)
             {
                 return false;
             }
@@ -1698,7 +1673,6 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.PreProcessOperand(writer, opCode, 0);
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
 
@@ -1717,53 +1691,22 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="forcedType">
         /// </param>
-        public void PostProcess(LlvmIndentedTextWriter writer, OpCodePart operand, bool detectAndWriteTypePrefix = false, IType forcedType = null)
+        public void WriteOperandResult(LlvmIndentedTextWriter writer, OpCodePart operand, bool detectAndWriteTypePrefix = false, IType forcedType = null)
         {
             writer.Write(' ');
 
-            if (!operand.HasResult)
+            if (forcedType != null)
             {
-                if (forcedType != null)
-                {
-                    forcedType.WriteTypePrefix(writer);
-                    writer.Write(' ');
-                }
-                else if (detectAndWriteTypePrefix)
-                {
-                    IType castFrom;
-                    IType intAdjustment;
-                    bool intAdjustSecondOperand;
-                    var effectiveType = this.DetectTypePrefix(
-                        operand, null, OperandOptions.TypeIsInOperator, out castFrom, out intAdjustment, out intAdjustSecondOperand);
-                    (effectiveType ?? this.ResolveType("System.Void")).WriteTypePrefix(writer);
-                    writer.Write(' ');
-                }
-
-                this.ActualWrite(writer, operand);
-
-                this.WriteResult(operand.Result);
+                forcedType.WriteTypePrefix(writer);
+                writer.Write(' ');
             }
-            else
+            else if (detectAndWriteTypePrefix)
             {
-                if (forcedType != null)
-                {
-                    forcedType.WriteTypePrefix(writer);
-                    writer.Write(' ');
-                }
-                else if (detectAndWriteTypePrefix)
-                {
-                    (operand.Result.Type ?? this.ResolveType("System.Void")).WriteTypePrefix(writer);
-                    writer.Write(' ');
-                }
-
-                // TODO: you need to remove it after removing using field Skip
-                if (operand.Result == null)
-                {
-                    this.ActualWrite(writer, operand);
-                }
-
-                this.WriteResult(operand.Result);
+                (operand.Result.Type ?? this.ResolveType("System.Void")).WriteTypePrefix(writer);
+                writer.Write(' ');
             }
+
+            this.WriteResult(operand.Result);
         }
 
         /// <summary>
@@ -1784,48 +1727,7 @@ namespace Il2Native.Logic
             }
 
             var operand = opCode.OpCodeOperands[index];
-            this.PostProcess(writer, operand, detectAndWriteTypePrefix);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="operandOpCode">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        public void PreProcess(LlvmIndentedTextWriter writer, OpCodePart operandOpCode, OperandOptions options = OperandOptions.None)
-        {
-            // TODO: use it to sort out Result in future
-            ////Debug.Assert(operandOpCode.HasResult || operandOpCode.Destination != null || operandOpCode.Any(Code.Nop), "Should have result");
-            if (!operandOpCode.HasResult)
-            {
-                this.ActualWrite(writer, operandOpCode);
-                writer.WriteLine(string.Empty);
-                return;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        public void PreProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, OperandOptions options = OperandOptions.None)
-        {
-            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
-            {
-                return;
-            }
-
-            var operandOpCode = opCode.OpCodeOperands[index];
-            this.PreProcess(writer, operandOpCode, options: options);
+            this.WriteOperandResult(writer, operand, detectAndWriteTypePrefix);
         }
 
         /// <summary>
@@ -1974,8 +1876,6 @@ namespace Il2Native.Logic
             IType resultType = null,
             OperandOptions options = OperandOptions.None)
         {
-            this.PreProcessOperand(writer, opCode, operandIndex, options);
-
             this.ProcessOperator(writer, opCode, op, requiredType, resultType, options, operand1: operandIndex, operand2: -1);
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
@@ -2222,9 +2122,6 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Copy data");
-
-            // write access to a field
-            this.PreProcessOperand(writer, opCode, 0);
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
@@ -3644,12 +3541,12 @@ namespace Il2Native.Logic
                                 ? opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1]
                                 : null;
 
-            if (castFrom != null && operator1.HasResult)
+            if (castFrom != null)
             {
                 this.WriteCast(operator1, operator1.Result, effectiveType);
             }
 
-            if (intAdjustment != null && operator1.HasResult)
+            if (intAdjustment != null)
             {
                 var changeType = this.AdjustIntConvertableTypes(
                     writer,
@@ -3681,14 +3578,6 @@ namespace Il2Native.Logic
         public void BinaryOper(
             LlvmIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null, string beforeSecondOperand = null)
         {
-            if (opCode.HasResult)
-            {
-                return;
-            }
-
-            this.PreProcessOperand(writer, opCode, 0, options);
-            this.PreProcessOperand(writer, opCode, 1, options);
-
             this.ProcessOperator(writer, opCode, op, options: options, resultType: resultType);
 
             this.PostProcessOperand(writer, opCode, 0);
@@ -4036,7 +3925,6 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            this.PreProcessOperand(writer, opCodeFieldInfoPart, 1);
             this.WriteFieldAccess(writer, opCodeFieldInfoPart);
             writer.WriteLine(string.Empty);
 
@@ -4168,10 +4056,6 @@ namespace Il2Native.Logic
             {
                 var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
                 type = resultOf.Type;
-            }
-            else
-            {
-                type = this.ResolveType("System.Byte").ToPointerType();
             }
 
             if (type.IsArray || type.IsByRef || type.IsPointer)
@@ -4369,8 +4253,6 @@ namespace Il2Native.Logic
 
             var operandIndex = 2;
 
-            this.PreProcessOperand(writer, opCode, operandIndex);
-
             if (!type.IsStructureType())
             {
                 this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
@@ -4449,8 +4331,6 @@ namespace Il2Native.Logic
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
             }
-
-            this.PreProcessOperand(writer, opCode, 0);
 
             this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
             writer.Write(", ");

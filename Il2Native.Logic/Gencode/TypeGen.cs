@@ -312,24 +312,21 @@ namespace Il2Native.Logic.Gencode
         {
             dynamicCastRequired = false;
 
-            if (opCodePart.HasResult)
+            var other = opCodePart.Result.Type.ToDereferencedType();
+            var constValue = opCodePart.Result as ConstValue;
+            if (constValue != null && constValue.IsNull)
             {
-                var other = opCodePart.Result.Type.ToDereferencedType();
-                var constValue = opCodePart.Result as ConstValue;
-                if (constValue != null && constValue.IsNull)
+                return false;
+            }
+
+            if (requiredType.TypeNotEquals(other))
+            {
+                if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
                 {
-                    return false;
+                    return true;
                 }
 
-                if (requiredType.TypeNotEquals(other))
-                {
-                    if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
-                    {
-                        return true;
-                    }
-
-                    dynamicCastRequired = true;
-                }
+                dynamicCastRequired = true;
             }
 
             return false;

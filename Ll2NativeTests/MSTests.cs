@@ -306,7 +306,7 @@ namespace Ll2NativeTests
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128 };
-            foreach (var index in Enumerable.Range(126, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }

@@ -216,14 +216,13 @@ namespace Il2Native.Logic.Gencode
 
             var incomingResult = opCode.Result;
 
-            llvmWriter.PreProcess(writer, opCode);
             llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type, toType);
 
             var returnResult = opCode.Result;
 
             opCode.Result = incomingResult;
 
-            llvmWriter.PostProcess(writer, opCode);
+            llvmWriter.WriteOperandResult(writer, opCode);
 
             writer.Write(" to ");
             toType.WriteTypePrefix(writer);
@@ -366,11 +365,6 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference thisResultNumber,
             TryClause tryClause)
         {
-            if (opCodeMethodInfo.HasResult)
-            {
-                return;
-            }
-
             var writer = llvmWriter.Output;
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo);
@@ -384,8 +378,6 @@ namespace Il2Native.Logic.Gencode
             IType ownerOfExplicitInterface;
             IType requiredType;
             methodInfo.WriteFunctionCallProlog(opCodeMethodInfo, isVirtual, hasThis, llvmWriter, out thisType, out hasThisArgument, out opCodeFirstOperand, out resultOfFirstOperand, out isIndirectMethodCall, out ownerOfExplicitInterface, out requiredType);
-
-            opCodeMethodInfo.WriteCallFunctionPreProcessOperands(llvmWriter);
 
             if (hasThisArgument)
             {
@@ -705,15 +697,12 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsByRef || typeToLoad.IsStructureType() && !typeToLoad.IsByRef && opCode.Result != null);
+            var isStruct = typeToLoad.ToNormal().IsStructureType();
 
-            if (!typeToLoad.IsStructureType() || typeToLoad.IsByRef || structAsRef || opCode.Result == null || indirect)
+            Debug.Assert(structAsRef || !isStruct || typeToLoad.IsByRef || isStruct && !typeToLoad.IsByRef && opCode.HasResult);
+
+            if (!isStruct || typeToLoad.IsByRef || structAsRef || !opCode.HasResult || indirect)
             {
-                if (opCode.HasResult)
-                {
-                    return;
-                }
-
                 ////Debug.Assert(source.Type.IsPointer);
                 var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
 
