@@ -226,7 +226,7 @@ namespace Il2Native.Logic
 
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
-            this.WriteExceptionHandlers(writer, opCode);
+            this.WriteExceptionHandlersProlog(writer, opCode);
         }
 
         /// <summary>
@@ -411,27 +411,16 @@ namespace Il2Native.Logic
 
                     destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
+                    reference = new FullyDefinedReference(destinationName, operandType);
 
                     if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
                     {
-                        opCode.Result = new FullyDefinedReference(destinationName, operandType);
+                        opCode.Result = reference;
                         this.WriteLlvmLoad(opCode, operandType, opCode.OpCodeOperands[0].Result);
                     }
                     else
                     {
-                        this.ProcessOperator(
-                            writer,
-                            opCode,
-                            "store",
-                            operandType,
-                            options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
-                            operand1: 0,
-                            operand2: -1);
-                        this.PostProcessOperand(writer, opCode, 0);
-                        writer.Write(", ");
-                        operandType.WriteTypePrefix(writer);
-                        writer.Write("* ");
-                        writer.Write(destinationName);
+                        this.WriteLlvmSave(opCode, operandType, 0, reference);
                     }
 
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
@@ -440,18 +429,11 @@ namespace Il2Native.Logic
 
                 case Code.Ldobj:
 
-                    // to support settings exceptions
-                    if (opCode.ReadExceptionFromStack)
-                    {
-                        opCode.Result = this.catchScopes.First().ExceptionResult;
-                        break;
-                    }
-
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
                     var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
-                    if ((!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef)
-                        || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef))
+                    var loadFromAddress = (!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef) || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef);
+                    if (loadFromAddress)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
@@ -463,15 +445,13 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Stobj:
-                    opCodeTypePart = opCode as OpCodeTypePart;
-
-                    var ooperandIndex = 1;
-                    this.SaveStruct(writer, opCode, ooperandIndex);
-
+                    this.SaveObject(opCode, 1, 0);
                     break;
+
                 case Code.Ldlen:
                     this.WriteArrayGetLength(opCode);
                     break;
+
                 case Code.Ldelem:
                 case Code.Ldelem_I:
                 case Code.Ldelem_I1:
@@ -1151,6 +1131,13 @@ namespace Il2Native.Logic
 
                 case Code.Newobj:
 
+                    // to support settings exceptions
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        opCode.Result = this.catchScopes.First().ExceptionResult;
+                        break;
+                    }
+
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     this.WriteNewObject(opCodeConstructorInfoPart);
 
@@ -1244,6 +1231,13 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.ResolveType("System.Int32"));
                     break;
+
+                case Code.Initblk:
+                case Code.Cpblk:
+                case Code.Cpobj:
+                case Code.Jmp:
+                case Code.Ckfinite:
+                    throw new NotImplementedException();
             }
         }
 
@@ -1719,7 +1713,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="detectAndWriteTypePrefix">
         /// </param>
-        public void PostProcessOperand(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool detectAndWriteTypePrefix = false)
+        public void WriteOperandResult(LlvmIndentedTextWriter writer, OpCodePart opCode, int index, bool detectAndWriteTypePrefix = false)
         {
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
@@ -1785,8 +1779,6 @@ namespace Il2Native.Logic
         /// </param>
         public void SaveToField(OpCodePart opCodePart, IType fieldType, int valueOperand = 1)
         {
-            var writer = this.Output;
-
             if (opCodePart.OpCodeOperands == null)
             {
                 return;
@@ -1798,10 +1790,12 @@ namespace Il2Native.Logic
             }
             else
             {
+                var writer = this.Output;
+
                 var opts = OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
 
                 this.ProcessOperator(writer, opCodePart, "store", fieldType, options: opts, operand1: valueOperand, operand2: -1);
-                this.PostProcessOperand(writer, opCodePart, valueOperand);
+                this.WriteOperandResult(writer, opCodePart, valueOperand);
                 writer.Write(", ");
                 opCodePart.Result.Type.WriteTypePrefix(writer);
                 writer.Write("* ");
@@ -1880,7 +1874,7 @@ namespace Il2Native.Logic
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
-                this.PostProcessOperand(writer, opCode, operandIndex);
+                this.WriteOperandResult(writer, opCode, operandIndex);
             }
         }
 
@@ -2773,7 +2767,6 @@ namespace Il2Native.Logic
         public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
             this.WriteMethodBody();
-
             this.WritePostMethodEnd(method);
         }
 
@@ -3580,14 +3573,14 @@ namespace Il2Native.Logic
         {
             this.ProcessOperator(writer, opCode, op, options: options, resultType: resultType);
 
-            this.PostProcessOperand(writer, opCode, 0);
+            this.WriteOperandResult(writer, opCode, 0);
             writer.Write(", ");
             if (beforeSecondOperand != null)
             {
                 writer.Write(beforeSecondOperand);
             }
 
-            this.PostProcessOperand(writer, opCode, 1, options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
+            this.WriteOperandResult(writer, opCode, 1, options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
         }
 
         /// <summary>
@@ -4258,7 +4251,7 @@ namespace Il2Native.Logic
                 this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
 
                 this.ProcessOperator(writer, opCode, "store", type, operand1: 2, operand2: -1);
-                this.PostProcessOperand(writer, opCode, operandIndex);
+                this.WriteOperandResult(writer, opCode, operandIndex);
 
                 writer.Write(", ");
                 type.WriteTypePrefix(writer, type.IsStructureType());
@@ -4336,7 +4329,7 @@ namespace Il2Native.Logic
             writer.Write(", ");
 
             destinationType.WriteTypePrefix(writer, true);
-            this.PostProcessOperand(writer, opCode, 0);
+            this.WriteOperandResult(writer, opCode, 0);
         }
 
         /// <summary>
@@ -4347,10 +4340,19 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="operandIndex">
         /// </param>
-        private void SaveStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex)
+        private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex)
         {
-            opCode.Result = opCode.OpCodeOperands[0].Result;
-            this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[operandIndex].Result.ToNormalType());
+            var operandResult = opCode.OpCodeOperands[operandIndex].Result.ToNormalType();
+
+            if (operandResult.Type.IsPrimitiveType())
+            {
+                this.WriteLlvmSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result);
+            }
+            else
+            {
+                opCode.Result = opCode.OpCodeOperands[0].Result;
+                this.WriteLlvmLoad(opCode, operandResult);
+            }
         }
 
         /// <summary>
@@ -4606,7 +4608,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteExceptionHandlers(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteExceptionHandlersProlog(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.ExceptionHandlers == null)
             {

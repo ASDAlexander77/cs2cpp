@@ -183,8 +183,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var name = type.Name;
-
             var method = new SynthesizedNewMethod(type, llvmWriter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call New Object method");

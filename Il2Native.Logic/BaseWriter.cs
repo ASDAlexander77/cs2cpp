@@ -198,6 +198,11 @@ namespace Il2Native.Logic
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
                 case Code.Newobj:
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        return new ReturnResult(opCode.ReadExceptionFromStackType);
+                    }
+
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
                 case Code.Ldfld:
@@ -223,15 +228,8 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-
                     var op1 = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (!op1.IsConst)
-                    {
-                        return op1;
-                    }
-
-                    return this.ResultOf(opCode.OpCodeOperands[1]);
-
+                    return !op1.IsConst ? op1 : this.ResultOf(opCode.OpCodeOperands[1]);
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ceq:
@@ -393,11 +391,10 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_M1:
                 case Code.Ldc_I4:
                 case Code.Ldc_I4_S:
-                    return
-                        new ReturnResult(
-                                opCode.UseAsNull
-                                    ? this.ResolveType("System.Void").ToPointerType()
-                                    : this.ResolveType("System.Int32")) { IsConst = true };
+                    return new ReturnResult(opCode.UseAsNull ? this.ResolveType("System.Void").ToPointerType() : this.ResolveType("System.Int32"))
+                               {
+                                   IsConst = true
+                               };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
                 case Code.Ldc_R4:
@@ -434,9 +431,11 @@ namespace Il2Native.Logic
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                     return new ReturnResult(fieldType.ToPointerType());
+                case Code.Nop:
+                    return null;
                 case Code.Ldobj:
                     var opCodeTypePart = opCode as OpCodeTypePart;
-                    return new ReturnResult(opCode.ReadExceptionFromStack ? opCode.ReadExceptionFromStackType : opCodeTypePart.Operand);
+                    return new ReturnResult(opCodeTypePart.Operand);
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
@@ -446,10 +445,8 @@ namespace Il2Native.Logic
                         result = new ReturnResult(res.Type.ToClass());
                         return result;
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
@@ -460,10 +457,8 @@ namespace Il2Native.Logic
                     {
                         return new ReturnResult(res.Type);
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
             }
 
             return null;
@@ -619,7 +614,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCodes">
         /// </param>
-        protected void AssignJumpBlocks(OpCodePart[] opCodes)
+        protected void AssignJumpBlocks(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -664,10 +659,69 @@ namespace Il2Native.Logic
             }
         }
 
-        protected void ProcessAll(OpCodePart[] opCodes)
+        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes)
+        {
+            OpCodePart last = null; 
+            foreach (var opCodePart in opCodes)
+            {
+                foreach (var opCodePartBefore in this.InsertBeforeOpCode(opCodePart))
+                {
+                    last = BuildChain(last, opCodePartBefore);
+                    yield return opCodePartBefore;
+                }
+
+                last = BuildChain(last, opCodePart);
+                yield return opCodePart;
+
+                foreach (var opCodePartAfter in this.InsertAfterOpCode(opCodePart))
+                {
+                    last = BuildChain(last, opCodePartAfter);
+                    yield return opCodePartAfter;
+                }
+            }
+        }
+
+        private static OpCodePart BuildChain(OpCodePart last, OpCodePart opCodePartBefore)
+        {
+            if (last != null)
+            {
+                last.Next = opCodePartBefore;
+                opCodePartBefore.Previous = last;
+            }
+
+            last = opCodePartBefore;
+            return last;
+        }
+
+        protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
+        {
+            // insert result of exception
+            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
+            if (exceptionHandling == null || exceptionHandling.CatchType == null)
+            {
+                yield break;
+            }
+
+            var opCodeNope = new OpCodePart(OpCodesEmit.Newobj, opCode.AddressStart, opCode.AddressStart);
+            opCodeNope.ReadExceptionFromStack = true;
+            opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
+            yield return opCodeNope;
+        }
+
+        protected virtual IEnumerable<OpCodePart> InsertAfterOpCode(OpCodePart opCode)
+        {
+            yield break;
+        }
+
+        protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
         {
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
+
+            foreach (var opCodePart in opCodes)
+            {
+                this.AddAddressIndex(opCodePart);
+            }
 
             foreach (var opCodePart in opCodes)
             {
@@ -675,7 +729,7 @@ namespace Il2Native.Logic
             }
         }
 
-        protected void CalculateRequiredTypesForAlternativeValues(OpCodePart[] opCodes)
+        protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -876,9 +930,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        protected OpCodePart[] PrepareWritingMethodBody()
+        protected IEnumerable<OpCodePart> PrepareWritingMethodBody()
         {
-            var ops = this.Ops.ToArray();
+            var ops = this.PreProcessOpCodes(this.Ops).ToList();
             this.ProcessAll(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
             this.AssignJumpBlocks(ops);
@@ -889,7 +943,6 @@ namespace Il2Native.Logic
         protected void AddOpCode(OpCodePart opCode)
         {
             this.Ops.Add(opCode);
-            this.AddAddressIndex(opCode);
         }
 
         /// <summary>
@@ -898,16 +951,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
-            // insert result of exception
-            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
-            if (exceptionHandling != null && exceptionHandling.CatchType != null)
-            {
-                var opCodeNope = new OpCodePart(OpCodesEmit.Ldobj, opCode.AddressStart - 1, opCode.AddressStart - 1);
-                opCodeNope.ReadExceptionFromStack = true;
-                opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
-                this.Stack.Push(opCodeNope);
-            }
-
             var code = opCode.ToCode();
             switch (code)
             {
@@ -923,6 +966,11 @@ namespace Il2Native.Logic
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        break;
+                    }
+
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
                     this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
@@ -1289,8 +1337,15 @@ namespace Il2Native.Logic
         /// </param>
         private void AddAddressIndex(OpCodePart opCode)
         {
-            this.OpsByAddressStart[opCode.AddressStart] = opCode;
-            this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
+            if (!OpsByAddressStart.ContainsKey(opCode.AddressStart))
+            {
+                this.OpsByAddressStart[opCode.AddressStart] = opCode;
+            }
+
+            if (!OpsByAddressEnd.ContainsKey(opCode.AddressEnd))
+            {
+                this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
+            }
         }
 
         /// <summary>

@@ -748,6 +748,30 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
+        public static void WriteLlvmSave(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType typeToSave,
+            int operandIndex,
+            FullyDefinedReference destination)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.ProcessOperator(
+                writer,
+                opCode,
+                "store",
+                typeToSave,
+                options: LlvmWriter.OperandOptions.CastPointersToBytePointer | LlvmWriter.OperandOptions.AdjustIntTypes,
+                operand1: operandIndex,
+                operand2: -1);
+            llvmWriter.WriteOperandResult(writer, opCode, operandIndex);
+            writer.Write(", ");
+            typeToSave.WriteTypePrefix(writer);
+            writer.Write("* ");
+            writer.Write(destination);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">

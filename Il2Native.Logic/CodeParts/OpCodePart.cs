@@ -216,5 +216,13 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public PhiNodes AlternativeValues { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public OpCodePart Next { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public OpCodePart Previous { get; set; }
     }
 }
