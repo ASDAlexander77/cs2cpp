@@ -133,7 +133,7 @@ namespace Il2Native.Logic.Gencode
 
             if (callInit)
             {
-                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
+                opCode.Result = newObjectResult;
                 declaringType.WriteCallInitObjectMethod(llvmWriter, opCode);
                 writer.WriteLine(string.Empty);
             }
