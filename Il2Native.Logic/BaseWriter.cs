@@ -509,7 +509,7 @@ namespace Il2Native.Logic
             }
 
             // fix types
-            var requiredType = this.RequiredType(opCode);
+            var requiredType = this.RequiredIncomingType(opCode);
             if (requiredType != null)
             {
                 if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
@@ -759,10 +759,10 @@ namespace Il2Native.Logic
                 }
 
                 var usedBy = firstOpCode.UsedBy;
-                var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
-                    val.RequiredResultType = requiredType;
+                    val.RequiredOutgoingType = requiredType;
                 }
             }
         }
@@ -1257,7 +1257,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredType(OpCodePart opCodePart, int operandPosition = -1)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1301,13 +1301,13 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType;
+                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
             }
 
             if (opCodePart.Any(Code.Box))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType;
+                return retType.UseAsClass ? retType.ToNormal() : retType;
             }
 
             if (opCodePart.Any(Code.Call, Code.Callvirt))
@@ -1338,6 +1338,37 @@ namespace Il2Native.Logic
 
                     index++;
                 }
+            }
+
+            return retType;
+        }
+
+        protected IType RequiredOutgoingType(OpCodePart opCodePart)
+        {
+            // TODO: need a good review of required types etc
+            IType retType = null;
+            if (opCodePart.Any(Code.Ret))
+            {
+                retType = this.MethodReturnType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.UseAsClass ? retType.ToNormal() : retType;
+            }
+
+            if (opCodePart.Any(Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+            }
+
+            if (opCodePart.Any(Code.Call, Code.Callvirt))
+            {
+                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                return opCodePartMethod.Operand.ReturnType;
             }
 
             return retType;

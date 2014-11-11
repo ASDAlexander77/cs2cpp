@@ -217,7 +217,7 @@ namespace Il2Native.Logic
 
             this.ActualWriteOpCode(writer, opCode);
 
-            this.AdjustResultType(opCode);
+            this.AdjustResultTypeToOutgoingType(opCode);
 
             if (!opCode.Any(Code.Leave, Code.Leave_S))
             {
@@ -3112,8 +3112,8 @@ namespace Il2Native.Logic
 
             writer.WriteLine(string.Empty);
 
-            var firstValueWithRequiredType = opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredResultType != null);
-            var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredResultType : null;
+            var firstValueWithRequiredType = opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredIncomingType != null);
+            var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredIncomingType : null;
 
             var phiType = firstValueRequiredType
                           ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue))
@@ -3466,26 +3466,50 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        public void AdjustResultType(OpCodePart opCode)
+        public void AdjustOperandResultTypeToIncomingType(OpCodePart opCode)
         {
             // cast result if required
-            if (opCode.RequiredResultType != null && opCode.Result != null && opCode.RequiredResultType.TypeNotEquals(opCode.Result.Type)
+            if (opCode.RequiredIncomingType != null && opCode.Result != null && opCode.RequiredIncomingType.TypeNotEquals(opCode.Result.Type)
                 && !(opCode.Result is ConstValue))
             {
                 bool castRequired;
                 bool intAdjustmentRequired;
-                this.DetectConversion(opCode.Result.Type, opCode.RequiredResultType, out castRequired, out intAdjustmentRequired);
+                this.DetectConversion(opCode.Result.Type, opCode.RequiredIncomingType, out castRequired, out intAdjustmentRequired);
 
                 if (castRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.WriteCast(opCode, opCode.Result, opCode.RequiredResultType);
+                    this.WriteCast(opCode, opCode.Result, opCode.RequiredIncomingType);
                 }
 
                 if (intAdjustmentRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredResultType);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredIncomingType);
+                }
+            }
+        }
+
+        public void AdjustResultTypeToOutgoingType(OpCodePart opCode)
+        {
+            // cast result if required
+            if (opCode.RequiredOutgoingType != null && opCode.Result != null && opCode.RequiredOutgoingType.TypeNotEquals(opCode.Result.Type)
+                && !(opCode.Result is ConstValue))
+            {
+                bool castRequired;
+                bool intAdjustmentRequired;
+                this.DetectConversion(opCode.Result.Type, opCode.RequiredOutgoingType, out castRequired, out intAdjustmentRequired);
+
+                if (castRequired)
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.WriteCast(opCode, opCode.Result, opCode.RequiredOutgoingType);
+                }
+
+                if (intAdjustmentRequired)
+                {
+                    this.Output.WriteLine(string.Empty);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredOutgoingType);
                 }
             }
         }
@@ -3896,10 +3920,10 @@ namespace Il2Native.Logic
 
                         if (res1.Type.IsPointer && res2.Type.IsPointer)
                         {
-                            opCode.OpCodeOperands[operand1].RequiredResultType = requiredType;
-                            opCode.OpCodeOperands[operand2].RequiredResultType = requiredType;
-                            AdjustResultType(opCode.OpCodeOperands[operand1]);
-                            AdjustResultType(opCode.OpCodeOperands[operand2]);
+                            opCode.OpCodeOperands[operand1].RequiredIncomingType = requiredType;
+                            opCode.OpCodeOperands[operand2].RequiredIncomingType = requiredType;
+                            this.AdjustOperandResultTypeToIncomingType(opCode.OpCodeOperands[operand1]);
+                            this.AdjustOperandResultTypeToIncomingType(opCode.OpCodeOperands[operand2]);
 
                             effectiveType = requiredType;
                         }

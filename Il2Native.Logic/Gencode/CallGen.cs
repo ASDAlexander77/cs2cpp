@@ -156,8 +156,8 @@
                     llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
                 }
 
-                operand.RequiredResultType = parameter.ParameterType;
-                llvmWriter.AdjustResultType(operand);
+                operand.RequiredIncomingType = parameter.ParameterType;
+                llvmWriter.AdjustOperandResultTypeToIncomingType(operand);
 
                 index++;
             }
