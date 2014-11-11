@@ -3245,13 +3245,13 @@ namespace Il2Native.Logic
             ////    }
             ////}
             ////while (count > 0 && this.requiredTypesForBody.Count != count);
-            foreach (var requiredType in this.requiredTypesForBody.ToArray())
+            foreach (var requiredType in this.RequiredTypesForBody.ToArray())
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
 
             // clear types for next type
-            this.requiredTypesForBody.Clear();
+            this.RequiredTypesForBody.Clear();
         }
 
         /// <summary>

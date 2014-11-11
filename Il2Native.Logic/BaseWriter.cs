@@ -28,7 +28,11 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        protected readonly HashSet<IType> requiredTypesForBody = new HashSet<IType>();
+        protected readonly ISet<IType> RequiredTypesForBody = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
+        protected readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
 
         /// <summary>
         /// </summary>
@@ -148,7 +152,7 @@ namespace Il2Native.Logic
             var item = type.HasElementType ? type.GetElementType() : type;
             if (!item.IsPrimitiveType())
             {
-                this.requiredTypesForBody.Add(item);
+                this.RequiredTypesForBody.Add(item);
             }
         }
 
@@ -172,7 +176,15 @@ namespace Il2Native.Logic
         /// </returns>
         public IType ResolveType(string fullTypeName)
         {
-            return this.ThisType.Module.ResolveType(fullTypeName, null);
+            IType result;
+            if (ResolvedTypes.TryGetValue(fullTypeName, out result))
+            {
+                return result;
+            }
+
+            result = this.ThisType.Module.ResolveType(fullTypeName, null);
+            ResolvedTypes[result.FullName] = result;
+            return result;
         }
 
         /// <summary>
