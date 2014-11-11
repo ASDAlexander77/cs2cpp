@@ -46,7 +46,7 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         public static void DiscoverRequiredTypesAndMethodsInMethodBody(
-            this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations, HashSet<IType> requiredTypes, Queue<IMethod> stackCall)
+            this IMethod method, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> requiredTypes, Queue<IMethod> stackCall)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -60,17 +60,17 @@ namespace Il2Native.Logic
         }
 
         public static void DiscoverMethod(
-            this IMethod method, HashSet<IType> usedTypes, HashSet<IMethod> calledMethods, HashSet<IField> readStaticFields)
+            this IMethod method, ISet<IType> usedTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
 
-            var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>())) ;
-
             reader.UsedTypes = usedTypes;
             reader.CalledMethods = calledMethods;
             reader.UsedStaticFieldsToRead = readStaticFields;
+
+            var genericContext = MetadataGenericContext.DiscoverFrom(method);
+            foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>())) ;
         }
 
         /// <summary>

@@ -57,35 +57,35 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private HashSet<IMethod> usedGenericSpecialiazedMethods;
+        private ISet<IMethod> usedGenericSpecialiazedMethods;
 
         /// <summary>
         /// </summary>
-        private HashSet<IType> usedGenericSpecialiazedTypes;
+        private ISet<IType> usedGenericSpecialiazedTypes;
 
         /// <summary>
         /// </summary>
-        private HashSet<IType> usedStructTypes;
+        private ISet<IType> usedStructTypes;
 
         /// <summary>
         /// </summary>
-        private HashSet<IType> usedTypes;
+        private ISet<IType> usedTypes;
 
         /// <summary>
         /// </summary>
-        private HashSet<IField> usedStaticFieldsToRead;
+        private ISet<IField> usedStaticFieldsToRead;
 
         /// <summary>
         /// </summary>
-        private HashSet<IMethod> calledMethods;
+        private ISet<IMethod> calledMethods;
 
         /// <summary>
         /// </summary>
-        private readonly Dictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
 
         /// <summary>
         /// </summary>
-        private readonly List<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -381,7 +381,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IMethod> UsedGenericSpecialiazedMethods
+        public ISet<IMethod> UsedGenericSpecialiazedMethods
         {
             get
             {
@@ -396,7 +396,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IType> UsedGenericSpecialiazedTypes
+        public ISet<IType> UsedGenericSpecialiazedTypes
         {
             get
             {
@@ -411,7 +411,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IType> UsedStructTypes
+        public ISet<IType> UsedStructTypes
         {
             get
             {
@@ -426,7 +426,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IType> UsedTypes
+        public ISet<IType> UsedTypes
         {
             get
             {
@@ -441,7 +441,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IField> UsedStaticFieldsToRead
+        public ISet<IField> UsedStaticFieldsToRead
         {
             get
             {
@@ -456,7 +456,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public HashSet<IMethod> CalledMethods
+        public ISet<IMethod> CalledMethods
         {
             get
             {
