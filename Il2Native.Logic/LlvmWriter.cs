@@ -432,7 +432,9 @@ namespace Il2Native.Logic
                     var opCodeTypePart = opCode as OpCodeTypePart;
 
                     var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
-                    var loadFromAddress = (!firstOpResultType.UseAsClass && !firstOpResultType.IsByRef) || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef);
+                    var structPointer = firstOpResultType.IsPointer && firstOpResultType.GetElementType().IsStructureType();
+                    var loadFromAddress = (!firstOpResultType.UseAsClass && !structPointer && !firstOpResultType.IsByRef) 
+                        || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef);
                     if (loadFromAddress)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);

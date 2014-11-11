@@ -48,13 +48,17 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteMethodStart(method, null);
 
+            llvmWriter.WriteNewMethodBody(opCode, normalType, true);
+            var newObjectResult = opCode.Result;
+            opCode.Result = null;
+
             if (!isStruct)
             {
                 llvmWriter.WriteLlvmLoad(opCode, normalType, new FullyDefinedReference(llvmWriter.GetArgVarName("value", 0), normalType));
                 writer.WriteLine(string.Empty);
             }
 
-            llvmWriter.WriteBoxObject(opCode, classType);
+            llvmWriter.WriteBoxObject(opCode, classType, newObjectResult, true);
 
             writer.Write("ret ");
             classType.WriteTypePrefix(writer);
@@ -72,7 +76,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteBoxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static void WriteBoxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType, FullyDefinedReference newObjectResult = null, bool callInit = false)
         {
             var writer = llvmWriter.Output;
 
@@ -86,9 +90,17 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
-            declaringType.WriteCallNewObjectMethod(llvmWriter, opCode);
 
-            var newObjectResult = opCode.Result;
+            // call new if null
+            if (newObjectResult == null)
+            {
+                declaringType.WriteCallNewObjectMethod(llvmWriter, opCode);
+                newObjectResult = opCode.Result;
+            }
+            else
+            {
+                opCode.Result = newObjectResult;
+            }
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Copy data");
@@ -118,6 +130,13 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
+
+            if (callInit)
+            {
+                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
+                declaringType.WriteCallInitObjectMethod(llvmWriter, opCode);
+                writer.WriteLine(string.Empty);
+            }
 
             opCode.Result = newObjectResult.ToClassType();
         }
@@ -473,7 +492,7 @@ namespace Il2Native.Logic.Gencode
             opCodePart.Result = castResult;
 
             writer.WriteLine(string.Empty);
-            writer.Write("; end of new obj");
+            writer.WriteLine("; end of new obj");
         }
 
         /// <summary>

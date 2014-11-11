@@ -110,6 +110,10 @@ namespace Il2Native.Logic.Gencode
         {
             var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
             var typeAlign = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
+            if (type.BaseType != null)
+            {
+                typeAlign = Math.Max(typeAlign, LlvmWriter.PointerSize);
+            }
 
             var offset = 0;
             foreach (var size in type.GetTypeSizes())
