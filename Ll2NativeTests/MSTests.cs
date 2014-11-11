@@ -250,6 +250,8 @@ namespace Ll2NativeTests
             // 238 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
             // 239 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
             // 240 - the same as 239
+            // 247 - ArrayList - GetEnumator is not implemented
+            // 250 - FieldsOffset attribute not implemented
 
             // -----------
             // 32, 55, 74 - missing class
@@ -260,7 +262,8 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240
+                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 247,
+                            250
                         });
 
             if (UsingRoslyn)
