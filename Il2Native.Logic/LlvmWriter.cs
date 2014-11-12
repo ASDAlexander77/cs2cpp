@@ -2148,7 +2148,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, FullyDefinedReference source, FullyDefinedReference dest)
         {
-            Debug.Assert(source.Type.TypeEquals(dest.Type));
+            Debug.Assert(source.Type.TypeEquals(dest.Type.HasElementType ? dest.Type.GetElementType() : dest.Type));
 
             this.WriteBitcast(opCode, dest);
             var op1 = opCode.Result;
