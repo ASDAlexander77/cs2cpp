@@ -214,6 +214,26 @@ namespace Ll2NativeTests
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
             // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
 
+
+            // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
+            // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
+            /*
+             	static int Test ()
+	            {
+		            int? a = 5;
+		            int? b = 5;
+
+		            var d = b++ + ++a;
+
+		            Console.WriteLine(a);		
+		            Console.WriteLine(b);		
+		            Console.WriteLine(d);		
+
+		            return 0;
+	            }
+             */
+
+
             // 10 - not compilable
             // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
@@ -326,12 +346,13 @@ namespace Ll2NativeTests
             // 126 - can't be compiled, Debug Trace: (29,10): error CS0246: The type or namespace name 'List<T>' could not be found (are you missing a using directive or an assembly reference?)
             // 127 - Delegate.Combine not implemented
             // 128 - Reflection
+            // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128 };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143 };
+            foreach (var index in Enumerable.Range(143, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }

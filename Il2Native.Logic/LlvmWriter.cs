@@ -732,7 +732,8 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(opCode, this.ThisType, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true, true);
+                        var thisTypeAsClass = this.ThisType.ToClass();
+                        this.WriteLlvmLoad(opCode, thisTypeAsClass, new FullyDefinedReference(this.GetThisName(), thisTypeAsClass), true, true);
                     }
                     else
                     {
