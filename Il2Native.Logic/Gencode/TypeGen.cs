@@ -15,6 +15,7 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
+    using System;
 
     /// <summary>
     /// </summary>
@@ -107,14 +108,20 @@ namespace Il2Native.Logic.Gencode
 
         public static int CalculateSize(this IType type)
         {
-            var fieldSizes = type.GetFieldsSizesRecursive().ToList();
+            var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
             var typeAlign = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
+            if (type.BaseType != null)
+            {
+                typeAlign = Math.Max(typeAlign, LlvmWriter.PointerSize);
+            }
 
             var offset = 0;
             foreach (var size in type.GetTypeSizes())
             {
+                var effectiveSize = Math.Min(typeAlign, size);
+
                 offset += size;
-                while (offset % size != 0)
+                while (offset % effectiveSize != 0)
                 {
                     offset++;
                 }
@@ -199,7 +206,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizes(this IType type)
+        public static IEnumerable<int> GetFieldsSizes(this IType type, bool excludingStructs = false)
         {
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
@@ -209,6 +216,10 @@ namespace Il2Native.Logic.Gencode
                 {
                     // pointer size
                     yield return LlvmWriter.PointerSize;
+                }
+                else if (!excludingStructs && fieldType.IsStructureType())
+                {
+                    yield return fieldType.GetTypeSize();
                 }
                 else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
                 {
@@ -224,17 +235,17 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type)
+        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
         {
             if (type.BaseType != null)
             {
-                foreach (var item in type.BaseType.GetFieldsSizes())
+                foreach (var item in type.BaseType.GetFieldsSizes(excludingStructs))
                 {
                     yield return item;
                 }
             }
 
-            foreach (var item in type.GetFieldsSizes())
+            foreach (var item in type.GetFieldsSizes(excludingStructs))
             {
                 yield return item;
             }
@@ -261,8 +272,13 @@ namespace Il2Native.Logic.Gencode
         }
 
 
-        public static int GetTypeSize(this IType type)
+        public static int GetTypeSize(this IType type, bool asValueType = false)
         {
+            if (asValueType && type.IsPrimitiveType())
+            {
+                return SystemTypeSizes[type.Name];
+            }
+
             // find index
             int size;
             if (!sizeByType.TryGetValue(type.FullName, out size))
@@ -300,18 +316,21 @@ namespace Il2Native.Logic.Gencode
         {
             dynamicCastRequired = false;
 
-            if (opCodePart.HasResult)
+            var other = opCodePart.Result.Type.ToDereferencedType();
+            var constValue = opCodePart.Result as ConstValue;
+            if (constValue != null && constValue.IsNull)
             {
-                var other = opCodePart.Result.Type.ToDereferencedType();
-                if (requiredType.TypeNotEquals(other))
-                {
-                    if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
-                    {
-                        return true;
-                    }
+                return false;
+            }
 
-                    dynamicCastRequired = true;
+            if (requiredType.TypeNotEquals(other))
+            {
+                if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
+                {
+                    return true;
                 }
+
+                dynamicCastRequired = true;
             }
 
             return false;
@@ -392,6 +411,18 @@ namespace Il2Native.Logic.Gencode
             var refChar = '*';
             var effectiveType = type;
 
+            if (type.IsArray)
+            {
+                writer.Write(refChar);
+
+                if (type.IsByRef)
+                {
+                    writer.Write(refChar);
+                }
+
+                return;
+            }
+
             var level = 0;
             do
             {
@@ -468,13 +499,31 @@ namespace Il2Native.Logic.Gencode
                 effectiveType = effectiveType.GetElementType();
             }
 
-            if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+            if (!type.IsArray)
             {
-                writer.Write('%');
-            }
+                if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+                {
+                    writer.Write('%');
+                }
 
-            // write base name
-            effectiveType.WriteTypeName(writer, type.IsPointer);
+                // write base name
+                effectiveType.WriteTypeName(writer, type.IsPointer);
+            }
+            else
+            {
+                writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
+
+                effectiveType = type;
+
+                if (effectiveType.IsByRef)
+                {
+                    effectiveType = effectiveType.GetElementType();
+                }
+
+                effectiveType.GetElementType().WriteTypePrefix(writer);
+
+                writer.Write(" ] }");
+            }
         }
     }
 }

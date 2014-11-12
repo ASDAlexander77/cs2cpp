@@ -55,12 +55,18 @@ namespace Il2Native.Logic
                     continue;
                 }
 
+                if (line.IndexOf("%.r") > 0)
+                {
+                    // to support localalloc
+                    continue;
+                }
+
                 base.WriteLine(line);
             }
 
             foreach (var line in lines)
             {
-                if (string.IsNullOrWhiteSpace(line) || line.Contains("alloca "))
+                if (string.IsNullOrWhiteSpace(line) || (line.Contains("alloca ") && line.IndexOf("%.r") <= 0))
                 {
                     continue;
                 }

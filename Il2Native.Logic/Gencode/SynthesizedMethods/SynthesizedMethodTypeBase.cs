@@ -68,11 +68,11 @@
 
         /// <summary>
         /// </summary>
-        protected IType Type { get; private set; }
+        protected IType Type { get; set; }
 
         /// <summary>
         /// </summary>
-        protected string MethodName { get; private set; }
+        protected string MethodName { get; set; }
     }
 
 }

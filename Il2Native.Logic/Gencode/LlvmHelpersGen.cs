@@ -42,17 +42,18 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="requiredType">
         /// </param>
-        public static void GenerateVirtualCall(
+        public static FullyDefinedReference GenerateVirtualCall(
             this LlvmWriter llvmWriter,
             OpCodePart opCodeMethodInfo,
             IMethod methodInfo,
             IType thisType,
             OpCodePart opCodeFirstOperand,
             BaseWriter.ReturnResult resultOfirstOperand,
-            ref FullyDefinedReference virtualMethodAddressResultNumber,
             ref IType requiredType)
         {
             var writer = llvmWriter.Output;
+
+            FullyDefinedReference virtualMethodAddressResultNumber = null;
 
             if (thisType.IsInterface && resultOfirstOperand.Type.TypeNotEquals(thisType))
             {
@@ -75,7 +76,7 @@ namespace Il2Native.Logic.Gencode
                 requiredType = requiredInterface;
             }
 
-            llvmWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType);
+            llvmWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType ?? thisType);
             writer.Write(" to ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.WriteLine("**");
@@ -125,6 +126,8 @@ namespace Il2Native.Logic.Gencode
                 // set ot for Call op code
                 opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
             }
+
+            return virtualMethodAddressResultNumber;
         }
 
         /// <summary>
@@ -144,44 +147,56 @@ namespace Il2Native.Logic.Gencode
         /// <param name="typesToExclude">
         /// </param>
         public static void LlvmConvert(
-            this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, string toType, bool toAddress, params IType[] typesToExclude)
+            this LlvmWriter llvmWriter, OpCodePart opCode, string realConvert, string intConvert, IType toType, bool toAddress, params IType[] typesToExclude)
         {
             var writer = llvmWriter.Output;
 
             var resultOf = llvmWriter.ResultOf(opCode.OpCodeOperands[0]);
             var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
-            if (!typesToExclude.Any(t => resultOf.Type.TypeEquals(t)) && !areBothPointers)
+            var typeToTest = resultOf.Type.IsEnum ? resultOf.Type.GetEnumUnderlyingType() : resultOf.Type;
+            if (!typesToExclude.Any(typeToTest.TypeEquals) && !areBothPointers)
             {
                 if (resultOf.Type.IsReal())
                 {
-                    llvmWriter.UnaryOper(writer, opCode, realConvert, options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, realConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
-                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, "ptrtoint", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
-                else if (toType.EndsWith("*") || toType.EndsWith("&"))
+                else if (toType.IsPointer || toType.IsByRef)
                 {
-                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else
                 {
-                    llvmWriter.UnaryOper(writer, opCode, intConvert, options: LlvmWriter.OperandOptions.GenerateResult);
+                    var intSize = toType.IntTypeBitSize();
+                    if (intSize > 0)
+                    {
+                        var toIntType = llvmWriter.GetIntTypeByByteSize(intSize / 8);
+                        if (llvmWriter.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], toIntType))
+                        {
+                            opCode.Result = opCode.OpCodeOperands[0].Result;
+                            return;
+                        }
+                    }
+
+                    // if types are equals then
+                    if (opCode.OpCodeOperands[0].Result.Type.TypeEquals(toType))
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        return;
+                    }
+
+                    llvmWriter.UnaryOper(writer, opCode, intConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
 
-                writer.Write(" to {0}", toType);
+                writer.Write(" to ");
+                toType.WriteTypePrefix(writer);
             }
             else
             {
-                if (opCode.OpCodeOperands[0].Result != null)
-                {
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
-                }
-                else
-                {
-                    llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
-                }
+                opCode.Result = opCode.OpCodeOperands[0].Result;
             }
         }
 
@@ -195,60 +210,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void LlvmIntConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string intConvert, string toType)
+        public static void LlvmIntConvert(this LlvmWriter llvmWriter, OpCodePart opCode, string intConvert, IType toType)
         {
             var writer = llvmWriter.Output;
 
             var incomingResult = opCode.Result;
 
-            llvmWriter.PreProcess(writer, opCode);
-            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type);
+            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type, toType);
 
             var returnResult = opCode.Result;
 
             opCode.Result = incomingResult;
 
-            llvmWriter.PostProcess(writer, opCode);
+            llvmWriter.WriteOperandResult(writer, opCode);
 
-            writer.Write(" to {0}", toType);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer);
 
             opCode.Result = returnResult;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="methodBase">
-        /// </param>
-        /// <param name="preProcessedOperandDirectResults">
-        /// </param>
-        public static void PreProcessCallParameters(this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodBase)
-        {
-            var writer = llvmWriter.Output;
-
-            var parameters = methodBase.GetParameters();
-            var index = opCodeMethodInfo.OpCodeOperands.Count() - parameters.Count();
-            foreach (var parameter in parameters)
-            {
-                var operand = opCodeMethodInfo.OpCodeOperands[index];
-
-                var dynamicCastRequired = false;
-                if (parameter.ParameterType.IsClassCastRequired(operand, out dynamicCastRequired))
-                {
-                    writer.WriteLine("; Cast of '{0}' parameter", parameter.Name);
-                    llvmWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
-                }
-
-                if (operand.HasResult && parameter.ParameterType.IsIntValueTypeExtCastRequired(operand.Result.Type))
-                {
-                    llvmWriter.AdjustIntConvertableTypes(writer, operand, parameter.ParameterType);
-                }
-
-                index++;
-            }
         }
 
         /// <summary>
@@ -379,264 +358,108 @@ namespace Il2Native.Logic.Gencode
         public static void WriteCall(
             this LlvmWriter llvmWriter,
             OpCodePart opCodeMethodInfo,
-            IMethod methodBase,
+            IMethod methodInfo,
             bool isVirtual,
             bool hasThis,
             bool isCtor,
             FullyDefinedReference thisResultNumber,
             TryClause tryClause)
         {
-            if (opCodeMethodInfo.HasResult)
-            {
-                return;
-            }
-
-            var methodInfo = methodBase;
-
-            if (methodInfo != null
-                && methodInfo.ReturnType.IsStructureType()
-                && opCodeMethodInfo.UsedBy != null && !opCodeMethodInfo.UsedBy.Any(Code.Ldfld, Code.Ldflda, Code.Call, Code.Callvirt, Code.Box, Code.Unbox, Code.Unbox_Any, Code.Pop)
-                && opCodeMethodInfo.Destination == null)
-            {
-                // You should not allocate it yourself, as result of function should be stored in DestinationName or in Return Value such as "agg.return"
-                // so if Destination is null means that call is not ready and will be ready later when DestinationName is set
-                // note: if method which returns structure used by "Field" when we need to generate temp result of a function in stack
-                return;
-            }
-
             var writer = llvmWriter.Output;
 
-            llvmWriter.CheckIfExternalDeclarationIsRequired(methodBase);
+            llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo);
+            llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.DeclaringType);
 
-            if (opCodeMethodInfo.OpCodeOperands != null)
-            {
-                var index = 0;
-                foreach (var operand in opCodeMethodInfo.OpCodeOperands)
-                {
-                    llvmWriter.PreProcessOperand(writer, opCodeMethodInfo, index);
-                    index++;
-                }
-            }
+            IType thisType;
+            bool hasThisArgument;
+            OpCodePart opCodeFirstOperand;
+            BaseWriter.ReturnResult resultOfFirstOperand;
+            bool isIndirectMethodCall;
+            IType ownerOfExplicitInterface;
+            IType requiredType;
+            methodInfo.WriteFunctionCallProlog(opCodeMethodInfo, isVirtual, hasThis, llvmWriter, out thisType, out hasThisArgument, out opCodeFirstOperand, out resultOfFirstOperand, out isIndirectMethodCall, out ownerOfExplicitInterface, out requiredType);
 
-            var thisType = methodBase.DeclaringType;
-
-            llvmWriter.CheckIfExternalDeclarationIsRequired(thisType);
-
-            var parametersCount = methodBase.GetParameters().Count();
-
-            thisType.UseAsClass = true;
-
-            var hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length - parametersCount > 0;
-            var opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
-                                         ? opCodeMethodInfo.OpCodeOperands[0]
-                                         : null;
-            var resultOfFirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
-
-            FullyDefinedReference methodAddressResultNumber = null;
-            var isIndirectMethodCall = isVirtual
-                                       && (methodBase.IsAbstract || methodBase.IsVirtual
-                                           || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
-
-            var ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.Type)
-                                               ? resultOfFirstOperand.Type
-                                               : null;
-
-            var rollbackType = false;
-            var requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;
-            if (requiredType != null)
-            {
-                thisType = requiredType;
-                rollbackType = true;
-            }
-
-            if (isIndirectMethodCall && methodBase.DeclaringType.TypeNotEquals(thisType) && methodBase.DeclaringType.IsInterface && !thisType.IsInterface
-                && thisType.HasExplicitInterfaceMethodOverride(methodBase))
-            {
-                // this is explicit call of interface
-                isIndirectMethodCall = false;
-            }
-            else if (rollbackType)
-            {
-                thisType = methodBase.DeclaringType;
-            }
-
-            // check if you need to cast this parameter
             if (hasThisArgument)
             {
-                var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
-                var isPrimitivePointer = resultOfFirstOperand.Type.IsPointer && resultOfFirstOperand.Type.GetElementType().IsPrimitiveTypeOrEnum();
-
-                bool dynamicCastRequired = false;
-                if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
-                {
-                    writer.WriteLine("; Cast of 'This' parameter");
-                    llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
-                    writer.WriteLine(string.Empty);
-                }
-
-                if (dynamicCastRequired)
-                {
-                    writer.WriteLine("; Dynamic Cast of 'This' parameter");
-                    llvmWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
-                    writer.WriteLine(string.Empty);
-                }
-
-                if (isPrimitive || isPrimitivePointer)
-                {
-                    writer.WriteLine("; Box Primitive type for 'This' parameter");
-
-                    var primitiveType = !isPrimitivePointer ? resultOfFirstOperand.Type : resultOfFirstOperand.Type.GetElementType();
-
-                    if (isPrimitivePointer)
-                    {
-                        var firstOperandResult = opCodeFirstOperand.Result;
-                        opCodeFirstOperand.Result = null;
-                        llvmWriter.WriteLlvmLoad(opCodeFirstOperand, firstOperandResult.Type.ToDereferencedType(), firstOperandResult);
-                    }
-
-                    // convert value to object
-                    opCodeMethodInfo.Result = null;
-                    primitiveType.ToClass().WriteCallBoxObjectMethod(llvmWriter, opCodeMethodInfo);
-                    opCodeFirstOperand.Result = opCodeMethodInfo.Result;
-                    writer.WriteLine(string.Empty);
-
-                    if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
-                    {
-                        writer.WriteLine("; Cast of 'Boxed' 'This' parameter");
-                        llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
-                        writer.WriteLine(string.Empty);
-                    }
-                }
+                opCodeMethodInfo.WriteFunctionCallPrepareThisExpression(thisType, opCodeFirstOperand, resultOfFirstOperand, llvmWriter);
             }
 
+            FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
             {
-                llvmWriter.GenerateVirtualCall(
-                    opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref methodAddressResultNumber, ref requiredType);
+                methodAddressResultNumber = llvmWriter.GenerateVirtualCall(opCodeMethodInfo, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
             }
 
-            // if this is external method reference we need to load reference first
-            if (methodInfo.IsUnmanagedMethodReference)
+            methodInfo.WriteFunctionCallLoadFunctionAddress(opCodeMethodInfo, thisType, ref methodAddressResultNumber, llvmWriter);
+
+            methodInfo.PreProcessCallParameters(opCodeMethodInfo, llvmWriter);
+
+            if (llvmWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
-                //  %4 = load i32 ()** @__glewCreateProgram, align 4
-                // load pointer
-                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
-                writer.Write("load ");
-                llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-                writer.Write("* ");
-                llvmWriter.WriteMethodDefinitionName(writer, methodInfo);
-                writer.Write(", align {0}", LlvmWriter.PointerSize);
-                writer.WriteLine(string.Empty);
-                methodAddressResultNumber = opCodeMethodInfo.Result;
+                return;
             }
 
-            // check if you need to cast parameter
-            if (opCodeMethodInfo.OpCodeOperands != null)
-            {
-                llvmWriter.PreProcessCallParameters(opCodeMethodInfo, methodBase);
-            }
+            var returnFullyDefinedReference = methodInfo.WriteFunctionCallResult(opCodeMethodInfo, llvmWriter);
 
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && opCodeMethodInfo.Destination == null)
-            {
-                llvmWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
-            }
+            writer.WriteFunctionCall(tryClause);
 
-            var returnFullyDefinedReference = opCodeMethodInfo.Result != null ? opCodeMethodInfo.Result : null;
+            methodInfo.WriteFunctionCallAttributes(writer);
 
-            // allocate space for structure if return type is structure
-            if (methodInfo != null && methodInfo.ReturnType.IsStructureType())
-            {
-                if (opCodeMethodInfo.Destination == null)
-                {
-                    // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
-                    llvmWriter.WriteAlloca(methodInfo.ReturnType);
-                    writer.WriteLine(string.Empty);
-                }
-                else
-                {
-                    Debug.Assert(opCodeMethodInfo.Destination.Type.TypeEquals(methodInfo.ReturnType));
-                    returnFullyDefinedReference = opCodeMethodInfo.Destination.ToType(methodInfo.ReturnType);
-                }
-            }
-
-            if (tryClause != null)
-            {
-                writer.Write("invoke ");
-            }
-            else
-            {
-                writer.Write("call ");
-            }
-
-            if (methodInfo.DllImportData != null && methodInfo.DllImportData.CallingConvention == System.Runtime.InteropServices.CallingConvention.StdCall)
-            {
-                writer.Write("x86_stdcallcc ");
-            }
-
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
-            {
-                methodInfo.ReturnType.WriteTypePrefix(writer, false);
-
-                llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
-            }
-            else
-            {
-                // this is constructor
-                writer.Write("void");
-            }
+            methodInfo.WriteFunctionCallReturnType(llvmWriter);
 
             writer.Write(' ');
 
-            if (isIndirectMethodCall || methodInfo.IsUnmanagedMethodReference)
+            // extra support
+            if (methodInfo.IsExternalLibraryMethod())
             {
-                llvmWriter.WriteResult(methodAddressResultNumber);
-            }
-            else
-            {
-                if (methodBase.IsExternalLibraryMethod())
-                {
-                    writer.Write("(...)* ");
-                }
-
-                llvmWriter.WriteMethodDefinitionName(writer, methodBase, ownerOfExplicitInterface);
+                writer.Write("(...)* ");
             }
 
-            llvmWriter.ActualWrite(
-                writer,
+            methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, llvmWriter);
+
+            methodInfo.GetParameters().WriteFunctionCallArguments(
                 opCodeMethodInfo.OpCodeOperands,
-                methodBase.GetParameters(),
                 isVirtual,
                 hasThis,
                 isCtor,
                 thisResultNumber,
                 thisType,
                 returnFullyDefinedReference,
-                methodInfo != null ? methodInfo.ReturnType : null);
+                methodInfo != null ? methodInfo.ReturnType : null,
+                llvmWriter);
 
-            if (tryClause != null)
+            tryClause.WriteFunctionCallUnwind(opCodeMethodInfo, llvmWriter);
+        }
+
+        public static bool ProcessPluggableMethodCall(this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo)
+        {
+            // TODO: it seems, you can preprocess MSIL code and replace all functions with MSIL code blocks to stop writing the code manually.
+            // for example call System.Activator.CreateInstance<X>() can be replace with "Code.NewObj x"
+            // the same interlocked functions and the same for TypeOf operators
+            if (methodInfo.IsTypeOfCallFunction())
             {
-                var nextAddress = llvmWriter.GetBlockJumpAddress();
-
-                var label = string.Concat("next", nextAddress);
-
-                writer.WriteLine(string.Empty);
-                writer.Indent++;
-                writer.WriteLine(
-                    "to label %.{0} unwind label %.catch{1}", label, tryClause.Catches.First().Offset);
-                writer.Indent--;
-
-                writer.Indent--;
-                writer.WriteLine(
-                    ".{0}:", label);
-                writer.Indent++;
-
-                SetCustomLabel(opCodeMethodInfo, label);
+                opCodeMethodInfo.WriteTypeOfFunction(llvmWriter);
+                return true;
             }
+
+            if (methodInfo.IsInterlockedFunction())
+            {
+                methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
+            if (methodInfo.IsCreateInstanceFunction())
+            {
+                methodInfo.WriteCreateInstanceFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
+            return false;
         }
 
         public static void SetCustomLabel(OpCodePart opCodePart, string label)
         {
-            if (opCodePart.AddressStart == 0)
+            if (opCodePart.AddressStart == 0 && opCodePart.UsedBy != null)
             {
                 opCodePart.UsedBy.OpCode.CreatedLabel = label;
             }
@@ -660,13 +483,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference fromResult, IType toType, bool appendReference = false)
+        public static bool WriteCast(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference fromResult, IType toType, bool throwExceptionIfNull = false)
         {
             var writer = llvmWriter.Output;
 
+            var bareType = !fromResult.Type.IsArray ? fromResult.Type.ToBareType() : llvmWriter.ResolveType("System.Array");
             if (toType.IsInterface)
             {
-                var bareType = fromResult.Type.ToBareType();
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
                     opCode.Result = fromResult;
@@ -674,22 +497,24 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true);
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
                 }
             }
             else
             {
-                llvmWriter.WriteSetResultNumber(opCode, toType);
-                writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(writer, true);
-                writer.Write(' ');
-                llvmWriter.WriteResult(fromResult);
-                writer.Write(" to ");
-                toType.WriteTypePrefix(writer, true);
-                if (appendReference)
+                if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType) || fromResult is ConstValue)
                 {
-                    // result should be array
-                    writer.Write('*');
+                    llvmWriter.WriteSetResultNumber(opCode, toType);
+                    writer.Write("bitcast ");
+                    fromResult.Type.WriteTypePrefix(writer, true);
+                    writer.Write(' ');
+                    llvmWriter.WriteResult(fromResult);
+                    writer.Write(" to ");
+                    toType.WriteTypePrefix(writer, true);
+                }
+                else
+                {
+                    llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
                 }
             }
 
@@ -725,6 +550,7 @@ namespace Il2Native.Logic.Gencode
             bool appendReference = false,
             bool doNotConvert = false)
         {
+            // TODO: remove this one. use anather one
             var writer = llvmWriter.Output;
 
             if (!fromType.IsInterface && toType.IsInterface)
@@ -782,6 +608,42 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
+        /// <param name="source">
+        /// </param>
+        /// <param name="toType">
+        /// </param>
+        public static void WritePtrToInt(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.WriteSetResultNumber(opCode, toType);
+            writer.Write("ptrtoint ");
+            source.Type.WriteTypePrefix(writer, true);
+            writer.Write(" ");
+            llvmWriter.WriteResult(source);
+            writer.Write(" to ");
+            toType.WriteTypePrefix(writer);
+        }
+
+        public static IType GetIntTypeByByteSize(this LlvmWriter llvmWriter, int byteSize)
+        {
+            IType toType = null;
+            switch (byteSize)
+            {
+                case 1: toType = llvmWriter.ResolveType("System.Byte"); break;
+                case 2: toType = llvmWriter.ResolveType("System.Int16"); break;
+                case 4: toType = llvmWriter.ResolveType("System.Int32"); break;
+                case 8: toType = llvmWriter.ResolveType("System.Int64"); break;
+            }
+            return toType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         /// <param name="typeToLoad">
         /// </param>
         /// <param name="source">
@@ -802,24 +664,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
-        {
-            llvmWriter.WriteLlvmLoad(opCode, source.Type, source, appendReference, structAsRef);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="typeToLoad">
         /// </param>
         /// <param name="source">
@@ -829,21 +673,18 @@ namespace Il2Native.Logic.Gencode
         /// <param name="structAsRef">
         /// </param>
         public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
+            this LlvmWriter llvmWriter, OpCodePart opCode, IType typeToLoad, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false, bool indirect = false)
         {
             // TODO: improve it, by checking if Source is Reference or Pointer
 
             var writer = llvmWriter.Output;
 
-            Debug.Assert(!typeToLoad.IsStructureType() || typeToLoad.IsStructureType() && opCode.Destination != null);
+            var isStruct =  typeToLoad.ToNormal().IsStructureType();
 
-            if (!typeToLoad.IsStructureType() || structAsRef || opCode.Destination == null)
+            Debug.Assert(structAsRef || !isStruct || typeToLoad.IsByRef || isStruct && !typeToLoad.IsByRef && opCode.HasResult);
+
+            if (!isStruct || typeToLoad.IsByRef || structAsRef || !opCode.HasResult || indirect)
             {
-                if (opCode.HasResult)
-                {
-                    return;
-                }
-
                 ////Debug.Assert(source.Type.IsPointer);
                 var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
 
@@ -858,8 +699,7 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result;
                 }
 
-                if (dereferencedType == null && !source.Type.IsPointer && !source.Type.IsByRef && typeToLoad.IntTypeBitSize() != source.Type.IntTypeBitSize()
-                    && typeToLoad.IntTypeBitSize() > 0)
+                if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
                 {
                     // check if you need cast here
                     llvmWriter.WriteIntToPtr(opCode, source, typeToLoad);
@@ -886,8 +726,32 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, source, opCode.Destination);
+                llvmWriter.WriteCopyStruct(writer, opCode, typeToLoad, source, opCode.Result);
             }
+        }
+
+        public static void WriteLlvmSave(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType typeToSave,
+            int operandIndex,
+            FullyDefinedReference destination)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.ProcessOperator(
+                writer,
+                opCode,
+                "store",
+                typeToSave,
+                options: LlvmWriter.OperandOptions.CastPointersToBytePointer | LlvmWriter.OperandOptions.AdjustIntTypes,
+                operand1: operandIndex,
+                operand2: -1);
+            llvmWriter.WriteOperandResult(writer, opCode, operandIndex);
+            writer.Write(", ");
+            typeToSave.WriteTypePrefix(writer);
+            writer.Write("* ");
+            writer.Write(destination);
         }
 
         /// <summary>
@@ -950,7 +814,11 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", op1, type.GetTypeSize(), LlvmWriter.PointerSize /*Align*/);
+                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
+                op1,
+                type.GetTypeSize(type.IsPrimitiveType() && !type.UseAsClass),
+                LlvmWriter.PointerSize
+                /*Align*/);
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
+    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -54,6 +55,8 @@ namespace Il2Native.Logic
         /// </summary>
         void WriteAfterMethods();
 
+        /// <summary>
+        /// </summary>
         void WritePostDeclarations(IType type);
 
         /// <summary>
@@ -153,7 +156,7 @@ namespace Il2Native.Logic
         /// <param name="assemblyName">
         /// </param>
         /// ///
-        void WriteStart(string moduleName, string assemblyName);
+        void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference);
 
         /// <summary>
         /// </summary>
@@ -178,11 +181,5 @@ namespace Il2Native.Logic
         /// <param name="type">
         /// </param>
         bool IsProcessed(IType type);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        bool IsPostDeclarationsProcessed(IType type);
     }
 }

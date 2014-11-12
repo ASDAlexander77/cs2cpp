@@ -45,8 +45,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        public static void DiscoverRequiredTypesAndMethods(
-            this IMethod method, HashSet<IType> genericTypeSpecializations, HashSet<IMethod> genericMethodSpecializations, HashSet<IType> requiredTypes)
+        public static void DiscoverRequiredTypesAndMethodsInMethodBody(
+            this IMethod method, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> requiredTypes, Queue<IMethod> stackCall)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -55,48 +55,22 @@ namespace Il2Native.Logic
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
 
-            var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext))
-            {
-                // dummy body we just need to read body of a method
-            }
+            var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
+            foreach (var op in reader.OpCodes(method, genericContext, stackCall)) ;
         }
 
         public static void DiscoverMethod(
-            this IMethod method, HashSet<IType> usedTypes, HashSet<IMethod> calledMethods, HashSet<IField> readStaticFields)
+            this IMethod method, ISet<IType> usedTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
 
+            reader.UsedTypes = usedTypes;
+            reader.CalledMethods = calledMethods;
+            reader.UsedStaticFieldsToRead = readStaticFields;
+
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
-            foreach (var op in reader.OpCodes(method, genericContext))
-            {
-                // dummy body we just need to read body of a method
-            }
-
-            if (usedTypes != null)
-            {
-                foreach (var usedType in reader.UsedTypes)
-                {
-                    usedTypes.Add(usedType);
-                }
-            }
-
-            if (calledMethods != null)
-            {
-                foreach (var calledMethod in reader.CalledMethods)
-                {
-                    calledMethods.Add(calledMethod);
-                }
-            }
-
-            if (readStaticFields != null)
-            {
-                foreach (var usedStaticFieldToRead in reader.UsedStaticFieldsToRead)
-                {
-                    readStaticFields.Add(usedStaticFieldToRead);
-                }
-            }
+            foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>())) ;
         }
 
         /// <summary>
@@ -271,10 +245,10 @@ namespace Il2Native.Logic
         public static int IntTypeBitSize(this IType thisType, bool isPointer = false)
         {
             var thisTypeString = thisType.TypeToCType(isPointer);
-            return GetIntSize(thisTypeString);
+            return GetIntSizeBits(thisTypeString);
         }
 
-        public static bool IsSignType(this IType thisType)
+        public static bool IsSignedType(this IType thisType)
         {
             switch (thisType.FullName)
             {
@@ -288,6 +262,43 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        public static bool IsUnsignedType(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.Byte":
+                case "System.Char":
+                case "System.UInt16":
+                case "System.UInt32":
+                case "System.UInt64":
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsUnsigned(this OpCodePart opCode)
+        {
+            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
+            {
+                return false;
+            }
+
+            var result1 = opCode.OpCodeOperands[0].Result;
+            var result2 = opCode.OpCodeOperands[1].Result;
+            if (result2 is ConstValue)
+            {
+                return result1.Type.IsUnsignedType();
+            }
+
+            if (result1 is ConstValue)
+            {
+                return result2.Type.IsUnsignedType();
+            }
+
+            return result1.Type.IsUnsignedType() && result2.Type.IsUnsignedType();
         }
 
         /// <summary>
@@ -401,8 +412,8 @@ namespace Il2Native.Logic
             var thisTypeString = thisType.TypeToCType();
             var typeString = type.TypeToCType();
 
-            var thisTypeSize = GetIntSize(thisTypeString);
-            var typeSize = GetIntSize(typeString);
+            var thisTypeSize = GetIntSizeBits(thisTypeString);
+            var typeSize = GetIntSizeBits(typeString);
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -417,8 +428,8 @@ namespace Il2Native.Logic
             var thisTypeString = thisType.TypeToCType();
             var typeString = type.TypeToCType();
 
-            var thisTypeSize = GetIntSize(thisTypeString);
-            var typeSize = GetIntSize(typeString);
+            var thisTypeSize = GetIntSizeBits(thisTypeString);
+            var typeSize = GetIntSizeBits(typeString);
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -437,6 +448,10 @@ namespace Il2Native.Logic
         public static bool IsJumpForward(this OpCodePart opCodePart)
         {
             var opCode = opCodePart as OpCodeInt32Part;
+            if (opCode == null)
+            {
+                return false;
+            }
 
             if (opCode.OpCode.OperandType == OperandType.ShortInlineBrTarget && (opCode.Operand & 0x80) == 0x80)
             {
@@ -525,7 +540,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingOverride(this IMethod method, IMethod overridingMethod)
         {
-            if (method.Name == overridingMethod.Name)
+            if (method.MetadataName == overridingMethod.MetadataName)
             {
                 return method.IsMatchingParamsAndReturnType(overridingMethod);
             }
@@ -906,7 +921,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static int GetIntSize(string thisTypeString)
+        public static int GetIntSizeBits(this string thisTypeString)
         {
             if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
             {
@@ -991,7 +1006,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            return genType.IsGenericParameter;
+            return genType.IsGenericParameter || type.IsGenericParameter;
         }
 
         /// <summary>
@@ -1015,34 +1030,35 @@ namespace Il2Native.Logic
             var count = params1.Length;
             for (var index = 0; index < count; index++)
             {
-                if (!params1[index].ParameterType.Equals(params2[index].ParameterType))
+                var p1 = params1[index].ParameterType;
+                var p2 = params2[index].ParameterType;
+                if (!CompareTypeParam(p1, p2))
                 {
                     return false;
                 }
             }
 
-            if (!method.ReturnType.Equals(overridingMethod.ReturnType))
+            return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+        }
+
+        private static bool CompareTypeParam(IType p1, IType p2)
+        {
+            if (p1.IsGenericParameter && p2.IsGenericParameter && !p1.Equals(p2))
+            {
+                return false;
+            }
+
+            if (p1.IsGenericParameter || p2.IsGenericParameter)
+            {
+                return true;
+            }
+
+            if (!p1.Equals(p2))
             {
                 return false;
             }
 
             return true;
-        }
-
-        public static bool IsGenericDefinition(this IType type)
-        {
-            if (type.IsGenericTypeDefinition)
-            {
-                return true;
-            }
-
-            var current = type;
-            while (current != null && current.IsNested)
-            {
-                current = current.DeclaringType;
-            }
-
-            return current != null && current.IsGenericTypeDefinition;
         }
     }
 }

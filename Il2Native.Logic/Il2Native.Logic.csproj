@@ -62,6 +62,9 @@
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
     <Compile Include="CodeParts\PhiNodes.cs" />
     <Compile Include="CodeParts\UsedByInfo.cs" />
+    <Compile Include="Gencode\ActivatorGen.cs" />
+    <Compile Include="Gencode\CallGen.cs" />
+    <Compile Include="Gencode\InterlockedGen.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
@@ -69,11 +72,15 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
+    <Compile Include="Gencode\TypeInfrastructure.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />

@@ -28,7 +28,11 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        protected readonly HashSet<IType> requiredTypesForBody = new HashSet<IType>();
+        protected readonly ISet<IType> RequiredTypesForBody = new HashSet<IType>();
+
+        /// <summary>
+        /// </summary>
+        protected readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
 
         /// <summary>
         /// </summary>
@@ -148,7 +152,7 @@ namespace Il2Native.Logic
             var item = type.HasElementType ? type.GetElementType() : type;
             if (!item.IsPrimitiveType())
             {
-                this.requiredTypesForBody.Add(item);
+                this.RequiredTypesForBody.Add(item);
             }
         }
 
@@ -172,7 +176,15 @@ namespace Il2Native.Logic
         /// </returns>
         public IType ResolveType(string fullTypeName)
         {
-            return this.ThisType.Module.ResolveType(fullTypeName, null);
+            IType result;
+            if (ResolvedTypes.TryGetValue(fullTypeName, out result))
+            {
+                return result;
+            }
+
+            result = this.ThisType.Module.ResolveType(fullTypeName, null);
+            ResolvedTypes[result.FullName] = result;
+            return result;
         }
 
         /// <summary>
@@ -198,6 +210,11 @@ namespace Il2Native.Logic
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
                 case Code.Newobj:
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        return new ReturnResult(opCode.ReadExceptionFromStackType);
+                    }
+
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
                 case Code.Ldfld:
@@ -223,15 +240,8 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-
                     var op1 = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (!op1.IsConst)
-                    {
-                        return op1;
-                    }
-
-                    return this.ResultOf(opCode.OpCodeOperands[1]);
-
+                    return !op1.IsConst ? op1 : this.ResultOf(opCode.OpCodeOperands[1]);
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ceq:
@@ -393,11 +403,10 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_M1:
                 case Code.Ldc_I4:
                 case Code.Ldc_I4_S:
-                    return
-                        new ReturnResult(
-                                opCode.UseAsNull
-                                    ? this.ResolveType("System.Void").ToPointerType()
-                                    : this.ResolveType("System.Int32")) { IsConst = true };
+                    return new ReturnResult(opCode.UseAsNull ? this.ResolveType("System.Void").ToPointerType() : this.ResolveType("System.Int32"))
+                               {
+                                   IsConst = true
+                               };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
                 case Code.Ldc_R4:
@@ -434,23 +443,22 @@ namespace Il2Native.Logic
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     var fieldType = opCodeFieldInfoPart.Operand.FieldType;
                     return new ReturnResult(fieldType.ToPointerType());
+                case Code.Nop:
+                    return null;
                 case Code.Ldobj:
                     var opCodeTypePart = opCode as OpCodeTypePart;
-                    return new ReturnResult(opCode.ReadExceptionFromStack ? opCode.ReadExceptionFromStackType : opCodeTypePart.Operand);
+                    return new ReturnResult(opCodeTypePart.Operand);
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
                     var res = this.ResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
-                        result = new ReturnResult(res.Type);
-                        result.Type.UseAsClass = true;
+                        result = new ReturnResult(res.Type.ToClass());
                         return result;
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
@@ -461,10 +469,8 @@ namespace Il2Native.Logic
                     {
                         return new ReturnResult(res.Type);
                     }
-                    else
-                    {
-                        return null;
-                    }
+
+                    return null;
             }
 
             return null;
@@ -503,24 +509,13 @@ namespace Il2Native.Logic
             }
 
             // fix types
-            var requiredType = this.RequiredType(opCode);
+            var requiredType = this.RequiredIncomingType(opCode);
             if (requiredType != null)
             {
                 if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
                     && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
-                }
-            }
-
-            if (opCode.Any(Code.Call, Code.Callvirt))
-            {
-                // todo: finish it, check required type of parameter
-                foreach (var usedOpCode in opCode.OpCodeOperands
-                                                 .Where(usedOpCode => usedOpCode.Any(Code.Conv_U)
-                                                                      && usedOpCode.OpCodeOperands[0].Any(Code.Ldc_I4_0)))
-                {
-                    usedOpCode.OpCodeOperands[0].UseAsNull = true;
                 }
             }
         }
@@ -604,8 +599,13 @@ namespace Il2Native.Logic
 
                     if (this.OpsByAddressEnd.TryGetValue(catchOrFinally.Offset + catchOrFinally.Length, out opCodePart))
                     {
-                        Debug.Assert(opCodePart.CatchOrFinallyEnd == null);
-                        opCodePart.CatchOrFinallyEnd = catchOrFinally;
+                        //Debug.Assert(opCodePart.CatchOrFinallyEnds == null);
+                        if (opCodePart.CatchOrFinallyEnds == null)
+                        {
+                            opCodePart.CatchOrFinallyEnds = new List<CatchOfFinallyClause>();
+                        }
+
+                        opCodePart.CatchOrFinallyEnds.Add(catchOrFinally);
                     }
                 }
             }
@@ -615,7 +615,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCodes">
         /// </param>
-        protected void AssignJumpBlocks(OpCodePart[] opCodes)
+        protected void AssignJumpBlocks(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -660,10 +660,69 @@ namespace Il2Native.Logic
             }
         }
 
-        protected void ProcessAll(OpCodePart[] opCodes)
+        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes)
+        {
+            OpCodePart last = null; 
+            foreach (var opCodePart in opCodes)
+            {
+                foreach (var opCodePartBefore in this.InsertBeforeOpCode(opCodePart))
+                {
+                    last = BuildChain(last, opCodePartBefore);
+                    yield return opCodePartBefore;
+                }
+
+                last = BuildChain(last, opCodePart);
+                yield return opCodePart;
+
+                foreach (var opCodePartAfter in this.InsertAfterOpCode(opCodePart))
+                {
+                    last = BuildChain(last, opCodePartAfter);
+                    yield return opCodePartAfter;
+                }
+            }
+        }
+
+        private static OpCodePart BuildChain(OpCodePart last, OpCodePart opCodePartBefore)
+        {
+            if (last != null)
+            {
+                last.Next = opCodePartBefore;
+                opCodePartBefore.Previous = last;
+            }
+
+            last = opCodePartBefore;
+            return last;
+        }
+
+        protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
+        {
+            // insert result of exception
+            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
+            if (exceptionHandling == null || exceptionHandling.CatchType == null)
+            {
+                yield break;
+            }
+
+            var opCodeNope = new OpCodePart(OpCodesEmit.Newobj, opCode.AddressStart, opCode.AddressStart);
+            opCodeNope.ReadExceptionFromStack = true;
+            opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
+            yield return opCodeNope;
+        }
+
+        protected virtual IEnumerable<OpCodePart> InsertAfterOpCode(OpCodePart opCode)
+        {
+            yield break;
+        }
+
+        protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
         {
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
+
+            foreach (var opCodePart in opCodes)
+            {
+                this.AddAddressIndex(opCodePart);
+            }
 
             foreach (var opCodePart in opCodes)
             {
@@ -671,7 +730,7 @@ namespace Il2Native.Logic
             }
         }
 
-        protected void CalculateRequiredTypesForAlternativeValues(OpCodePart[] opCodes)
+        protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -681,11 +740,18 @@ namespace Il2Native.Logic
                 }
 
                 // detect required types in alternative values
-                var usedBy = opCodePart.AlternativeValues.Values.First(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop)).UsedBy;
-                var requiredType = RequiredType(usedBy.OpCode, usedBy.OperandPosition);
+                var firstOpCode = opCodePart.AlternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                if (firstOpCode == null)
+                {
+                    // TODO: find out why it happens here (test-154.cs)
+                    continue;
+                }
+
+                var usedBy = firstOpCode.UsedBy;
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
-                    val.RequiredResultType = requiredType;
+                    val.RequiredOutgoingType = requiredType;
                 }
             }
         }
@@ -865,9 +931,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        protected OpCodePart[] PrepareWritingMethodBody()
+        protected IEnumerable<OpCodePart> PrepareWritingMethodBody()
         {
-            var ops = this.Ops.ToArray();
+            var ops = this.PreProcessOpCodes(this.Ops).ToList();
             this.ProcessAll(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
             this.AssignJumpBlocks(ops);
@@ -878,7 +944,6 @@ namespace Il2Native.Logic
         protected void AddOpCode(OpCodePart opCode)
         {
             this.Ops.Add(opCode);
-            this.AddAddressIndex(opCode);
         }
 
         /// <summary>
@@ -887,16 +952,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
-            // insert result of exception
-            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
-            if (exceptionHandling != null && exceptionHandling.CatchType != null)
-            {
-                var opCodeNope = new OpCodePart(OpCodesEmit.Ldobj, opCode.AddressStart - 1, opCode.AddressStart - 1);
-                opCodeNope.ReadExceptionFromStack = true;
-                opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
-                this.Stack.Push(opCodeNope);
-            }
-
             var code = opCode.ToCode();
             switch (code)
             {
@@ -912,6 +967,11 @@ namespace Il2Native.Logic
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
+                    if (opCode.ReadExceptionFromStack)
+                    {
+                        break;
+                    }
+
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
                     this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
@@ -1072,6 +1132,7 @@ namespace Il2Native.Logic
                 case Code.Starg_S:
                 case Code.Localloc:
                 case Code.Pop:
+                case Code.Ldvirtftn:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:
@@ -1140,16 +1201,15 @@ namespace Il2Native.Logic
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
 
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
-
-            this.NoBody = methodBody == null;
-            if (methodBody != null)
+            this.NoBody = !methodBody.HasBody;
+            if (!this.NoBody)
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
 
                 AdjustLocalVariableTypes();
 
 #if DEBUG
-                Debug.Assert(!LocalInfo.Any(li => li.LocalType.IsGenericParameter));
+                Debug.Assert(genericContext == null || !LocalInfo.Any(li => li.LocalType.IsGenericParameter));
 #endif
 
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];
@@ -1164,7 +1224,9 @@ namespace Il2Native.Logic
             // replace pinned IntPtr& with Int
             foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
             {
-                localInfo.LocalType = this.ResolveType("System.Void").ToPointerType();
+                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
+                                          ? this.ResolveType("System.Void").ToPointerType()
+                                          : localInfo.LocalType.ToPointerType();
             }
         }
 
@@ -1184,21 +1246,19 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredType(OpCodePart opCodePart, int operandPosition = -1)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
             if (opCodePart.Any(Code.Ret))
             {
                 retType = this.MethodReturnType;
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
             {
                 retType = opCodePart.GetLocalType(this);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
@@ -1208,59 +1268,96 @@ namespace Il2Native.Logic
                 if (this.HasMethodThis && index == 0)
                 {
                     retType = this.ThisType;
-                    ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                     return retType;
                 }
 
                 retType = this.GetArgType(index);
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stfld, Code.Stsfld))
             {
                 retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
-                ////opCodePart.OpCodeOperands[x].RequiredResultType = retType;
                 return retType;
             }
 
             if (opCodePart.Any(Code.Stobj))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                retType = ((OpCodeTypePart)opCodePart).Operand;
                 return retType;
             }
 
-            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any, Code.Box))
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToClass();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
-                return retType;
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
             }
 
             if (opCodePart.Any(Code.Box))
             {
-                retType = ((OpCodeTypePart)opCodePart).Operand.ToNormal();
-                ////opCodePart.OpCodeOperands[0].RequiredResultType = retType;
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.UseAsClass ? retType.ToNormal() : retType;
+            }
+
+            if (opCodePart.Any(Code.Call, Code.Callvirt))
+            {
+                var effectiveoperandPosition = operandPosition;
+                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                {
+                    if (operandPosition == 0)
+                    {
+                        return opCodePartMethod.Operand.DeclaringType;
+                    }
+                    else
+                    {
+                        effectiveoperandPosition--;
+                    }
+                }
+
+                var parameters = opCodePartMethod.Operand.GetParameters();
+                var index = 0;
+                foreach (var parameter in parameters)
+                {
+                    if (index == effectiveoperandPosition)
+                    {
+                        retType = parameter.ParameterType;
+                        break;
+                    }
+
+                    index++;
+                }
+            }
+
+            return retType;
+        }
+
+        protected IType RequiredOutgoingType(OpCodePart opCodePart)
+        {
+            // TODO: need a good review of required types etc
+            IType retType = null;
+            if (opCodePart.Any(Code.Ret))
+            {
+                retType = this.MethodReturnType;
                 return retType;
+            }
+
+            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.UseAsClass ? retType.ToNormal() : retType;
+            }
+
+            if (opCodePart.Any(Code.Box))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
             }
 
             if (opCodePart.Any(Code.Call, Code.Callvirt))
             {
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                var parameters = opCodePartMethod.Operand.GetParameters();
-                var offset = opCodePartMethod.OpCodeOperands.Length - parameters.Count();
-                var index = 0;
-                foreach (var parameter in parameters)
-                {
-                    if (index == operandPosition)
-                    {
-                        retType = parameter.ParameterType;
-                    }
-
-                    ////opCodePartMethod.OpCodeOperands[offset + index].RequiredResultType = parameter.ParameterType;
-                    index++;
-                }
+                return opCodePartMethod.Operand.ReturnType;
             }
 
             return retType;
@@ -1272,8 +1369,15 @@ namespace Il2Native.Logic
         /// </param>
         private void AddAddressIndex(OpCodePart opCode)
         {
-            this.OpsByAddressStart[opCode.AddressStart] = opCode;
-            this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
+            if (!OpsByAddressStart.ContainsKey(opCode.AddressStart))
+            {
+                this.OpsByAddressStart[opCode.AddressStart] = opCode;
+            }
+
+            if (!OpsByAddressEnd.ContainsKey(opCode.AddressEnd))
+            {
+                this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
+            }
         }
 
         /// <summary>
@@ -1311,11 +1415,25 @@ namespace Il2Native.Logic
             }
 
             var secondValue = stack.First();
-            var firstCondJump = secondValue.PreviousOpCodeGroup(this);
-            var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward() && firstCondJump.JumpAddress() == middleJump.AddressEnd;
-            if (!isCondJumpForward)
+            while (true)
             {
-                return false;
+                var firstCondJump = secondValue.PreviousOpCodeGroup(this);
+                if (firstCondJump == null)
+                {
+                    return false;
+                }
+
+                var isCondJumpForward = firstCondJump != null
+                                        && firstCondJump.IsCondBranch()
+                                        && firstCondJump.IsJumpForward()
+                                        && firstCondJump.JumpAddress() == middleJump.AddressEnd;
+                if (!isCondJumpForward)
+                {
+                    secondValue = firstCondJump;
+                    continue;
+                }
+
+                break;
             }
 
             // expression is not full yet

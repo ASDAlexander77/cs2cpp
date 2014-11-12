@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace System
 {
@@ -21,16 +21,6 @@ namespace System
         {
         }
 
-        public virtual String ToString()
-        {
-            return GetType().FullName;
-        }
-
-        public virtual bool Equals(Object obj)
-        {
-            throw new NotImplementedException();
-        }
-
         public static bool Equals(Object objA, Object objB)
         {
             if (objA == objB)
@@ -46,10 +36,19 @@ namespace System
             return objA.Equals(objB);
         }
 
-
         public static bool ReferenceEquals(Object objA, Object objB)
         {
             return objA == objB;
+        }
+
+        public virtual String ToString()
+        {
+            return GetType().FullName;
+        }
+
+        public virtual bool Equals(Object obj)
+        {
+            throw new NotImplementedException();
         }
 
         public virtual int GetHashCode()
@@ -57,18 +56,14 @@ namespace System
             throw new NotImplementedException();
         }
 
-        public Type GetType()
-        {
-            throw new NotImplementedException();
-        }
+        // adjusted to C# Native compiler
+        public virtual extern Type GetType();
 
         ~Object()
         {
         }
 
-        
         protected extern Object MemberwiseClone();
-
     }
 }
 

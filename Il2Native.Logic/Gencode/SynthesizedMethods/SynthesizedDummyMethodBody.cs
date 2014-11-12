@@ -10,6 +10,13 @@
     {
         /// <summary>
         /// </summary>
+        public bool HasBody
+        {
+            get { return true; }
+        }
+
+        /// <summary>
+        /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
         {
             get

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
@@ -56,6 +56,9 @@ namespace System
     [Serializable()]
     public struct DateTime
     {
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern unsafe int time(int* value);
+
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
         private const long TicksPerSecond = TicksPerMillisecond * 1000;
@@ -97,7 +100,7 @@ namespace System
         public static readonly DateTime MaxValue = new DateTime(MaxTicks);
 
         private ulong m_ticks;
-
+            
         public DateTime(long ticks)
         {
             if (((ticks & (long)TickMask) < MinTicks) || ((ticks & (long)TickMask) > MaxTicks))
@@ -314,7 +317,7 @@ namespace System
             
             get
             {
-                return 0;
+                return (int)((m_ticks / TicksPerMillisecond) % 1000);
             }
         }
 
@@ -323,7 +326,7 @@ namespace System
             
             get
             {
-                return 0;
+                return (int)((m_ticks / TicksPerMinute) % 60);
             }
         }
 
@@ -338,10 +341,12 @@ namespace System
 
         public static DateTime Now
         {
-            
             get
             {
-                return new DateTime();
+                unsafe
+                {
+                    return new DateTime(time(null) * TicksPerSecond);
+                }
             }
         }
 
@@ -359,7 +364,7 @@ namespace System
             
             get
             {
-                return 0;
+                return (int)((m_ticks / TicksPerSecond) % 60);
             }
         }
 

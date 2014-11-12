@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
@@ -35,6 +35,15 @@ namespace System
 
         public static readonly TimeSpan MaxValue = new TimeSpan(Int64.MaxValue);
         public static readonly TimeSpan MinValue = new TimeSpan(Int64.MinValue);
+
+        private const double MillisecondsPerTick = 1.0 / TicksPerMillisecond;
+        private const double SecondsPerTick = 1.0 / TicksPerSecond;
+        private const double MinutesPerTick = 1.0 / TicksPerMinute;
+        private const double HoursPerTick = 1.0 / TicksPerHour;
+        private const double DaysPerTick = 1.0 / TicksPerDay;
+
+        private const long MaxMilliSeconds = Int64.MaxValue / TicksPerMillisecond;
+        private const long MinMilliSeconds = Int64.MinValue / TicksPerMillisecond;
 
         public TimeSpan(long ticks)
         {
@@ -96,6 +105,41 @@ namespace System
             {
                 return (int)((m_ticks / TicksPerSecond) % 60);
             }
+        }
+
+        public double TotalDays
+        {
+            get { return ((double)m_ticks) * DaysPerTick; }
+        }
+
+        public double TotalHours
+        {
+            get { return (double)m_ticks * HoursPerTick; }
+        }
+
+        public double TotalMilliseconds
+        {
+            get
+            {
+                double temp = (double)m_ticks * MillisecondsPerTick;
+                if (temp > MaxMilliSeconds)
+                    return (double)MaxMilliSeconds;
+
+                if (temp < MinMilliSeconds)
+                    return (double)MinMilliSeconds;
+
+                return temp;
+            }
+        }
+
+        public double TotalMinutes
+        {
+            get { return (double)m_ticks * MinutesPerTick; }
+        }
+
+        public double TotalSeconds
+        {
+            get { return (double)m_ticks * SecondsPerTick; }
         }
 
         public TimeSpan Add(TimeSpan ts)

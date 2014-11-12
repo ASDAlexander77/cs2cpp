@@ -16,39 +16,48 @@ namespace PEAssemblyReader
     /// </summary>
     public class MetadataGenericContext : IGenericContext
     {
+        private IType typeSpecialization;
+
+        private IMethod methodSpecialization;
+
         /// <summary>
         /// </summary>
         public MetadataGenericContext()
+            : this(new SortedDictionary<IType, IType>())
         {
-            this.Map = new SortedDictionary<IType, IType>();
+        }
+
+        public MetadataGenericContext(IDictionary<IType, IType> map)
+        {
+            this.Map = map;
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        public MetadataGenericContext(IType type)
+        public MetadataGenericContext(IType type, bool allowToUseDefinitionAsSpecialization = false)
             : this()
         {
-            this.Init(type);
-            Debug.Assert(!this.IsEmpty);
+            this.Init(type, allowToUseDefinitionAsSpecialization);           
+            if (this.TypeSpecialization != null)
+            {
+                this.TypeSpecialization.GenericMap(this.Map);
+            }
         }
 
         /// <summary>
         /// </summary>
         /// <param name="method">
         /// </param>
-        public MetadataGenericContext(IMethod method)
-            : this()
+        public MetadataGenericContext(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
+            : this(method.DeclaringType, allowToUseDefinitionAsSpecialization)
         {
-            this.Init(method.DeclaringType);
-            if (method.IsGenericMethod)
+            this.Init(method, allowToUseDefinitionAsSpecialization);
+            if (this.MethodSpecialization != null)
             {
-                this.MethodDefinition = method;
-                this.MethodSpecialization = method;
+                MethodSpecialization.GenericMap(this.Map);
             }
-
-            Debug.Assert(!this.IsEmpty);
         }
 
         /// <summary>
@@ -57,7 +66,8 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null && this.MethodSpecialization == null;
+                return this.Map.Count == 0 && this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null
+                       && this.MethodSpecialization == null;
             }
         }
 
@@ -71,7 +81,22 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IMethod MethodSpecialization { get; set; }
+        public IMethod MethodSpecialization
+        {
+            get
+            {
+                return this.methodSpecialization;
+            }
+
+            set
+            {
+                this.methodSpecialization = value;
+                if (this.MethodSpecialization != null)
+                {
+                    this.MethodSpecialization.GenericMap(this.Map);
+                }
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -79,13 +104,28 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IType TypeSpecialization { get; set; }
-
-        public static IGenericContext DiscoverFrom(IMethod method)
+        public IType TypeSpecialization
         {
-            if (method.IsGenericMethod)
+            get
             {
-                return new MetadataGenericContext(method);
+                return this.typeSpecialization;
+            }
+
+            set
+            {
+                this.typeSpecialization = value;
+                if (this.TypeSpecialization != null)
+                {
+                    this.TypeSpecialization.GenericMap(this.Map);
+                }
+            }
+        }
+
+        public static IGenericContext DiscoverFrom(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
+        {
+            if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+            {
+                return new MetadataGenericContext(method, allowToUseDefinitionAsSpecialization);
             }
 
             var declType = method.DeclaringType;
@@ -93,7 +133,7 @@ namespace PEAssemblyReader
             {
                 if (declType.IsGenericType || declType.IsGenericTypeDefinition)
                 {
-                    return new MetadataGenericContext(declType);
+                    return new MetadataGenericContext(declType, allowToUseDefinitionAsSpecialization);
                 }
 
                 if (declType.IsNested)
@@ -108,21 +148,72 @@ namespace PEAssemblyReader
             return null;
         }
 
+        public static IGenericContext CreateMap(IMethod definitionMethod, IMethod specializationMethod)
+        {
+            var context = new MetadataGenericContext();
+            context.Map.GenericMap(definitionMethod.GetGenericParameters(), specializationMethod.GetGenericArguments());
+            context.Map.GenericMap(definitionMethod.DeclaringType.GenericTypeParameters, specializationMethod.DeclaringType.GenericTypeArguments);
+            return context;
+        }
+
+        public IType ResolveTypeParameter(IType typeParameter)
+        {
+            IType resolved = null;
+            if (Map.TryGetValue(typeParameter, out resolved))
+            {
+                return resolved;
+            }
+
+            return typeParameter;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void Init(IType type)
+        private void Init(IType type, bool allowToUseDefinitionAsSpecialization = false)
         {
             if (type.IsGenericTypeDefinition)
             {
                 this.TypeDefinition = type;
+                if (allowToUseDefinitionAsSpecialization)
+                {
+                    this.TypeSpecialization = type;
+                }
             }
 
             if (type.IsGenericType)
             {
                 this.TypeSpecialization = type;
-                this.TypeDefinition = type.GetTypeDefinition();
+                if (this.TypeDefinition == null)
+                {
+                    this.TypeDefinition = type.GetTypeDefinition();
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        private void Init(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
+        {
+            if (method.IsGenericMethodDefinition)
+            {
+                this.MethodDefinition = method;
+                if (allowToUseDefinitionAsSpecialization)
+                {
+                    this.MethodSpecialization = method;
+                }
+            }
+
+            if (method.IsGenericMethod)
+            {
+                this.MethodSpecialization = method;
+                if (this.MethodDefinition == null)
+                {
+                    this.MethodDefinition = method.GetMethodDefinition();
+                }
             }
         }
     }

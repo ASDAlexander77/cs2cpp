@@ -17,8 +17,7 @@
         /// </param>
         public SynthesizedValueParameter(IType type)
         {
-            this.type = type.Clone();
-            this.type.UseAsClass = false;
+            this.type = type.ToNormal();
         }
 
         /// <summary>

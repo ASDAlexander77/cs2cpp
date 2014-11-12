@@ -73,7 +73,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public CatchOfFinallyClause CatchOrFinallyEnd { get; set; }
+        public IList<CatchOfFinallyClause> CatchOrFinallyEnds { get; set; }
 
         /// <summary>
         /// </summary>
@@ -82,10 +82,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public string CreatedLabel { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public FullyDefinedReference Destination { get; set; }
 
         /// <summary>
         /// </summary>
@@ -194,8 +190,14 @@ namespace Il2Native.Logic.CodeParts
         }
 
         /// <summary>
+        /// used to adjust operand type
         /// </summary>
-        public IType RequiredResultType { get; set; }
+        public IType RequiredIncomingType { get; set; }
+
+        /// <summary>
+        /// used to adjust result of OpCode type
+        /// </summary>
+        public IType RequiredOutgoingType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -215,14 +217,18 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsNullCoalescingExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
         public UsedByInfo UsedBy { get; set; }
 
         /// <summary>
         /// </summary>
         public PhiNodes AlternativeValues { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public OpCodePart Next { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public OpCodePart Previous { get; set; }
     }
 }

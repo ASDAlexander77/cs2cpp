@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace System.DiagnosticsX
+namespace System.Diagnostics
 {
     public static class Debugger
     {

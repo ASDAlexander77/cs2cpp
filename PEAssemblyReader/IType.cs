@@ -77,6 +77,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsGenericTypeLocal { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsGenericTypeDefinitionLocal { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsInterface { get; }
 
         /// <summary>
@@ -100,15 +108,14 @@ namespace PEAssemblyReader
         IModule Module { get; }
 
         /// <summary>
-        /// to disable optimazing for the type
         /// </summary>
-        bool UseAsClass { get; set; }
+        bool UseAsClass { get; }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        IType Clone();
+        IType Clone(bool setUseAsClass = false, bool value = false);
 
         /// <summary>
         /// </summary>
@@ -195,14 +202,6 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         bool IsAssignableFrom(IType type);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        IType ResolveTypeParameter(IType type);
 
         /// <summary>
         /// </summary>

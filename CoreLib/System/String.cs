@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Copyright (c) Microsoft Corporation.  All rights reserved.
+// Apache License 2.0 (Apache)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace System
 {
@@ -290,9 +290,69 @@ namespace System
             }
         }
 
-        public static int Compare(String strA, String strB)
+        public static int Compare(String a, String b)
         {
-            throw new NotImplementedException();
+            if (a == null && b == null)
+            {
+                return 0;
+            }
+
+            if (a == null)
+            {
+                return 1;
+            }
+
+            if (b == null)
+            {
+                return -1;
+            }
+
+            var charsA = a.chars;
+            var charsB = b.chars;
+
+            if (charsA == null && charsB == null)
+            {
+                return 0;
+            }
+
+            if (charsA == null)
+            {
+                return 1;
+            }
+
+            if (charsB == null)
+            {
+                return -1;
+            }
+
+            var len = Math.Min(charsA.Length, charsB.Length);
+            for (var index = 0; index < len; index++)
+            {
+                var cA = charsA[index];
+                var cB = charsB[index];
+
+                if (cA < cB)
+                {
+                    return 1;
+                }
+
+                if (cA > cB)
+                {
+                    return -1;
+                }
+            }
+
+            if (charsA.Length < charsB.Length)
+            {
+                return 1;
+            }
+
+            if (charsA.Length > charsB.Length)
+            {
+                return -1;
+            }
+
+            return 0;
         }
         
         public int CompareTo(Object value)

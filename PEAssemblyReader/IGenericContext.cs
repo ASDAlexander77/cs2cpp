@@ -37,5 +37,9 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         IType TypeSpecialization { get; }
+
+        /// <summary>
+        /// </summary>
+        IType ResolveTypeParameter(IType typeParameter);
     }
 }
