@@ -664,24 +664,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        public static void WriteLlvmLoad(
-            this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, bool appendReference = true, bool structAsRef = false)
-        {
-            llvmWriter.WriteLlvmLoad(opCode, source.Type, source, appendReference, structAsRef);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="typeToLoad">
         /// </param>
         /// <param name="source">
@@ -697,7 +679,7 @@ namespace Il2Native.Logic.Gencode
 
             var writer = llvmWriter.Output;
 
-            var isStruct = typeToLoad.ToNormal().IsStructureType();
+            var isStruct =  typeToLoad.ToNormal().IsStructureType();
 
             Debug.Assert(structAsRef || !isStruct || typeToLoad.IsByRef || isStruct && !typeToLoad.IsByRef && opCode.HasResult);
 

@@ -430,12 +430,8 @@ namespace Il2Native.Logic
                 case Code.Ldobj:
 
                     var opCodeTypePart = opCode as OpCodeTypePart;
-
-                    var firstOpResultType = opCode.OpCodeOperands[0].Result.Type;
-                    var structPointer = firstOpResultType.IsPointer && firstOpResultType.GetElementType().IsStructureType();
-                    var loadFromAddress = (!firstOpResultType.UseAsClass && !structPointer && !firstOpResultType.IsByRef) 
-                        || (!firstOpResultType.IsValueType && firstOpResultType.IsByRef);
-                    if (loadFromAddress)
+                    var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
+                    if (loadValueFromAddress)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
                     }
@@ -669,7 +665,7 @@ namespace Il2Native.Logic
                     if (localType.IsStructureType() && !localType.IsByRef)
                     {
                         opCode.Result = new FullyDefinedReference(this.GetLocalVarName(index), localType);
-                        this.WriteLlvmLoad(opCode, opCode.OpCodeOperands[0].Result);
+                        this.WriteLlvmLoad(opCode, localType, opCode.OpCodeOperands[0].Result);
                     }
                     else
                     {
@@ -701,7 +697,7 @@ namespace Il2Native.Logic
                     var definedReference = new FullyDefinedReference(destinationName, localType);
                     if (!localType.IsStructureType() || localType.IsByRef)
                     {
-                        this.WriteLlvmLoad(opCode, definedReference);
+                        this.WriteLlvmLoad(opCode, localType, definedReference);
                     }
                     else
                     {
@@ -736,7 +732,7 @@ namespace Il2Native.Logic
 
                     if (this.HasMethodThis && index == 0)
                     {
-                        this.WriteLlvmLoad(opCode, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true, true);
+                        this.WriteLlvmLoad(opCode, this.ThisType, new FullyDefinedReference(this.GetThisName(), this.ThisType.ToClass()), true, true);
                     }
                     else
                     {
@@ -747,7 +743,7 @@ namespace Il2Native.Logic
                         var fullyDefinedReference = new FullyDefinedReference(destinationName, parameter.ParameterType);
                         if (!parameter.ParameterType.IsStructureType())
                         {
-                            this.WriteLlvmLoad(opCode, fullyDefinedReference);
+                            this.WriteLlvmLoad(opCode, parameter.ParameterType, fullyDefinedReference);
                         }
                         else
                         {
@@ -3324,7 +3320,7 @@ namespace Il2Native.Logic
                 var operands = opCode.OpCodeOperands;
                 var opCodeOperand = operands[0];
                 opCode.Result = new FullyDefinedReference("%agg.result", methodReturnType);
-                this.WriteLlvmLoad(opCode, opCodeOperand.Result.ToNormalType());
+                this.WriteLlvmLoad(opCode, methodReturnType, opCodeOperand.Result.ToNormalType());
 
                 opts |= OperandOptions.IgnoreOperand;
             }
@@ -4367,7 +4363,6 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex)
         {
             var operandResult = opCode.OpCodeOperands[operandIndex].Result.ToNormalType();
-
             if (operandResult.Type.IsPrimitiveType())
             {
                 this.WriteLlvmSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result);
@@ -4375,7 +4370,7 @@ namespace Il2Native.Logic
             else
             {
                 opCode.Result = opCode.OpCodeOperands[0].Result;
-                this.WriteLlvmLoad(opCode, operandResult);
+                this.WriteLlvmLoad(opCode, operandResult.Type, operandResult);
             }
         }
 

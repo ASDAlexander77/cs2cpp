@@ -165,7 +165,7 @@ namespace Il2Native.Logic.Gencode
                 var fullyDefinedRef = new FullyDefinedReference(
                     string.Concat("%.finally_jump", exceptionHandlingClause.Offset), llvmWriter.ResolveType("System.Int32"));
 
-                llvmWriter.WriteLlvmLoad(opCodeNope, fullyDefinedRef);
+                llvmWriter.WriteLlvmLoad(opCodeNope, llvmWriter.ResolveType("System.Int32"), fullyDefinedRef);
                 writer.WriteLine(string.Empty);
                 writer.WriteLine("switch i32 {1}, label %.finally_exit{0} [", exceptionHandlingClause.Offset, opCodeNope.Result);
                 writer.Indent++;
