@@ -1208,9 +1208,13 @@ namespace Il2Native.Logic
             // parameters.CompilerOptions = "/optimize-";
             var results = codeProvider.CompileAssemblyFromFile(parameters, source);
 
-            foreach (CompilerError compilerError in results.Errors)
+            if (results.Errors.Count > 0)
             {
-                Trace.WriteLine(compilerError);
+                Console.WriteLine(@"Errors/Warnings:");
+                foreach (CompilerError compilerError in results.Errors)
+                {
+                    Console.WriteLine(compilerError);
+                }
             }
 
             if (results.Errors.HasErrors)

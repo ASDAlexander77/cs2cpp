@@ -54,7 +54,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool UsingRoslyn = false;
+        private const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>
@@ -181,6 +181,28 @@ namespace Ll2NativeTests
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestGenCompile()
+        {
+            // 66 - using typeof (typeof (Foo<>))
+
+            var skip =
+                new List<int>(
+                    new[]
+                        { 
+                            66
+                        });
+
+            Debug.Listeners.Clear();
+
+            foreach (var index in Enumerable.Range(66, 589).Where(n => !skip.Contains(n)))
+            {
+                Compile(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -400,7 +422,7 @@ namespace Ll2NativeTests
             {
                 if (!File.Exists(Path.Combine(OutputPath, "CoreLib.ll")))
                 {
-                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+                    Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
                 var piCoreLibObj = new ProcessStartInfo();

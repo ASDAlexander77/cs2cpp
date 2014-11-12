@@ -2146,10 +2146,8 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="dest">
         /// </param>
-        public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, FullyDefinedReference source, FullyDefinedReference dest)
+        public void WriteCopyStruct(LlvmIndentedTextWriter writer, OpCodePart opCode, IType typeToCopy, FullyDefinedReference source, FullyDefinedReference dest)
         {
-            Debug.Assert(source.Type.TypeEquals(dest.Type.HasElementType ? dest.Type.GetElementType() : dest.Type));
-
             this.WriteBitcast(opCode, dest);
             var op1 = opCode.Result;
             writer.WriteLine(string.Empty);
@@ -2157,7 +2155,7 @@ namespace Il2Native.Logic
             var op2 = opCode.Result;
             writer.WriteLine(string.Empty);
 
-            this.WriteMemCopy(dest.Type, op1, op2);
+            this.WriteMemCopy(typeToCopy, op1, op2);
 
             opCode.Result = dest;
         }

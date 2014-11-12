@@ -744,7 +744,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                llvmWriter.WriteCopyStruct(writer, opCode, source, opCode.Result);
+                llvmWriter.WriteCopyStruct(writer, opCode, typeToLoad, source, opCode.Result);
             }
         }
 
