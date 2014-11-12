@@ -111,6 +111,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        IMethod ToSpecialization(IGenericContext genericContext);
+
+        /// <summary>
+        /// </summary>
         /// <param name="ownerOfExplicitInterface">
         /// </param>
         /// <returns>
