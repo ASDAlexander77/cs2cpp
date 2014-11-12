@@ -347,12 +347,13 @@ namespace Ll2NativeTests
             // 127 - Delegate.Combine not implemented
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
+            // 145 - using multiarray
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143 };
-            foreach (var index in Enumerable.Range(143, 400).Where(n => !skip.Contains(n)))
+            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 145 };
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }
