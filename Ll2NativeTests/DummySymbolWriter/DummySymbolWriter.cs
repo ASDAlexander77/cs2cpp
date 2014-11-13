@@ -14,7 +14,7 @@
             return new DummyCompileUnitEntry();
         }
 
-        public ISourceMethodBuilder OpenMethod(ICompileUnitEntry compilationUnit, int methodNumber, ISourceMethod method)
+        public ISourceMethodBuilder OpenMethod(ICompileUnitEntry compilationUnit, int start, ISourceMethod method)
         {
             return new DummySourceMethodBuilder();
         }

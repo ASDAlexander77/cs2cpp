@@ -8,7 +8,7 @@
 
         ICompileUnitEntry DefineCompilationUnit(ISourceFileEntry entry);
 
-        ISourceMethodBuilder OpenMethod(ICompileUnitEntry compilationUnit, int methodNumber, ISourceMethod method);
+        ISourceMethodBuilder OpenMethod(ICompileUnitEntry compilationUnit, int start, ISourceMethod method);
 
         void DefineLocalVariable(int slot, string name);
 
@@ -26,7 +26,6 @@
 
     public interface ICompileUnitEntry
     {
-        ISourceFile SourceFile { get; }
     }
 
     public interface ISourceFile

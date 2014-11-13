@@ -4,5 +4,6 @@
 
     public class DummySourceFileEntry : ISourceFileEntry
     {
+        public ISourceFile SourceFile { get; set; }
     }
 }

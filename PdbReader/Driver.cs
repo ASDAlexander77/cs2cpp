@@ -119,7 +119,7 @@ namespace PdbReader
                 // 0xfeefee is an MS convention, we can't pass it into ISymbolWriter, so we use the last non-hidden line
                 var isHidden = line.lineBegin == 0xfeefee;
                 builder.MarkSequencePoint(
-                    (int)line.offset, file.CompilationUnitEntry.SourceFile, isHidden ? lastLine : (int)line.lineBegin, (int)line.colBegin, isHidden);
+                    (int)line.offset, file, isHidden ? lastLine : (int)line.lineBegin, (int)line.colBegin, isHidden);
                 if (!isHidden)
                 {
                     lastLine = (int)line.lineBegin;
