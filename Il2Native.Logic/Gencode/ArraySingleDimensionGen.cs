@@ -18,6 +18,7 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ArraySingleDimensionGen
     {
+        public const int ArrayDataLength = 4;
         public const int ArrayDataStartsWith = 5;
 
         /// <summary>
@@ -44,11 +45,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
-
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, 4);
+            var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, ArrayDataLength);
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
@@ -59,9 +58,20 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
+            if (!arrayInstanceResult.Type.IsArray)
+            {
+                // this is Array instance
+                var opCodeNope = OpCodePart.CreateNop;
+                llvmWriter.WriteBitcast(opCodeNope, arrayInstanceResult, llvmWriter.ResolveType("System.Byte").ToArrayType(1));
+                arrayInstanceResult = opCodeNope.Result;
+
+                writer.WriteLine(string.Empty);
+            }
+
             var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
             arrayInstanceResult.Type.WriteTypePrefix(writer, true);
+
             writer.Write(" ");
             llvmWriter.WriteResult(arrayInstanceResult);
             writer.Write(", i32 0, i32 {0}", dataIndex);

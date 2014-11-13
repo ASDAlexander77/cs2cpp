@@ -7,7 +7,7 @@
 
     public static class ActivatorGen
     {
-        public static bool IsCreateInstanceFunction(this IMethod method)
+        public static bool IsActivatorFunction(this IMethod method)
         {
             if (!method.IsStatic)
             {
@@ -28,7 +28,7 @@
             return false;
         }
 
-        public static void WriteCreateInstanceFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static void WriteActivatorFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
         {
             switch (method.MetadataName)
             {

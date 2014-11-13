@@ -442,15 +442,21 @@ namespace Il2Native.Logic.Gencode
                 return true;
             }
 
+            if (methodInfo.IsArrayFunction())
+            {
+                methodInfo.WriteArrayFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
             if (methodInfo.IsInterlockedFunction())
             {
                 methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
                 return true;
             }
 
-            if (methodInfo.IsCreateInstanceFunction())
+            if (methodInfo.IsActivatorFunction())
             {
-                methodInfo.WriteCreateInstanceFunction(opCodeMethodInfo, llvmWriter);
+                methodInfo.WriteActivatorFunction(opCodeMethodInfo, llvmWriter);
                 return true;
             }
 

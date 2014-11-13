@@ -62,9 +62,10 @@
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
     <Compile Include="CodeParts\PhiNodes.cs" />
     <Compile Include="CodeParts\UsedByInfo.cs" />
-    <Compile Include="Gencode\ActivatorGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
-    <Compile Include="Gencode\InterlockedGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGen.cs" />
+    <Compile Include="Gencode\InternalMethods\InterlockedGen.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
@@ -98,9 +99,6 @@
     <Compile Include="ICodeWriter.cs" />
     <Compile Include="Il2Converter.cs" />
     <Compile Include="IlReader.cs" />
-    <Compile Include="Instructions\AllocaInstruction.cs" />
-    <Compile Include="Instructions\Base\BaseInstruction.cs" />
-    <Compile Include="Instructions\Base\BaseInstructionWithResult.cs" />
     <Compile Include="LlvmIndentedTextWriter.cs" />
     <Compile Include="OpResults\IncrementalResult.cs" />
     <Compile Include="LlvmWriter.cs" />
@@ -136,6 +134,9 @@
   <ItemGroup>
     <None Include="Resources\llvm_declarations.ll" />
     <None Include="Resources\llvm_gc_declarations.ll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Instructions\Base\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
