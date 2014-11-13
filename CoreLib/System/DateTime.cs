@@ -346,9 +346,12 @@ namespace System
                 {
                     long time;
                     long zone;
+
                     if (gettimeofday(&time, &zone) == 0)
                     {
-                        return new DateTime(time, DateTimeKind.Local);
+                        var seconds = (int)(time >> 32);
+                        var milliseconds = (int)(time & 0x0000ffff);
+                        return new DateTime(seconds * TicksPerSecond + milliseconds, DateTimeKind.Local);
                     }
 
                     throw new Exception();
@@ -365,9 +368,12 @@ namespace System
                 {
                     long time;
                     long zone;
+
                     if (gettimeofday(&time, &zone) == 0)
                     {
-                        return new DateTime(time, DateTimeKind.Utc);
+                        var seconds = (int)(time >> 32);
+                        var milliseconds = (int)(time & 0x0000ffff);
+                        return new DateTime(seconds * TicksPerSecond + milliseconds, DateTimeKind.Local);
                     }
 
                     throw new Exception();
