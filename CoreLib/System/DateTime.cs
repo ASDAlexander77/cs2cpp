@@ -57,7 +57,7 @@ namespace System
     public struct DateTime
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int time(int* value);
+        public static extern unsafe int gettimeofday(long* value, long* timezome);
 
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
@@ -344,7 +344,14 @@ namespace System
             {
                 unsafe
                 {
-                    return new DateTime(time(null) * TicksPerSecond);
+                    long time;
+                    long zone;
+                    if (gettimeofday(&time, &zone) == 0)
+                    {
+                        return new DateTime(time, DateTimeKind.Local);
+                    }
+
+                    throw new Exception();
                 }
             }
         }
@@ -354,7 +361,17 @@ namespace System
             
             get
             {
-                return new DateTime();
+                unsafe
+                {
+                    long time;
+                    long zone;
+                    if (gettimeofday(&time, &zone) == 0)
+                    {
+                        return new DateTime(time, DateTimeKind.Utc);
+                    }
+
+                    throw new Exception();
+                }
             }
         }
 
