@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="LlvmResult.cs" company="">
+// <copyright file="IncrementalResult.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -64,6 +64,12 @@ namespace Il2Native.Logic
             return string.Concat("%.r", this.Number);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="newType">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public override FullyDefinedReference ToType(IType newType)
         {
             return new IncrementalResult(this.Number, newType);

@@ -16,10 +16,11 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
+    using Microsoft.CodeAnalysis;
+
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using Microsoft.CodeAnalysis;
 
     /// <summary>
     /// </summary>
@@ -324,7 +325,8 @@ namespace Il2Native.Logic.Gencode
             /// </param>
             /// <param name="isStatic">
             /// </param>
-            public SynthesizedInvokeMethod(LlvmWriter writer, FullyDefinedReference objectResult, FullyDefinedReference methodResult, IMethod invokeMethod, bool isStatic)
+            public SynthesizedInvokeMethod(
+                LlvmWriter writer, FullyDefinedReference objectResult, FullyDefinedReference methodResult, IMethod invokeMethod, bool isStatic)
             {
                 this.writer = writer;
                 this.objectResult = objectResult;
@@ -354,6 +356,16 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return this.objectResult.Type;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public DllImportData DllImportData
+            {
+                get
+                {
+                    return null;
                 }
             }
 
@@ -397,6 +409,26 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsDllImport
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
+            public bool IsExplicitInterfaceImplementation
+            {
+                get
+                {
+                    return false;
+                }
+            }
+
+            /// <summary>
+            /// </summary>
             public bool IsExternal
             {
                 get
@@ -407,11 +439,25 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsGenericMethod { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public bool IsGenericMethodDefinition { get; private set; }
 
             /// <summary>
             /// </summary>
-            public bool IsGenericMethod { get; private set; }
+            public bool IsOverride { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsStatic
+            {
+                get
+                {
+                    return this.isStatic;
+                }
+            }
 
             /// <summary>
             /// custom field
@@ -432,46 +478,6 @@ namespace Il2Native.Logic.Gencode
                 get
                 {
                     return false;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsExplicitInterfaceImplementation
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public bool IsDllImport
-            {
-                get
-                {
-                    return false;
-                }
-            }
-
-            public DllImportData DllImportData
-            {
-                get
-                {
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public bool IsOverride { get; private set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsStatic
-            {
-                get
-                {
-                    return this.isStatic;
                 }
             }
 
@@ -539,11 +545,6 @@ namespace Il2Native.Logic.Gencode
                 {
                     return this.invokeMethod.ReturnType;
                 }
-            }
-
-            public IMethod GetMethodDefinition()
-            {
-                return null;
             }
 
             /// <summary>
@@ -623,6 +624,15 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             /// <returns>
             /// </returns>
+            public IMethod GetMethodDefinition()
+            {
+                return null;
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
             public IEnumerable<IParameter> GetParameters()
             {
                 return this.invokeMethod.GetParameters();
@@ -637,6 +647,19 @@ namespace Il2Native.Logic.Gencode
             /// <exception cref="NotImplementedException">
             /// </exception>
             public IType ResolveTypeParameter(IType type)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="genericContext">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IMethod ToSpecialization(IGenericContext genericContext)
             {
                 throw new NotImplementedException();
             }
@@ -661,11 +684,6 @@ namespace Il2Native.Logic.Gencode
             public override string ToString()
             {
                 return this.Name;
-            }
-
-            public IMethod ToSpecialization(IGenericContext genericContext)
-            {
-                throw new NotImplementedException();
             }
         }
     }

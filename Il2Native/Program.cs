@@ -1,12 +1,27 @@
-﻿namespace Il2Native
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="Program.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native
 {
     using System;
     using System.Linq;
 
     using Il2Native.Logic;
 
+    /// <summary>
+    /// </summary>
     public class Program
     {
+        /// <summary>
+        /// </summary>
+        /// <param name="args">
+        /// </param>
         private static void Main(string[] args)
         {
             if (args.Length == 0)

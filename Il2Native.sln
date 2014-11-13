@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpCodeAnalysis", "CShar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CoreLib", "CoreLib\CoreLib.csproj", "{870F71A1-76E0-4F6D-9651-42E9FCEBC294}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdbReader", "PdbReader\PdbReader.csproj", "{68D11523-23EC-405F-ADB0-C2F2C0538589}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +51,10 @@ Global
 		{870F71A1-76E0-4F6D-9651-42E9FCEBC294}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{870F71A1-76E0-4F6D-9651-42E9FCEBC294}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{870F71A1-76E0-4F6D-9651-42E9FCEBC294}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68D11523-23EC-405F-ADB0-C2F2C0538589}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

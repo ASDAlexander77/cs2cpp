@@ -8,7 +8,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
-    using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
@@ -112,7 +111,10 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="metadataName">
         /// </param>
-        internal static void AppendFullNamespace(this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false, char declTypeJoinChar = '+')
+        /// <param name="declTypeJoinChar">
+        /// </param>
+        internal static void AppendFullNamespace(
+            this Symbol symbol, StringBuilder sb, string @namespace, IType declaringType, bool metadataName = false, char declTypeJoinChar = '+')
         {
             if (symbol.ContainingType != null && symbol.Kind != SymbolKind.TypeParameter)
             {
@@ -328,11 +330,56 @@ namespace PEAssemblyReader
             return new MetadataTypeAdapter(typeSymbol, genericContext);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="methodSymbol">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static IMethod ResolveGeneric(this MethodSymbol methodSymbol, IGenericContext genericContext)
         {
             return new MetadataMethodAdapter(methodSymbol, genericContext);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="methodSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static ConstructedMethodSymbol ConstructGenericMethodSymbol(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
+        {
+            var mapFilteredByTypeParameters = methodSymbol.ContainingType.TypeArguments != null
+                                                  ? SelectGenericsFromArguments(methodSymbol.ContainingType, map)
+                                                  : SelectGenericsFromParameters(methodSymbol.ContainingType, map);
+
+            if (methodSymbol.IsGenericMethod)
+            {
+                var mapFilteredByMethodParameters = methodSymbol.TypeArguments != null
+                                                        ? SelectGenericsFromArguments(methodSymbol, map)
+                                                        : SelectGenericsFromParameters(methodSymbol, map);
+
+                mapFilteredByTypeParameters = mapFilteredByTypeParameters.Union(mapFilteredByMethodParameters).ToArray();
+            }
+
+            Debug.Assert(mapFilteredByTypeParameters.Any());
+
+            var newType = new ConstructedMethodSymbol(methodSymbol, ImmutableArray.Create(mapFilteredByTypeParameters));
+            return newType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="namedTypeSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static ConstructedNamedTypeSymbol ConstructGenericTypeSymbol(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map)
         {
             var mapFilteredByTypeParameters = namedTypeSymbol.TypeArguments != null
@@ -344,27 +391,6 @@ namespace PEAssemblyReader
             }
 
             var newType = new ConstructedNamedTypeSymbol(namedTypeSymbol.ConstructedFrom, ImmutableArray.Create(mapFilteredByTypeParameters));
-            return newType;
-        }
-
-        private static ConstructedMethodSymbol ConstructGenericMethodSymbol(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
-        {
-            var mapFilteredByTypeParameters = methodSymbol.ContainingType.TypeArguments != null
-                                                  ? SelectGenericsFromArguments(methodSymbol.ContainingType, map)
-                                                  : SelectGenericsFromParameters(methodSymbol.ContainingType, map);
-
-            if (methodSymbol.IsGenericMethod)
-            {
-                var mapFilteredByMethodParameters = methodSymbol.TypeArguments != null
-                                                  ? SelectGenericsFromArguments(methodSymbol, map)
-                                                  : SelectGenericsFromParameters(methodSymbol, map);
-
-                mapFilteredByTypeParameters = mapFilteredByTypeParameters.Union(mapFilteredByMethodParameters).ToArray();
-            }
-
-            Debug.Assert(mapFilteredByTypeParameters.Any());
-
-            var newType = new ConstructedMethodSymbol(methodSymbol, ImmutableArray.Create(mapFilteredByTypeParameters));
             return newType;
         }
 
@@ -387,7 +413,33 @@ namespace PEAssemblyReader
             return resolvedTypes.ToArray();
         }
 
-        private static bool SelectGenericsFromArgumentsForOneLevel(NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map, List<TypeSymbol> resolvedTypes)
+        /// <summary>
+        /// </summary>
+        /// <param name="methodSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static TypeSymbol[] SelectGenericsFromArguments(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
+        {
+            var resolvedTypes = new List<TypeSymbol>();
+            SelectGenericsFromArgumentsForOneLevel(methodSymbol, map, resolvedTypes);
+            return resolvedTypes.ToArray();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="namedTypeSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <param name="resolvedTypes">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static bool SelectGenericsFromArgumentsForOneLevel(
+            NamedTypeSymbol namedTypeSymbol, IDictionary<IType, IType> map, List<TypeSymbol> resolvedTypes)
         {
             foreach (var typeSymbol in namedTypeSymbol.TypeArguments)
             {
@@ -416,20 +468,20 @@ namespace PEAssemblyReader
             return true;
         }
 
-        private static TypeSymbol[] SelectGenericsFromArguments(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
-        {
-            var resolvedTypes = new List<TypeSymbol>();
-            SelectGenericsFromArgumentsForOneLevel(methodSymbol, map, resolvedTypes);
-            return resolvedTypes.ToArray();
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="methodSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <param name="resolvedTypes">
+        /// </param>
         private static void SelectGenericsFromArgumentsForOneLevel(MethodSymbol methodSymbol, IDictionary<IType, IType> map, List<TypeSymbol> resolvedTypes)
         {
             ////if (namedTypeSymbol.IsNestedType())
             ////{
             ////    SelectGenericsFromArgumentsForOneLevel(namedTypeSymbol.ContainingType, map, resolvedTypes);
             ////}
-
             foreach (var typeSymbol in methodSymbol.TypeArguments)
             {
                 if (typeSymbol.Kind == SymbolKind.TypeParameter)
@@ -466,6 +518,14 @@ namespace PEAssemblyReader
                    .ToArray();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="methodSymbol">
+        /// </param>
+        /// <param name="map">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private static TypeSymbol[] SelectGenericsFromParameters(MethodSymbol methodSymbol, IDictionary<IType, IType> map)
         {
             return

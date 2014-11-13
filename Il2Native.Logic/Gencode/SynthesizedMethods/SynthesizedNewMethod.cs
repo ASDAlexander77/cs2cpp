@@ -1,9 +1,15 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
-{
-    using System.Reflection;
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedNewMethod.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
 
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
+{
     using PEAssemblyReader;
-    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -23,7 +29,7 @@
             : base(type, ".new")
         {
             this.writer = writer;
-            Type = type.ToClass();
+            this.Type = type.ToClass();
         }
     }
 }

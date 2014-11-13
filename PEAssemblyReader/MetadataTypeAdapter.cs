@@ -25,23 +25,7 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
-        private readonly Lazy<string> lazyName;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<string> lazyFullName;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<string> lazyMetadataName;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<string> lazyMetadataFullName;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<string> lazyNamespace;
+        private readonly Lazy<string> lazyAssemblyQualifiedName;
 
         /// <summary>
         /// </summary>
@@ -49,7 +33,23 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<string> lazyAssemblyQualifiedName;
+        private readonly Lazy<string> lazyFullName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataFullName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyMetadataName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<string> lazyNamespace;
 
         /// <summary>
         /// </summary>
@@ -239,10 +239,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsPinned { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool IsClass
         {
             get
@@ -291,6 +287,8 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericType
         {
             get
@@ -315,6 +313,8 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
         public bool IsGenericTypeDefinition
         {
             get
@@ -341,21 +341,21 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsGenericTypeLocal
-        {
-            get
-            {
-                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public bool IsGenericTypeDefinitionLocal
         {
             get
             {
                 return this.GetGenericParameters().Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsGenericTypeLocal
+        {
+            get
+            {
+                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -378,6 +378,10 @@ namespace PEAssemblyReader
                 return this.typeDef.IsNestedType();
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public bool IsPinned { get; set; }
 
         /// <summary>
         /// </summary>
@@ -519,6 +523,25 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="setUseAsClass">
+        /// </param>
+        /// <param name="value">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType Clone(bool setUseAsClass = false, bool value = false)
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext);
+            if (setUseAsClass)
+            {
+                typeAdapter.UseAsClass = value;
+            }
+
+            return typeAdapter;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="obj">
         /// </param>
         /// <returns>
@@ -626,11 +649,6 @@ namespace PEAssemblyReader
         public IType GetDeclaringTypeOriginal()
         {
             return new MetadataTypeAdapter(this.typeDef.ContainingType);
-        }
-
-        public IType GetTypeDefinition()
-        {
-            return new MetadataTypeAdapter((this.typeDef as NamedTypeSymbol).ConstructedFrom);
         }
 
         /// <summary>
@@ -800,6 +818,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType GetTypeDefinition()
+        {
+            return new MetadataTypeAdapter((this.typeDef as NamedTypeSymbol).ConstructedFrom);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -851,24 +878,18 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IType Clone(bool setUseAsClass = false, bool value = false)
+        public IType ToClass()
         {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext);
-            if (setUseAsClass)
-            {
-                typeAdapter.UseAsClass = value;
-            }
-
-            return typeAdapter;
+            return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, true);
         }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        public IType ToClass()
+        public IType ToDereferencedType()
         {
-            return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, true);
+            return this.IsPointer ? this.GetElementType() : this.typeDef.ResolveGeneric(this.GenericContext);
         }
 
         /// <summary>
@@ -893,75 +914,114 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IType ToDereferencedType()
-        {
-            return this.IsPointer ? GetElementType() : this.typeDef.ResolveGeneric(this.GenericContext);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
         public override string ToString()
         {
             return this.lazyToString.Value;
         }
 
-        private string CalculateToString()
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateAssemblyQualifiedName()
         {
-            var result = new StringBuilder();
+            var effective = this.typeDef;
 
-            // write Full Name
-            if (this.HasElementType)
+            while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
             {
-                result.Append(this.GetElementType());
+                var arrayType = effective as ArrayTypeSymbol;
+                if (arrayType != null)
+                {
+                    effective = arrayType.ElementType;
+                    continue;
+                }
 
-                if (!this.IsByRef)
+                var pointerType = effective as PointerTypeSymbol;
+                if (pointerType != null)
                 {
-                    if (this.IsPointer)
-                    {
-                        result.Append('*');
-                    }
+                    effective = pointerType.PointedAtType;
+                    continue;
+                }
 
-                    if (this.IsArray)
-                    {
-                        result.Append("[]");
-                    }
-                }
-                else
-                {
-                    result.Append('&');
-                }
-            }
-            else
-            {
-                if ((this.IsPrimitive || this.Name == "Void") && this.Namespace == "System")
-                {
-                    result.Append(this.Name);
-                }
-                else
-                {
-                    result.Append(this.FullName);
-                }
+                break;
             }
 
-            return result.ToString();
+            return effective.ContainingAssembly.Identity.Name;
         }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        private string CalculateNamespace()
-        {
-            return this.typeDef.CalculateNamespace();
-        }
-
         private IType CalculateBaseType()
         {
             return this.typeDef.BaseType != null ? this.typeDef.BaseType.ResolveGeneric(this.GenericContext) : null;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateFullName()
+        {
+            var sb = new StringBuilder();
+            if (!this.IsGenericParameter)
+            {
+                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
+            }
+
+            sb.Append(this.Name);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateMetadataFullName()
+        {
+            var sb = new StringBuilder();
+            this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
+            sb.Append(this.MetadataName);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateMetadataName()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(this.typeDef.Name);
+
+            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            {
+                sb.Append('`');
+                sb.Append(this.typeDef.GetArity());
+            }
+
+            if (this.IsArray)
+            {
+                sb.Append(this.GetElementType().MetadataName);
+                sb.Append("[]");
+            }
+
+            if (this.IsPointer)
+            {
+                sb.Append(this.GetElementType().MetadataName);
+                sb.Append("*");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private string CalculateName()
         {
             var sb = new StringBuilder();
@@ -1001,78 +1061,58 @@ namespace PEAssemblyReader
             return sb.ToString();
         }
 
-        private string CalculateFullName()
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateNamespace()
         {
-            var sb = new StringBuilder();
-            if (!this.IsGenericParameter)
-            {
-                this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType);
-            }
-
-            sb.Append(this.Name);
-            return sb.ToString();
+            return this.typeDef.CalculateNamespace();
         }
 
-        private string CalculateMetadataName()
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateToString()
         {
-            var sb = new StringBuilder();
+            var result = new StringBuilder();
 
-            sb.Append(this.typeDef.Name);
-
-            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            // write Full Name
+            if (this.HasElementType)
             {
-                sb.Append('`');
-                sb.Append(this.typeDef.GetArity());
-            }
+                result.Append(this.GetElementType());
 
-            if (this.IsArray)
-            {
-                sb.Append(this.GetElementType().MetadataName);
-                sb.Append("[]");
-            }
-
-            if (this.IsPointer)
-            {
-                sb.Append(this.GetElementType().MetadataName);
-                sb.Append("*");
-            }
-
-            return sb.ToString();
-        }
-
-        private string CalculateMetadataFullName()
-        {
-            var sb = new StringBuilder();
-            this.typeDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true);
-            sb.Append(this.MetadataName);
-
-            return sb.ToString();
-        }
-
-        private string CalculateAssemblyQualifiedName()
-        {
-            var effective = this.typeDef;
-
-            while (effective.TypeKind == TypeKind.ArrayType || effective.TypeKind == TypeKind.PointerType)
-            {
-                var arrayType = effective as ArrayTypeSymbol;
-                if (arrayType != null)
+                if (!this.IsByRef)
                 {
-                    effective = arrayType.ElementType;
-                    continue;
-                }
+                    if (this.IsPointer)
+                    {
+                        result.Append('*');
+                    }
 
-                var pointerType = effective as PointerTypeSymbol;
-                if (pointerType != null)
+                    if (this.IsArray)
+                    {
+                        result.Append("[]");
+                    }
+                }
+                else
                 {
-                    effective = pointerType.PointedAtType;
-                    continue;
+                    result.Append('&');
                 }
-
-                break;
+            }
+            else
+            {
+                if ((this.IsPrimitive || this.Name == "Void") && this.Namespace == "System")
+                {
+                    result.Append(this.Name);
+                }
+                else
+                {
+                    result.Append(this.FullName);
+                }
             }
 
-            return effective.ContainingAssembly.Identity.Name;
+            return result.ToString();
         }
 
         /// <summary>

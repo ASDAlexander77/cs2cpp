@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Linq;
@@ -15,12 +16,15 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
-    using System;
 
     /// <summary>
     /// </summary>
     public static class TypeGen
     {
+        /// <summary>
+        /// </summary>
+        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
+
         /// <summary>
         /// </summary>
         private static readonly IDictionary<string, int> SystemTypeSizes = new SortedDictionary<string, int>();
@@ -31,15 +35,11 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
+        private static readonly IDictionary<string, int> fieldsShiftByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
         private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
-        private static readonly IDictionary<string, int> fieldsShiftByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
@@ -106,6 +106,31 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int CalculateFieldsShift(this IType type)
+        {
+            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
+            if (type.BaseType != null)
+            {
+                fieldsShift += type.BaseType.GetFieldsShift();
+            }
+
+            fieldsShiftByType[type.FullName] = fieldsShift;
+
+            return fieldsShift;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static int CalculateSize(this IType type)
         {
             var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
@@ -136,6 +161,124 @@ namespace Il2Native.Logic.Gencode
             return offset;
         }
 
+        /// <summary>
+        /// </summary>
+        public static void Clear()
+        {
+            sizeByType.Clear();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetFieldsShift(this IType type)
+        {
+            // find index
+            int fieldsShift;
+            if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
+            {
+                fieldsShift = type.CalculateFieldsShift();
+            }
+
+            return fieldsShift;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="excludingStructs">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<int> GetFieldsSizes(this IType type, bool excludingStructs = false)
+        {
+            foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
+            {
+                var fieldSize = 0;
+                var fieldType = field.FieldType;
+                if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
+                {
+                    // pointer size
+                    yield return LlvmWriter.PointerSize;
+                }
+                else if (!excludingStructs && fieldType.IsStructureType())
+                {
+                    yield return fieldType.GetTypeSize();
+                }
+                else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
+                {
+                    yield return fieldSize;
+                }
+                else
+                {
+                    foreach (var item in fieldType.GetTypeSizes())
+                    {
+                        yield return item;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="excludingStructs">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
+        {
+            if (type.BaseType != null)
+            {
+                foreach (var item in type.BaseType.GetFieldsSizes(excludingStructs))
+                {
+                    yield return item;
+                }
+            }
+
+            foreach (var item in type.GetFieldsSizes(excludingStructs))
+            {
+                yield return item;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="asValueType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetTypeSize(this IType type, bool asValueType = false)
+        {
+            if (asValueType && type.IsPrimitiveType())
+            {
+                return SystemTypeSizes[type.Name];
+            }
+
+            // find index
+            int size;
+            if (!sizeByType.TryGetValue(type.FullName, out size))
+            {
+                size = type.CalculateSize();
+                sizeByType[type.FullName] = size;
+            }
+
+            return size;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static IEnumerable<int> GetTypeSizes(this IType type)
         {
             if (type.IsInterface)
@@ -206,102 +349,6 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizes(this IType type, bool excludingStructs = false)
-        {
-            foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
-            {
-                var fieldSize = 0;
-                var fieldType = field.FieldType;
-                if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
-                {
-                    // pointer size
-                    yield return LlvmWriter.PointerSize;
-                }
-                else if (!excludingStructs && fieldType.IsStructureType())
-                {
-                    yield return fieldType.GetTypeSize();
-                }
-                else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
-                {
-                    yield return fieldSize;
-                }
-                else
-                {
-                    foreach (var item in fieldType.GetTypeSizes())
-                    {
-                        yield return item;
-                    }
-                }
-            }
-        }
-
-        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
-        {
-            if (type.BaseType != null)
-            {
-                foreach (var item in type.BaseType.GetFieldsSizes(excludingStructs))
-                {
-                    yield return item;
-                }
-            }
-
-            foreach (var item in type.GetFieldsSizes(excludingStructs))
-            {
-                yield return item;
-            }
-        }
-
-        public static int CalculateFieldsShift(this IType type)
-        {
-            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
-            if (type.BaseType != null)
-            {
-                fieldsShift += type.BaseType.GetFieldsShift();
-            }
-
-            fieldsShiftByType[type.FullName] = fieldsShift;
-
-            return fieldsShift;
-        }
-
-        /// <summary>
-        /// </summary>
-        public static void Clear()
-        {
-            sizeByType.Clear();
-        }
-
-
-        public static int GetTypeSize(this IType type, bool asValueType = false)
-        {
-            if (asValueType && type.IsPrimitiveType())
-            {
-                return SystemTypeSizes[type.Name];
-            }
-
-            // find index
-            int size;
-            if (!sizeByType.TryGetValue(type.FullName, out size))
-            {
-                size = type.CalculateSize();
-                sizeByType[type.FullName] = size;
-            }
-
-            return size;
-        }
-
-        public static int GetFieldsShift(this IType type)
-        {
-            // find index
-            int fieldsShift;
-            if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
-            {
-                fieldsShift = type.CalculateFieldsShift();
-            }
-
-            return fieldsShift;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="requiredType">
@@ -339,6 +386,8 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         /// <param name="type">
+        /// </param>
+        /// <param name="isPointerOpt">
         /// </param>
         /// <returns>
         /// </returns>
@@ -456,6 +505,8 @@ namespace Il2Native.Logic.Gencode
         /// <param name="type">
         /// </param>
         /// <param name="writer">
+        /// </param>
+        /// <param name="isPointer">
         /// </param>
         public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool isPointer)
         {

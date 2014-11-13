@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="RttiClassWithNoBaseAndSingleInterfaceGen.cs" company="">
+// <copyright file="RttiClassWithNoBaseAndSingleInterface.cs" company="">
 //   
 // </copyright>
 // <summary>

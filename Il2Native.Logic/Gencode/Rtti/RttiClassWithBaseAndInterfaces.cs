@@ -66,11 +66,12 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(",i8* bitcast (");
                 type.BaseType.WriteRttiClassInfoDeclaration(writer);
                 writer.WriteLine("* @\"{0}\" to i8*),", type.BaseType.GetRttiInfoName());
+
                 // if class does not have any virtual method then next value should be 0, else 2 (and next class should be +1024)
                 writer.WriteLine("i32 {0}", nextFlag);
 
                 // apply fields shift + base item
-                //nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
+                // nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
                 nextFlag += 1024 * (type.BaseType.GetTypeSize() / LlvmWriter.PointerSize);
             }
 

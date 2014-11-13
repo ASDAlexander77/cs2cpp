@@ -1,6 +1,16 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedBoxMethod.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -10,8 +20,6 @@
         /// <summary>
         /// </summary>
         /// <param name="type">
-        /// </param>
-        /// <param name="writer">
         /// </param>
         public SynthesizedBoxMethod(IType type)
             : base(type, ".box")

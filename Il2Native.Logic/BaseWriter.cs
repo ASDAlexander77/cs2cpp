@@ -177,13 +177,13 @@ namespace Il2Native.Logic
         public IType ResolveType(string fullTypeName)
         {
             IType result;
-            if (ResolvedTypes.TryGetValue(fullTypeName, out result))
+            if (this.ResolvedTypes.TryGetValue(fullTypeName, out result))
             {
                 return result;
             }
 
             result = this.ThisType.Module.ResolveType(fullTypeName, null);
-            ResolvedTypes[result.FullName] = result;
+            this.ResolvedTypes[result.FullName] = result;
             return result;
         }
 
@@ -388,7 +388,7 @@ namespace Il2Native.Logic
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
-                    //var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
+                    // var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
                     var typeOfElement = result.Type.GetElementType();
                     return new ReturnResult(typeOfElement.ToPointerType());
                 case Code.Ldc_I4_0:
@@ -405,7 +405,8 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_S:
                     return new ReturnResult(opCode.UseAsNull ? this.ResolveType("System.Void").ToPointerType() : this.ResolveType("System.Int32"))
                                {
-                                   IsConst = true
+                                   IsConst =
+                                       true
                                };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
@@ -492,10 +493,18 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
+        protected void AddOpCode(OpCodePart opCode)
+        {
+            this.Ops.Add(opCode);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
         protected void AdjustTypes(OpCodePart opCode)
         {
             // TODO: review this function, I think I need to get rid of it
-
             if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
             {
                 return;
@@ -512,8 +521,7 @@ namespace Il2Native.Logic
             var requiredType = this.RequiredIncomingType(opCode);
             if (requiredType != null)
             {
-                if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U)
-                    && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
+                if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U) && usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
                 }
@@ -545,10 +553,10 @@ namespace Il2Native.Logic
 
                     var catchOfFinallyClause = new CatchOfFinallyClause
                                                    {
-                                                       Flags = exceptionHandlingClause.Flags,
-                                                       Offset = exceptionHandlingClause.HandlerOffset,
-                                                       Length = exceptionHandlingClause.HandlerLength,
-                                                       Catch = exceptionHandlingClause.CatchType,
+                                                       Flags = exceptionHandlingClause.Flags, 
+                                                       Offset = exceptionHandlingClause.HandlerOffset, 
+                                                       Length = exceptionHandlingClause.HandlerLength, 
+                                                       Catch = exceptionHandlingClause.CatchType, 
                                                        OwnerTry = tryItem
                                                    };
 
@@ -599,7 +607,7 @@ namespace Il2Native.Logic
 
                     if (this.OpsByAddressEnd.TryGetValue(catchOrFinally.Offset + catchOrFinally.Length, out opCodePart))
                     {
-                        //Debug.Assert(opCodePart.CatchOrFinallyEnds == null);
+                        // Debug.Assert(opCodePart.CatchOrFinallyEnds == null);
                         if (opCodePart.CatchOrFinallyEnds == null)
                         {
                             opCodePart.CatchOrFinallyEnds = new List<CatchOfFinallyClause>();
@@ -660,76 +668,10 @@ namespace Il2Native.Logic
             }
         }
 
-        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes)
-        {
-            OpCodePart last = null; 
-            foreach (var opCodePart in opCodes)
-            {
-                foreach (var opCodePartBefore in this.InsertBeforeOpCode(opCodePart))
-                {
-                    last = BuildChain(last, opCodePartBefore);
-                    yield return opCodePartBefore;
-                }
-
-                last = BuildChain(last, opCodePart);
-                yield return opCodePart;
-
-                foreach (var opCodePartAfter in this.InsertAfterOpCode(opCodePart))
-                {
-                    last = BuildChain(last, opCodePartAfter);
-                    yield return opCodePartAfter;
-                }
-            }
-        }
-
-        private static OpCodePart BuildChain(OpCodePart last, OpCodePart opCodePartBefore)
-        {
-            if (last != null)
-            {
-                last.Next = opCodePartBefore;
-                opCodePartBefore.Previous = last;
-            }
-
-            last = opCodePartBefore;
-            return last;
-        }
-
-        protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
-        {
-            // insert result of exception
-            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
-            if (exceptionHandling == null || exceptionHandling.CatchType == null)
-            {
-                yield break;
-            }
-
-            var opCodeNope = new OpCodePart(OpCodesEmit.Newobj, opCode.AddressStart, opCode.AddressStart);
-            opCodeNope.ReadExceptionFromStack = true;
-            opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
-            yield return opCodeNope;
-        }
-
-        protected virtual IEnumerable<OpCodePart> InsertAfterOpCode(OpCodePart opCode)
-        {
-            yield break;
-        }
-
-        protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
-        {
-            this.OpsByGroupAddressStart.Clear();
-            this.OpsByGroupAddressEnd.Clear();
-
-            foreach (var opCodePart in opCodes)
-            {
-                this.AddAddressIndex(opCodePart);
-            }
-
-            foreach (var opCodePart in opCodes)
-            {
-                this.Process(opCodePart);
-            }
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodes">
+        /// </param>
         protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
@@ -753,19 +695,6 @@ namespace Il2Native.Logic
                 {
                     val.RequiredOutgoingType = requiredType;
                 }
-            }
-        }
-
-        private void BuildGroupIndex(OpCodePart opCodePart)
-        {
-            if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
-            {
-                this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
-            }
-
-            if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
-            {
-                this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
             }
         }
 
@@ -836,95 +765,64 @@ namespace Il2Native.Logic
             }
         }
 
-        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected virtual IEnumerable<OpCodePart> InsertAfterOpCode(OpCodePart opCode)
         {
-            if (i == 1 && opCodePart.AlternativeValues != null)
-            {
-                lastPhiNodes = opCodePart.AlternativeValues;
-            }
-
-            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
-            {
-                lastPhiNodes.Values.Add(opCodePartUsed);
-            }
-
-            lastPhiNodes = null;
-            if (i > 0)
-            {
-                lastPhiNodes = opCodePartUsed.AlternativeValues;
-            }
-
-            return lastPhiNodes;
+            yield break;
         }
 
-        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
         {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = popCodePart.PreviousOpCode(this);
-            while (current != null
-                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
-                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
+            // insert result of exception
+            var exceptionHandling = this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
+            if (exceptionHandling == null || exceptionHandling.CatchType == null)
             {
-                current = current.PreviousOpCode(this);
-            };
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
+                yield break;
             }
 
-            return null;
+            var opCodeNope = new OpCodePart(OpCodesEmit.Newobj, opCode.AddressStart, opCode.AddressStart);
+            opCodeNope.ReadExceptionFromStack = true;
+            opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
+            yield return opCodeNope;
         }
 
-        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodes">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected IEnumerable<OpCodePart> PreProcessOpCodes(IEnumerable<OpCodePart> opCodes)
         {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = closerValue.PreviousOpCodeGroup(this);
-            while (current != null
-                   && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
-                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
+            OpCodePart last = null;
+            foreach (var opCodePart in opCodes)
             {
-                current = current.PreviousOpCodeGroup(this);
-            };
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, futherValue);
-            }
-
-            return null;
-        }
-
-        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
-        {
-            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
-
-            var destJump = closerValueJump.JumpOpCode(this);
-
-            // found address
-            if (destJump.AlternativeValues == null)
-            {
-                destJump.AlternativeValues = new PhiNodes();
-
-                // create custom jump point
-                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
-                var jumpDestination = futherValue.JumpDestination;
-                if (jumpDestination == null)
+                foreach (var opCodePartBefore in this.InsertBeforeOpCode(opCodePart))
                 {
-                    jumpDestination = new List<OpCodePart>();
-                    futherValue.JumpDestination = jumpDestination;
+                    last = BuildChain(last, opCodePartBefore);
+                    yield return opCodePartBefore;
                 }
 
-                // to force creating jump
-                jumpDestination.Add(OpCodePart.CreateNop);
+                last = BuildChain(last, opCodePart);
+                yield return opCodePart;
+
+                foreach (var opCodePartAfter in this.InsertAfterOpCode(opCodePart))
+                {
+                    last = BuildChain(last, opCodePartAfter);
+                    yield return opCodePartAfter;
+                }
             }
-
-            destJump.AlternativeValues.Values.Add(futherValue);
-            destJump.AlternativeValues.Labels.Add(labelAddress);
-
-            return destJump.AlternativeValues;
         }
 
         /// <summary>
@@ -939,11 +837,6 @@ namespace Il2Native.Logic
             this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
             return ops;
-        }
-
-        protected void AddOpCode(OpCodePart opCode)
-        {
-            this.Ops.Add(opCode);
         }
 
         /// <summary>
@@ -1175,12 +1068,31 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var isItMethodWithVoid =
-                opCode.OpCode.StackBehaviourPush == StackBehaviour.Varpush
-                && opCode is OpCodeMethodInfoPart && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
+            var isItMethodWithVoid = opCode.OpCode.StackBehaviourPush == StackBehaviour.Varpush && opCode is OpCodeMethodInfoPart
+                                     && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
             if (!isItMethodWithVoid)
             {
                 this.Stack.Push(opCode);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodes">
+        /// </param>
+        protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
+        {
+            this.OpsByGroupAddressStart.Clear();
+            this.OpsByGroupAddressEnd.Clear();
+
+            foreach (var opCodePart in opCodes)
+            {
+                this.AddAddressIndex(opCodePart);
+            }
+
+            foreach (var opCodePart in opCodes)
+            {
+                this.Process(opCodePart);
             }
         }
 
@@ -1199,17 +1111,16 @@ namespace Il2Native.Logic
             this.ThisType = methodInfo.DeclaringType;
 
             ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
             this.NoBody = !methodBody.HasBody;
             if (!this.NoBody)
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
 
-                AdjustLocalVariableTypes();
+                this.AdjustLocalVariableTypes();
 
 #if DEBUG
-                Debug.Assert(genericContext == null || !LocalInfo.Any(li => li.LocalType.IsGenericParameter));
+                Debug.Assert(genericContext == null || !this.LocalInfo.Any(li => li.LocalType.IsGenericParameter));
 #endif
 
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];
@@ -1217,17 +1128,6 @@ namespace Il2Native.Logic
             }
 
             this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
-        }
-
-        private void AdjustLocalVariableTypes()
-        {
-            // replace pinned IntPtr& with Int
-            foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
-            {
-                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
-                                          ? this.ResolveType("System.Void").ToPointerType()
-                                          : localInfo.LocalType.ToPointerType();
-            }
         }
 
         /// <summary>
@@ -1243,6 +1143,8 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
+        /// </param>
+        /// <param name="operandPosition">
         /// </param>
         /// <returns>
         /// </returns>
@@ -1332,6 +1234,12 @@ namespace Il2Native.Logic
             return retType;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodePart">
+        /// </param>
+        /// <returns>
+        /// </returns>
         protected IType RequiredOutgoingType(OpCodePart opCodePart)
         {
             // TODO: need a good review of required types etc
@@ -1365,16 +1273,69 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="opCodePart">
+        /// </param>
+        /// <param name="lastPhiNodes">
+        /// </param>
+        /// <param name="i">
+        /// </param>
+        /// <param name="opCodePartUsed">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
+        {
+            if (i == 1 && opCodePart.AlternativeValues != null)
+            {
+                lastPhiNodes = opCodePart.AlternativeValues;
+            }
+
+            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
+            {
+                lastPhiNodes.Values.Add(opCodePartUsed);
+            }
+
+            lastPhiNodes = null;
+            if (i > 0)
+            {
+                lastPhiNodes = opCodePartUsed.AlternativeValues;
+            }
+
+            return lastPhiNodes;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="last">
+        /// </param>
+        /// <param name="opCodePartBefore">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static OpCodePart BuildChain(OpCodePart last, OpCodePart opCodePartBefore)
+        {
+            if (last != null)
+            {
+                last.Next = opCodePartBefore;
+                opCodePartBefore.Previous = last;
+            }
+
+            last = opCodePartBefore;
+            return last;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCode">
         /// </param>
         private void AddAddressIndex(OpCodePart opCode)
         {
-            if (!OpsByAddressStart.ContainsKey(opCode.AddressStart))
+            if (!this.OpsByAddressStart.ContainsKey(opCode.AddressStart))
             {
                 this.OpsByAddressStart[opCode.AddressStart] = opCode;
             }
 
-            if (!OpsByAddressEnd.ContainsKey(opCode.AddressEnd))
+            if (!this.OpsByAddressEnd.ContainsKey(opCode.AddressEnd))
             {
                 this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
             }
@@ -1382,23 +1343,139 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="closerValue">
+        /// </param>
+        /// <param name="futherValue">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = closerValue.PreviousOpCodeGroup(this);
+            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCodeGroup(this);
+            }
+
+            ;
+
+            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
+            {
+                return this.AddPhiValues(current.AddressEnd, current, futherValue);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="popCodePart">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = popCodePart.PreviousOpCode(this);
+            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
+            {
+                current = current.PreviousOpCode(this);
+            }
+
+            ;
+
+            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
+            {
+                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="labelAddress">
+        /// </param>
+        /// <param name="closerValueJump">
+        /// </param>
+        /// <param name="futherValue">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
+        {
+            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
+
+            var destJump = closerValueJump.JumpOpCode(this);
+
+            // found address
+            if (destJump.AlternativeValues == null)
+            {
+                destJump.AlternativeValues = new PhiNodes();
+
+                // create custom jump point
+                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
+                var jumpDestination = futherValue.JumpDestination;
+                if (jumpDestination == null)
+                {
+                    jumpDestination = new List<OpCodePart>();
+                    futherValue.JumpDestination = jumpDestination;
+                }
+
+                // to force creating jump
+                jumpDestination.Add(OpCodePart.CreateNop);
+            }
+
+            destJump.AlternativeValues.Values.Add(futherValue);
+            destJump.AlternativeValues.Labels.Add(labelAddress);
+
+            return destJump.AlternativeValues;
+        }
+
+        /// <summary>
+        /// </summary>
+        private void AdjustLocalVariableTypes()
+        {
+            // replace pinned IntPtr& with Int
+            foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
+            {
+                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
+                                          ? this.ResolveType("System.Void").ToPointerType()
+                                          : localInfo.LocalType.ToPointerType();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="opCodePart">
         /// </param>
+        private void BuildGroupIndex(OpCodePart opCodePart)
+        {
+            if (!this.OpsByGroupAddressStart.ContainsKey(opCodePart.GroupAddressStart))
+            {
+                this.OpsByGroupAddressStart[opCodePart.GroupAddressStart] = opCodePart;
+            }
+
+            if (!this.OpsByGroupAddressEnd.ContainsKey(opCodePart.GroupAddressEnd))
+            {
+                this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="currentArgument">
         /// </param>
         /// <param name="stack">
         /// </param>
-        /// <param name="sizeOfCondition">
-        /// </param>
-        /// <param name="firstCondition">
-        /// </param>
-        /// <param name="lastCondition">
-        /// </param>
         /// <returns>
         /// </returns>
-        private bool IsConditionalExpression(
-            OpCodePart currentArgument,
-            Stack<OpCodePart> stack)
+        private bool IsConditionalExpression(OpCodePart currentArgument, Stack<OpCodePart> stack)
         {
             if (!stack.Any())
             {
@@ -1423,9 +1500,7 @@ namespace Il2Native.Logic
                     return false;
                 }
 
-                var isCondJumpForward = firstCondJump != null
-                                        && firstCondJump.IsCondBranch()
-                                        && firstCondJump.IsJumpForward()
+                var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() && firstCondJump.IsJumpForward()
                                         && firstCondJump.JumpAddress() == middleJump.AddressEnd;
                 if (!isCondJumpForward)
                 {
@@ -1452,7 +1527,7 @@ namespace Il2Native.Logic
         {
             /// <summary>
             /// </summary>
-            /// <param name="type">
+            /// <param name="result">
             /// </param>
             public ReturnResult(FullyDefinedReference result)
             {
@@ -1468,10 +1543,6 @@ namespace Il2Native.Logic
             {
                 this.Type = type;
             }
-
-            /// <summary>
-            /// </summary>
-            public IType Type { get; set; }
 
             /// <summary>
             /// </summary>
@@ -1496,6 +1567,10 @@ namespace Il2Native.Logic
                     return true;
                 }
             }
+
+            /// <summary>
+            /// </summary>
+            public IType Type { get; set; }
 
             /// <summary>
             /// </summary>

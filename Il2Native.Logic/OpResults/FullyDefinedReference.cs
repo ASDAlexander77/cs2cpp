@@ -9,9 +9,9 @@
 namespace Il2Native.Logic
 {
     using System;
+    using System.Diagnostics;
 
     using PEAssemblyReader;
-    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -44,6 +44,10 @@ namespace Il2Native.Logic
             this.Name = name;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
         protected FullyDefinedReference(IType type)
         {
             this.Type = type;
@@ -61,32 +65,18 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        public override string ToString()
-        {
-            return this.Name;
-        }
-
-        public virtual FullyDefinedReference ToType(IType newType)
-        {
-            return new FullyDefinedReference(this.ToString(), newType);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public FullyDefinedReference ToNormalType()
-        {
-            return this.ToType(this.Type.ToNormal());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
         public FullyDefinedReference ToClassType()
         {
             return this.ToType(this.Type.ToClass());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public FullyDefinedReference ToDereferencedType()
+        {
+            return this.ToType(this.Type.ToDereferencedType());
         }
 
         /// <summary>
@@ -102,6 +92,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
+        public FullyDefinedReference ToNormalType()
+        {
+            return this.ToType(this.Type.ToNormal());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public FullyDefinedReference ToPointerType()
         {
             return this.ToType(this.Type.ToPointerType());
@@ -111,9 +110,20 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference ToDereferencedType()
+        public override string ToString()
         {
-            return this.ToType(this.Type.ToDereferencedType());
+            return this.Name;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="newType">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public virtual FullyDefinedReference ToType(IType newType)
+        {
+            return new FullyDefinedReference(this.ToString(), newType);
         }
     }
 }

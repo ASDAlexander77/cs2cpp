@@ -1,19 +1,29 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedGetTypeStaticMethod.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Collections.Generic;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedGetTypeStaticMethod : SynthesizedMethodTypeBase
     {
-        private IType systemType;
+        /// <summary>
+        /// </summary>
+        private readonly IType systemType;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
+        /// <param name="llvmWriter">
         /// </param>
         public SynthesizedGetTypeStaticMethod(IType type, LlvmWriter llvmWriter)
             : base(type, ".getType")

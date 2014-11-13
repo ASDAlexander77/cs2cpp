@@ -1,62 +1,34 @@
-﻿namespace Il2Native.Logic.Gencode
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="InterlockedGen.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode
 {
-    using System;
     using System.Linq;
+
     using Il2Native.Logic.CodeParts;
+
     using PEAssemblyReader;
 
+    /// <summary>
+    /// </summary>
     public static class InterlockedGen
     {
-        public static bool IsInterlockedFunction(this IMethod method)
-        {
-            if (!method.IsStatic)
-            {
-                return false;
-            }
-
-            if (method.DeclaringType.FullName != "System.Threading.Interlocked")
-            {
-                return false;
-            }
-
-            switch (method.MetadataName)
-            {
-                case "Increment":
-                case "Decrement":
-                case "Exchange`1":
-                case "Exchange":
-                case "CompareExchange`1":
-                case "CompareExchange":
-                    return true;
-            }
-
-            return false;
-        }
-
-        public static void WriteInterlockedFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
-        {
-            switch (method.MetadataName)
-            {
-                case "Increment":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", llvmWriter);
-                    break;
-
-                case "Decrement":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", llvmWriter);
-                    break;
-
-                case "Exchange`1":
-                case "Exchange":
-                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter);
-                    break;
-
-                case "CompareExchange`1":
-                case "CompareExchange":
-                    opCodeMethodInfo.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm36OrHigher, llvmWriter);
-                    break;
-            }
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodeMethodInfo">
+        /// </param>
+        /// <param name="oper">
+        /// </param>
+        /// <param name="attribs">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         public static void IncDecInterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
@@ -67,8 +39,8 @@
             llvmWriter.WriteSetResultNumber(opCodeMethodInfo, resultType);
 
             writer.Write(oper);
-            //i32* %ptr, i32 %cmp, i32 %squared 
 
+            // i32* %ptr, i32 %cmp, i32 %squared 
             var index = 0;
             foreach (var operand in opCodeMethodInfo.OpCodeOperands)
             {
@@ -89,6 +61,18 @@
             writer.WriteLine(attribs);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="opCodeMethodInfo">
+        /// </param>
+        /// <param name="oper">
+        /// </param>
+        /// <param name="attribs">
+        /// </param>
+        /// <param name="extractValue">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         public static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
@@ -157,6 +141,70 @@
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; {0} end", oper);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static bool IsInterlockedFunction(this IMethod method)
+        {
+            if (!method.IsStatic)
+            {
+                return false;
+            }
+
+            if (method.DeclaringType.FullName != "System.Threading.Interlocked")
+            {
+                return false;
+            }
+
+            switch (method.MetadataName)
+            {
+                case "Increment":
+                case "Decrement":
+                case "Exchange`1":
+                case "Exchange":
+                case "CompareExchange`1":
+                case "CompareExchange":
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="opCodeMethodInfo">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteInterlockedFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        {
+            switch (method.MetadataName)
+            {
+                case "Increment":
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", llvmWriter);
+                    break;
+
+                case "Decrement":
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", llvmWriter);
+                    break;
+
+                case "Exchange`1":
+                case "Exchange":
+                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter);
+                    break;
+
+                case "CompareExchange`1":
+                case "CompareExchange":
+                    opCodeMethodInfo.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm36OrHigher, llvmWriter);
+                    break;
+            }
         }
     }
 }

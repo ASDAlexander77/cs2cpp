@@ -25,6 +25,8 @@ namespace PEAssemblyReader
         private MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo;
 
         // we are using it to replace Pinner IntPtr& with Void* to work with it as value
+        /// <summary>
+        /// </summary>
         private IType localTypeReplaced;
 
         /// <summary>

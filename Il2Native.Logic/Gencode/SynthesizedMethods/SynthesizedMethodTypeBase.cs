@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedMethodTypeBase.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using PEAssemblyReader;
 
@@ -9,6 +18,8 @@
         /// <summary>
         /// </summary>
         /// <param name="type">
+        /// </param>
+        /// <param name="methodName">
         /// </param>
         public SynthesizedMethodTypeBase(IType type, string methodName)
         {
@@ -68,11 +79,10 @@
 
         /// <summary>
         /// </summary>
-        protected IType Type { get; set; }
+        protected string MethodName { get; set; }
 
         /// <summary>
         /// </summary>
-        protected string MethodName { get; set; }
+        protected IType Type { get; set; }
     }
-
 }

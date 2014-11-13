@@ -12,11 +12,11 @@ namespace PEAssemblyReader
     using System.Diagnostics;
     using System.Reflection.Metadata;
     using System.Reflection.PortableExecutable;
+    using System.Text;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-    using System.Text;
 
     /// <summary>
     /// </summary>
@@ -216,6 +216,17 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public bool Equals(IField other)
+        {
+            return this.FullName == other.FullName;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="relativeVirtualAddress">
         /// </param>
         /// <param name="peReader">
@@ -267,18 +278,18 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public override string ToString()
+        public override int GetHashCode()
         {
-            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return this.FullName.GetHashCode();
         }
 
         /// <summary>
         /// </summary>
         /// <returns>
         /// </returns>
-        public override int GetHashCode()
+        public override string ToString()
         {
-            return this.FullName.GetHashCode();
+            return this.fieldDef.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         }
 
         /// <summary>
@@ -311,11 +322,6 @@ namespace PEAssemblyReader
         {
             peModuleSymbol = this.fieldDef.ContainingModule as PEModuleSymbol;
             peMethodSymbol = this.fieldDef as PEFieldSymbol ?? this.fieldDef.OriginalDefinition as PEFieldSymbol;
-        }
-
-        public bool Equals(IField other)
-        {
-            return this.FullName == other.FullName;
         }
     }
 }
