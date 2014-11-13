@@ -38,15 +38,12 @@ namespace PdbReader
         /// </summary>
         /// <param name="filename">
         /// </param>
-        public static void Convert(string filename)
+        public static void Convert(string filename, ISymbolWriter symbolWriter)
         {
-            var pdb = filename + ".pdb";
-            pdb = Path.Combine(Path.GetDirectoryName(filename), pdb);
-
-            using (var stream = File.OpenRead(pdb))
+            using (var stream = File.OpenRead(filename))
             {
                 var funcs = PdbFile.LoadFunctions(stream, true);
-                Convert(funcs, null);
+                Convert(funcs, symbolWriter);
             }
         }
 

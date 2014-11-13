@@ -55,6 +55,11 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DummySymbolWriter\DummyCompileUnitEntry.cs" />
+    <Compile Include="DummySymbolWriter\DummySourceFile.cs" />
+    <Compile Include="DummySymbolWriter\DummySourceFileEntry.cs" />
+    <Compile Include="DummySymbolWriter\DummySourceMethodBuilder.cs" />
+    <Compile Include="DummySymbolWriter\DummySymbolWriter.cs" />
     <Compile Include="MSTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -66,6 +71,10 @@
     <ProjectReference Include="..\Il2Native.Logic\Il2Native.Logic.csproj">
       <Project>{8F2A92D0-8862-4CF7-9C95-120681F5A689}</Project>
       <Name>Il2Native.Logic</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PdbReader\PdbReader.csproj">
+      <Project>{68d11523-23ec-405f-adb0-c2f2c0538589}</Project>
+      <Name>PdbReader</Name>
     </ProjectReference>
     <ProjectReference Include="..\PEAssemblyReader\PEAssemblyReader.csproj">
       <Project>{278b563a-a934-489c-8dfc-39b021816c25}</Project>

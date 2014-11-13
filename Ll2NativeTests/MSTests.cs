@@ -18,6 +18,8 @@ namespace Ll2NativeTests
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    using PdbReader;
+
     /// <summary>
     /// Summary description for MSTests
     /// </summary>
@@ -30,6 +32,7 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"C:\Temp\tests\";
         private const string OutputPath = @"C:\Temp\IlCTests\";
         private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
         private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
@@ -43,6 +46,7 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"D:\Temp\tests\";
         private const string OutputPath = @"D:\Temp\IlCTests\";
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
@@ -357,6 +361,14 @@ namespace Ll2NativeTests
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestPdbReader()
+        {
+            Converter.Convert(CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
         }
 
         /// <summary>
