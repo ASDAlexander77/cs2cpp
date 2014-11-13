@@ -9,12 +9,9 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PdbReader
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
-    using Microsoft.Cci.Pdb;
 
     /// <summary>
     /// </summary>
@@ -119,16 +116,16 @@ namespace PdbReader
         /// </param>
         private void ConvertSequencePoints(PdbFunction function, SourceFile file, ISourceMethodBuilder builder)
         {
-            var last_line = 0;
+            var lastLine = 0;
             foreach (var line in function.lines.SelectMany(lines => lines.lines))
             {
-                // 0xfeefee is an MS convention, we can't pass it into mdb files, so we use the last non-hidden line
-                var is_hidden = line.lineBegin == 0xfeefee;
+                // 0xfeefee is an MS convention, we can't pass it into ISymbolWriter, so we use the last non-hidden line
+                var isHidden = line.lineBegin == 0xfeefee;
                 builder.MarkSequencePoint(
-                    (int)line.offset, file.CompilationUnitEntry.SourceFile, is_hidden ? last_line : (int)line.lineBegin, (int)line.colBegin, is_hidden);
-                if (!is_hidden)
+                    (int)line.offset, file.CompilationUnitEntry.SourceFile, isHidden ? lastLine : (int)line.lineBegin, (int)line.colBegin, isHidden);
+                if (!isHidden)
                 {
-                    last_line = (int)line.lineBegin;
+                    lastLine = (int)line.lineBegin;
                 }
             }
         }

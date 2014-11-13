@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Microsoft.Cci
+namespace PdbReader
 {
     using System.Collections.Generic;
 

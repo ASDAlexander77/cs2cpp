@@ -7,7 +7,7 @@
 // </summary>
 // 
 // --------------------------------------------------------------------------------------------------------------------
-namespace Microsoft.Cci.Pdb
+namespace PdbReader
 {
     using System;
     using System.IO;
