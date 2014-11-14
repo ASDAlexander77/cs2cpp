@@ -160,7 +160,7 @@ namespace Il2Native.Logic
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = args == null || !args.Contains("gctors-");
-            this.IsLlvm36OrHigher = args != null && args.Contains("llvm36");
+            this.IsLlvm35OrLower = args != null && args.Contains("llvm35");
             this.DebugInfo = args != null && args.Contains("debug");
             if (this.DebugInfo)
             {
@@ -190,7 +190,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool IsLlvm36OrHigher { get; private set; }
+        public bool IsLlvm35OrLower { get; private set; }
 
         /// <summary>
         /// </summary>

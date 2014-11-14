@@ -135,7 +135,7 @@ namespace Il2Native.Logic.Gencode
                         noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
                         noOpCmpXchg.OpCodeOperands[1].Result = new ConstValue(null, operandType);
                         noOpCmpXchg.OpCodeOperands[2].Result = newObjectResult;
-                        noOpCmpXchg.InterlockBase("cmpxchg ", " acq_rel monotonic", llvmWriter.IsLlvm36OrHigher, llvmWriter);
+                        noOpCmpXchg.InterlockBase("cmpxchg ", " acq_rel monotonic", !llvmWriter.IsLlvm35OrLower, llvmWriter);
                         writer.WriteLine(string.Empty);
 
                         // load again

@@ -39,7 +39,7 @@ namespace Il2Native
                 Console.WriteLine("  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors (recommended for Android platform)");
-                Console.WriteLine("  /llvm36                 Enable support LLVM 3.6 or higher, otherwise uses LLVM 3.5 or lower version");
+                Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 or lower version");
                 Console.WriteLine("  /debug                  Generate debug information");
                 return;
             }

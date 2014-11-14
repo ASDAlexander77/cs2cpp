@@ -37,7 +37,7 @@ namespace Ll2NativeTests
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
-        private const bool Llvm36Support = true;
+        private const bool Llvm36Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -51,7 +51,7 @@ namespace Ll2NativeTests
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
-        private const bool Llvm36Support = false;
+        private const bool Llvm35Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -387,7 +387,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support, bool debugInfo = false)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -410,9 +410,9 @@ namespace Ll2NativeTests
                 args.Add("gctors-");
             }
 
-            if (llvm36Support)
+            if (llvm35Support)
             {
-                args.Add("llvm36");
+                args.Add("llvm35");
             }
 
             if (debugInfo)

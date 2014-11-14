@@ -36,7 +36,7 @@
             // add default flags and identity
             this.Identity.Add(new CollectionMetadata(indexedMetadata).Add(this.identity));
             this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Dwarf Version", 4));
-            this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Debug Info Version", 1));
+            this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Debug Info Version", 2));
         }
 
         public string DefaultSourceFilePath
@@ -103,17 +103,9 @@
         {
             // add compile unit template
             var compilationUnit = new CollectionMetadata(indexedMetadata).Add(
-                786449,
+                string.Format(@"0x11\0012\00{0}\000\00\000\00\001", this.identity),
                 // file
                 file,
-                12,
-                this.identity,
-                // isOptimized?
-                false,
-                // Flags
-                string.Empty,
-                // Runtime Version
-                0,
                 // Enum Types
                 enumTypes = new CollectionMetadata(indexedMetadata),
                 // Retained Types
@@ -123,11 +115,7 @@
                 // Global Variables
                 globalVariables = new CollectionMetadata(indexedMetadata),
                 // Imported entities
-                importedEntities = new CollectionMetadata(indexedMetadata),
-                // Split debug filename
-                string.Empty,
-                // Full debug info
-                0);
+                importedEntities = new CollectionMetadata(indexedMetadata));
 
             this.CompileUnit.Add(compilationUnit);
         }
