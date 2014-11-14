@@ -8,22 +8,27 @@
     {
         private DebugInfoGenerator debugInfoGenerator;
 
+        private CollectionMetadata file;
+
         private CollectionMetadata enumTypes;
         private CollectionMetadata retainedTypes;
         private CollectionMetadata subprograms;
         private CollectionMetadata globalVariables;
         private CollectionMetadata importedEntities;
 
-        public DebugInfoCompileUnitEntry(DebugInfoGenerator debugInfoGenerator, ISourceFileEntry entry)
+        public DebugInfoCompileUnitEntry(DebugInfoGenerator debugInfoGenerator, ISourceFileEntry entry, CollectionMetadata file)
         {
             this.debugInfoGenerator = debugInfoGenerator;
+
+            this.file = file;
 
             CollectionMetadata enumTypes;
             CollectionMetadata retainedTypes; 
             CollectionMetadata subprograms;
             CollectionMetadata globalVariables;
             CollectionMetadata importedEntities;
-            this.debugInfoGenerator.DefineCompilationUnit(entry, out enumTypes, out retainedTypes, out subprograms, out globalVariables, out importedEntities);
+            this.debugInfoGenerator.DefineCompilationUnit(
+                this.file, out enumTypes, out retainedTypes, out subprograms, out globalVariables, out importedEntities);
 
             this.enumTypes = enumTypes;
             this.retainedTypes = retainedTypes;
@@ -34,7 +39,7 @@
 
         public ISourceMethodBuilder DefineMethod(ISourceMethod method)
         {
-            return new DebugInfoSourceMethodBuilder(method);
+            return new DebugInfoSourceMethodBuilder(this.debugInfoGenerator, method, this.file, this.subprograms);
         }
     }
 }

@@ -228,11 +228,17 @@ namespace PdbReader
         {
             /// <summary>
             /// </summary>
+            public int Token { get; set; }
+
             public string Name { get; set; }
 
-            /// <summary>
-            /// </summary>
-            public int Token { get; set; }
+            public string DisplayName { get; set; }
+
+            public string LinkageName { get; set; }
+
+            public string LineNumber { get; set; }
+
+            public string MethodReference { get; set; }
         }
     }
 }

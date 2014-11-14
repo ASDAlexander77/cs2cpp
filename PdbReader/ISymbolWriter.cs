@@ -15,6 +15,15 @@
 
     public interface ISourceMethod
     {
+        string Name { get; set; }
+
+        string DisplayName { get; set; }
+
+        string LinkageName { get; set; }
+
+        string LineNumber { get; set; }
+
+        string MethodReference { get; set; }
     }
 
     public interface ISourceMethodBuilder

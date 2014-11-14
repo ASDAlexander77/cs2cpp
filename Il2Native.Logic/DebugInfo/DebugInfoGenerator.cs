@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.IO;
 
+    using Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter;
     using Il2Native.Logic.Metadata.Model;
 
     using PdbReader;
@@ -93,13 +94,18 @@
             }
         }
 
-        public void DefineCompilationUnit(ISourceFileEntry entry, out CollectionMetadata enumTypes, out CollectionMetadata retainedTypes, out CollectionMetadata subprograms, out CollectionMetadata globalVariables, out CollectionMetadata importedEntities)
+        public CollectionMetadata DefineFile(ISourceFileEntry entry)
+        {
+            return new CollectionMetadata(indexedMetadata).Add(entry.FileName, entry.Directory.Replace("\\", "\\5C"));
+        }
+
+        public void DefineCompilationUnit(CollectionMetadata file, out CollectionMetadata enumTypes, out CollectionMetadata retainedTypes, out CollectionMetadata subprograms, out CollectionMetadata globalVariables, out CollectionMetadata importedEntities)
         {
             // add compile unit template
             var compilationUnit = new CollectionMetadata(indexedMetadata).Add(
                 786449,
                 // file
-                new CollectionMetadata(indexedMetadata).Add(entry.FileName, entry.Directory.Replace("\\", "\\5C")),
+                file,
                 12,
                 this.identity,
                 // isOptimized?
@@ -109,15 +115,15 @@
                 // Runtime Version
                 0,
                 // Enum Types
-                new CollectionMetadata(indexedMetadata).Add(enumTypes = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
+                enumTypes = new CollectionMetadata(indexedMetadata),
                 // Retained Types
-                new CollectionMetadata(indexedMetadata).Add(retainedTypes = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
+                retainedTypes = new CollectionMetadata(indexedMetadata),
                 // Subprograms
-                new CollectionMetadata(indexedMetadata).Add(subprograms = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
+                subprograms = new CollectionMetadata(indexedMetadata),
                 // Global Variables
-                new CollectionMetadata(indexedMetadata).Add(globalVariables = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
+                globalVariables = new CollectionMetadata(indexedMetadata),
                 // Imported entities
-                new CollectionMetadata(indexedMetadata).Add(importedEntities = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
+                importedEntities = new CollectionMetadata(indexedMetadata),
                 // Split debug filename
                 string.Empty,
                 // Full debug info
@@ -126,9 +132,48 @@
             this.CompileUnit.Add(compilationUnit);
         }
 
-        public void DefineMethod(ISourceMethod method)
+        public CollectionMetadata DefineMethod(ISourceMethod method, CollectionMetadata file, out CollectionMetadata subroutineTypes, out CollectionMetadata functionVariables)
         {
+            // member of a class   
+            // !6 = metadata !{i32 786478, metadata !1, metadata !"_ZTS5Hello", metadata !"Test", metadata !"Test", metadata !"_ZN5Hello4TestEv", i32 4, metadata !7,  i1 false, i1 false, i32 0, i32 0, null, i32 259, i1 false, null,          null, i32 0, null,        i32 4 } ; [ DW_TAG_subprogram ] [line 4] [public] [Test]
+            // definition
+            // !7 = metadata !{i32 786478, metadata !1, metadata !12,           metadata !"main", metadata !"main", metadata !"",                 i32 9, metadata !13, i1 false, i1 true,  i32 0, i32 0, null, i32 256, i1 false, i32 ()* @main, null, null,  metadata !2, i32 10} ; [ DW_TAG_subprogram ] [line 9] [def] [scope 10] [main]
 
+            // add compile unit template
+            var methodDefinition = new CollectionMetadata(indexedMetadata).Add(
+                786478,
+                file,
+                12,
+                method.Name,
+                method.DisplayName,
+                method.LinkageName,
+                method.LineNumber,
+                // Subroutine types
+                subroutineTypes = new CollectionMetadata(indexedMetadata),
+                // Is local
+                false,
+                // Is definition
+                true,
+                // Virtuality attribute, e.g. pure virtual function
+                0,
+                // Index into virtual table for C++ methods
+                0,
+                // Flags 256 - definition (as main()), 259 - public (member of a class)
+                256,
+                // True if this function is optimized
+                false,
+                // function method reference ex. "i32 ()* @main"
+                method.MethodReference,
+                // Function template parameters
+                null,
+                // Function declaration
+                null,
+                // List of function variables
+                functionVariables = new CollectionMetadata(indexedMetadata),
+                // Line number of the opening '{' of the function
+                method.LineNumber);
+
+            return methodDefinition;
         }
     }
 }

@@ -19,7 +19,7 @@
             var path = Path.GetDirectoryName(effectiveName);
             var filename = Path.GetFileName(effectiveName);
 
-            return new DebugInfoSourceFileEntry(this.debugInfoGenerator) { Directory = path, FileName = filename };
+            return new DebugInfoSourceFileEntry(this.debugInfoGenerator, path, filename);
         }
 
         public ICompileUnitEntry DefineCompilationUnit(ISourceFileEntry entry)
