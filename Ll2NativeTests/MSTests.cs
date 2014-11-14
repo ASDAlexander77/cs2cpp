@@ -102,6 +102,14 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
+        public void TestCustomConvertDebugInfo()
+        {
+            Convert("test-1", SourcePathCustom, true);
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
         public void TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
@@ -379,7 +387,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support, bool debugInfo = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -405,6 +413,11 @@ namespace Ll2NativeTests
             if (llvm36Support)
             {
                 args.Add("llvm36");
+            }
+
+            if (debugInfo)
+            {
+                args.Add("debug");
             }
 
             return args.ToArray();
@@ -562,12 +575,12 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="format">
         /// </param>
-        private static void Convert(string fileName, string source = SourcePath)
+        private static void Convert(string fileName, string source = SourcePath, bool debugInfo = false)
         {
             Il2Converter.Convert(
                 string.Concat(source, string.Format("{0}.cs", fileName)),
                 OutputPath,
-                GetConverterArgs(true));
+                GetConverterArgs(true, debugInfo: debugInfo));
         }
     }
 }

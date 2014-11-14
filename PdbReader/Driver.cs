@@ -80,7 +80,7 @@ namespace PdbReader
 
             var file = this.GetSourceFile(this.symbolWriter, function);
 
-            var builder = this.symbolWriter.OpenMethod(file.CompilationUnitEntry, 0, method);
+            var builder = this.symbolWriter.OpenMethod(file.CompilationUnitEntry, method);
 
             this.ConvertSequencePoints(function, file, builder);
 

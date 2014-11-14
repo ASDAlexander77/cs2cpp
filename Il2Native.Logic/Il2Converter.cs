@@ -31,9 +31,12 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(string source, string outputFolder, string[] args = null)
         {
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source);
+            
             var ilReader = new IlReader(source, args);
             ilReader.Load();
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder, args);
+
+            GenerateLlvm(ilReader, fileNameWithoutExtension, ilReader.SourceFilePath, ilReader.PdbFilePath, outputFolder, args);
         }
 
         /// <summary>
@@ -46,10 +49,14 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(Type type, string outputFolder, string[] args = null)
         {
+            var name = type.Module.Name.Replace(".dll", string.Empty);
+            var filePath = Path.GetDirectoryName(name);
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
+            var pdbFileName = Path.Combine(filePath, string.Concat(fileNameWithoutExtension, ".pdb"));
+
             var ilReader = new IlReader();
             ilReader.Load(type);
-            var name = type.Module.Name.Replace(".dll", string.Empty);
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
+            GenerateLlvm(ilReader, fileNameWithoutExtension, null, pdbFileName, outputFolder, args, new[] { type.FullName });
         }
 
         /// <summary>
@@ -463,9 +470,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="filter">
         /// </param>
-        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
+        private static void GenerateLlvm(IlReader ilReader, string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args, string[] filter = null)
         {
-            var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
+            var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
 
@@ -614,9 +621,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder, string[] args)
+        private static ICodeWriter GetLlvmWriter(string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args)
         {
-            return new LlvmWriter(Path.Combine(outputFolder, fileName), args);
+            return new LlvmWriter(Path.Combine(outputFolder, fileName), sourceFilePath, pdbFilePath, args);
         }
 
         /// <summary>

@@ -335,8 +335,22 @@ namespace Il2Native.Logic
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
             this.UsingRoslyn = args != null && args.Any(a => a == "roslyn");
-            this.DefaultDllLocations = this.Source.EndsWith(".dll") ? Path.GetDirectoryName(Path.GetFullPath(this.Source)) : null;
+            var isDll = this.Source.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
+            this.DefaultDllLocations = isDll
+                                           ? Path.GetDirectoryName(Path.GetFullPath(this.Source))
+                                           : null;
+
+            if (!isDll)
+            {
+                this.SourceFilePath = Path.GetFullPath(this.Source);
+            }
         }
+
+        public string SourceFilePath { get; private set; }
+
+        public string DllFilePath { get; private set; }
+
+        public string PdbFilePath { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -1190,7 +1204,11 @@ namespace Il2Native.Logic
                 throw new NotSupportedException(string.Format("language '{0}' is not supported", language));
             }
 
-            var outDll = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".dll");
+            var path = Path.GetTempPath();
+            var filename = Path.GetRandomFileName();
+
+            var outDll = Path.Combine(path, string.Concat(filename, ".dll"));
+            var outPdb = Path.Combine(path, string.Concat(filename, ".pdb"));
 
             var parameters = CodeDomProvider.GetCompilerInfo(language).CreateDefaultCompilerParameters();
             parameters.GenerateExecutable = false;
@@ -1215,6 +1233,9 @@ namespace Il2Native.Logic
             {
                 throw new Exception();
             }
+
+            this.DllFilePath = outDll;
+            this.PdbFilePath = outPdb;
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(results.PathToAssembly, FileMode.Open, FileAccess.Read));
@@ -1256,6 +1277,9 @@ namespace Il2Native.Logic
                     Trace.WriteLine(diagnostic);
                 }
             }
+
+            this.DllFilePath = outDll;
+            this.PdbFilePath = outPdb;
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(outDll, FileMode.Open, FileAccess.Read));

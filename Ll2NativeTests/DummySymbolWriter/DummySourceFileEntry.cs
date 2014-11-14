@@ -4,6 +4,13 @@
 
     public class DummySourceFileEntry : ISourceFileEntry
     {
-        public ISourceFile SourceFile { get; set; }
+        public string Directory { get; private set; }
+
+        public string FileName { get; private set; }
+
+        public ICompileUnitEntry DefineCompilationUnit()
+        {
+            return new DummyCompileUnitEntry();
+        }
     }
 }

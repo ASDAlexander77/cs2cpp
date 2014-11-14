@@ -40,6 +40,7 @@ namespace Il2Native
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors (recommended for Android platform)");
                 Console.WriteLine("  /llvm36                 Enable support LLVM 3.6 or higher, otherwise uses LLVM 3.5 or lower version");
+                Console.WriteLine("  /debug                  Generate debug information");
                 return;
             }
 

@@ -19,11 +19,14 @@ namespace Il2Native.Logic
     using System.Text;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.DebugInfo;
     using Il2Native.Logic.Exceptions;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Properties;
 
     using PEAssemblyReader;
+
+    using PdbReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
@@ -139,13 +142,16 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
 
+
+        public DebugInfoGenerator debugInfoGenerator;
+
         /// <summary>
         /// </summary>
         /// <param name="fileName">
         /// </param>
         /// <param name="args">
         /// </param>
-        public LlvmWriter(string fileName, string[] args)
+        public LlvmWriter(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
@@ -155,11 +161,20 @@ namespace Il2Native.Logic
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = args == null || !args.Contains("gctors-");
             this.IsLlvm36OrHigher = args != null && args.Contains("llvm36");
+            this.DebugInfo = args != null && args.Contains("debug");
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
+            }
         }
 
         /// <summary>
         /// </summary>
         public IEnumerable<string> AllReference { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool DebugInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -2349,6 +2364,12 @@ namespace Il2Native.Logic
             this.WriteGlobalConstructors();
 
             this.WriteRequiredDeclarations();
+
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator.Generate();
+                this.debugInfoGenerator.WriteTo(this.Output);
+            }
         }
 
         /// <summary>
