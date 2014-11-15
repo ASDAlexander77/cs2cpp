@@ -236,7 +236,7 @@ namespace PdbReader
 
             public string LinkageName { get; set; }
 
-            public string LineNumber { get; set; }
+            public int LineNumber { get; set; }
 
             public string MethodReference { get; set; }
         }

@@ -127,39 +127,43 @@
             // definition
             // !7 = metadata !{i32 786478, metadata !1, metadata !12,           metadata !"main", metadata !"main", metadata !"",                 i32 9, metadata !13, i1 false, i1 true,  i32 0, i32 0, null, i32 256, i1 false, i32 ()* @main, null, null,  metadata !2, i32 10} ; [ DW_TAG_subprogram ] [line 9] [def] [scope 10] [main]
 
+            // Flags 256 - definition (as main()), 259 - public (member of a class)
+            var flag = 256;
+
+            // Line number of the opening '{' of the function
+            var scopeLine = method.LineNumber;
+
+            CollectionMetadata fileTypes;
+
             // add compile unit template
             var methodDefinition = new CollectionMetadata(indexedMetadata).Add(
-                786478,
+                string.Format(@"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}",
+                    method.Name,
+                    method.DisplayName,
+                    method.LinkageName,
+                    method.LineNumber,
+                    flag,
+                    scopeLine
+                ),
+                // Source directory (including trailing slash) & file pair
                 file,
-                12,
-                method.Name,
-                method.DisplayName,
-                method.LinkageName,
-                method.LineNumber,
+                // Reference to context descriptor
+                fileTypes = new CollectionMetadata(indexedMetadata),
                 // Subroutine types
                 subroutineTypes = new CollectionMetadata(indexedMetadata),
-                // Is local
-                false,
-                // Is definition
-                true,
-                // Virtuality attribute, e.g. pure virtual function
-                0,
-                // Index into virtual table for C++ methods
-                0,
-                // Flags 256 - definition (as main()), 259 - public (member of a class)
-                256,
-                // True if this function is optimized
-                false,
-                // function method reference ex. "i32 ()* @main"
-                method.MethodReference,
-                // Function template parameters
+                // indicates which base type contains the vtable pointer for the derived class
                 null,
-                // Function declaration
+                // function method reference ex. "i32 ()* @main"                
+                method.MethodReference,
+                // Lists function template parameters
+                null,
+                // Function declaration descriptor
                 null,
                 // List of function variables
-                functionVariables = new CollectionMetadata(indexedMetadata),
-                // Line number of the opening '{' of the function
-                method.LineNumber);
+                functionVariables = new CollectionMetadata(indexedMetadata));
+
+            // Add file type
+            fileTypes.Add("0x29", file);
 
             return methodDefinition;
         }

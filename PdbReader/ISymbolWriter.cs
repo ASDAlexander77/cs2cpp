@@ -21,7 +21,7 @@
 
         string LinkageName { get; set; }
 
-        string LineNumber { get; set; }
+        int LineNumber { get; set; }
 
         string MethodReference { get; set; }
     }
