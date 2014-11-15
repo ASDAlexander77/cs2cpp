@@ -296,6 +296,24 @@ namespace Il2Native.Logic
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlersProlog(writer, opCode);
+
+            if (this.DebugInfo)
+            {
+                WriteDbgLine(opCode);
+            }
+        }
+
+        private void WriteDbgLine(OpCodePart opCode)
+        {
+            if (opCode.AddressEnd == opCode.GroupAddressEnd && !(opCode.Result is ConstValue))
+            {
+                //, !dbg !24
+                var line = this.debugInfoGenerator.GetLineByOffiset(opCode.GroupAddressStart);
+                if (line != -1)
+                {
+                    this.Output.Write(", !dbg !{0}", line);
+                }
+            }
         }
 
         /// <summary>

@@ -20,6 +20,8 @@
 
         private LlvmWriter writer;
 
+        private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
+
         private string identity = "C# Native compiler";
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
@@ -94,6 +96,7 @@
 
         public void GenerateFunction(int token)
         {
+            indexByOffset.Clear();
             this.PdbConverter.ConvertFunction(token);
         }
 
@@ -187,7 +190,22 @@
 
         public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
         {
-            new CollectionMetadata(indexedMetadata).Add(lineBegin, colBegin, function, null);
+            var dbgLine = new CollectionMetadata(indexedMetadata).Add(lineBegin, colBegin, function, null);
+            if (dbgLine.Index.HasValue)
+            {
+                indexByOffset[offset] = dbgLine.Index.Value;
+            }
+        }
+
+        public int GetLineByOffiset(int offset)
+        {
+            int index;
+            if (indexByOffset.TryGetValue(offset, out index))
+            {
+                return index;
+            }
+
+            return -1;
         }
     }
 }
