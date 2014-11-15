@@ -14,6 +14,7 @@
         public CollectionMetadata(IList<CollectionMetadata> model)
             : this()
         {
+            this.Index = model.Count;
             model.Add(this);
         }
 

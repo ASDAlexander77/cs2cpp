@@ -107,9 +107,9 @@ namespace PdbReader
                 }
             }
 
-            Array.Sort(funcs, PdbFunction.byAddress);
+            //Array.Sort(funcs, PdbFunction.byAddress);
+            Array.Sort(funcs, PdbFunction.byToken);
 
-            // Array.Sort(funcs, PdbFunction.byToken);
             return funcs;
         }
 

@@ -91,6 +91,7 @@
     <Compile Include="Metadata\Model\CollectionMetadata.cs" />
     <Compile Include="Metadata\Model\Metadata.cs" />
     <Compile Include="Metadata\Model\NamedMetadata.cs" />
+    <Compile Include="Metadata\Model\PlainTextMetadata.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />

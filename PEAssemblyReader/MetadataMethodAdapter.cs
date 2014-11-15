@@ -17,6 +17,8 @@ namespace PEAssemblyReader
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using System.Reflection.Metadata.Ecma335;
 
     /// <summary>
     /// </summary>
@@ -77,6 +79,18 @@ namespace PEAssemblyReader
             : this(methodDef)
         {
             this.GenericContext = genericContext;
+
+            var peMethodSymbol = methodDef as PEMethodSymbol;
+            if (peMethodSymbol != null)
+            {
+                this.Token = MetadataTokens.GetToken(peMethodSymbol.Handle);
+            }
+        }
+
+        public int? Token
+        {
+            get;
+            private set;
         }
 
         /// <summary>

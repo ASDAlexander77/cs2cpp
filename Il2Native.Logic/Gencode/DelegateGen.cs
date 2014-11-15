@@ -337,6 +337,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public int? Token { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public string AssemblyQualifiedName { get; private set; }
 
             /// <summary>

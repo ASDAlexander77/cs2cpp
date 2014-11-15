@@ -24,6 +24,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         /// <summary>
         /// </summary>
+        public int? Token { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public string AssemblyQualifiedName { get; private set; }
 
         /// <summary>

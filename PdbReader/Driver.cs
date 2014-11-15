@@ -15,7 +15,7 @@ namespace PdbReader
 
     /// <summary>
     /// </summary>
-    public class Converter
+    public class Converter : IConverter
     {
         /// <summary>
         /// </summary>
@@ -24,6 +24,10 @@ namespace PdbReader
         /// <summary>
         /// </summary>
         private readonly ISymbolWriter symbolWriter;
+
+        /// <summary>
+        /// </summary>
+        private IDictionary<uint, PdbFunction> funcs = new SortedDictionary<uint, PdbFunction>();
 
         /// <summary>
         /// </summary>
@@ -38,12 +42,44 @@ namespace PdbReader
         /// </summary>
         /// <param name="filename">
         /// </param>
+        /// <param name="symbolWriter">
+        /// </param>
+        internal Converter(string filename, ISymbolWriter symbolWriter)
+        {
+            this.symbolWriter = symbolWriter;
+            using (var stream = File.OpenRead(filename))
+            {
+                foreach (var pdbFunc in PdbFile.LoadFunctions(stream, true))
+                {
+                    funcs[pdbFunc.token] = pdbFunc;
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="filename">
+        /// </param>
         public static void Convert(string filename, ISymbolWriter symbolWriter)
         {
             using (var stream = File.OpenRead(filename))
             {
                 var funcs = PdbFile.LoadFunctions(stream, true);
                 Convert(funcs, symbolWriter);
+            }
+        }
+
+        public static IConverter GetConverter(string filename, ISymbolWriter symbolWriter)
+        {
+            return new Converter(filename, symbolWriter);
+        }
+
+        public void ConvertFunction(int token)
+        {
+            PdbFunction func;
+            if (this.funcs.TryGetValue((uint)token, out func))
+            {
+                this.ConvertFunction(func);
             }
         }
 
@@ -76,7 +112,14 @@ namespace PdbReader
                 return;
             }
 
-            var method = new SourceMethod { Name = function.name, Token = (int)function.token };
+            var method = new SourceMethod
+            {
+                Token = (int)function.token,
+                Name = function.name,
+                LinkageName = function.name,
+                DisplayName = function.name,
+                LineNumber = function.lines.First().lines.First().lineBegin
+            };
 
             var file = this.GetSourceFile(this.symbolWriter, function);
 
@@ -236,9 +279,7 @@ namespace PdbReader
 
             public string LinkageName { get; set; }
 
-            public int LineNumber { get; set; }
-
-            public string MethodReference { get; set; }
+            public uint LineNumber { get; set; }
         }
     }
 }

@@ -18,6 +18,8 @@
 
         private readonly string defaultSourceFilePath;
 
+        private LlvmWriter writer;
+
         private string identity = "C# Native compiler";
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
@@ -39,6 +41,8 @@
             this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Debug Info Version", 2));
         }
 
+        public IConverter PdbConverter { get; set; }
+
         public string DefaultSourceFilePath
         {
             get
@@ -56,13 +60,6 @@
         public void WriteTo(TextWriter output)
         {
             output.WriteLine(string.Empty);
-
-            // build references
-            var index = 0;
-            foreach (var indexedMetadataItem in this.indexedMetadata)
-            {
-                indexedMetadataItem.Index = index++;
-            }
 
             output.WriteLine("; Metadata Entries");
             foreach (var namedMetadataItem in this.namedMetadata)
@@ -86,12 +83,18 @@
             }
         }
 
-        public void Generate()
+        public void StartGenerating(LlvmWriter writer)
         {
             if (File.Exists(this.pdbFileName))
             {
-                Converter.Convert(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
+                this.writer = writer;
+                this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
             }
+        }
+
+        public void GenerateFunction(int token)
+        {
+            this.PdbConverter.ConvertFunction(token);
         }
 
         public CollectionMetadata DefineFile(ISourceFileEntry entry)
@@ -120,23 +123,26 @@
             this.CompileUnit.Add(compilationUnit);
         }
 
-        public CollectionMetadata DefineMethod(ISourceMethod method, CollectionMetadata file, out CollectionMetadata subroutineTypes, out CollectionMetadata functionVariables)
+        public CollectionMetadata DefineMethod(ISourceMethod method, CollectionMetadata file, out CollectionMetadata functionVariables)
         {
-            // member of a class   
-            // !6 = metadata !{i32 786478, metadata !1, metadata !"_ZTS5Hello", metadata !"Test", metadata !"Test", metadata !"_ZN5Hello4TestEv", i32 4, metadata !7,  i1 false, i1 false, i32 0, i32 0, null, i32 259, i1 false, null,          null, i32 0, null,        i32 4 } ; [ DW_TAG_subprogram ] [line 4] [public] [Test]
-            // definition
-            // !7 = metadata !{i32 786478, metadata !1, metadata !12,           metadata !"main", metadata !"main", metadata !"",                 i32 9, metadata !13, i1 false, i1 true,  i32 0, i32 0, null, i32 256, i1 false, i32 ()* @main, null, null,  metadata !2, i32 10} ; [ DW_TAG_subprogram ] [line 9] [def] [scope 10] [main]
-
             // Flags 256 - definition (as main()), 259 - public (member of a class)
             var flag = 256;
 
             // Line number of the opening '{' of the function
             var scopeLine = method.LineNumber;
 
+            // find method definition
+            var methodDefinition = this.writer.MethodsByToken[method.Token];
+
+            var methodReferenceType = this.writer.WriteToString(() => this.writer.WriteMethodPointerType(this.writer.Output, methodDefinition));
+            var methodDefinitionName = this.writer.WriteToString(() => this.writer.WriteMethodDefinitionName(this.writer.Output, methodDefinition));
+
             CollectionMetadata fileTypes;
+            CollectionMetadata subroutineTypes;
+            CollectionMetadata parametersTypes;
 
             // add compile unit template
-            var methodDefinition = new CollectionMetadata(indexedMetadata).Add(
+            var methodMetadataDefinition = new CollectionMetadata(indexedMetadata).Add(
                 string.Format(@"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}",
                     method.Name,
                     method.DisplayName,
@@ -154,7 +160,7 @@
                 // indicates which base type contains the vtable pointer for the derived class
                 null,
                 // function method reference ex. "i32 ()* @main"                
-                method.MethodReference,
+                new PlainTextMetadata(string.Concat(methodReferenceType, " ", methodDefinitionName)),
                 // Lists function template parameters
                 null,
                 // Function declaration descriptor
@@ -165,7 +171,23 @@
             // Add file type
             fileTypes.Add("0x29", file);
 
-            return methodDefinition;
+            // add subrouting type
+            subroutineTypes.Add(
+                @"0x15\00\000\000\000\000\000\000",
+                null, 
+                null, 
+                null,
+                parametersTypes = new CollectionMetadata(indexedMetadata), 
+                null, 
+                null, 
+                null);
+
+            return methodMetadataDefinition;
+        }
+
+        public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
+        {
+            new CollectionMetadata(indexedMetadata).Add(lineBegin, colBegin, function, null);
         }
     }
 }

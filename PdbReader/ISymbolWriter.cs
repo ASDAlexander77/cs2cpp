@@ -1,5 +1,10 @@
 ﻿namespace PdbReader
 {
+    public interface IConverter
+    {
+        void ConvertFunction(int token);
+    }
+
     public interface ISymbolWriter
     {
         ISourceFileEntry DefineDocument(string name);
@@ -15,15 +20,15 @@
 
     public interface ISourceMethod
     {
-        string Name { get; set; }
+        int Token { get; }
 
-        string DisplayName { get; set; }
+        string Name { get; }
 
-        string LinkageName { get; set; }
+        string DisplayName { get; }
 
-        int LineNumber { get; set; }
+        string LinkageName { get; }
 
-        string MethodReference { get; set; }
+        uint LineNumber { get; }
     }
 
     public interface ISourceMethodBuilder

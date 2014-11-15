@@ -17,6 +17,8 @@ namespace PEAssemblyReader
     /// </summary>
     public interface IMethod : IMember
     {
+        int? Token { get; }
+
         /// <summary>
         /// </summary>
         CallingConventions CallingConvention { get; }

@@ -8,7 +8,7 @@
     {
         private DebugInfoGenerator debugInfoGenerator;
 
-        private CollectionMetadata subroutineTypes;
+        private CollectionMetadata function;
 
         private CollectionMetadata functionVariables;
 
@@ -18,15 +18,14 @@
 
             CollectionMetadata subroutineTypes;
             CollectionMetadata functionVariables;
-            subprograms.Add(debugInfoGenerator.DefineMethod(method, file, out subroutineTypes, out functionVariables));
+            subprograms.Add(this.function = debugInfoGenerator.DefineMethod(method, file, out functionVariables));
 
-            this.subroutineTypes = subroutineTypes;
             this.functionVariables = functionVariables;
         }
 
         public void MarkSequencePoint(int offset, ISourceFile sourceFile, int lineBegin, int colBegin, bool isHidden)
         {
-
+            this.debugInfoGenerator.SequencePoint(offset, lineBegin, colBegin, this.function);
         }
     }
 }
