@@ -10,6 +10,8 @@
 
     public class DebugInfoGenerator
     {
+        private const string IdentityString = "C# Native compiler";
+       
         private readonly IList<NamedMetadata> namedMetadata = new List<NamedMetadata>(3);
 
         private readonly IList<CollectionMetadata> indexedMetadata = new List<CollectionMetadata>();
@@ -21,8 +23,6 @@
         private LlvmWriter writer;
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
-
-        private string identity = "C# Native compiler";
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -38,7 +38,7 @@
             namedMetadata.Add(new NamedMetadata("llvm.ident", this.Identity));
 
             // add default flags and identity
-            this.Identity.Add(new CollectionMetadata(indexedMetadata).Add(this.identity));
+            this.Identity.Add(new CollectionMetadata(indexedMetadata).Add(IdentityString));
             this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Dwarf Version", 4));
             this.Flags.Add(new CollectionMetadata(indexedMetadata).Add(2, "Debug Info Version", 2));
         }
@@ -58,6 +58,12 @@
         public CollectionMetadata Flags { get; private set; }
 
         public CollectionMetadata Identity { get; private set; }
+
+        public int? CurrentDebugLine
+        {
+            get;
+            private set;
+        }
 
         public void WriteTo(TextWriter output)
         {
@@ -96,7 +102,9 @@
 
         public void GenerateFunction(int token)
         {
-            indexByOffset.Clear();
+            this.indexByOffset.Clear();
+            this.CurrentDebugLine = null;
+
             this.PdbConverter.ConvertFunction(token);
         }
 
@@ -109,7 +117,7 @@
         {
             // add compile unit template
             var compilationUnit = new CollectionMetadata(indexedMetadata).Add(
-                string.Format(@"0x11\0012\00{0}\000\00\000\00\001", this.identity),
+                string.Format(@"0x11\0012\00{0}\000\00\000\00\001", IdentityString),
                 // file
                 file,
                 // Enum Types
@@ -197,7 +205,16 @@
             }
         }
 
-        public int GetLineByOffiset(int offset)
+        public void ReadAndSetCurrentDebugLine(int offset)
+        {
+            var newLine = this.GetLineByOffiset(offset);
+            if (newLine.HasValue)
+            {
+                this.CurrentDebugLine = newLine;
+            }
+        }
+
+        protected int? GetLineByOffiset(int offset)
         {
             int index;
             if (indexByOffset.TryGetValue(offset, out index))
@@ -205,7 +222,7 @@
                 return index;
             }
 
-            return -1;
+            return null;
         }
     }
 }

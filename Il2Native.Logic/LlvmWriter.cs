@@ -170,12 +170,12 @@ namespace Il2Native.Logic
             }
         }
 
-        public IDictionary<int, IMethod> MethodsByToken 
-        { 
-            get 
-            { 
-                return this.methodsByToken; 
-            } 
+        public IDictionary<int, IMethod> MethodsByToken
+        {
+            get
+            {
+                return this.methodsByToken;
+            }
         }
 
         /// <summary>
@@ -296,23 +296,30 @@ namespace Il2Native.Logic
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlersProlog(writer, opCode);
+        }
 
-            if (this.DebugInfo)
+        private void ReadDbgLine(OpCodePart opCode)
+        {
+            if (!this.DebugInfo)
             {
-                WriteDbgLine(opCode);
+                return;
             }
+
+            this.debugInfoGenerator.ReadAndSetCurrentDebugLine(opCode.AddressStart);
         }
 
         private void WriteDbgLine(OpCodePart opCode)
         {
-            if (opCode.AddressEnd == opCode.GroupAddressEnd && !(opCode.Result is ConstValue))
+            if (!this.DebugInfo)
             {
-                //, !dbg !24
-                var line = this.debugInfoGenerator.GetLineByOffiset(opCode.GroupAddressStart);
-                if (line != -1)
-                {
-                    this.Output.Write(", !dbg !{0}", line);
-                }
+                return;
+            }
+
+            //, !dbg !24
+            var line = this.debugInfoGenerator.CurrentDebugLine;
+            if (line.HasValue)
+            {
+                this.Output.Write(", !dbg !{0}", line);
             }
         }
 
@@ -408,6 +415,8 @@ namespace Il2Native.Logic
 
                     this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
 
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Ldnull:
                     opCode.Result = new ConstValue(null, this.ResolveType("System.Void").ToPointerType());
@@ -428,6 +437,9 @@ namespace Il2Native.Logic
                     writer.Write(" ");
                     this.WriteResult(opCode.OpCodeOperands[0]);
                     writer.Write(", align 1");
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Ldfld:
 
@@ -442,6 +454,8 @@ namespace Il2Native.Logic
                         var memberAccessResultNumber = opCode.Result;
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
+
+                        WriteDbgLine(opCode);
                     }
 
                     break;
@@ -469,6 +483,8 @@ namespace Il2Native.Logic
                     if (!operandType.IsStructureType())
                     {
                         this.WriteLlvmLoad(opCode, operandType, reference);
+
+                        WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -491,6 +507,8 @@ namespace Il2Native.Logic
 
                     this.FieldAccessAndSaveToField(opCode as OpCodeFieldInfoPart);
 
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Stsfld:
 
@@ -510,6 +528,8 @@ namespace Il2Native.Logic
                         this.WriteLlvmSave(opCode, operandType, 0, reference);
                     }
 
+                    WriteDbgLine(opCode);
+
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
@@ -521,6 +541,8 @@ namespace Il2Native.Logic
                     if (loadValueFromAddress)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
+
+                        WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -531,10 +553,16 @@ namespace Il2Native.Logic
 
                 case Code.Stobj:
                     this.SaveObject(opCode, 1, 0);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Ldlen:
                     this.WriteArrayGetLength(opCode);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Ldelem:
@@ -552,6 +580,9 @@ namespace Il2Native.Logic
                 case Code.Ldelema:
 
                     this.LoadElement(writer, opCode);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Stelem:
@@ -565,6 +596,9 @@ namespace Il2Native.Logic
                 case Code.Stelem_Ref:
 
                     this.SaveElement(writer, opCode);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Ldind_I:
@@ -580,6 +614,9 @@ namespace Il2Native.Logic
                 case Code.Ldind_U4:
 
                     this.LoadIndirect(writer, opCode);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Stind_I:
@@ -592,6 +629,9 @@ namespace Il2Native.Logic
                 case Code.Stind_Ref:
 
                     this.SaveIndirect(writer, opCode);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Call:
@@ -614,56 +654,97 @@ namespace Il2Native.Logic
                         null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Add:
                     var isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fadd" : "add", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Add_Ovf:
                 case Code.Add_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "sadd");
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Mul:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fmul" : "mul", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Mul_Ovf:
                 case Code.Mul_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "smul");
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Sub:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fsub" : "sub", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Sub_Ovf:
                 case Code.Sub_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "ssub");
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Div:
                 case Code.Div_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fdiv" : "sdiv", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "frem" : "srem", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.And:
                     this.BinaryOper(writer, opCode, "and", OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Or:
                     this.BinaryOper(writer, opCode, "or", OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Xor:
                     this.BinaryOper(writer, opCode, "xor", OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Shl:
                     this.BinaryOper(writer, opCode, "shl", OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
                     this.BinaryOper(writer, opCode, "lshr", OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Not:
                     var tempOper = opCode.OpCodeOperands;
@@ -672,6 +753,9 @@ namespace Il2Native.Logic
                     opCode.OpCodeOperands = new[] { tempOper[0], secondOperand };
                     this.BinaryOper(writer, opCode, "xor");
                     opCode.OpCodeOperands = tempOper;
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Neg:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -686,6 +770,9 @@ namespace Il2Native.Logic
 
                     this.BinaryOper(writer, opCode, isFloatingPoint ? "fsub" : "sub", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     opCode.OpCodeOperands = tempOper;
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Dup:
@@ -698,10 +785,11 @@ namespace Il2Native.Logic
                     if (type.IsValueType())
                     {
                         type.WriteCallBoxObjectMethod(this, opCode);
+
+                        WriteDbgLine(opCode);
                     }
                     else
                     {
-                        this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
                         opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result.ToClassType();
                     }
 
@@ -721,10 +809,14 @@ namespace Il2Native.Logic
                         this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
                     }
 
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Ret:
 
                     this.WriteReturn(writer, opCode, this.MethodReturnType);
+
+                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Stloc:
@@ -760,6 +852,8 @@ namespace Il2Native.Logic
                         this.WriteLlvmLocalVarAccess(index, true);
                     }
 
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Ldloc:
                 case Code.Ldloc_0:
@@ -784,6 +878,8 @@ namespace Il2Native.Logic
                     if (!localType.IsStructureType() || localType.IsByRef)
                     {
                         this.WriteLlvmLoad(opCode, localType, definedReference);
+
+                        WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -820,6 +916,8 @@ namespace Il2Native.Logic
                     {
                         var thisTypeAsClass = this.ThisType.ToClass();
                         this.WriteLlvmLoad(opCode, thisTypeAsClass, new FullyDefinedReference(this.GetThisName(), thisTypeAsClass), true, true);
+
+                        WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -831,6 +929,8 @@ namespace Il2Native.Logic
                         if (!parameter.ParameterType.IsStructureType())
                         {
                             this.WriteLlvmLoad(opCode, parameter.ParameterType, fullyDefinedReference);
+
+                            WriteDbgLine(opCode);
                         }
                         else
                         {
@@ -875,6 +975,8 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                     this.WriteLlvmArgVarAccess(writer, actualIndex, index, true);
 
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Ldftn:
@@ -897,6 +999,8 @@ namespace Il2Native.Logic
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
                     this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
+
+                    WriteDbgLine(opCode);
 
                     break;
 
@@ -946,6 +1050,8 @@ namespace Il2Native.Logic
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
 
                     this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
+
+                    WriteDbgLine(opCode);
 
                     break;
 
@@ -1023,6 +1129,9 @@ namespace Il2Native.Logic
                         opCode,
                         string.Format(oper, sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     if (!opCode.UseAsConditionalExpression)
                     {
                         writer.WriteLine(string.Empty);
@@ -1043,12 +1152,16 @@ namespace Il2Native.Logic
 
                     if (resultOf.Type.IsValueType() && !resultOf.Type.UseAsClass)
                     {
-                        writer.WriteLine(", 0");
+                        writer.Write(", 0");
                     }
                     else
                     {
-                        writer.WriteLine(", null");
+                        writer.Write(", null");
                     }
+
+                    WriteDbgLine(opCode);
+                    
+                    writer.WriteLine(string.Empty);
 
                     if (!opCode.UseAsConditionalExpression)
                     {
@@ -1060,6 +1173,8 @@ namespace Il2Native.Logic
                 case Code.Br_S:
 
                     writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+
+                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Leave:
@@ -1075,6 +1190,9 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fcmp oeq" : "icmp eq",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Clt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1084,6 +1202,9 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fcmp olt" : string.Format("icmp {0}lt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Clt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1092,6 +1213,9 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fcmp ult" : "icmp ult",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Cgt:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1101,6 +1225,9 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fcmp ogt" : string.Format("icmp {0}gt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
                 case Code.Cgt_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1109,6 +1236,9 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fcmp ugt" : "icmp ugt",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Conv_R4:
@@ -1212,13 +1342,14 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
+
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Isinst:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.ActualWrite(writer, opCodeTypePart.OpCodeOperands[0]);
-                    writer.WriteLine(string.Empty);
 
                     var fromType = opCodeTypePart.OpCodeOperands[0].Result;
                     var toType = opCodeTypePart.Operand;
@@ -1234,6 +1365,8 @@ namespace Il2Native.Logic
                         this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, toType);
                     }
 
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Newobj:
@@ -1248,12 +1381,16 @@ namespace Il2Native.Logic
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     this.WriteNewObject(opCodeConstructorInfoPart);
 
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Newarr:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteNewArray(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
+
+                    WriteDbgLine(opCode);
 
                     break;
 
@@ -1262,13 +1399,15 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteInit(opCode, opCodeTypePart.Operand);
 
+                    WriteDbgLine(opCode);
+
                     break;
 
                 case Code.Throw:
 
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                    writer.WriteLine(string.Empty);
                     this.WriteThrow(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+
+                    WriteDbgLine(opCode);
 
                     break;
 
@@ -1278,6 +1417,8 @@ namespace Il2Native.Logic
                         opCode,
                         this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+
+                    WriteDbgLine(opCode);
 
                     break;
 
@@ -1325,6 +1466,8 @@ namespace Il2Native.Logic
                     }
 
                     writer.WriteLine("]");
+
+                    WriteDbgLine(opCode);
 
                     writer.Indent--;
                     writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
@@ -4871,7 +5014,11 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteCondBranch(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            writer.WriteLine("br i1 {0}, label %.a{1}, label %.a{2}", opCode.Result, opCode.JumpAddress(), opCode.AddressEnd);
+            writer.Write("br i1 {0}, label %.a{1}, label %.a{2}", opCode.Result, opCode.JumpAddress(), opCode.AddressEnd);
+
+            WriteDbgLine(opCode);
+            writer.WriteLine(string.Empty);
+
             writer.Indent--;
             writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
             writer.Indent++;
@@ -5323,6 +5470,7 @@ namespace Il2Native.Logic
 
             foreach (var opCodePart in rest)
             {
+                this.ReadDbgLine(opCodePart);
                 this.ActualWrite(this.Output, opCodePart, true);
                 this.Output.WriteLine(string.Empty);
             }
