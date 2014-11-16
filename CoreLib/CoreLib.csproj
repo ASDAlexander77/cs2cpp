@@ -74,6 +74,7 @@
     <Compile Include="System\Decimal.cs" />
     <Compile Include="System\Delegate.cs" />
     <Compile Include="System\Diagnostics\Debugger.cs" />
+    <Compile Include="System\Diagnostics\Stopwatch.cs" />
     <Compile Include="System\DivideByZeroException.cs" />
     <Compile Include="System\Double.cs" />
     <Compile Include="System\Enum.cs" />
