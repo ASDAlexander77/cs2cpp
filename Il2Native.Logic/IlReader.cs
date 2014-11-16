@@ -1226,6 +1226,7 @@ namespace Il2Native.Logic
                 foreach (CompilerError compilerError in results.Errors)
                 {
                     Console.WriteLine(compilerError);
+                    Debug.WriteLine(compilerError);
                 }
             }
 
@@ -1279,6 +1280,7 @@ namespace Il2Native.Logic
                     foreach (var diagnostic in result.Diagnostics)
                     {
                         Console.WriteLine(diagnostic);
+                        Debug.WriteLine(diagnostic);
                     }
                 }
             }

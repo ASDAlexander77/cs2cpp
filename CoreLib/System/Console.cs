@@ -10,7 +10,8 @@
         private static string NewLine = "\r\n";
         private static string PrintString = "%.*s";
         private static string PrintDouble = "%f";
-        private static string PrintInt = "%d";
+        private static string PrintLong = "%lld";
+        private static string PrintInt = "%ld";
         private static string PrintChar = "%c";
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
@@ -148,7 +149,7 @@
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = &PrintLong.ToCharArray()[0])
                 fixed (char* nl = &NewLine.ToCharArray()[0])
                 {
                     wprintf(pi, value);
@@ -162,7 +163,7 @@
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = &PrintLong.ToCharArray()[0])
                 fixed (char* nl = &NewLine.ToCharArray()[0])
                 {
                     wprintf(pi, value);
@@ -333,7 +334,7 @@
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = &PrintLong.ToCharArray()[0])
                 {
                     wprintf(pi, value);
                 }
@@ -345,7 +346,7 @@
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = &PrintLong.ToCharArray()[0])
                 {
                     wprintf(pi, value);
                 }
