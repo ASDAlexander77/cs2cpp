@@ -1272,9 +1272,14 @@ namespace Il2Native.Logic
             using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
             {
                 var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
-                foreach (var diagnostic in result.Diagnostics)
+
+                if (result.Diagnostics.Length > 0)
                 {
-                    Trace.WriteLine(diagnostic);
+                    Console.WriteLine(@"Errors/Warnings:");
+                    foreach (var diagnostic in result.Diagnostics)
+                    {
+                        Console.WriteLine(diagnostic);
+                    }
                 }
             }
 

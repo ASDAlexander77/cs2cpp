@@ -69,6 +69,10 @@ namespace Ll2NativeTests
         private const bool GctorsEnabled = true;
 
         /// <summary>
+        /// </summary>
+        private const bool DebugInfo = true;
+
+        /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
@@ -96,15 +100,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert("test-1", SourcePathCustom);
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestCustomConvertDebugInfo()
-        {
-            Convert("test-1", SourcePathCustom, true);
+            Convert("test-1", SourcePathCustom, DebugInfo);
         }
 
         /// <summary>
@@ -190,7 +186,7 @@ namespace Ll2NativeTests
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(525, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -306,7 +302,9 @@ namespace Ll2NativeTests
             // 240 - the same as 239
             // 247 - ArrayList - GetEnumator is not implemented
             // 250 - FieldsOffset attribute not implemented
-
+            // 252 - Delegate.Combine (NotImplemented)
+            // 253 - System.Reflection
+            // 254 - System.Reflection 
             // -----------
             // 32, 55, 74 - missing class
             // 37, 42, 43, 44, 45, 66 - multiarray
@@ -317,7 +315,7 @@ namespace Ll2NativeTests
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 247,
-                            250
+                            250, 252, 253, 254
                         });
 
             if (UsingRoslyn)
@@ -327,7 +325,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(154, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
@@ -537,7 +535,7 @@ namespace Ll2NativeTests
 
             try
             {
-                Convert(fileName);
+                Convert(fileName, debugInfo: DebugInfo);
             }
             catch (Exception ex)
             {
@@ -558,7 +556,7 @@ namespace Ll2NativeTests
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
-            Convert(fileName, source);
+            Convert(fileName, source, debugInfo: DebugInfo);
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 

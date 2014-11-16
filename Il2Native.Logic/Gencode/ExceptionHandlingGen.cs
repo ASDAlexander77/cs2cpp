@@ -658,8 +658,13 @@ namespace Il2Native.Logic.Gencode
             var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
             writer.Write("call void @__cxa_throw(i8* {0}, i8* bitcast (", errorAllocationResultNumber);
             exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
+            writer.Write("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
+
+            llvmWriter.WriteDbgLine(opCode);
+            writer.WriteLine(string.Empty);
+
             writer.WriteLine("unreachable");
+
             return exceptionPointerType;
         }
 
@@ -686,13 +691,16 @@ namespace Il2Native.Logic.Gencode
             writer.Indent++;
             if (exceptionHandlingClause != null)
             {
-                writer.WriteLine("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.Offset);
+                writer.Write("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.Offset);
             }
             else
             {
-                writer.WriteLine("to label %.unreachable unwind label %.unwind_exception");
+                writer.Write("to label %.unreachable unwind label %.unwind_exception");
                 llvmWriter.needToWriteUnwindException = true;
             }
+
+            llvmWriter.WriteDbgLine(opCode);
+            writer.WriteLine(string.Empty);
 
             writer.Indent--;
             llvmWriter.needToWriteUnreachable = true;

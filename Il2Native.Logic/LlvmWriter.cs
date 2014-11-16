@@ -308,7 +308,7 @@ namespace Il2Native.Logic
             this.debugInfoGenerator.ReadAndSetCurrentDebugLine(opCode.AddressStart);
         }
 
-        private void WriteDbgLine(OpCodePart opCode)
+        public void WriteDbgLine(OpCodePart opCode)
         {
             if (!this.DebugInfo)
             {
@@ -414,8 +414,6 @@ namespace Il2Native.Logic
                             this.GetArrayTypeReference(string.Format("@.s{0}", stringIndex), charType, opCodeString.Operand.Length + 1), charArrayType);
 
                     this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
-
-                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Ldnull:
@@ -654,8 +652,6 @@ namespace Il2Native.Logic
                         null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
-                    WriteDbgLine(opCode);
-
                     break;
                 case Code.Add:
                     var isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -667,8 +663,6 @@ namespace Il2Native.Logic
                 case Code.Add_Ovf:
                 case Code.Add_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "sadd");
-
-                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Mul:
@@ -682,8 +676,6 @@ namespace Il2Native.Logic
                 case Code.Mul_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "smul");
 
-                    WriteDbgLine(opCode);
-
                     break;
                 case Code.Sub:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -695,8 +687,6 @@ namespace Il2Native.Logic
                 case Code.Sub_Ovf:
                 case Code.Sub_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "ssub");
-
-                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Div:
@@ -785,8 +775,6 @@ namespace Il2Native.Logic
                     if (type.IsValueType())
                     {
                         type.WriteCallBoxObjectMethod(this, opCode);
-
-                        WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -808,8 +796,6 @@ namespace Il2Native.Logic
                     {
                         this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, opCodeTypePart.Operand, true);
                     }
-
-                    WriteDbgLine(opCode);
 
                     break;
                 case Code.Ret:
@@ -1381,8 +1367,6 @@ namespace Il2Native.Logic
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     this.WriteNewObject(opCodeConstructorInfoPart);
 
-                    WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Newarr:
@@ -1406,8 +1390,6 @@ namespace Il2Native.Logic
                 case Code.Throw:
 
                     this.WriteThrow(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
-
-                    WriteDbgLine(opCode);
 
                     break;
 
@@ -1468,6 +1450,7 @@ namespace Il2Native.Logic
                     writer.WriteLine("]");
 
                     WriteDbgLine(opCode);
+                    writer.WriteLine(string.Empty);
 
                     writer.Indent--;
                     writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
@@ -3036,7 +3019,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                (thisType ?? methodInfo.DeclaringType).WriteTypePrefix(writer);
+                (thisType ?? methodInfo.DeclaringType.ToClass()).WriteTypePrefix(writer);
             }
 
             var index = 0;
@@ -3650,7 +3633,10 @@ namespace Il2Native.Logic
             VirtualTableGen.Clear();
             TypeGen.Clear();
 
-            this.debugInfoGenerator.StartGenerating(this);
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator.StartGenerating(this);
+            }
         }
 
         /// <summary>

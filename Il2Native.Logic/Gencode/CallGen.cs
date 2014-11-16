@@ -438,6 +438,7 @@ namespace Il2Native.Logic.Gencode
         {
             if (tryClause == null)
             {
+                llvmWriter.WriteDbgLine(opCodeMethodInfo);
                 return;
             }
 
@@ -449,8 +450,11 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.Indent++;
-            writer.WriteLine("to label %.{0} unwind label %.catch{1}", label, tryClause.Catches.First().Offset);
+            writer.Write("to label %.{0} unwind label %.catch{1}", label, tryClause.Catches.First().Offset);
             writer.Indent--;
+
+            llvmWriter.WriteDbgLine(opCodeMethodInfo);
+            writer.WriteLine(string.Empty);
 
             writer.Indent--;
             writer.WriteLine(".{0}:", label);
