@@ -239,7 +239,7 @@
             var line = 0;
 
             this.globalVariables.Add(
-                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.FullName, line),
+                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.Name, line),
                 null,
                 fileTypes = new CollectionMetadata(indexedMetadata),
                 DefineType(field.FieldType),
