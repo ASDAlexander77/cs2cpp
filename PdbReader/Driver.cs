@@ -76,10 +76,16 @@ namespace PdbReader
 
         public void ConvertFunction(int token)
         {
-            PdbFunction func;
+            PdbFunction func = null;
             if (this.funcs.TryGetValue((uint)token, out func))
             {
                 this.ConvertFunction(func);
+                return;
+            }
+
+            if (token == -1)
+            {
+                this.ConvertFunction(this.funcs.Values.First(f => f.lines != null), true);
             }
         }
 
@@ -105,7 +111,7 @@ namespace PdbReader
         /// </summary>
         /// <param name="function">
         /// </param>
-        private void ConvertFunction(PdbFunction function)
+        private void ConvertFunction(PdbFunction function, bool generateFileOnly = false)
         {
             if (function.lines == null)
             {
@@ -122,6 +128,10 @@ namespace PdbReader
             };
 
             var file = this.GetSourceFile(this.symbolWriter, function);
+            if (generateFileOnly)
+            {
+                return;
+            }
 
             var builder = this.symbolWriter.OpenMethod(file.CompilationUnitEntry, method);
 

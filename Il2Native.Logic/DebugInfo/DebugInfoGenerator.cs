@@ -1,17 +1,21 @@
 ﻿namespace Il2Native.Logic.DebugInfo
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
 
     using Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter;
+    using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Metadata.Model;
+
+    using PEAssemblyReader;
 
     using PdbReader;
 
     public class DebugInfoGenerator
     {
         private const string IdentityString = "C# Native compiler";
-       
+
         private readonly IList<NamedMetadata> namedMetadata = new List<NamedMetadata>(3);
 
         private readonly IList<CollectionMetadata> indexedMetadata = new List<CollectionMetadata>();
@@ -23,6 +27,10 @@
         private LlvmWriter writer;
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
+
+        private CollectionMetadata globalVariables;
+
+        private CollectionMetadata file;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -97,6 +105,8 @@
             {
                 this.writer = writer;
                 this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
+                // to force generating CompileUnit info
+                this.PdbConverter.ConvertFunction(-1);
             }
         }
 
@@ -131,6 +141,9 @@
                 // Imported entities
                 importedEntities = new CollectionMetadata(indexedMetadata));
 
+            this.globalVariables = globalVariables;
+            this.file = file;
+
             this.CompileUnit.Add(compilationUnit);
         }
 
@@ -153,15 +166,16 @@
             CollectionMetadata parametersTypes;
 
             // add compile unit template
-            var methodMetadataDefinition = new CollectionMetadata(indexedMetadata).Add(
-                string.Format(@"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}",
-                    method.Name,
-                    method.DisplayName,
-                    method.LinkageName,
-                    method.LineNumber,
-                    flag,
-                    scopeLine
-                ),
+            var methodMetadataDefinition =
+                new CollectionMetadata(indexedMetadata).Add(
+                    string.Format(
+                        @"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}",
+                        method.Name,
+                        method.DisplayName,
+                        method.LinkageName,
+                        method.LineNumber,
+                        flag,
+                        scopeLine),
                 // Source directory (including trailing slash) & file pair
                 file,
                 // Reference to context descriptor
@@ -179,21 +193,26 @@
                 // List of function variables
                 functionVariables = new CollectionMetadata(indexedMetadata));
 
-            // Add file type
-            fileTypes.Add("0x29", file);
+            AddFileType(fileTypes, file);
 
             // add subrouting type
             subroutineTypes.Add(
                 @"0x15\00\000\000\000\000\000\000",
-                null, 
-                null, 
                 null,
-                parametersTypes = new CollectionMetadata(indexedMetadata), 
-                null, 
-                null, 
+                null,
+                null,
+                parametersTypes = new CollectionMetadata(indexedMetadata),
+                null,
+                null,
                 null);
 
             return methodMetadataDefinition;
+        }
+
+        private static void AddFileType(CollectionMetadata fileTypes, CollectionMetadata file)
+        {
+            // Add file type
+            fileTypes.Add("0x29", file);
         }
 
         public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
@@ -203,6 +222,44 @@
             {
                 indexByOffset[offset] = dbgLine.Index.Value;
             }
+        }
+
+        public void DefineGlobal(PEAssemblyReader.IField field)
+        {
+            if (globalVariables == null)
+            {
+                throw new NullReferenceException("globalVariables");
+            }
+
+            CollectionMetadata fileTypes;
+
+            var globalType = this.writer.WriteToString(() => field.FieldType.WriteTypePrefix(this.writer.Output, true));
+            var globalName = string.Format("@\"{0}\"", field.GetFullName());
+
+            var line = 0;
+
+            this.globalVariables.Add(
+                string.Format(@"0x34\00M{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.FullName, line),
+                null,
+                fileTypes = new CollectionMetadata(indexedMetadata),
+                DefineType(field.FieldType),
+                new PlainTextMetadata(string.Concat(globalType, " ", globalName)));
+
+            AddFileType(fileTypes, file);
+        }
+
+        public CollectionMetadata DefineType(IType type)
+        {
+            var line = 0;
+            var offset = 0;
+            var flags = 0;
+
+            return
+                new CollectionMetadata(indexedMetadata).Add(
+                    string.Format(
+                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", type.FullName, line, type.GetTypeSize(true), LlvmWriter.PointerSize, offset, flags),
+                    null,
+                    null);
         }
 
         public void ReadAndSetCurrentDebugLine(int offset)

@@ -5752,6 +5752,11 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
             }
+
+            if (!isExternal && this.DebugInfo)
+            {
+                this.debugInfoGenerator.DefineGlobal(field);
+            }
         }
 
         /// <summary>
