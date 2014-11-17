@@ -2126,15 +2126,15 @@ namespace Il2Native.Logic
             this.Output.Write(", align " + PointerSize);
             this.Output.WriteLine(string.Empty);
 
-            if (this.DebugInfo && name == "t")
+            if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLine.HasValue)
             {
                 this.Output.Write("call void @llvm.dbg.declare(metadata !{");
                 type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
                 this.Output.Write(string.Concat("* ", paramFullName, "}, "));
-                this.debugInfoGenerator.DefineVariable(isThis ? "this" : name, type, DebugVariableType.Auto).WriteTo(this.Output);
+                this.debugInfoGenerator.DefineVariable(isThis ? "this" : name, type, DebugVariableType.Argument).WriteTo(this.Output);
                 this.Output.Write(", ");
                 this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
-                this.Output.WriteLine(");, !dbg !xx");
+                this.Output.WriteLine("), !dbg !{0}", this.debugInfoGenerator.CurrentDebugLine);
             }
         }
 
@@ -2337,6 +2337,13 @@ namespace Il2Native.Logic
             var methodBase = ctor.ResolveMethodBody(genericContext);
             if (methodBase.HasBody)
             {
+                if (this.DebugInfo && ctor.Token.HasValue)
+                {
+                    this.debugInfoGenerator.GenerateFunction(ctor.Token.Value);
+                    // to find first debug line of method
+                    ReadDbgLine(OpCodePart.CreateNop);
+                }
+
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
@@ -3197,6 +3204,13 @@ namespace Il2Native.Logic
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
             if (methodBodyBytes.HasBody)
             {
+                if (this.DebugInfo && method.Token.HasValue)
+                {
+                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
+                    // to find first debug line of method
+                    ReadDbgLine(OpCodePart.CreateNop);
+                }
+
                 this.Output.WriteLine(" {");
 
                 this.Output.Indent++;
@@ -5463,11 +5477,6 @@ namespace Il2Native.Logic
         private void WriteMethodBody(IMethod method)
         {
             var rest = this.PrepareWritingMethodBody();
-
-            if (this.DebugInfo && method.Token.HasValue)
-            {
-                this.debugInfoGenerator.GenerateFunction(method.Token.Value);
-            }
 
             foreach (var opCodePart in rest)
             {

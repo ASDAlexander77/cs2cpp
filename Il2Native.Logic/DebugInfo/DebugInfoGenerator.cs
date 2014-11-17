@@ -255,6 +255,7 @@
             {
                 case DebugVariableType.Argument:
                     tag = "0x101";
+                    line = 16777220;
                     break;
                 case DebugVariableType.Auto:
                     tag = "0x100";
@@ -266,7 +267,7 @@
             var type = this.DefineType(vriableType);
 
             return new CollectionMetadata(indexedMetadata).Add(
-                string.Format(@"0x{2}\00{0}\00{1}\000", name, line, tag),
+                string.Format(@"{2}\00{0}\00{1}\000", name, line, tag),
                 this.currentFunction,
                 this.fileType,
                 type);
