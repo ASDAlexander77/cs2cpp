@@ -137,7 +137,7 @@
                 // Subprograms
                 subprograms = new CollectionMetadata(indexedMetadata),
                 // Global Variables
-                globalVariables = new CollectionMetadata(indexedMetadata),
+                new CollectionMetadata(indexedMetadata).Add(globalVariables = new CollectionMetadata(indexedMetadata)),
                 // Imported entities
                 importedEntities = new CollectionMetadata(indexedMetadata));
 
@@ -239,7 +239,7 @@
             var line = 0;
 
             this.globalVariables.Add(
-                string.Format(@"0x34\00M{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.FullName, line),
+                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.FullName, line),
                 null,
                 fileTypes = new CollectionMetadata(indexedMetadata),
                 DefineType(field.FieldType),
@@ -257,7 +257,7 @@
             return
                 new CollectionMetadata(indexedMetadata).Add(
                     string.Format(
-                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", type.FullName, line, type.GetTypeSize(true), LlvmWriter.PointerSize, offset, flags),
+                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", type.FullName, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
                     null,
                     null);
         }
