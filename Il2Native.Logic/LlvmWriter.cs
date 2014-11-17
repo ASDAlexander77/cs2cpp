@@ -1146,7 +1146,7 @@ namespace Il2Native.Logic
                     }
 
                     WriteDbgLine(opCode);
-                    
+
                     writer.WriteLine(string.Empty);
 
                     if (!opCode.UseAsConditionalExpression)
@@ -2125,6 +2125,17 @@ namespace Il2Native.Logic
             this.Output.Write("* {0}", paramFullName);
             this.Output.Write(", align " + PointerSize);
             this.Output.WriteLine(string.Empty);
+
+            if (this.DebugInfo && name == "t")
+            {
+                this.Output.Write("call void @llvm.dbg.declare(metadata !{");
+                type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
+                this.Output.Write(string.Concat("* ", paramFullName, "}, "));
+                this.debugInfoGenerator.DefineVariable(isThis ? "this" : name, type, DebugVariableType.Auto).WriteTo(this.Output);
+                this.Output.Write(", ");
+                this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
+                this.Output.WriteLine(");, !dbg !xx");
+            }
         }
 
         /// <summary>
@@ -3635,6 +3646,10 @@ namespace Il2Native.Logic
 
             if (this.DebugInfo)
             {
+
+                this.Output.WriteLine("declare void @llvm.dbg.declare(metadata, metadata, metadata) #0");
+                this.Output.WriteLine(string.Empty);
+
                 this.debugInfoGenerator.StartGenerating(this);
             }
         }

@@ -28,9 +28,15 @@
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
 
+        private CollectionMetadata file;
+
+        private CollectionMetadata fileType;
+
         private CollectionMetadata globalVariables;
 
-        private CollectionMetadata file;
+        private CollectionMetadata currentFunction;
+
+        private CollectionMetadata tagExpression;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -143,6 +149,7 @@
 
             this.globalVariables = globalVariables;
             this.file = file;
+            this.fileType = new CollectionMetadata(indexedMetadata).Add("0x29", file);
 
             this.CompileUnit.Add(compilationUnit);
         }
@@ -161,7 +168,6 @@
             var methodReferenceType = this.writer.WriteToString(() => this.writer.WriteMethodPointerType(this.writer.Output, methodDefinition));
             var methodDefinitionName = this.writer.WriteToString(() => this.writer.WriteMethodDefinitionName(this.writer.Output, methodDefinition));
 
-            CollectionMetadata fileTypes;
             CollectionMetadata subroutineTypes;
             CollectionMetadata parametersTypes;
 
@@ -179,7 +185,7 @@
                 // Source directory (including trailing slash) & file pair
                 file,
                 // Reference to context descriptor
-                fileTypes = new CollectionMetadata(indexedMetadata),
+                this.fileType,
                 // Subroutine types
                 subroutineTypes = new CollectionMetadata(indexedMetadata),
                 // indicates which base type contains the vtable pointer for the derived class
@@ -193,8 +199,6 @@
                 // List of function variables
                 functionVariables = new CollectionMetadata(indexedMetadata));
 
-            AddFileType(fileTypes, file);
-
             // add subrouting type
             subroutineTypes.Add(
                 @"0x15\00\000\000\000\000\000\000",
@@ -206,13 +210,9 @@
                 null,
                 null);
 
-            return methodMetadataDefinition;
-        }
+            this.currentFunction = methodMetadataDefinition;
 
-        private static void AddFileType(CollectionMetadata fileTypes, CollectionMetadata file)
-        {
-            // Add file type
-            fileTypes.Add("0x29", file);
+            return methodMetadataDefinition;
         }
 
         public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
@@ -241,11 +241,35 @@
             this.globalVariables.Add(
                 string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, field.Name, line),
                 null,
-                fileTypes = new CollectionMetadata(indexedMetadata),
+                this.fileType,
                 DefineType(field.FieldType),
                 new PlainTextMetadata(string.Concat(globalType, " ", globalName)));
+        }
 
-            AddFileType(fileTypes, file);
+        public CollectionMetadata DefineVariable(string name, IType vriableType, DebugVariableType debugVariableType)
+        {
+            var line = 0;
+
+            var tag = string.Empty;
+            switch (debugVariableType)
+            {
+                case DebugVariableType.Argument:
+                    tag = "0x101";
+                    break;
+                case DebugVariableType.Auto:
+                    tag = "0x100";
+                    break;
+                default:
+                    break;
+            }
+
+            var type = this.DefineType(vriableType);
+
+            return new CollectionMetadata(indexedMetadata).Add(
+                string.Format(@"0x{2}\00{0}\00{1}\000", name, line, tag),
+                this.currentFunction,
+                this.fileType,
+                type);
         }
 
         public CollectionMetadata DefineType(IType type)
@@ -260,6 +284,16 @@
                         @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", type.FullName, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
                     null,
                     null);
+        }
+
+        public CollectionMetadata DefineTagExpression()
+        {
+            if (this.tagExpression == null)
+            {
+                this.tagExpression = new CollectionMetadata(indexedMetadata).Add("0x102");
+            }
+
+            return this.tagExpression;
         }
 
         public void ReadAndSetCurrentDebugLine(int offset)

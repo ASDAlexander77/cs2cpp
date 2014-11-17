@@ -68,6 +68,7 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceFileEntry.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
+    <Compile Include="DebugInfo\DebugVariableType.cs" />
     <Compile Include="Gencode\InternalMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGen.cs" />
