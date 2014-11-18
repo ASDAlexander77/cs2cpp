@@ -49,6 +49,8 @@
 
         private LlvmWriter writer;
 
+        private bool structuresByName = false;
+
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
             this.pdbFileName = pdbFileName;
@@ -154,15 +156,15 @@
             this.nameBySlot[slot] = name;
         }
 
-        public CollectionMetadata DefineMember(IField field, bool create = false)
+        public CollectionMetadata DefineMember(IField field, bool create = false, CollectionMetadata structureType = null)
         {
             var line = 0;
-            var size = 0;
-            var align = 0;
+            var size = field.FieldType.GetTypeSize(true) * 8;
+            var align = LlvmWriter.PointerSize * 8;
             var offset = 0;
 
             // static
-            var flags = 4096;
+            var flags = field.IsStatic ? 4096 : 0;
 
             CollectionMetadata memberMetadata;
             if (!create && this.typeMembersMetadataCache.TryGetValue(field, out memberMetadata))
@@ -174,9 +176,13 @@
             var typeMember = fieldMetadata.Add(
                 string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", field.Name, line, size, align, offset, flags),
                 this.file,
-                field.DeclaringType.FullName,
-                this.DefineType(field.FieldType),
-                null);
+                this.structuresByName || structureType == null ? (object)this.DefineType(field.DeclaringType) : (object)structureType,
+                this.DefineType(field.FieldType));
+
+            if (this.structuresByName)
+            {
+                typeMember.Add(null);
+            }
 
             typeMembersMetadataCache[field] = typeMember;
 
@@ -276,9 +282,12 @@
             }
             else
             {
-                typeMetadata = type.FullName;
-                this.typesMetadataCache[type] = typeMetadata;
-                this.DefineStructureType(type, line, offset, flags);
+                var structureType = new CollectionMetadata(this.indexedMetadata);
+                var reference = this.structuresByName ? (object)type.FullName : (object)structureType;
+                this.typesMetadataCache[type] = reference;
+                this.DefineStructureType(type, line, offset, flags, structureType);
+
+                typeMetadata = reference;
             }
 
             return typeMetadata;
@@ -325,7 +334,7 @@
                 return name;
             }
 
-            return null;
+            return "local" + localIndex;
         }
 
         public void ReadAndSetCurrentDebugLine(int offset)
@@ -412,12 +421,12 @@
             return sb.ToString();
         }
 
-        private CollectionMetadata DefineMembers(IType type)
+        private CollectionMetadata DefineMembers(IType type, CollectionMetadata structureType)
         {
             var members = new CollectionMetadata(this.indexedMetadata);
             foreach (var field in IlReader.Fields(type))
             {
-                members.Add(this.DefineMember(field, true));
+                members.Add(this.DefineMember(field, true, structureType));
             }
 
             return members;
@@ -439,19 +448,24 @@
                     null);
         }
 
-        private void DefineStructureType(IType type, int line, int offset, int flags)
+        private void DefineStructureType(IType type, int line, int offset, int flags, CollectionMetadata structureType)
         {
-            this.retainedTypes.Add(new CollectionMetadata(this.indexedMetadata).Add(
+            structureType.Add(
                     string.Format(
                         @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000", type.Name, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
                     this.file,
                     null,
                     null,
                 // members
-                    this.DefineMembers(type),
+                    this.DefineMembers(type, structureType),
                     null,
                     null,
-                    type.FullName));
+                    this.structuresByName ? type.FullName : null);
+
+            if (structuresByName)
+            {
+                this.retainedTypes.Add(structureType);
+            }
         }
     }
 }
