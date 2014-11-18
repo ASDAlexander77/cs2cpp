@@ -18,6 +18,32 @@
             model.Add(this);
         }
 
+        public object this[int index]
+        {
+            get
+            {
+                var objects = this.Value as IList<object>;
+                if (objects != null)
+                {
+                    return objects[index];
+                }
+
+                throw new NotSupportedException();
+            }
+
+            set
+            {
+                var objects = this.Value as IList<object>;
+                if (objects != null)
+                {
+                    objects[index] = value;
+                    return;
+                }
+
+                throw new NotSupportedException();
+            }
+        }
+
         public int? Index { get; set; }
 
         public bool NullIfEmpty { get; set; }
