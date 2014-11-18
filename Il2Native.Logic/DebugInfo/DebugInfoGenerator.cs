@@ -231,8 +231,6 @@
                 throw new NullReferenceException("globalVariables");
             }
 
-            CollectionMetadata fileTypes;
-
             var globalType = this.writer.WriteToString(() => field.FieldType.WriteTypePrefix(this.writer.Output, true));
             var globalName = string.Format("@\"{0}\"", field.GetFullName());
 

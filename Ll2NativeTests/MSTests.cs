@@ -70,7 +70,12 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = true;
+        private const bool DebugInfo = false;
+        
+        /// <summary>
+        /// ex. opt 'file'.ll -o 'file'.bc -O2
+        /// </summary>
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -110,16 +115,15 @@ namespace Ll2NativeTests
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
 
-            var piCoreLibObj = new ProcessStartInfo();
-            piCoreLibObj.WorkingDirectory = OutputPath;
-            piCoreLibObj.FileName = "llc";
-            piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
-            piCoreLibObj.CreateNoWindow = true;
-            piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-            var processCoreLibObj = Process.Start(piCoreLibObj);
-            processCoreLibObj.WaitForExit();
-            Assert.AreEqual(0, processCoreLibObj.ExitCode);
+            if (CompileWithOptimization)
+            {
+                ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
+            }
+            else
+            {
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
+            }
         }
 
         /// <summary>
@@ -431,7 +435,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        private static void ExecCompile(string fileName, string output = OutputPath, bool justCompile = false)
+        private static void ExecCompile(string fileName, bool justCompile = false, bool opt = false)
         {
             /*
                 call vcvars32.bat
@@ -460,6 +464,16 @@ namespace Ll2NativeTests
                 del test-%1.o 
              */
 
+            // if GC Enabled with optimization
+            /*
+                opt corelib.ll -o corelib.bc -O2
+                opt test-%1.ll -o test-%1.bc -O2
+                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
+                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
+                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
+                del test-%1.o 
+             */
+
             // Android target - target triple = "armv7-none-linux-androideabi"
 
             // compile CoreLib
@@ -470,59 +484,54 @@ namespace Ll2NativeTests
                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
-                var piCoreLibObj = new ProcessStartInfo();
-                piCoreLibObj.WorkingDirectory = OutputPath;
-                piCoreLibObj.FileName = "llc";
-                piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
-                piCoreLibObj.CreateNoWindow = true;
-                piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var processCoreLibObj = Process.Start(piCoreLibObj);
-                processCoreLibObj.WaitForExit();
-                Assert.AreEqual(0, processCoreLibObj.ExitCode);
+                if (opt)
+                {
+                    ExecCmd("opt", string.Format("CoreLib.ll -o CoreLib.bc -O2", Target));
+                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
+                }
+                else
+                {
+                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
+                }
             }
 
             // file obj
-            var piFileObj = new ProcessStartInfo();
-            piFileObj.WorkingDirectory = OutputPath;
-            piFileObj.FileName = "llc";
-            piFileObj.Arguments = string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target);
-            piFileObj.CreateNoWindow = true;
-            piFileObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-            var processFileObj = Process.Start(piFileObj);
-            processFileObj.WaitForExit();
-            Assert.AreEqual(0, processFileObj.ExitCode);
+            if (opt)
+            {
+                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName, Target));
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
+            }
+            else
+            {
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target));
+            }
 
             if (!justCompile)
             {
                 // file exe
-                var piFileExe = new ProcessStartInfo();
-                piFileExe.WorkingDirectory = OutputPath;
-                piFileExe.FileName = "g++";
-                piFileExe.Arguments = string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt);
-                piFileExe.CreateNoWindow = true;
-                piFileExe.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var processFileExe = Process.Start(piFileExe);
-                processFileExe.WaitForExit();
-                Assert.AreEqual(0, processFileExe.ExitCode);
+                ExecCmd("g++", string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
 
                 // test execution
-                var execProcess = new ProcessStartInfo();
-                execProcess.WorkingDirectory = OutputPath;
-                execProcess.FileName = string.Format("{0}.exe", fileName);
-                execProcess.CreateNoWindow = true;
-                execProcess.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var execProcessProc = Process.Start(execProcess);
-                execProcessProc.WaitForExit();
-                Assert.AreEqual(0, execProcessProc.ExitCode);
+                ExecCmd(string.Format("{0}.exe", fileName));
             }
             else
             {
                 Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
             }
+        }
+
+        private static void ExecCmd(string fileName, string arguments = "", string workingDir = OutputPath)
+        {
+            var processStartInfo = new ProcessStartInfo();
+            processStartInfo.WorkingDirectory = workingDir;
+            processStartInfo.FileName = fileName;
+            processStartInfo.Arguments = arguments;
+            processStartInfo.CreateNoWindow = true;
+            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+            var processCoreLibObj = Process.Start(processStartInfo);
+            processCoreLibObj.WaitForExit();
+            Assert.AreEqual(0, processCoreLibObj.ExitCode);
         }
 
         /// <summary>
@@ -552,7 +561,7 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void CompileAndRun(string fileName, string source = SourcePath, string output = OutputPath)
+        private static void CompileAndRun(string fileName, string source = SourcePath)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
@@ -560,7 +569,7 @@ namespace Ll2NativeTests
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 
-            ExecCompile(fileName, output);
+            ExecCompile(fileName, CompileWithOptimization);
         }
 
         /// <summary>
