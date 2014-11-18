@@ -15,6 +15,8 @@
 
     public class DebugInfoGenerator
     {
+        private const string IdentityString = "C# Native compiler";
+
         private readonly string defaultSourceFilePath;
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
@@ -29,7 +31,7 @@
 
         private readonly IDictionary<IField, CollectionMetadata> typeMembersMetadataCache = new SortedDictionary<IField, CollectionMetadata>();
 
-        private readonly IDictionary<IType, CollectionMetadata> typesMetadataCache = new SortedDictionary<IType, CollectionMetadata>();
+        private readonly IDictionary<IType, object> typesMetadataCache = new SortedDictionary<IType, object>();
 
         private CollectionMetadata currentFunction;
 
@@ -85,11 +87,11 @@
         public IConverter PdbConverter { get; set; }
 
         public void DefineCompilationUnit(
-            CollectionMetadata file, 
-            out CollectionMetadata enumTypes, 
-            out CollectionMetadata retainedTypes, 
-            out CollectionMetadata subprograms, 
-            out CollectionMetadata globalVariables, 
+            CollectionMetadata file,
+            out CollectionMetadata enumTypes,
+            out CollectionMetadata retainedTypes,
+            out CollectionMetadata subprograms,
+            out CollectionMetadata globalVariables,
             out CollectionMetadata importedEntities)
         {
             // 4 - C++
@@ -97,17 +99,17 @@
             var lang = 4;
 
             var compilationUnit = new CollectionMetadata(this.indexedMetadata).Add(
-                string.Format(@"0x11\00{0}\00{1}\000\00\000\00\001", lang, IdentityString), 
+                string.Format(@"0x11\00{0}\00{1}\000\00\000\00\001", lang, IdentityString),
                 // file
-                file, 
+                file,
                 // Enum Types
-                enumTypes = new CollectionMetadata(this.indexedMetadata), 
+                enumTypes = new CollectionMetadata(this.indexedMetadata),
                 // Retained Types
-                retainedTypes = new CollectionMetadata(this.indexedMetadata), 
+                retainedTypes = new CollectionMetadata(this.indexedMetadata),
                 // Subprograms
-                subprograms = new CollectionMetadata(this.indexedMetadata), 
+                subprograms = new CollectionMetadata(this.indexedMetadata),
                 // Global Variables
-                new CollectionMetadata(this.indexedMetadata).Add(globalVariables = new CollectionMetadata(this.indexedMetadata) { NullIfEmpty = true }), 
+                new CollectionMetadata(this.indexedMetadata).Add(globalVariables = new CollectionMetadata(this.indexedMetadata) { NullIfEmpty = true }),
                 // Imported entities
                 importedEntities = new CollectionMetadata(this.indexedMetadata));
 
@@ -139,11 +141,11 @@
             this.retainedTypes.Add(this.DefineType(field.DeclaringType));
 
             this.globalVariables.Add(
-                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, PrepareEscape(field.GetFullName()), line), 
-                null, 
-                this.fileType, 
-                this.DefineType(field.FieldType), 
-                new PlainTextMetadata(string.Concat(globalType, " ", globalName)), 
+                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, PrepareEscape(field.GetFullName()), line),
+                null,
+                this.fileType,
+                this.DefineType(field.FieldType),
+                new PlainTextMetadata(string.Concat(globalType, " ", globalName)),
                 this.DefineMember(field));
         }
 
@@ -168,13 +170,13 @@
                 return memberMetadata;
             }
 
-            var typeMember =
-                new CollectionMetadata(this.indexedMetadata).Add(
-                    string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", field.Name, line, size, align, offset, flags),
-                    this.file,
-                    field.DeclaringType.FullName,
-                    this.DefineType(field.FieldType),
-                    null);
+            var fieldMetadata = new CollectionMetadata(this.indexedMetadata);
+            var typeMember = fieldMetadata.Add(
+                string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", field.Name, line, size, align, offset, flags),
+                this.file,
+                field.DeclaringType.FullName,
+                this.DefineType(field.FieldType),
+                null);
 
             typeMembersMetadataCache[field] = typeMember;
 
@@ -202,28 +204,28 @@
             var methodMetadataDefinition =
                 new CollectionMetadata(this.indexedMetadata).Add(
                     string.Format(
-                        @"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}", 
-                        method.Name, 
-                        method.DisplayName, 
-                        method.LinkageName, 
-                        method.LineNumber, 
-                        flag, 
-                        scopeLine), 
-                    // Source directory (including trailing slash) & file pair
-                    file, 
-                    // Reference to context descriptor
-                    this.fileType, 
-                    // Subroutine types
-                    subroutineTypes = new CollectionMetadata(this.indexedMetadata), 
-                    // indicates which base type contains the vtable pointer for the derived class
-                    null, 
-                    // function method reference ex. "i32 ()* @main"                
-                    new PlainTextMetadata(string.Concat(methodReferenceType, " ", methodDefinitionName)), 
-                    // Lists function template parameters
-                    null, 
-                    // Function declaration descriptor
-                    null, 
-                    // List of function variables
+                        @"0x2e\00{0}\00{1}\00{2}\00{3}\000\001\000\000\00{4}\000\00{5}",
+                        method.Name,
+                        method.DisplayName,
+                        method.LinkageName,
+                        method.LineNumber,
+                        flag,
+                        scopeLine),
+                // Source directory (including trailing slash) & file pair
+                    file,
+                // Reference to context descriptor
+                    this.fileType,
+                // Subroutine types
+                    subroutineTypes = new CollectionMetadata(this.indexedMetadata),
+                // indicates which base type contains the vtable pointer for the derived class
+                    null,
+                // function method reference ex. "i32 ()* @main"                
+                    new PlainTextMetadata(string.Concat(methodReferenceType, " ", methodDefinitionName)),
+                // Lists function template parameters
+                    null,
+                // Function declaration descriptor
+                    null,
+                // List of function variables
                     functionVariables = new CollectionMetadata(this.indexedMetadata));
 
             // add subrouting type
@@ -255,21 +257,29 @@
             return this.tagExpression;
         }
 
-        public CollectionMetadata DefineType(IType type)
+        public object DefineType(IType type)
         {
             var line = 0;
             var offset = 0;
             var flags = 0;
 
-            CollectionMetadata typeMetadata;
+            object typeMetadata;
             if (this.typesMetadataCache.TryGetValue(type, out typeMetadata))
             {
                 return typeMetadata;
             }
 
-            typeMetadata = type.IsPrimitiveType() ? this.DefinePrimitiveType(type, line, offset, flags) : this.DefineStructureType(type, line, offset, flags);
-
-            this.typesMetadataCache[type] = typeMetadata;
+            if (type.IsPrimitiveType())
+            {
+                typeMetadata = this.DefinePrimitiveType(type, line, offset, flags);
+                this.typesMetadataCache[type] = typeMetadata;
+            }
+            else
+            {
+                typeMetadata = type.FullName;
+                this.typesMetadataCache[type] = typeMetadata;
+                this.DefineStructureType(type, line, offset, flags);
+            }
 
             return typeMetadata;
         }
@@ -418,35 +428,30 @@
             return
                 new CollectionMetadata(this.indexedMetadata).Add(
                     string.Format(
-                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", 
-                        type.FullName, 
-                        line, 
-                        type.GetTypeSize(true) * 8, 
-                        LlvmWriter.PointerSize * 8, 
-                        offset, 
-                        flags), 
-                    null, 
+                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005",
+                        type.FullName,
+                        line,
+                        type.GetTypeSize(true) * 8,
+                        LlvmWriter.PointerSize * 8,
+                        offset,
+                        flags),
+                    null,
                     null);
         }
 
-        private CollectionMetadata DefineStructureType(IType type, int line, int offset, int flags)
+        private void DefineStructureType(IType type, int line, int offset, int flags)
         {
-            var structureType =
-                new CollectionMetadata(this.indexedMetadata).Add(
+            this.retainedTypes.Add(new CollectionMetadata(this.indexedMetadata).Add(
                     string.Format(
-                        @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000", type.Name, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags), 
-                    this.file, 
-                    null, 
-                    null, 
-                    // members
-                    this.DefineMembers(type), 
-                    null, 
-                    null, 
-                    type.FullName);
-
-            return structureType;
+                        @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000", type.Name, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
+                    this.file,
+                    null,
+                    null,
+                // members
+                    this.DefineMembers(type),
+                    null,
+                    null,
+                    type.FullName));
         }
-
-        private const string IdentityString = "C# Native compiler";
     }
 }
