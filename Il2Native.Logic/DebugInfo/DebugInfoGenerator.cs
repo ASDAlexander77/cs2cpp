@@ -28,6 +28,8 @@
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
 
+        private readonly IDictionary<string, CollectionMetadata> typesMetadataCache = new SortedDictionary<string, CollectionMetadata>();  
+
         private CollectionMetadata file;
 
         private CollectionMetadata fileType;
@@ -143,7 +145,7 @@
                 // Subprograms
                 subprograms = new CollectionMetadata(indexedMetadata),
                 // Global Variables
-                new CollectionMetadata(indexedMetadata).Add(globalVariables = new CollectionMetadata(indexedMetadata)),
+                new CollectionMetadata(indexedMetadata).Add(globalVariables = new CollectionMetadata(indexedMetadata) { NullIfEmpty = true }),
                 // Imported entities
                 importedEntities = new CollectionMetadata(indexedMetadata));
 
@@ -212,6 +214,14 @@
 
             this.currentFunction = methodMetadataDefinition;
 
+            // add return type
+            parametersTypes.Add(
+                !methodDefinition.ReturnType.IsVoid() && methodDefinition.ReturnType.IsStructureType() ? this.DefineType(methodDefinition.ReturnType) : null);
+            foreach (var parameter in methodDefinition.GetParameters())
+            {
+                parametersTypes.Add(this.DefineType(parameter.ParameterType));
+            }
+
             return methodMetadataDefinition;
         }
 
@@ -277,12 +287,28 @@
             var offset = 0;
             var flags = 0;
 
-            return
+            CollectionMetadata typeMetadata;
+            if (typesMetadataCache.TryGetValue(type.FullName, out typeMetadata))
+            {
+                return typeMetadata;
+            }
+
+            typeMetadata =
                 new CollectionMetadata(indexedMetadata).Add(
                     string.Format(
-                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005", type.FullName, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
+                        @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\005",
+                        type.FullName,
+                        line,
+                        type.GetTypeSize(true) * 8,
+                        LlvmWriter.PointerSize * 8,
+                        offset,
+                        flags),
                     null,
                     null);
+
+            typesMetadataCache[type.FullName] = typeMetadata;
+
+            return typeMetadata;
         }
 
         public CollectionMetadata DefineTagExpression()
