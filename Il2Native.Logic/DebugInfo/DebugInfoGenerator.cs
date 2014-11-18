@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
 
     using Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter;
     using Il2Native.Logic.Gencode;
@@ -28,6 +29,8 @@
 
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
 
+        private readonly IDictionary<int, string> nameBySlot = new SortedDictionary<int, string>();
+
         private readonly IDictionary<string, CollectionMetadata> typesMetadataCache = new SortedDictionary<string, CollectionMetadata>();  
 
         private CollectionMetadata file;
@@ -39,6 +42,8 @@
         private CollectionMetadata currentFunction;
 
         private CollectionMetadata tagExpression;
+
+        private IMethod methodDefinition;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -94,13 +99,9 @@
             output.WriteLine(string.Empty);
 
             output.WriteLine("; Metadata Items");
-            foreach (var indexedMetadataItem in this.indexedMetadata)
+            foreach (
+                var indexedMetadataItem in this.indexedMetadata.Where(indexedMetadataItem => !indexedMetadataItem.NullIfEmpty || !indexedMetadataItem.IsEmpty))
             {
-                if (indexedMetadataItem.NullIfEmpty && indexedMetadataItem.IsEmpty)
-                {
-                    continue;
-                }
-
                 output.Write("!{0} = ", indexedMetadataItem.Index);
                 indexedMetadataItem.WriteValueTo(output);
                 output.WriteLine(string.Empty);
@@ -109,18 +110,22 @@
 
         public void StartGenerating(LlvmWriter writer)
         {
-            if (File.Exists(this.pdbFileName))
+            if (!File.Exists(this.pdbFileName))
             {
-                this.writer = writer;
-                this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
-                // to force generating CompileUnit info
-                this.PdbConverter.ConvertFunction(-1);
+                return;
             }
+
+            this.writer = writer;
+            this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
+
+            // to force generating CompileUnit info
+            this.PdbConverter.ConvertFunction(-1);
         }
 
         public void GenerateFunction(int token)
         {
             this.indexByOffset.Clear();
+            this.nameBySlot.Clear();
             this.CurrentDebugLine = null;
 
             this.PdbConverter.ConvertFunction(token);
@@ -165,7 +170,7 @@
             var scopeLine = method.LineNumber;
 
             // find method definition
-            var methodDefinition = this.writer.MethodsByToken[method.Token];
+            this.methodDefinition = this.writer.MethodsByToken[method.Token];
 
             var methodReferenceType = this.writer.WriteToString(() => this.writer.WriteMethodPointerType(this.writer.Output, methodDefinition));
             var methodDefinitionName = this.writer.WriteToString(() => this.writer.WriteMethodDefinitionName(this.writer.Output, methodDefinition));
@@ -254,7 +259,12 @@
                 new PlainTextMetadata(string.Concat(globalType, " ", globalName)));
         }
 
-        public CollectionMetadata DefineVariable(string name, IType vriableType, DebugVariableType debugVariableType)
+        public void DefineLocalVariable(string name, int slot)
+        {
+            this.nameBySlot[slot] = name;
+        }
+
+        public CollectionMetadata DefineVariable(string name, IType variableType, DebugVariableType debugVariableType)
         {
             var line = 0;
 
@@ -272,7 +282,7 @@
                     break;
             }
 
-            var type = this.DefineType(vriableType);
+            var type = this.DefineType(variableType);
 
             return new CollectionMetadata(indexedMetadata).Add(
                 string.Format(@"{2}\00{0}\00{1}\000", name, line, tag),
@@ -306,7 +316,7 @@
                     null,
                     null);
 
-            typesMetadataCache[type.FullName] = typeMetadata;
+            this.typesMetadataCache[type.FullName] = typeMetadata;
 
             return typeMetadata;
         }
@@ -333,9 +343,20 @@
         protected int? GetLineByOffiset(int offset)
         {
             int index;
-            if (indexByOffset.TryGetValue(offset, out index))
+            if (this.indexByOffset.TryGetValue(offset, out index))
             {
                 return index;
+            }
+
+            return null;
+        }
+
+        public string GetLocalNameByIndex(int localIndex)
+        {
+            string name;
+            if (this.nameBySlot.TryGetValue(localIndex, out name))
+            {
+                return name;
             }
 
             return null;

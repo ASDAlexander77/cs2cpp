@@ -34,6 +34,7 @@
 
         public void DefineLocalVariable(int slot, string name)
         {
+            this.debugInfoGenerator.DefineLocalVariable(name, slot);
         }
 
         public void CloseMethod()

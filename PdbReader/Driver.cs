@@ -111,6 +111,8 @@ namespace PdbReader
         /// </summary>
         /// <param name="function">
         /// </param>
+        /// <param name="generateFileOnly">
+        /// </param>
         private void ConvertFunction(PdbFunction function, bool generateFileOnly = false)
         {
             if (function.lines == null)

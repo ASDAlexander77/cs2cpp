@@ -2128,14 +2128,21 @@ namespace Il2Native.Logic
 
             if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLine.HasValue)
             {
-                this.Output.Write("call void @llvm.dbg.declare(metadata !{");
-                type.WriteTypePrefix(this.Output, type.IsStructureType() || isThis);
-                this.Output.Write(string.Concat("* ", paramFullName, "}, "));
-                this.debugInfoGenerator.DefineVariable(isThis ? "this" : name, type, DebugVariableType.Argument).WriteTo(this.Output);
-                this.Output.Write(", ");
-                this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
-                this.Output.WriteLine("), !dbg !{0}", this.debugInfoGenerator.CurrentDebugLine);
+                var effectiveName = isThis ? "this" : name;
+                var effectiveType = type.IsStructureType() || isThis ? type.ToClass() : type;
+                this.WriteDebugDeclare(effectiveName, effectiveType, paramFullName, DebugVariableType.Argument);
             }
+        }
+
+        private void WriteDebugDeclare(string name, IType type, string variableOrArgumentName, DebugVariableType debugVariableType)
+        {
+            this.Output.Write("call void @llvm.dbg.declare(metadata !{");
+            type.WriteTypePrefix(this.Output);
+            this.Output.Write(string.Concat("* ", variableOrArgumentName, "}, "));
+            this.debugInfoGenerator.DefineVariable(name, type, debugVariableType).WriteTo(this.Output);
+            this.Output.Write(", ");
+            this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
+            this.Output.WriteLine("), !dbg !{0}", this.debugInfoGenerator.CurrentDebugLine);
         }
 
         /// <summary>
@@ -3212,9 +3219,7 @@ namespace Il2Native.Logic
                 }
 
                 this.Output.WriteLine(" {");
-
                 this.Output.Indent++;
-
                 this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
                 this.WriteArgumentCopyDeclarations(method.GetParameters(), this.HasMethodThis);
 
@@ -5390,7 +5395,7 @@ namespace Il2Native.Logic
         {
             foreach (var local in locals)
             {
-                this.Output.Write("%local{0} = ", local.LocalIndex);
+                this.Output.Write("{0} = ", this.GetLocalVarName(local.LocalIndex));
                 if (local.LocalType.IsPinned)
                 {
                     var localPinnedType = local.LocalType.FullName == "System.IntPtr"
@@ -5407,6 +5412,18 @@ namespace Il2Native.Logic
                 CheckIfExternalDeclarationIsRequired(local.LocalType);
 
                 this.Output.WriteLine(string.Empty);
+            }
+
+            if (this.DebugInfo)
+            {
+                foreach (var local in locals)
+                {
+                    this.WriteDebugDeclare(
+                        this.debugInfoGenerator.GetLocalNameByIndex(local.LocalIndex),
+                        local.LocalType,
+                        this.GetLocalVarName(local.LocalIndex),
+                        DebugVariableType.Auto);
+                }
             }
         }
 
