@@ -339,7 +339,7 @@ namespace Il2Native.Logic
             this.DefaultDllLocations = isDll
                                            ? Path.GetDirectoryName(Path.GetFullPath(this.Source))
                                            : null;
-
+            this.DebugInfo = args != null && args.Contains("debug");
             if (!isDll)
             {
                 this.SourceFilePath = Path.GetFullPath(this.Source);
@@ -351,6 +351,8 @@ namespace Il2Native.Logic
         public string DllFilePath { get; private set; }
 
         public string PdbFilePath { get; private set; }
+
+        public bool DebugInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -1214,10 +1216,10 @@ namespace Il2Native.Logic
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = string.Concat(
-                "/optimize+ /unsafe+", string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
+                string.Format("/optimize{0} /unsafe+", this.DebugInfo ? "-" : "+"),
+                string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 
-            // parameters.CompilerOptions = "/optimize-";
             var results = codeProvider.CompileAssemblyFromFile(parameters, source);
 
             if (results.Errors.Count > 0)
@@ -1264,7 +1266,7 @@ namespace Il2Native.Logic
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
-                                                                                 .WithOptimizations(true)
+                                                                                 .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
             var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);

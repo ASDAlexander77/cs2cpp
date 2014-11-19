@@ -135,7 +135,7 @@
                 throw new NullReferenceException("globalVariables");
             }
 
-            var globalType = this.writer.WriteToString(() => field.FieldType.WriteTypePrefix(this.writer.Output, true));
+            var globalType = this.writer.WriteToString(() => field.FieldType.WriteTypePrefix(this.writer.Output)) + "* ";
             var globalName = string.Format("@\"{0}\"", field.GetFullName());
 
             var line = 0;

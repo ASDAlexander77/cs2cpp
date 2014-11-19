@@ -190,7 +190,7 @@ namespace Ll2NativeTests
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(525, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -569,7 +569,7 @@ namespace Ll2NativeTests
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 
-            ExecCompile(fileName, CompileWithOptimization);
+            ExecCompile(fileName, opt: CompileWithOptimization);
         }
 
         /// <summary>
