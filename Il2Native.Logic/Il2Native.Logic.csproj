@@ -73,6 +73,8 @@
     <Compile Include="Gencode\CallGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGen.cs" />
     <Compile Include="Gencode\InternalMethods\InterlockedGen.cs" />
+    <Compile Include="Gencode\MemberLocationInfo.cs" />
+    <Compile Include="Gencode\MemberTypes.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />

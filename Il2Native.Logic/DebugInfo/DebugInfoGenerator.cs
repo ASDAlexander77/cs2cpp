@@ -49,7 +49,7 @@
 
         private LlvmWriter writer;
 
-        private bool structuresByName = false;
+        private bool structuresByName = true;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -161,7 +161,7 @@
             var line = 0;
             var size = field.FieldType.GetTypeSize(true) * 8;
             var align = LlvmWriter.PointerSize * 8;
-            var offset = 0;
+            var offset = !field.IsStatic ? field.GetFieldOffset() * 8 : 0;
 
             // static
             var flags = field.IsStatic ? 4096 : 0;
@@ -181,7 +181,7 @@
 
             if (this.structuresByName)
             {
-                typeMember.Add(null);
+                typeMember.Add((object)null);
             }
 
             typeMembersMetadataCache[field] = typeMember;
