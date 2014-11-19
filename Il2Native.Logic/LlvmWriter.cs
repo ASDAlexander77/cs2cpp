@@ -3614,7 +3614,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IncrementalResult WriteSetResultNumber(OpCodePart opCode, IType type)
+        public IncrementalResult WriteSetResultNumber(OpCodePart opCode, IType type, bool dupShift = false)
         {
             var writer = this.Output;
 
@@ -3626,7 +3626,14 @@ namespace Il2Native.Logic
             var llvmResult = new IncrementalResult(this.resultNumberIncremental, type);
             if (opCode != null)
             {
-                opCode.Result = llvmResult;
+                if (dupShift)
+                {
+                    opCode.ResultWithDupShift = llvmResult;
+                }
+                else
+                {
+                    opCode.Result = llvmResult;
+                }
             }
 
             return llvmResult;

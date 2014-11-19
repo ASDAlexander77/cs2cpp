@@ -569,7 +569,7 @@ namespace Il2Native.Logic.Gencode
             {
                 if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType) || fromResult is ConstValue)
                 {
-                    llvmWriter.WriteSetResultNumber(opCode, toType);
+                    llvmWriter.WriteSetResultNumber(opCode, toType, true);
                     writer.Write("bitcast ");
                     fromResult.Type.WriteTypePrefix(writer, true);
                     writer.Write(' ');

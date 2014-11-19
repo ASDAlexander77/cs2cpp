@@ -207,11 +207,28 @@ namespace Il2Native.Logic.CodeParts
 
             set
             {
+                ////if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
+                ////{
+                ////    this.Next.Result = this.result;
+                ////}
+                
+                this.result = value;
+            }
+        }
+
+        /// <summary>
+        /// TODO: you need to get rid of it when you stop allowing rewriting result of OpCode uncontrollablly (as you do in 'newarray' and etc)
+        /// so OpCode should get only one result only once and second time whem 'cast' happends
+        /// </summary>
+        public FullyDefinedReference ResultWithDupShift
+        {
+            set
+            {
                 if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
                 {
                     this.Next.Result = this.result;
                 }
-                
+
                 this.result = value;
             }
         }
