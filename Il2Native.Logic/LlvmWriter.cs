@@ -1113,7 +1113,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         string.Format(oper, sign),
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
@@ -1174,7 +1175,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp oeq" : "icmp eq",
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
@@ -1186,7 +1188,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp olt" : string.Format("icmp {0}lt", sign),
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
@@ -1197,7 +1200,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ult" : "icmp ult",
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
@@ -1209,7 +1213,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ogt" : string.Format("icmp {0}gt", sign),
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
@@ -1220,7 +1225,8 @@ namespace Il2Native.Logic
                         writer,
                         opCode,
                         isFloatingPoint ? "fcmp ugt" : "icmp ugt",
-                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                        OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
+                        this.ResolveType("System.Boolean"));
 
                     WriteDbgLine(opCode);
 
