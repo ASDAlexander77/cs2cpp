@@ -207,6 +207,11 @@ namespace Il2Native.Logic.CodeParts
 
             set
             {
+                if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
+                {
+                    this.Next.Result = this.result;
+                }
+                
                 this.result = value;
             }
         }
