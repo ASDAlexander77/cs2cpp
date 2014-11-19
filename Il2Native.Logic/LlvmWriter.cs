@@ -315,7 +315,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            //, !dbg !24
             var line = this.debugInfoGenerator.CurrentDebugLine;
             if (line.HasValue)
             {
@@ -2136,6 +2135,11 @@ namespace Il2Native.Logic
 
         private void WriteDebugDeclare(string name, IType type, string variableOrArgumentName, DebugVariableType debugVariableType)
         {
+            if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
+            {
+                return;
+            }
+
             this.Output.Write("call void @llvm.dbg.declare(metadata !{");
             type.WriteTypePrefix(this.Output);
             this.Output.Write(string.Concat("* ", variableOrArgumentName, "}, "));
@@ -3376,9 +3380,12 @@ namespace Il2Native.Logic
             var firstValueWithRequiredType = opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredIncomingType != null);
             var firstValueRequiredType = firstValueWithRequiredType != null ? firstValueWithRequiredType.RequiredIncomingType : null;
 
-            var phiType = firstValueRequiredType
-                          ?? (opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue)) ?? opCode.AlternativeValues.Values.First()).Result
-                                                                                                                                                        .Type;
+            var phiType = firstValueRequiredType;
+            if (phiType == null)
+            {
+                var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
+                phiType = (value != null ? value.Result.Type : null) ?? opCode.AlternativeValues.Values.First().RequiredOutgoingType;
+            }
 
             var structUsed = false;
             if (phiType.IsStructureType())
@@ -5396,18 +5403,7 @@ namespace Il2Native.Logic
             foreach (var local in locals)
             {
                 this.Output.Write("{0} = ", this.GetLocalVarName(local.LocalIndex));
-                if (local.LocalType.IsPinned)
-                {
-                    var localPinnedType = local.LocalType.FullName == "System.IntPtr"
-                                              ? this.ResolveType("System.Void").ToPointerType()
-                                              : local.LocalType.ToPointerType();
-
-                    this.WriteAlloca(localPinnedType);
-                }
-                else
-                {
-                    this.WriteAlloca(local.LocalType);
-                }
+                this.WriteAlloca(this.GetEffectiveLocalType(local));
 
                 CheckIfExternalDeclarationIsRequired(local.LocalType);
 
@@ -5420,11 +5416,24 @@ namespace Il2Native.Logic
                 {
                     this.WriteDebugDeclare(
                         this.debugInfoGenerator.GetLocalNameByIndex(local.LocalIndex),
-                        local.LocalType,
+                        GetEffectiveLocalType(local),
                         this.GetLocalVarName(local.LocalIndex),
                         DebugVariableType.Auto);
                 }
             }
+        }
+
+        private IType GetEffectiveLocalType(ILocalVariable local)
+        {
+            if (local.LocalType.IsPinned)
+            {
+                var localPinnedType = local.LocalType.FullName == "System.IntPtr"
+                                          ? this.ResolveType("System.Void").ToPointerType()
+                                          : local.LocalType.ToPointerType();
+                return localPinnedType;
+            }
+
+            return local.LocalType;
         }
 
         /// <summary>
