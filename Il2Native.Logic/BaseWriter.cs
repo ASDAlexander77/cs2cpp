@@ -733,10 +733,11 @@ namespace Il2Native.Logic
                 }
 
                 // check here if you have conditional argument (cond) ? a1 : b1;
-                while (this.IsConditionalExpression(opCodePartUsed, this.Stack))
+                bool whenSecondValueSeparatedByExpression;
+                while (this.IsConditionalExpression(opCodePartUsed, this.Stack, out whenSecondValueSeparatedByExpression))
                 {
                     var secondValue = this.Stack.Pop();
-                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue);
+                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue, whenSecondValueSeparatedByExpression);
                     alternativeValues.Values.Add(opCodePartUsed);
                 }
 
@@ -1349,18 +1350,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue)
+        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue, bool whenSecondValueSeparatedByExpression)
         {
             // add alternative stack value to and address
             // 1) find jump address
             var current = closerValue.PreviousOpCodeGroup(this);
-            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+            while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || whenSecondValueSeparatedByExpression)
                    && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
             {
                 current = current.PreviousOpCodeGroup(this);
             }
-
-            ;
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
             {
@@ -1475,8 +1474,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private bool IsConditionalExpression(OpCodePart currentArgument, Stack<OpCodePart> stack)
+        private bool IsConditionalExpression(OpCodePart currentArgument, Stack<OpCodePart> stack, out bool whenSecondValueSeparatedByExpression)
         {
+            whenSecondValueSeparatedByExpression = false;
+
             if (!stack.Any())
             {
                 return false;
@@ -1486,12 +1487,22 @@ namespace Il2Native.Logic
 
             var middleJump = firstValue.PreviousOpCodeGroup(this);
             var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
-            if (!isJumpForward)
-            {
-                return false;
-            }
 
             var secondValue = stack.First();
+
+            if (!isJumpForward)
+            {
+                // check value in stack if it is followed by jump
+                middleJump= secondValue.NextOpCodeGroup(this);
+                isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
+                if (!isJumpForward)
+                {
+                    return false;
+                }
+
+                whenSecondValueSeparatedByExpression = true;
+            }
+
             while (true)
             {
                 var firstCondJump = secondValue.PreviousOpCodeGroup(this);
