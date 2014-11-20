@@ -420,7 +420,7 @@ namespace Il2Native.Logic.Gencode
                 IlReader.Methods(@interface)
                         .Select(
                             interfaceMember =>
-                            allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
+                                allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
                         .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
         }
 

@@ -5667,7 +5667,7 @@ namespace Il2Native.Logic
                 foreach (
                     var rttiPointerDecl in this.typeRttiPointerDeclRequired.Where(rttiPointerDecl => !this.processedRttiPointerTypes.Contains(rttiPointerDecl)))
                 {
-                    rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
+                    rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output, this.typeRttiDeclRequired.Contains(rttiPointerDecl));
                     this.Output.WriteLine(string.Empty);
                 }
             }
