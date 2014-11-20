@@ -2135,11 +2135,11 @@ namespace Il2Native.Logic
             {
                 var effectiveName = isThis ? "this" : name;
                 var effectiveType = type.IsStructureType() || isThis ? type.ToClass() : type;
-                this.WriteDebugDeclare(effectiveName, effectiveType, paramFullName, DebugVariableType.Argument);
+                this.WriteDebugDeclare(effectiveName, effectiveType, paramFullName, DebugVariableType.Argument, index);
             }
         }
 
-        private void WriteDebugDeclare(string name, IType type, string variableOrArgumentName, DebugVariableType debugVariableType)
+        private void WriteDebugDeclare(string name, IType type, string variableOrArgumentName, DebugVariableType debugVariableType, int index = 0)
         {
             if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
             {
@@ -2149,7 +2149,7 @@ namespace Il2Native.Logic
             this.Output.Write("call void @llvm.dbg.declare(metadata !{");
             type.WriteTypePrefix(this.Output);
             this.Output.Write(string.Concat("* ", variableOrArgumentName, "}, "));
-            this.debugInfoGenerator.DefineVariable(name, type, debugVariableType).WriteTo(this.Output);
+            this.debugInfoGenerator.DefineVariable(name, type, debugVariableType, index).WriteTo(this.Output);
             this.Output.Write(", ");
             this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
             this.Output.WriteLine("), !dbg !{0}", this.debugInfoGenerator.CurrentDebugLine);
@@ -3390,7 +3390,9 @@ namespace Il2Native.Logic
             if (phiType == null)
             {
                 var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
-                phiType = (value != null ? value.Result.Type : null) ?? opCode.AlternativeValues.Values.First().RequiredOutgoingType;
+                phiType = (value != null ? value.Result.Type : null) 
+                            ?? opCode.AlternativeValues.Values.First().RequiredOutgoingType
+                            ?? opCode.AlternativeValues.Values.First().Result.Type;
             }
 
             var structUsed = false;
@@ -3409,7 +3411,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            // apply PHI is condition is complex
+            // apply PHI if condition is complex
             var nopeCode = OpCodePart.CreateNop;
             this.ProcessOperator(writer, nopeCode, "phi", phiType, phiType, options: OperandOptions.GenerateResult);
 
@@ -3974,10 +3976,13 @@ namespace Il2Native.Logic
             {
                 var changeType = this.AdjustIntConvertableTypes(writer, operator2, intAdjustment);
 
-                if (changeType && resultType == null)
+                if (changeType)
                 {
-                    resultType = intAdjustment;
                     effectiveType = intAdjustment;
+                    if (resultType == null)
+                    {
+                        resultType = intAdjustment;
+                    }
                 }
             }
 
@@ -5337,7 +5342,9 @@ namespace Il2Native.Logic
                 var previousOpCode = opCode.PreviousOpCode(this);
                 var splitBlock = previousOpCode == null
                                  || (previousOpCode != null
-                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Next || previousOpCode.OpCode.FlowControl == FlowControl.Call));
+                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Meta 
+                                         || previousOpCode.OpCode.FlowControl == FlowControl.Next
+                                         || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
                 // opCode.Skip to fix issue with using it in 'conditional expresions'
                 if (splitBlock)

@@ -190,7 +190,7 @@ namespace Ll2NativeTests
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(865, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -212,7 +212,7 @@ namespace Ll2NativeTests
 
             Debug.Listeners.Clear();
 
-            foreach (var index in Enumerable.Range(66, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("gtest-{0:000}", index));
             }
