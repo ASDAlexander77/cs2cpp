@@ -224,6 +224,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     foreach (var item in fieldType.GetTypeSizes())
                     {
+                        item.SetMainMember(field);
                         yield return item;
                     }
                 }
@@ -290,7 +291,13 @@ namespace Il2Native.Logic.Gencode
                 GetTypeSize(field.DeclaringType);
             }
 
-            return membersLayout.First(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member)).Offset;
+            var memberLocationInfo = membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
+            if (memberLocationInfo == null)
+            {
+                throw new MissingMemberException(field.FullName);    
+            }
+
+            return memberLocationInfo.Offset;
         }
 
         /// <summary>

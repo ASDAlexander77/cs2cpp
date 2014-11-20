@@ -49,6 +49,8 @@
 
         private LlvmWriter writer;
 
+        private int functionNumberUsedArgs = -1;
+
         private bool structuresByName = true;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
@@ -293,7 +295,7 @@
             return typeMetadata;
         }
 
-        public CollectionMetadata DefineVariable(string name, IType variableType, DebugVariableType debugVariableType)
+        public CollectionMetadata DefineVariable(string name, IType variableType, DebugVariableType debugVariableType, int index = 0)
         {
             var line = 0;
 
@@ -302,12 +304,16 @@
             {
                 case DebugVariableType.Argument:
                     tag = "0x101";
-                    line = 16777220;
+
+                    if (index == 0)
+                    {
+                        functionNumberUsedArgs++;
+                    }
+
+                    line = index * 16777216 + 1 + functionNumberUsedArgs * 5;
                     break;
                 case DebugVariableType.Auto:
                     tag = "0x100";
-                    break;
-                default:
                     break;
             }
 
@@ -355,11 +361,11 @@
             }
         }
 
-        public void StartGenerating(LlvmWriter writer)
+        public bool StartGenerating(LlvmWriter writer)
         {
             if (!File.Exists(this.pdbFileName))
             {
-                return;
+                return false;
             }
 
             this.writer = writer;
@@ -367,6 +373,8 @@
 
             // to force generating CompileUnit info
             this.PdbConverter.ConvertFunction(-1);
+
+            return true;
         }
 
         public void WriteTo(TextWriter output)

@@ -70,12 +70,12 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = true;
+        private const bool DebugInfo = false;
         
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = false;
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -113,7 +113,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false, debugInfo: DebugInfo));
 
             if (CompileWithOptimization)
             {
@@ -212,7 +212,7 @@ namespace Ll2NativeTests
 
             Debug.Listeners.Clear();
 
-            foreach (var index in Enumerable.Range(66, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("gtest-{0:000}", index));
             }
@@ -274,6 +274,7 @@ namespace Ll2NativeTests
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
+            // 126 - calling ToString on Interface, (CONSIDER FIXING IT)
             // 127 - IsDerined not implemented
             // 128 - using Attributes
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
@@ -318,8 +319,8 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 247,
-                            250, 252, 253, 254
+                            126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
+                            247, 250, 252, 253, 254
                         });
 
             if (UsingRoslyn)
@@ -329,7 +330,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(154, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
