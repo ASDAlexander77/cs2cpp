@@ -3877,7 +3877,7 @@ namespace Il2Native.Logic
                     index++;
                 }
 
-                if (interfaceRouteIndex > 0 && toType.GetInterfaces().Contains(fromType))
+                if (interfaceRouteIndex >= 0 && toType.GetInterfaces().Contains(fromType))
                 {
                     return -3;
                 }
