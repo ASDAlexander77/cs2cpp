@@ -3691,7 +3691,10 @@ namespace Il2Native.Logic
                 this.Output.WriteLine("declare void @llvm.dbg.declare(metadata, metadata, metadata) #0");
                 this.Output.WriteLine(string.Empty);
 
-                this.debugInfoGenerator.StartGenerating(this);
+                if (!this.debugInfoGenerator.StartGenerating(this))
+                {
+                    this.DebugInfo = false;
+                }
             }
         }
 

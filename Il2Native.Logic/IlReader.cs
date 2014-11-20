@@ -628,9 +628,16 @@ namespace Il2Native.Logic
         /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
+            var isSourceFile = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase);
+            this.Assembly = isSourceFile
                                 ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Source) : this.Compile(this.Source)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
+
+            if (!isSourceFile)
+            {
+                DllFilePath = this.Source;
+                PdbFilePath = Path.ChangeExtension(this.Source, "pdb");
+            }
         }
 
         /// <summary>

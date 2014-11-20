@@ -361,11 +361,11 @@
             }
         }
 
-        public void StartGenerating(LlvmWriter writer)
+        public bool StartGenerating(LlvmWriter writer)
         {
             if (!File.Exists(this.pdbFileName))
             {
-                return;
+                return false;
             }
 
             this.writer = writer;
@@ -373,6 +373,8 @@
 
             // to force generating CompileUnit info
             this.PdbConverter.ConvertFunction(-1);
+
+            return true;
         }
 
         public void WriteTo(TextWriter output)

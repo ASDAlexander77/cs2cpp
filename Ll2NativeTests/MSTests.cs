@@ -113,7 +113,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false, debugInfo: DebugInfo));
 
             if (CompileWithOptimization)
             {
