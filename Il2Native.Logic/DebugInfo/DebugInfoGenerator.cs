@@ -242,7 +242,7 @@
 
             // add return type
             parametersTypes.Add(
-                !this.methodDefinition.ReturnType.IsVoid() && this.methodDefinition.ReturnType.IsStructureType()
+                !this.methodDefinition.ReturnType.IsVoid() && !this.methodDefinition.ReturnType.IsStructureType()
                     ? this.DefineType(this.methodDefinition.ReturnType)
                     : null);
             foreach (var parameter in this.methodDefinition.GetParameters())
