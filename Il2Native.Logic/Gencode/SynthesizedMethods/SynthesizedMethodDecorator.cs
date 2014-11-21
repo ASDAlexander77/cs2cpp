@@ -9,12 +9,14 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Linq;
     using System.Collections.Generic;
     using System.Reflection;
 
     using Microsoft.CodeAnalysis;
 
     using PEAssemblyReader;
+    using System.Text;
 
     /// <summary>
     /// </summary>
@@ -22,6 +24,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         private readonly IMethod method;
         private readonly IMethodBody methodBody;
+        private readonly IEnumerable<IParameter> parameters;
         private readonly IModule module;
 
         public SynthesizedMethodDecorator(IMethod method)
@@ -29,10 +32,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.method = method;
         }
 
-        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IModule module) : this(method)
+        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IEnumerable<IType> parameters, IModule module) : this(method)
         {
             this.methodBody = methodBody;
             this.module = module;
+            this.parameters = parameters.Select(t => new SynthesizedValueParameter(t)).ToList();
         }
 
         public string AssemblyQualifiedName 
@@ -262,6 +266,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public IEnumerable<IParameter> GetParameters()
         {
+            if (this.parameters != null)
+            {
+                return this.parameters;
+            }
+
             return this.method.GetParameters();
         }
 
@@ -273,6 +282,36 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public string ToString(IType ownerOfExplicitInterface)
         {
             return this.method.ToString(ownerOfExplicitInterface);
+        }
+
+        public override string ToString()
+        {
+            var result = new StringBuilder();
+
+            // write return type
+            result.Append(this.ReturnType);
+            result.Append(' ');
+
+            // write Full Name
+            result.Append(this.FullName);
+
+            // write Parameter Types
+            result.Append('(');
+            var index = 0;
+            foreach (var parameterType in this.GetParameters())
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(parameterType);
+                index++;
+            }
+
+            result.Append(')');
+
+            return result.ToString();
         }
     }
 }

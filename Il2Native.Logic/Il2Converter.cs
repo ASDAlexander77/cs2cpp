@@ -304,7 +304,7 @@ namespace Il2Native.Logic
                 codeWriter.DisableWrite(true);
 
                 // pre process step to get all used undefined structures
-                foreach (var method in IlReader.MethodsOriginal(type).Select(MethodBodyBank.GetMethodBodyOrDefault))
+                foreach (var method in IlReader.MethodsOriginal(type).Select(m => MethodBodyBank.GetMethodBodyOrDefault(m, codeWriter)))
                 {
                     IMethod genericMethod = null;
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)

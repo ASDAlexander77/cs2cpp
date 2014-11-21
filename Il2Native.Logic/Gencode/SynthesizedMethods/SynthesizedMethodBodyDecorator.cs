@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Linq;
     using System.Collections.Generic;
 
     using PEAssemblyReader;
@@ -21,15 +22,19 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         private readonly byte[] customBody;
 
+        private readonly IEnumerable<ILocalVariable> locals;
+
         public SynthesizedMethodBodyDecorator(IMethodBody methodBody)
         {
             this.methodBody = methodBody;
         }
 
-        public SynthesizedMethodBodyDecorator(IMethodBody methodBody, byte[] customBody)
+        public SynthesizedMethodBodyDecorator(IMethodBody methodBody, IList<IType> locals, byte[] customBody)
             : this(methodBody)
         {
             this.customBody = customBody;
+            var index = 0;
+            this.locals = locals.Select(t => new SynthesizedLocalVariable(index++, t)).ToList();
         }
 
         /// <summary>
@@ -58,6 +63,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             get
             {
+                if (this.locals != null)
+                {
+                    return this.locals;
+                }
+
                 return this.methodBody.LocalVariables;
             }
         }

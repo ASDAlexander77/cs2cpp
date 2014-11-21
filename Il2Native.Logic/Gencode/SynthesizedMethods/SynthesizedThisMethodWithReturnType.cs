@@ -25,10 +25,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedThisMethodWithReturnType(string name, string declaringType, string returnType, LlvmWriter writer)
-            : base(writer.ResolveType(declaringType), name)
+        public SynthesizedThisMethodWithReturnType(string name, IType declaringType, IType returnType, bool isVirtual = false)
+            : base(declaringType, name)
         {
-            this.returnType = writer.ResolveType(returnType);
+            this.returnType = returnType;
+            IsVirtual = isVirtual;
         }
 
         /// <summary>

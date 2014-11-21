@@ -87,6 +87,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBodyDecorator.cs" />

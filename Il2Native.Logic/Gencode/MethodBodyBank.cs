@@ -13,11 +13,11 @@
     {
         private static IDictionary<string, Func<IMethod, IMethod>> methodsByFullName = new SortedDictionary<string, Func<IMethod, IMethod>>();
 
-        public static IMethod GetMethodBodyOrDefault(IMethod method)
+        public static IMethod GetMethodBodyOrDefault(IMethod method, ICodeWriter codeWriter)
         {
             if (methodsByFullName.Count == 0)
             {
-                RegisterAll();
+                RegisterAll(codeWriter);
             }
 
             Func<IMethod, IMethod> methodFactory;
@@ -33,40 +33,50 @@
             return method;
         }
 
+        public static void Register(string methodFullName, object[] code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
+        {
+            MethodBodyBank.Register(methodFullName, m => MethodBodyBank.GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
+        }
+
         private static void Register(string methodFullName, Func<IMethod, IMethod> func)
         {
             methodsByFullName[methodFullName] = func;
         }
 
-        private static void RegisterAll()
+        private static void RegisterAll(ICodeWriter codeWriter)
         {
-        	// IL_0002: callvirt instance class System.Type System.Object::GetType()
-	        // IL_0007: callvirt instance int32 System.Type::get_Size()
-
-            // SynthesizedThisMethodWithReturnType("GetType" "System.Object", "System.Type", llvmWriter);
-            // SynthesizedThisMethodWithReturnType("get_Size" "System.Type", "System.Int32", llvmWriter);
-
-            MethodBodyBank.Register(GetHashCodeGen.Name, m => GetMethodDecorator(m, GetHashCodeGen.ByteCode));
+            GetHashCodeGen.Register(codeWriter);
         }
 
-        private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<Code> code)
+        private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
         {
             return new SynthesizedMethodDecorator(
-                m, new SynthesizedMethodBodyDecorator(m.GetMethodBody(), Transform(code).ToArray()), new SynthesizedModuleResolver());
+                m, 
+                new SynthesizedMethodBodyDecorator(m.GetMethodBody(), locals, Transform(code).ToArray()),
+                parameters,
+                new SynthesizedModuleResolver(m, tokenResolutions));
         }
 
-        private static IEnumerable<byte> Transform(IEnumerable<Code> code)
+        private static IEnumerable<byte> Transform(IEnumerable<object> code)
         {
-            foreach (var @byte in code.Select(codeItem => (byte)codeItem))
+            foreach (var codeItem in code)
             {
-                if (@byte >= 0xE1)
+                if (codeItem is Code)
                 {
-                    yield return 0xFE;
-                    yield return (byte)(@byte - 0xE1);
+                    var @byte = (byte)(Code)codeItem;
+                    if (@byte >= 0xE1)
+                    {
+                        yield return 0xFE;
+                        yield return (byte)(@byte - 0xE1);
+                    }
+                    else
+                    {
+                        yield return @byte;
+                    }
                 }
                 else
                 {
-                    yield return @byte;
+                    yield return (byte) (int) codeItem;
                 }
             }
         }
