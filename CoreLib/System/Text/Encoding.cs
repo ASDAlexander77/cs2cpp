@@ -69,6 +69,9 @@ namespace System.Text
     [Serializable()]
     public abstract class Encoding
     {
+        private static UTF8Encoding utf8Decoder = new UTF8Encoding();
+        private static ASCIIEncoding asciiEncoding = new ASCIIEncoding();
+
         public virtual byte[] GetBytes(String s)
         {
             return null;
@@ -94,7 +97,7 @@ namespace System.Text
         {
             get
             {
-                return new UTF8Encoding();
+                return utf8Decoder;
             }
         }
 
@@ -102,7 +105,7 @@ namespace System.Text
         {
             get
             {
-                return new ASCIIEncoding();
+                return asciiEncoding;
             }
         }
     }

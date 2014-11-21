@@ -52,7 +52,7 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         private readonly MethodSymbol methodDef;
-
+        
         /// <summary>
         /// </summary>
         /// <param name="methodDef">

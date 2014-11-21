@@ -61,6 +61,11 @@ namespace System
             throw new NotImplementedException();
         }
 
+        public abstract int Size
+        {
+            get;
+        }
+
         public abstract String FullName
         {
             get;

@@ -10,7 +10,7 @@ namespace Il2Native.Logic
 {
     /// <summary>
     /// </summary>
-    public enum Code
+    public enum Code : byte
     {
         /// <summary>
         /// </summary>

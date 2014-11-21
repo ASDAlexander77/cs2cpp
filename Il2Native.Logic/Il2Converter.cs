@@ -15,6 +15,8 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
 
+    using Il2Native.Logic.Gencode;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -302,7 +304,7 @@ namespace Il2Native.Logic
                 codeWriter.DisableWrite(true);
 
                 // pre process step to get all used undefined structures
-                foreach (var method in IlReader.MethodsOriginal(type))
+                foreach (var method in IlReader.MethodsOriginal(type).Select(MethodBodyBank.GetMethodBodyOrDefault))
                 {
                     IMethod genericMethod = null;
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)

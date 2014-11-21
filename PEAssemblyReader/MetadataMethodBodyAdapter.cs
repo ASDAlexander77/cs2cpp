@@ -140,10 +140,7 @@ namespace PEAssemblyReader
                 }
 
                 var index = 0;
-                foreach (var li in localInfo)
-                {
-                    yield return new MetadataLocalVariableAdapter(li, index++, this.GenericContext);
-                }
+                return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext));
             }
         }
 
