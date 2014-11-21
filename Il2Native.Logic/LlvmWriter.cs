@@ -3390,7 +3390,7 @@ namespace Il2Native.Logic
             if (phiType == null)
             {
                 var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
-                phiType = (value != null ? value.Result.Type : null) 
+                phiType = (value != null ? value.Result.Type : null)
                             ?? opCode.AlternativeValues.Values.First().RequiredOutgoingType
                             ?? opCode.AlternativeValues.Values.First().Result.Type;
             }
@@ -3866,9 +3866,9 @@ namespace Il2Native.Logic
                 // caluclate interfaceRouteIndex
                 var interfaceRouteIndex = 0;
                 var index = 1; // + BaseType
-                foreach (var interafce in toType.GetInterfaces())
+                foreach (var @interface in toType.GetInterfaces())
                 {
-                    if (interafce.GetAllInterfaces().Contains(fromType))
+                    if (@interface.GetAllInterfaces().Contains(fromType))
                     {
                         interfaceRouteIndex = index;
                         break;
@@ -5345,7 +5345,7 @@ namespace Il2Native.Logic
                 var previousOpCode = opCode.PreviousOpCode(this);
                 var splitBlock = previousOpCode == null
                                  || (previousOpCode != null
-                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Meta 
+                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Meta
                                          || previousOpCode.OpCode.FlowControl == FlowControl.Next
                                          || previousOpCode.OpCode.FlowControl == FlowControl.Call));
 
@@ -5651,25 +5651,40 @@ namespace Il2Native.Logic
                 this.WriteCallGctorsDeclarations();
             }
 
-            if (this.typeRttiDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (var rttiDecl in this.typeRttiDeclRequired.Where(rttiDecl => !this.processedRttiTypes.Contains(rttiDecl)))
-                {
-                    rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
-                    this.Output.WriteLine(string.Empty);
-                }
-            }
-
             if (this.typeRttiPointerDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
                 foreach (
                     var rttiPointerDecl in this.typeRttiPointerDeclRequired.Where(rttiPointerDecl => !this.processedRttiPointerTypes.Contains(rttiPointerDecl)))
                 {
-                    rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output, this.typeRttiDeclRequired.Contains(rttiPointerDecl));
+                    ////rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
+                    rttiPointerDecl.WriteRttiPointerClassName(this.Output);
+                    rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
+                    this.typeRttiDeclRequired.Add(rttiPointerDecl);
                     this.Output.WriteLine(string.Empty);
                 }
+            }
+
+            if (this.typeRttiDeclRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+
+                bool any;
+                do
+                {
+                    any = false;
+                    foreach (var rttiDecl in this.typeRttiDeclRequired.ToList().Where(rttiDecl => !this.processedRttiTypes.Contains(rttiDecl)))
+                    {
+                        ////rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
+                        rttiDecl.WriteRttiClassName(this.Output);
+                        rttiDecl.WriteRttiClassInfo(this);
+                        this.Output.WriteLine(string.Empty);
+
+                        processedRttiTypes.Add(rttiDecl);
+                        any = true;
+                    }
+                }
+                while (any);
             }
 
             if (this.typeDeclRequired.Count > 0)

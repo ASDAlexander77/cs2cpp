@@ -70,12 +70,12 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = true;
+        private const bool DebugInfo = false;
         
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = false;
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -105,7 +105,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert("test-1", SourcePathCustom, DebugInfo);
+            Convert("test-1", SourcePathCustom);
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false, debugInfo: DebugInfo));
+            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
 
             if (CompileWithOptimization)
             {
@@ -391,7 +391,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = false)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = DebugInfo)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -546,7 +546,7 @@ namespace Ll2NativeTests
 
             try
             {
-                Convert(fileName, debugInfo: DebugInfo);
+                Convert(fileName);
             }
             catch (Exception ex)
             {
@@ -567,7 +567,7 @@ namespace Ll2NativeTests
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
-            Convert(fileName, source, debugInfo: DebugInfo);
+            Convert(fileName, source);
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 
@@ -584,12 +584,12 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="format">
         /// </param>
-        private static void Convert(string fileName, string source = SourcePath, bool debugInfo = false)
+        private static void Convert(string fileName, string source = SourcePath)
         {
             Il2Converter.Convert(
                 string.Concat(source, string.Format("{0}.cs", fileName)),
                 OutputPath,
-                GetConverterArgs(true, debugInfo: debugInfo));
+                GetConverterArgs(true));
         }
     }
 }

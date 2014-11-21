@@ -113,17 +113,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer, bool classInfoExternalDeclarationExists = false)
+        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
         {
-            //writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
-            //type.WriteRttiPointerClassInfoDeclaration(writer);
-            if (!classInfoExternalDeclarationExists)
-            {
-                type.WriteRttiClassInfoExternalDeclaration(writer);
-                writer.WriteLine(string.Empty);
-            }
-            type.WriteRttiPointerClassName(writer);
-            type.WriteRttiPointerClassInfo(writer);
+            writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
+            type.WriteRttiPointerClassInfoDeclaration(writer);
         }
 
         /// <summary>
