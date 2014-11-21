@@ -1,24 +1,45 @@
-﻿namespace Il2Native.Logic
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MethodsWalker.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic
 {
-    using System;
-    using PEAssemblyReader;
     using System.Collections.Generic;
 
+    using PEAssemblyReader;
+
+    /// <summary>
+    /// </summary>
     public class MethodsWalker
     {
-        private IMethod startMethod;
+        /// <summary>
+        /// </summary>
+        private readonly IMethod startMethod;
 
+        /// <summary>
+        /// </summary>
+        /// <param name="startMethod">
+        /// </param>
         public MethodsWalker(IMethod startMethod)
         {
             this.startMethod = startMethod;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public HashSet<IType> DiscoverAllStaticFieldsDependencies()
         {
             var calledMethods = new HashSet<IMethod>();
             var readStaticFields = new HashSet<IField>();
 
-            WalkMethod(this.startMethod, calledMethods, readStaticFields);
+            this.WalkMethod(this.startMethod, calledMethods, readStaticFields);
 
             var typesWithStaticFields = new HashSet<IType>();
             foreach (var staticField in readStaticFields)
@@ -34,6 +55,14 @@
             return typesWithStaticFields;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="allCalledMethods">
+        /// </param>
+        /// <param name="allReadStaticFields">
+        /// </param>
         private void WalkMethod(IMethod method, HashSet<IMethod> allCalledMethods, HashSet<IField> allReadStaticFields)
         {
             var calledMethods = new HashSet<IMethod>();
@@ -48,7 +77,7 @@
 
                 allCalledMethods.Add(nextMethod);
 
-                WalkMethod(nextMethod, allCalledMethods, allReadStaticFields);
+                this.WalkMethod(nextMethod, allCalledMethods, allReadStaticFields);
             }
         }
     }

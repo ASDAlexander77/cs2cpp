@@ -8,10 +8,11 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic
 {
+    using System.Collections.Generic;
+
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
-    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
@@ -26,6 +27,14 @@ namespace Il2Native.Logic
         /// <param name="value">
         /// </param>
         void DisableWrite(bool value);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        bool IsProcessed(IType type);
 
         /// <summary>
         /// </summary>
@@ -47,17 +56,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="count">
         /// </param>
-        /// <param name="disablePostDeclarations">
-        /// </param>
         void WriteAfterFields(int count);
 
         /// <summary>
         /// </summary>
         void WriteAfterMethods();
-
-        /// <summary>
-        /// </summary>
-        void WritePostDeclarations(IType type);
 
         /// <summary>
         /// </summary>
@@ -147,6 +150,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        void WritePostDeclarations(IType type);
+
+        /// <summary>
+        /// </summary>
         void WriteRequiredTypesForBody();
 
         /// <summary>
@@ -154,6 +163,10 @@ namespace Il2Native.Logic
         /// <param name="moduleName">
         /// </param>
         /// <param name="assemblyName">
+        /// </param>
+        /// <param name="isCoreLib">
+        /// </param>
+        /// <param name="allReference">
         /// </param>
         /// ///
         void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference);
@@ -175,11 +188,5 @@ namespace Il2Native.Logic
         /// <param name="genericContext">
         /// </param>
         void WriteTypeStart(IType type, IGenericContext genericContext);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        bool IsProcessed(IType type);
     }
 }

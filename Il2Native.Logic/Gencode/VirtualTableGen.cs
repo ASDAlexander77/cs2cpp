@@ -65,6 +65,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="thisType">
         /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         public static void BuildVirtualTable(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, IType thisType, LlvmWriter llvmWriter)
         {
             if (thisType.BaseType != null)
@@ -186,6 +188,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="methodInfo">
         /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         /// <param name="requiredInterface">
         /// </param>
         /// <returns>
@@ -258,6 +262,8 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="thisType">
         /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         /// <returns>
         /// </returns>
         public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(this IType thisType, LlvmWriter llvmWriter)
@@ -318,6 +324,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="methodInfo">
         /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
         /// <returns>
         /// </returns>
         public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo, LlvmWriter llvmWriter)
@@ -335,6 +343,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="interfaceIndex">
         /// </param>
+        /// <param name="baseTypeFieldsOffset">
+        /// </param>
         public static void WriteTableOfMethods(
             this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable, LlvmWriter llvmWriter, IType type, int interfaceIndex, int baseTypeFieldsOffset)
         {
@@ -343,7 +353,11 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(" = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
             writer.Indent++;
-            writer.WriteLine("i8* {0},", interfaceIndex == 0 ? "null" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
+            writer.WriteLine(
+                "i8* {0},", 
+                interfaceIndex == 0
+                    ? "null"
+                    : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
 
             // RTTI info class
             writer.Write("i8* bitcast (");
@@ -406,7 +420,7 @@ namespace Il2Native.Logic.Gencode
                 IlReader.Methods(@interface)
                         .Select(
                             interfaceMember =>
-                            allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
+                                allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
                         .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
         }
 

@@ -36,13 +36,10 @@ namespace System
             return ((IList)this)[index];
         }
 
-        public int Length
+        public extern int Length
         {
-            
-            get
-            {
-                throw new NotImplementedException();
-            }
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
         }
 
         int ICollection.Count

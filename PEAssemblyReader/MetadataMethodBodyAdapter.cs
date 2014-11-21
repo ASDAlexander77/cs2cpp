@@ -1,26 +1,37 @@
-﻿namespace PEAssemblyReader
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="MetadataMethodBodyAdapter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
-    using System.Reflection;
     using System.Reflection.Metadata;
-    using System.Text;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
+    /// <summary>
+    /// </summary>
     public class MetadataMethodBodyAdapter : IMethodBody
     {
         /// <summary>
         /// </summary>
-        private readonly MethodSymbol methodDef;
+        private readonly Lazy<MethodBodyBlock> lazyMethodBodyBlock;
 
-        private Lazy<MethodBodyBlock> lazyMethodBodyBlock;
+        /// <summary>
+        /// </summary>
+        private readonly MethodSymbol methodDef;
 
         /// <summary>
         /// </summary>
@@ -30,7 +41,7 @@
         {
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
-            this.lazyMethodBodyBlock = new Lazy<MethodBodyBlock>(GetMethodBodyBlock);
+            this.lazyMethodBodyBlock = new Lazy<MethodBodyBlock>(this.GetMethodBodyBlock);
         }
 
         /// <summary>
@@ -43,24 +54,6 @@
             : this(methodDef)
         {
             this.GenericContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
-
-        public bool HasBody
-        {
-            get
-            {
-                var block = this.lazyMethodBodyBlock.Value;
-                if (block == null)
-                {
-                    return false;
-                }
-
-                return block.GetILBytes() != null;
-            }
         }
 
         /// <summary>
@@ -87,6 +80,26 @@
                 }
 
                 return new IExceptionHandlingClause[0];
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IGenericContext GenericContext { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool HasBody
+        {
+            get
+            {
+                var block = this.lazyMethodBodyBlock.Value;
+                if (block == null)
+                {
+                    return false;
+                }
+
+                return block.GetILBytes() != null;
             }
         }
 
@@ -149,6 +162,10 @@
             return null;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private MethodBodyBlock GetMethodBodyBlock()
         {
             PEModuleSymbol peModuleSymbol;
@@ -169,22 +186,6 @@
         /// </param>
         /// <param name="peMethodSymbol">
         /// </param>
-        private void GetPEMethodSymbol(out PEModuleSymbol peModuleSymbol, out PEMethodSymbol peMethodSymbol)
-        {
-            peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
-            peMethodSymbol = this.methodDef as PEMethodSymbol;
-            if (peMethodSymbol == null)
-            {
-                peMethodSymbol = this.methodDef.OriginalDefinition as PEMethodSymbol;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="peModuleSymbol">
-        /// </param>
-        /// <param name="peMethodSymbol">
-        /// </param>
         /// <returns>
         /// </returns>
         private MethodBodyBlock GetMethodBodyBlock(PEModuleSymbol peModuleSymbol, PEMethodSymbol peMethodSymbol)
@@ -197,6 +198,22 @@
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="peModuleSymbol">
+        /// </param>
+        /// <param name="peMethodSymbol">
+        /// </param>
+        private void GetPEMethodSymbol(out PEModuleSymbol peModuleSymbol, out PEMethodSymbol peMethodSymbol)
+        {
+            peModuleSymbol = this.methodDef.ContainingModule as PEModuleSymbol;
+            peMethodSymbol = this.methodDef as PEMethodSymbol;
+            if (peMethodSymbol == null)
+            {
+                peMethodSymbol = this.methodDef.OriginalDefinition as PEMethodSymbol;
+            }
         }
     }
 }

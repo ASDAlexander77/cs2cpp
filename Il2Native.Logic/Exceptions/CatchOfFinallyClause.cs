@@ -29,6 +29,14 @@ namespace Il2Native.Logic.Exceptions
 
         /// <summary>
         /// </summary>
+        public bool EmptyFinallyRethrowRequired { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public FullyDefinedReference ExceptionResult { get; set; }
+
+        /// <summary>
+        /// </summary>
         public IList<string> FinallyJumps
         {
             get
@@ -64,13 +72,5 @@ namespace Il2Native.Logic.Exceptions
         /// <summary>
         /// </summary>
         public bool RethrowCatchWithCleanUpRequired { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public bool EmptyFinallyRethrowRequired { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public FullyDefinedReference ExceptionResult { get; set; }
     }
 }

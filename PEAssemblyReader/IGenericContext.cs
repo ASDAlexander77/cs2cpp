@@ -40,6 +40,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="typeParameter">
+        /// </param>
+        /// <returns>
+        /// </returns>
         IType ResolveTypeParameter(IType typeParameter);
     }
 }

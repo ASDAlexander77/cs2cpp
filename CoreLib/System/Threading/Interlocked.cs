@@ -18,8 +18,10 @@ namespace System.Threading
          *                        long
          *****************************/
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Increment(ref int location);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Increment(ref long location);
         /******************************
          * Decrement
@@ -27,9 +29,10 @@ namespace System.Threading
          *                        long
          *****************************/
 
-        
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Decrement(ref int location);
-        
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern long Decrement(ref long location);
 
         /******************************
@@ -42,18 +45,25 @@ namespace System.Threading
          *                        IntPtr
          *****************************/
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref int location1, int value);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref long location1, long value);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref float location1, float value);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref double location1, double value);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref object location1, object value);
 
+        //[MethodImpl(MethodImplOptions.InternalCall)]
         //public static extern int Exchange(ref IntPtr location1, IntPtr value);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern T Exchange<T>(ref T location1, T value) where T : class;
         /******************************
          * CompareExchange
@@ -65,19 +75,25 @@ namespace System.Threading
          *                         IntPtr
          *****************************/
 
-        
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int CompareExchange(ref int location1, int value, int comparand);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern long CompareExchange(ref long location1, long value, long comparand);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern float CompareExchange(ref float location1, float value, float comparand);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern double CompareExchange(ref double location1, double value, double comparand);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern object CompareExchange(ref object location1, object value, object comparand);
 
+        //[MethodImpl(MethodImplOptions.InternalCall)]
         //public static extern IntPtr CompareExchange(ref IntPtr location1, IntPtr value, IntPtr comparand);
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern T CompareExchange<T>(ref T location1, T value, T comparand) where T : class;
     }
 }

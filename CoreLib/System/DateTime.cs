@@ -57,7 +57,7 @@ namespace System
     public struct DateTime
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern unsafe int time(int* value);
+        public static extern unsafe int gettimeofday(int* time, int* timezome);
 
         // Number of 100ns ticks per time unit
         private const long TicksPerMillisecond = 10000;
@@ -99,8 +99,20 @@ namespace System
         public static readonly DateTime MinValue = new DateTime(MinTicks);
         public static readonly DateTime MaxValue = new DateTime(MaxTicks);
 
+        private const int DatePartYear = 0;
+        private const int DatePartDayOfYear = 1;
+        private const int DatePartMonth = 2;
+        private const int DatePartDay = 3;
+
+        private static readonly int[] DaysToMonth365 = {
+            0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
+        private static readonly int[] DaysToMonth366 = {
+            0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
+
+        private static readonly int[] timeBuffer = new int[2];
+
         private ulong m_ticks;
-            
+
         public DateTime(long ticks)
         {
             if (((ticks & (long)TickMask) < MinTicks) || ((ticks & (long)TickMask) > MaxTicks))
@@ -134,7 +146,6 @@ namespace System
         {
         }
 
-        
         public DateTime(int year, int month, int day, int hour, int minute, int second, int millisecond)
         {
             throw new NotImplementedException();
@@ -208,7 +219,7 @@ namespace System
             return DateTime.Compare(this, (DateTime)val);
         }
 
-        
+
         public extern static int DaysInMonth(int year, int month);
 
         public override bool Equals(Object val)
@@ -250,38 +261,34 @@ namespace System
 
         public int Day
         {
-            
             get
             {
-                return 0;
+                return GetDatePart(DatePartDay);
             }
         }
 
         public DayOfWeek DayOfWeek
         {
-            
             get
             {
-                return DayOfWeek.Monday;
+                return (DayOfWeek)((m_ticks / TicksPerDay + 1) % 7);
             }
         }
 
         public int DayOfYear
         {
-            
             get
             {
-                return 0;
+                return GetDatePart(DatePartDayOfYear);
             }
         }
 
         /// Reduce size by calling a single method?
         public int Hour
         {
-            
             get
             {
-                return 0;
+                return (int)((m_ticks / TicksPerHour) % 24);
             }
         }
 
@@ -292,7 +299,6 @@ namespace System
                 // If mask for UTC time is set - return UTC. If no maskk - return local.
                 return (m_ticks & UTCMask) != 0 ? DateTimeKind.Utc : DateTimeKind.Local;
             }
-
         }
 
         public static DateTime SpecifyKind(DateTime value, DateTimeKind kind)
@@ -314,7 +320,6 @@ namespace System
 
         public int Millisecond
         {
-            
             get
             {
                 return (int)((m_ticks / TicksPerMillisecond) % 1000);
@@ -323,7 +328,6 @@ namespace System
 
         public int Minute
         {
-            
             get
             {
                 return (int)((m_ticks / TicksPerMinute) % 60);
@@ -332,7 +336,6 @@ namespace System
 
         public int Month
         {
-            
             get
             {
                 return 0;
@@ -345,23 +348,42 @@ namespace System
             {
                 unsafe
                 {
-                    return new DateTime(time(null) * TicksPerSecond);
+                    fixed (int* p = &timeBuffer[0])
+                    {
+                        if (gettimeofday(p, null) == 0)
+                        {
+                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10, DateTimeKind.Local);
+                        }
+                    }
+
+                    throw new Exception();
                 }
             }
         }
 
         public static DateTime UtcNow
         {
-            
+
             get
             {
-                return new DateTime();
+                unsafe
+                {
+                    fixed (int* p = &timeBuffer[0])
+                    {
+                        if (gettimeofday(p, null) == 0)
+                        {
+                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10, DateTimeKind.Utc);
+                        }
+                    }
+
+                    throw new Exception();
+                }
             }
         }
 
         public int Second
         {
-            
+
             get
             {
                 return (int)((m_ticks / TicksPerSecond) % 60);
@@ -393,7 +415,7 @@ namespace System
 
         public static DateTime Today
         {
-            
+
             get
             {
                 return new DateTime();
@@ -402,7 +424,7 @@ namespace System
 
         public int Year
         {
-            
+
             get
             {
                 return 0;
@@ -419,7 +441,7 @@ namespace System
             return new DateTime((long)(m_ticks - (ulong)val.m_ticks));
         }
 
-        
+
         public extern DateTime ToLocalTime();
 
         public override String ToString()
@@ -432,7 +454,7 @@ namespace System
             return DateTimeFormat.Format(this, format, DateTimeFormatInfo.CurrentInfo);
         }
 
-        
+
         public extern DateTime ToUniversalTime();
 
         public static DateTime operator +(DateTime d, TimeSpan t)
@@ -478,6 +500,53 @@ namespace System
         public static bool operator >=(DateTime t1, DateTime t2)
         {
             return Compare(t1, t2) >= 0;
+        }
+
+        private int GetDatePart(int part)
+        {
+            var ticks = m_ticks;
+            // n = number of days since 1/1/0001
+            int n = (int)(ticks / TicksPerDay);
+            // y400 = number of whole 400-year periods since 1/1/0001
+            int y400 = n / DaysPer400Years;
+            // n = day number within 400-year period
+            n -= y400 * DaysPer400Years;
+            // y100 = number of whole 100-year periods within 400-year period
+            int y100 = n / DaysPer100Years;
+            // Last 100-year period has an extra day, so decrement result if 4
+            if (y100 == 4) y100 = 3;
+            // n = day number within 100-year period
+            n -= y100 * DaysPer100Years;
+            // y4 = number of whole 4-year periods within 100-year period
+            int y4 = n / DaysPer4Years;
+            // n = day number within 4-year period
+            n -= y4 * DaysPer4Years;
+            // y1 = number of whole years within 4-year period
+            int y1 = n / DaysPerYear;
+            // Last year has an extra day, so decrement result if 4
+            if (y1 == 4) y1 = 3;
+            // If year was requested, compute and return it
+            if (part == DatePartYear)
+            {
+                return y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
+            }
+            // n = day number within year
+            n -= y1 * DaysPerYear;
+            // If day-of-year was requested, return it
+            if (part == DatePartDayOfYear) return n + 1;
+            // Leap year calculation looks different from IsLeapYear since y1, y4,
+            // and y100 are relative to year 1, not year 0
+            bool leapYear = y1 == 3 && (y4 != 24 || y100 == 3);
+            int[] days = leapYear ? DaysToMonth366 : DaysToMonth365;
+            // All months have less than 32 days, so n >> 5 is a good conservative
+            // estimate for the month
+            int m = n >> 5 + 1;
+            // m = 1-based month number
+            while (n >= days[m]) m++;
+            // If month was requested, return it
+            if (part == DatePartMonth) return m;
+            // Return 1-based day-of-month
+            return n - days[m - 1] + 1;
         }
     }
 }

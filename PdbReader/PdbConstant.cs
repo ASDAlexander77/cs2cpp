@@ -1,0 +1,105 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright company="" file="PdbConstant.cs">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// 
+// --------------------------------------------------------------------------------------------------------------------
+namespace PdbReader
+{
+    /// <summary>
+    /// </summary>
+    internal class PdbConstant
+    {
+        /// <summary>
+        /// </summary>
+        internal string name;
+
+        /// <summary>
+        /// </summary>
+        internal uint token;
+
+        /// <summary>
+        /// </summary>
+        internal object value;
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bits">
+        /// </param>
+        internal PdbConstant(BitAccess bits)
+        {
+            bits.ReadUInt32(out this.token);
+            byte tag1;
+            bits.ReadUInt8(out tag1);
+            byte tag2;
+            bits.ReadUInt8(out tag2);
+            if (tag2 == 0)
+            {
+                this.value = tag1;
+            }
+            else if (tag2 == 0x80)
+            {
+                switch (tag1)
+                {
+                    case 0x01: // short
+                        short s;
+                        bits.ReadInt16(out s);
+                        this.value = s;
+                        break;
+                    case 0x02: // ushort
+                        ushort us;
+                        bits.ReadUInt16(out us);
+                        this.value = us;
+                        break;
+                    case 0x03: // int
+                        int i;
+                        bits.ReadInt32(out i);
+                        this.value = i;
+                        break;
+                    case 0x04: // uint
+                        uint ui;
+                        bits.ReadUInt32(out ui);
+                        this.value = ui;
+                        break;
+                    case 0x05: // float
+                        this.value = bits.ReadFloat();
+                        break;
+                    case 0x06: // double
+                        this.value = bits.ReadDouble();
+                        break;
+                    case 0x09: // long
+                        long sl;
+                        bits.ReadInt64(out sl);
+                        this.value = sl;
+                        break;
+                    case 0x0a: // ulong
+                        ulong ul;
+                        bits.ReadUInt64(out ul);
+                        this.value = ul;
+                        break;
+                    case 0x10: // string
+                        string str;
+                        bits.ReadBString(out str);
+                        this.value = str;
+                        break;
+                    case 0x19: // decimal
+                        this.value = bits.ReadDecimal();
+                        break;
+                    default:
+
+                        // TODO: error
+                        break;
+                }
+            }
+            else
+            {
+                // TODO: error
+            }
+
+            bits.ReadCString(out this.name);
+        }
+    }
+}

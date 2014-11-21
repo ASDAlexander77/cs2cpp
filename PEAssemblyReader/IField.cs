@@ -6,9 +6,10 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-using System;
 namespace PEAssemblyReader
 {
+    using System;
+
     /// <summary>
     /// </summary>
     public interface IField : IMember, IEquatable<IField>
@@ -23,6 +24,8 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
         byte[] GetFieldRVAData();
     }
 }

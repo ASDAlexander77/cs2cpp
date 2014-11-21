@@ -49,10 +49,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsPinned { get; set; }
-
-        /// <summary>
-        /// </summary>
         bool IsClass { get; }
 
         /// <summary>
@@ -77,11 +73,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsGenericTypeLocal { get; }
+        bool IsGenericTypeDefinitionLocal { get; }
 
         /// <summary>
         /// </summary>
-        bool IsGenericTypeDefinitionLocal { get; }
+        bool IsGenericTypeLocal { get; }
 
         /// <summary>
         /// </summary>
@@ -90,6 +86,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsNested { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsPinned { get; set; }
 
         /// <summary>
         /// </summary>
@@ -113,6 +113,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="setUseAsClass">
+        /// </param>
+        /// <param name="value">
+        /// </param>
         /// <returns>
         /// </returns>
         IType Clone(bool setUseAsClass = false, bool value = false);
@@ -136,12 +140,6 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType GetDeclaringTypeOriginal();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IType GetTypeDefinition();
 
         /// <summary>
         /// </summary>
@@ -197,6 +195,12 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        IType GetTypeDefinition();
+
+        /// <summary>
+        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -221,6 +225,12 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        IType ToDereferencedType();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType ToNormal();
 
         /// <summary>
@@ -228,11 +238,5 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToPointerType();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IType ToDereferencedType();
     }
 }

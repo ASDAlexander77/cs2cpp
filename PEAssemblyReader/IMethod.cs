@@ -8,17 +8,24 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
-    using Microsoft.CodeAnalysis;
     using System.Collections.Generic;
     using System.Reflection;
+
+    using Microsoft.CodeAnalysis;
 
     /// <summary>
     /// </summary>
     public interface IMethod : IMember
     {
+        int? Token { get; }
+
         /// <summary>
         /// </summary>
         CallingConventions CallingConvention { get; }
+
+        /// <summary>
+        /// </summary>
+        DllImportData DllImportData { get; }
 
         /// <summary>
         /// </summary>
@@ -31,15 +38,25 @@ namespace PEAssemblyReader
         /// <summary>
         /// custom field
         /// </summary>
+        bool IsDllImport { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsExplicitInterfaceImplementation { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
         bool IsExternal { get; }
 
         /// <summary>
         /// </summary>
-        bool IsGenericMethodDefinition { get; }
+        bool IsGenericMethod { get; }
 
         /// <summary>
         /// </summary>
-        bool IsGenericMethod { get; }
+        bool IsGenericMethodDefinition { get; }
 
         /// <summary>
         /// custom field
@@ -50,20 +67,6 @@ namespace PEAssemblyReader
         /// custom field
         /// </summary>
         bool IsUnmanagedMethodReference { get; }
-
-        /// <summary>
-        /// custom field
-        /// </summary>
-        bool IsExplicitInterfaceImplementation { get; }
-
-        /// <summary>
-        /// custom field
-        /// </summary>
-        bool IsDllImport { get; }
-
-        /// <summary>
-        /// </summary>
-        DllImportData DllImportData { get; }
 
         /// <summary>
         /// </summary>
@@ -83,12 +86,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        IMethod GetMethodDefinition();
-
-        /// <summary>
-        /// </summary>
         /// <param name="genericContext">
         /// </param>
         /// <returns>
@@ -99,15 +96,13 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IEnumerable<IParameter> GetParameters();
+        IMethod GetMethodDefinition();
 
         /// <summary>
         /// </summary>
-        /// <param name="genericContext">
-        /// </param>
         /// <returns>
         /// </returns>
-        IMethod ToSpecialization(IGenericContext genericContext);
+        IEnumerable<IParameter> GetParameters();
 
         /// <summary>
         /// </summary>

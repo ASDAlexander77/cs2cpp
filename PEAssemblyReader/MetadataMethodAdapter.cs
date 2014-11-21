@@ -10,27 +10,21 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
-    using System.Reflection.Metadata;
     using System.Text;
 
     using Microsoft.CodeAnalysis;
-    using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+    using System.Reflection.Metadata.Ecma335;
 
     /// <summary>
     /// </summary>
     [DebuggerDisplay("Name = {ExplicitName}")]
     public class MetadataMethodAdapter : IMethod
     {
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<string> lazyName;
-
         /// <summary>
         /// </summary>
         private readonly Lazy<string> lazyExplicitName;
@@ -41,11 +35,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyMetadataFullName;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<string> lazyMetadataName;
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<string> lazyMetadataFullName;
+        private readonly Lazy<string> lazyName;
 
         /// <summary>
         /// </summary>
@@ -81,6 +79,18 @@ namespace PEAssemblyReader
             : this(methodDef)
         {
             this.GenericContext = genericContext;
+
+            var peMethodSymbol = methodDef as PEMethodSymbol;
+            if (peMethodSymbol != null)
+            {
+                this.Token = MetadataTokens.GetToken(peMethodSymbol.Handle);
+            }
+        }
+
+        public int? Token
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -123,6 +133,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public bool ContainsGenericParameters
+        {
+            get
+            {
+                return this.methodDef.TypeArguments.Any();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public IType DeclaringType
         {
             get
@@ -130,7 +152,17 @@ namespace PEAssemblyReader
                 return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
-        
+
+        /// <summary>
+        /// </summary>
+        public DllImportData DllImportData
+        {
+            get
+            {
+                return this.methodDef.GetDllImportData();
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string ExplicitName
@@ -173,6 +205,26 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsDllImport
+        {
+            get
+            {
+                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsExplicitInterfaceImplementation
+        {
+            get
+            {
+                return this.methodDef.IsExplicitInterfaceImplementation;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsExternal
         {
             get
@@ -203,44 +255,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsUnmanaged
-        {
-            get
-            {
-                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsUnmanagedMethodReference
-        {
-            get
-            {
-                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ForwardRef);
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsDllImport
-        {
-            get
-            {
-                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null;
-            }
-        }
-
-        public DllImportData DllImportData
-        {
-            get
-            {
-                return this.methodDef.GetDllImportData();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public bool IsOverride
         {
             get
@@ -261,6 +275,26 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsUnmanaged
+        {
+            get
+            {
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.Unmanaged);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsUnmanagedMethodReference
+        {
+            get
+            {
+                return this.methodDef.ImplementationAttributes.HasFlag(MethodImplAttributes.ForwardRef);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsVirtual
         {
             get
@@ -271,16 +305,6 @@ namespace PEAssemblyReader
                 }
 
                 return this.methodDef.IsVirtual;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsExplicitInterfaceImplementation
-        {
-            get
-            {
-                return this.methodDef.IsExplicitInterfaceImplementation;
             }
         }
 
@@ -356,18 +380,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public bool ContainsGenericParameters
-        {
-            get
-            {
-                return methodDef.TypeArguments.Any();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="obj">
         /// </param>
         /// <returns>
@@ -427,11 +439,6 @@ namespace PEAssemblyReader
             return this.ToString().GetHashCode();
         }
 
-        public IMethod ToSpecialization(IGenericContext genericContext)
-        {
-            return this.methodDef.ResolveGeneric(genericContext);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="genericContext">
@@ -447,15 +454,18 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IEnumerable<IParameter> GetParameters()
-        {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
-        }
-
-
         public IMethod GetMethodDefinition()
         {
             return new MetadataMethodAdapter(this.methodDef.ConstructedFrom);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IParameter> GetParameters()
+        {
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
         }
 
         /// <summary>
@@ -480,6 +490,17 @@ namespace PEAssemblyReader
             }
 
             throw new KeyNotFoundException();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IMethod ToSpecialization(IGenericContext genericContext)
+        {
+            return this.methodDef.ResolveGeneric(genericContext);
         }
 
         /// <summary>
@@ -567,11 +588,76 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        private string CalculateNamespace()
+        private string CalculateExplicitName()
         {
-            return this.methodDef.CalculateNamespace();
+            var result = new StringBuilder();
+
+            if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
+            {
+                if (this.methodDef.ContainingType.IsNestedType())
+                {
+                    result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                    result.Append('+');
+                }
+
+                result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                result.Append('.');
+            }
+
+            result.Append(this.Name);
+
+            return result.ToString();
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateFullName()
+        {
+            var result = new StringBuilder();
+            this.methodDef.AppendFullNamespace(result, this.Namespace, this.DeclaringType, false, '.');
+            result.Append(this.Name);
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateMetadataFullName()
+        {
+            var sb = new StringBuilder();
+            this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true, '.');
+            sb.Append(this.MetadataName);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateMetadataName()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(this.methodDef.Name);
+
+            if (this.IsGenericMethod || this.IsGenericMethodDefinition)
+            {
+                sb.Append('`');
+                sb.Append(this.methodDef.GetArity());
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private string CalculateName()
         {
             var sb = new StringBuilder();
@@ -608,60 +694,19 @@ namespace PEAssemblyReader
             return sb.ToString();
         }
 
-        private string CalculateFullName()
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private string CalculateNamespace()
         {
-            var result = new StringBuilder();
-            this.methodDef.AppendFullNamespace(result, this.Namespace, this.DeclaringType, false, '.');
-            result.Append(this.Name);
-
-            return result.ToString();
+            return this.methodDef.CalculateNamespace();
         }
 
-        private string CalculateExplicitName()
-        {
-            var result = new StringBuilder();
-
-            if (this.methodDef.ContainingType != null && !string.IsNullOrWhiteSpace(this.methodDef.ContainingType.Name))
-            {
-                if (this.methodDef.ContainingType.IsNestedType())
-                {
-                    result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                    result.Append('+');
-                }
-
-                result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                result.Append('.');
-            }
-
-            result.Append(this.Name);
-
-            return result.ToString();
-        }
-
-        private string CalculateMetadataName()
-        {
-            var sb = new StringBuilder();
-
-            sb.Append(this.methodDef.Name);
-
-            if (this.IsGenericMethod || this.IsGenericMethodDefinition)
-            {
-                sb.Append('`');
-                sb.Append(this.methodDef.GetArity());
-            }
-
-            return sb.ToString();
-        }
-
-        private string CalculateMetadataFullName()
-        {
-            var sb = new StringBuilder();
-            this.methodDef.AppendFullNamespace(sb, this.Namespace, this.DeclaringType, true, '.');
-            sb.Append(this.MetadataName);
-
-            return sb.ToString();
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private MetadataGenericContext GetDefaultGenericMetadataContext()
         {
             if (this.IsGenericMethodDefinition)

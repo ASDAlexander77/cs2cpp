@@ -31,9 +31,12 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(string source, string outputFolder, string[] args = null)
         {
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source);
+            
             var ilReader = new IlReader(source, args);
             ilReader.Load();
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(source), outputFolder, args);
+
+            GenerateLlvm(ilReader, fileNameWithoutExtension, ilReader.SourceFilePath, ilReader.PdbFilePath, outputFolder, args);
         }
 
         /// <summary>
@@ -46,10 +49,14 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(Type type, string outputFolder, string[] args = null)
         {
+            var name = type.Module.Name.Replace(".dll", string.Empty);
+            var filePath = Path.GetDirectoryName(name);
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
+            var pdbFileName = Path.Combine(filePath, string.Concat(fileNameWithoutExtension, ".pdb"));
+
             var ilReader = new IlReader();
             ilReader.Load(type);
-            var name = type.Module.Name.Replace(".dll", string.Empty);
-            GenerateLlvm(ilReader, Path.GetFileNameWithoutExtension(name), outputFolder, args, new[] { type.FullName });
+            GenerateLlvm(ilReader, fileNameWithoutExtension, null, pdbFileName, outputFolder, args, new[] { type.FullName });
         }
 
         /// <summary>
@@ -65,10 +72,10 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         public static void ProcessRequiredITypesForITypes(
-            IEnumerable<IType> types,
-            HashSet<IType> typesAdded,
-            List<IType> newListOfITypes,
-            HashSet<IType> genericSpecializations,
+            IEnumerable<IType> types, 
+            HashSet<IType> typesAdded, 
+            List<IType> newListOfITypes, 
+            HashSet<IType> genericSpecializations, 
             HashSet<IMethod> genericMethodSpecializations)
         {
             foreach (var type in types)
@@ -92,8 +99,6 @@ namespace Il2Native.Logic
         /// <param name="type">
         /// </param>
         /// <param name="genericContext">
-        /// </param>
-        /// <param name="disablePostDeclarations">
         /// </param>
         public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
@@ -163,14 +168,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="mode">
         /// </param>
+        /// <param name="processGenericMethodsOnly">
+        /// </param>
         private static void ConvertAllTypes(
-            IlReader ilReader,
-            string[] filter,
-            ICodeWriter codeWriter,
-            List<IType> newListOfITypes,
-            IDictionary<string, IType> genDefinitionsByMetadataName,
-            IDictionary<IType, IEnumerable<IMethod>> genMethodSpec,
-            ConvertingMode mode,
+            IlReader ilReader, 
+            string[] filter, 
+            ICodeWriter codeWriter, 
+            List<IType> newListOfITypes, 
+            IDictionary<string, IType> genDefinitionsByMetadataName, 
+            IDictionary<IType, IEnumerable<IMethod>> genMethodSpec, 
+            ConvertingMode mode, 
             bool processGenericMethodsOnly = false)
         {
             var i = 0;
@@ -215,8 +222,16 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="mode">
         /// </param>
+        /// <param name="processGenericMethodsOnly">
+        /// </param>
         private static void ConvertIType(
-            IlReader ilReader, ICodeWriter codeWriter, IType type, IType genericDefinition, IEnumerable<IMethod> genericMethodSpecializatons, ConvertingMode mode, bool processGenericMethodsOnly = false)
+            IlReader ilReader, 
+            ICodeWriter codeWriter, 
+            IType type, 
+            IType genericDefinition, 
+            IEnumerable<IMethod> genericMethodSpecializatons, 
+            ConvertingMode mode, 
+            bool processGenericMethodsOnly = false)
         {
             var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
@@ -380,129 +395,47 @@ namespace Il2Native.Logic
                 genericSpecializations.Add(type);
 
                 // todo the same for base class and interfaces
-                foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations)) ;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ilReader">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="args">
-        /// </param>
-        /// <param name="filter">
-        /// </param>
-        private static void GenerateLlvm(IlReader ilReader, string fileName, string outputFolder, string[] args, string[] filter = null)
-        {
-            var codeWriter = GetLlvmWriter(fileName, outputFolder, args);
-            GenerateSource(ilReader, filter, codeWriter);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ilReader">
-        /// </param>
-        /// <param name="filter">
-        /// </param>
-        /// <param name="codeWriter">
-        /// </param>
-        private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
-        {
-            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib, ilReader.AllReferences());
-
-            // types in current assembly
-            var genericTypeSpecializations = new HashSet<IType>();
-            var genericMethodSpecializations = new HashSet<IMethod>();
-            var types = ilReader.Types().ToList();
-            var allTypes = ilReader.AllTypes().ToList();
-            var newListOfITypes = ResortITypes(
-                types.Where(t => !t.IsGenericTypeDefinition).ToList(),
-                genericTypeSpecializations,
-                genericMethodSpecializations);
-
-            // build quick access array for Generic Definitions
-            var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
-            foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))
-            {
-                genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
-            }
-
-            DiscoverAllGenericVirtualMethods(allTypes, genericMethodSpecializations);
-
-            DiscoverAllGenericMethodsOfInterfaces(allTypes, genericMethodSpecializations);
-
-            var genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
-
-            WriteForwardDeclarations(codeWriter, newListOfITypes);
-
-            ConvertAllTypes(
-                ilReader,
-                filter,
-                codeWriter,
-                newListOfITypes,
-                genDefinitionsByMetadataName,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Declaration);
-
-            ConvertAllTypes(
-                ilReader,
-                filter,
-                codeWriter,
-                newListOfITypes,
-                genDefinitionsByMetadataName,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Definition);
-
-            // Append definition of Generic Methods of not used non-generic types
-            ConvertAllTypes(
-                ilReader,
-                filter,
-                codeWriter,
-                genericMethodSpecializationsSorted.Keys.Where(k => !newListOfITypes.Contains(k)).ToList(),
-                genDefinitionsByMetadataName,
-                genericMethodSpecializationsSorted,
-                ConvertingMode.Definition,
-                true);
-
-            codeWriter.WriteEnd();
-
-            codeWriter.Close();
-        }
-
-        private static void WriteForwardDeclarations(ICodeWriter codeWriter, List<IType> newListOfITypes)
-        {
-            // write forward declaration
-            for (var index = 0; index < newListOfITypes.Count; index++)
-            {
-                var type = newListOfITypes[index];
-                if (type.IsGenericTypeDefinition)
+                foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations))
                 {
-                    continue;
+                    ;
                 }
-
-                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
             }
         }
 
-        private static SortedDictionary<IType, IEnumerable<IMethod>> GroupGenericMethodsByType(HashSet<IMethod> genericMethodSpecializations)
+        /// <summary>
+        /// </summary>
+        /// <param name="allTypes">
+        /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
+        private static void DiscoverAllGenericMethodsOfInterfaces(IEnumerable<IType> allTypes, ISet<IMethod> genericMethodSpecializations)
         {
-            // group generic methods by Type
-            var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
-            var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
-            foreach (var group in genericMethodSpecializationsGroupedByType)
+            var allSpecializedMethodsOfInterfaces =
+                genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod).Distinct().ToList();
+            var allSpecializedMethodsOfInterfacesGroupedByType = allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
+
+            foreach (var specializedTypeMethods in allSpecializedMethodsOfInterfacesGroupedByType)
             {
-                genericMethodSpecializationsSorted[@group.Key] = @group;
+                var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
+                foreach (var specializedTypeMethod in specializedTypeMethods)
+                {
+                    var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
+                    foreach (var genericMethodOfInterface in
+                        types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
+                    {
+                        genericMethodSpecializations.Add(
+                            genericMethodOfInterface.ToSpecialization(MetadataGenericContext.CreateMap(genericMethodOfInterface, specializedTypeMethod)));
+                    }
+                }
             }
-
-            IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
-
-            return genericMethodSpecializationsSorted;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="allTypes">
+        /// </param>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
         private static void DiscoverAllGenericVirtualMethods(IEnumerable<IType> allTypes, ISet<IMethod> genericMethodSpecializations)
         {
             // find all override of generic methods 
@@ -525,24 +458,78 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void DiscoverAllGenericMethodsOfInterfaces(IEnumerable<IType> allTypes, ISet<IMethod> genericMethodSpecializations)
+        /// <summary>
+        /// </summary>
+        /// <param name="ilReader">
+        /// </param>
+        /// <param name="fileName">
+        /// </param>
+        /// <param name="outputFolder">
+        /// </param>
+        /// <param name="args">
+        /// </param>
+        /// <param name="filter">
+        /// </param>
+        private static void GenerateLlvm(IlReader ilReader, string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args, string[] filter = null)
         {
-            var allSpecializedMethodsOfInterfaces = genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod).Distinct().ToList();
-            var allSpecializedMethodsOfInterfacesGroupedByType = allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
+            var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
+            GenerateSource(ilReader, filter, codeWriter);
+        }
 
-            foreach (var specializedTypeMethods in allSpecializedMethodsOfInterfacesGroupedByType)
+        /// <summary>
+        /// </summary>
+        /// <param name="ilReader">
+        /// </param>
+        /// <param name="filter">
+        /// </param>
+        /// <param name="codeWriter">
+        /// </param>
+        private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
+        {
+            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib, ilReader.AllReferences());
+
+            // types in current assembly
+            var genericTypeSpecializations = new HashSet<IType>();
+            var genericMethodSpecializations = new HashSet<IMethod>();
+            var types = ilReader.Types().ToList();
+            var allTypes = ilReader.AllTypes().ToList();
+            var newListOfITypes = ResortITypes(types.Where(t => !t.IsGenericTypeDefinition).ToList(), genericTypeSpecializations, genericMethodSpecializations);
+
+            // build quick access array for Generic Definitions
+            var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
+            foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))
             {
-                var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
-                foreach (var specializedTypeMethod in specializedTypeMethods)
-                {
-                    var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
-                    foreach (var genericMethodOfInterface in
-                        types.SelectMany(t => t.GetMethods(flags).Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
-                    {
-                        genericMethodSpecializations.Add(genericMethodOfInterface.ToSpecialization(MetadataGenericContext.CreateMap(genericMethodOfInterface, specializedTypeMethod)));
-                    }
-                }
+                genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
+
+            DiscoverAllGenericVirtualMethods(allTypes, genericMethodSpecializations);
+
+            DiscoverAllGenericMethodsOfInterfaces(allTypes, genericMethodSpecializations);
+
+            var genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
+
+            WriteForwardDeclarations(codeWriter, newListOfITypes);
+
+            ConvertAllTypes(
+                ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializationsSorted, ConvertingMode.Declaration);
+
+            ConvertAllTypes(
+                ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializationsSorted, ConvertingMode.Definition);
+
+            // Append definition of Generic Methods of not used non-generic types
+            ConvertAllTypes(
+                ilReader, 
+                filter, 
+                codeWriter, 
+                genericMethodSpecializationsSorted.Keys.Where(k => !newListOfITypes.Contains(k)).ToList(), 
+                genDefinitionsByMetadataName, 
+                genericMethodSpecializationsSorted, 
+                ConvertingMode.Definition, 
+                true);
+
+            codeWriter.WriteEnd();
+
+            codeWriter.Close();
         }
 
         /// <summary>
@@ -613,7 +600,8 @@ namespace Il2Native.Logic
                         }
 
                         var usedStructTypes = new HashSet<IType>();
-                        method.DiscoverRequiredTypesAndMethodsInMethodBody(genericTypeSpecializations, genericMethodSpecializations, usedStructTypes, new Queue<IMethod>());
+                        method.DiscoverRequiredTypesAndMethodsInMethodBody(
+                            genericTypeSpecializations, genericMethodSpecializations, usedStructTypes, new Queue<IMethod>());
                         foreach (var usedStructType in usedStructTypes)
                         {
                             yield return usedStructType;
@@ -633,9 +621,66 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static ICodeWriter GetLlvmWriter(string fileName, string outputFolder, string[] args)
+        private static ICodeWriter GetLlvmWriter(string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args)
         {
-            return new LlvmWriter(Path.Combine(outputFolder, fileName), args);
+            return new LlvmWriter(Path.Combine(outputFolder, fileName), sourceFilePath, pdbFilePath, args);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="genericMethodSpecializations">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static SortedDictionary<IType, IEnumerable<IMethod>> GroupGenericMethodsByType(HashSet<IMethod> genericMethodSpecializations)
+        {
+            // group generic methods by Type
+            var genericMethodSpecializationsGroupedByType = genericMethodSpecializations.GroupBy(g => g.DeclaringType);
+            var genericMethodSpecializationsSorted = new SortedDictionary<IType, IEnumerable<IMethod>>();
+            foreach (var group in genericMethodSpecializationsGroupedByType)
+            {
+                genericMethodSpecializationsSorted[@group.Key] = @group;
+            }
+
+            IlReader.GenericMethodSpecializations = genericMethodSpecializationsSorted;
+
+            return genericMethodSpecializationsSorted;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="genericTypeSpecializations">
+        /// </param>
+        /// <param name="requiredTypes">
+        /// </param>
+        private static void ProcessGenericTypeToFindRequiredTypes(ISet<IType> genericTypeSpecializations, ICollection<Tuple<IType, List<IType>>> requiredTypes)
+        {
+            var subSetGenericTypeSpecializations = new HashSet<IType>();
+            HashSet<IMethod> subSetGenericMethodSpecializations = null; // new HashSet<IMethod>();
+
+            // the same for generic specialized types
+            foreach (var type in genericTypeSpecializations)
+            {
+                var requiredITypesToAdd = new List<IType>();
+                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
+                requiredTypes.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
+            }
+
+            if (subSetGenericTypeSpecializations.Count > 0)
+            {
+                foreach (var disoveredType in requiredTypes.Select(t => t.Item1))
+                {
+                    subSetGenericTypeSpecializations.Remove(disoveredType);
+                }
+
+                ProcessGenericTypeToFindRequiredTypes(subSetGenericTypeSpecializations, requiredTypes);
+
+                // join types
+                foreach (var disoveredType in subSetGenericTypeSpecializations)
+                {
+                    genericTypeSpecializations.Add(disoveredType);
+                }
+            }
         }
 
         /// <summary>
@@ -651,10 +696,10 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         private static void ProcessNextRequiredITypes(
-            IType type,
-            HashSet<IType> typesAdded,
-            List<IType> requiredITypesToAdd,
-            HashSet<IType> genericTypeSpecializations,
+            IType type, 
+            HashSet<IType> typesAdded, 
+            List<IType> requiredITypesToAdd, 
+            HashSet<IType> genericTypeSpecializations, 
             HashSet<IMethod> genericMethodSpecializations)
         {
             var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).ToList();
@@ -741,36 +786,6 @@ namespace Il2Native.Logic
             return newOrder;
         }
 
-        private static void ProcessGenericTypeToFindRequiredTypes(ISet<IType> genericTypeSpecializations, ICollection<Tuple<IType, List<IType>>> requiredTypes)
-        {
-            HashSet<IType> subSetGenericTypeSpecializations = new HashSet<IType>();
-            HashSet<IMethod> subSetGenericMethodSpecializations = null; // new HashSet<IMethod>();
-
-            // the same for generic specialized types
-            foreach (var type in genericTypeSpecializations)
-            {
-                var requiredITypesToAdd = new List<IType>();
-                ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
-                requiredTypes.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
-            }
-
-            if (subSetGenericTypeSpecializations.Count > 0)
-            {
-                foreach (var disoveredType in requiredTypes.Select(t => t.Item1))
-                {
-                    subSetGenericTypeSpecializations.Remove(disoveredType);
-                }
-
-                ProcessGenericTypeToFindRequiredTypes(subSetGenericTypeSpecializations, requiredTypes);
-
-                // join types
-                foreach (var disoveredType in subSetGenericTypeSpecializations)
-                {
-                    genericTypeSpecializations.Add(disoveredType);
-                }
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -804,11 +819,32 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="codeWriter">
+        /// </param>
+        /// <param name="newListOfITypes">
+        /// </param>
+        private static void WriteForwardDeclarations(ICodeWriter codeWriter, List<IType> newListOfITypes)
+        {
+            // write forward declaration
+            for (var index = 0; index < newListOfITypes.Count; index++)
+            {
+                var type = newListOfITypes[index];
+                if (type.IsGenericTypeDefinition)
+                {
+                    continue;
+                }
+
+                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public enum ConvertingMode
         {
             /// <summary>
             /// </summary>
-            Declaration,
+            Declaration, 
 
             /// <summary>
             /// </summary>

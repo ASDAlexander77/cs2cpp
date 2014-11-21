@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Linq;
@@ -15,12 +16,15 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
-    using System;
 
     /// <summary>
     /// </summary>
     public static class TypeGen
     {
+        /// <summary>
+        /// </summary>
+        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
+
         /// <summary>
         /// </summary>
         private static readonly IDictionary<string, int> SystemTypeSizes = new SortedDictionary<string, int>();
@@ -31,15 +35,15 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
-
-        /// <summary>
-        /// </summary>
-        private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
         private static readonly IDictionary<string, int> fieldsShiftByType = new SortedDictionary<string, int>();
+
+        /// <summary>
+        /// </summary>
+        private static readonly IDictionary<IType, int> sizeByType = new SortedDictionary<IType, int>();
+
+        /// <summary>
+        /// </summary>
+        private static readonly IDictionary<IType, IList<MemberLocationInfo>> membersLayoutByType = new SortedDictionary<IType, IList<MemberLocationInfo>>();
 
         /// <summary>
         /// </summary>
@@ -106,18 +110,46 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
-        public static int CalculateSize(this IType type)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int CalculateFieldsShift(this IType type)
+        {
+            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
+            if (type.BaseType != null)
+            {
+                fieldsShift += type.BaseType.GetFieldsShift();
+            }
+
+            fieldsShiftByType[type.FullName] = fieldsShift;
+
+            return fieldsShift;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int CalculateSize(this IType type, out IList<MemberLocationInfo> membersLayout)
         {
             var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
-            var typeAlign = fieldSizes.Any() ? fieldSizes.Max() : LlvmWriter.PointerSize;
+            var typeAlign = fieldSizes.Any() ? fieldSizes.Max(m => m.Size) : LlvmWriter.PointerSize;
             if (type.BaseType != null)
             {
                 typeAlign = Math.Max(typeAlign, LlvmWriter.PointerSize);
             }
 
             var offset = 0;
-            foreach (var size in type.GetTypeSizes())
+            membersLayout = type.GetTypeSizes().ToList();
+            foreach (var member in membersLayout)
             {
+                member.Offset = offset;
+                var size = member.Size;
                 var effectiveSize = Math.Min(typeAlign, size);
 
                 offset += size;
@@ -136,77 +168,40 @@ namespace Il2Native.Logic.Gencode
             return offset;
         }
 
-        public static IEnumerable<int> GetTypeSizes(this IType type)
+        /// <summary>
+        /// </summary>
+        public static void Clear()
         {
-            if (type.IsInterface)
-            {
-                var any = false;
-                foreach (var interfaceItem in type.GetInterfacesExcludingBaseAllInterfaces())
-                {
-                    foreach (var item in interfaceItem.GetTypeSizes())
-                    {
-                        any = true;
-                        yield return item;
-                    }
-                }
-
-                if (!any)
-                {
-                    yield return LlvmWriter.PointerSize;
-                }
-
-                yield break;
-            }
-
-            if (type.IsArray || type.IsPointer)
-            {
-                // type*
-                yield return LlvmWriter.PointerSize;
-                yield break;
-            }
-
-            if (type.IsEnum)
-            {
-                var enumUnderlyingType = type.GetEnumUnderlyingType();
-                int enumUnderlyingTypeFieldSize;
-                if (enumUnderlyingType.Namespace == "System" && SystemTypeSizes.TryGetValue(enumUnderlyingType.Name, out enumUnderlyingTypeFieldSize))
-                {
-                    yield return enumUnderlyingTypeFieldSize;
-                }
-
-                yield break;
-            }
-
-            // add shift for virtual table
-            if (type.IsRootOfVirtualTable())
-            {
-                yield return LlvmWriter.PointerSize;
-            }
-
-            if (type.BaseType != null)
-            {
-                foreach (var item in type.BaseType.GetTypeSizes())
-                {
-                    yield return item;
-                }
-            }
-
-            // add shift for interfaces
-            foreach (var interfaceItem in type.GetInterfacesExcludingBaseAllInterfaces())
-            {
-                foreach (var item in interfaceItem.GetTypeSizes())
-                {
-                    yield return item;
-                }
-            }
-
-            foreach (var item in type.GetFieldsSizes())
-            {
-                yield return item;
-            }
+            sizeByType.Clear();
         }
 
-        public static IEnumerable<int> GetFieldsSizes(this IType type, bool excludingStructs = false)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static int GetFieldsShift(this IType type)
+        {
+            // find index
+            int fieldsShift;
+            if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
+            {
+                fieldsShift = type.CalculateFieldsShift();
+            }
+
+            return fieldsShift;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="excludingStructs">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<MemberLocationInfo> GetFieldsSizes(this IType type, bool excludingStructs = false)
         {
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
@@ -215,27 +210,36 @@ namespace Il2Native.Logic.Gencode
                 if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
                 {
                     // pointer size
-                    yield return LlvmWriter.PointerSize;
+                    yield return new MemberLocationInfo(field, LlvmWriter.PointerSize);
                 }
                 else if (!excludingStructs && fieldType.IsStructureType())
                 {
-                    yield return fieldType.GetTypeSize();
+                    yield return new MemberLocationInfo(field, fieldType.GetTypeSize());
                 }
                 else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
                 {
-                    yield return fieldSize;
+                    yield return new MemberLocationInfo(field, fieldSize);
                 }
                 else
                 {
                     foreach (var item in fieldType.GetTypeSizes())
                     {
+                        item.SetMainMember(field);
                         yield return item;
                     }
                 }
             }
         }
 
-        public static IEnumerable<int> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="excludingStructs">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<MemberLocationInfo> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
         {
             if (type.BaseType != null)
             {
@@ -251,27 +255,14 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static int CalculateFieldsShift(this IType type)
-        {
-            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
-            if (type.BaseType != null)
-            {
-                fieldsShift += type.BaseType.GetFieldsShift();
-            }
-
-            fieldsShiftByType[type.FullName] = fieldsShift;
-
-            return fieldsShift;
-        }
-
         /// <summary>
         /// </summary>
-        public static void Clear()
-        {
-            sizeByType.Clear();
-        }
-
-
+        /// <param name="type">
+        /// </param>
+        /// <param name="asValueType">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static int GetTypeSize(this IType type, bool asValueType = false)
         {
             if (asValueType && type.IsPrimitiveType())
@@ -281,25 +272,102 @@ namespace Il2Native.Logic.Gencode
 
             // find index
             int size;
-            if (!sizeByType.TryGetValue(type.FullName, out size))
+            if (!sizeByType.TryGetValue(type, out size))
             {
-                size = type.CalculateSize();
-                sizeByType[type.FullName] = size;
+                IList<MemberLocationInfo> membersLayout;
+                size = type.CalculateSize(out membersLayout);
+                sizeByType[type] = size;
+                membersLayoutByType[type] = membersLayout;
             }
 
             return size;
         }
 
-        public static int GetFieldsShift(this IType type)
+        public static int GetFieldOffset(this IField field)
         {
-            // find index
-            int fieldsShift;
-            if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
+            IList<MemberLocationInfo> membersLayout;
+            while (!membersLayoutByType.TryGetValue(field.DeclaringType, out membersLayout))
             {
-                fieldsShift = type.CalculateFieldsShift();
+                GetTypeSize(field.DeclaringType);
             }
 
-            return fieldsShift;
+            var memberLocationInfo = membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
+            if (memberLocationInfo == null)
+            {
+                throw new MissingMemberException(field.FullName);    
+            }
+
+            return memberLocationInfo.Offset;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type)
+        {
+            if (type.IsInterface)
+            {
+                var any = false;
+                foreach (var item in type.GetInterfacesExcludingBaseAllInterfaces().SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+                {
+                    any = true;
+                    yield return item;
+                }
+
+                if (!any)
+                {
+                    yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                }
+
+                yield break;
+            }
+
+            if (type.IsArray || type.IsPointer)
+            {
+                // type*
+                yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                yield break;
+            }
+
+            if (type.IsEnum)
+            {
+                var enumUnderlyingType = type.GetEnumUnderlyingType();
+                int enumUnderlyingTypeFieldSize;
+                if (enumUnderlyingType.Namespace == "System" && SystemTypeSizes.TryGetValue(enumUnderlyingType.Name, out enumUnderlyingTypeFieldSize))
+                {
+                    yield return new MemberLocationInfo(type, enumUnderlyingTypeFieldSize);
+                }
+
+                yield break;
+            }
+
+            // add shift for virtual table
+            if (type.IsRootOfVirtualTable())
+            {
+                yield return new MemberLocationInfo(LlvmWriter.PointerSize);
+            }
+
+            if (type.BaseType != null)
+            {
+                foreach (var item in type.BaseType.GetTypeSizes())
+                {
+                    yield return item;
+                }
+            }
+
+            // add shift for interfaces
+            foreach (var item in type.GetInterfacesExcludingBaseAllInterfaces().SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+            {
+                yield return item;
+            }
+
+            foreach (var item in type.GetFieldsSizes())
+            {
+                yield return item;
+            }
         }
 
         /// <summary>
@@ -339,6 +407,8 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         /// <param name="type">
+        /// </param>
+        /// <param name="isPointerOpt">
         /// </param>
         /// <returns>
         /// </returns>
@@ -456,6 +526,8 @@ namespace Il2Native.Logic.Gencode
         /// <param name="type">
         /// </param>
         /// <param name="writer">
+        /// </param>
+        /// <param name="isPointer">
         /// </param>
         public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool isPointer)
         {

@@ -1,4 +1,13 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedMethodBase.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System;
     using System.Collections.Generic;
@@ -13,6 +22,10 @@
     /// </summary>
     public class SynthesizedMethodBase : IMethod
     {
+        /// <summary>
+        /// </summary>
+        public int? Token { get; private set; }
+
         /// <summary>
         /// </summary>
         public string AssemblyQualifiedName { get; private set; }
@@ -30,6 +43,16 @@
         /// <summary>
         /// </summary>
         public virtual IType DeclaringType
+        {
+            get
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public DllImportData DllImportData
         {
             get
             {
@@ -77,34 +100,7 @@
 
         /// <summary>
         /// </summary>
-        public bool IsExternal
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsGenericMethodDefinition { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool IsGenericMethod { get; private set; }
-
-        /// <summary>
-        /// custom field
-        /// </summary>
-        public bool IsUnmanaged
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        public bool IsUnmanagedMethodReference
+        public bool IsDllImport
         {
             get
             {
@@ -122,7 +118,9 @@
             }
         }
 
-        public bool IsDllImport
+        /// <summary>
+        /// </summary>
+        public bool IsExternal
         {
             get
             {
@@ -130,13 +128,13 @@
             }
         }
 
-        public DllImportData DllImportData
-        {
-            get
-            {
-                return null;
-            }
-        }
+        /// <summary>
+        /// </summary>
+        public bool IsGenericMethod { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool IsGenericMethodDefinition { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -145,6 +143,27 @@
         /// <summary>
         /// </summary>
         public virtual bool IsStatic { get; private set; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
+        public bool IsUnmanaged
+        {
+            get
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsUnmanagedMethodReference
+        {
+            get
+            {
+                return false;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -206,11 +225,6 @@
             {
                 return null;
             }
-        }
-
-        public IMethod GetMethodDefinition()
-        {
-            return null;
         }
 
         /// <summary>
@@ -290,6 +304,15 @@
         /// </summary>
         /// <returns>
         /// </returns>
+        public IMethod GetMethodDefinition()
+        {
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public virtual IEnumerable<IParameter> GetParameters()
         {
             return new IParameter[0];
@@ -304,6 +327,19 @@
         /// <exception cref="NotImplementedException">
         /// </exception>
         public IType ResolveTypeParameter(IType type)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="genericContext">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public IMethod ToSpecialization(IGenericContext genericContext)
         {
             throw new NotImplementedException();
         }
@@ -353,11 +389,6 @@
             result.Append(')');
 
             return result.ToString();
-        }
-
-        public IMethod ToSpecialization(IGenericContext genericContext)
-        {
-            throw new NotImplementedException();
         }
     }
 }

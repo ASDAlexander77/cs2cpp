@@ -1,6 +1,16 @@
-﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="SynthesizedValueParameter.cs" company="">
+//   
+// </copyright>
+// <summary>
+//   
+// </summary>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Text;
+
     using PEAssemblyReader;
 
     /// <summary>

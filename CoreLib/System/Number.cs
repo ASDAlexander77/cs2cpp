@@ -283,7 +283,9 @@ namespace System
     {
         private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f', 0 };
 
-        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'d', 0 };
+        private static byte[] PrintLong = new byte[] { (byte)'%', (byte)'l', (byte)'l', (byte)'d', 0 };
+
+        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'l', (byte)'d', 0 };
 
         private static byte[] buffer = new byte[128];
 
@@ -295,6 +297,16 @@ namespace System
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public unsafe static extern int sprintf(byte* buffer, byte* format, int t);
+
+        public static String Format(long value, bool isInteger, String format, NumberFormatInfo info)
+        {
+            char formatCh;
+            int precision;
+            ValidateFormat(format, out formatCh, out precision);
+
+            String result = FormatNative(value, formatCh, precision);
+            return PostProcessInteger(value, result, formatCh, precision, info);
+        }
 
         public static String Format(int value, bool isInteger, String format, NumberFormatInfo info)
         {
@@ -319,6 +331,19 @@ namespace System
         public static String Format(object value, bool isInteger, String format, NumberFormatInfo info)
         {
             throw new NotImplementedException();
+        }
+
+        private static String FormatNative(long value, char format, int precision)
+        {
+            unsafe
+            {
+                fixed (byte* b = &buffer[0])
+                fixed (byte* pi = &PrintLong[0])
+                {
+                    var size = sprintf(b, pi, value);
+                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
+                }
+            }
         }
 
         private static String FormatNative(int value, char format, int precision)

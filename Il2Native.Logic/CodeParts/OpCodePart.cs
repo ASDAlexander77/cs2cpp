@@ -8,7 +8,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace Il2Native.Logic.CodeParts
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -16,8 +15,9 @@ namespace Il2Native.Logic.CodeParts
 
     using Il2Native.Logic.Exceptions;
 
-    using OpCodesEmit = System.Reflection.Emit.OpCodes;
     using PEAssemblyReader;
+
+    using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
     /// </summary>
@@ -69,6 +69,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public PhiNodes AlternativeValues { get; set; }
+
+        /// <summary>
+        /// </summary>
         public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
 
         /// <summary>
@@ -77,11 +81,11 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public int? CustomJumpAddress { get; set; }
+        public string CreatedLabel { get; set; }
 
         /// <summary>
         /// </summary>
-        public string CreatedLabel { get; set; }
+        public int? CustomJumpAddress { get; set; }
 
         /// <summary>
         /// </summary>
@@ -150,6 +154,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public OpCodePart Next { get; set; }
+
+        /// <summary>
+        /// </summary>
         public OpCode OpCode { get; private set; }
 
         /// <summary>
@@ -158,11 +166,25 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public OpCodePart Previous { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool ReadExceptionFromStack { get; set; }
 
         /// <summary>
         /// </summary>
         public IType ReadExceptionFromStackType { get; set; }
+
+        /// <summary>
+        /// used to adjust operand type
+        /// </summary>
+        public IType RequiredIncomingType { get; set; }
+
+        /// <summary>
+        /// used to adjust result of OpCode type
+        /// </summary>
+        public IType RequiredOutgoingType { get; set; }
 
         /// <summary>
         /// </summary>
@@ -185,19 +207,31 @@ namespace Il2Native.Logic.CodeParts
 
             set
             {
+                ////if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
+                ////{
+                ////    this.Next.Result = this.result;
+                ////}
+                
                 this.result = value;
             }
         }
 
         /// <summary>
-        /// used to adjust operand type
+        /// TODO: you need to get rid of it when you stop allowing rewriting result of OpCode uncontrollablly (as you do in 'newarray' and etc)
+        /// so OpCode should get only one result only once and second time whem 'cast' happends
         /// </summary>
-        public IType RequiredIncomingType { get; set; }
+        public FullyDefinedReference ResultWithDupShift
+        {
+            set
+            {
+                if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
+                {
+                    this.Next.Result = this.result;
+                }
 
-        /// <summary>
-        /// used to adjust result of OpCode type
-        /// </summary>
-        public IType RequiredOutgoingType { get; set; }
+                this.result = value;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -218,17 +252,5 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public UsedByInfo UsedBy { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public PhiNodes AlternativeValues { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public OpCodePart Next { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public OpCodePart Previous { get; set; }
     }
 }

@@ -18,7 +18,95 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class ArraySingleDimensionGen
     {
-        public const int ArrayDataStartsWith = 5;
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public static string GetArrayPrefixDataType()
+        {
+            return "i8*, i8*, i8*, i32, i32";
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetArrayTypeHeader(this LlvmWriter llvmWriter, IType elementType, int length)
+        {
+            var typeString = llvmWriter.WriteToString(
+                () =>
+                    {
+                        var writer = llvmWriter.Output;
+                        elementType.WriteTypePrefix(writer);
+                    });
+
+            return "{ " + GetArrayPrefixDataType() + ", [" + length + " x " + typeString + "] }";
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="name">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetArrayTypeReference(this LlvmWriter llvmWriter, string name, IType elementType, int length)
+        {
+            var convertString = llvmWriter.WriteToString(
+                () =>
+                    {
+                        var writer = llvmWriter.Output;
+
+                        var array = elementType.ToArrayType(1);
+                        writer.Write("bitcast (");
+                        writer.Write("{1}* {0} to ", name, llvmWriter.GetArrayTypeHeader(elementType, length));
+                        array.WriteTypePrefix(writer);
+                        writer.Write(")");
+                    });
+
+            return convertString;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        /// <param name="storeLength">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetArrayValuesHeader(this LlvmWriter llvmWriter, IType elementType, int length, int storeLength)
+        {
+            var typeString = llvmWriter.WriteToString(
+                () =>
+                    {
+                        var writer = llvmWriter.Output;
+                        elementType.WriteTypePrefix(writer);
+                    });
+
+            ////var arrayType = llvmWriter.ResolveType("System.Array");
+            ////var cloneableType = llvmWriter.ResolveType("System.ICloneable");
+            ////var listType = llvmWriter.ResolveType("System.Collections.IList");
+            ////return "i8** " + arrayType.GetVirtualTableReference(llvmWriter) + ", i8** " + arrayType.GetVirtualTableReference(cloneableType) + ", i8** "
+            ////       + arrayType.GetVirtualTableReference(listType) + ", i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
+            ////       + typeString + "]";
+            return "i8* null, i8* null, i8* null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
+        }
 
         /// <summary>
         /// </summary>
@@ -44,34 +132,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
-
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, 4);
+            var lengthResult = GetArrayDataHelper(llvmWriter, opCode, intType, ArrayDataLength);
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
-        }
-
-        private static IncrementalResult GetArrayDataHelper(LlvmWriter llvmWriter, OpCodePart opCode, IType dataType, int dataIndex, int secondIndex = -1)
-        {
-            var writer = llvmWriter.Output;
-
-            var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
-            var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
-            writer.Write("getelementptr ");
-            arrayInstanceResult.Type.WriteTypePrefix(writer, true);
-            writer.Write(" ");
-            llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 {0}", dataIndex);
-            if (secondIndex != -1)
-            {
-                writer.Write(", i32 {0}", secondIndex);
-            }
-
-            writer.WriteLine(string.Empty);
-            return result;
         }
 
         /// <summary>
@@ -125,10 +191,10 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                firstBytes,
-                secondBytes,
-                arrayLength,
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
+                firstBytes, 
+                secondBytes, 
+                arrayLength, 
                 LlvmWriter.PointerSize /*Align*/);
 
             opCode.OpCodeOperands[0].Result = storedResult;
@@ -178,10 +244,7 @@ namespace Il2Native.Logic.Gencode
             if (!llvmWriter.Gc)
             {
                 writer.WriteLine(
-                   "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                   resAlloc,
-                   resAdd,
-                   LlvmWriter.PointerSize /*Align*/);
+                    "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", resAlloc, resAdd, LlvmWriter.PointerSize /*Align*/);
             }
 
             var opCodeTemp = OpCodePart.CreateNop;
@@ -239,59 +302,57 @@ namespace Il2Native.Logic.Gencode
             opCode.Result = arrayInstanceResult;
         }
 
-        public static string GetArrayTypeReference(this LlvmWriter llvmWriter, string name, IType elementType, int length)
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="dataType">
+        /// </param>
+        /// <param name="dataIndex">
+        /// </param>
+        /// <param name="secondIndex">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static IncrementalResult GetArrayDataHelper(LlvmWriter llvmWriter, OpCodePart opCode, IType dataType, int dataIndex, int secondIndex = -1)
         {
-            var convertString = llvmWriter.WriteToString(
-            () =>
+            var writer = llvmWriter.Output;
+
+            var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
+            if (!arrayInstanceResult.Type.IsArray)
             {
-                var writer = llvmWriter.Output;
+                // this is Array instance
+                var opCodeNope = OpCodePart.CreateNop;
+                llvmWriter.WriteBitcast(opCodeNope, arrayInstanceResult, llvmWriter.ResolveType("System.Byte").ToArrayType(1));
+                arrayInstanceResult = opCodeNope.Result;
 
-                var array = elementType.ToArrayType(1);
-                writer.Write("bitcast (");
-                writer.Write("{1}* {0} to ", name, llvmWriter.GetArrayTypeHeader(elementType, length));
-                array.WriteTypePrefix(writer);
-                writer.Write(")");
-            });
+                writer.WriteLine(string.Empty);
+            }
 
-            return convertString;
-        }
+            var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
+            writer.Write("getelementptr ");
+            arrayInstanceResult.Type.WriteTypePrefix(writer, true);
 
-        public static string GetArrayPrefixDataType()
-        {
-            return "i8*, i8*, i8*, i32, i32";
-        }
-
-        public static string GetArrayTypeHeader(this LlvmWriter llvmWriter, IType elementType, int length)
-        {
-            var typeString = llvmWriter.WriteToString(
-            () =>
+            writer.Write(" ");
+            llvmWriter.WriteResult(arrayInstanceResult);
+            writer.Write(", i32 0, i32 {0}", dataIndex);
+            if (secondIndex != -1)
             {
-                var writer = llvmWriter.Output;
-                elementType.WriteTypePrefix(writer);
-            });
+                writer.Write(", i32 {0}", secondIndex);
+            }
 
-            return "{ " + GetArrayPrefixDataType() + ", [" + length + " x " + typeString + "] }";
+            writer.WriteLine(string.Empty);
+            return result;
         }
 
-        // TODO: you need to init first 3 value with VTable of Object and interfaces, make it universal
-        public static string GetArrayValuesHeader(this LlvmWriter llvmWriter, IType elementType, int length, int storeLength)
-        {
-            var typeString = llvmWriter.WriteToString(
-            () =>
-            {
-                var writer = llvmWriter.Output;
-                elementType.WriteTypePrefix(writer);
-            });
+        /// <summary>
+        /// </summary>
+        public const int ArrayDataLength = 4;
 
-            ////var arrayType = llvmWriter.ResolveType("System.Array");
-            ////var cloneableType = llvmWriter.ResolveType("System.ICloneable");
-            ////var listType = llvmWriter.ResolveType("System.Collections.IList");
-            ////return "i8** " + arrayType.GetVirtualTableReference(llvmWriter) + ", i8** " + arrayType.GetVirtualTableReference(cloneableType) + ", i8** "
-            ////       + arrayType.GetVirtualTableReference(listType) + ", i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
-            ////       + typeString + "]";
-
-            return "i8* null, i8* null, i8* null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
-                   + typeString + "]";
-        }
+        /// <summary>
+        /// </summary>
+        public const int ArrayDataStartsWith = 5;
     }
 }

@@ -18,6 +18,8 @@ namespace Ll2NativeTests
 
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+    using PdbReader;
+
     /// <summary>
     /// Summary description for MSTests
     /// </summary>
@@ -30,11 +32,12 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"C:\Temp\tests\";
         private const string OutputPath = @"C:\Temp\IlCTests\";
         private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
         private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
-        private const bool Llvm36Support = true;
+        private const bool Llvm35Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -43,11 +46,12 @@ namespace Ll2NativeTests
         private const string SourcePathCustom = @"D:\Temp\tests\";
         private const string OutputPath = @"D:\Temp\IlCTests\";
         private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
+        private const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
-        private const bool Llvm36Support = false;
+        private const bool Llvm35Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -63,6 +67,15 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const bool GctorsEnabled = true;
+
+        /// <summary>
+        /// </summary>
+        private const bool DebugInfo = false;
+        
+        /// <summary>
+        /// ex. opt 'file'.ll -o 'file'.bc -O2
+        /// </summary>
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -102,16 +115,15 @@ namespace Ll2NativeTests
         {
             Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
 
-            var piCoreLibObj = new ProcessStartInfo();
-            piCoreLibObj.WorkingDirectory = OutputPath;
-            piCoreLibObj.FileName = "llc";
-            piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
-            piCoreLibObj.CreateNoWindow = true;
-            piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-            var processCoreLibObj = Process.Start(piCoreLibObj);
-            processCoreLibObj.WaitForExit();
-            Assert.AreEqual(0, processCoreLibObj.ExitCode);
+            if (CompileWithOptimization)
+            {
+                ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
+            }
+            else
+            {
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
+            }
         }
 
         /// <summary>
@@ -200,7 +212,7 @@ namespace Ll2NativeTests
 
             Debug.Listeners.Clear();
 
-            foreach (var index in Enumerable.Range(66, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("gtest-{0:000}", index));
             }
@@ -262,6 +274,7 @@ namespace Ll2NativeTests
             // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
+            // 126 - calling ToString on Interface, (CONSIDER FIXING IT)
             // 127 - IsDerined not implemented
             // 128 - using Attributes
             // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
@@ -294,7 +307,9 @@ namespace Ll2NativeTests
             // 240 - the same as 239
             // 247 - ArrayList - GetEnumator is not implemented
             // 250 - FieldsOffset attribute not implemented
-
+            // 252 - Delegate.Combine (NotImplemented)
+            // 253 - System.Reflection
+            // 254 - System.Reflection 
             // -----------
             // 32, 55, 74 - missing class
             // 37, 42, 43, 44, 45, 66 - multiarray
@@ -304,8 +319,8 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 247,
-                            250
+                            126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
+                            247, 250, 252, 253, 254
                         });
 
             if (UsingRoslyn)
@@ -347,16 +362,25 @@ namespace Ll2NativeTests
             // 127 - Delegate.Combine not implemented
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
+            // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
             // 145 - using multiarray
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 145 };
+            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145 };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestPdbReader()
+        {
+            Converter.Convert(CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
         }
 
         /// <summary>
@@ -367,7 +391,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm36Support = Llvm36Support)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = DebugInfo)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -390,9 +414,14 @@ namespace Ll2NativeTests
                 args.Add("gctors-");
             }
 
-            if (llvm36Support)
+            if (llvm35Support)
             {
-                args.Add("llvm36");
+                args.Add("llvm35");
+            }
+
+            if (debugInfo)
+            {
+                args.Add("debug");
             }
 
             return args.ToArray();
@@ -408,7 +437,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <param name="justCompile">
         /// </param>
-        private static void ExecCompile(string fileName, string output = OutputPath, bool justCompile = false)
+        private static void ExecCompile(string fileName, bool justCompile = false, bool opt = false)
         {
             /*
                 call vcvars32.bat
@@ -437,6 +466,16 @@ namespace Ll2NativeTests
                 del test-%1.o 
              */
 
+            // if GC Enabled with optimization
+            /*
+                opt corelib.ll -o corelib.bc -O2
+                opt test-%1.ll -o test-%1.bc -O2
+                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
+                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
+                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
+                del test-%1.o 
+             */
+
             // Android target - target triple = "armv7-none-linux-androideabi"
 
             // compile CoreLib
@@ -447,59 +486,54 @@ namespace Ll2NativeTests
                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
-                var piCoreLibObj = new ProcessStartInfo();
-                piCoreLibObj.WorkingDirectory = OutputPath;
-                piCoreLibObj.FileName = "llc";
-                piCoreLibObj.Arguments = string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target);
-                piCoreLibObj.CreateNoWindow = true;
-                piCoreLibObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var processCoreLibObj = Process.Start(piCoreLibObj);
-                processCoreLibObj.WaitForExit();
-                Assert.AreEqual(0, processCoreLibObj.ExitCode);
+                if (opt)
+                {
+                    ExecCmd("opt", string.Format("CoreLib.ll -o CoreLib.bc -O2", Target));
+                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
+                }
+                else
+                {
+                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
+                }
             }
 
             // file obj
-            var piFileObj = new ProcessStartInfo();
-            piFileObj.WorkingDirectory = OutputPath;
-            piFileObj.FileName = "llc";
-            piFileObj.Arguments = string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target);
-            piFileObj.CreateNoWindow = true;
-            piFileObj.WindowStyle = ProcessWindowStyle.Hidden;
-
-            var processFileObj = Process.Start(piFileObj);
-            processFileObj.WaitForExit();
-            Assert.AreEqual(0, processFileObj.ExitCode);
+            if (opt)
+            {
+                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName, Target));
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
+            }
+            else
+            {
+                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target));
+            }
 
             if (!justCompile)
             {
                 // file exe
-                var piFileExe = new ProcessStartInfo();
-                piFileExe.WorkingDirectory = OutputPath;
-                piFileExe.FileName = "g++";
-                piFileExe.Arguments = string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt);
-                piFileExe.CreateNoWindow = true;
-                piFileExe.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var processFileExe = Process.Start(piFileExe);
-                processFileExe.WaitForExit();
-                Assert.AreEqual(0, processFileExe.ExitCode);
+                ExecCmd("g++", string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
 
                 // test execution
-                var execProcess = new ProcessStartInfo();
-                execProcess.WorkingDirectory = OutputPath;
-                execProcess.FileName = string.Format("{0}.exe", fileName);
-                execProcess.CreateNoWindow = true;
-                execProcess.WindowStyle = ProcessWindowStyle.Hidden;
-
-                var execProcessProc = Process.Start(execProcess);
-                execProcessProc.WaitForExit();
-                Assert.AreEqual(0, execProcessProc.ExitCode);
+                ExecCmd(string.Format("{0}.exe", fileName));
             }
             else
             {
                 Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
             }
+        }
+
+        private static void ExecCmd(string fileName, string arguments = "", string workingDir = OutputPath)
+        {
+            var processStartInfo = new ProcessStartInfo();
+            processStartInfo.WorkingDirectory = workingDir;
+            processStartInfo.FileName = fileName;
+            processStartInfo.Arguments = arguments;
+            processStartInfo.CreateNoWindow = true;
+            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+            var processCoreLibObj = Process.Start(processStartInfo);
+            processCoreLibObj.WaitForExit();
+            Assert.AreEqual(0, processCoreLibObj.ExitCode);
         }
 
         /// <summary>
@@ -529,7 +563,7 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void CompileAndRun(string fileName, string source = SourcePath, string output = OutputPath)
+        private static void CompileAndRun(string fileName, string source = SourcePath)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
@@ -537,7 +571,7 @@ namespace Ll2NativeTests
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 
-            ExecCompile(fileName, output);
+            ExecCompile(fileName, opt: CompileWithOptimization);
         }
 
         /// <summary>

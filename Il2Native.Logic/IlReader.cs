@@ -13,6 +13,7 @@ namespace Il2Native.Logic
     using System.Collections;
     using System.Collections.Generic;
     using System.Collections.Immutable;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -24,12 +25,10 @@ namespace Il2Native.Logic
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
-    using Microsoft.CSharp;
 
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
-    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -37,15 +36,23 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<Code, OpCode> opCodesMap = new SortedDictionary<Code, OpCode>();
-
-        /// <summary>
-        /// </summary>
         private static IDictionary<IType, IEnumerable<IMethod>> genMethodSpec;
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyTypes;
+        private static readonly IDictionary<Code, OpCode> opCodesMap = new SortedDictionary<Code, OpCode>();
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
+
+        /// <summary>
+        /// </summary>
+        private ISet<IMethod> calledMethods;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyAllReferencedTypes;
 
         /// <summary>
         /// </summary>
@@ -53,7 +60,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyAllReferencedTypes;
+        private readonly Lazy<IEnumerable<IType>> lazyTypes;
+
+        /// <summary>
+        /// </summary>
+        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -65,27 +76,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IField> usedStaticFieldsToRead;
+
+        /// <summary>
+        /// </summary>
         private ISet<IType> usedStructTypes;
 
         /// <summary>
         /// </summary>
         private ISet<IType> usedTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IField> usedStaticFieldsToRead;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IMethod> calledMethods;
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<AssemblyIdentity, AssemblySymbol> cache = new Dictionary<AssemblyIdentity, AssemblySymbol>();
-
-        /// <summary>
-        /// </summary>
-        private readonly IList<UnifiedAssembly<AssemblySymbol>> unifiedAssemblies = new List<UnifiedAssembly<AssemblySymbol>>();
 
         /// <summary>
         /// </summary>
@@ -336,9 +335,27 @@ namespace Il2Native.Logic
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
             this.UsingRoslyn = args != null && args.Any(a => a == "roslyn");
-            this.DefaultDllLocations = this.Source.EndsWith(".dll") ? Path.GetDirectoryName(Path.GetFullPath(this.Source)) : null;
+            var isDll = this.Source.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
+            this.DefaultDllLocations = isDll
+                                           ? Path.GetDirectoryName(Path.GetFullPath(this.Source))
+                                           : null;
+            this.DebugInfo = args != null && args.Contains("debug");
+            if (!isDll)
+            {
+                this.SourceFilePath = Path.GetFullPath(this.Source);
+            }
         }
 
+        public string SourceFilePath { get; private set; }
+
+        public string DllFilePath { get; private set; }
+
+        public string PdbFilePath { get; private set; }
+
+        public bool DebugInfo { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
         {
             set
@@ -357,6 +374,31 @@ namespace Il2Native.Logic
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public ISet<IMethod> CalledMethods
+        {
+            get
+            {
+                return this.calledMethods;
+            }
+
+            set
+            {
+                this.calledMethods = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public string CoreLibPath { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public string DefaultDllLocations { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool IsCoreLib
         {
             get
@@ -364,10 +406,6 @@ namespace Il2Native.Logic
                 return !this.Assembly.Assembly.AssemblyReferences.Any();
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public string CoreLibPath { get; set; }
 
         /// <summary>
         /// </summary>
@@ -411,6 +449,21 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public ISet<IField> UsedStaticFieldsToRead
+        {
+            get
+            {
+                return this.usedStaticFieldsToRead;
+            }
+
+            set
+            {
+                this.usedStaticFieldsToRead = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public ISet<IType> UsedStructTypes
         {
             get
@@ -441,39 +494,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IField> UsedStaticFieldsToRead
-        {
-            get
-            {
-                return this.usedStaticFieldsToRead;
-            }
-
-            set
-            {
-                this.usedStaticFieldsToRead = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IMethod> CalledMethods
-        {
-            get
-            {
-                return this.calledMethods;
-            }
-
-            set
-            {
-                this.calledMethods = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public bool UsingRoslyn { get; set; }
-
-        public string DefaultDllLocations { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -505,11 +526,6 @@ namespace Il2Native.Logic
             return type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
 
-        public static IEnumerable<IMethod> MethodsOriginal(IType type)
-        {
-            return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -521,12 +537,18 @@ namespace Il2Native.Logic
             return Methods(type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="flags">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags)
         {
-            foreach (
-                var method in
-                    type.GetMethods(flags)
-                        .Where(m => !m.IsGenericMethodDefinition))
+            foreach (var method in
+                type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return method;
             }
@@ -538,9 +560,8 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            foreach (
-                var method in
-                    genMethodSpecializationForType)
+            foreach (var method in
+                genMethodSpecializationForType)
             {
                 yield return method;
             }
@@ -548,11 +569,75 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IMethod> MethodsOriginal(IType type)
+        {
+            return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> AllReferencedTypes()
+        {
+            return this.lazyAllReferencedTypes.Value;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<string> AllReferences()
+        {
+            return this.AllReferencesHelper(this.Assembly);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblyMetadata">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata)
+        {
+            yield return assemblyMetadata.Assembly.Identity.Name;
+
+            foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
+            {
+                foreach (var referenceName in this.AllReferencesHelper(this.GetAssemblyMetadata(reference)))
+                {
+                    yield return referenceName;
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IType> AllTypes()
+        {
+            return this.lazyAllTypes.Value;
+        }
+
+        /// <summary>
+        /// </summary>
         public void Load()
         {
-            this.Assembly = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase)
+            var isSourceFile = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase);
+            this.Assembly = isSourceFile
                                 ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Source) : this.Compile(this.Source)
                                 : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
+
+            if (!isSourceFile)
+            {
+                DllFilePath = this.Source;
+                PdbFilePath = Path.ChangeExtension(this.Source, "pdb");
+            }
         }
 
         /// <summary>
@@ -569,6 +654,8 @@ namespace Il2Native.Logic
         /// <param name="ctor">
         /// </param>
         /// <param name="genericContext">
+        /// </param>
+        /// <param name="stackCall">
         /// </param>
         /// <returns>
         /// </returns>
@@ -590,6 +677,8 @@ namespace Il2Native.Logic
         /// <param name="method">
         /// </param>
         /// <param name="genericContext">
+        /// </param>
+        /// <param name="stackCall">
         /// </param>
         /// <returns>
         /// </returns>
@@ -613,6 +702,8 @@ namespace Il2Native.Logic
         /// <param name="module">
         /// </param>
         /// <param name="genericContext">
+        /// </param>
+        /// <param name="stackCall">
         /// </param>
         /// <returns>
         /// </returns>
@@ -738,8 +829,8 @@ namespace Il2Native.Logic
                             this.AddStructType(methodParameter.ParameterType);
                         }
 
-                        AddUsedType(constructor.DeclaringType);
-                        AddCalledMethod(constructor);
+                        this.AddUsedType(constructor.DeclaringType);
+                        this.AddCalledMethod(constructor);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
@@ -756,8 +847,8 @@ namespace Il2Native.Logic
                             this.AddStructType(methodParameter.ParameterType);
                         }
 
-                        AddUsedType(method.DeclaringType);
-                        AddCalledMethod(method);
+                        this.AddUsedType(method.DeclaringType);
+                        this.AddCalledMethod(method);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -771,7 +862,7 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
-                        AddUsedType(method.DeclaringType);
+                        this.AddUsedType(method.DeclaringType);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -806,7 +897,7 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
-                            AddUsedType(typeToken);
+                            this.AddUsedType(typeToken);
 
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
@@ -815,7 +906,7 @@ namespace Il2Native.Logic
                         var fieldMember = resolvedToken as IField;
                         if (fieldMember != null)
                         {
-                            AddUsedType(fieldMember.DeclaringType);
+                            this.AddUsedType(fieldMember.DeclaringType);
 
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
                             continue;
@@ -824,7 +915,7 @@ namespace Il2Native.Logic
                         var methodMember = resolvedToken as IMethod;
                         if (methodMember != null)
                         {
-                            AddUsedType(methodMember.DeclaringType);
+                            this.AddUsedType(methodMember.DeclaringType);
 
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
@@ -856,7 +947,7 @@ namespace Il2Native.Logic
                             this.AddStructType(type);
                         }
 
-                        AddUsedType(type);
+                        this.AddUsedType(type);
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
@@ -887,30 +978,20 @@ namespace Il2Native.Logic
             return this.lazyTypes.Value;
         }
 
-        public IEnumerable<IType> AllTypes()
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static IEnumerable<IType> EnumAllNestedTypes(IType type)
         {
-            return this.lazyAllTypes.Value;
-        }
-
-        public IEnumerable<IType> AllReferencedTypes()
-        {
-            return this.lazyAllReferencedTypes.Value;
-        }
-
-        public IEnumerable<string> AllReferences()
-        {
-            return this.AllReferencesHelper(this.Assembly);
-        }
-
-        public IEnumerable<string> AllReferencesHelper(AssemblyMetadata assemblyMetadata)
-        {
-            yield return assemblyMetadata.Assembly.Identity.Name;
-
-            foreach (var reference in this.LoadReferences(assemblyMetadata).Names)
+            foreach (var nestedType in type.GetNestedTypes())
             {
-                foreach (var referenceName in this.AllReferencesHelper(GetAssemblyMetadata(reference)))
+                yield return nestedType;
+                foreach (var subNestedType in EnumAllNestedTypes(nestedType))
                 {
-                    yield return referenceName;
+                    yield return subNestedType;
                 }
             }
         }
@@ -932,68 +1013,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="identity">
-        /// </param>
-        /// <param name="map">
+        /// <param name="assemblyMetadata">
         /// </param>
         /// <returns>
         /// </returns>
-        private AssemblySymbol LoadAssemblySymbolOrMissingAssemblySymbol(AssemblyIdentity identity)
+        private static PEAssemblySymbol GetAssemblySymbol(AssemblyMetadata assemblyMetadata)
         {
-            AssemblySymbol symbol;
-            if (this.cache.TryGetValue(identity, out symbol))
-            {
-                return symbol;
-            }
-
-            var peAssemblySymbol = this.LoadAssemblySymbol(identity);
-            if (peAssemblySymbol != null)
-            {
-                return peAssemblySymbol;
-            }
-
-            return new MissingAssemblySymbol(identity);
-        }
-
-        private AssemblySymbol LoadAssemblySymbol(AssemblyIdentity identity)
-        {
-            AssemblySymbol symbol;
-            if (this.cache.TryGetValue(identity, out symbol))
-            {
-                return symbol;
-            }
-
-            var assemblyMetadata = this.GetAssemblyMetadata(identity);
-            if (assemblyMetadata != null)
-            {
-                return this.LoadAssemblySymbol(assemblyMetadata);
-            }
-
-            return null;
-        }
-
-        private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata)
-        {
-            AssemblySymbol symbol;
-            if (this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
-            {
-                return symbol;
-            }
-
-            var assemblySymbol = GetAssemblySymbol(assemblyMetadata);
-
-            this.cache[assemblyMetadata.Assembly.Identity] = assemblySymbol;
-            this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.Assembly.Identity));
-
-            var moduleReferences = this.LoadReferences(assemblyMetadata);
-            foreach (var module in assemblySymbol.Modules)
-            {
-                module.SetReferences(moduleReferences);
-            }
-
-            this.SetCorLib(assemblySymbol);
-
-            return assemblySymbol;
+            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
         }
 
         /// <summary>
@@ -1066,6 +1092,22 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
+        private void AddCalledMethod(IMethod method)
+        {
+            if (this.calledMethods == null || method == null)
+            {
+                return;
+            }
+
+            this.calledMethods.Add(method);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="stackCall">
+        /// </param>
         private void AddGenericSpecializedMethod(IMethod method, Queue<IMethod> stackCall)
         {
             if (this.usedGenericSpecialiazedMethods == null || method == null)
@@ -1091,25 +1133,6 @@ namespace Il2Native.Logic
             this.usedGenericSpecialiazedMethods.Add(method);
 
             this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);
-        }
-
-        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
-        {
-            stackCall.Enqueue(method);
-
-            // add all generic types in parameters
-            foreach (var parameter in method.GetParameters())
-            {
-                this.AddGenericSpecializedType(parameter.ParameterType);
-            }
-
-            // add return type
-            this.AddGenericSpecializedType(method.ReturnType);
-
-            // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, stackCall);
-
-            stackCall.Dequeue();
         }
 
         /// <summary>
@@ -1147,18 +1170,8 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
+        /// <param name="field">
         /// </param>
-        private void AddUsedType(IType type)
-        {
-            if (this.usedTypes == null || type == null)
-            {
-                return;
-            }
-
-            this.usedTypes.Add(type);
-        }
-
         private void AddUsedStaticFieldToRead(IField field)
         {
             if (this.usedStaticFieldsToRead == null || field == null || !field.IsStatic)
@@ -1169,14 +1182,18 @@ namespace Il2Native.Logic
             this.usedStaticFieldsToRead.Add(field);
         }
 
-        private void AddCalledMethod(IMethod method)
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddUsedType(IType type)
         {
-            if (this.calledMethods == null || method == null)
+            if (this.usedTypes == null || type == null)
             {
                 return;
             }
 
-            this.calledMethods.Add(method);
+            this.usedTypes.Add(type);
         }
 
         /// <summary>
@@ -1196,16 +1213,20 @@ namespace Il2Native.Logic
                 throw new NotSupportedException(string.Format("language '{0}' is not supported", language));
             }
 
-            var outDll = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName() + ".dll");
+            var path = Path.GetTempPath();
+            var filename = Path.GetRandomFileName();
+
+            var outDll = Path.Combine(path, string.Concat(filename, ".dll"));
+            var outPdb = Path.Combine(path, string.Concat(filename, ".pdb"));
 
             var parameters = CodeDomProvider.GetCompilerInfo(language).CreateDefaultCompilerParameters();
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = string.Concat(
-                "/optimize+ /unsafe+", string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
+                string.Format("/optimize{0} /unsafe+", this.DebugInfo ? "-" : "+"),
+                string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 
-            // parameters.CompilerOptions = "/optimize-";
             var results = codeProvider.CompileAssemblyFromFile(parameters, source);
 
             if (results.Errors.Count > 0)
@@ -1214,6 +1235,7 @@ namespace Il2Native.Logic
                 foreach (CompilerError compilerError in results.Errors)
                 {
                     Console.WriteLine(compilerError);
+                    Debug.WriteLine(compilerError);
                 }
             }
 
@@ -1221,6 +1243,9 @@ namespace Il2Native.Logic
             {
                 throw new Exception();
             }
+
+            this.DllFilePath = outDll;
+            this.PdbFilePath = outPdb;
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(results.PathToAssembly, FileMode.Open, FileAccess.Read));
@@ -1248,7 +1273,7 @@ namespace Il2Native.Logic
 
             var options =
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary).WithAllowUnsafe(true)
-                                                                                 .WithOptimizations(true)
+                                                                                 .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
             var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);
@@ -1257,11 +1282,20 @@ namespace Il2Native.Logic
             using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
             {
                 var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
-                foreach (var diagnostic in result.Diagnostics)
+
+                if (result.Diagnostics.Length > 0)
                 {
-                    System.Diagnostics.Trace.WriteLine(diagnostic);
+                    Console.WriteLine(@"Errors/Warnings:");
+                    foreach (var diagnostic in result.Diagnostics)
+                    {
+                        Console.WriteLine(diagnostic);
+                        Debug.WriteLine(diagnostic);
+                    }
                 }
             }
+
+            this.DllFilePath = outDll;
+            this.PdbFilePath = outPdb;
 
             // Successful Compile
             return AssemblyMetadata.CreateFromImageStream(new FileStream(outDll, FileMode.Open, FileAccess.Read));
@@ -1269,6 +1303,171 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="method">
+        /// </param>
+        /// <param name="stackCall">
+        /// </param>
+        private void DiscoverRequiredTypesAndMethodsInMethod(IMethod method, Queue<IMethod> stackCall)
+        {
+            stackCall.Enqueue(method);
+
+            // add all generic types in parameters
+            foreach (var parameter in method.GetParameters())
+            {
+                this.AddGenericSpecializedType(parameter.ParameterType);
+            }
+
+            // add return type
+            this.AddGenericSpecializedType(method.ReturnType);
+
+            // disover it again in specialized method
+            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, stackCall);
+
+            stackCall.Dequeue();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblySymbol">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol)
+        {
+            Debug.Assert(assemblySymbol != null, "missing assembly");
+
+            foreach (var module in assemblySymbol.Modules)
+            {
+                var peModuleSymbol = module as PEModuleSymbol;
+                foreach (
+                    var metadataTypeAdapter in
+                        from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
+                        select new MetadataTypeAdapter(symbol))
+                {
+                    yield return metadataTypeAdapter;
+                    foreach (var nestedType in EnumAllNestedTypes(metadataTypeAdapter))
+                    {
+                        yield return nestedType;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblyIdentity">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private AssemblyMetadata GetAssemblyMetadata(AssemblyIdentity assemblyIdentity)
+        {
+            var resolveReferencePath = this.ResolveReferencePath(assemblyIdentity);
+            if (string.IsNullOrWhiteSpace(resolveReferencePath))
+            {
+                return null;
+            }
+
+            return AssemblyMetadata.CreateFromImageStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="identity">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private AssemblySymbol LoadAssemblySymbol(AssemblyIdentity identity)
+        {
+            AssemblySymbol symbol;
+            if (this.cache.TryGetValue(identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var assemblyMetadata = this.GetAssemblyMetadata(identity);
+            if (assemblyMetadata != null)
+            {
+                return this.LoadAssemblySymbol(assemblyMetadata);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblyMetadata">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private AssemblySymbol LoadAssemblySymbol(AssemblyMetadata assemblyMetadata)
+        {
+            AssemblySymbol symbol;
+            if (this.cache.TryGetValue(assemblyMetadata.Assembly.Identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var assemblySymbol = GetAssemblySymbol(assemblyMetadata);
+
+            this.cache[assemblyMetadata.Assembly.Identity] = assemblySymbol;
+            this.unifiedAssemblies.Add(new UnifiedAssembly<AssemblySymbol>(assemblySymbol, assemblyMetadata.Assembly.Identity));
+
+            var moduleReferences = this.LoadReferences(assemblyMetadata);
+            foreach (var module in assemblySymbol.Modules)
+            {
+                module.SetReferences(moduleReferences);
+            }
+
+            this.SetCorLib(assemblySymbol);
+
+            return assemblySymbol;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="identity">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private AssemblySymbol LoadAssemblySymbolOrMissingAssemblySymbol(AssemblyIdentity identity)
+        {
+            AssemblySymbol symbol;
+            if (this.cache.TryGetValue(identity, out symbol))
+            {
+                return symbol;
+            }
+
+            var peAssemblySymbol = this.LoadAssemblySymbol(identity);
+            if (peAssemblySymbol != null)
+            {
+                return peAssemblySymbol;
+            }
+
+            return new MissingAssemblySymbol(identity);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblyMetadata">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private ModuleReferences<AssemblySymbol> LoadReferences(AssemblyMetadata assemblyMetadata)
+        {
+            var peReferences = ImmutableArray.CreateRange(assemblyMetadata.Assembly.AssemblyReferences.Select(this.LoadAssemblySymbolOrMissingAssemblySymbol));
+
+            var moduleReferences = new ModuleReferences<AssemblySymbol>(
+                assemblyMetadata.Assembly.AssemblyReferences, peReferences, ImmutableArray.CreateRange(this.unifiedAssemblies));
+
+            return moduleReferences;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="readAll">
+        /// </param>
+        /// <param name="ignoreCurrent">
+        /// </param>
         /// <returns>
         /// </returns>
         private IEnumerable<IType> ReadTypes(bool readAll = false, bool ignoreCurrent = false)
@@ -1297,88 +1496,12 @@ namespace Il2Native.Logic
             }
         }
 
-        private IEnumerable<IType> EnumAllTypes(PEAssemblySymbol assemblySymbol)
-        {
-            Debug.Assert(assemblySymbol != null, "missing assembly");
-
-            foreach (var module in assemblySymbol.Modules)
-            {
-                var peModuleSymbol = module as PEModuleSymbol;
-                foreach (var metadataTypeAdapter in from symbol in GetAllNamespaces(peModuleSymbol.GlobalNamespace).SelectMany(n => n.GetTypeMembers())
-                                                    select new MetadataTypeAdapter(symbol))
-                {
-                    yield return metadataTypeAdapter;
-                    foreach (var nestedType in EnumAllNestedTypes(metadataTypeAdapter))
-                    {
-                        yield return nestedType;
-                    }
-                }
-            }
-        }
-
-        private static IEnumerable<IType> EnumAllNestedTypes(IType type)
-        {
-            foreach (var nestedType in type.GetNestedTypes())
-            {
-                yield return nestedType;
-                foreach (var subNestedType in EnumAllNestedTypes(nestedType))
-                {
-                    yield return subNestedType;
-                }
-            }
-        }
-
-        private ModuleReferences<AssemblySymbol> LoadReferences(AssemblyMetadata assemblyMetadata)
-        {
-            var peReferences = ImmutableArray.CreateRange(assemblyMetadata.Assembly.AssemblyReferences.Select(this.LoadAssemblySymbolOrMissingAssemblySymbol));
-
-            var moduleReferences = new ModuleReferences<AssemblySymbol>(
-                assemblyMetadata.Assembly.AssemblyReferences,
-                peReferences,
-                ImmutableArray.CreateRange(this.unifiedAssemblies));
-
-            return moduleReferences;
-        }
-
-        private void SetCorLib(PEAssemblySymbol assemblySymbol)
-        {
-            if (!assemblySymbol.Assembly.AssemblyReferences.Any())
-            {
-                // this is the core lib
-                assemblySymbol.SetCorLibrary(assemblySymbol);
-                return;
-            }
-
-            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
-            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
-            {
-                var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
-                if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
-                {
-                    assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
-                    return;
-                }
-            }
-
-            Debug.Fail("CoreLib not set");
-        }
-
-        private static PEAssemblySymbol GetAssemblySymbol(AssemblyMetadata assemblyMetadata)
-        {
-            return new PEAssemblySymbol(assemblyMetadata.Assembly, DocumentationProvider.Default, isLinked: false, importOptions: MetadataImportOptions.All);
-        }
-
-        private AssemblyMetadata GetAssemblyMetadata(AssemblyIdentity assemblyIdentity)
-        {
-            var resolveReferencePath = this.ResolveReferencePath(assemblyIdentity);
-            if (string.IsNullOrWhiteSpace(resolveReferencePath))
-            {
-                return null;
-            }
-
-            return AssemblyMetadata.CreateFromImageStream(new FileStream(resolveReferencePath, FileMode.Open, FileAccess.Read));
-        }
-
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblyIdentity">
+        /// </param>
+        /// <returns>
+        /// </returns>
         private string ResolveReferencePath(AssemblyIdentity assemblyIdentity)
         {
             if (assemblyIdentity.Name == "CoreLib")
@@ -1408,6 +1531,33 @@ namespace Il2Native.Logic
 
             Debug.Fail("Not implemented yet");
             return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="assemblySymbol">
+        /// </param>
+        private void SetCorLib(PEAssemblySymbol assemblySymbol)
+        {
+            if (!assemblySymbol.Assembly.AssemblyReferences.Any())
+            {
+                // this is the core lib
+                assemblySymbol.SetCorLibrary(assemblySymbol);
+                return;
+            }
+
+            var loadedRefAssemblies = from assemblyIdentity in assemblySymbol.Assembly.AssemblyReferences select this.LoadAssemblySymbol(assemblyIdentity);
+            foreach (var loadedRefAssemblySymbol in loadedRefAssemblies)
+            {
+                var peRefAssembly = loadedRefAssemblySymbol as PEAssemblySymbol;
+                if (peRefAssembly != null && !peRefAssembly.Assembly.AssemblyReferences.Any())
+                {
+                    assemblySymbol.SetCorLibrary(loadedRefAssemblySymbol);
+                    return;
+                }
+            }
+
+            Debug.Fail("CoreLib not set");
         }
     }
 }
