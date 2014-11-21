@@ -93,6 +93,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedModuleResolver.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethodWithReturnType.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />

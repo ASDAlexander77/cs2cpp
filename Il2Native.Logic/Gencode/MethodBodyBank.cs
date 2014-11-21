@@ -40,6 +40,12 @@
 
         private static void RegisterAll()
         {
+        	// IL_0002: callvirt instance class System.Type System.Object::GetType()
+	        // IL_0007: callvirt instance int32 System.Type::get_Size()
+
+            // SynthesizedThisMethodWithReturnType("GetType" "System.Object", "System.Type", llvmWriter);
+            // SynthesizedThisMethodWithReturnType("get_Size" "System.Type", "System.Int32", llvmWriter);
+
             MethodBodyBank.Register(GetHashCodeGen.Name, m => GetMethodDecorator(m, GetHashCodeGen.ByteCode));
         }
 
