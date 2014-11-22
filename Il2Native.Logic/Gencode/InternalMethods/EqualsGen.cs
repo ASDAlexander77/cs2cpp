@@ -35,6 +35,7 @@
                                             0,
                                             0,
                                             Code.Stloc_0,
+
                                             Code.Ldarg_1, 
                                             Code.Callvirt, 
                                             1, 
@@ -47,7 +48,8 @@
                                             0, 
                                             0, 
                                             Code.Stloc_3, 
-                                            Code.Ldarg_0, 
+
+                                            Code.Ldarg_1, 
                                             Code.Castclass,
                                             3,
                                             0,
