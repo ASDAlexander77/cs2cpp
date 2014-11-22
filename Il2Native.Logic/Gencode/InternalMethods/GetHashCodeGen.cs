@@ -40,7 +40,7 @@
                                             Code.Ldc_I4_0, 
                                             Code.Stloc_1, 
                                             Code.Br_S, 
-                                            (Code)16, 
+                                            (Code)14, 
                                             Code.Ldc_I4_S, 
                                             (Code)31, 
                                             Code.Ldloc_0,
@@ -58,7 +58,7 @@
                                             Code.Ldloc_1, 
                                             Code.Ldloc_2, 
                                             Code.Blt_S, 
-                                            -15, 
+                                            -18, 
                                             Code.Ldloc_0, 
                                             Code.Ret
                                         };

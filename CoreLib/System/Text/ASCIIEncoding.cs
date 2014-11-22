@@ -43,7 +43,13 @@ namespace System.Text
 
         public override char[] GetChars(byte[] bytes, int byteIndex, int byteCount)
         {
-            throw new NotImplementedException();
+            var chars = new char[byteCount];
+            for (var i = 0; i < byteCount; i++)
+            {
+                chars[i] = (char)bytes[i + byteIndex];
+            }
+
+            return chars;
         }
 
         public override Decoder GetDecoder()

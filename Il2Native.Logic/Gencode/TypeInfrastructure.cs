@@ -14,6 +14,8 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
+    using System.Collections.Generic;
+    using System;
 
     /// <summary>
     /// </summary>
@@ -27,7 +29,10 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static byte[] GenerateTypeInfoBytes(this IType type)
         {
-            return Encoding.ASCII.GetBytes(type.FullName);
+            var bytes = new List<byte>();
+            bytes.AddRange(BitConverter.GetBytes(type.GetTypeSize()));
+            bytes.AddRange(Encoding.ASCII.GetBytes(type.FullName));
+            return bytes.ToArray();
         }
 
         /// <summary>
@@ -107,48 +112,48 @@ namespace Il2Native.Logic.Gencode
             var testNullResultNumber = llvmWriter.WriteTestNull(writer, opCode, opCode.Result);
 
             llvmWriter.WriteBranchSwitchToExecute(
-                writer, 
-                opCode, 
-                testNullResultNumber, 
-                operandType.FullName, 
-                "gettype", 
-                "new", 
+                writer,
+                opCode,
+                testNullResultNumber,
+                operandType.FullName,
+                "gettype",
+                "new",
                 () =>
-                    {
-                        // TODO: here send predifined byte array data with info for Type
-                        var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
-                        var byteType = llvmWriter.ResolveType("System.Byte");
-                        var byteArrayType = byteType.ToArrayType(1);
-                        var bytes = type.GenerateTypeInfoBytes();
-                        var bytesIndex = llvmWriter.GetBytesIndex(bytes);
-                        var firstParameterValue =
-                            new FullyDefinedReference(
-                                llvmWriter.GetArrayTypeReference(string.Format("@.bytes{0}", bytesIndex), byteType, bytes.Length), byteArrayType);
+                {
+                    // TODO: here send predifined byte array data with info for Type
+                    var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
+                    var byteType = llvmWriter.ResolveType("System.Byte");
+                    var byteArrayType = byteType.ToArrayType(1);
+                    var bytes = type.GenerateTypeInfoBytes();
+                    var bytesIndex = llvmWriter.GetBytesIndex(bytes);
+                    var firstParameterValue =
+                        new FullyDefinedReference(
+                            llvmWriter.GetArrayTypeReference(string.Format("@.bytes{0}", bytesIndex), byteType, bytes.Length), byteArrayType);
 
-                        opCode.Result = null;
-                        var newObjectResult = llvmWriter.WriteNewWithCallingConstructor(opCode, runtimeType, byteArrayType, firstParameterValue);
-                        writer.WriteLine(string.Empty);
+                    opCode.Result = null;
+                    var newObjectResult = llvmWriter.WriteNewWithCallingConstructor(opCode, runtimeType, byteArrayType, firstParameterValue);
+                    writer.WriteLine(string.Empty);
 
-                        // call cmp exchnage
-                        var noOpCmpXchg = OpCodePart.CreateNop;
-                        noOpCmpXchg.OpCodeOperands = new[] { OpCodePart.CreateNop, OpCodePart.CreateNop, OpCodePart.CreateNop };
-                        noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
-                        noOpCmpXchg.OpCodeOperands[1].Result = new ConstValue(null, operandType);
-                        noOpCmpXchg.OpCodeOperands[2].Result = newObjectResult;
-                        noOpCmpXchg.InterlockBase("cmpxchg ", " acq_rel monotonic", !llvmWriter.IsLlvm35OrLower, llvmWriter);
-                        writer.WriteLine(string.Empty);
+                    // call cmp exchnage
+                    var noOpCmpXchg = OpCodePart.CreateNop;
+                    noOpCmpXchg.OpCodeOperands = new[] { OpCodePart.CreateNop, OpCodePart.CreateNop, OpCodePart.CreateNop };
+                    noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
+                    noOpCmpXchg.OpCodeOperands[1].Result = new ConstValue(null, operandType);
+                    noOpCmpXchg.OpCodeOperands[2].Result = newObjectResult;
+                    noOpCmpXchg.InterlockBase("cmpxchg ", " acq_rel monotonic", !llvmWriter.IsLlvm35OrLower, llvmWriter);
+                    writer.WriteLine(string.Empty);
 
-                        // load again
-                        opCode.Result = null;
-                        llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
-                        writer.WriteLine(string.Empty);
+                    // load again
+                    opCode.Result = null;
+                    llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
+                    writer.WriteLine(string.Empty);
 
-                        writer.Write("ret ");
-                        opCode.Result.Type.WriteTypePrefix(writer);
-                        writer.Write(" ");
-                        llvmWriter.WriteResult(opCode.Result);
-                        writer.WriteLine(string.Empty);
-                    });
+                    writer.Write("ret ");
+                    opCode.Result.Type.WriteTypePrefix(writer);
+                    writer.Write(" ");
+                    llvmWriter.WriteResult(opCode.Result);
+                    writer.WriteLine(string.Empty);
+                });
 
             opCode.Result = result;
         }
