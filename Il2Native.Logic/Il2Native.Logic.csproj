@@ -75,6 +75,8 @@
     <Compile Include="Gencode\InlineMethods\InterlockedGen.cs" />
     <Compile Include="Gencode\InternalMethods\EqualsGen.cs" />
     <Compile Include="Gencode\InternalMethods\GetHashCodeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
+    <Compile Include="Gencode\InternalMethods\MemberwiseCloneGen.cs" />
     <Compile Include="Gencode\MemberLocationInfo.cs" />
     <Compile Include="Gencode\MemberTypes.cs" />
     <Compile Include="Gencode\MethodBodyBank.cs" />
@@ -90,12 +92,13 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBodyDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedModuleResolver.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethodWithReturnType.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />

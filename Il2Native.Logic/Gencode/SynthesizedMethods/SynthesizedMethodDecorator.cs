@@ -239,6 +239,26 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public bool IsInline
+        {
+            get
+            {
+                return this.method.IsInline;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool HasProceduralBody
+        {
+            get
+            {
+                return this.method.HasProceduralBody;
+            }
+        }
+
         public int CompareTo(object obj)
         {
             return this.method.CompareTo(obj);

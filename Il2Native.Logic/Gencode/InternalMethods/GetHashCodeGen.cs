@@ -67,8 +67,8 @@
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(new SynthesizedThisMethodWithReturnType("GetType", codeWriter.ResolveType("System.Object"), codeWriter.ResolveType("System.Type"), true));
-            tokenResolutions.Add(new SynthesizedThisMethodWithReturnType("get_Size", codeWriter.ResolveType("System.Type"), codeWriter.ResolveType("System.Int32"), true));
+            tokenResolutions.Add(new SynthesizedThisMethod("GetType", codeWriter.ResolveType("System.Object"), codeWriter.ResolveType("System.Type"), true));
+            tokenResolutions.Add(new SynthesizedThisMethod("get_Size", codeWriter.ResolveType("System.Type"), codeWriter.ResolveType("System.Int32"), true));
             tokenResolutions.Add(codeWriter.ResolveType("System.Byte").ToPointerType());
 
             var locals = new List<IType>();

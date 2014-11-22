@@ -3499,7 +3499,7 @@ namespace Il2Native.Logic
 
             if (isEnum)
             {
-                normalType.WriteGetHashCodeMethod(this);
+                normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
             normalType.WriteGetTypeMethod(this);

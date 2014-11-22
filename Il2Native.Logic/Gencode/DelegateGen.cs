@@ -553,6 +553,22 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsInline
+            {
+                get;
+                protected set;
+            }
+
+            /// <summary>
+            /// </summary>
+            public bool HasProceduralBody
+            {
+                get;
+                protected set;
+            }
+
+            /// <summary>
+            /// </summary>
             /// <param name="obj">
             /// </param>
             /// <returns>

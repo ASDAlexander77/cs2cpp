@@ -69,6 +69,16 @@ namespace PEAssemblyReader
         bool IsUnmanagedMethodReference { get; }
 
         /// <summary>
+        /// custom field
+        /// </summary>
+        bool IsInline { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
+        bool HasProceduralBody { get; }
+
+        /// <summary>
         /// </summary>
         IType ReturnType { get; }
 

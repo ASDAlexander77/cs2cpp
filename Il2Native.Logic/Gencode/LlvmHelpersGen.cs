@@ -18,6 +18,7 @@ namespace Il2Native.Logic.Gencode
     using PEAssemblyReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using Il2Native.Logic.Gencode.InternalMethods;
 
     /// <summary>
     /// </summary>
@@ -271,6 +272,17 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool ProcessPluggableMethodCall(this LlvmWriter llvmWriter, OpCodePart opCodeMethodInfo, IMethod methodInfo)
         {
+            if (methodInfo.HasProceduralBody)
+            {
+                var customAction = methodInfo as IMethodBodyCustomAction;
+                if (customAction != null)
+                {
+                    customAction.Execute(llvmWriter, opCodeMethodInfo);
+                }
+
+                return true;
+            }
+
             // TODO: it seems, you can preprocess MSIL code and replace all functions with MSIL code blocks to stop writing the code manually.
             // for example call System.Activator.CreateInstance<X>() can be replace with "Code.NewObj x"
             // the same interlocked functions and the same for TypeOf operators
@@ -844,6 +856,15 @@ namespace Il2Native.Logic.Gencode
                 /*Align*/);
         }
 
+        public static void WriteMemCopy(this LlvmWriter llvmWriter, FullyDefinedReference op1, FullyDefinedReference op2, FullyDefinedReference size)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", op1, op2, size, LlvmWriter.PointerSize
+                /*Align*/);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -864,6 +885,18 @@ namespace Il2Native.Logic.Gencode
                 
                 /*Align*/);
         }
+
+        public static void WriteMemSet(this LlvmWriter llvmWriter, FullyDefinedReference op1, FullyDefinedReference size)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.Write("call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, ", op1);
+            size.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(size);
+            writer.Write(", i32 {0}, i1 false)", LlvmWriter.PointerSize /*Align*/);
+        }
+
 
         /// <summary>
         /// </summary>

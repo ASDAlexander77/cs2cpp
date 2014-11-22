@@ -15,7 +15,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedThisMethodWithReturnType : SynthesizedMethodTypeBase
+    public class SynthesizedThisMethod : SynthesizedMethodTypeBase
     {
         private IType returnType;
 
@@ -25,7 +25,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedThisMethodWithReturnType(string name, IType declaringType, IType returnType, bool isVirtual = false)
+        public SynthesizedThisMethod(string name, IType declaringType, IType returnType, bool isVirtual = false)
             : base(declaringType, name)
         {
             this.returnType = returnType;
