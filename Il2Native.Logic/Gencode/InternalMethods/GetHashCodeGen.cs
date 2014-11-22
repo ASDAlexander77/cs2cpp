@@ -12,7 +12,7 @@
 
     public static class GetHashCodeGen
     {
-        public static readonly string Name = "System.Object.GetHashCode";
+        public static readonly string Name = "Int32 System.Object.GetHashCode()";
 
         public static readonly object[] ByteCode = new object[]
                                         {

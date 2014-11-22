@@ -31,6 +31,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<ILocalVariable>> lazyLocalVariables;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IExceptionHandlingClause>> lazyExceptionHandlingClauses;
+
+        /// <summary>
+        /// </summary>
         private readonly MethodSymbol methodDef;
 
         /// <summary>
@@ -42,6 +50,8 @@ namespace PEAssemblyReader
             Debug.Assert(methodDef != null);
             this.methodDef = methodDef;
             this.lazyMethodBodyBlock = new Lazy<MethodBodyBlock>(this.GetMethodBodyBlock);
+            this.lazyLocalVariables = new Lazy<IEnumerable<ILocalVariable>>(this.GetLocalVariables);
+            this.lazyExceptionHandlingClauses = new Lazy<IEnumerable<IExceptionHandlingClause>>(this.GetExceptionHandlingClauses);
         }
 
         /// <summary>
@@ -62,24 +72,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                PEModuleSymbol peModuleSymbol;
-                PEMethodSymbol peMethodSymbol;
-                this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-                if (peMethodSymbol != null)
-                {
-                    var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                    if (methodBodyBlock != null)
-                    {
-                        return
-                            methodBodyBlock.ExceptionRegions.Select(
-                                er =>
-                                new MetadataExceptionHandlingClauseAdapter(
-                                    er, !er.CatchType.IsNil ? new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType) : null, this.GenericContext));
-                    }
-                }
-
-                return new IExceptionHandlingClause[0];
+                return this.lazyExceptionHandlingClauses.Value;
             }
         }
 
@@ -109,38 +102,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var localInfo = default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
-                try
-                {
-                    PEModuleSymbol peModuleSymbol;
-                    PEMethodSymbol peMethodSymbol;
-                    this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
-
-                    if (peMethodSymbol != null)
-                    {
-                        var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-                        if (methodBody != null && !methodBody.LocalSignature.IsNil)
-                        {
-                            var module = peModuleSymbol.Module;
-                            var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
-                            var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
-                            localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
-                        }
-                        else
-                        {
-                            localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
-                        }
-                    }
-                }
-                catch (UnsupportedSignatureContent)
-                {
-                }
-                catch (BadImageFormatException)
-                {
-                }
-
-                var index = 0;
-                return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext));
+                return this.lazyLocalVariables.Value;
             }
         }
 
@@ -211,6 +173,64 @@ namespace PEAssemblyReader
             {
                 peMethodSymbol = this.methodDef.OriginalDefinition as PEMethodSymbol;
             }
+        }
+
+        private IEnumerable<ILocalVariable> GetLocalVariables()
+        {
+            var localInfo = default(ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>);
+            try
+            {
+                PEModuleSymbol peModuleSymbol;
+                PEMethodSymbol peMethodSymbol;
+                this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
+                if (peMethodSymbol != null)
+                {
+                    var methodBody = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                    if (methodBody != null && !methodBody.LocalSignature.IsNil)
+                    {
+                        var module = peModuleSymbol.Module;
+                        var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
+                        var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
+                        localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
+                    }
+                    else
+                    {
+                        localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
+                    }
+                }
+            }
+            catch (UnsupportedSignatureContent)
+            {
+            }
+            catch (BadImageFormatException)
+            {
+            }
+
+            var index = 0;
+            return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
+        }
+
+        private IEnumerable<IExceptionHandlingClause> GetExceptionHandlingClauses()
+        {
+            PEModuleSymbol peModuleSymbol;
+            PEMethodSymbol peMethodSymbol;
+            this.GetPEMethodSymbol(out peModuleSymbol, out peMethodSymbol);
+
+            if (peMethodSymbol != null)
+            {
+                var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                if (methodBodyBlock != null)
+                {
+                    return
+                        methodBodyBlock.ExceptionRegions.Select(
+                            er =>
+                            new MetadataExceptionHandlingClauseAdapter(
+                                er, !er.CatchType.IsNil ? new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType) : null, this.GenericContext)).ToArray();
+                }
+            }
+
+            return new IExceptionHandlingClause[0];
         }
     }
 }

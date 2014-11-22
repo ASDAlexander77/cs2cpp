@@ -21,7 +21,7 @@
             }
 
             Func<IMethod, IMethod> methodFactory;
-            if (methodsByFullName.TryGetValue(method.FullName, out methodFactory))
+            if (methodsByFullName.TryGetValue(method.ToString(), out methodFactory))
             {
                 var newMethod = methodFactory.Invoke(method);
                 if (newMethod != null)
@@ -46,6 +46,7 @@
         private static void RegisterAll(ICodeWriter codeWriter)
         {
             GetHashCodeGen.Register(codeWriter);
+            EqualsGen.Register(codeWriter);
         }
 
         private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
