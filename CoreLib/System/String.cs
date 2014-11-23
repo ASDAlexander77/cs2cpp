@@ -273,7 +273,7 @@ namespace System
         public String(char[] value, int startIndex, int length)
         {
             this.chars = new char[length];
-            StringBuilder.wstrcpy(this.chars, 0, value, startIndex, length);
+            Array.Copy(value, startIndex, this.chars, 0, length);
         }
 
         public String(char[] value)
