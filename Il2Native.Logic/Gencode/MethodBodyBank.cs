@@ -48,6 +48,7 @@
             GetHashCodeGen.Register(codeWriter);
             EqualsGen.Register(codeWriter);
             MemberwiseCloneGen.Register(codeWriter);
+            ArrayCopyGen.Register(codeWriter);
         }
 
         private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)

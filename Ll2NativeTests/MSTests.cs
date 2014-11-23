@@ -70,12 +70,12 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = true;
+        private const bool DebugInfo = false;
         
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = false;
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -106,6 +106,14 @@ namespace Ll2NativeTests
         public void TestCustomConvert()
         {
             Convert("test-1", SourcePathCustom);
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile()
+        {
+            Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
         }
 
         /// <summary>

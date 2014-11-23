@@ -73,6 +73,7 @@
     <Compile Include="Gencode\CallGen.cs" />
     <Compile Include="Gencode\InlineMethods\ArrayGen.cs" />
     <Compile Include="Gencode\InlineMethods\InterlockedGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayCopyGen.cs" />
     <Compile Include="Gencode\InternalMethods\EqualsGen.cs" />
     <Compile Include="Gencode\InternalMethods\GetHashCodeGen.cs" />
     <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
