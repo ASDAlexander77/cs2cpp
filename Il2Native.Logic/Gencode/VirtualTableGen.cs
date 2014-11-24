@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
 
@@ -109,8 +110,12 @@ namespace Il2Native.Logic.Gencode
             // custom GetType
             // TODO: you need to append it before processing custom methods
             var getTypeMethod = new SynthesizedGetTypeMethod(thisType, llvmWriter);
-            var baseGetTypeMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getTypeMethod));
-            baseGetTypeMethod.Value = getTypeMethod;
+            var baseGetTypeMethod = virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(getTypeMethod));
+            Debug.Assert(baseGetTypeMethod != null, "Could not find virtual method GetType (adjust source code and make GetType a virtual method");
+            if (baseGetTypeMethod != null)
+            {
+                baseGetTypeMethod.Value = getTypeMethod;
+            }
         }
 
         /// <summary>

@@ -3304,7 +3304,9 @@ namespace Il2Native.Logic
         {
             // find constructor
             var constructorInfo =
-                IlReader.Constructors(type).First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+                IlReader.Constructors(type).FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+
+            Debug.Assert(constructorInfo != null, "Could not find required constructor");
 
             type.WriteCallNewObjectMethod(this, opCode);
 
@@ -3313,7 +3315,10 @@ namespace Il2Native.Logic
 
             opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
 
-            this.WriteCallConstructor(opCode, constructorInfo);
+            if (constructorInfo != null)
+            {
+                this.WriteCallConstructor(opCode, constructorInfo);
+            }
 
             return opCode.Result;
         }

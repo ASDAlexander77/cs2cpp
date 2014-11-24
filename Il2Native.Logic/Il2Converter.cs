@@ -235,6 +235,8 @@ namespace Il2Native.Logic
             ConvertingMode mode, 
             bool processGenericMethodsOnly = false)
         {
+            Debug.WriteLine("Converting {0}, Mode: {1}", type, mode);
+
             var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
             var genericContext = new MetadataGenericContext();
@@ -663,6 +665,8 @@ namespace Il2Native.Logic
             // the same for generic specialized types
             foreach (var type in genericTypeSpecializations)
             {
+                Debug.WriteLine("Analyzing generic type: {0}", type);
+
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
                 requiredTypes.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
@@ -728,6 +732,8 @@ namespace Il2Native.Logic
             var typesWithRequired = new List<Tuple<IType, List<IType>>>();
             foreach (var type in types)
             {
+                Debug.WriteLine("Reading info about type: {0}", type);
+
                 var requiredITypesToAdd = new List<IType>();
                 ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, genericTypeSpecializations, genericMethodSpecializations);
                 typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
