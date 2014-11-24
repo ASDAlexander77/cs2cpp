@@ -169,6 +169,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompile()
         {
+            // TODO: WARNING! order of obj files in g++ cmd line is important, CoreLib.obj should be last one
+
             // test-400.cs 
             // %.r13 = load i32* %local1, align 4
             // %.r14 = load i32* %local1, align 4
@@ -526,7 +528,7 @@ namespace Ll2NativeTests
             if (!justCompile)
             {
                 // file exe
-                ExecCmd("g++", string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
+                ExecCmd("g++", string.Format("-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
 
                 // test execution
                 ExecCmd(string.Format("{0}.exe", fileName));
