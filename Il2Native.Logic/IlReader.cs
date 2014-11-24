@@ -1265,7 +1265,7 @@ namespace Il2Native.Logic
             var outDll = Path.Combine(Path.GetTempPath(), nameDll);
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd());
+            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental));
 
             var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
                                          ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
