@@ -613,7 +613,9 @@ namespace PEAssemblyReader
                 if (this.methodDef.ContainingType.IsNestedType())
                 {
                     result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                    result.Append('+');
+                    ////result.Append('+');
+                    // Metadata explicitname should contains +
+                    result.Append('.');
                 }
 
                 result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
