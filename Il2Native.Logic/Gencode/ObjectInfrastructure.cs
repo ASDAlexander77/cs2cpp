@@ -713,7 +713,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!llvmWriter.Gc)
             {
-                llvmWriter.WriteMemSet(size, mallocResult);
+                llvmWriter.WriteMemSet(mallocResult, size);
                 writer.WriteLine(string.Empty);
             }
         }

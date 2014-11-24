@@ -37,9 +37,10 @@ namespace Il2Native
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
                 Console.WriteLine("  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi");
-                Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
+                Console.WriteLine("  /gc-                    Disable Boehm garbage collector (recommended for Emscripten)");
                 Console.WriteLine("  /gctors-                Disable using global constructors (recommended for Android platform)");
-                Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 or lower version");
+                Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 (otherwise 3.6)");
+                Console.WriteLine("  /llvm34                 Enable support LLVM 3.4 or lower version (otherwise 3.6)");
                 Console.WriteLine("  /debug                  Generate debug information");
                 return;
             }

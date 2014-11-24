@@ -38,6 +38,7 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
+        private const bool Llvm34Support = true;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -52,6 +53,7 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
+        private const bool Llvm34Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -62,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool GcEnabled = true;
+        private const bool GcEnabled = false;
 
         /// <summary>
         /// </summary>
@@ -113,6 +115,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscorlibCompile()
         {
+            Debug.Listeners.Clear();
             Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
         }
 
@@ -399,7 +402,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = DebugInfo)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool llvm34Support = Llvm34Support, bool debugInfo = DebugInfo)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -425,6 +428,10 @@ namespace Ll2NativeTests
             if (llvm35Support)
             {
                 args.Add("llvm35");
+            }
+            else if (llvm34Support)
+            {
+                args.Add("llvm34");
             }
 
             if (debugInfo)
