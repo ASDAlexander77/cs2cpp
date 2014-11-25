@@ -38,7 +38,7 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
-        private const bool Llvm34Support = false;
+        private const bool Llvm34Support = true;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -64,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool GcEnabled = true;
+        private const bool GcEnabled = false;
 
         /// <summary>
         /// </summary>
