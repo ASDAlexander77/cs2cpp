@@ -359,7 +359,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent++;
             writer.WriteLine(
-                "i8* {0},", 
+                "i8* {0},",
                 interfaceIndex == 0
                     ? "null"
                     : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
@@ -378,7 +378,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(",");
 
                 writer.Write("i8* bitcast (");
-                if (virtualMethod.Value.IsAbstract)
+                if (virtualMethod.Value == null || virtualMethod.Value.IsAbstract)
                 {
                     writer.Write("void ()* @__cxa_pure_virtual");
                 }

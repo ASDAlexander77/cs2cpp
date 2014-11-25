@@ -1037,7 +1037,7 @@ namespace PEAssemblyReader
                 {
                     if (index++ > 0)
                     {
-                        sb.Append(", ");
+                        sb.Append(",");
                     }
 
                     sb.Append(genArg.FullName);

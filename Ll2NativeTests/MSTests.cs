@@ -236,9 +236,10 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
+            // BUG!!!!! mscorlib.dll, System.Globalization.CodePageDataItem, .ctor  - (ldfld of address result)  (NEEDS TO BE FIXED)
+
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
             // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
-
 
             // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
             // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
