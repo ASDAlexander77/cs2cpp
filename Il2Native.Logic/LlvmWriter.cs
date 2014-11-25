@@ -169,6 +169,27 @@ namespace Il2Native.Logic
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
+           
+            // prefefined settings
+            if (args != null && args.Contains("android"))
+            {
+                this.Target = this.Target ?? "armv7-none-linux-androideabi";
+                this.Gctors = false;
+                this.IsLlvm35 = true;
+                this.IsLlvm34OrLower = false;
+            }
+            else if (args != null && args.Contains("emscripten"))
+            {
+                this.Target = this.Target ?? "asmjs-unknown-emscripten";
+                this.Gc = false;
+                this.IsLlvm35 = false;
+                this.IsLlvm34OrLower = true;
+
+                this.DataLayout = @"e-p:32:32-i64:64-v128:32:128-n32-S128";
+            }
+
+            this.DataLayout = this.DataLayout ?? @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
+            this.Target = this.Target ?? "i686-pc-mingw32";
         }
 
         public IDictionary<int, IMethod> MethodsByToken
@@ -214,6 +235,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string Target { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public string DataLayout { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -3667,12 +3692,8 @@ namespace Il2Native.Logic
             this.IsCoreLib = isCoreLib;
             this.AllReference = allReference;
 
-            this.Output.WriteLine(
-                "target datalayout = \"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32\"");
-
-            // EMSCRIPTEN target datalayout = "e-p:32:32-i64:64-v128:32:128-n32-S128"
-
-            this.Output.WriteLine("target triple = \"{0}\"", string.IsNullOrWhiteSpace(this.Target) ? "i686-pc-mingw32" : this.Target);
+            this.Output.WriteLine("target datalayout = \"{0}\"", this.DataLayout);
+            this.Output.WriteLine("target triple = \"{0}\"", this.Target);
             this.Output.WriteLine(string.Empty);
 
             if (this.Gctors)

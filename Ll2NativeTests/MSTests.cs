@@ -38,7 +38,7 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
-        private const bool Llvm34Support = true;
+        private const bool Llvm34Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -60,11 +60,19 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
+        private const bool Android = false;
+
+        /// <summary>
+        /// </summary>
+        private const bool Emscripten = true;
+
+        /// <summary>
+        /// </summary>
         private const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>
-        private const bool GcEnabled = false;
+        private const bool GcEnabled = true;
 
         /// <summary>
         /// </summary>
@@ -467,6 +475,16 @@ namespace Ll2NativeTests
             if (debugInfo)
             {
                 args.Add("debug");
+            }
+
+            if (Android)
+            {
+                args.Add("android");
+            }
+
+            if (Emscripten)
+            {
+                args.Add("emscripten");
             }
 
             return args.ToArray();
