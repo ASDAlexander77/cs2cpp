@@ -92,7 +92,6 @@ namespace Il2Native.Logic
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
             {
-                ;
             }
         }
 
