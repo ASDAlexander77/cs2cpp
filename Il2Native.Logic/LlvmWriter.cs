@@ -3336,7 +3336,7 @@ namespace Il2Native.Logic
             var constructorInfo =
                 IlReader.Constructors(type).FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
 
-            Debug.Assert(constructorInfo != null, "Could not find required constructor");
+            //Debug.Assert(constructorInfo != null, "Could not find required constructor");
 
             type.WriteCallNewObjectMethod(this, opCode);
 
