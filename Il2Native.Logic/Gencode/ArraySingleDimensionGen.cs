@@ -197,27 +197,34 @@ namespace Il2Native.Logic.Gencode
 
             var opCodeConvert = OpCodePart.CreateNop;
 
-            // first array to i8*
-            var firstElementResult = GetArrayDataAddressHelper(llvmWriter, opCode, storedResult.Type.GetElementType(), ArrayDataStartsWith, 0);
-            llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
-            var firstBytes = opCodeConvert.Result;
-            writer.WriteLine(string.Empty);
+            if (!storedResult.Type.IsMultiArray)
+            {
+                // first array to i8*
+                var firstElementResult = GetArrayDataAddressHelper(llvmWriter, opCode, storedResult.Type.GetElementType(), ArrayDataStartsWith, 0);
+                llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
+                var firstBytes = opCodeConvert.Result;
+                writer.WriteLine(string.Empty);
 
-            // second array to i8*
-            var opCodeDataHolder = OpCodePart.CreateNop;
-            opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(arrayData, byteType.ToArrayType(1));
-            var secondFirstElementResult = GetArrayDataAddressHelper(llvmWriter, opCodeDataHolder, byteType, ArrayDataStartsWith, 0);
-            llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
-            var secondBytes = opCodeConvert.Result;
-            writer.WriteLine(string.Empty);
+                // second array to i8*
+                var opCodeDataHolder = OpCodePart.CreateNop;
+                opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
+                opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(arrayData, byteType.ToArrayType(1));
+                var secondFirstElementResult = GetArrayDataAddressHelper(llvmWriter, opCodeDataHolder, byteType, ArrayDataStartsWith, 0);
+                llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
+                var secondBytes = opCodeConvert.Result;
+                writer.WriteLine(string.Empty);
 
-            writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)", 
-                firstBytes, 
-                secondBytes, 
-                arrayLength, 
-                LlvmWriter.PointerSize /*Align*/);
+                writer.WriteLine(
+                    "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                    firstBytes,
+                    secondBytes,
+                    arrayLength,
+                    LlvmWriter.PointerSize /*Align*/);
+            }
+            else
+            {
+                writer.WriteLine("; MultiArray init.  Call <ARRAY>::Address(int, int) to get an address of the first element");
+            }
 
             opCode.OpCodeOperands[0].Result = storedResult;
 

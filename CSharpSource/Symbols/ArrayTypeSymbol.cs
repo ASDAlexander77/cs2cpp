@@ -19,7 +19,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
     /// <summary>
     /// An ArrayTypeSymbol represents an array type, such as int[] or object[,].
     /// </summary>
-    internal sealed partial class ArrayTypeSymbol : TypeSymbol, IArrayTypeSymbol 
+    internal sealed partial class ArrayTypeSymbol : TypeSymbol, IArrayTypeSymbol
     {
         private readonly TypeSymbol elementType;
         private readonly int rank;
@@ -185,22 +185,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (name == ".ctor")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayConstructor(this.baseType, this.elementType, n)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayConstructor(this)).ToArray<Symbol>());
             }
 
             if (name == "Set")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArraySetValueMethod(this.baseType, this.elementType, n)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArraySetValueMethod(this)).ToArray<Symbol>());
             }
 
             if (name == "Get")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayGetValueMethod(this.baseType, this.elementType, n)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayGetValueMethod(this)).ToArray<Symbol>());
             }
 
             if (name == "Address")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayAddressMethod(this.baseType, this.elementType, n)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayAddressMethod(this)).ToArray<Symbol>());
             }
 
             return ImmutableArray<Symbol>.Empty;
@@ -436,69 +436,64 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
         #endregion
 
-        private sealed class ArrayConstructor : SynthesizedInstanceConstructor
+        private sealed class ArrayConstructor : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly TypeSymbol elementType;
+            private readonly ArrayTypeSymbol arrayTypeSymbol;
 
-            public ArrayConstructor(NamedTypeSymbol containingType, TypeSymbol elementType, int rank)
-                : base(containingType)
+            public ArrayConstructor(ArrayTypeSymbol arrayTypeSymbol)
             {
-                this.elementType = elementType;
-                var intType = ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
+                this.arrayTypeSymbol = arrayTypeSymbol;
+                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
                 this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None)).ToArray<ParameterSymbol>());
+                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None)).ToArray<ParameterSymbol>());
             }
 
             public override ImmutableArray<ParameterSymbol> Parameters
             {
                 get { return parameters; }
             }
-        }
 
-        private sealed class ArraySetValueMethod : SynthesizedInstanceMethodSymbol
-        {
-            private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly NamedTypeSymbol containingType;
-            private readonly TypeSymbol elementType;
+            //
+            // Consider overriding when implementing a synthesized subclass.
+            //
 
-            internal ArraySetValueMethod(NamedTypeSymbol containingType, TypeSymbol elementType, int rank)
+            internal override bool GenerateDebugInfo
             {
-                this.containingType = containingType;
-                this.elementType = elementType;
-                var intType = containingType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
-                this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
-                    .ToArray<ParameterSymbol>()
-                    .Append(new SynthesizedParameterSymbol(this, elementType, rank + 1, RefKind.None)));
+                get { return false; }
             }
 
-            public override ImmutableArray<ParameterSymbol> Parameters
+            public override Accessibility DeclaredAccessibility
             {
-                get { return parameters; }
+                get { return ContainingType.IsAbstract ? Accessibility.Protected : Accessibility.Public; }
+            }
+
+            internal override bool IsMetadataFinal()
+            {
+                return false;
             }
 
             #region Sealed
 
             public sealed override Symbol ContainingSymbol
             {
-                get { return this.containingType; }
+                get
+                {
+                    return this.arrayTypeSymbol.BaseType;
+                }
             }
 
             public sealed override NamedTypeSymbol ContainingType
             {
                 get
                 {
-                    return this.containingType;
+                    return this.arrayTypeSymbol.BaseType;
                 }
             }
 
             public sealed override string Name
             {
-                get
-                {
-                    return "Set";
-                }
+                get { return WellKnownMemberNames.InstanceConstructorName; }
             }
 
             internal sealed override bool HasSpecialName
@@ -510,6 +505,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get
                 {
+                    var containingType = this.arrayTypeSymbol.BaseType;
                     if (containingType.IsComImport)
                     {
                         Debug.Assert(containingType.TypeKind == TypeKind.Class);
@@ -579,7 +575,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override TypeSymbol ReturnType
             {
-                get { return this.containingType.ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
+                get { return this.arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
             }
 
             public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
@@ -594,7 +590,243 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol AssociatedSymbol
             {
+                get { return this.arrayTypeSymbol; }
+            }
+
+            public sealed override int Arity
+            {
+                get { return 0; }
+            }
+
+            public sealed override bool ReturnsVoid
+            {
+                get { return true; }
+            }
+
+            public sealed override MethodKind MethodKind
+            {
+                get { return MethodKind.Constructor; }
+            }
+
+            public sealed override bool IsExtern
+            {
+                get
+                {
+                    // Synthesized constructors of ComImport type are extern
+                    NamedTypeSymbol containingType = this.ContainingType;
+                    return (object)containingType != null && containingType.IsComImport;
+                }
+            }
+
+            public sealed override bool IsSealed
+            {
+                get { return false; }
+            }
+
+            public sealed override bool IsAbstract
+            {
+                get { return false; }
+            }
+
+            public sealed override bool IsOverride
+            {
+                get { return false; }
+            }
+
+            public sealed override bool IsVirtual
+            {
+                get { return false; }
+            }
+
+            public sealed override bool IsStatic
+            {
+                get { return false; }
+            }
+
+            public sealed override bool IsAsync
+            {
+                get { return false; }
+            }
+
+            public sealed override bool HidesBaseMethodsByName
+            {
+                get { return false; }
+            }
+
+            internal sealed override bool IsMetadataNewSlot(bool ignoreInterfaceImplementationChanges = false)
+            {
+                return false;
+            }
+
+            internal sealed override bool IsMetadataVirtual(bool ignoreInterfaceImplementationChanges = false)
+            {
+                return false;
+            }
+
+            public sealed override bool IsExtensionMethod
+            {
+                get { return false; }
+            }
+
+            internal sealed override Microsoft.Cci.CallingConvention CallingConvention
+            {
+                get { return Microsoft.Cci.CallingConvention.HasThis; }
+            }
+
+            internal sealed override bool IsExplicitInterfaceImplementation
+            {
+                get { return false; }
+            }
+
+            public sealed override ImmutableArray<MethodSymbol> ExplicitInterfaceImplementations
+            {
+                get { return ImmutableArray<MethodSymbol>.Empty; }
+            }
+
+            #endregion
+        }
+
+        private sealed class ArraySetValueMethod : SynthesizedInstanceMethodSymbol
+        {
+            private readonly ImmutableArray<ParameterSymbol> parameters;
+            private readonly ArrayTypeSymbol arrayTypeSymbol;
+
+            internal ArraySetValueMethod(ArrayTypeSymbol arrayTypeSymbol)
+            {
+                this.arrayTypeSymbol = arrayTypeSymbol;
+                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
+                this.parameters = ImmutableArray.Create<ParameterSymbol>(
+                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
+                    .ToArray<ParameterSymbol>()
+                    .Append(new SynthesizedParameterSymbol(this, arrayTypeSymbol.ElementType, arrayTypeSymbol.Rank + 1, RefKind.None)));
+            }
+
+            public override ImmutableArray<ParameterSymbol> Parameters
+            {
+                get { return parameters; }
+            }
+
+            #region Sealed
+
+            public sealed override Symbol ContainingSymbol
+            {
+                get
+                {
+                    return this.arrayTypeSymbol.BaseType;
+                }
+            }
+
+            public sealed override NamedTypeSymbol ContainingType
+            {
+                get
+                {
+                    return this.arrayTypeSymbol.BaseType;
+                }
+            }
+
+            public sealed override string Name
+            {
+                get
+                {
+                    return "Set";
+                }
+            }
+
+            internal sealed override bool HasSpecialName
+            {
+                get { return true; }
+            }
+
+            internal sealed override System.Reflection.MethodImplAttributes ImplementationAttributes
+            {
+                get
+                {
+                    var containingType = this.arrayTypeSymbol.BaseType;
+                    if (containingType.IsComImport)
+                    {
+                        Debug.Assert(containingType.TypeKind == TypeKind.Class);
+                        return System.Reflection.MethodImplAttributes.Runtime | System.Reflection.MethodImplAttributes.InternalCall;
+                    }
+
+                    if (containingType.TypeKind == TypeKind.Delegate)
+                    {
+                        return System.Reflection.MethodImplAttributes.Runtime;
+                    }
+
+                    return default(System.Reflection.MethodImplAttributes);
+                }
+            }
+
+            internal sealed override bool RequiresSecurityObject
+            {
+                get { return false; }
+            }
+
+            public sealed override DllImportData GetDllImportData()
+            {
+                return null;
+            }
+
+            internal sealed override MarshalPseudoCustomAttributeData ReturnValueMarshallingInformation
+            {
                 get { return null; }
+            }
+
+            internal sealed override bool HasDeclarativeSecurity
+            {
+                get { return false; }
+            }
+
+            internal sealed override IEnumerable<Microsoft.Cci.SecurityAttribute> GetSecurityInformation()
+            {
+                throw ExceptionUtilities.Unreachable;
+            }
+
+            internal sealed override ImmutableArray<string> GetAppliedConditionalSymbols()
+            {
+                return ImmutableArray<string>.Empty;
+            }
+
+            public sealed override bool IsVararg
+            {
+                get { return false; }
+            }
+
+            public sealed override ImmutableArray<TypeParameterSymbol> TypeParameters
+            {
+                get { return ImmutableArray<TypeParameterSymbol>.Empty; }
+            }
+
+            internal sealed override LexicalSortKey GetLexicalSortKey()
+            {
+                //For the sake of matching the metadata output of the native compiler, make synthesized constructors appear last in the metadata.
+                //This is not critical, but it makes it easier on tools that are comparing metadata.
+                return LexicalSortKey.Last;
+            }
+
+            public sealed override ImmutableArray<Location> Locations
+            {
+                get { return ContainingType.Locations; }
+            }
+
+            public sealed override TypeSymbol ReturnType
+            {
+                get { return this.arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Void); }
+            }
+
+            public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
+            {
+                get { return ImmutableArray<CustomModifier>.Empty; }
+            }
+
+            public sealed override ImmutableArray<TypeSymbol> TypeArguments
+            {
+                get { return ImmutableArray<TypeSymbol>.Empty; }
+            }
+
+            public sealed override Symbol AssociatedSymbol
+            {
+                get { return this.arrayTypeSymbol; }
             }
 
             public sealed override int Arity
@@ -708,16 +940,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         private sealed class ArrayGetValueMethod : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly NamedTypeSymbol containingType;
-            private readonly TypeSymbol elementType;
+            private readonly ArrayTypeSymbol arrayTypeSymbol;
 
-            internal ArrayGetValueMethod(NamedTypeSymbol containingType, TypeSymbol elementType, int rank)
+            internal ArrayGetValueMethod(ArrayTypeSymbol arrayTypeSymbol)
             {
-                this.containingType = containingType;
-                this.elementType = elementType;
-                var intType = containingType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
+                this.arrayTypeSymbol = arrayTypeSymbol;
+                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
                 this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
+                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
                     .ToArray<ParameterSymbol>());
             }
 
@@ -730,14 +960,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol ContainingSymbol
             {
-                get { return this.containingType; }
+                get
+                {
+                    return this.arrayTypeSymbol.BaseType;
+                }
             }
 
             public sealed override NamedTypeSymbol ContainingType
             {
                 get
                 {
-                    return this.containingType;
+                    return this.arrayTypeSymbol.BaseType;
                 }
             }
 
@@ -758,6 +991,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get
                 {
+                    var containingType = this.arrayTypeSymbol.BaseType;
                     if (containingType.IsComImport)
                     {
                         Debug.Assert(containingType.TypeKind == TypeKind.Class);
@@ -827,7 +1061,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override TypeSymbol ReturnType
             {
-                get { return this.elementType; }
+                get { return this.arrayTypeSymbol.ElementType; }
             }
 
             public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
@@ -842,7 +1076,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol AssociatedSymbol
             {
-                get { return null; }
+                get { return this.arrayTypeSymbol; }
             }
 
             public sealed override int Arity
@@ -956,16 +1190,14 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         private sealed class ArrayAddressMethod : SynthesizedInstanceMethodSymbol
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
-            private readonly NamedTypeSymbol containingType;
-            private readonly TypeSymbol elementType;
+            private readonly ArrayTypeSymbol arrayTypeSymbol;
 
-            internal ArrayAddressMethod(NamedTypeSymbol containingType, TypeSymbol elementType, int rank)
+            internal ArrayAddressMethod(ArrayTypeSymbol arrayTypeSymbol)
             {
-                this.containingType = containingType;
-                this.elementType = new ByRefReturnErrorTypeSymbol(elementType);
-                var intType = containingType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
+                this.arrayTypeSymbol = arrayTypeSymbol;
+                var intType = arrayTypeSymbol.BaseType.ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
                 this.parameters = ImmutableArray.Create<ParameterSymbol>(
-                    Enumerable.Range(0, rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
+                    Enumerable.Range(0, arrayTypeSymbol.Rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None))
                     .ToArray<ParameterSymbol>());
             }
 
@@ -978,14 +1210,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol ContainingSymbol
             {
-                get { return this.containingType; }
+                get
+                {
+                    return this.arrayTypeSymbol.BaseType;
+                }
             }
 
             public sealed override NamedTypeSymbol ContainingType
             {
                 get
                 {
-                    return this.containingType;
+                    return this.arrayTypeSymbol.BaseType;
                 }
             }
 
@@ -1006,6 +1241,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
             {
                 get
                 {
+                    var containingType = this.arrayTypeSymbol.BaseType;
                     if (containingType.IsComImport)
                     {
                         Debug.Assert(containingType.TypeKind == TypeKind.Class);
@@ -1075,7 +1311,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override TypeSymbol ReturnType
             {
-                get { return this.elementType; }
+                get { return new ByRefReturnErrorTypeSymbol(this.arrayTypeSymbol.ElementType); }
             }
 
             public sealed override ImmutableArray<CustomModifier> ReturnTypeCustomModifiers
@@ -1090,7 +1326,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
 
             public sealed override Symbol AssociatedSymbol
             {
-                get { return null; }
+                get { return this.arrayTypeSymbol; }
             }
 
             public sealed override int Arity

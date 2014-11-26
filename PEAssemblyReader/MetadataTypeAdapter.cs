@@ -1030,7 +1030,13 @@ namespace PEAssemblyReader
             if (this.IsArray)
             {
                 sb.Append(this.GetElementType().MetadataName);
-                sb.Append("[]");
+                sb.Append("[");
+                for (var i = 0; i < this.ArrayRank - 1; i++)
+                {
+                    sb.Append(",");
+                }
+
+                sb.Append("]");
             }
 
             if (this.IsPointer)
@@ -1073,7 +1079,13 @@ namespace PEAssemblyReader
             if (this.IsArray)
             {
                 sb.Append(this.GetElementType().Name);
-                sb.Append("[]");
+                sb.Append("[");
+                for (var i = 0; i < this.ArrayRank - 1; i++)
+                {
+                    sb.Append(",");
+                }
+
+                sb.Append("]");
             }
 
             if (this.IsPointer)

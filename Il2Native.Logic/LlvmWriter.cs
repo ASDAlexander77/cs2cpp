@@ -1657,7 +1657,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (methodBase.DeclaringType.AssemblyQualifiedName != this.AssemblyQualifiedName)
+            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(methodBase);
             }

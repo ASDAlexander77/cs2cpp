@@ -101,7 +101,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.ContainingType.ContainingAssembly.Identity.Name;
             }
         }
 
@@ -149,6 +149,15 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.methodDef.ContainingType.SpecialType == SpecialType.System_Array)
+                {
+                    var typeSymbol = this.methodDef.AssociatedSymbol as TypeSymbol;
+                    if (typeSymbol != null)
+                    {
+                        return typeSymbol.ResolveGeneric(this.GenericContext);
+                    }
+                }
+
                 return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }

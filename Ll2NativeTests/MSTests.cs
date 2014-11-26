@@ -203,6 +203,8 @@ namespace Ll2NativeTests
             // 535 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 550 - codepage 65001 is used (can't be compiled)
             // 551 - multiple definition of Int32 (but all issues are fixed)
+            // 596 - IntPtr conversion (in CoreLib.dll some conversions are missing)
+            // 600 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 616 - test to compile Object (but it should be compiled without any Assembly reference)
             // 709 - get_OffsetStringData - required (NEED TO BE FIXED!!!!).
             // 817 - redefinition of Int32
@@ -210,13 +212,13 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 616, 709, 817
+                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 596, 600, 616, 709, 817
                         });
 
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(535, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(595, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
