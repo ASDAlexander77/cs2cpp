@@ -862,9 +862,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.UnaryOper(writer, opCode, "store", localType, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
-                        writer.Write(", ");
-                        this.WriteLlvmLocalVarAccess(index, true);
+                        this.WriteLlvmSave(opCode, localType, 0, new FullyDefinedReference(this.GetLocalVarName(index), localType));
                     }
 
                     WriteDbgLine(opCode);
@@ -1677,6 +1675,11 @@ namespace Il2Native.Logic
             }
 
             this.typeDeclRequired.Add(type.ToBareType());
+
+            if (type.IsMultiArray)
+            {
+                this.typeDeclRequired.Add(this.ResolveType("System.Array"));
+            }
         }
 
         /// <summary>
@@ -4200,7 +4203,7 @@ namespace Il2Native.Logic
 
             var res1Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res1.IsPointerAccessRequired;
             var res2Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res2 != null && res2.IsPointerAccessRequired;
-            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null && requiredType.IsPointer;
+            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null && (requiredType.IsPointer || requiredType.IsByRef);
 
             if (res1Pointer && (res2Pointer || requiredTypePointer))
             {

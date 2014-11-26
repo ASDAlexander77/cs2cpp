@@ -581,7 +581,7 @@ namespace Il2Native.Logic.Gencode
                 // write base name
                 effectiveType.WriteTypeName(writer, type.IsPointer);
             }
-            else
+            else if (!type.IsMultiArray)
             {
                 writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
 
@@ -595,6 +595,10 @@ namespace Il2Native.Logic.Gencode
                 effectiveType.GetElementType().WriteTypePrefix(writer);
 
                 writer.Write(" ] }");
+            }
+            else
+            {
+                type.BaseType.WriteTypeWithoutModifiers(writer);
             }
         }
     }

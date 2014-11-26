@@ -68,10 +68,18 @@ namespace PEAssemblyReader
         internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
         {
             Debug.Assert(typeDef != null);
-            Debug.Assert(typeDef.TypeKind != TypeKind.Error);
 
             this.typeDef = typeDef;
             this.IsByRef = isByRef;
+
+            var def = typeDef as ByRefReturnErrorTypeSymbol;
+            if (def != null)
+            {
+                this.typeDef = def.ReferencedType;
+                this.IsByRef = true;                
+            }
+
+            Debug.Assert(this.typeDef.TypeKind != TypeKind.Error);
 
             this.lazyName = new Lazy<string>(this.CalculateName);
             this.lazyFullName = new Lazy<string>(this.CalculateFullName);
@@ -230,6 +238,22 @@ namespace PEAssemblyReader
             get
             {
                 return this.typeDef.IsArray();
+            }
+        }
+
+        public bool IsMultiArray
+        {
+            get
+            {
+                return this.typeDef.IsArray() && !this.typeDef.IsSingleDimensionalArray();
+            }
+        }
+
+        public int ArrayRank
+        {
+            get
+            {
+                return this.typeDef.IsArray() ? ((ArrayTypeSymbol)this.typeDef).Rank : 0;
             }
         }
 
@@ -1092,7 +1116,13 @@ namespace PEAssemblyReader
 
                     if (this.IsArray)
                     {
-                        result.Append("[]");
+                        result.Append("[");
+                        for (var i = 0; i < this.ArrayRank - 1; i++)
+                        {
+                            result.Append(",");
+                        }
+                        
+                        result.Append("]");
                     }
                 }
                 else

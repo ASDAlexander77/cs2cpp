@@ -45,6 +45,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsMultiArray { get; }
+
+        /// <summary>
+        /// </summary>
+        int ArrayRank { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsByRef { get; set; }
 
         /// <summary>

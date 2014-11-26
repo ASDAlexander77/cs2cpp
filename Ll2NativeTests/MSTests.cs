@@ -64,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool Emscripten = true;
+        private const bool Emscripten = false;
 
         /// <summary>
         /// </summary>
@@ -186,6 +186,7 @@ namespace Ll2NativeTests
 
             // 100 - using DllImport      
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
+            // 270 - __arglist
             // 294 - lock (Missing Monitor.Enter/Exit)
             // 300 - typeof of C[] (Array, will be fixed when using __Array__<T> implementation
             // 301 - typeof of Pointer type (*)
@@ -205,13 +206,13 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
+                            100, 251, 270, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
                         });
 
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(580, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -339,6 +340,7 @@ namespace Ll2NativeTests
             // 270 - __arglist
             // 273 - GetCustomAttributes
             // 275 - Delegate.Combine (NotImplemented)
+            // 276 - GetType.GetEvents(); (NotImplemented)
             // 279 - Enum ToString with Flags
             // 282 - error:  error CS1502: The best overloaded method match for 'System.Convert.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
             // 286 - Xml (not implemented)
@@ -355,6 +357,7 @@ namespace Ll2NativeTests
             // 311 - SecurityPermission
             // 313 - typeof(D).GetMethods - NotImplemented
             // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
+            // 319 - missing DecimalConstantAttribute
             // -----------
             // 32, 55, 74 - missing class
             // 37, 42, 43, 44, 45, 66 - multiarray
@@ -365,7 +368,7 @@ namespace Ll2NativeTests
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 252, 253, 254, 263, 264, 266, 269, 270, 273, 275, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318
+                            247, 250, 252, 253, 254, 263, 264, 266, 269, 270, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319
                         });
 
             if (UsingRoslyn)
@@ -375,7 +378,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(311, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(319, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
