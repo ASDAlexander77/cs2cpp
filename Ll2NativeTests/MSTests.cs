@@ -185,6 +185,7 @@ namespace Ll2NativeTests
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 100 - using DllImport      
+            // 171 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
             // 270 - __arglist
             // 294 - lock (Missing Monitor.Enter/Exit)
@@ -194,9 +195,12 @@ namespace Ll2NativeTests
             // 305 - the same as 301
             // 324 - bug NEED TO BE FIXED.
             // 353 - does not have Main method
+            // 386 - Double conversion (in CoreLib.dll some conversions are missing)
+            // 387 - Decimal conversion (in CoreLib.dll some conversions are missing)
             // 444 - codepage 65001 is used (can't be compiled)
             // 524 - (Missing Monitor.Enter/Exit
             // 528 - using typeof(object[]) (Array, will be fixed when using __Array__<T> implementation
+            // 535 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 550 - codepage 65001 is used (can't be compiled)
             // 551 - multiple definition of Int32 (but all issues are fixed)
             // 616 - test to compile Object (but it should be compiled without any Assembly reference)
@@ -206,13 +210,13 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 100, 251, 270, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
+                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 616, 709, 817
                         });
 
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(535, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -615,6 +619,11 @@ namespace Ll2NativeTests
                 Convert(fileName);
             }
             catch (BadImageFormatException ex)
+            {
+                Debug.WriteLine(ex);
+                return;
+            }
+            catch (FileNotFoundException ex)
             {
                 Debug.WriteLine(ex);
                 return;

@@ -185,7 +185,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (name == ".ctor")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayConstructor(this.baseType, n)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayConstructor(this.baseType, this.elementType, n)).ToArray<Symbol>());
             }
 
             if (name == "Set")
@@ -439,10 +439,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         private sealed class ArrayConstructor : SynthesizedInstanceConstructor
         {
             private readonly ImmutableArray<ParameterSymbol> parameters;
+            private readonly TypeSymbol elementType;
 
-            public ArrayConstructor(NamedTypeSymbol containingType, int rank)
+            public ArrayConstructor(NamedTypeSymbol containingType, TypeSymbol elementType, int rank)
                 : base(containingType)
             {
+                this.elementType = elementType;
                 var intType = ContainingAssembly.GetSpecialType(SpecialType.System_Int32);
                 this.parameters = ImmutableArray.Create<ParameterSymbol>(
                     Enumerable.Range(0, rank).Select(n => new SynthesizedParameterSymbol(this, intType, n, RefKind.None)).ToArray<ParameterSymbol>());
