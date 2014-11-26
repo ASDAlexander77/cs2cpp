@@ -721,7 +721,17 @@ namespace Il2Native.Logic
             PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size; i++)
             {
-                var opCodePartUsed = this.Stack.Pop();
+                var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
+                OpCodePart opCodePartUsed;
+                if (!alternativeValueOnlyOne)
+                {
+                    opCodePartUsed = this.Stack.Pop();
+                }
+                else
+                {
+                    opCodePartUsed = opCodePart.AlternativeValues.Values.First();
+                    opCodePart.AlternativeValues = null;
+                }
 
                 // register second value
                 // TODO: this is still hack, review the code
@@ -1385,8 +1395,6 @@ namespace Il2Native.Logic
             {
                 current = current.PreviousOpCode(this);
             }
-
-            ;
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {

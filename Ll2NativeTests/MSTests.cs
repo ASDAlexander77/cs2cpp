@@ -183,7 +183,7 @@ namespace Ll2NativeTests
             // %.r13 = load i32* %local1, align 4
             // %.r14 = load i32* %local1, align 4
 
-
+            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 100 - using DllImport      
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
             // 270 - __arglist
@@ -206,13 +206,13 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            100, 251, 270, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
+                            10, 100, 251, 270, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
                         });
 
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(580, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }
@@ -269,7 +269,7 @@ namespace Ll2NativeTests
              */
 
 
-            // 10 - not compilable
+            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
             // 32 - multi array
@@ -614,7 +614,7 @@ namespace Ll2NativeTests
             {
                 Convert(fileName);
             }
-            catch (Exception ex)
+            catch (BadImageFormatException ex)
             {
                 Debug.WriteLine(ex);
                 return;
