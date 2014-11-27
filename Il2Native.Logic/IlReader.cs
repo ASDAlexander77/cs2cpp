@@ -937,6 +937,8 @@ namespace Il2Native.Logic
                     case Code.Stobj:
                     case Code.Constrained:
                     case Code.Sizeof:
+                    case Code.Mkrefany:
+                    case Code.Refanyval:
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
@@ -962,6 +964,7 @@ namespace Il2Native.Logic
 
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
+
                     default:
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;

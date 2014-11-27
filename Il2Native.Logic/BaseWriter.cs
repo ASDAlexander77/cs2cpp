@@ -1037,6 +1037,9 @@ namespace Il2Native.Logic
                 case Code.Localloc:
                 case Code.Pop:
                 case Code.Ldvirtftn:
+                case Code.Mkrefany:
+                case Code.Refanytype:
+                case Code.Refanyval:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:

@@ -164,11 +164,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteTypeOfFunction(this OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static bool WriteTypeOfFunction(this OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
         {
             // call .getType
             var typeInfo = opCodeMethodInfo.OpCodeOperands[0] as OpCodeTypePart;
+            if (typeInfo == null)
+            {
+                return false;
+            }
+
             typeInfo.Operand.WriteCallGetTypeObjectMethod(llvmWriter, opCodeMethodInfo);
+            return true;
         }
 
         /// <summary>

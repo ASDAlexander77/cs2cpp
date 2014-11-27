@@ -1043,15 +1043,26 @@ namespace Il2Native.Logic
                         out ownerOfExplicitInterface,
                         out requiredType);
 
-                    var methodAddressResultNumber = this.GenerateVirtualCall(
-                        opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                    FullyDefinedReference methodAddressResultNumber = null;
+                    if (isIndirectMethodCall)
+                    {
+                        methodAddressResultNumber = this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                    }
 
                     // bitcast method function address to Byte*
                     this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
                     writer.Write("bitcast ");
                     this.WriteMethodPointerType(writer, methodInfo, thisType);
                     writer.Write(" ");
-                    this.WriteResult(methodAddressResultNumber);
+                    if (isIndirectMethodCall)
+                    {
+                        this.WriteResult(methodAddressResultNumber);
+                    }
+                    else
+                    {
+                        this.WriteMethodDefinitionName(writer, methodInfo);
+                    }
+
                     writer.Write(" to i8*");
                     writer.WriteLine(string.Empty);
 
@@ -1496,6 +1507,18 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.ResolveType("System.Int32"));
+                    break;
+
+                case Code.Mkrefany:
+                    opCode.Result = opCode.OpCodeOperands[0].Result.ToByRefType();
+                    break;
+
+                case Code.Refanytype:
+                    opCode.Result = opCode.OpCodeOperands[0].Result;
+                    break;
+
+                case Code.Refanyval:
+                    opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
                     break;
 
                 case Code.Initblk:

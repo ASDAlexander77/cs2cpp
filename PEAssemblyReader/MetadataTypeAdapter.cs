@@ -920,6 +920,17 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IType ToByRefType()
+        {
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext).Clone();
+            newType.IsByRef = true;
+            return newType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IType ToNormal()
         {
             return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, false);

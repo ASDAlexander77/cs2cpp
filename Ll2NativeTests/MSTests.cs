@@ -206,19 +206,24 @@ namespace Ll2NativeTests
             // 596 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 600 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 616 - test to compile Object (but it should be compiled without any Assembly reference)
+            // 631 - missing System_Decimal__op_UnaryNegation (the same issue as 596)
+            // 646 - IntPtr does not have field "Size"
+            // 682 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 709 - get_OffsetStringData - required (NEED TO BE FIXED!!!!).
             // 817 - redefinition of Int32
+            // 864 - Decimal conversion (in CoreLib.dll some conversions are missing)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 596, 600, 616, 709, 817
+                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 596, 600, 616, 631, 646, 682,
+                            709, 817, 864
                         });
 
             Debug.Listeners.Clear();
 
             // last 790
-            foreach (var index in Enumerable.Range(595, 907).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
             }

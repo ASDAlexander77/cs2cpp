@@ -239,6 +239,12 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        IType ToByRefType();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType ToNormal();
 
         /// <summary>

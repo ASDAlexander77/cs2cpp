@@ -286,9 +286,8 @@ namespace Il2Native.Logic.Gencode
             // TODO: it seems, you can preprocess MSIL code and replace all functions with MSIL code blocks to stop writing the code manually.
             // for example call System.Activator.CreateInstance<X>() can be replace with "Code.NewObj x"
             // the same interlocked functions and the same for TypeOf operators
-            if (methodInfo.IsTypeOfCallFunction())
+            if (methodInfo.IsTypeOfCallFunction() && opCodeMethodInfo.WriteTypeOfFunction(llvmWriter))
             {
-                opCodeMethodInfo.WriteTypeOfFunction(llvmWriter);
                 return true;
             }
 

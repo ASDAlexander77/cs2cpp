@@ -83,6 +83,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
+        public FullyDefinedReference ToByRefType()
+        {
+            return this.ToType(this.Type.ToByRefType());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public FullyDefinedReference ToElementType()
         {
             return this.ToType(this.Type.GetElementType());
