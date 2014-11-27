@@ -64,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool Emscripten = false;
+        private const bool Emscripten = true;
 
         /// <summary>
         /// </summary>
@@ -81,6 +81,10 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const bool DebugInfo = false;
+
+        /// <summary>
+        /// </summary>
+        private const bool MultiCore = true;
         
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
@@ -430,7 +434,7 @@ namespace Ll2NativeTests
                                13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
                                161
                            };
-            foreach (var index in Enumerable.Range(159, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }
@@ -487,6 +491,11 @@ namespace Ll2NativeTests
             if (debugInfo)
             {
                 args.Add("debug");
+            }
+
+            if (MultiCore)
+            {
+                args.Add("multi");
             }
 
             if (Android)
