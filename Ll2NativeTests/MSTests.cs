@@ -179,10 +179,6 @@ namespace Ll2NativeTests
         {
             // TODO: WARNING! order of obj files in g++ cmd line is important, CoreLib.obj should be last one
 
-            // test-400.cs 
-            // %.r13 = load i32* %local1, align 4
-            // %.r14 = load i32* %local1, align 4
-
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 100 - using DllImport      
             // 171 - IntPtr conversion (in CoreLib.dll some conversions are missing)
@@ -429,8 +425,11 @@ namespace Ll2NativeTests
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156,
-                               159, 161 };
+            var skip = new[]
+                           {
+                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
+                               161
+                           };
             foreach (var index in Enumerable.Range(159, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
@@ -564,7 +563,7 @@ namespace Ll2NativeTests
 
                 if (opt)
                 {
-                    ExecCmd("opt", string.Format("CoreLib.ll -o CoreLib.bc -O2", Target));
+                    ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
                     ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
                 }
                 else
@@ -576,7 +575,7 @@ namespace Ll2NativeTests
             // file obj
             if (opt)
             {
-                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName, Target));
+                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName));
                 ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
             }
             else
