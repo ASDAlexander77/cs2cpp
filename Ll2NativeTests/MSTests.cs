@@ -222,7 +222,6 @@ namespace Ll2NativeTests
 
             Debug.Listeners.Clear();
 
-            // last 790
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
