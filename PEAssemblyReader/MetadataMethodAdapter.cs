@@ -60,6 +60,8 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         private readonly MethodSymbol methodDef;
+
+        private bool isVirtual;
         
         /// <summary>
         /// </summary>
@@ -77,6 +79,13 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyGenericArguments = new Lazy<IEnumerable<IType>>(this.CalculateGenericArguments);
             this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
+
+            this.isVirtual = methodDef.IsVirtual;
+            if (this.FullName == "System.Object.Finalize"
+                || this.FullName == "System.Object.GetType")
+            {
+                this.isVirtual = true;
+            }
         }
 
         /// <summary>
@@ -318,12 +327,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.FullName == "System.Object.Finalize")
-                {
-                    return true;
-                }
-
-                return this.methodDef.IsVirtual;
+                return this.isVirtual;
             }
         }
 

@@ -111,7 +111,9 @@ namespace Il2Native.Logic.Gencode
             // TODO: you need to append it before processing custom methods
             var getTypeMethod = new SynthesizedGetTypeMethod(thisType, llvmWriter);
             var baseGetTypeMethod = virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(getTypeMethod));
-            ////Debug.Assert(baseGetTypeMethod != null, "Could not find virtual method GetType (adjust source code and make GetType a virtual method");
+#if !FOR_MSCORLIBTEST
+            Debug.Assert(baseGetTypeMethod != null, "Could not find virtual method GetType (adjust source code and make GetType a virtual method");
+#endif
             if (baseGetTypeMethod != null)
             {
                 baseGetTypeMethod.Value = getTypeMethod;
@@ -425,7 +427,9 @@ namespace Il2Native.Logic.Gencode
                         .Select(interfaceMember => allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).FirstOrDefault())
                         .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }).ToList();
 
-            ////Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+#if !FOR_MSCORLIBTEST
+            Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+#endif
 
             virtualTable.AddRange(list);
         }

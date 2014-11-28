@@ -531,8 +531,11 @@ namespace Il2Native.Logic
             var genericMethodSpecializations = new HashSet<IMethod>();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList();
             var allTypes = ilReader.AllTypes().ToList();
+#if !FOR_MSCORLIBTEST
             var newListOfITypes = ResortITypes(types, genericTypeSpecializations, genericMethodSpecializations);
-
+#else
+            var newListOfITypes = allTypes;
+#endif
             // build quick access array for Generic Definitions
             var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))

@@ -45,11 +45,13 @@
 
         private static void RegisterAll(ICodeWriter codeWriter)
         {
+#if !FOR_MSCORLIBTEST
             GetHashCodeGen.Register(codeWriter);
             EqualsGen.Register(codeWriter);
             MemberwiseCloneGen.Register(codeWriter);
             ArrayCopyGen.Register(codeWriter);
             ArrayClearGen.Register(codeWriter);
+#endif
         }
 
         private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
