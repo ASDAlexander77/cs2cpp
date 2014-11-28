@@ -443,6 +443,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
+            return CalculateGenericArguments();
+        }
+
+        private IEnumerable<IType> CalculateGenericArguments()
+        {
             return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
@@ -451,6 +456,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IEnumerable<IType> GetGenericParameters()
+        {
+            return CalculateGenericParameters();
+        }
+
+        private IEnumerable<MetadataTypeAdapter> CalculateGenericParameters()
         {
             return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
         }

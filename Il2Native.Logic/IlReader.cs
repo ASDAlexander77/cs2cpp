@@ -547,8 +547,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags)
         {
-            foreach (var method in
-                type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+            foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return method;
             }

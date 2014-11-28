@@ -57,6 +57,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new Dictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
+
+        /// <summary>
+        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -76,7 +80,7 @@ namespace PEAssemblyReader
             if (def != null)
             {
                 this.typeDef = def.ReferencedType;
-                this.IsByRef = true;                
+                this.IsByRef = true;
             }
 
             Debug.Assert(this.typeDef.TypeKind != TypeKind.Error);
@@ -182,13 +186,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    return namedTypeSymbol.TypeArguments.Select(t => t.ResolveGeneric(this.GenericContext));
-                }
-
-                throw new NotImplementedException();
+                return this.CalculateGenericArguments();
             }
         }
 
@@ -200,14 +198,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    // TODO: you do not need to fix GenericTypeParameters (otherwise you will map ResolvedType to ResolvedType but you need to map Generic Param to ResolvedType
-                    return namedTypeSymbol.TypeParameters.Select(t => new MetadataTypeAdapter(t));
-                }
-
-                throw new NotImplementedException();
+                return this.CalculateGenericParameters();
             }
         }
 
@@ -737,6 +728,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
+            return CalculateGenericArguments();
+        }
+
+        private IEnumerable<IType> CalculateGenericArguments()
+        {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
@@ -751,6 +747,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IEnumerable<IType> GetGenericParameters()
+        {
+            return CalculateGenericParameters();
+        }
+
+        private IEnumerable<IType> CalculateGenericParameters()
         {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
@@ -801,6 +802,23 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IEnumerable<IMethod> GetMethods(BindingFlags bindingFlags)
+        {
+            Lazy<IEnumerable<IMethod>> lazyMethodsByFlags;
+            if (!this.lazyMethods.TryGetValue(bindingFlags, out lazyMethodsByFlags))
+            {
+                lazyMethodsByFlags = new Lazy<IEnumerable<IMethod>>(() => this.CalculateMethods(bindingFlags));
+                this.lazyMethods[bindingFlags] = lazyMethodsByFlags;
+            }
+
+            return lazyMethodsByFlags.Value;
+        }
+
+        public IEnumerable<IMethod> CalculateMethods(BindingFlags bindingFlags)
+        {
+            return this.IterateMethods(bindingFlags).ToList();
+        }
+
+        private IEnumerable<IMethod> IterateMethods(BindingFlags bindingFlags)
         {
             foreach (var method in
                 this.typeDef.GetMembers()
@@ -1144,7 +1162,7 @@ namespace PEAssemblyReader
                         {
                             result.Append(",");
                         }
-                        
+
                         result.Append("]");
                     }
                 }
