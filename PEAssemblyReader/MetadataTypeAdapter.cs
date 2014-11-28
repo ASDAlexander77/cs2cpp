@@ -176,7 +176,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IGenericContext GenericContext { get; set; }
+        public IGenericContext GenericContext { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -360,7 +360,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.GetGenericParameters().Any() && this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+                return this.GenericTypeParameters.Any() && this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -370,7 +370,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.GetGenericParameters().Any() && !this.GetGenericArguments().Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+                return this.GenericTypeParameters.Any() && !this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -722,15 +722,6 @@ namespace PEAssemblyReader
             return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<IType> GetGenericArguments()
-        {
-            return CalculateGenericArguments();
-        }
-
         private IEnumerable<IType> CalculateGenericArguments()
         {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
@@ -742,21 +733,12 @@ namespace PEAssemblyReader
             return new IType[0];
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<IType> GetGenericParameters()
-        {
-            return CalculateGenericParameters();
-        }
-
         private IEnumerable<IType> CalculateGenericParameters()
         {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeArguments.Select(a => new MetadataTypeAdapter(a));
+                return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a));
             }
 
             return new IType[0];
@@ -1092,7 +1074,7 @@ namespace PEAssemblyReader
                 sb.Append('<');
 
                 var index = 0;
-                foreach (var genArg in this.GetGenericArguments())
+                foreach (var genArg in this.GenericTypeArguments)
                 {
                     if (index++ > 0)
                     {

@@ -925,7 +925,7 @@ namespace Il2Native.Logic
         private static bool TypeHasGenericParameterInGenericArguments(IType type)
         {
             return type.IsGenericParameter
-                   || type.GetGenericArguments()
+                   || type.GenericTypeArguments
                           .Any(
                               t =>
                               t.IsGenericParameter || t.ContainsGenericParameters && TypeHasGenericParameterInGenericArguments(t)

@@ -196,7 +196,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IGenericContext GenericContext { get; set; }
+        public IGenericContext GenericContext { get; private set; }
 
         /// <summary>
         /// </summary>

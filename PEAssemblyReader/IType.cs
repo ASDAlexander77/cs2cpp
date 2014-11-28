@@ -173,12 +173,6 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IEnumerable<IType> GetGenericArguments();
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
         IEnumerable<IType> GetInterfaces();
 
         /// <summary>
