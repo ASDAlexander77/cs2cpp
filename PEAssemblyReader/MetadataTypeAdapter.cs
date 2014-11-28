@@ -61,6 +61,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyGenericArguments;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyGenericParameters;
+
+        /// <summary>
+        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -93,6 +101,8 @@ namespace PEAssemblyReader
             this.lazyBaseType = new Lazy<IType>(this.CalculateBaseType);
             this.lazyAssemblyQualifiedName = new Lazy<string>(this.CalculateAssemblyQualifiedName);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
+            this.lazyGenericArguments = new Lazy<IEnumerable<IType>>(this.CalculateGenericArguments);
+            this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
         }
 
         /// <summary>
@@ -186,7 +196,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.CalculateGenericArguments();
+                return this.lazyGenericArguments.Value;
             }
         }
 
@@ -198,7 +208,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.CalculateGenericParameters();
+                return this.lazyGenericParameters.Value;
             }
         }
 
@@ -727,7 +737,7 @@ namespace PEAssemblyReader
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
+                return namedTypeSymbol.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext)).ToList();
             }
 
             return new IType[0];
@@ -738,7 +748,7 @@ namespace PEAssemblyReader
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
             if (namedTypeSymbol != null)
             {
-                return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+                return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a)).ToList();
             }
 
             return new IType[0];

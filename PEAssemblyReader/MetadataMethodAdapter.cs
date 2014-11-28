@@ -51,6 +51,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyGenericArguments;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IType>> lazyGenericParameters;
+
+        /// <summary>
+        /// </summary>
         private readonly MethodSymbol methodDef;
         
         /// <summary>
@@ -67,6 +75,8 @@ namespace PEAssemblyReader
             this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
             this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
+            this.lazyGenericArguments = new Lazy<IEnumerable<IType>>(this.CalculateGenericArguments);
+            this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
         }
 
         /// <summary>
@@ -443,12 +453,12 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
-            return CalculateGenericArguments();
+            return this.lazyGenericArguments.Value;
         }
 
         private IEnumerable<IType> CalculateGenericArguments()
         {
-            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
+            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -457,12 +467,12 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericParameters()
         {
-            return CalculateGenericParameters();
+            return this.lazyGenericParameters.Value;
         }
 
         private IEnumerable<MetadataTypeAdapter> CalculateGenericParameters()
         {
-            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a)).ToList();
         }
 
         /// <summary>
