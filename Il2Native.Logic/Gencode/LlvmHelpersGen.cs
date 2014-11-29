@@ -548,7 +548,8 @@ namespace Il2Native.Logic.Gencode
                           thisType, 
                           returnFullyDefinedReference, 
                           methodInfo != null ? methodInfo.ReturnType : null, 
-                          llvmWriter);
+                          llvmWriter,
+                          methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
 
             tryClause.WriteFunctionCallUnwind(opCodeMethodInfo, llvmWriter);
         }

@@ -404,7 +404,6 @@ namespace Ll2NativeTests
             // 51 - bug in execution (NotImplemented)
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
-            // 63 - Array.Length is not implemented
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 66 - using typeof (typeof (Foo<>))
             // 72 - not implemented (DateTime to string)
@@ -430,7 +429,7 @@ namespace Ll2NativeTests
 
             var skip = new[]
                            {
-                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
+                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
                                161
                            };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
