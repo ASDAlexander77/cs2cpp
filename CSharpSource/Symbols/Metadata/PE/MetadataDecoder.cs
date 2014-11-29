@@ -692,6 +692,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
         {
             TypeSymbol targetTypeSymbol = GetMemberRefTypeSymbol(memberRef);
 
+            // TODO: ASD: MY ADDON
+            if (targetTypeSymbol == null)
+            {
+                Handle container = Module.GetContainingTypeOrThrow(memberRef);
+                HandleType containerType = container.HandleType;
+                if (containerType == HandleType.Method)
+                {
+                    return GetSymbolForILToken(container);
+                }
+            }
+
             if ((object)scope != null)
             {
                 Debug.Assert(scope.Kind == SymbolKind.NamedType || scope.Kind == SymbolKind.ErrorType);

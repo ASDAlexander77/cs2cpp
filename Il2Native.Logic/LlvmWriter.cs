@@ -3133,6 +3133,16 @@ namespace Il2Native.Logic
                 index++;
             }
 
+            if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                if (index > 0 || hasThis || isStructureType)
+                {
+                    writer.Write(", ");
+                }
+
+                writer.Write("...");
+            }
+
             writer.Write(")*");
         }
 

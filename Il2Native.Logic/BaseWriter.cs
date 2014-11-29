@@ -704,7 +704,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="size">
         /// </param>
-        protected void FoldNestedOpCodes(OpCodePart opCodePart, int size)
+        protected void FoldNestedOpCodes(OpCodePart opCodePart, int size, bool varArg = false)
         {
             if (opCodePart.OpCode.StackBehaviourPop == StackBehaviour.Pop0)
             {
@@ -719,18 +719,14 @@ namespace Il2Native.Logic
             var opCodeParts = new OpCodePart[size];
 
             PhiNodes lastPhiNodes = null;
-            for (var i = 1; i <= size; i++)
+            for (var i = 1; i <= size || varArg; i++)
             {
-                var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
-                OpCodePart opCodePartUsed;
-                if (!alternativeValueOnlyOne)
+                var isVarArg = i > size && varArg;
+                // take value from Stack
+                var opCodePartUsed = PopValue(opCodePart, isVarArg);
+                if (isVarArg && opCodePartUsed == null)
                 {
-                    opCodePartUsed = this.Stack.Pop();
-                }
-                else
-                {
-                    opCodePartUsed = opCodePart.AlternativeValues.Values.First();
-                    opCodePart.AlternativeValues = null;
+                    break;
                 }
 
                 // register second value
@@ -751,7 +747,13 @@ namespace Il2Native.Logic
                     alternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                opCodeParts[size - i] = opCodePartUsed;
+                if (!isVarArg)
+                {
+                    opCodeParts[size - i] = opCodePartUsed;
+                }
+                else
+                {
+                }
             }
 
             // register second value
@@ -774,6 +776,28 @@ namespace Il2Native.Logic
             {
                 this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
             }
+        }
+
+        private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
+        {
+            if (varArg && this.Stack.Count == 0)
+            {
+                return null;
+            }
+
+            var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
+            OpCodePart opCodePartUsed;
+            if (!alternativeValueOnlyOne)
+            {
+                opCodePartUsed = this.Stack.Pop();
+            }
+            else
+            {
+                opCodePartUsed = opCodePart.AlternativeValues.Values.First();
+                opCodePart.AlternativeValues = null;
+            }
+
+            return opCodePartUsed;
         }
 
         /// <summary>
@@ -862,12 +886,12 @@ namespace Il2Native.Logic
                 case Code.Call:
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
-                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
+                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count(), methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count(), methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
@@ -877,7 +901,7 @@ namespace Il2Native.Logic
                     }
 
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count(), ctorInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
                     break;
                 case Code.Stelem:

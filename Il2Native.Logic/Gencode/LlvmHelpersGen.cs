@@ -19,6 +19,7 @@ namespace Il2Native.Logic.Gencode
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
     using Il2Native.Logic.Gencode.InternalMethods;
+    using System.Reflection;
 
     /// <summary>
     /// </summary>
@@ -517,14 +518,22 @@ namespace Il2Native.Logic.Gencode
 
             methodInfo.WriteFunctionCallAttributes(writer);
 
-            methodInfo.WriteFunctionCallReturnType(llvmWriter);
-
-            writer.Write(' ');
-
-            // extra support
-            if (methodInfo.IsExternalLibraryMethod())
+            if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
-                writer.Write("(...)* ");
+                llvmWriter.WriteMethodPointerType(writer, methodInfo);
+                writer.Write(" ");
+            }
+            else
+            {
+                methodInfo.WriteFunctionCallReturnType(llvmWriter);
+
+                writer.Write(' ');
+
+                // extra support
+                if (methodInfo.IsExternalLibraryMethod())
+                {
+                    writer.Write("(...)* ");
+                }
             }
 
             methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, llvmWriter);

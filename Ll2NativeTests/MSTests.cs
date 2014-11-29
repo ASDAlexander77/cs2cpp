@@ -64,7 +64,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool Emscripten = true;
+        private const bool Emscripten = false;
 
         /// <summary>
         /// </summary>
@@ -347,7 +347,6 @@ namespace Ll2NativeTests
             // 264 - Delegate.Combine (NotImplemented)
             // 266 - IConvertable 
             // 269 - ArgIterator
-            // 270 - __arglist
             // 273 - GetCustomAttributes
             // 275 - Delegate.Combine (NotImplemented)
             // 276 - GetType.GetEvents(); (NotImplemented)
@@ -378,7 +377,7 @@ namespace Ll2NativeTests
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 252, 253, 254, 263, 264, 266, 269, 270, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319
+                            247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319
                         });
 
             if (UsingRoslyn)
