@@ -716,7 +716,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var opCodeParts = new OpCodePart[size];
+            var opCodeParts = new List<OpCodePart>(size);
 
             PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size || varArg; i++)
@@ -747,13 +747,7 @@ namespace Il2Native.Logic
                     alternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                if (!isVarArg)
-                {
-                    opCodeParts[size - i] = opCodePartUsed;
-                }
-                else
-                {
-                }
+                opCodeParts.Insert(0, opCodePartUsed);
             }
 
             // register second value
@@ -763,7 +757,7 @@ namespace Il2Native.Logic
                 AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
             }
 
-            opCodePart.OpCodeOperands = opCodeParts;
+            opCodePart.OpCodeOperands = opCodeParts.ToArray();
             var operandPosition = 0;
             foreach (var childCodePart in opCodeParts)
             {
