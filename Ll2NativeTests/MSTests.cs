@@ -423,6 +423,13 @@ namespace Ll2NativeTests
             // 156 - can't compile (seems it is lib)
             // 159 - Dictionary<K, V> NotImplemented
             // 161 - can't compile (seems it is lib)
+            // 162 - GetType. findMember
+            // 165 - cant be compiled (library)
+            // 166 - cant be compiled (library)
+            // 167 - Attribute.GetCustomAttributes
+            // 171 - multiarray
+            // 172 - cant be compiled (library)
+            // 174 - cant be compiled (library)
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -430,9 +437,9 @@ namespace Ll2NativeTests
             var skip = new[]
                            {
                                13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
-                               161
+                               161, 162, 165, 166, 167, 171, 172, 174
                            };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(174, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }

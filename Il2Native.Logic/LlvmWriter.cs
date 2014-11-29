@@ -448,6 +448,13 @@ namespace Il2Native.Logic
                 case Code.Ldnull:
                     opCode.Result = new ConstValue(null, this.ResolveType("System.Void").ToPointerType());
                     break;
+
+                case Code.Arglist:
+
+                    // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
+                    opCode.Result = new ConstValue("undef", this.ResolveType("System.Object"));
+                    break;
+
                 case Code.Ldtoken:
 
                     // TODO: finish loading Token  
@@ -1692,17 +1699,22 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfExternalDeclarationIsRequired(IType type)
         {
-            if (type == null || type.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            if (type == null)
             {
                 return;
             }
-
-            this.typeDeclRequired.Add(type.ToBareType());
 
             if (type.IsMultiArray)
             {
                 this.typeDeclRequired.Add(this.ResolveType("System.Array"));
             }
+
+            if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            {
+                return;
+            }
+
+            this.typeDeclRequired.Add(type.ToBareType());
         }
 
         /// <summary>
@@ -4029,7 +4041,7 @@ namespace Il2Native.Logic
             int operand1 = 0,
             int operand2 = 1)
         {
-            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && opCode.OpCodeOperands == null)
+            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0))
             {
                 return effectiveType;
             }
