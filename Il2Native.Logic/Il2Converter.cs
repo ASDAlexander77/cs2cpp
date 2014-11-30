@@ -599,6 +599,8 @@ namespace Il2Native.Logic
         private static IEnumerable<IType> GetAllRequiredITypesForIType(
             IType type, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations)
         {
+            Debug.Assert(type != null);
+
             if (type.BaseType != null)
             {
                 DicoverGenericSpecializedIType(type.BaseType, genericTypeSpecializations, genericMethodSpecializations);
@@ -707,13 +709,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredTypes">
         /// </param>
-        private static void ProcessGenericTypeToFindRequiredTypes(ISet<IType> genericTypeSpecializations, ICollection<Tuple<IType, List<IType>>> requiredTypes, object requiredTypesSyncRoot)
+        private static void ProcessGenericTypeToFindRequiredTypes(ISet<IType> genericTypeSpecializations, ICollection<Tuple<IType, List<IType>>> requiredTypes, object requiredTypesSyncRoot, bool applyConccurent = false)
         {
             var subSetGenericTypeSpecializations = new HashSet<IType>();
             HashSet<IMethod> subSetGenericMethodSpecializations = null; // new HashSet<IMethod>();
 
             // the same for generic specialized types
-            if (concurrent)
+            if (concurrent && applyConccurent)
             {
                 Parallel.ForEach(
                     genericTypeSpecializations,
@@ -777,7 +779,7 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations)
         {
-            var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).Where(type.TypeNotEquals).ToList();
+            var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).Where(type.TypeNotEquals);
             foreach (var requiredIType in requiredITypes)
             {
                 AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);

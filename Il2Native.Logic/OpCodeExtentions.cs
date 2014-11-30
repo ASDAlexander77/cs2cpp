@@ -239,6 +239,8 @@ namespace Il2Native.Logic
                 index = int.Parse(asString.Substring(asString.Length - 1));
             }
 
+            Debug.Assert(baseWriter.LocalInfo.Length > index);
+
             var localType = baseWriter.LocalInfo[index].LocalType;
             return localType;
         }
@@ -1045,7 +1047,12 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (genType.MetadataFullName.Equals(type.MetadataFullName))
+            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
+            {
+                return true;
+            }
+
+            if (genType.FullName.Equals(type.FullName))
             {
                 return true;
             }
