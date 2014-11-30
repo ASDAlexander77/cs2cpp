@@ -146,7 +146,13 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                if (!llvmWriter.WriteFieldAccess(
+                        writer, 
+                        opCode, 
+                        declaringType.ToClass(), 
+                        declaringType.ToClass(), 
+                        llvmWriter.CalculateFirstFieldIndex(declaringType), 
+                        opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return;
@@ -828,7 +834,13 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                if (!llvmWriter.WriteFieldAccess(
+                        writer, 
+                        opCode, 
+                        declaringType.ToClass(), 
+                        declaringType.ToClass(), 
+                        llvmWriter.CalculateFirstFieldIndex(declaringType), 
+                        opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return false;

@@ -4124,7 +4124,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private int CalculateFirstFieldIndex(IType type)
+        public int CalculateFirstFieldIndex(IType type)
         {
             var index = 0;
 
