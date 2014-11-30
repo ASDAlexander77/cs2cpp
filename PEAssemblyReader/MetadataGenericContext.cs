@@ -25,7 +25,7 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         public MetadataGenericContext()
-            : this(new SortedDictionary<IType, IType>())
+            : this(new SortedList<IType, IType>())
         {
         }
 

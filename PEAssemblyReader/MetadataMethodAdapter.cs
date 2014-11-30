@@ -458,6 +458,11 @@ namespace PEAssemblyReader
 
         private IEnumerable<IType> CalculateGenericArguments()
         {
+            if (this.methodDef.TypeArguments.Length == 0)
+            {
+                return new MetadataTypeAdapter[0];
+            }
+
             return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext)).ToList();
         }
 
@@ -472,6 +477,11 @@ namespace PEAssemblyReader
 
         private IEnumerable<MetadataTypeAdapter> CalculateGenericParameters()
         {
+            if (this.methodDef.TypeParameters.Length == 0)
+            {
+                return new MetadataTypeAdapter[0];
+            }
+
             return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a)).ToList();
         }
 
@@ -492,7 +502,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            return this.ToString().GetHashCode();
+            return this.methodDef.GetHashCode();
         }
 
         /// <summary>

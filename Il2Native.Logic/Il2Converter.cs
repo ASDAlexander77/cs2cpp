@@ -24,7 +24,7 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
-        private static bool concurrent = true;
+        private static bool concurrent = false;
 
         /// <summary>
         /// </summary>
@@ -524,20 +524,28 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
-            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib, ilReader.AllReferences());
+            List<IType> newListOfITypes;
+            SortedDictionary<string, IType> genDefinitionsByMetadataName;
+            SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
+            ReadingTypes(ilReader, out newListOfITypes, out genDefinitionsByMetadataName, out genericMethodSpecializationsSorted);
 
+            Writing(ilReader, filter, codeWriter, newListOfITypes, genDefinitionsByMetadataName, genericMethodSpecializationsSorted);
+        }
+
+        private static void ReadingTypes(IlReader ilReader, out List<IType> newListOfITypes, out SortedDictionary<string, IType> genDefinitionsByMetadataName, out SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+        {
             // types in current assembly
             var genericTypeSpecializations = new HashSet<IType>();
             var genericMethodSpecializations = new HashSet<IMethod>();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList();
             var allTypes = ilReader.AllTypes().ToList();
-#if !FOR_MSCORLIBTEST
-            var newListOfITypes = ResortITypes(types, genericTypeSpecializations, genericMethodSpecializations);
+#if !FOR_MSCORLIBTEST_DISABLE_RESORT
+            newListOfITypes = ResortITypes(types, genericTypeSpecializations, genericMethodSpecializations);
 #else
             var newListOfITypes = allTypes;
 #endif
             // build quick access array for Generic Definitions
-            var genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
+            genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))
             {
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
@@ -547,7 +555,13 @@ namespace Il2Native.Logic
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, genericMethodSpecializations);
 
-            var genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
+            genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
+        }
+
+        private static void Writing(IlReader ilReader, string[] filter, ICodeWriter codeWriter, List<IType> newListOfITypes, SortedDictionary<string, IType> genDefinitionsByMetadataName, SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+        {
+            // writing
+            codeWriter.WriteStart(ilReader.ModuleName, ilReader.AssemblyQualifiedName, ilReader.IsCoreLib, ilReader.AllReferences());
 
             WriteForwardDeclarations(codeWriter, newListOfITypes);
 

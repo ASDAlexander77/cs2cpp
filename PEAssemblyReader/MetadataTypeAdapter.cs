@@ -69,6 +69,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<bool> lazyIsGenericTypeDefinition;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<bool> lazyIsGenericType;
+
+        /// <summary>
+        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -103,6 +111,8 @@ namespace PEAssemblyReader
             this.lazyToString = new Lazy<string>(this.CalculateToString);
             this.lazyGenericArguments = new Lazy<IEnumerable<IType>>(this.CalculateGenericArguments);
             this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
+            this.lazyIsGenericTypeDefinition = new Lazy<bool>(this.CalculateIsGenericTypeDefinition);
+            this.lazyIsGenericType = new Lazy<bool>(this.CalculateIsGenericType);
         }
 
         /// <summary>
@@ -147,13 +157,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    return namedTypeSymbol.TypeArguments.Any();
-                }
-
-                return false;
+                return this.AnyGenericParameters();
             }
         }
 
@@ -318,24 +322,29 @@ namespace PEAssemblyReader
         {
             get
             {
-                IType current = this;
-                while (current != null)
+                return this.lazyIsGenericType.Value;
+            }
+        }
+
+        private bool CalculateIsGenericType()
+        {
+            IType current = this;
+            while (current != null)
+            {
+                if (current.IsGenericTypeLocal)
                 {
-                    if (current.IsGenericTypeLocal)
-                    {
-                        return true;
-                    }
-
-                    if (!current.IsNested)
-                    {
-                        break;
-                    }
-
-                    current = current.DeclaringType;
+                    return true;
                 }
 
-                return false;
+                if (!current.IsNested)
+                {
+                    break;
+                }
+
+                current = current.DeclaringType;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -344,24 +353,29 @@ namespace PEAssemblyReader
         {
             get
             {
-                IType current = this;
-                while (current != null)
+                return this.lazyIsGenericTypeDefinition.Value;
+            }
+        }
+
+        private bool CalculateIsGenericTypeDefinition()
+        {
+            IType current = this;
+            while (current != null)
+            {
+                if (current.IsGenericTypeDefinitionLocal)
                 {
-                    if (current.IsGenericTypeDefinitionLocal)
-                    {
-                        return true;
-                    }
-
-                    if (!current.IsNested)
-                    {
-                        break;
-                    }
-
-                    current = current.DeclaringType;
+                    return true;
                 }
 
-                return false;
+                if (!current.IsNested)
+                {
+                    break;
+                }
+
+                current = current.DeclaringType;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -370,7 +384,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.GenericTypeParameters.Any() && this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+                return this.AnyGenericParameters() && this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -380,7 +394,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.GenericTypeParameters.Any() && !this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
+                return this.AnyGenericParameters() && !this.GenericTypeArguments.Any(tp => tp.IsGenericParameter || tp.IsGenericTypeDefinition);
             }
         }
 
@@ -735,7 +749,7 @@ namespace PEAssemblyReader
         private IEnumerable<IType> CalculateGenericArguments()
         {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null)
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
             {
                 return namedTypeSymbol.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext)).ToList();
             }
@@ -743,15 +757,37 @@ namespace PEAssemblyReader
             return new IType[0];
         }
 
+        private bool AnyGenericArguments()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private IEnumerable<IType> CalculateGenericParameters()
         {
             var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null)
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
             {
                 return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a)).ToList();
             }
 
             return new IType[0];
+        }
+
+        private bool AnyGenericParameters()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -760,7 +796,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            return this.FullName.GetHashCode();
+            return this.typeDef.GetHashCode();
         }
 
         /// <summary>
