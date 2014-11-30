@@ -59,8 +59,6 @@ namespace Il2Native.Logic
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
             var pdbFileName = Path.Combine(filePath, string.Concat(fileNameWithoutExtension, ".pdb"));
             
-            concurrent = args != null && args.Any(a => a == "multi");
-
             var ilReader = new IlReader();
             ilReader.Load(type);
             GenerateLlvm(ilReader, fileNameWithoutExtension, null, pdbFileName, outputFolder, args, new[] { type.FullName });
@@ -510,6 +508,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateLlvm(IlReader ilReader, string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args, string[] filter = null)
         {
+            concurrent = args != null && args.Any(a => a == "multi");
             var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }

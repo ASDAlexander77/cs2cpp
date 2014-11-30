@@ -77,6 +77,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<bool> lazyIsPrimitive;
+
+        /// <summary>
+        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -113,6 +117,7 @@ namespace PEAssemblyReader
             this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
             this.lazyIsGenericTypeDefinition = new Lazy<bool>(this.CalculateIsGenericTypeDefinition);
             this.lazyIsGenericType = new Lazy<bool>(this.CalculateIsGenericType);
+            this.lazyIsPrimitive = new Lazy<bool>(this.CalculateIsPrimitive);
         }
 
         /// <summary>
@@ -277,7 +282,7 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType() || this.FullName == "System.Enum";
+                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType() || this.typeDef.SpecialType == SpecialType.System_Enum;
             }
         }
 
@@ -303,6 +308,16 @@ namespace PEAssemblyReader
                 }
 
                 return this.typeDef.IsEnumType() || this.IsDerivedFromEnum();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsObject
+        {
+            get
+            {
+                return this.typeDef.SpecialType == SpecialType.System_Object;
             }
         }
 
@@ -443,36 +458,41 @@ namespace PEAssemblyReader
                     return false;
                 }
 
-                if (this.typeDef.IsPrimitiveRecursiveStruct())
-                {
-                    switch (this.FullName)
-                    {
-                        case "System.IntPtr":
-                        case "System.UIntPtr":
-                            return false;
-                    }
+                return this.lazyIsPrimitive.Value;
+            }
+        }
 
-                    return true;
-                }
-
-                switch (this.FullName)
+        private bool CalculateIsPrimitive()
+        {
+            if (this.typeDef.IsPrimitiveRecursiveStruct())
+            {
+                switch (this.typeDef.SpecialType)
                 {
-                    case "System.Boolean":
-                    case "System.Byte":
-                    case "System.Char":
-                    case "System.Double":
-                    case "System.Int16":
-                    case "System.Int32":
-                    case "System.Int64":
-                    case "System.UInt16":
-                    case "System.UInt32":
-                    case "System.UInt64":
-                    case "System.SByte":
-                    case "System.Single":
-                        return true;
-                    default:
+                    case SpecialType.System_IntPtr:
+                    case SpecialType.System_UIntPtr:
                         return false;
                 }
+
+                return true;
+            }
+
+            switch (this.typeDef.SpecialType)
+            {
+                case SpecialType.System_Boolean:
+                case SpecialType.System_Byte:
+                case SpecialType.System_Char:
+                case SpecialType.System_Double:
+                case SpecialType.System_Int16:
+                case SpecialType.System_Int32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt16:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_SByte:
+                case SpecialType.System_Single:
+                    return true;
+                default:
+                    return false;
             }
         }
 
@@ -487,12 +507,13 @@ namespace PEAssemblyReader
                     return false;
                 }
 
-                if (this.FullName == "System.Enum" || this.IsPointer)
+                var isEnum = this.IsEnum;
+                if ((isEnum && this.typeDef.SpecialType == SpecialType.System_Enum) || this.IsPointer)
                 {
                     return false;
                 }
 
-                return this.typeDef.IsValueType || this.IsDerivedFromEnum() || this.IsDerivedFromValueType();
+                return this.typeDef.IsValueType || isEnum || this.IsDerivedFromValueType();
             }
         }
 
@@ -1250,7 +1271,7 @@ namespace PEAssemblyReader
         /// </returns>
         private bool IsDerivedFromDelegateType()
         {
-            return this.BaseType != null && (this.BaseType.FullName == "System.Delegate" || this.BaseType.FullName == "System.MulticastDelegate");
+            return this.BaseType != null && this.BaseType.IsDelegate;
         }
 
         /// <summary>
@@ -1259,7 +1280,7 @@ namespace PEAssemblyReader
         /// </returns>
         private bool IsDerivedFromEnum()
         {
-            return this.BaseType != null && this.BaseType.FullName == "System.Enum";
+            return this.BaseType != null && this.BaseType.IsEnum;
         }
 
         /// <summary>
@@ -1268,7 +1289,7 @@ namespace PEAssemblyReader
         /// </returns>
         private bool IsDerivedFromValueType()
         {
-            return this.BaseType != null && this.BaseType.FullName == "System.ValueType";
+            return this.BaseType != null && this.BaseType.IsValueType;
         }
     }
 }

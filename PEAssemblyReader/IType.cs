@@ -69,6 +69,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsObject { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsGenericParameter { get; }
 
         /// <summary>
