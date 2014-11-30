@@ -2642,15 +2642,27 @@ namespace Il2Native.Logic
             writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
 
             var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
-            var opts = OperandOptions.GenerateResult;
-
-            var effectiveType = operand.Type.IsPointer ? operand.Type.GetElementType() : operand.Type;
+            var operandType = operand.Type;
+            var effectiveType = operandType.IsPointer ? operandType.GetElementType() : operandType;
             if (effectiveType.IsValueType)
             {
-                effectiveType = effectiveType.ToClass();
+                if (opCodeFieldInfoPart.OpCodeOperands[0].Result.Type.IntTypeBitSize() == PointerSize * 8)
+                {
+                    effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
+                    this.LlvmConvert(opCodeFieldInfoPart, string.Empty, string.Empty, effectiveType.ToPointerType(), true);
+                }
+                else
+                {
+                    effectiveType = effectiveType.ToClass();
+                }
+            }
+            else if (effectiveType.IsPointer)
+            {
+                effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
+                this.WriteBitcast(opCodeFieldInfoPart, effectiveType.ToPointerType());
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.GenerateResult);
 
             this.CheckIfTypeIsRequiredForBody(effectiveType);
 
