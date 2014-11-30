@@ -51,19 +51,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyGenericArguments;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<IEnumerable<IType>> lazyGenericParameters;
-
-        /// <summary>
-        /// </summary>
         private readonly MethodSymbol methodDef;
 
         /// <summary>
         /// </summary>
-        private Lazy<bool> lazyIsVirtual;
+        private bool? isVirtual;
         
         /// <summary>
         /// </summary>
@@ -79,9 +71,6 @@ namespace PEAssemblyReader
             this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
             this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
-            this.lazyGenericArguments = new Lazy<IEnumerable<IType>>(this.CalculateGenericArguments);
-            this.lazyGenericParameters = new Lazy<IEnumerable<IType>>(this.CalculateGenericParameters);
-            this.lazyIsVirtual = new Lazy<bool>(this.CalculateIsVirtual);
         }
 
         /// <summary>
@@ -323,7 +312,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.lazyIsVirtual.Value;
+                return this.isVirtual.HasValue ? this.isVirtual.Value : (isVirtual = CalculateIsVirtual()).Value;
             }
         }
 
@@ -453,7 +442,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
-            return this.lazyGenericArguments.Value;
+            return this.CalculateGenericArguments();
         }
 
         private IEnumerable<IType> CalculateGenericArguments()
@@ -463,7 +452,7 @@ namespace PEAssemblyReader
                 return new MetadataTypeAdapter[0];
             }
 
-            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext)).ToList();
+            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
         /// <summary>
@@ -472,7 +461,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericParameters()
         {
-            return this.lazyGenericParameters.Value;
+            return this.CalculateGenericParameters();
         }
 
         private IEnumerable<MetadataTypeAdapter> CalculateGenericParameters()
@@ -482,7 +471,7 @@ namespace PEAssemblyReader
                 return new MetadataTypeAdapter[0];
             }
 
-            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a)).ToList();
+            return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
         }
 
         private bool CalculateIsVirtual()
@@ -502,7 +491,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            return this.methodDef.GetHashCode();
+            return this.FullName.GetHashCode();
         }
 
         /// <summary>
