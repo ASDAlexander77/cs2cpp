@@ -1517,15 +1517,18 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Mkrefany:
-                    opCode.Result = opCode.OpCodeOperands[0].Result.ToByRefType();
+                    var opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
                     break;
 
                 case Code.Refanytype:
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
+                    opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
                     break;
 
                 case Code.Refanyval:
-                    opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
+                    opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
                     break;
 
                 case Code.Initblk:

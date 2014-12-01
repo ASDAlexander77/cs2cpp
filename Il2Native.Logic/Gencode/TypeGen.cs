@@ -66,19 +66,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypesToCTypes["Single"] = "float";
             SystemTypesToCTypes["Double"] = "double";
             SystemTypesToCTypes["Boolean"] = "i1";
-            SystemTypesToCTypes["Byte&"] = "i8*";
-            SystemTypesToCTypes["SByte&"] = "i8*";
-            SystemTypesToCTypes["Char&"] = "i8*";
-            SystemTypesToCTypes["Int16&"] = "i16*";
-            SystemTypesToCTypes["Int32&"] = "i32*";
-            SystemTypesToCTypes["Int64&"] = "i64*";
-            SystemTypesToCTypes["UInt16&"] = "i16**";
-            SystemTypesToCTypes["UInt32&"] = "i32**";
-            SystemTypesToCTypes["UInt64&"] = "i64*";
-            SystemTypesToCTypes["Float&"] = "float*";
-            SystemTypesToCTypes["Single&"] = "float*";
-            SystemTypesToCTypes["Double&"] = "double*";
-            SystemTypesToCTypes["Boolean&"] = "i1*";
 
             SystemTypeSizes["Void"] = 0;
             SystemTypeSizes["Void*"] = LlvmWriter.PointerSize;
@@ -95,19 +82,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["Single"] = LlvmWriter.PointerSize;
             SystemTypeSizes["Double"] = 8;
             SystemTypeSizes["Boolean"] = 1;
-            SystemTypeSizes["Byte&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["SByte&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Char&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Int16&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Int32&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Int64&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["UInt16&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["UInt32&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["UInt64&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Float&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Single&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Double&"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Boolean&"] = LlvmWriter.PointerSize;
         }
 
         /// <summary>
