@@ -127,6 +127,8 @@ namespace Il2Native.Logic
             var count = fields.Count();
             var number = 1;
 
+            Debug.Assert(!type.IsGenericType || !type.IsArray);
+
             codeWriter.WriteTypeStart(type, genericContext);
             codeWriter.WriteBeforeFields(count);
 
@@ -331,10 +333,6 @@ namespace Il2Native.Logic
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same method in generic class
-                        Debug.Assert(genericDefinition != null);
-
-                        Debug.Assert(method.FullName != "System.Threading.Tasks.TaskFactory<Task<Task[]>[]>.ContinueWhenAll<Task[]>");
-
                         genericMethod = IlReader.MethodsOriginal(genericDefinition).First(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)));
                     }
 

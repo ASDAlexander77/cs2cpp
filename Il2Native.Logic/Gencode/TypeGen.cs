@@ -508,7 +508,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(refChar);
                 }
 
-                if (effectiveType.HasElementType)
+                if (effectiveType.HasElementType && !effectiveType.IsArray)
                 {
                     effectiveType = effectiveType.GetElementType();
                     level++;
@@ -562,13 +562,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer)
+        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool isPointer = false)
         {
             var effectiveType = type;
 
-            while (effectiveType.HasElementType)
+            if (effectiveType.IsPointer)
             {
-                effectiveType = effectiveType.GetElementType();
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(writer, type.IsPointer);
+                return;
             }
 
             if (!type.IsArray)
@@ -579,7 +580,7 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 // write base name
-                effectiveType.WriteTypeName(writer, type.IsPointer);
+                effectiveType.WriteTypeName(writer, isPointer);
             }
             else if (!type.IsMultiArray)
             {

@@ -1148,7 +1148,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.IsGenericTypeDefinition || !type.IsGenericType)
+            if (type.IsArray || type.IsPointer || type.IsGenericTypeDefinition || !type.IsGenericType)
             {
                 return;
             }
