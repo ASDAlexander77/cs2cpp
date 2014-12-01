@@ -491,7 +491,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override int GetHashCode()
         {
-            return this.FullName.GetHashCode();
+            return this.ToString().GetHashCode();
         }
 
         /// <summary>

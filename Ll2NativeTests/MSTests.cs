@@ -439,7 +439,7 @@ namespace Ll2NativeTests
                                13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
                                161, 162, 165, 166, 167, 171, 172, 174
                            };
-            foreach (var index in Enumerable.Range(174, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }
