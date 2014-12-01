@@ -1892,7 +1892,12 @@ namespace Il2Native.Logic
                     type = this.ResolveType("System.SByte");
                     break;
                 case Code.Ldind_U1:
-                    type = this.ResolveType("System.Byte");
+                    //type = this.ResolveType("System.Byte");
+
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
                     break;
                 case Code.Ldind_I2:
                     type = this.ResolveType("System.Int16");
@@ -4872,7 +4877,12 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stind_I1:
-                    type = this.ResolveType("System.Byte");
+                    //type = this.ResolveType("System.Byte");
+                    
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
                     break;
                 case Code.Stind_I2:
                     type = this.ResolveType("System.Int16");
