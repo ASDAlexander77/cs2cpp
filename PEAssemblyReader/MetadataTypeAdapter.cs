@@ -326,6 +326,11 @@ namespace PEAssemblyReader
                     return true;
                 }
 
+                if (current.HasElementType && current.GetElementType().IsGenericTypeLocal)
+                {
+                    return true;
+                }
+
                 if (!current.IsNested)
                 {
                     break;
@@ -353,6 +358,11 @@ namespace PEAssemblyReader
             while (current != null)
             {
                 if (current.IsGenericTypeDefinitionLocal)
+                {
+                    return true;
+                }
+
+                if (current.HasElementType && current.GetElementType().IsGenericTypeDefinition)
                 {
                     return true;
                 }
@@ -692,19 +702,30 @@ namespace PEAssemblyReader
         /// </returns>
         public IType GetElementType()
         {
+            var typeSymbol = this.GetElementTypeSymbol();
+            if (typeSymbol != null)
+            {
+                return typeSymbol.ResolveGeneric(this.GenericContext);
+            }
+
+            return null;
+        }
+
+        internal TypeSymbol GetElementTypeSymbol()
+        {
             if (this.IsByRef)
             {
-                return this.typeDef.ResolveGeneric(this.GenericContext);
+                return this.typeDef;
             }
 
             if (this.IsArray)
             {
-                return (this.typeDef as ArrayTypeSymbol).ElementType.ResolveGeneric(this.GenericContext);
+                return (this.typeDef as ArrayTypeSymbol).ElementType;
             }
 
             if (this.IsPointer)
             {
-                return (this.typeDef as PointerTypeSymbol).PointedAtType.ResolveGeneric(this.GenericContext);
+                return (this.typeDef as PointerTypeSymbol).PointedAtType;
             }
 
             Debug.Fail(string.Empty);

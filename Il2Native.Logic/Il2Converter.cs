@@ -332,6 +332,9 @@ namespace Il2Native.Logic
                     {
                         // find the same method in generic class
                         Debug.Assert(genericDefinition != null);
+
+                        Debug.Assert(method.FullName != "System.Threading.Tasks.TaskFactory<Task<Task[]>[]>.ContinueWhenAll<Task[]>");
+
                         genericMethod = IlReader.MethodsOriginal(genericDefinition).First(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)));
                     }
 
