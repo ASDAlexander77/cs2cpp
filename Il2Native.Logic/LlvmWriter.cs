@@ -1890,6 +1890,12 @@ namespace Il2Native.Logic
             {
                 case Code.Ldind_I:
                     type = this.GetTypeOfReference(opCode);
+                    if (type.IsVoid())
+                    {
+                        // ignore Ldind.i load of Void type
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        return;
+                    }
                     break;
                 case Code.Ldind_I1:
                     type = this.ResolveType("System.SByte");
@@ -1897,9 +1903,13 @@ namespace Il2Native.Logic
                 case Code.Ldind_U1:
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.SByte");
+                    ////type = this.ResolveType("System.Byte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
-                    type = result.Type.HasElementType ? result.Type.GetElementType() : this.ResolveType("System.Byte");
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid())
+                    {
+                        type = this.ResolveType("System.Byte");
+                    }
                     break;
                 case Code.Ldind_I2:
                     type = this.ResolveType("System.Int16");
@@ -1926,6 +1936,8 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
             }
+
+            Debug.Assert(!type.IsVoid());
 
             this.LoadIndirect(writer, opCode, type);
         }
@@ -4755,6 +4767,8 @@ namespace Il2Native.Logic
                     break;
             }
 
+            Debug.Assert(!type.IsVoid());
+
             this.BinaryOper(
                 writer,
                 opCode,
@@ -4887,7 +4901,12 @@ namespace Il2Native.Logic
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
-                    type = result.Type.HasElementType ? result.Type.GetElementType() : this.ResolveType("System.Byte");
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid())
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Stind_I2:
                     type = this.ResolveType("System.Int16");
@@ -4908,6 +4927,8 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
             }
+
+            Debug.Assert(!type.IsVoid());
 
             var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
             var destinationType = resultOfOperand0.Type;
@@ -4951,7 +4972,7 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex)
         {
             var operandResult = opCode.OpCodeOperands[operandIndex].Result.ToNormalType();
-            if (operandResult.Type.IsPrimitiveType())
+            if (!operandResult.Type.IsStructureType())
             {
                 this.WriteLlvmSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result);
             }
