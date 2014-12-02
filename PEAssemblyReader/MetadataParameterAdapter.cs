@@ -84,8 +84,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var paramType = this.paramDef.Type.ResolveGeneric(this.GenericContext);
-                paramType.IsByRef = this.IsRef || this.IsOut;
+                var paramType = this.paramDef.Type.ResolveGeneric(this.GenericContext, this.IsRef || this.IsOut);
                 return paramType;
             }
         }

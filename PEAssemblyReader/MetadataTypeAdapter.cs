@@ -69,12 +69,13 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false)
         {
             Debug.Assert(typeDef != null);
 
             this.typeDef = typeDef;
             this.IsByRef = isByRef;
+            this.IsPinned = isPinned;
 
             var def = typeDef as ByRefReturnErrorTypeSymbol;
             if (def != null)
@@ -103,8 +104,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false)
-            : this(typeDef, isByRef)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
+            : this(typeDef, isByRef, isPinned)
         {
             this.GenericContext = genericContext;
         }
@@ -985,8 +986,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToByRefType()
         {
-            var newType = this.typeDef.ResolveGeneric(this.GenericContext).Clone();
-            newType.IsByRef = true;
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext, true).Clone();
             return newType;
         }
 

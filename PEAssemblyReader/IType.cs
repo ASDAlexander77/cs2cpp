@@ -53,7 +53,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsByRef { get; set; }
+        bool IsByRef { get; }
 
         /// <summary>
         /// </summary>
@@ -101,7 +101,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsPinned { get; set; }
+        bool IsPinned { get; }
 
         /// <summary>
         /// </summary>

@@ -231,8 +231,14 @@ namespace PEAssemblyReader
 
             for (var index = 0; index < typeArguments.Count; index++)
             {
-                Debug.Assert(typeParameters[index].IsGenericParameter);
-                map[typeParameters[index]] = typeArguments[index];
+                var typeParameter = typeParameters[index];
+                var typeArgument = typeArguments[index];
+
+                Debug.Assert(typeParameter.IsGenericParameter);
+                Debug.Assert(!typeParameter.IsByRef);
+                Debug.Assert(!typeArgument.IsByRef);
+                
+                map[typeParameter] = typeArgument.ToDereferencedType();
             }
 
             return map;
@@ -301,33 +307,33 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext)
+        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
         {
             if (genericContext != null && !genericContext.IsEmpty)
             {
                 if (typeSymbol.IsTypeParameter())
                 {
-                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol));
+                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
                 if (arrayType != null)
                 {
-                    return arrayType.ElementType.ResolveGeneric(genericContext).ToArrayType(arrayType.Rank);
+                    return arrayType.ElementType.ResolveGeneric(genericContext, isByRef, isPinned).ToArrayType(arrayType.Rank);
                 }
 
                 var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    var metadataType = new MetadataTypeAdapter(namedTypeSymbol);
+                    var metadataType = new MetadataTypeAdapter(namedTypeSymbol, isByRef, isPinned);
                     if (metadataType.IsGenericTypeDefinition && !genericContext.IsEmpty)
                     {
-                        return new MetadataTypeAdapter(namedTypeSymbol, genericContext);
+                        return new MetadataTypeAdapter(namedTypeSymbol, genericContext, isByRef, isPinned);
                     }
                 }
             }
 
-            return new MetadataTypeAdapter(typeSymbol, genericContext);
+            return new MetadataTypeAdapter(typeSymbol, genericContext, isByRef, isPinned);
         }
 
         /// <summary>
