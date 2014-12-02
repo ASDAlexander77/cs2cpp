@@ -80,7 +80,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = true;
+        private const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>

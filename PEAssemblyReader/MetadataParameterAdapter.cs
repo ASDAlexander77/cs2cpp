@@ -85,6 +85,12 @@ namespace PEAssemblyReader
             get
             {
                 var paramType = this.paramDef.Type.ResolveGeneric(this.GenericContext, this.IsRef || this.IsOut);
+
+                if (this.IsRef && !paramType.IsByRef)
+                {
+                    Debug.Fail("param has ref but type does not");
+                }
+
                 return paramType;
             }
         }

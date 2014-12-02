@@ -575,9 +575,9 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        public IType Clone(bool setUseAsClass = false, bool value = false)
+        public IType Clone(bool setUseAsClass = false, bool value = false, bool isByRef = false, bool isPinned = false)
         {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext);
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext, isByRef, isPinned);
             if (setUseAsClass)
             {
                 typeAdapter.UseAsClass = value;
@@ -959,7 +959,7 @@ namespace PEAssemblyReader
             }
 
             var containingAssembly = type.ContainingAssembly;
-            return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext);
+            return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext, this.IsByRef, this.IsPinned);
         }
 
         /// <summary>

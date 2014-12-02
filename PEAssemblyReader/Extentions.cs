@@ -313,7 +313,7 @@ namespace PEAssemblyReader
             {
                 if (typeSymbol.IsTypeParameter())
                 {
-                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
+                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned), isByRef, isPinned);
                 }
 
                 var arrayType = typeSymbol as ArrayTypeSymbol;
