@@ -2662,15 +2662,15 @@ namespace Il2Native.Logic
             var operandResultCalc = this.ResultOf(operand);
             var operandType = operandResultCalc.Type;
             var effectiveType = operandType.IsPointer ? operandType.GetElementType() : operandType;
+            bool asPointer = false;
             if (effectiveType.IsValueType)
             {
                 if (operand.Result.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                    this.LlvmConvert(opCodeFieldInfoPart, string.Empty, string.Empty, effectiveType.ToPointerType(), true);
-                    operand.Result = opCodeFieldInfoPart.Result;
+                    this.LlvmConvert(operand, string.Empty, string.Empty, effectiveType.ToPointerType(), true);
 
-                    Debug.Assert(operand.Result.Type.IsPointer);
+                    asPointer = true;
 
                     writer.WriteLine(string.Empty);
                 }
@@ -2682,13 +2682,14 @@ namespace Il2Native.Logic
             else if (effectiveType.IsPointer)
             {
                 effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                this.WriteBitcast(opCodeFieldInfoPart, effectiveType.ToPointerType());
-                operand.Result = opCodeFieldInfoPart.Result;
+                this.WriteBitcast(operand, effectiveType.ToPointerType());
+
+                asPointer = true;
 
                 writer.WriteLine(string.Empty);
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.GenerateResult);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", asPointer ? effectiveType.ToPointerType() : effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.GenerateResult);
 
             this.CheckIfTypeIsRequiredForBody(effectiveType);
 
