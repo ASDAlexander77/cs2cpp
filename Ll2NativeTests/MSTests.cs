@@ -387,7 +387,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(204, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }

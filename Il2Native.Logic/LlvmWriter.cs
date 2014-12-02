@@ -189,7 +189,7 @@ namespace Il2Native.Logic
             }
 
             this.DataLayout = this.DataLayout ?? @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
-            this.Target = this.Target ?? "i686-pc-mingw32";
+            this.Target = this.Target ?? "i686-w64-mingw32";
         }
 
         public IDictionary<int, IMethod> MethodsByToken
@@ -300,11 +300,6 @@ namespace Il2Native.Logic
                 this.WriteLabels(writer, opCode);
             }
 
-            if (opCode.Any(Code.Leave, Code.Leave_S))
-            {
-                this.WriteCatchFinnallyEnd(writer, opCode);
-            }
-
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
 
@@ -318,10 +313,7 @@ namespace Il2Native.Logic
 
             this.AdjustResultTypeToOutgoingType(opCode);
 
-            if (!opCode.Any(Code.Leave, Code.Leave_S))
-            {
-                this.WriteCatchFinnallyEnd(writer, opCode);
-            }
+            this.WriteCatchFinnallyEnd(writer, opCode);
 
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
@@ -1509,7 +1501,7 @@ namespace Il2Native.Logic
 
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.GetIntTypeByByteSize(PointerSize));
                     break;
 
                 case Code.Mkrefany:
@@ -2666,15 +2658,21 @@ namespace Il2Native.Logic
         {
             writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
 
-            var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
-            var operandType = operand.Type;
+            var operand = opCodeFieldInfoPart.OpCodeOperands[0];
+            var operandResultCalc = this.ResultOf(operand);
+            var operandType = operandResultCalc.Type;
             var effectiveType = operandType.IsPointer ? operandType.GetElementType() : operandType;
             if (effectiveType.IsValueType)
             {
-                if (opCodeFieldInfoPart.OpCodeOperands[0].Result.Type.IntTypeBitSize() == PointerSize * 8)
+                if (operand.Result.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                     this.LlvmConvert(opCodeFieldInfoPart, string.Empty, string.Empty, effectiveType.ToPointerType(), true);
+                    operand.Result = opCodeFieldInfoPart.Result;
+
+                    Debug.Assert(operand.Result.Type.IsPointer);
+
+                    writer.WriteLine(string.Empty);
                 }
                 else
                 {
@@ -2685,6 +2683,9 @@ namespace Il2Native.Logic
             {
                 effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                 this.WriteBitcast(opCodeFieldInfoPart, effectiveType.ToPointerType());
+                operand.Result = opCodeFieldInfoPart.Result;
+
+                writer.WriteLine(string.Empty);
             }
 
             this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.GenerateResult);
