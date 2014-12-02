@@ -465,11 +465,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Localloc:
 
-                    this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
-                    writer.Write("alloca i8, ");
-                    opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(this.Output);
-                    writer.Write(" ");
-                    this.WriteResult(opCode.OpCodeOperands[0]);
+                    this.UnaryOper(writer, opCode, "alloca i8, ", this.GetIntTypeByByteSize(PointerSize), this.ResolveType("System.Byte").ToPointerType());
                     writer.Write(", align 1");
 
                     WriteDbgLine(opCode);
