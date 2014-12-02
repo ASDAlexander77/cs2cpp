@@ -2545,6 +2545,9 @@ namespace Il2Native.Logic
 
             if (checkNull)
             {
+                Debug.Assert(!fromType.Type.IsVoid());
+                Debug.Assert(!(fromType is ConstValue));
+
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
                 effectiveFromType.Type.WriteTypePrefix(writer);
