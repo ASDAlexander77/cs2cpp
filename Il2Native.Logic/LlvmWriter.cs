@@ -1898,13 +1898,20 @@ namespace Il2Native.Logic
                     }
                     break;
                 case Code.Ldind_I1:
-                    type = this.ResolveType("System.SByte");
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid())
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
                     break;
                 case Code.Ldind_U1:
 
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.Byte");
-                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
                     if (type.IsVoid())
                     {
