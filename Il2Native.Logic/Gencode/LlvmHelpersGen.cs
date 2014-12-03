@@ -586,7 +586,12 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
                 }
             }
-            else if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || bareType.IsDerivedFrom(toType) || (fromResult is ConstValue))
+            else if (fromResult.Type.IntTypeBitSize() == LlvmWriter.PointerSize * 8 && (toType.IsPointer || toType.IsByRef))
+            {
+                Debug.Assert(false);
+                LlvmConvert(llvmWriter, opCode, string.Empty, string.Empty, toType, true);
+            }
+            else if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || toType.IsByRef || bareType.IsDerivedFrom(toType) || (fromResult is ConstValue))
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType, true);
                 writer.Write("bitcast ");
@@ -598,6 +603,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
+                Debug.Assert(fromResult.Type.IntTypeBitSize() == 0);
                 llvmWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
             }
 

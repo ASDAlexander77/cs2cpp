@@ -222,7 +222,8 @@ namespace PEAssemblyReader
         {
             get
             {
-                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null;
+                // TODO: temporary HACK to find that this is function required dllimport artrtibute
+                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null && this.methodDef.GetDllImportData().ModuleName == null;
             }
         }
 
