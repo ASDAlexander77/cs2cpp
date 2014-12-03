@@ -1890,7 +1890,7 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                    if (type.IsVoid())
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
                         type = this.ResolveType("System.SByte");
                     }
@@ -1901,7 +1901,8 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.Byte");
                     result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                    if (type.IsVoid())
+
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
                         type = this.ResolveType("System.Byte");
                     }
@@ -1963,12 +1964,12 @@ namespace Il2Native.Logic
             if (isValueType && isUsedAsClass)
             {
                 // write first field access
-                this.WriteFieldAccess(writer, opCode, 1);
+                this.WriteFieldAccess(writer, opCode, 0);
                 writer.WriteLine(string.Empty);
                 accessIndexResultNumber2 = opCode.Result;
                 type = opCode.Result.Type;
 
-                // TODO: needs to be fixed, WriteFieldAccess shouls return Pointer type
+                // TODO: needs to be fixed, WriteFieldAccess should return Pointer type
                 indirect = false;
             }
             else
@@ -2479,7 +2480,7 @@ namespace Il2Native.Logic
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
-                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result);
+                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 0, opCode.Result);
                 writer.WriteLine(string.Empty);
             }
 
@@ -2713,7 +2714,7 @@ namespace Il2Native.Logic
             var classType = operand.Type.ToClass();
 
             var opts = OperandOptions.GenerateResult;
-            var fieldType = classType.GetFieldTypeByIndex(index);
+            var fieldType = classType.GetFieldTypeByFieldNumber(index);
 
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, options: opts);
 
@@ -2741,7 +2742,7 @@ namespace Il2Native.Logic
         public bool WriteFieldAccess(
             LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
         {
-            var fieldType = fieldContainerType.GetFieldTypeByIndex(index);
+            var fieldType = fieldContainerType.GetFieldTypeByFieldNumber(index);
             if (fieldType == null)
             {
                 return false;
@@ -2845,7 +2846,7 @@ namespace Il2Native.Logic
 
             // find index
             writer.Write(", i32 ");
-            writer.Write(fieldIndex);
+            writer.Write(fieldIndex + this.CalculateFirstFieldPositionInType(fieldContainerType));
         }
 
         /// <summary>
@@ -3008,6 +3009,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
+            Debug.Assert(!(method.Name == "GetHashCode" && method.DeclaringType.Name == "Boolean"));
+
             this.WriteMethodBody(method);
             this.WritePostMethodEnd(method);
         }
@@ -4138,7 +4141,7 @@ namespace Il2Native.Logic
                 throw new KeyNotFoundException();
             }
 
-            index += this.CalculateFirstFieldIndex(type);
+            index += this.CalculateFirstFieldPositionInType(type);
 
             this.indexByFieldInfo[fieldInfo.GetFullName()] = index;
 
@@ -4151,7 +4154,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public int CalculateFirstFieldIndex(IType type)
+        public int CalculateFirstFieldPositionInType(IType type)
         {
             var index = 0;
 
@@ -4734,6 +4737,11 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Ldelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4825,6 +4833,11 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Stelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4907,7 +4920,7 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                    if (type.IsVoid())
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
                         type = this.ResolveType("System.SByte");
                     }

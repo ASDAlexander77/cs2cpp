@@ -162,11 +162,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="classType">
         /// </param>
-        /// <param name="index">
+        /// <param name="number">
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetFieldTypeByIndex(this IType classType, int index)
+        public static IType GetFieldTypeByFieldNumber(this IType classType, int number)
         {
             var normalType = classType.ToNormal();
 
@@ -175,7 +175,7 @@ namespace Il2Native.Logic
                 return normalType.GetEnumUnderlyingType();
             }
 
-            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).FirstOrDefault();
+            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
             if (field == null)
             {
                 return null;

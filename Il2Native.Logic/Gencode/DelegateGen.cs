@@ -170,7 +170,7 @@ namespace Il2Native.Logic.Gencode
             var thisResult = opCode.Result;
 
             // write access to a field 1
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 0, thisResult);
             writer.WriteLine(string.Empty);
 
             // load value 1
@@ -183,7 +183,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             // write access to a field 2
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 2, thisResult);
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
             writer.WriteLine(string.Empty);
 
             // load value 2
@@ -230,7 +230,7 @@ namespace Il2Native.Logic.Gencode
             var thisResult = opCode.Result;
 
             // write access to a field 1
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 0, thisResult);
             writer.WriteLine(string.Empty);
 
             var objectMemberAccessResultNumber = opCode.Result;
@@ -243,11 +243,11 @@ namespace Il2Native.Logic.Gencode
             var objectResultNumber = opCode.Result;
 
             // write access to a field 2
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 2, thisResult);
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
             writer.WriteLine(string.Empty);
 
             // additional step to extract value from IntPtr structure
-            llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 1, opCode.Result);
+            llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
             writer.WriteLine(string.Empty);
 
             // load value 2
