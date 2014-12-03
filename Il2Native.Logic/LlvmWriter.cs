@@ -3009,8 +3009,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
-            Debug.Assert(!(method.Name == "GetHashCode" && method.DeclaringType.Name == "Boolean"));
-
             this.WriteMethodBody(method);
             this.WritePostMethodEnd(method);
         }

@@ -1221,6 +1221,17 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Stind_Ref))
+            {
+                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                if (retType.IsByRef)
+                {
+                    retType = retType.ToNormal();
+                }
+
+                return retType;
+            }
+
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
@@ -1279,6 +1290,43 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ret))
             {
                 retType = this.MethodReturnType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
+            {
+                retType = opCodePart.GetLocalType(this);
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
+            {
+                var index = opCodePart.GetArgIndex();
+                if (this.HasMethodThis && index == 0)
+                {
+                    retType = this.ThisType;
+                    return retType;
+                }
+
+                retType = this.GetArgType(index);
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldfld, Code.Ldsfld))
+            {
+                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldobj))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldind_Ref))
+            {
+                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
                 return retType;
             }
 
