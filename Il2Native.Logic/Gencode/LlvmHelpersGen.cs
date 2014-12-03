@@ -588,7 +588,6 @@ namespace Il2Native.Logic.Gencode
             }
             else if (fromResult.Type.IntTypeBitSize() == LlvmWriter.PointerSize * 8 && (toType.IsPointer || toType.IsByRef))
             {
-                Debug.Assert(false);
                 LlvmConvert(llvmWriter, opCode, string.Empty, string.Empty, toType, true);
             }
             else if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || toType.IsByRef || bareType.IsDerivedFrom(toType) || (fromResult is ConstValue))
