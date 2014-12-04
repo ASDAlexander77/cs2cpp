@@ -40,8 +40,9 @@
             this.current.Push(opCodePart);
         }
 
-        public OpCodePart Pop()
+        public OpCodePart Pop(out PhiNodes alternativeValues)
         {
+            alternativeValues = null;
             var value = this.current.Pop();
 
             // read all alternative values from other branches
@@ -63,18 +64,30 @@
 
                 // current value
                 var currentLabel = value.FindBeginOfBasicBlock();
-                Debug.Assert(currentLabel.HasValue);
+                phiNodes.Values.Add(value);
                 if (currentLabel.HasValue)
                 {
-                    phiNodes.Values.Add(value);
                     phiNodes.Labels.Add(currentLabel.Value);
+                }
+                else
+                {
+                    phiNodes.Labels.Add(value.GroupAddressStart);
+
+                    // we need to create a label
+                    var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0 ? value.OpCodeOperands[0] : value;
+                    if (opCode.JumpDestination == null)
+                    {
+                        opCode.JumpDestination = new List<OpCodePart>();
+                    }
+
+                    opCode.JumpDestination.Add(value);
                 }
 
                 this.CleanUpBranches();
 
                 if (any)
                 {
-                    value.AlternativeValues = phiNodes;
+                    alternativeValues = phiNodes;
                 }
             }
 

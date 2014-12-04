@@ -85,10 +85,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public int? CustomJumpAddress { get; set; }
-
-        /// <summary>
-        /// </summary>
         public IList<CatchOfFinallyClause> ExceptionHandlers { get; set; }
 
         /// <summary>

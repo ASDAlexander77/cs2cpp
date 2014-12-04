@@ -727,32 +727,12 @@ namespace Il2Native.Logic
                     break;
                 }
 
-                // register second value
-                // TODO: this is still hack, review the code
-                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed);
-
                 if (opCodePartUsed.ToCode() == Code.Dup)
                 {
                     this.Stacks.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
-                // check here if you have conditional argument (cond) ? a1 : b1;
-                bool whenSecondValueSeparatedByExpression;
-                while (this.IsConditionalExpression(opCodePartUsed, this.Stacks, out whenSecondValueSeparatedByExpression))
-                {
-                    var secondValue = this.Stacks.Pop();
-                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue, whenSecondValueSeparatedByExpression);
-                    alternativeValues.Values.Add(opCodePartUsed);
-                }
-
                 opCodeParts.Insert(0, opCodePartUsed);
-            }
-
-            // register second value
-            // TODO: this is still hack, review the code
-            if (size > 0 && this.Stacks.Any())
-            {
-                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stacks.Peek());
             }
 
             opCodePart.OpCodeOperands = opCodeParts.ToArray();
@@ -763,11 +743,6 @@ namespace Il2Native.Logic
             }
 
             this.AdjustTypes(opCodePart);
-
-            if (opCodePart.ToCode() == Code.Pop)
-            {
-                this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
-            }
         }
 
         private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
@@ -781,7 +756,9 @@ namespace Il2Native.Logic
             OpCodePart opCodePartUsed;
             if (!alternativeValueOnlyOne)
             {
-                opCodePartUsed = this.Stacks.Pop();
+                PhiNodes alternativeValues;
+                opCodePartUsed = this.Stacks.Pop(out alternativeValues);
+                opCodePart.AlternativeValues = alternativeValues;
             }
             else
             {
@@ -1393,39 +1370,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="lastPhiNodes">
-        /// </param>
-        /// <param name="i">
-        /// </param>
-        /// <param name="opCodePartUsed">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
-        {
-            if (i == 1 && opCodePart.AlternativeValues != null)
-            {
-                lastPhiNodes = opCodePart.AlternativeValues;
-            }
-
-            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
-            {
-                lastPhiNodes.Values.Add(opCodePartUsed);
-            }
-
-            lastPhiNodes = null;
-            if (i > 0)
-            {
-                lastPhiNodes = opCodePartUsed.AlternativeValues;
-            }
-
-            return lastPhiNodes;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="last">
         /// </param>
         /// <param name="opCodePartBefore">
@@ -1459,98 +1403,6 @@ namespace Il2Native.Logic
             {
                 this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="closerValue">
-        /// </param>
-        /// <param name="futherValue">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue, bool whenSecondValueSeparatedByExpression)
-        {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = closerValue.PreviousOpCodeGroup(this);
-            while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || whenSecondValueSeparatedByExpression)
-                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
-            {
-                current = current.PreviousOpCodeGroup(this);
-            }
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, futherValue);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="popCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
-        {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = popCodePart.PreviousOpCode(this);
-            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
-                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
-            {
-                current = current.PreviousOpCode(this);
-            }
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="labelAddress">
-        /// </param>
-        /// <param name="closerValueJump">
-        /// </param>
-        /// <param name="futherValue">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
-        {
-            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
-
-            var destJump = closerValueJump.JumpOpCode(this);
-
-            // found address
-            if (destJump.AlternativeValues == null)
-            {
-                destJump.AlternativeValues = new PhiNodes();
-
-                // create custom jump point
-                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
-                var jumpDestination = futherValue.JumpDestination;
-                if (jumpDestination == null)
-                {
-                    jumpDestination = new List<OpCodePart>();
-                    futherValue.JumpDestination = jumpDestination;
-                }
-
-                // to force creating jump
-                jumpDestination.Add(OpCodePart.CreateNop);
-            }
-
-            destJump.AlternativeValues.Values.Add(futherValue);
-            destJump.AlternativeValues.Labels.Add(labelAddress);
-
-            return destJump.AlternativeValues;
         }
 
         /// <summary>
