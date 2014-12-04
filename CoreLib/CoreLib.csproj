@@ -58,6 +58,7 @@
     <Compile Include="System\Attribute.cs" />
     <Compile Include="System\AttributeTargets.cs" />
     <Compile Include="System\AttributeUsageAttribute.cs" />
+    <Compile Include="System\BitConverter.cs" />
     <Compile Include="System\Boolean.cs" />
     <Compile Include="System\Byte.cs" />
     <Compile Include="System\Char.cs" />

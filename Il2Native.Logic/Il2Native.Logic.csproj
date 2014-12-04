@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FOR_MSCORLIBTEST</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -34,10 +34,7 @@
     <Reference Include="System.Collections.Immutable">
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.1.20-beta\lib\portable-net45+win8\System.Collections.Immutable.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.XML" />
-    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseWriter.cs" />
@@ -69,12 +66,19 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="DebugInfo\DebugVariableType.cs" />
-    <Compile Include="Gencode\InternalMethods\ActivatorGen.cs" />
+    <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
-    <Compile Include="Gencode\InternalMethods\ArrayGen.cs" />
-    <Compile Include="Gencode\InternalMethods\InterlockedGen.cs" />
+    <Compile Include="Gencode\InlineMethods\ArrayGen.cs" />
+    <Compile Include="Gencode\InlineMethods\InterlockedGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayClearGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayCopyGen.cs" />
+    <Compile Include="Gencode\InternalMethods\EqualsGen.cs" />
+    <Compile Include="Gencode\InternalMethods\GetHashCodeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
+    <Compile Include="Gencode\InternalMethods\MemberwiseCloneGen.cs" />
     <Compile Include="Gencode\MemberLocationInfo.cs" />
     <Compile Include="Gencode\MemberTypes.cs" />
+    <Compile Include="Gencode\MethodBodyBank.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithBaseAndNoInterfaces.cs" />
     <Compile Include="Gencode\Rtti\RttiClassWithNoBaseAndNoInterfaces.cs" />
@@ -85,9 +89,15 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedStaticMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodDecorator.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodBodyDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedMethodTypeBase.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedModuleResolver.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />

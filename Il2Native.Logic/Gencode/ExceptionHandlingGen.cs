@@ -24,11 +24,11 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        None = 0, 
+        None = 0,
 
         /// <summary>
         /// </summary>
-        Cleanup = 1, 
+        Cleanup = 1,
 
         /// <summary>
         /// </summary>
@@ -185,8 +185,8 @@ namespace Il2Native.Logic.Gencode
                     // rethrow exception in empty finally block
                     var opCodeNop = OpCodePart.CreateNop;
                     llvmWriter.WriteRethrow(
-                        opCodeNop, 
-                        llvmWriter.catchScopes.Count > 0 ? llvmWriter.catchScopes.Peek() : null, 
+                        opCodeNop,
+                        llvmWriter.catchScopes.Count > 0 ? llvmWriter.catchScopes.Peek() : null,
                         llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek().Catches.First() : null);
                 }
             }
@@ -200,9 +200,9 @@ namespace Il2Native.Logic.Gencode
 
                 var opCodeNop = OpCodePart.CreateNop;
                 llvmWriter.WriteLandingPad(
-                    opCodeNop, 
-                    LandingPadOptions.Cleanup, 
-                    null, 
+                    opCodeNop,
+                    LandingPadOptions.Cleanup,
+                    null,
                     new[] { upperLevelExceptionHandlingClause != null ? upperLevelExceptionHandlingClause.Catch : llvmWriter.ResolveType("System.Exception") });
                 writer.WriteLine(string.Empty);
             }
@@ -215,8 +215,10 @@ namespace Il2Native.Logic.Gencode
 
             if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
+                var isLeave = opCode.Any(Code.Leave, Code.Leave_S);
                 var nextOp = opCode.NextOpCode(llvmWriter);
-                if (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress)
+                if (!isLeave &&
+                    (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress))
                 {
                     if (nextOp != null && nextOp.CatchOrFinallyBegin == null || opCode.Any(Code.Leave, Code.Leave_S)
                         || llvmWriter.OpsByAddressStart.Values.Any(op => op.ToCode() == Code.Ret))
@@ -232,7 +234,14 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    writer.WriteLine("br label %.a{0}", nextOp.GroupAddressStart);
+                    if (isLeave)
+                    {
+                        writer.WriteLine("br label %.a{0}", opCode.JumpAddress());
+                    }
+                    else
+                    {
+                        writer.WriteLine("br label %.a{0}", nextOp.GroupAddressStart);
+                    }
                 }
             }
             else
@@ -316,9 +325,9 @@ namespace Il2Native.Logic.Gencode
             var compareResultResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, llvmWriter.ResolveType("System.Boolean"));
             writer.WriteLine("icmp eq i32 {0}, {1}", errorTypeIdOfCatchResultNumber, errorTypeIdOfExceptionResultNumber);
             writer.WriteLine(
-                "br i1 {0}, label %.exception_handler{1}, label %.{2}", 
-                compareResultResultNumber, 
-                exceptionHandlingClause.Offset, 
+                "br i1 {0}, label %.exception_handler{1}, label %.{2}",
+                compareResultResultNumber,
+                exceptionHandlingClause.Offset,
                 nextExceptionHandlingClause != null ? string.Concat("exception_switch", nextExceptionHandlingClause.Offset) : "resume");
 
             writer.Indent--;
@@ -392,12 +401,12 @@ namespace Il2Native.Logic.Gencode
         /// <param name="exceptionAllocationResultNumber">
         /// </param>
         public static void WriteLandingPad(
-            this LlvmWriter llvmWriter, 
-            OpCodePart opCode, 
-            LandingPadOptions options, 
-            CatchOfFinallyClause finallyOrFaultClause, 
-            IType[] @catch = null, 
-            int[] filter = null, 
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            LandingPadOptions options,
+            CatchOfFinallyClause finallyOrFaultClause,
+            IType[] @catch = null,
+            int[] filter = null,
             int? exceptionAllocationResultNumber = null)
         {
             var writer = llvmWriter.Output;
@@ -624,8 +633,8 @@ namespace Il2Native.Logic.Gencode
             {
                 writer.Indent++;
                 writer.WriteLine(
-                    "to label %.unreachable unwind label %.catch_with_cleanup_{0}_{1}", 
-                    exceptionHandlingClause.Offset, 
+                    "to label %.unreachable unwind label %.catch_with_cleanup_{0}_{1}",
+                    exceptionHandlingClause.Offset,
                     exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
                 writer.Indent--;
                 exceptionHandlingClause.RethrowCatchWithCleanUpRequired = true;

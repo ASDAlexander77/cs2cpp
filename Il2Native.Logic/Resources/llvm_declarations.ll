@@ -1,7 +1,8 @@
 declare i8* @malloc(i32) #99900
 
 ; Function Attrs: nounwind
-declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+;declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture, i32, i32, i1) #88801
 declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
 
 declare { i8, i1 } @llvm.sadd.with.overflow.i8(i8, i8) #0

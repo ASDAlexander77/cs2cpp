@@ -55,6 +55,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private bool? isVirtual;
+        
+        /// <summary>
+        /// </summary>
         /// <param name="methodDef">
         /// </param>
         internal MetadataMethodAdapter(MethodSymbol methodDef)
@@ -101,7 +105,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                throw new NotImplementedException();
+                return this.methodDef.ContainingType.ContainingAssembly.Identity.Name;
             }
         }
 
@@ -149,6 +153,15 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.methodDef.ContainingType.SpecialType == SpecialType.System_Array)
+                {
+                    var typeSymbol = this.methodDef.AssociatedSymbol as TypeSymbol;
+                    if (typeSymbol != null)
+                    {
+                        return typeSymbol.ResolveGeneric(this.GenericContext);
+                    }
+                }
+
                 return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
@@ -187,7 +200,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IGenericContext GenericContext { get; set; }
+        public IGenericContext GenericContext { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -209,7 +222,8 @@ namespace PEAssemblyReader
         {
             get
             {
-                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null;
+                // TODO: temporary HACK to find that this is function required dllimport artrtibute
+                return !this.IsUnmanaged && this.methodDef.GetDllImportData() != null && this.methodDef.GetDllImportData().ModuleName == null;
             }
         }
 
@@ -299,12 +313,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.FullName == "System.Object.Finalize")
-                {
-                    return true;
-                }
-
-                return this.methodDef.IsVirtual;
+                return this.isVirtual.HasValue ? this.isVirtual.Value : (isVirtual = CalculateIsVirtual()).Value;
             }
         }
 
@@ -380,6 +389,22 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsInline
+        {
+            get;
+            protected set;
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool HasProceduralBody
+        {
+            get;
+            protected set;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="obj">
         /// </param>
         /// <returns>
@@ -418,6 +443,16 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericArguments()
         {
+            return this.CalculateGenericArguments();
+        }
+
+        private IEnumerable<IType> CalculateGenericArguments()
+        {
+            if (this.methodDef.TypeArguments.Length == 0)
+            {
+                return new MetadataTypeAdapter[0];
+            }
+
             return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
         }
 
@@ -427,7 +462,28 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IType> GetGenericParameters()
         {
+            return this.CalculateGenericParameters();
+        }
+
+        private IEnumerable<MetadataTypeAdapter> CalculateGenericParameters()
+        {
+            if (this.methodDef.TypeParameters.Length == 0)
+            {
+                return new MetadataTypeAdapter[0];
+            }
+
             return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+        }
+
+        private bool CalculateIsVirtual()
+        {
+            if (this.FullName == "System.Object.Finalize"
+                || this.FullName == "System.Object.GetType")
+            {
+                return true;
+            }
+
+            return methodDef.IsVirtual;
         }
 
         /// <summary>
@@ -597,7 +653,9 @@ namespace PEAssemblyReader
                 if (this.methodDef.ContainingType.IsNestedType())
                 {
                     result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
-                    result.Append('+');
+                    ////result.Append('+');
+                    // Metadata explicitname should contains +
+                    result.Append('.');
                 }
 
                 result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
@@ -682,7 +740,7 @@ namespace PEAssemblyReader
                 {
                     if (index++ > 0)
                     {
-                        sb.Append(", ");
+                        sb.Append(",");
                     }
 
                     sb.Append(genArg.FullName);

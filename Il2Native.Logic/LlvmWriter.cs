@@ -162,12 +162,34 @@ namespace Il2Native.Logic
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = args == null || !args.Contains("gctors-");
-            this.IsLlvm35OrLower = args != null && args.Contains("llvm35");
+            this.IsLlvm35 = args != null && args.Contains("llvm35");
+            this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
             this.DebugInfo = args != null && args.Contains("debug");
             if (this.DebugInfo)
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
+           
+            // prefefined settings
+            if (args != null && args.Contains("android"))
+            {
+                this.Target = this.Target ?? "armv7-none-linux-androideabi";
+                this.Gctors = false;
+                this.IsLlvm35 = true;
+                this.IsLlvm34OrLower = false;
+            }
+            else if (args != null && args.Contains("emscripten"))
+            {
+                this.Target = this.Target ?? "asmjs-unknown-emscripten";
+                this.Gc = false;
+                this.IsLlvm35 = false;
+                this.IsLlvm34OrLower = true;
+
+                this.DataLayout = @"e-p:32:32-i64:64-v128:32:128-n32-S128";
+            }
+
+            this.DataLayout = this.DataLayout ?? @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
+            this.Target = this.Target ?? "i686-w64-mingw32";
         }
 
         public IDictionary<int, IMethod> MethodsByToken
@@ -200,7 +222,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool IsLlvm35OrLower { get; private set; }
+        public bool IsLlvm35 { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool IsLlvm34OrLower { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -209,6 +235,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string Target { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public string DataLayout { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -270,11 +300,6 @@ namespace Il2Native.Logic
                 this.WriteLabels(writer, opCode);
             }
 
-            if (opCode.Any(Code.Leave, Code.Leave_S))
-            {
-                this.WriteCatchFinnallyEnd(writer, opCode);
-            }
-
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
 
@@ -288,10 +313,7 @@ namespace Il2Native.Logic
 
             this.AdjustResultTypeToOutgoingType(opCode);
 
-            if (!opCode.Any(Code.Leave, Code.Leave_S))
-            {
-                this.WriteCatchFinnallyEnd(writer, opCode);
-            }
+            this.WriteCatchFinnallyEnd(writer, opCode);
 
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
@@ -418,6 +440,13 @@ namespace Il2Native.Logic
                 case Code.Ldnull:
                     opCode.Result = new ConstValue(null, this.ResolveType("System.Void").ToPointerType());
                     break;
+
+                case Code.Arglist:
+
+                    // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
+                    opCode.Result = new ConstValue("undef", this.ResolveType("System.Object"));
+                    break;
+
                 case Code.Ldtoken:
 
                     // TODO: finish loading Token  
@@ -428,11 +457,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Localloc:
 
-                    this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
-                    writer.Write("alloca i8, ");
-                    opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(this.Output);
-                    writer.Write(" ");
-                    this.WriteResult(opCode.OpCodeOperands[0]);
+                    this.UnaryOper(writer, opCode, "alloca i8, ", this.GetIntTypeByByteSize(PointerSize), this.ResolveType("System.Byte").ToPointerType(), OperandOptions.AdjustIntTypes | OperandOptions.CastPointersToBytePointer);
                     writer.Write(", align 1");
 
                     WriteDbgLine(opCode);
@@ -543,7 +568,14 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
+                        if (opCode.Result.Type.IsVoid())
+                        {
+                            // in case we receive void* to load struct
+                            opCode.Result = opCode.OpCodeOperands[0].Result;
+                        }
+
+                        Debug.Assert(!opCode.Result.Type.IsVoid());
                     }
 
                     break;
@@ -832,9 +864,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.UnaryOper(writer, opCode, "store", localType, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
-                        writer.Write(", ");
-                        this.WriteLlvmLocalVarAccess(index, true);
+                        this.WriteLlvmSave(opCode, localType, 0, new FullyDefinedReference(this.GetLocalVarName(index), localType));
                     }
 
                     WriteDbgLine(opCode);
@@ -1015,15 +1045,26 @@ namespace Il2Native.Logic
                         out ownerOfExplicitInterface,
                         out requiredType);
 
-                    var methodAddressResultNumber = this.GenerateVirtualCall(
-                        opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                    FullyDefinedReference methodAddressResultNumber = null;
+                    if (isIndirectMethodCall)
+                    {
+                        methodAddressResultNumber = this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                    }
 
                     // bitcast method function address to Byte*
                     this.WriteSetResultNumber(opCode, this.ResolveType("System.Byte").ToPointerType());
                     writer.Write("bitcast ");
                     this.WriteMethodPointerType(writer, methodInfo, thisType);
                     writer.Write(" ");
-                    this.WriteResult(methodAddressResultNumber);
+                    if (isIndirectMethodCall)
+                    {
+                        this.WriteResult(methodAddressResultNumber);
+                    }
+                    else
+                    {
+                        this.WriteMethodDefinitionName(writer, methodInfo);
+                    }
+
                     writer.Write(" to i8*");
                     writer.WriteLine(string.Empty);
 
@@ -1467,7 +1508,22 @@ namespace Il2Native.Logic
 
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(opCodeTypePart.Operand.GetTypeSize(), this.GetIntTypeByByteSize(PointerSize));
+                    break;
+
+                case Code.Mkrefany:
+                    var opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
+                    break;
+
+                case Code.Refanytype:
+                    opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
+                    break;
+
+                case Code.Refanyval:
+                    opResult = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opResult;
                     break;
 
                 case Code.Initblk:
@@ -1629,7 +1685,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (methodBase.DeclaringType.AssemblyQualifiedName != this.AssemblyQualifiedName)
+            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(methodBase);
             }
@@ -1641,7 +1697,17 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfExternalDeclarationIsRequired(IType type)
         {
-            if (type == null || type.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            if (type == null)
+            {
+                return;
+            }
+
+            if (type.IsMultiArray)
+            {
+                this.typeDeclRequired.Add(this.ResolveType("System.Array"));
+            }
+
+            if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
             {
                 return;
             }
@@ -1819,12 +1885,34 @@ namespace Il2Native.Logic
             {
                 case Code.Ldind_I:
                     type = this.GetTypeOfReference(opCode);
+                    if (type.IsVoid())
+                    {
+                        // ignore Ldind.i load of Void type
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        return;
+                    }
                     break;
                 case Code.Ldind_I1:
-                    type = this.ResolveType("System.SByte");
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
                     break;
                 case Code.Ldind_U1:
-                    type = this.ResolveType("System.Byte");
+
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.Byte");
+                    result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.Byte");
+                    }
                     break;
                 case Code.Ldind_I2:
                     type = this.ResolveType("System.Int16");
@@ -1851,6 +1939,8 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
             }
+
+            Debug.Assert(!type.IsVoid());
 
             this.LoadIndirect(writer, opCode, type);
         }
@@ -1881,12 +1971,12 @@ namespace Il2Native.Logic
             if (isValueType && isUsedAsClass)
             {
                 // write first field access
-                this.WriteFieldAccess(writer, opCode, 1);
+                this.WriteFieldAccess(writer, opCode, 0);
                 writer.WriteLine(string.Empty);
                 accessIndexResultNumber2 = opCode.Result;
                 type = opCode.Result.Type;
 
-                // TODO: needs to be fixed, WriteFieldAccess shouls return Pointer type
+                // TODO: needs to be fixed, WriteFieldAccess should return Pointer type
                 indirect = false;
             }
             else
@@ -2397,7 +2487,7 @@ namespace Il2Native.Logic
 
             if (!declaringType.IsStructureType() && declaringType.FullName != "System.DateTime" && declaringType.FullName != "System.Decimal")
             {
-                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result);
+                this.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 0, opCode.Result);
                 writer.WriteLine(string.Empty);
             }
 
@@ -2470,6 +2560,9 @@ namespace Il2Native.Logic
 
             if (checkNull)
             {
+                Debug.Assert(!fromType.Type.IsVoid());
+                Debug.Assert(!(fromType is ConstValue));
+
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
                 effectiveFromType.Type.WriteTypePrefix(writer);
@@ -2573,16 +2666,38 @@ namespace Il2Native.Logic
         {
             writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
 
-            var operand = this.ResultOf(opCodeFieldInfoPart.OpCodeOperands[0]);
-            var opts = OperandOptions.GenerateResult;
-
-            var effectiveType = operand.Type.IsPointer ? operand.Type.GetElementType() : operand.Type;
+            var operand = opCodeFieldInfoPart.OpCodeOperands[0];
+            var operandResultCalc = this.ResultOf(operand);
+            var operandType = operandResultCalc.Type;
+            var effectiveType = operandType.IsPointer ? operandType.GetElementType() : operandType;
+            bool asPointer = false;
             if (effectiveType.IsValueType)
             {
-                effectiveType = effectiveType.ToClass();
+                if (operand.Result.Type.IntTypeBitSize() == PointerSize * 8)
+                {
+                    effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
+                    this.LlvmConvert(operand, string.Empty, string.Empty, effectiveType.ToPointerType(), true);
+
+                    asPointer = true;
+
+                    writer.WriteLine(string.Empty);
+                }
+                else
+                {
+                    effectiveType = effectiveType.ToClass();
+                }
+            }
+            else if (effectiveType.IsPointer)
+            {
+                effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
+                this.WriteBitcast(operand, effectiveType.ToPointerType());
+
+                asPointer = true;
+
+                writer.WriteLine(string.Empty);
             }
 
-            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: opts);
+            this.UnaryOper(writer, opCodeFieldInfoPart, "getelementptr inbounds", asPointer ? effectiveType.ToPointerType() : effectiveType, opCodeFieldInfoPart.Operand.FieldType, options: OperandOptions.GenerateResult);
 
             this.CheckIfTypeIsRequiredForBody(effectiveType);
 
@@ -2606,7 +2721,7 @@ namespace Il2Native.Logic
             var classType = operand.Type.ToClass();
 
             var opts = OperandOptions.GenerateResult;
-            var fieldType = classType.GetFieldTypeByIndex(index);
+            var fieldType = classType.GetFieldTypeByFieldNumber(index);
 
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, options: opts);
 
@@ -2634,7 +2749,7 @@ namespace Il2Native.Logic
         public bool WriteFieldAccess(
             LlvmIndentedTextWriter writer, OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
         {
-            var fieldType = fieldContainerType.GetFieldTypeByIndex(index);
+            var fieldType = fieldContainerType.GetFieldTypeByFieldNumber(index);
             if (fieldType == null)
             {
                 return false;
@@ -2738,7 +2853,7 @@ namespace Il2Native.Logic
 
             // find index
             writer.Write(", i32 ");
-            writer.Write(fieldIndex);
+            writer.Write(fieldIndex + this.CalculateFirstFieldPositionInType(fieldContainerType));
         }
 
         /// <summary>
@@ -3077,6 +3192,16 @@ namespace Il2Native.Logic
                 index++;
             }
 
+            if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                if (index > 0 || hasThis || isStructureType)
+                {
+                    writer.Write(", ");
+                }
+
+                writer.Write("...");
+            }
+
             writer.Write(")*");
         }
 
@@ -3304,7 +3429,9 @@ namespace Il2Native.Logic
         {
             // find constructor
             var constructorInfo =
-                IlReader.Constructors(type).First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+                IlReader.Constructors(type).FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+
+            //Debug.Assert(constructorInfo != null, "Could not find required constructor");
 
             type.WriteCallNewObjectMethod(this, opCode);
 
@@ -3313,7 +3440,10 @@ namespace Il2Native.Logic
 
             opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
 
-            this.WriteCallConstructor(opCode, constructorInfo);
+            if (constructorInfo != null)
+            {
+                this.WriteCallConstructor(opCode, constructorInfo);
+            }
 
             return opCode.Result;
         }
@@ -3499,7 +3629,7 @@ namespace Il2Native.Logic
 
             if (isEnum)
             {
-                normalType.WriteGetHashCodeMethod(this);
+                normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
             normalType.WriteGetTypeMethod(this);
@@ -3657,9 +3787,8 @@ namespace Il2Native.Logic
             this.IsCoreLib = isCoreLib;
             this.AllReference = allReference;
 
-            this.Output.WriteLine(
-                "target datalayout = \"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32\"");
-            this.Output.WriteLine("target triple = \"{0}\"", string.IsNullOrWhiteSpace(this.Target) ? "i686-pc-mingw32" : this.Target);
+            this.Output.WriteLine("target datalayout = \"{0}\"", this.DataLayout);
+            this.Output.WriteLine("target triple = \"{0}\"", this.Target);
             this.Output.WriteLine(string.Empty);
 
             if (this.Gctors)
@@ -3959,7 +4088,7 @@ namespace Il2Native.Logic
             int operand1 = 0,
             int operand2 = 1)
         {
-            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && opCode.OpCodeOperands == null)
+            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0))
             {
                 return effectiveType;
             }
@@ -4017,7 +4146,7 @@ namespace Il2Native.Logic
                 throw new KeyNotFoundException();
             }
 
-            index += this.CalculateFirstFieldIndex(type);
+            index += this.CalculateFirstFieldPositionInType(type);
 
             this.indexByFieldInfo[fieldInfo.GetFullName()] = index;
 
@@ -4030,7 +4159,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private int CalculateFirstFieldIndex(IType type)
+        public int CalculateFirstFieldPositionInType(IType type)
         {
             var index = 0;
 
@@ -4166,7 +4295,7 @@ namespace Il2Native.Logic
 
             var res1Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res1.IsPointerAccessRequired;
             var res2Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res2 != null && res2.IsPointerAccessRequired;
-            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null && requiredType.IsPointer;
+            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null && (requiredType.IsPointer || requiredType.IsByRef);
 
             if (res1Pointer && (res2Pointer || requiredTypePointer))
             {
@@ -4613,6 +4742,11 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Ldelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4650,6 +4784,8 @@ namespace Il2Native.Logic
                     actualLoad = false;
                     break;
             }
+
+            Debug.Assert(!type.IsVoid());
 
             this.BinaryOper(
                 writer,
@@ -4702,6 +4838,11 @@ namespace Il2Native.Logic
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Stelem_I2:
                     type = this.ResolveType("System.Int16");
@@ -4778,7 +4919,17 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stind_I1:
-                    type = this.ResolveType("System.Byte");
+                    //type = this.ResolveType("System.Byte");
+                    
+                    // it can be Bool or Byte, leave it null
+                    ////type = this.ResolveType("System.SByte");
+                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.ResolveType("System.SByte");
+                    }
+
                     break;
                 case Code.Stind_I2:
                     type = this.ResolveType("System.Int16");
@@ -4799,6 +4950,8 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
             }
+
+            Debug.Assert(!type.IsVoid());
 
             var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
             var destinationType = resultOfOperand0.Type;
@@ -4842,7 +4995,7 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex)
         {
             var operandResult = opCode.OpCodeOperands[operandIndex].Result.ToNormalType();
-            if (operandResult.Type.IsPrimitiveType())
+            if (!operandResult.Type.IsStructureType())
             {
                 this.WriteLlvmSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result);
             }

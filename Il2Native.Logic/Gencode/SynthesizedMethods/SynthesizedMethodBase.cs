@@ -167,7 +167,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public bool IsVirtual { get; private set; }
+        public bool IsVirtual { get; protected set; }
 
         /// <summary>
         /// </summary>
@@ -225,6 +225,22 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsInline
+        {
+            get;
+            protected set;
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool HasProceduralBody
+        {
+            get;
+            protected set;
         }
 
         /// <summary>

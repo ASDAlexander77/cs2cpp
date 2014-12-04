@@ -76,9 +76,7 @@ namespace PEAssemblyReader
                     return this.localTypeReplaced;
                 }
 
-                var localType = this.localInfo.Type.ResolveGeneric(this.GenericContext);
-                localType.IsByRef = this.localInfo.IsByRef;
-                localType.IsPinned = this.localInfo.IsPinned;
+                var localType = this.localInfo.Type.ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
                 return localType;
             }
 

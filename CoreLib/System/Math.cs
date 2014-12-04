@@ -9,25 +9,25 @@ namespace System
     public static class Math
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_log10_f64(double value);
+        public static extern double log10(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_log_f64(double value);
+        public static extern double log(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_pow_f64(double value, double power);
+        public static extern double pow(double value, double power);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_floor_f64(double value);
+        public static extern double floor(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_cos_f64(double value);
+        public static extern double cos(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_sin_f64(double value);
+        public static extern double sin(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double @llvm_sqrt_f64(double value);
+        public static extern double sqrt(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double acos(double value);
@@ -219,7 +219,7 @@ namespace System
 
         public static double Cos(double a)
         {
-            return llvm_cos_f64(a);
+            return cos(a);
         }
 
         //
@@ -286,7 +286,7 @@ namespace System
 
         public static double Floor(double d)
         {
-            return llvm_floor_f64(d);
+            return floor(d);
         }
 
         //
@@ -305,7 +305,7 @@ namespace System
 
         public static double Log(double d)
         {
-            return @llvm_log_f64(d);
+            return log(d);
         }
         //
         // Summary:
@@ -323,7 +323,7 @@ namespace System
 
         public static double Log10(double d)
         {
-            return @llvm_log10_f64(d);
+            return log10(d);
         }
         //
         // Summary:
@@ -377,7 +377,7 @@ namespace System
 
         public static double Pow(double x, double y)
         {
-            return @llvm_pow_f64(x, y);
+            return pow(x, y);
         }
 
         //
@@ -437,7 +437,7 @@ namespace System
 
         public static double Sin(double a)
         {
-            return llvm_sin_f64(a);
+            return sin(a);
         }
         //
         // Summary:
@@ -468,7 +468,7 @@ namespace System
 
         public static double Sqrt(double d)
         {
-            return llvm_sqrt_f64(d);
+            return sqrt(d);
         }
         //
         // Summary:

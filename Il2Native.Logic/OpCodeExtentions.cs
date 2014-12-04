@@ -92,7 +92,6 @@ namespace Il2Native.Logic
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
             {
-                ;
             }
         }
 
@@ -163,11 +162,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="classType">
         /// </param>
-        /// <param name="index">
+        /// <param name="number">
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetFieldTypeByIndex(this IType classType, int index)
+        public static IType GetFieldTypeByFieldNumber(this IType classType, int number)
         {
             var normalType = classType.ToNormal();
 
@@ -176,7 +175,7 @@ namespace Il2Native.Logic
                 return normalType.GetEnumUnderlyingType();
             }
 
-            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(index - 1).FirstOrDefault();
+            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
             if (field == null)
             {
                 return null;
@@ -239,6 +238,8 @@ namespace Il2Native.Logic
             {
                 index = int.Parse(asString.Substring(asString.Length - 1));
             }
+
+            Debug.Assert(baseWriter.LocalInfo.Length > index);
 
             var localType = baseWriter.LocalInfo[index].LocalType;
             return localType;
@@ -655,7 +656,7 @@ namespace Il2Native.Logic
         public static bool IsStructureType(this IType type, bool recurse = false)
         {
             return type != null
-                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer
+                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer && !type.IsByRef
                        || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
@@ -1046,7 +1047,12 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (genType.MetadataFullName.Equals(type.MetadataFullName))
+            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
+            {
+                return true;
+            }
+
+            if (genType.FullName.Equals(type.FullName))
             {
                 return true;
             }

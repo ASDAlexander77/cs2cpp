@@ -146,7 +146,13 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                if (!llvmWriter.WriteFieldAccess(
+                        writer, 
+                        opCode, 
+                        declaringType.ToClass(), 
+                        declaringType.ToClass(), 
+                        0, 
+                        opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return;
@@ -324,7 +330,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteGetHashCodeMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteGetHashCodeMethodForEnum(this IType type, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -338,7 +344,7 @@ namespace Il2Native.Logic.Gencode
 
             var normalType = type.ToNormal();
 
-            llvmWriter.WriteGetHashCodeObject(opCode, normalType);
+            llvmWriter.WriteGetHashCodeObjectForEnum(opCode, normalType);
 
             writer.Write("ret i32");
 
@@ -358,7 +364,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteGetHashCodeObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static void WriteGetHashCodeObjectForEnum(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
         {
             var writer = llvmWriter.Output;
 
@@ -374,7 +380,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 0, opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return;
@@ -654,8 +660,30 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New obj");
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            llvmWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue);
+
+            var castResult = opCodePart.Result;
+
+            if (!doNotCallInit)
+            {
+                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
+                declaringClassType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+            }
+
+            // restore result and type
+            opCodePart.Result = castResult;
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; end of new obj");
+        }
+
+        public static void WriteAllocateMemoryForObject(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringClassType, bool doNotTestNullValue)
+        {
+            var writer = llvmWriter.Output;
+
             var size = declaringClassType.GetTypeSize();
+
+            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.WriteLine("call i8* @{1}(i32 {0})", size, llvmWriter.GetAllocator());
 
             if (!doNotTestNullValue)
@@ -671,20 +699,29 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringClassType);
             writer.WriteLine(string.Empty);
+        }
 
-            var castResult = opCodePart.Result;
+        public static void WriteAllocateMemory(this LlvmWriter llvmWriter, OpCodePart opCodePart, FullyDefinedReference size, bool doNotTestNullValue)
+        {
+            var writer = llvmWriter.Output;
 
-            if (!doNotCallInit)
+            var mallocResult = llvmWriter.WriteSetResultNumber(opCodePart, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
+            size.Type.WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(size);
+            writer.WriteLine(")");
+
+            if (!doNotTestNullValue)
             {
-                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
-                declaringClassType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                llvmWriter.WriteTestNullValueAndThrowException(writer, opCodePart, mallocResult, "System.OutOfMemoryException", "new_obj");
             }
 
-            // restore result and type
-            opCodePart.Result = castResult;
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; end of new obj");
+            if (!llvmWriter.Gc)
+            {
+                llvmWriter.WriteMemSet(mallocResult, size);
+                writer.WriteLine(string.Empty);
+            }
         }
 
         /// <summary>
@@ -797,7 +834,13 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(writer, opCode, declaringType.ToClass(), declaringType.ToClass(), 1, opCode.Result))
+                if (!llvmWriter.WriteFieldAccess(
+                        writer, 
+                        opCode, 
+                        declaringType.ToClass(), 
+                        declaringType.ToClass(), 
+                        0, 
+                        opCode.Result))
                 {
                     writer.WriteLine("; No data");
                     return false;

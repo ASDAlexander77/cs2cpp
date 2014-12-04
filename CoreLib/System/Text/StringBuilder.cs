@@ -213,9 +213,8 @@ namespace System.Text
             //Set the length of the chunk
             this.m_ChunkLength = length;
             //Copy the value to the chunkChars
-            {
-                var tmp = value.ToCharArray();//.CopyTo(this.m_ChunkChars, 0);
-                wstrcpy(this.m_ChunkChars, 0, tmp, tmp.Length);
+            {                
+                value.ToCharArray().CopyTo(this.m_ChunkChars, 0);
             }
         }
 
@@ -435,11 +434,9 @@ namespace System.Text
                         if (length > 1) chunkChars[chunkLength + 1] = value[1];
                     }
                     else
-                    {
+                    {                        
                         char[] tmp = value.ToCharArray();
-                        //System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);
-                        wstrcpy(chunkChars, chunkLength, tmp, length);
-
+                        System.Array.Copy(tmp, 0, chunkChars, chunkLength, length);                       
                     }
                     this.m_ChunkLength = num3;
                 }
@@ -569,14 +566,14 @@ namespace System.Text
             }
             if (charCount != 0)
             {
-                for (int i = startIndex; i < startIndex + charCount; ++i)
+                for(int i = startIndex; i < startIndex + charCount; ++i)
                 {
                     this.Append(value[i], 1);
                 }
             }
             return this;
         }
-
+        
         /// <summary>
         /// Appends a specified number of copies of the string representation of a Unicode character to this instance. 
         /// </summary>
@@ -660,37 +657,12 @@ namespace System.Text
                     char[] chunkChars = chunkPrevious.m_ChunkChars;
                     int chunkOffset = chunkPrevious.m_ChunkOffset;
                     int chunkLength = chunkPrevious.m_ChunkLength;
-                    wstrcpy(result, chunkOffset, chunkChars, chunkLength);
+                    System.Array.Copy(chunkChars, 0, result, chunkOffset, chunkLength);
                 }
                 chunkPrevious = chunkPrevious.m_ChunkPrevious;
             }
             while (chunkPrevious != null);
             return new string(result);
-        }
-
-        public static void wstrcpy(char[] d, int doffset, char[] s, int charCount)
-        {
-            if (charCount > 0)
-            {
-                var dindex = doffset;
-                for (var index = 0; index < charCount; index++)
-                {
-                    d[dindex++] = s[index];
-                }
-            }
-        }
-
-        public static void wstrcpy(char[] d, int doffset, char[] s, int soffset, int charCount)
-        {
-            if (charCount > 0)
-            {
-                var dindex = doffset;
-                var sindex = soffset;
-                for (var index = 0; index < charCount; index++)
-                {
-                    d[dindex++] = s[sindex++];
-                }
-            }
         }
 
         /// <summary>
@@ -746,7 +718,7 @@ namespace System.Text
                         if ((((charCount + num3)) > length) || ((charCount + index) > chunkChars.Length))
                         {
                             throw new ArgumentOutOfRangeException("chunkCount");
-                        }
+                        }                       
                         System.Array.Copy(chunkChars, index, result, 0, charCount);
                     }
                 }
@@ -786,7 +758,7 @@ namespace System.Text
                 char[] chars = value.ToCharArray();
                 int charLength = chars.Length;
                 while (count > 0)
-                {
+                {                    
                     int cindex = 0;
                     this.ReplaceInPlaceAtChunk(ref builder, ref num3, chars, ref cindex, charLength);
                     --count;
@@ -831,7 +803,7 @@ namespace System.Text
                 throw new ArgumentOutOfRangeException("startIndex");
             }
             if (charCount > 0)
-            {
+            {                
                 this.Insert(index, new string(value, startIndex, charCount), 1);
             }
             return this;
@@ -1111,7 +1083,7 @@ namespace System.Text
             int indexInChunk = startIndex - chunk.m_ChunkOffset;
             //While there is a replacement remaining
             while (count > 0)
-            {
+            {                
                 //If the old value if found in the chunk at the index
                 if (this.StartsWith(chunk, indexInChunk, count, oldValue))
                 {
@@ -1257,6 +1229,11 @@ namespace System.Text
             ReplaceValue:
                 //Replace the value                 
                 this.ReplaceInPlaceAtChunk(ref chunk, ref indexInChunk, chars, ref replacementIndex, value.Length);
+                if (replacementIndex == value.Length)
+                {
+                    replacementIndex = 0;
+                }
+
                 //Determine the next replacement 
                 int valueIndex = replacements[index] + removeCount;
                 //Move the pointer of the working replacement
@@ -1312,8 +1289,8 @@ namespace System.Text
                     indexInChunk = 0;
                 }
                 count -= length;
-                if (count == 0) return;
                 valueIndex += length;
+                if (count == 0) return;
             }
         }
 
@@ -1348,7 +1325,7 @@ namespace System.Text
                     int nextLength = indexInChunk - length;
                     if (nextLength >= 0)
                     {
-                        System.Array.Copy(chunk.m_ChunkChars, length, builder.m_ChunkChars, 0, nextLength);
+                        System.Array.Copy(chunk.m_ChunkChars, length, chunk.m_ChunkChars, 0, nextLength);
                         indexInChunk = nextLength;
                     }
                 }
@@ -1370,7 +1347,7 @@ namespace System.Text
         }
 
         internal void AppendHelper(ref string value)
-        {
+        {            
             if (value == null || value == string.Empty) return;
             this.Append(value.ToCharArray(), value.Length);
         }
@@ -1384,7 +1361,7 @@ namespace System.Text
             this.m_ChunkLength = 0;
             //If Allocated does not match required storage
             if ((this.m_ChunkOffset + num) < num)
-            {
+            {                
                 this.m_ChunkChars = null;
                 throw new OutOfMemoryException();
             }
@@ -1427,8 +1404,7 @@ namespace System.Text
                         if (destinationIndex != sourceIndex)
                         {
                             //ThreadSafeCopy(builder.m_ChunkChars, ref sourceIndex, builder.m_ChunkChars, ref destinationIndex, num4);
-                            //System.Array.Copy(builder.m_ChunkChars, sourceIndex, builder.m_ChunkChars, destinationIndex, num4);
-                            wstrcpy(builder.m_ChunkChars, destinationIndex, builder.m_ChunkChars, sourceIndex, num4);
+                            System.Array.Copy(builder.m_ChunkChars, sourceIndex, builder.m_ChunkChars, destinationIndex, num4);
                         }
                         return;
                     }
@@ -1444,8 +1420,7 @@ namespace System.Text
             if (num <= this.m_ChunkChars.Length)
             {
                 //ThreadSafeCopy(value, this.m_ChunkChars, this.m_ChunkLength, valueCount);
-                //System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, valueCount);
-                wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, valueCount);
+                System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, valueCount);
                 this.m_ChunkLength = num;
             }
             else
@@ -1454,22 +1429,19 @@ namespace System.Text
                 if (count > 0)
                 {
                     //ThreadSafeCopy(value, this.m_ChunkChars, this.m_ChunkLength, count);
-                    //System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, count);
-                    wstrcpy(this.m_ChunkChars, this.m_ChunkLength, value, count);
+                    System.Array.Copy(value, 0, this.m_ChunkChars, this.m_ChunkLength, count);
                     this.m_ChunkLength = this.m_ChunkChars.Length;
                 }
                 int minBlockCharCount = valueCount - count;
                 this.ExpandByABlock(minBlockCharCount);
                 //ThreadSafeCopy(value + count, this.m_ChunkChars, 0, minBlockCharCount);
-                //System.Array.Copy(value, count, this.m_ChunkChars, 0, minBlockCharCount);
-                wstrcpy(this.m_ChunkChars, 0, value, count, minBlockCharCount);
+                System.Array.Copy(value, count, this.m_ChunkChars, 0, minBlockCharCount);
                 this.m_ChunkLength = minBlockCharCount;
             }
-
             return;
         }
 
-        #endregion
+        #endregion        
     }
 }
 

@@ -110,7 +110,8 @@ namespace Il2Native.Logic.Gencode
             IType thisType, 
             FullyDefinedReference resultNumberForReturn, 
             IType returnType, 
-            LlvmWriter llvmWriter)
+            LlvmWriter llvmWriter,
+            bool varArg)
         {
             var writer = llvmWriter.Output;
 
@@ -119,6 +120,8 @@ namespace Il2Native.Logic.Gencode
             var index = 0;
 
             var returnIsStruct = returnType != null && returnType.IsStructureType();
+
+            var comaRequired = false;
 
             // allocate space for structure if return type is structure
             if (returnIsStruct)
@@ -129,11 +132,13 @@ namespace Il2Native.Logic.Gencode
                 {
                     llvmWriter.WriteResult(resultNumberForReturn);
                 }
+
+                comaRequired = true;
             }
 
             if (hasThis)
             {
-                if (returnIsStruct)
+                if (comaRequired)
                 {
                     writer.Write(", ");
                 }
@@ -148,34 +153,85 @@ namespace Il2Native.Logic.Gencode
                 {
                     llvmWriter.WriteResult(used[0].Result);
                 }
+
+                comaRequired = true;
             }
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(returnType);
 
             var argsContainsThisArg = used != null ? (used.Length - parameterInfos.Count()) > 0 : false;
+            var argShift = (@isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0);
+            
+            // add parameters
             foreach (var parameter in parameterInfos)
             {
-                llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
+                var effectiveIndex = index + argShift;
+                var usedItem = used[effectiveIndex];
 
-                if (hasThis || index > 0 || returnIsStruct)
+                if (comaRequired)
                 {
                     writer.Write(", ");
                 }
 
-                var effectiveIndex = index + (@isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0);
+                llvmWriter.WriteFunctionCallParameterArgument(usedItem, parameter);
 
-                parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
-                if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
-                {
-                    writer.Write(" byval align " + LlvmWriter.PointerSize);
-                }
-
-                writer.Write(' ');
-                llvmWriter.WriteResult(used[effectiveIndex]);
+                comaRequired = true;
                 index++;
             }
 
+            if (varArg)
+            {
+                // VarArgs
+                while (index < used.Length)
+                {
+                    var effectiveIndex = index + argShift;
+                    var usedItem = used[effectiveIndex];
+
+                    if (comaRequired)
+                    {
+                        writer.Write(", ");
+                    }
+
+                    llvmWriter.WriteFunctionCallVarArgument(usedItem, usedItem.Result.Type);
+
+                    comaRequired = true;
+                    index++;
+                }
+            }
+
             writer.Write(")");
+        }
+
+        private static void WriteFunctionCallParameterArgument(this LlvmWriter llvmWriter, OpCodePart opArg, IParameter parameter)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
+
+            parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
+            if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
+            {
+                writer.Write(" byval align " + LlvmWriter.PointerSize);
+            }
+
+            writer.Write(' ');
+            llvmWriter.WriteResult(opArg);
+        }
+
+        private static void WriteFunctionCallVarArgument(this LlvmWriter llvmWriter, OpCodePart opArg, IType type)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(type);
+
+            type.WriteTypePrefix(writer, type.IsStructureType());
+            if (type.IsStructureType())
+            {
+                writer.Write(" byval align " + LlvmWriter.PointerSize);
+            }
+
+            writer.Write(' ');
+            llvmWriter.WriteResult(opArg);
         }
 
         /// <summary>

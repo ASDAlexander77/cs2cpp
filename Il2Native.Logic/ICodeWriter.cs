@@ -20,6 +20,10 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
+        IType ResolveType(string fullTypeName);
+
+        /// <summary>
+        /// </summary>
         void Close();
 
         /// <summary>

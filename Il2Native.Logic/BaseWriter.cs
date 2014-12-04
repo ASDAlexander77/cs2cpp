@@ -704,7 +704,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="size">
         /// </param>
-        protected void FoldNestedOpCodes(OpCodePart opCodePart, int size)
+        protected void FoldNestedOpCodes(OpCodePart opCodePart, int size, bool varArg = false)
         {
             if (opCodePart.OpCode.StackBehaviourPop == StackBehaviour.Pop0)
             {
@@ -716,12 +716,18 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var opCodeParts = new OpCodePart[size];
+            var opCodeParts = new List<OpCodePart>(size);
 
             PhiNodes lastPhiNodes = null;
-            for (var i = 1; i <= size; i++)
+            for (var i = 1; i <= size || varArg; i++)
             {
-                var opCodePartUsed = this.Stack.Pop();
+                var isVarArg = i > size && varArg;
+                // take value from Stack
+                var opCodePartUsed = PopValue(opCodePart, isVarArg);
+                if (isVarArg && opCodePartUsed == null)
+                {
+                    break;
+                }
 
                 // register second value
                 // TODO: this is still hack, review the code
@@ -741,7 +747,7 @@ namespace Il2Native.Logic
                     alternativeValues.Values.Add(opCodePartUsed);
                 }
 
-                opCodeParts[size - i] = opCodePartUsed;
+                opCodeParts.Insert(0, opCodePartUsed);
             }
 
             // register second value
@@ -751,7 +757,7 @@ namespace Il2Native.Logic
                 AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
             }
 
-            opCodePart.OpCodeOperands = opCodeParts;
+            opCodePart.OpCodeOperands = opCodeParts.ToArray();
             var operandPosition = 0;
             foreach (var childCodePart in opCodeParts)
             {
@@ -764,6 +770,28 @@ namespace Il2Native.Logic
             {
                 this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
             }
+        }
+
+        private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
+        {
+            if (varArg && this.Stack.Count == 0)
+            {
+                return null;
+            }
+
+            var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
+            OpCodePart opCodePartUsed;
+            if (!alternativeValueOnlyOne)
+            {
+                opCodePartUsed = this.Stack.Pop();
+            }
+            else
+            {
+                opCodePartUsed = opCodePart.AlternativeValues.Values.First();
+                opCodePart.AlternativeValues = null;
+            }
+
+            return opCodePartUsed;
         }
 
         /// <summary>
@@ -852,12 +880,12 @@ namespace Il2Native.Logic
                 case Code.Call:
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     this.FoldNestedOpCodes(
-                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count());
+                        opCode, (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) + methodBase.GetParameters().Count(), methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count());
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count(), methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
@@ -867,7 +895,7 @@ namespace Il2Native.Logic
                     }
 
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
-                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count());
+                    this.FoldNestedOpCodes(opCode, (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count(), ctorInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
                     break;
                 case Code.Stelem:
@@ -1027,6 +1055,9 @@ namespace Il2Native.Logic
                 case Code.Localloc:
                 case Code.Pop:
                 case Code.Ldvirtftn:
+                case Code.Mkrefany:
+                case Code.Refanytype:
+                case Code.Refanyval:
                     this.FoldNestedOpCodes(opCode, 1);
                     break;
                 case Code.Ldloc:
@@ -1190,6 +1221,17 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Stind_Ref))
+            {
+                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                if (retType.IsByRef)
+                {
+                    retType = retType.ToNormal();
+                }
+
+                return retType;
+            }
+
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
@@ -1248,6 +1290,43 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ret))
             {
                 retType = this.MethodReturnType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
+            {
+                retType = opCodePart.GetLocalType(this);
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
+            {
+                var index = opCodePart.GetArgIndex();
+                if (this.HasMethodThis && index == 0)
+                {
+                    retType = this.ThisType;
+                    return retType;
+                }
+
+                retType = this.GetArgType(index);
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldfld, Code.Ldsfld))
+            {
+                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldobj))
+            {
+                retType = ((OpCodeTypePart)opCodePart).Operand;
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Ldind_Ref))
+            {
+                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
                 return retType;
             }
 
@@ -1385,8 +1464,6 @@ namespace Il2Native.Logic
             {
                 current = current.PreviousOpCode(this);
             }
-
-            ;
 
             if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
             {

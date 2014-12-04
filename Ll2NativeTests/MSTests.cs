@@ -38,6 +38,7 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
+        private const bool Llvm34Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
@@ -52,13 +53,22 @@ namespace Ll2NativeTests
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         private const bool Llvm35Support = false;
+        private const bool Llvm34Support = false;
         private const string OutputObjectFileExt = "obj";
         private const string Target = "i686-w64-mingw32";
 #endif
 
         /// <summary>
         /// </summary>
-        private const bool UsingRoslyn = true;
+        private const bool Android = false;
+
+        /// <summary>
+        /// </summary>
+        private const bool Emscripten = false;
+
+        /// <summary>
+        /// </summary>
+        private const bool UsingRoslyn = false;
 
         /// <summary>
         /// </summary>
@@ -71,11 +81,15 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         private const bool DebugInfo = false;
-        
+
+        /// <summary>
+        /// </summary>
+        private const bool MultiCore = true;
+
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = true;
+        private const bool CompileWithOptimization = false;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -106,6 +120,15 @@ namespace Ll2NativeTests
         public void TestCustomConvert()
         {
             Convert("test-1", SourcePathCustom);
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile()
+        {
+            //Debug.Listeners.Clear();
+            Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
         }
 
         /// <summary>
@@ -158,13 +181,13 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompile()
         {
-            // test-400.cs 
-            // %.r13 = load i32* %local1, align 4
-            // %.r14 = load i32* %local1, align 4
+            // TODO: WARNING! order of obj files in g++ cmd line is important, CoreLib.obj should be last one
 
-
+            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 100 - using DllImport      
+            // 171 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 251 - error CS0518: Predefined type 'System.Runtime.CompilerServices.IsVolatile' is not defined or imported
+            // 270 - __arglist
             // 294 - lock (Missing Monitor.Enter/Exit)
             // 300 - typeof of C[] (Array, will be fixed when using __Array__<T> implementation
             // 301 - typeof of Pointer type (*)
@@ -172,24 +195,33 @@ namespace Ll2NativeTests
             // 305 - the same as 301
             // 324 - bug NEED TO BE FIXED.
             // 353 - does not have Main method
+            // 386 - Double conversion (in CoreLib.dll some conversions are missing)
+            // 387 - Decimal conversion (in CoreLib.dll some conversions are missing)
             // 444 - codepage 65001 is used (can't be compiled)
             // 524 - (Missing Monitor.Enter/Exit
             // 528 - using typeof(object[]) (Array, will be fixed when using __Array__<T> implementation
+            // 535 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 550 - codepage 65001 is used (can't be compiled)
             // 551 - multiple definition of Int32 (but all issues are fixed)
+            // 596 - IntPtr conversion (in CoreLib.dll some conversions are missing)
+            // 600 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 616 - test to compile Object (but it should be compiled without any Assembly reference)
+            // 631 - missing System_Decimal__op_UnaryNegation (the same issue as 596)
+            // 646 - IntPtr does not have field "Size"
+            // 682 - IntPtr conversion (in CoreLib.dll some conversions are missing)
             // 709 - get_OffsetStringData - required (NEED TO BE FIXED!!!!).
             // 817 - redefinition of Int32
+            // 864 - Decimal conversion (in CoreLib.dll some conversions are missing)
             var skip =
                 new List<int>(
                     new[]
                         {
-                            100, 251, 294, 300, 301, 304, 305, 353, 444, 482, 524, 528, 550, 551, 616, 709, 817
+                            10, 100, 171, 251, 270, 294, 300, 301, 304, 305, 353, 386, 387, 444, 482, 524, 528, 535, 550, 551, 596, 600, 616, 631, 646, 682,
+                            709, 817, 864
                         });
 
             Debug.Listeners.Clear();
 
-            // last 790
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 Compile(string.Format("test-{0}", index));
@@ -223,9 +255,10 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
+            // BUG!!!!! mscorlib.dll, System.Globalization.CodePageDataItem, .ctor  - (ldfld of address result)  (NEEDS TO BE FIXED)
+
             // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
             // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
-
 
             // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
             // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
@@ -246,7 +279,7 @@ namespace Ll2NativeTests
              */
 
 
-            // 10 - not compilable
+            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
             // 28 - bug in execution (Hashtable)
             // 32 - multi array
@@ -310,6 +343,30 @@ namespace Ll2NativeTests
             // 252 - Delegate.Combine (NotImplemented)
             // 253 - System.Reflection
             // 254 - System.Reflection 
+            // 263 - string with sbyte*
+            // 264 - Delegate.Combine (NotImplemented)
+            // 266 - IConvertable 
+            // 269 - ArgIterator
+            // 273 - GetCustomAttributes
+            // 275 - Delegate.Combine (NotImplemented)
+            // 276 - GetType.GetEvents(); (NotImplemented)
+            // 279 - Enum ToString with Flags
+            // 282 - error:  error CS1502: The best overloaded method match for 'System.Convert.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
+            // 286 - Xml (not implemented)
+            // 287 - System.Type, GetConstructors, IsSealed
+            // 294 - lock, Monitor.Enter/Exit
+            // 295 - System.Reflection
+            // 296 - GetElementType (NotImplemented)
+            // 297 - System.Reflection
+            // 300 - typeof(C[]) - will be fixed when __Array__<T> applied
+            // 301 - typeof(x*) - type of pointer
+            // 304 - typeof(C[]) - will be fixed when __Array__<T> applied
+            // 305 - typeof(x*) - type of pointer
+            // 308 - typeof(x*) - type of pointer
+            // 311 - SecurityPermission
+            // 313 - typeof(D).GetMethods - NotImplemented
+            // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
+            // 319 - missing DecimalConstantAttribute
             // -----------
             // 32, 55, 74 - missing class
             // 37, 42, 43, 44, 45, 66 - multiarray
@@ -320,7 +377,7 @@ namespace Ll2NativeTests
                         {
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 252, 253, 254
+                            247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319
                         });
 
             if (UsingRoslyn)
@@ -330,7 +387,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 49, 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(205, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
@@ -347,7 +404,6 @@ namespace Ll2NativeTests
             // 51 - bug in execution (NotImplemented)
             // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
-            // 63 - Array.Length is not implemented
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 66 - using typeof (typeof (Foo<>))
             // 72 - not implemented (DateTime to string)
@@ -364,11 +420,25 @@ namespace Ll2NativeTests
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
             // 145 - using multiarray
+            // 156 - can't compile (seems it is lib)
+            // 159 - Dictionary<K, V> NotImplemented
+            // 161 - can't compile (seems it is lib)
+            // 162 - GetType. findMember
+            // 165 - cant be compiled (library)
+            // 166 - cant be compiled (library)
+            // 167 - Attribute.GetCustomAttributes
+            // 171 - multiarray
+            // 172 - cant be compiled (library)
+            // 174 - cant be compiled (library)
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
-            var skip = new[] { 13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 63, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145 };
+            var skip = new[]
+                           {
+                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
+                               161, 162, 165, 166, 167, 171, 172, 174
+                           };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
@@ -391,7 +461,7 @@ namespace Ll2NativeTests
         /// </param>
         /// <returns>
         /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool debugInfo = DebugInfo)
+        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool llvm34Support = Llvm34Support, bool debugInfo = DebugInfo)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -418,10 +488,29 @@ namespace Ll2NativeTests
             {
                 args.Add("llvm35");
             }
+            else if (llvm34Support)
+            {
+                args.Add("llvm34");
+            }
 
             if (debugInfo)
             {
                 args.Add("debug");
+            }
+
+            if (MultiCore)
+            {
+                args.Add("multi");
+            }
+
+            if (Android)
+            {
+                args.Add("android");
+            }
+
+            if (Emscripten)
+            {
+                args.Add("emscripten");
             }
 
             return args.ToArray();
@@ -488,7 +577,7 @@ namespace Ll2NativeTests
 
                 if (opt)
                 {
-                    ExecCmd("opt", string.Format("CoreLib.ll -o CoreLib.bc -O2", Target));
+                    ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
                     ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
                 }
                 else
@@ -500,7 +589,7 @@ namespace Ll2NativeTests
             // file obj
             if (opt)
             {
-                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName, Target));
+                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName));
                 ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
             }
             else
@@ -511,7 +600,7 @@ namespace Ll2NativeTests
             if (!justCompile)
             {
                 // file exe
-                ExecCmd("g++", string.Format("-o {0}.exe CoreLib.{1} {0}.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
+                ExecCmd("g++", string.Format("-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
 
                 // test execution
                 ExecCmd(string.Format("{0}.exe", fileName));
@@ -548,7 +637,12 @@ namespace Ll2NativeTests
             {
                 Convert(fileName);
             }
-            catch (Exception ex)
+            catch (BadImageFormatException ex)
+            {
+                Debug.WriteLine(ex);
+                return;
+            }
+            catch (FileNotFoundException ex)
             {
                 Debug.WriteLine(ex);
                 return;

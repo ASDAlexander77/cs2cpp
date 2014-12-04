@@ -38,7 +38,7 @@ namespace System
 
             get
             {
-                throw new NotImplementedException();
+                return this.obj;
             }
         }
 

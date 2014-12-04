@@ -547,8 +547,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags)
         {
-            foreach (var method in
-                type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+            foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return method;
             }
@@ -937,6 +936,8 @@ namespace Il2Native.Logic
                     case Code.Stobj:
                     case Code.Constrained:
                     case Code.Sizeof:
+                    case Code.Mkrefany:
+                    case Code.Refanyval:
 
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
@@ -962,6 +963,7 @@ namespace Il2Native.Logic
 
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
+
                     default:
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
@@ -1146,7 +1148,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.IsGenericTypeDefinition || !type.IsGenericType)
+            if (type.IsArray || type.IsPointer || type.IsGenericTypeDefinition || !type.IsGenericType)
             {
                 return;
             }
@@ -1265,7 +1267,7 @@ namespace Il2Native.Logic
             var outDll = Path.Combine(Path.GetTempPath(), nameDll);
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd());
+            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental));
 
             var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
                                          ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))

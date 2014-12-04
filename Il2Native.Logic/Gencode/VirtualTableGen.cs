@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
 
@@ -109,8 +110,14 @@ namespace Il2Native.Logic.Gencode
             // custom GetType
             // TODO: you need to append it before processing custom methods
             var getTypeMethod = new SynthesizedGetTypeMethod(thisType, llvmWriter);
-            var baseGetTypeMethod = virtualTable.First(m => m.Key.IsMatchingOverride(getTypeMethod));
-            baseGetTypeMethod.Value = getTypeMethod;
+            var baseGetTypeMethod = virtualTable.FirstOrDefault(m => m.Key.IsMatchingOverride(getTypeMethod));
+#if !FOR_MSCORLIBTEST
+            Debug.Assert(baseGetTypeMethod != null, "Could not find virtual method GetType (adjust source code and make GetType a virtual method");
+#endif
+            if (baseGetTypeMethod != null)
+            {
+                baseGetTypeMethod.Value = getTypeMethod;
+            }
         }
 
         /// <summary>
@@ -354,7 +361,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent++;
             writer.WriteLine(
-                "i8* {0},", 
+                "i8* {0},",
                 interfaceIndex == 0
                     ? "null"
                     : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
@@ -373,7 +380,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(",");
 
                 writer.Write("i8* bitcast (");
-                if (virtualMethod.Value.IsAbstract)
+                if (virtualMethod.Value == null || virtualMethod.Value.IsAbstract)
                 {
                     writer.Write("void ()* @__cxa_pure_virtual");
                 }
@@ -416,12 +423,15 @@ namespace Il2Native.Logic.Gencode
             }
 
             // get all virtual methods in current type and replace or append
-            virtualTable.AddRange(
-                IlReader.Methods(@interface)
-                        .Select(
-                            interfaceMember =>
-                                allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).First())
-                        .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }));
+            var list = IlReader.Methods(@interface)
+                        .Select(interfaceMember => allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).FirstOrDefault())
+                        .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod }).ToList();
+
+#if !FOR_MSCORLIBTEST
+            Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+#endif
+
+            virtualTable.AddRange(list);
         }
 
         /// <summary>

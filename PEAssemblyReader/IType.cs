@@ -45,7 +45,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsByRef { get; set; }
+        bool IsMultiArray { get; }
+
+        /// <summary>
+        /// </summary>
+        int ArrayRank { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsByRef { get; }
 
         /// <summary>
         /// </summary>
@@ -58,6 +66,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool IsEnum { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsObject { get; }
 
         /// <summary>
         /// </summary>
@@ -89,7 +101,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsPinned { get; set; }
+        bool IsPinned { get; }
 
         /// <summary>
         /// </summary>
@@ -119,7 +131,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IType Clone(bool setUseAsClass = false, bool value = false);
+        IType Clone(bool setUseAsClass = false, bool value = false, bool isByRef = false, bool isPinned = false);
 
         /// <summary>
         /// </summary>
@@ -160,12 +172,6 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IEnumerable<IField> GetFields(BindingFlags bindingFlags);
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IEnumerable<IType> GetGenericArguments();
 
         /// <summary>
         /// </summary>
@@ -226,6 +232,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToDereferencedType();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToByRefType();
 
         /// <summary>
         /// </summary>
