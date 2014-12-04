@@ -1134,5 +1134,24 @@ namespace Il2Native.Logic
 
             return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
         }
+
+        public static int? FindBeginOfBasicBlock(this OpCodePart popCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = popCodePart.Previous;
+            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+                   && !((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward()))
+            {
+                current = current.Previous;
+            }
+
+            if (current != null && (current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward())
+            {
+                return current.AddressEnd;
+            }
+
+            return null;
+        }
     }
 }

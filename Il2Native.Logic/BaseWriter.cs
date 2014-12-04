@@ -36,11 +36,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        protected readonly StackBranches Stacks = new StackBranches();
+
+        /// <summary>
+        /// </summary>
         public BaseWriter()
         {
             this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
-            this.Stack = new Stack<OpCodePart>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -114,10 +117,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected Stack<OpCodePart> Stack { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -405,8 +404,7 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_S:
                     return new ReturnResult(opCode.UseAsNull ? this.ResolveType("System.Void").ToPointerType() : this.ResolveType("System.Int32"))
                                {
-                                   IsConst =
-                                       true
+                                   IsConst = true
                                };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
@@ -482,7 +480,7 @@ namespace Il2Native.Logic
         public virtual void StartProcess()
         {
             this.Ops.Clear();
-            this.Stack.Clear();
+            this.Stacks.Clear();
             this.OpsByAddressStart.Clear();
             this.OpsByAddressEnd.Clear();
             this.OpsByGroupAddressStart.Clear();
@@ -735,14 +733,14 @@ namespace Il2Native.Logic
 
                 if (opCodePartUsed.ToCode() == Code.Dup)
                 {
-                    this.Stack.Push(opCodePartUsed.OpCodeOperands[0]);
+                    this.Stacks.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
                 // check here if you have conditional argument (cond) ? a1 : b1;
                 bool whenSecondValueSeparatedByExpression;
-                while (this.IsConditionalExpression(opCodePartUsed, this.Stack, out whenSecondValueSeparatedByExpression))
+                while (this.IsConditionalExpression(opCodePartUsed, this.Stacks, out whenSecondValueSeparatedByExpression))
                 {
-                    var secondValue = this.Stack.Pop();
+                    var secondValue = this.Stacks.Pop();
                     var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue, whenSecondValueSeparatedByExpression);
                     alternativeValues.Values.Add(opCodePartUsed);
                 }
@@ -752,9 +750,9 @@ namespace Il2Native.Logic
 
             // register second value
             // TODO: this is still hack, review the code
-            if (size > 0 && this.Stack.Count > 0)
+            if (size > 0 && this.Stacks.Any())
             {
-                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
+                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stacks.Peek());
             }
 
             opCodePart.OpCodeOperands = opCodeParts.ToArray();
@@ -774,16 +772,16 @@ namespace Il2Native.Logic
 
         private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
         {
-            if (varArg && this.Stack.Count == 0)
+            if (varArg && !this.Stacks.Any())
             {
                 return null;
             }
 
-            var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
+            var alternativeValueOnlyOne = !this.Stacks.Any() && opCodePart.AlternativeValues != null;
             OpCodePart opCodePartUsed;
             if (!alternativeValueOnlyOne)
             {
-                opCodePartUsed = this.Stack.Pop();
+                opCodePartUsed = this.Stacks.Pop();
             }
             else
             {
@@ -875,6 +873,9 @@ namespace Il2Native.Logic
         protected void Process(OpCodePart opCode)
         {
             var code = opCode.ToCode();
+
+            this.Stacks.UpdateCurrentAddress(opCode.AddressStart);
+
             switch (code)
             {
                 case Code.Call:
@@ -1094,6 +1095,8 @@ namespace Il2Native.Logic
 
             this.BuildGroupIndex(opCode);
 
+            this.CheckIfNewBranchToCreate(opCode, code);
+
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
             {
@@ -1104,7 +1107,44 @@ namespace Il2Native.Logic
                                      && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
             if (!isItMethodWithVoid)
             {
-                this.Stack.Push(opCode);
+                this.Stacks.Push(opCode);
+            }
+        }
+
+        private void CheckIfNewBranchToCreate(OpCodePart opCode, Code code)
+        {
+            switch (code)
+            {
+                case Code.Beq:
+                case Code.Beq_S:
+                case Code.Blt:
+                case Code.Blt_S:
+                case Code.Bgt:
+                case Code.Bgt_S:
+                case Code.Ble:
+                case Code.Ble_S:
+                case Code.Bge:
+                case Code.Bge_S:
+                case Code.Blt_Un:
+                case Code.Blt_Un_S:
+                case Code.Bgt_Un:
+                case Code.Bgt_Un_S:
+                case Code.Ble_Un:
+                case Code.Ble_Un_S:
+                case Code.Bge_Un:
+                case Code.Bge_Un_S:
+                case Code.Bne_Un:
+                case Code.Bne_Un_S:
+                case Code.Brtrue:
+                case Code.Brtrue_S:
+                case Code.Brfalse:
+                case Code.Brfalse_S:
+                    if (opCode.IsJumpForward())
+                    {
+                        this.Stacks.CreateNewBranch(opCode.JumpAddress());
+                    }
+
+                    break;
             }
         }
 
@@ -1547,15 +1587,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="currentArgument">
         /// </param>
-        /// <param name="stack">
+        /// <param name="stackBranches">
         /// </param>
         /// <returns>
         /// </returns>
-        private bool IsConditionalExpression(OpCodePart currentArgument, Stack<OpCodePart> stack, out bool whenSecondValueSeparatedByExpression)
+        private bool IsConditionalExpression(OpCodePart currentArgument, StackBranches stackBranches, out bool whenSecondValueSeparatedByExpression)
         {
             whenSecondValueSeparatedByExpression = false;
 
-            if (!stack.Any())
+            if (!stackBranches.Any())
             {
                 return false;
             }
@@ -1565,7 +1605,7 @@ namespace Il2Native.Logic
             var middleJump = firstValue.PreviousOpCodeGroup(this);
             var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
 
-            var secondValue = stack.First();
+            var secondValue = stackBranches.First();
 
             if (!isJumpForward)
             {
