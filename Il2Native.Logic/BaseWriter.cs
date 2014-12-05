@@ -1058,7 +1058,7 @@ namespace Il2Native.Logic
 
             this.BuildGroupIndex(opCode);
 
-            this.CheckIfNewBranchToCreate(opCode, code);
+            this.Stacks.CheckIfNewBranchToCreate(opCode, this);
 
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
@@ -1074,49 +1074,6 @@ namespace Il2Native.Logic
             }
         }
 
-        private void CheckIfNewBranchToCreate(OpCodePart opCode, Code code)
-        {
-            switch (code)
-            {
-                case Code.Br:
-                case Code.Br_S:
-                    if (opCode.IsJumpForward())
-                    {
-                        this.Stacks.CreateNewBranch(opCode.JumpAddress());
-                    }
-                    break;
-                case Code.Beq:
-                case Code.Beq_S:
-                case Code.Blt:
-                case Code.Blt_S:
-                case Code.Bgt:
-                case Code.Bgt_S:
-                case Code.Ble:
-                case Code.Ble_S:
-                case Code.Bge:
-                case Code.Bge_S:
-                case Code.Blt_Un:
-                case Code.Blt_Un_S:
-                case Code.Bgt_Un:
-                case Code.Bgt_Un_S:
-                case Code.Ble_Un:
-                case Code.Ble_Un_S:
-                case Code.Bge_Un:
-                case Code.Bge_Un_S:
-                case Code.Bne_Un:
-                case Code.Bne_Un_S:
-                case Code.Brtrue:
-                case Code.Brtrue_S:
-                case Code.Brfalse:
-                case Code.Brfalse_S:
-                    if (opCode.IsJumpForward() && !opCode.JumpOpCode(this).Previous.Any(Code.Br, Code.Br_S))
-                    {
-                        this.Stacks.CreateNewBranch(opCode.JumpAddress());
-                    }
-
-                    break;
-            }
-        }
 
         /// <summary>
         /// </summary>
