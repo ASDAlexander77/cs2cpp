@@ -1143,8 +1143,7 @@ namespace Il2Native.Logic
 
             // Varpop can pop 0
             var jumpOrLabel = false;
-            while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || current.OpCode.StackBehaviourPop == StackBehaviour.Varpop)
-                   && !(JumpOrLabelPoint(current, out jumpOrLabel)))
+            while (current != null && !(JumpOrLabelPoint(current, out jumpOrLabel)))
             {
                 current = current.Previous;
             }
