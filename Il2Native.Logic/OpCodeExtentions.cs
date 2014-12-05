@@ -1142,18 +1142,37 @@ namespace Il2Native.Logic
             var current = popCodePart.Previous;
 
             // Varpop can pop 0
+            var jumpOrLabel = false;
             while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || current.OpCode.StackBehaviourPop == StackBehaviour.Varpop)
-                   && !((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward()))
+                   && !(JumpOrLabelPoint(current, out jumpOrLabel)))
             {
                 current = current.Previous;
             }
 
-            if (current != null && (current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward())
+            if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
             {
-                return current.AddressEnd;
+                return jumpOrLabel ? current.AddressStart : current.AddressEnd;
             }
 
             return null;
+        }
+
+        private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)
+        {
+            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward())
+            {
+                startOrEnd = false;
+                return true;
+            }
+
+            if (current.JumpDestination != null && current.JumpDestination.Any())
+            {
+                startOrEnd = true;
+                return true;
+            }
+
+                startOrEnd = false;
+            return false;
         }
     }
 }

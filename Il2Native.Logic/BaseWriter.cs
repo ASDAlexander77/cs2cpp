@@ -822,9 +822,10 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PrepareWritingMethodBody()
         {
             var ops = this.PreProcessOpCodes(this.Ops).ToList();
+            this.BuildAddressIndexes(ops);
+            this.AssignJumpBlocks(ops);
             this.ProcessAll(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
-            this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
             return ops;
         }
@@ -1081,17 +1082,20 @@ namespace Il2Native.Logic
         /// </param>
         protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
         {
+            foreach (var opCodePart in opCodes)
+            {
+                this.Process(opCodePart);
+            }
+        }
+
+        private void BuildAddressIndexes(IEnumerable<OpCodePart> opCodes)
+        {
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
             foreach (var opCodePart in opCodes)
             {
                 this.AddAddressIndex(opCodePart);
-            }
-
-            foreach (var opCodePart in opCodes)
-            {
-                this.Process(opCodePart);
             }
         }
 
