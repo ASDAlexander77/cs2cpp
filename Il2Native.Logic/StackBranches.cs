@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection.Emit;
 
     using Il2Native.Logic.CodeParts;
 
@@ -57,10 +58,14 @@
                 case Code.Brtrue_S:
                 case Code.Brfalse:
                 case Code.Brfalse_S:
-                    if (opCode.IsJumpForward()
-                        && !opCode.JumpOpCode(baseWriter).Previous.Any(Code.Br, Code.Br_S, Code.Ret, Code.Leave, Code.Leave_S, Code.Endfilter, Code.Endfinally))
+                    if (opCode.IsJumpForward())
                     {
-                        this.CreateNewBranch(opCode.JumpAddress());
+                        var flowControl = opCode.JumpOpCode(baseWriter).Previous.OpCode.FlowControl;
+                        var isFork = flowControl == FlowControl.Branch || flowControl == FlowControl.Cond_Branch || flowControl == FlowControl.Return;
+                        if (!isFork)
+                        {
+                            this.CreateNewBranch(opCode.JumpAddress());
+                        }
                     }
 
                     break;
