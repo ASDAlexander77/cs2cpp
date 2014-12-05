@@ -8,6 +8,8 @@
 
     public class StackBranch
     {
+        private StackBranch rootBranch;
+
         public StackBranch(int branchStopAddress)
         {
             this.Stack = new Stack<OpCodePart>();
@@ -17,7 +19,7 @@
         public StackBranch(int branchStopAddress, StackBranch rootBranch)
             : this(branchStopAddress)
         {
-            this.ClonedStack = new Stack<OpCodePart>(rootBranch.Stack);
+            this.rootBranch = (StackBranch)rootBranch.MemberwiseClone();
         }
 
         /// <summary>
@@ -27,10 +29,6 @@
         /// <summary>
         /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected Stack<OpCodePart> ClonedStack { get; private set; }
 
         public void Push(OpCodePart opCodePart)
         {
@@ -44,9 +42,9 @@
                 return this.Stack.Pop();
             }
 
-            if (this.ClonedStack != null && this.ClonedStack.Count > 0)
+            if (this.rootBranch != null && this.rootBranch.Any())
             {
-                return this.ClonedStack.Pop();
+                return this.rootBranch.Pop();
             }
 
             throw new IndexOutOfRangeException();
@@ -64,7 +62,7 @@
 
         public bool Any()
         {
-            return this.Stack.Count > 0 || this.ClonedStack.Count > 0;
+            return this.Stack.Count > 0 || (this.rootBranch != null && this.rootBranch.Any());
         }
 
         public bool Empty()
