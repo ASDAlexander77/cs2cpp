@@ -37,6 +37,12 @@
 
         public void Push(OpCodePart opCodePart)
         {
+            // read all alternative values from other branches
+            if (this.current == this.main && this.HasAnyNonEmptyClosedBranch())
+            {
+                opCodePart.AlternativeValues = this.GetPhiValues(null);
+            }
+
             this.current.Push(opCodePart);
         }
 
@@ -48,50 +54,54 @@
             // read all alternative values from other branches
             if (this.branches.Count > 1 && this.HasAnyNonEmptyClosedBranch())
             {
-                var phiNodes = new PhiNodes();
-                var any = false;
-                foreach (var alternateValue in this.branches.Where(b => b.BranchStopAddress <= this.currentAddress).Select(branch => branch.Pop()))
-                {
-                    var label = alternateValue.FindBeginOfBasicBlock();
-                    Debug.Assert(label.HasValue);
-                    if (label.HasValue)
-                    {
-                        phiNodes.Values.Add(alternateValue);
-                        phiNodes.Labels.Add(label.Value);
-                        any = true;
-                    }
-                }
-
-                // current value
-                var currentLabel = value.FindBeginOfBasicBlock();
-                phiNodes.Values.Add(value);
-                if (currentLabel.HasValue)
-                {
-                    phiNodes.Labels.Add(currentLabel.Value);
-                }
-                else
-                {
-                    phiNodes.Labels.Add(value.GroupAddressStart);
-
-                    // we need to create a label
-                    var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0 ? value.OpCodeOperands[0] : value;
-                    if (opCode.JumpDestination == null)
-                    {
-                        opCode.JumpDestination = new List<OpCodePart>();
-                    }
-
-                    opCode.JumpDestination.Add(value);
-                }
-
-                this.CleanUpBranches();
-
-                if (any)
-                {
-                    alternativeValues = phiNodes;
-                }
+                alternativeValues = this.GetPhiValues(value);
             }
 
             return value;
+        }
+
+        private PhiNodes GetPhiValues(OpCodePart value)
+        {
+            var phiNodes = new PhiNodes();
+            foreach (var alternateValue in
+                this.branches.Where(b => b.BranchStopAddress <= this.currentAddress).Select(branch => branch.Pop()).Where(alternateValue => alternateValue != null))
+            {
+                AddPhiValue(phiNodes, alternateValue);
+            }
+
+            var hasAnyValue = phiNodes.Values.Any();
+            if (hasAnyValue && value != null)
+            {
+                // current value
+                AddPhiValue(phiNodes, value);
+            }
+
+            this.CleanUpBranches();
+
+            return hasAnyValue ? phiNodes : null;
+        }
+
+        private static void AddPhiValue(PhiNodes phiNodes, OpCodePart value)
+        {
+            var currentLabel = value.FindBeginOfBasicBlock();
+            phiNodes.Values.Add(value);
+            if (currentLabel.HasValue)
+            {
+                phiNodes.Labels.Add(currentLabel.Value);
+            }
+            else
+            {
+                phiNodes.Labels.Add(value.GroupAddressStart);
+
+                // we need to create a label
+                var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0 ? value.OpCodeOperands[0] : value;
+                if (opCode.JumpDestination == null)
+                {
+                    opCode.JumpDestination = new List<OpCodePart>();
+                }
+
+                opCode.JumpDestination.Add(value);
+            }
         }
 
         public OpCodePart Peek()

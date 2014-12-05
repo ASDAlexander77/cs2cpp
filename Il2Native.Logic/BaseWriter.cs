@@ -752,19 +752,9 @@ namespace Il2Native.Logic
                 return null;
             }
 
-            var alternativeValueOnlyOne = !this.Stacks.Any() && opCodePart.AlternativeValues != null;
-            OpCodePart opCodePartUsed;
-            if (!alternativeValueOnlyOne)
-            {
-                PhiNodes alternativeValues;
-                opCodePartUsed = this.Stacks.Pop(out alternativeValues);
-                opCodePart.AlternativeValues = alternativeValues;
-            }
-            else
-            {
-                opCodePartUsed = opCodePart.AlternativeValues.Values.First();
-                opCodePart.AlternativeValues = null;
-            }
+            PhiNodes alternativeValues;
+            var opCodePartUsed = this.Stacks.Pop(out alternativeValues);
+            opCodePart.AlternativeValues = alternativeValues;
 
             return opCodePartUsed;
         }
