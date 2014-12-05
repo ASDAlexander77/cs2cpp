@@ -81,10 +81,10 @@ namespace Il2Native.Logic
         /// <param name="stackCall">
         /// </param>
         public static void DiscoverRequiredTypesAndMethodsInMethodBody(
-            this IMethod method, 
-            ISet<IType> genericTypeSpecializations, 
-            ISet<IMethod> genericMethodSpecializations, 
-            ISet<IType> requiredTypes, 
+            this IMethod method,
+            ISet<IType> genericTypeSpecializations,
+            ISet<IMethod> genericMethodSpecializations,
+            ISet<IType> requiredTypes,
             Queue<IMethod> stackCall)
         {
             // read method body to extract all types
@@ -1140,7 +1140,9 @@ namespace Il2Native.Logic
             // add alternative stack value to and address
             // 1) find jump address
             var current = popCodePart.Previous;
-            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
+
+            // Varpop can pop 0
+            while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || current.OpCode.StackBehaviourPop == StackBehaviour.Varpop)
                    && !((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward()))
             {
                 current = current.Previous;
