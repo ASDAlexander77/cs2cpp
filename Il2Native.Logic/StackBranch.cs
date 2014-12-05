@@ -19,7 +19,7 @@
         public StackBranch(int branchStopAddress, StackBranch rootBranch)
             : this(branchStopAddress)
         {
-            this.rootBranch = (StackBranch)rootBranch.MemberwiseClone();
+            this.rootBranch = rootBranch.Clone();
         }
 
         /// <summary>
@@ -68,6 +68,14 @@
         public bool Empty()
         {
             return this.Stack.Count == 0;
+        }
+
+        private StackBranch Clone()
+        {
+            var newBranch = new StackBranch(this.BranchStopAddress);
+            newBranch.Stack = new Stack<OpCodePart>(this.Stack);
+            newBranch.rootBranch = rootBranch != null ? rootBranch.Clone() : null;
+            return newBranch;
         }
     }
 }

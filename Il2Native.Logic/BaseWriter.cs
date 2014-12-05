@@ -1109,7 +1109,7 @@ namespace Il2Native.Logic
                 case Code.Brtrue_S:
                 case Code.Brfalse:
                 case Code.Brfalse_S:
-                    if (opCode.IsJumpForward() && !opCode.JumpOpCode(this).Next.Any(Code.Br, Code.Br_S))
+                    if (opCode.IsJumpForward() && !opCode.JumpOpCode(this).Previous.Any(Code.Br, Code.Br_S))
                     {
                         this.Stacks.CreateNewBranch(opCode.JumpAddress());
                     }
