@@ -14,6 +14,12 @@
             this.BranchStopAddress = branchStopAddress;
         }
 
+        public StackBranch(int branchStopAddress, StackBranch rootBranch)
+            : this(branchStopAddress)
+        {
+            this.ClonedStack = new Stack<OpCodePart>(rootBranch.Stack);
+        }
+
         /// <summary>
         /// </summary>
         public int BranchStopAddress { get; private set; }
@@ -22,6 +28,10 @@
         /// </summary>
         protected Stack<OpCodePart> Stack { get; private set; }
 
+        /// <summary>
+        /// </summary>
+        protected Stack<OpCodePart> ClonedStack { get; private set; }
+
         public void Push(OpCodePart opCodePart)
         {
             this.Stack.Push(opCodePart);
@@ -29,7 +39,17 @@
 
         public OpCodePart Pop()
         {
-            return this.Stack.Pop();
+            if (this.Stack.Count > 0)
+            {
+                return this.Stack.Pop();
+            }
+
+            if (this.ClonedStack != null && this.ClonedStack.Count > 0)
+            {
+                return this.ClonedStack.Pop();
+            }
+
+            throw new IndexOutOfRangeException();
         }
 
         public OpCodePart Peek()
@@ -44,7 +64,12 @@
 
         public bool Any()
         {
-            return this.Stack.Count > 0;
+            return this.Stack.Count > 0 || this.ClonedStack.Count > 0;
+        }
+
+        public bool Empty()
+        {
+            return this.Stack.Count == 0;
         }
     }
 }

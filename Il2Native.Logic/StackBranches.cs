@@ -24,7 +24,7 @@
 
         public void CreateNewBranch(int branchEndAddress)
         {
-            var newBranch = new StackBranch(branchEndAddress);
+            var newBranch = new StackBranch(branchEndAddress, current);
             this.branches.Add(newBranch);
             this.current = newBranch;
         }
@@ -158,7 +158,7 @@
 
         private bool HasAnyNonEmptyClosedBranch()
         {
-            return this.branches.Any(stack => stack.BranchStopAddress <= this.currentAddress && stack.Any());
+            return this.branches.Any(stack => stack.BranchStopAddress <= this.currentAddress && stack.Empty());
         }
     }
 }
