@@ -752,10 +752,7 @@ namespace Il2Native.Logic
                 return null;
             }
 
-            PhiNodes alternativeValues;
-            var opCodePartUsed = this.Stacks.Pop(out alternativeValues);
-            opCodePart.AlternativeValues = alternativeValues;
-
+            var opCodePartUsed = this.Stacks.Pop();
             return opCodePartUsed;
         }
 
@@ -1082,30 +1079,32 @@ namespace Il2Native.Logic
         {
             switch (code)
             {
-                case Code.Beq:
-                case Code.Beq_S:
-                case Code.Blt:
-                case Code.Blt_S:
-                case Code.Bgt:
-                case Code.Bgt_S:
-                case Code.Ble:
-                case Code.Ble_S:
-                case Code.Bge:
-                case Code.Bge_S:
-                case Code.Blt_Un:
-                case Code.Blt_Un_S:
-                case Code.Bgt_Un:
-                case Code.Bgt_Un_S:
-                case Code.Ble_Un:
-                case Code.Ble_Un_S:
-                case Code.Bge_Un:
-                case Code.Bge_Un_S:
-                case Code.Bne_Un:
-                case Code.Bne_Un_S:
-                case Code.Brtrue:
-                case Code.Brtrue_S:
-                case Code.Brfalse:
-                case Code.Brfalse_S:
+                case Code.Br:
+                case Code.Br_S:
+                ////case Code.Beq:
+                ////case Code.Beq_S:
+                ////case Code.Blt:
+                ////case Code.Blt_S:
+                ////case Code.Bgt:
+                ////case Code.Bgt_S:
+                ////case Code.Ble:
+                ////case Code.Ble_S:
+                ////case Code.Bge:
+                ////case Code.Bge_S:
+                ////case Code.Blt_Un:
+                ////case Code.Blt_Un_S:
+                ////case Code.Bgt_Un:
+                ////case Code.Bgt_Un_S:
+                ////case Code.Ble_Un:
+                ////case Code.Ble_Un_S:
+                ////case Code.Bge_Un:
+                ////case Code.Bge_Un_S:
+                ////case Code.Bne_Un:
+                ////case Code.Bne_Un_S:
+                ////case Code.Brtrue:
+                ////case Code.Brtrue_S:
+                ////case Code.Brfalse:
+                ////case Code.Brfalse_S:
                     if (opCode.IsJumpForward())
                     {
                         this.Stacks.CreateNewBranch(opCode.JumpAddress());

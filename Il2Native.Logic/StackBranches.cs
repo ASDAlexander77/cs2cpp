@@ -24,7 +24,7 @@
 
         public void CreateNewBranch(int branchEndAddress)
         {
-            var newBranch = new StackBranch(branchEndAddress, current);
+            var newBranch = new StackBranch(branchEndAddress);
             this.branches.Add(newBranch);
             this.current = newBranch;
         }
@@ -37,24 +37,28 @@
 
         public void Push(OpCodePart opCodePart)
         {
-            // read all alternative values from other branches
-            if (this.current == this.main && this.HasAnyNonEmptyClosedBranch())
+            foreach (var branch in
+                this.branches.Where(b => b.BranchStopAddress <= this.currentAddress))
             {
-                opCodePart.AlternativeValues = this.GetPhiValues(null);
+                // to align stack
+                branch.Push(null);
             }
 
             this.current.Push(opCodePart);
         }
 
-        public OpCodePart Pop(out PhiNodes alternativeValues)
+        public OpCodePart Pop()
         {
-            alternativeValues = null;
             var value = this.current.Pop();
 
             // read all alternative values from other branches
             if (this.branches.Count > 1 && this.HasAnyNonEmptyClosedBranch())
             {
-                alternativeValues = this.GetPhiValues(value);
+                var alternativeValues = this.GetPhiValues(value);
+                if (alternativeValues != null)
+                {
+                    alternativeValues.Values.First().Next.AlternativeValues = alternativeValues;
+                }
             }
 
             return value;

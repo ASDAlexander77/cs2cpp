@@ -14,15 +14,6 @@
             this.BranchStopAddress = branchStopAddress;
         }
 
-        public StackBranch(int branchStopAddress, StackBranch toClone)
-            : this(branchStopAddress)
-        {
-            foreach (var opCodePart in toClone.Stack)
-            {
-                this.Stack.Push(opCodePart);
-            }
-        }
-
         /// <summary>
         /// </summary>
         public int BranchStopAddress { get; private set; }
