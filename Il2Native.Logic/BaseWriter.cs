@@ -551,10 +551,10 @@ namespace Il2Native.Logic
 
                     var catchOfFinallyClause = new CatchOfFinallyClause
                                                    {
-                                                       Flags = exceptionHandlingClause.Flags, 
-                                                       Offset = exceptionHandlingClause.HandlerOffset, 
-                                                       Length = exceptionHandlingClause.HandlerLength, 
-                                                       Catch = exceptionHandlingClause.CatchType, 
+                                                       Flags = exceptionHandlingClause.Flags,
+                                                       Offset = exceptionHandlingClause.HandlerOffset,
+                                                       Length = exceptionHandlingClause.HandlerLength,
+                                                       Catch = exceptionHandlingClause.CatchType,
                                                        OwnerTry = tryItem
                                                    };
 
@@ -716,12 +716,11 @@ namespace Il2Native.Logic
 
             var opCodeParts = new List<OpCodePart>(size);
 
-            PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size || varArg; i++)
             {
                 var isVarArg = i > size && varArg;
                 // take value from Stack
-                var opCodePartUsed = PopValue(opCodePart, isVarArg);
+                var opCodePartUsed = PopValue(isVarArg);
                 if (isVarArg && opCodePartUsed == null)
                 {
                     break;
@@ -745,7 +744,7 @@ namespace Il2Native.Logic
             this.AdjustTypes(opCodePart);
         }
 
-        private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
+        private OpCodePart PopValue(bool varArg = false)
         {
             if (varArg && !this.Stacks.Any())
             {
@@ -1081,31 +1080,36 @@ namespace Il2Native.Logic
             {
                 case Code.Br:
                 case Code.Br_S:
-                ////case Code.Beq:
-                ////case Code.Beq_S:
-                ////case Code.Blt:
-                ////case Code.Blt_S:
-                ////case Code.Bgt:
-                ////case Code.Bgt_S:
-                ////case Code.Ble:
-                ////case Code.Ble_S:
-                ////case Code.Bge:
-                ////case Code.Bge_S:
-                ////case Code.Blt_Un:
-                ////case Code.Blt_Un_S:
-                ////case Code.Bgt_Un:
-                ////case Code.Bgt_Un_S:
-                ////case Code.Ble_Un:
-                ////case Code.Ble_Un_S:
-                ////case Code.Bge_Un:
-                ////case Code.Bge_Un_S:
-                ////case Code.Bne_Un:
-                ////case Code.Bne_Un_S:
-                ////case Code.Brtrue:
-                ////case Code.Brtrue_S:
-                ////case Code.Brfalse:
-                ////case Code.Brfalse_S:
                     if (opCode.IsJumpForward())
+                    {
+                        this.Stacks.CreateNewBranch(opCode.JumpAddress());
+                    }
+                    break;
+                case Code.Beq:
+                case Code.Beq_S:
+                case Code.Blt:
+                case Code.Blt_S:
+                case Code.Bgt:
+                case Code.Bgt_S:
+                case Code.Ble:
+                case Code.Ble_S:
+                case Code.Bge:
+                case Code.Bge_S:
+                case Code.Blt_Un:
+                case Code.Blt_Un_S:
+                case Code.Bgt_Un:
+                case Code.Bgt_Un_S:
+                case Code.Ble_Un:
+                case Code.Ble_Un_S:
+                case Code.Bge_Un:
+                case Code.Bge_Un_S:
+                case Code.Bne_Un:
+                case Code.Bne_Un_S:
+                case Code.Brtrue:
+                case Code.Brtrue_S:
+                case Code.Brfalse:
+                case Code.Brfalse_S:
+                    if (opCode.IsJumpForward() && !opCode.JumpOpCode(this).Next.Any(Code.Br, Code.Br_S))
                     {
                         this.Stacks.CreateNewBranch(opCode.JumpAddress());
                     }
@@ -1451,7 +1455,7 @@ namespace Il2Native.Logic
             if (!isJumpForward)
             {
                 // check value in stack if it is followed by jump
-                middleJump= secondValue.NextOpCodeGroup(this);
+                middleJump = secondValue.NextOpCodeGroup(this);
                 isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
                 if (!isJumpForward)
                 {

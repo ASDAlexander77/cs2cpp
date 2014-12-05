@@ -21,7 +21,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public static class OpCodeExtentions
+    public static class OpCodeExtensions
     {
         /// <summary>
         /// </summary>
@@ -33,6 +33,11 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool Any(this OpCodePart opCode, params Code[] codes)
         {
+            if (opCode == null)
+            {
+                return false;
+            }
+
             var code = opCode.ToCode();
             return codes.Any(item => item == code);
         }
