@@ -203,7 +203,7 @@
 
         private bool HasAnyNonEmptyClosedBranch()
         {
-            return this.branches.Any(stack => stack.BranchStopAddress <= this.currentAddress && stack.Empty());
+            return this.branches.Any(stack => stack.BranchStopAddress <= this.currentAddress && !stack.Empty());
         }
     }
 }
