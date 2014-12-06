@@ -8,8 +8,6 @@
 
     public class StackBranch
     {
-        private StackBranch rootBranch;
-
         public StackBranch(int branchStopAddress)
         {
             this.Stack = new Stack<OpCodePart>();
@@ -19,7 +17,13 @@
         public StackBranch(int branchStopAddress, StackBranch rootBranch)
             : this(branchStopAddress)
         {
-            this.rootBranch = rootBranch.Clone();
+            this.RootBranch = rootBranch.Clone();
+        }
+
+        public StackBranch RootBranch
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -42,9 +46,9 @@
                 return this.Stack.Pop();
             }
 
-            if (this.rootBranch != null && this.rootBranch.Any())
+            if (this.RootBranch != null && this.RootBranch.Any())
             {
-                return this.rootBranch.Pop();
+                return this.RootBranch.Pop();
             }
 
             throw new IndexOutOfRangeException();
@@ -62,7 +66,7 @@
 
         public bool Any()
         {
-            return this.Stack.Count > 0 || (this.rootBranch != null && this.rootBranch.Any());
+            return this.Stack.Count > 0 || (this.RootBranch != null && this.RootBranch.Any());
         }
 
         public bool Empty()
@@ -74,7 +78,7 @@
         {
             var newBranch = new StackBranch(this.BranchStopAddress);
             newBranch.Stack = new Stack<OpCodePart>(this.Stack);
-            newBranch.rootBranch = rootBranch != null ? rootBranch.Clone() : null;
+            newBranch.RootBranch = this.RootBranch != null ? this.RootBranch.Clone() : null;
             return newBranch;
         }
     }

@@ -203,7 +203,11 @@
             this.CleanUpBranches();
 
             // set current
-            this.current = this.branches.Where(stack => stack.BranchStopAddress > this.currentAddress).OrderBy(stack => stack.BranchStopAddress).First();
+            var endBranch = this.branches.FirstOrDefault(stack => stack.BranchStopAddress == this.currentAddress);
+            if (endBranch != null)
+            {
+                this.current = endBranch.RootBranch ?? this.main;
+            }
         }
 
         private void CleanUpBranches()
