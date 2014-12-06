@@ -87,11 +87,16 @@
 
         public void Push(OpCodePart opCodePart)
         {
-            foreach (var branch in
-                this.branches.Where(b => b.BranchStopAddress <= this.currentAddress))
+            if (this.branches.Count > 1)
             {
-                // to align stack
-                branch.Push(null);
+                ////this.CleanUpBranches();
+
+                foreach (var branch in
+                    this.branches.Where(b => b.BranchStopAddress <= this.currentAddress))
+                {
+                    // to align stack
+                    branch.Push(null);
+                }
             }
 
             this.current.Push(opCodePart);
@@ -196,7 +201,7 @@
         private void CleanUpBranches()
         {
             // remove empty branch
-            this.branches.RemoveAll(stack => stack.BranchStopAddress <= this.currentAddress && !stack.Any());
+            this.branches.RemoveAll(stack => stack.BranchStopAddress <= this.currentAddress && stack.Empty());
         }
 
         private void CreateMainBranch()
