@@ -120,7 +120,7 @@
                 var alternativeValues = this.GetPhiValues(value);
                 if (alternativeValues != null)
                 {
-                    alternativeValues.Values.First().Next.AlternativeValues = alternativeValues;
+                    alternativeValues.Values.OrderByDescending(v => v.AddressStart).First().Next.AlternativeValues = alternativeValues;
                 }
             }
 
