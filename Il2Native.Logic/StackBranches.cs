@@ -206,7 +206,8 @@
             var endBranch = this.branches.FirstOrDefault(stack => stack.BranchStopAddress == this.currentAddress);
             if (endBranch != null)
             {
-                this.current = endBranch.RootBranch ?? this.main;
+                var switchTo = endBranch.RootBranch ?? this.main;
+                this.current = this.branches.First(b => b.Id == switchTo.Id);
             }
         }
 

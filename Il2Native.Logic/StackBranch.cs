@@ -8,8 +8,11 @@
 
     public class StackBranch
     {
+        private static int id = 0;
+
         public StackBranch(int branchStopAddress)
         {
+            this.Id = id++;
             this.Stack = new Stack<OpCodePart>();
             this.BranchStopAddress = branchStopAddress;
         }
@@ -18,6 +21,12 @@
             : this(branchStopAddress)
         {
             this.RootBranch = rootBranch.Clone();
+        }
+
+        public int Id
+        {
+            get;
+            private set;
         }
 
         public StackBranch RootBranch
@@ -77,7 +86,8 @@
         private StackBranch Clone()
         {
             var newBranch = new StackBranch(this.BranchStopAddress);
-            newBranch.Stack = new Stack<OpCodePart>(this.Stack);
+            newBranch.Id = this.Id;
+            newBranch.Stack = new Stack<OpCodePart>(this.Stack.Reverse());
             newBranch.RootBranch = this.RootBranch != null ? this.RootBranch.Clone() : null;
             return newBranch;
         }
