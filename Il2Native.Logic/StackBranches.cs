@@ -31,7 +31,15 @@
                 case Code.Br_S:
                     if (opCode.IsJumpForward())
                     {
-                        this.CreateNewBranch(opCode.JumpAddress());
+                        var dest = opCode.Next.JumpDestination;
+                        if (dest != null && dest.Count > 0)
+                        {
+                            var firstJump = dest.FirstOrDefault(j => j.IsJumpForward());
+                            if (firstJump != null && firstJump.OpCode.FlowControl == FlowControl.Cond_Branch)
+                            {
+                                this.CreateNewBranch(opCode.JumpAddress());
+                            }
+                        }
                     }
                     break;
                 case Code.Beq:
