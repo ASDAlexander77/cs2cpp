@@ -207,7 +207,7 @@
             if (endBranch != null)
             {
                 var switchTo = endBranch.RootBranch ?? this.main;
-                this.current = this.branches.First(b => b.Id == switchTo.Id);
+                this.current = this.branches.FirstOrDefault(b => b.Id == switchTo.Id) ?? switchTo;
             }
         }
 
