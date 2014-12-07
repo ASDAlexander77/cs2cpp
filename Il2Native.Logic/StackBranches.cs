@@ -57,6 +57,11 @@
 
         public void Push(OpCodePart opCodePart)
         {
+            this.main.Push(opCodePart);
+        }
+
+        public void ProcessAlternativeValues(OpCodePart opCodePart)
+        {
             // read all alternative values from other branches
             if (opCodePart.JumpDestination != null && this.main.Any())
             {
@@ -73,8 +78,6 @@
                     }
                 }
             }
-
-            this.main.Push(opCodePart);
         }
 
         public OpCodePart Pop()

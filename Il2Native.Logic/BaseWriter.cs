@@ -704,6 +704,8 @@ namespace Il2Native.Logic
         /// </param>
         protected void FoldNestedOpCodes(OpCodePart opCodePart, int size, bool varArg = false)
         {
+            this.Stacks.ProcessAlternativeValues(opCodePart);
+
             if (opCodePart.OpCode.StackBehaviourPop == StackBehaviour.Pop0)
             {
                 return;
