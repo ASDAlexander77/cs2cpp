@@ -71,19 +71,22 @@
                 if (entires.Count() > (noMainEntry ? 1 : 0))
                 {
                     var values = entires.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
-                    var alternativeValues = this.GetPhiValues(values, this.main.Peek());
+                    var alternativeValues = this.GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
                     if (alternativeValues != null)
                     {
                         var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
                         //firstValue.Next.AlternativeValues = alternativeValues;
                         opCodePart.AlternativeValues = alternativeValues;
 
-                        while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                        if (!noMainEntry)
                         {
-                            this.main.Pop();
-                        }
+                            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                            {
+                                this.main.Pop();
+                            }
 
-                        this.main.Push(firstValue);
+                            this.main.Push(firstValue);
+                        }
                     }
                 }
             }
@@ -100,7 +103,7 @@
             var any = false;
             foreach (var alternateValue in values)
             {
-                if (alternateValue.Equals(currentValue))
+                if (currentValue != null && alternateValue.Equals(currentValue))
                 {
                     continue;
                 }
@@ -111,7 +114,18 @@
 
             if (any)
             {
-                AddPhiValue(phiNodes, currentValue);
+                if (currentValue != null)
+                {
+                    AddPhiValue(phiNodes, currentValue);
+                }
+
+                // all values the same - return null
+                var firstValueAddressStart = phiNodes.Values.First().AddressStart;
+                if (phiNodes.Values.All(v => v.AddressStart == firstValueAddressStart))
+                {
+                    return null;
+                }
+
                 return phiNodes;
             }
 
