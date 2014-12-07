@@ -10,38 +10,18 @@
 
     public class StackBranches
     {
-        private readonly List<StackBranch> branches = new List<StackBranch>();
-
-        private int currentAddress = 0;
-
-        private StackBranch main;
-
-        private StackBranch current;
+        private Stack<OpCodePart> main = new Stack<OpCodePart>();
 
         public StackBranches()
         {
-            this.CreateMainBranch();
         }
 
-        public void CheckIfNewBranchToCreate(OpCodePart opCode, BaseWriter baseWriter)
+        public void SaveBranchStackValue(OpCodePart opCode, BaseWriter baseWriter)
         {
             switch (opCode.ToCode())
             {
                 case Code.Br:
                 case Code.Br_S:
-                    if (opCode.IsJumpForward())
-                    {
-                        var dest = opCode.Next.JumpDestination;
-                        if (dest != null && dest.Count > 0)
-                        {
-                            var firstJump = dest.FirstOrDefault(j => j.IsJumpForward());
-                            if (firstJump != null && firstJump.OpCode.FlowControl == FlowControl.Cond_Branch)
-                            {
-                                this.CreateNewBranch(opCode.JumpAddress());
-                            }
-                        }
-                    }
-                    break;
                 case Code.Beq:
                 case Code.Beq_S:
                 case Code.Blt:
@@ -66,86 +46,64 @@
                 case Code.Brtrue_S:
                 case Code.Brfalse:
                 case Code.Brfalse_S:
-                    if (opCode.IsJumpForward())
+                    if (opCode.IsJumpForward() && this.main.Any())
                     {
-                        var flowControl = opCode.JumpOpCode(baseWriter).Previous.OpCode.FlowControl;
-                        var isFork = flowControl == FlowControl.Branch || flowControl == FlowControl.Cond_Branch || flowControl == FlowControl.Return;
-                        if (!isFork)
-                        {
-                            this.CreateNewBranch(opCode.JumpAddress());
-                        }
+                        opCode.BranchStackValue = this.main.Peek();
                     }
 
                     break;
             }
         }
 
-        public void CreateNewBranch(int branchEndAddress)
-        {
-            var newBranch = new StackBranch(branchEndAddress, current);
-            this.branches.Add(newBranch);
-            this.current = newBranch;
-        }
-
-        public void UpdateCurrentAddress(int address)
-        {
-            this.currentAddress = address;
-            this.SwitchStackIfNeeded();
-        }
-
         public void Push(OpCodePart opCodePart)
         {
-            if (this.branches.Count > 1)
+            // read all alternative values from other branches
+            if (opCodePart.JumpDestination != null && this.main.Any())
             {
-                ////this.CleanUpBranches();
-
-                foreach (var branch in
-                    this.branches.Where(b => b.BranchStopAddress <= this.currentAddress))
+                var previousFlow = opCodePart.Previous.OpCode.FlowControl;
+                var noMainEntry = previousFlow == FlowControl.Branch || previousFlow == FlowControl.Return || previousFlow == FlowControl.Throw || previousFlow == FlowControl.Break;
+                var entires = opCodePart.JumpDestination.Where(opCode => opCode.IsJumpForward());
+                if (entires.Count() > (noMainEntry ? 1 : 0))
                 {
-                    // to align stack
-                    branch.Push(null);
+                    var values = entires.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
+                    var alternativeValues = this.GetPhiValues(values, this.main.Peek());
+                    if (alternativeValues != null)
+                    {
+                        alternativeValues.Values.OrderByDescending(v => v.AddressStart).First().Next.AlternativeValues = alternativeValues;
+                    }
                 }
             }
 
-            this.current.Push(opCodePart);
+            this.main.Push(opCodePart);
         }
 
         public OpCodePart Pop()
         {
-            var value = this.current.Pop();
-
-            // read all alternative values from other branches
-            if (this.branches.Count > 1 && this.HasAnyNonEmptyClosedBranch())
-            {
-                var alternativeValues = this.GetPhiValues(value);
-                if (alternativeValues != null)
-                {
-                    alternativeValues.Values.OrderByDescending(v => v.AddressStart).First().Next.AlternativeValues = alternativeValues;
-                }
-            }
-
-            return value;
+            return this.main.Pop();
         }
 
-        private PhiNodes GetPhiValues(OpCodePart value)
+        private PhiNodes GetPhiValues(IEnumerable<OpCodePart> values, OpCodePart currentValue)
         {
             var phiNodes = new PhiNodes();
-            foreach (var alternateValue in
-                this.branches.Where(b => b.BranchStopAddress <= this.currentAddress).Select(branch => branch.Pop()).Where(alternateValue => alternateValue != null))
+            var any = false;
+            foreach (var alternateValue in values)
             {
+                if (alternateValue.Equals(currentValue))
+                {
+                    continue;
+                }
+
                 AddPhiValue(phiNodes, alternateValue);
+                any = true;
             }
 
-            var hasAnyValue = phiNodes.Values.Any();
-            if (hasAnyValue && value != null)
+            if (any)
             {
-                // current value
-                AddPhiValue(phiNodes, value);
+                AddPhiValue(phiNodes, currentValue);
+                return phiNodes;
             }
 
-            this.CleanUpBranches();
-
-            return hasAnyValue ? phiNodes : null;
+            return null;
         }
 
         private static void AddPhiValue(PhiNodes phiNodes, OpCodePart value)
@@ -173,60 +131,22 @@
 
         public OpCodePart Peek()
         {
-            return this.current.Peek();
+            return this.main.Peek();
         }
 
         public OpCodePart First()
         {
-            return this.current.First();
+            return this.main.First();
         }
 
         public bool Any()
         {
-            return this.current.Any();
+            return this.main.Any();
         }
 
         public void Clear()
         {
-            this.branches.Clear();
-            this.CreateMainBranch();
-        }
-
-        private void SwitchStackIfNeeded()
-        {
-            if (this.current.BranchStopAddress > this.currentAddress)
-            {
-                // no need to change stack thread
-                return;
-            }
-
-            this.CleanUpBranches();
-
-            // set current
-            var endBranch = this.branches.FirstOrDefault(stack => stack.BranchStopAddress == this.currentAddress);
-            if (endBranch != null)
-            {
-                var switchTo = endBranch.RootBranch ?? this.main;
-                this.current = this.branches.FirstOrDefault(b => b.Id == switchTo.Id) ?? switchTo;
-            }
-        }
-
-        private void CleanUpBranches()
-        {
-            // remove empty branch
-            this.branches.RemoveAll(stack => stack.BranchStopAddress <= this.currentAddress && stack.Empty());
-        }
-
-        private void CreateMainBranch()
-        {
-            var newBranch = new StackBranch(int.MaxValue);
-            this.branches.Add(newBranch);
-            this.current = this.main = newBranch;
-        }
-
-        private bool HasAnyNonEmptyClosedBranch()
-        {
-            return this.branches.Any(stack => stack.BranchStopAddress <= this.currentAddress && !stack.Empty());
+            this.main.Clear();
         }
     }
 }

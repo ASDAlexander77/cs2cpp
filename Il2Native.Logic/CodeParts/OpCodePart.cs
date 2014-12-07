@@ -73,6 +73,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public OpCodePart BranchStackValue { get; set; }
+
+        /// <summary>
+        /// </summary>
         public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
 
         /// <summary>

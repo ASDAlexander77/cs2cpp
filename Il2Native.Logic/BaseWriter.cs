@@ -720,7 +720,7 @@ namespace Il2Native.Logic
             {
                 var isVarArg = i > size && varArg;
                 // take value from Stack
-                var opCodePartUsed = PopValue(isVarArg);
+                var opCodePartUsed = PopValue(opCodePart, isVarArg);
                 if (isVarArg && opCodePartUsed == null)
                 {
                     break;
@@ -744,15 +744,14 @@ namespace Il2Native.Logic
             this.AdjustTypes(opCodePart);
         }
 
-        private OpCodePart PopValue(bool varArg = false)
+        private OpCodePart PopValue(OpCodePart currentOpCodePart, bool varArg = false)
         {
             if (varArg && !this.Stacks.Any())
             {
                 return null;
             }
 
-            var opCodePartUsed = this.Stacks.Pop();
-            return opCodePartUsed;
+            return this.Stacks.Pop();
         }
 
         /// <summary>
@@ -837,9 +836,6 @@ namespace Il2Native.Logic
         protected void Process(OpCodePart opCode)
         {
             var code = opCode.ToCode();
-
-            this.Stacks.UpdateCurrentAddress(opCode.AddressStart);
-
             switch (code)
             {
                 case Code.Call:
@@ -1059,7 +1055,7 @@ namespace Il2Native.Logic
 
             this.BuildGroupIndex(opCode);
 
-            this.Stacks.CheckIfNewBranchToCreate(opCode, this);
+            this.Stacks.SaveBranchStackValue(opCode, this);
 
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
