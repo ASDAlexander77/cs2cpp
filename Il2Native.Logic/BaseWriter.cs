@@ -704,8 +704,6 @@ namespace Il2Native.Logic
         /// </param>
         protected void FoldNestedOpCodes(OpCodePart opCodePart, int size, bool varArg = false)
         {
-            this.Stacks.ProcessAlternativeValues(opCodePart);
-
             if (opCodePart.OpCode.StackBehaviourPop == StackBehaviour.Pop0)
             {
                 return;
@@ -837,6 +835,8 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
+            this.Stacks.ProcessAlternativeValues(opCode);
+
             var code = opCode.ToCode();
             switch (code)
             {

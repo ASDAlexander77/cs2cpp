@@ -74,7 +74,16 @@
                     var alternativeValues = this.GetPhiValues(values, this.main.Peek());
                     if (alternativeValues != null)
                     {
-                        alternativeValues.Values.OrderByDescending(v => v.AddressStart).First().Next.AlternativeValues = alternativeValues;
+                        var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
+                        //firstValue.Next.AlternativeValues = alternativeValues;
+                        opCodePart.AlternativeValues = alternativeValues;
+
+                        while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                        {
+                            this.main.Pop();
+                        }
+
+                        this.main.Push(firstValue);
                     }
                 }
             }
