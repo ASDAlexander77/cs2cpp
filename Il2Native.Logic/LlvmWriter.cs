@@ -169,7 +169,7 @@ namespace Il2Native.Logic
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
-           
+
             // prefefined settings
             if (args != null && args.Contains("android"))
             {
@@ -2565,7 +2565,7 @@ namespace Il2Native.Logic
 
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
-                effectiveFromType.Type.WriteTypePrefix(writer);
+                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType());
                 writer.WriteLine(" {0}, null", fromType);
 
                 writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
@@ -4920,7 +4920,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Stind_I1:
                     //type = this.ResolveType("System.Byte");
-                    
+
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
