@@ -12,10 +12,6 @@
     {
         private Stack<OpCodePart> main = new Stack<OpCodePart>();
 
-        public StackBranches()
-        {
-        }
-
         public void SaveBranchStackValue(OpCodePart opCode, BaseWriter baseWriter)
         {
             switch (opCode.ToCode())
@@ -94,7 +90,7 @@
             if (alternativeValues.Values.Count() == 1)
             {
                 // it just one value, we can push it back to stack
-                if (!this.main.Any() || this.main.Peek().AddressStart != firstValue.AddressStart)
+                if (!this.main.Any() || !this.main.Any(op => op.AddressStart == firstValue.AddressStart))
                 {
                     this.main.Push(firstValue);
                 }
