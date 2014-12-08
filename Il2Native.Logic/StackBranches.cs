@@ -158,8 +158,6 @@
             }
             else
             {
-                phiNodes.Labels.Add(value.GroupAddressStart);
-
                 // we need to create a label
                 var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0 ? value.OpCodeOperands[0] : value;
                 if (opCode.JumpDestination == null)
@@ -168,6 +166,8 @@
                 }
 
                 opCode.JumpDestination.Add(value);
+
+                phiNodes.Labels.Add(opCode.AddressStart);
             }
         }
 
