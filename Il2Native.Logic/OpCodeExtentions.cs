@@ -1109,7 +1109,7 @@ namespace Il2Native.Logic
         {
             // add alternative stack value to and address
             // 1) find jump address
-            var current = popCodePart.Previous;
+            var current = popCodePart;
 
             // Varpop can pop 0
             var jumpOrLabel = false;
@@ -1129,8 +1129,7 @@ namespace Il2Native.Logic
 
         private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)
         {
-            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch
-                 || current.OpCode.FlowControl == FlowControl.Return) && current.IsJumpForward() && !current.Any(Code.Leave, Code.Leave_S))
+            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward() && !current.Any(Code.Leave, Code.Leave_S))
             {
                 startOrEnd = false;
                 return true;

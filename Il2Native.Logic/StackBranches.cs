@@ -90,7 +90,7 @@
             if (alternativeValues.Values.Count() == 1)
             {
                 // it just one value, we can push it back to stack
-                if (!this.main.Any() || !this.main.Any(op => op.AddressStart == firstValue.AddressStart))
+                if (!this.main.Any() || this.main.All(op => op.AddressStart != firstValue.AddressStart))
                 {
                     this.main.Push(firstValue);
                 }

@@ -4482,7 +4482,7 @@ namespace Il2Native.Logic
             }
 
             var current = lastOpCode;
-            while (current != null && firstOpCode.GroupAddressStart <= current.AddressStart && current.AddressStart >= stopAddress)
+            while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/ current.AddressStart >= stopAddress)
             {
                 if (current.CreatedLabel != null)
                 {
