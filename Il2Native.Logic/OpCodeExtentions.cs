@@ -1129,8 +1129,8 @@ namespace Il2Native.Logic
 
         private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)
         {
-            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward()
-                && !current.Any(Code.Leave, Code.Leave_S))
+            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch
+                 || current.OpCode.FlowControl == FlowControl.Return) && current.IsJumpForward() && !current.Any(Code.Leave, Code.Leave_S))
             {
                 startOrEnd = false;
                 return true;
