@@ -821,40 +821,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static OpCodePart NextOpCode(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            OpCodePart ret = null;
-            baseWriter.OpsByAddressStart.TryGetValue(opCode.AddressEnd, out ret);
-            return ret;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="baseWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static OpCodePart NextOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
             OpCodePart ret = null;
             baseWriter.OpsByGroupAddressStart.TryGetValue(opCode.GroupAddressEnd, out ret);
-            return ret;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="baseWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static OpCodePart PreviousOpCode(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            OpCodePart ret = null;
-            baseWriter.OpsByAddressEnd.TryGetValue(opCode.AddressStart, out ret);
             return ret;
         }
 
@@ -1170,7 +1140,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-                startOrEnd = false;
+            startOrEnd = false;
             return false;
         }
     }

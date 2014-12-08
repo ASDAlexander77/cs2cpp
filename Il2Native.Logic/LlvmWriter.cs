@@ -1468,7 +1468,7 @@ namespace Il2Native.Logic
                     // if this is Struct we already have an address in LLVM
                     if (!opCodeTypePart.Operand.IsStructureType())
                     {
-                        var nextOp = opCode.NextOpCode(this);
+                        var nextOp = opCode.Next;
                         var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
                         this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
@@ -1502,7 +1502,7 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
                     writer.Indent++;
 
-                    opCode.NextOpCode(this).JumpProcessed = true;
+                    opCode.Next.JumpProcessed = true;
 
                     break;
 
@@ -4489,7 +4489,7 @@ namespace Il2Native.Logic
                     return current.CreatedLabel;
                 }
 
-                current = current.PreviousOpCode(this);
+                current = current.Previous;
             }
 
             return null;
@@ -5224,7 +5224,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
             writer.Indent++;
 
-            opCode.NextOpCode(this).JumpProcessed = true;
+            opCode.Next.JumpProcessed = true;
         }
 
         /// <summary>
@@ -5495,7 +5495,7 @@ namespace Il2Native.Logic
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
-                var previousOpCode = opCode.PreviousOpCode(this);
+                var previousOpCode = opCode.Previous;
                 var splitBlock = previousOpCode == null
                                  || (previousOpCode != null
                                      && (previousOpCode.OpCode.FlowControl == FlowControl.Meta

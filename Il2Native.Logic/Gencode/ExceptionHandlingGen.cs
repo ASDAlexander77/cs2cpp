@@ -216,7 +216,7 @@ namespace Il2Native.Logic.Gencode
             if (!exceptionHandlingClause.RethrowCatchWithCleanUpRequired || upperLevelExceptionHandlingClause == null)
             {
                 var isLeave = opCode.Any(Code.Leave, Code.Leave_S);
-                var nextOp = opCode.NextOpCode(llvmWriter);
+                var nextOp = opCode.Next;
                 if (!isLeave &&
                     (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress))
                 {

@@ -720,7 +720,7 @@ namespace Il2Native.Logic
             {
                 var isVarArg = i > size && varArg;
                 // take value from Stack
-                var opCodePartUsed = PopValue(opCodePart, isVarArg);
+                var opCodePartUsed = PopValue(isVarArg);
                 if (isVarArg && opCodePartUsed == null)
                 {
                     break;
@@ -744,7 +744,7 @@ namespace Il2Native.Logic
             this.AdjustTypes(opCodePart);
         }
 
-        private OpCodePart PopValue(OpCodePart currentOpCodePart, bool varArg = false)
+        private OpCodePart PopValue(bool varArg = false)
         {
             if (varArg && !this.Stacks.Any())
             {

@@ -63,33 +63,58 @@
         public void ProcessAlternativeValues(OpCodePart opCodePart)
         {
             // read all alternative values from other branches
-            if (opCodePart.JumpDestination != null && this.main.Any())
+            if (opCodePart.JumpDestination == null)
             {
-                var previousFlow = opCodePart.Previous.OpCode.FlowControl;
-                var noMainEntry = previousFlow == FlowControl.Branch || previousFlow == FlowControl.Return || previousFlow == FlowControl.Throw || previousFlow == FlowControl.Break;
-                var entires = opCodePart.JumpDestination.Where(opCode => opCode.IsJumpForward());
-                if (entires.Count() > (noMainEntry ? 1 : 0))
-                {
-                    var values = entires.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
-                    var alternativeValues = this.GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
-                    if (alternativeValues != null)
-                    {
-                        var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
-                        //firstValue.Next.AlternativeValues = alternativeValues;
-                        opCodePart.AlternativeValues = alternativeValues;
-
-                        if (!noMainEntry)
-                        {
-                            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
-                            {
-                                this.main.Pop();
-                            }
-
-                            this.main.Push(firstValue);
-                        }
-                    }
-                }
+                return;
             }
+
+            var previousFlow = opCodePart.Previous != null ? opCodePart.Previous.OpCode.FlowControl : FlowControl.Break;
+            var noMainEntry = previousFlow == FlowControl.Branch || previousFlow == FlowControl.Return || previousFlow == FlowControl.Throw || previousFlow == FlowControl.Break;
+            var entires = opCodePart.JumpDestination.Where(opCode => opCode.IsJumpForward());
+            var entriesList = entires as IList<OpCodePart> ?? entires.ToList();
+            //if (entriesList.Count() <= (noMainEntry ? 1 : 0))
+            if (!entriesList.Any())
+            {
+                return;
+            }
+
+            var values = entriesList.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
+            if (!values.Any())
+            {
+                return;
+            }
+
+            var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
+            if (alternativeValues == null)
+            {
+                return;
+            }
+
+            var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
+            if (alternativeValues.Values.Count() == 1)
+            {
+                // it just one value, we can push it back to stack
+                if (!this.main.Any() || this.main.Peek().AddressStart != firstValue.AddressStart)
+                {
+                    this.main.Push(firstValue);
+                }
+
+                return;
+            }
+
+            opCodePart.AlternativeValues = alternativeValues;
+
+            if (noMainEntry)
+            {
+                return;
+            }
+
+            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+            {
+                this.main.Pop();
+            }
+
+            this.main.Push(firstValue);
         }
 
         public OpCodePart Pop()
@@ -97,17 +122,12 @@
             return this.main.Pop();
         }
 
-        private PhiNodes GetPhiValues(IEnumerable<OpCodePart> values, OpCodePart currentValue)
+        private static PhiNodes GetPhiValues(IEnumerable<OpCodePart> values, OpCodePart currentValue)
         {
             var phiNodes = new PhiNodes();
             var any = false;
-            foreach (var alternateValue in values)
+            foreach (var alternateValue in values.Where(alternateValue => currentValue == null || !alternateValue.Equals(currentValue)))
             {
-                if (currentValue != null && alternateValue.Equals(currentValue))
-                {
-                    continue;
-                }
-
                 AddPhiValue(phiNodes, alternateValue);
                 any = true;
             }
@@ -121,7 +141,7 @@
 
                 // all values the same - return null
                 var firstValueAddressStart = phiNodes.Values.First().AddressStart;
-                if (phiNodes.Values.All(v => v.AddressStart == firstValueAddressStart))
+                if (phiNodes.Values.Count() > 1 && phiNodes.Values.All(v => v.AddressStart == firstValueAddressStart))
                 {
                     return null;
                 }
