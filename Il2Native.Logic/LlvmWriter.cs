@@ -1900,6 +1900,14 @@ namespace Il2Native.Logic
                         opCode.Result = opCode.OpCodeOperands[0].Result;
                         return;
                     }
+                    else if (!type.IsPointer && !type.IsByRef && type.IntTypeBitSize() == PointerSize * 8)
+                    {
+                        // using int as intptr
+                        type = this.ResolveType("System.IntPtr");
+                        this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], type.ToPointerType());
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                    }
+
                     break;
                 case Code.Ldind_I1:
                     // it can be Bool or Byte, leave it null
@@ -1993,7 +2001,10 @@ namespace Il2Native.Logic
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
 
-            opCode.Result = null;
+            if (opCode.Result != null && !opCode.Result.Type.ToDereferencedType().IsStructureType())
+            {
+                opCode.Result = null;
+            }
 
             this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
         }
