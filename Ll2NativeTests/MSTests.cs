@@ -278,6 +278,39 @@ namespace Ll2NativeTests
 	            }
              */
 
+            /*
+                using System;
+
+                    internal struct RuntimeFieldHandleInternal
+                    {
+                        internal RuntimeFieldHandleInternal(IntPtr value)
+                        {
+                            m_handle = value;
+                        }
+
+                        internal IntPtr m_handle;
+                    }
+
+
+                class X {
+
+	                public void Test(IntPtr p)
+	                {
+		                Console.WriteLine (p.GetType());
+	                }
+
+	                public unsafe static int Main (string [] args)
+	                {	
+		                var i = 9;
+                                fixed(IntPtr* pBigResult = new IntPtr[10])
+                                {
+                                        RuntimeFieldHandleInternal runtimeFieldHandle = new RuntimeFieldHandleInternal(pBigResult[i]);
+                                }
+
+		                return 0;
+	                }
+                }
+             */
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection

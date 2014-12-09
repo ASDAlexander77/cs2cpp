@@ -568,14 +568,23 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
-                        if (opCode.Result.Type.IsVoid())
+                        if (opCode.OpCodeOperands[0].Result.Type.IntTypeBitSize() == PointerSize * 8)
                         {
-                            // in case we receive void* to load struct
+                            // using int as intptr
+                            this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], opCodeTypePart.Operand.ToPointerType());
                             opCode.Result = opCode.OpCodeOperands[0].Result;
                         }
+                        else
+                        {
+                            opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
+                            if (opCode.Result.Type.IsVoid())
+                            {
+                                // in case we receive void* to load struct
+                                opCode.Result = opCode.OpCodeOperands[0].Result;
+                            }
 
-                        Debug.Assert(!opCode.Result.Type.IsVoid());
+                            Debug.Assert(!opCode.Result.Type.IsVoid());
+                        }
                     }
 
                     break;
