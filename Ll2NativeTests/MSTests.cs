@@ -80,7 +80,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = false;
+        private const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
@@ -89,7 +89,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = true;
+        private const bool CompileWithOptimization = false;
 
         /// <summary>
         ///Gets or sets the test context which provides
