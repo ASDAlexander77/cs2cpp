@@ -175,11 +175,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             }
         }
 
-        public bool IsDllImport
+        public bool IsUnmanagedDllImport
         {
             get
             {
-                return this.method.IsDllImport;
+                return this.method.IsUnmanagedDllImport;
             }
         }
 

@@ -3309,7 +3309,7 @@ namespace Il2Native.Logic
                     this.Output.Write(" = ");
                 }
 
-                if (method.IsDllImport)
+                if (method.IsUnmanagedDllImport)
                 {
                     this.Output.Write("dllimport ");
                 }
@@ -4560,7 +4560,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
-            if (methodBase.IsUnmanaged || methodBase.IsDllImport)
+            if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
             {
                 return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
             }

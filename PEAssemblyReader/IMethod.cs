@@ -38,7 +38,7 @@ namespace PEAssemblyReader
         /// <summary>
         /// custom field
         /// </summary>
-        bool IsDllImport { get; }
+        bool IsUnmanagedDllImport { get; }
 
         /// <summary>
         /// custom field

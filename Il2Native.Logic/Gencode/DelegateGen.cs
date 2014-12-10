@@ -413,7 +413,7 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public bool IsDllImport
+            public bool IsUnmanagedDllImport
             {
                 get
                 {

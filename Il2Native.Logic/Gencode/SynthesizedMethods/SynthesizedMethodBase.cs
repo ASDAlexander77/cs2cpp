@@ -100,7 +100,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public bool IsDllImport
+        public bool IsUnmanagedDllImport
         {
             get
             {
