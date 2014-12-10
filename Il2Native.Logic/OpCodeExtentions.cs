@@ -21,7 +21,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public static class OpCodeExtentions
+    public static class OpCodeExtensions
     {
         /// <summary>
         /// </summary>
@@ -33,6 +33,11 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool Any(this OpCodePart opCode, params Code[] codes)
         {
+            if (opCode == null)
+            {
+                return false;
+            }
+
             var code = opCode.ToCode();
             return codes.Any(item => item == code);
         }
@@ -76,10 +81,10 @@ namespace Il2Native.Logic
         /// <param name="stackCall">
         /// </param>
         public static void DiscoverRequiredTypesAndMethodsInMethodBody(
-            this IMethod method, 
-            ISet<IType> genericTypeSpecializations, 
-            ISet<IMethod> genericMethodSpecializations, 
-            ISet<IType> requiredTypes, 
+            this IMethod method,
+            ISet<IType> genericTypeSpecializations,
+            ISet<IMethod> genericMethodSpecializations,
+            ISet<IType> requiredTypes,
             Queue<IMethod> stackCall)
         {
             // read method body to extract all types
@@ -741,11 +746,6 @@ namespace Il2Native.Logic
         {
             var opCode = opCodePart as OpCodeInt32Part;
 
-            if (opCode.CustomJumpAddress.HasValue)
-            {
-                return opCode.CustomJumpAddress.Value;
-            }
-
             if (opCode.OpCode.OperandType == OperandType.ShortInlineBrTarget && (opCode.Operand & 0x80) == 0x80)
             {
                 return opCode.AddressEnd - (255 - (short)opCode.Operand + 1);
@@ -821,40 +821,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static OpCodePart NextOpCode(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            OpCodePart ret = null;
-            baseWriter.OpsByAddressStart.TryGetValue(opCode.AddressEnd, out ret);
-            return ret;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="baseWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static OpCodePart NextOpCodeGroup(this OpCodePart opCode, BaseWriter baseWriter)
         {
             OpCodePart ret = null;
             baseWriter.OpsByGroupAddressStart.TryGetValue(opCode.GroupAddressEnd, out ret);
-            return ret;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="baseWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static OpCodePart PreviousOpCode(this OpCodePart opCode, BaseWriter baseWriter)
-        {
-            OpCodePart ret = null;
-            baseWriter.OpsByAddressEnd.TryGetValue(opCode.AddressStart, out ret);
             return ret;
         }
 
@@ -1133,6 +1103,46 @@ namespace Il2Native.Logic
             }
 
             return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+        }
+
+        public static int? FindBeginOfBasicBlock(this OpCodePart popCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = popCodePart;
+
+            // Varpop can pop 0
+            var jumpOrLabel = false;
+            while (current != null && !(JumpOrLabelPoint(current, out jumpOrLabel)))
+            {
+                current = current.Previous;
+            }
+
+            if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
+            {
+                var address = jumpOrLabel ? current.AddressStart : current.AddressEnd;
+                return address;
+            }
+
+            return null;
+        }
+
+        private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)
+        {
+            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward() && !current.Any(Code.Leave, Code.Leave_S))
+            {
+                startOrEnd = false;
+                return true;
+            }
+
+            if (current.JumpDestination != null && current.JumpDestination.Any())
+            {
+                startOrEnd = true;
+                return true;
+            }
+
+            startOrEnd = false;
+            return false;
         }
     }
 }

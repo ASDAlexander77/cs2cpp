@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FOR_MSCORLIBTEST_</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -132,6 +132,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="StackBranches.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

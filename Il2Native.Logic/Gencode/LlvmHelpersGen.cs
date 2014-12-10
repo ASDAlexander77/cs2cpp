@@ -742,7 +742,7 @@ namespace Il2Native.Logic.Gencode
 
             Debug.Assert(structAsRef || !isStruct || typeToLoad.IsByRef || isStruct && !typeToLoad.IsByRef && opCode.HasResult);
 
-            if (!isStruct || typeToLoad.IsByRef || structAsRef || !opCode.HasResult || indirect)
+            if (!isStruct || typeToLoad.IsByRef || structAsRef || !opCode.HasResult || (indirect && !isStruct))
             {
                 ////Debug.Assert(source.Type.IsPointer);
                 var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;

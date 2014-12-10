@@ -73,6 +73,10 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
+        public OpCodePart BranchStackValue { get; set; }
+
+        /// <summary>
+        /// </summary>
         public CatchOfFinallyClause CatchOrFinallyBegin { get; set; }
 
         /// <summary>
@@ -82,10 +86,6 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public string CreatedLabel { get; set; }
-
-        /// <summary>
-        /// </summary>
-        public int? CustomJumpAddress { get; set; }
 
         /// <summary>
         /// </summary>

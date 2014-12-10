@@ -169,7 +169,7 @@ namespace Il2Native.Logic
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
-           
+
             // prefefined settings
             if (args != null && args.Contains("android"))
             {
@@ -568,14 +568,23 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
-                        if (opCode.Result.Type.IsVoid())
+                        if (opCode.OpCodeOperands[0].Result.Type.IntTypeBitSize() == PointerSize * 8)
                         {
-                            // in case we receive void* to load struct
+                            // using int as intptr
+                            this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], opCodeTypePart.Operand.ToPointerType());
                             opCode.Result = opCode.OpCodeOperands[0].Result;
                         }
+                        else
+                        {
+                            opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
+                            if (opCode.Result.Type.IsVoid())
+                            {
+                                // in case we receive void* to load struct
+                                opCode.Result = opCode.OpCodeOperands[0].Result;
+                            }
 
-                        Debug.Assert(!opCode.Result.Type.IsVoid());
+                            Debug.Assert(!opCode.Result.Type.IsVoid());
+                        }
                     }
 
                     break;
@@ -672,6 +681,15 @@ namespace Il2Native.Logic
                     if (code == Code.Call && methodBase.IsItArrayInitialization())
                     {
                         this.WriteArrayInit(opCode);
+                    }
+
+                    if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
+                    {
+                        // if we call constructor on struct we need to initialize object before
+                        opCodeMethodInfoPart.Result = opCodeMethodInfoPart.OpCodeOperands[0].Result;
+                        methodBase.DeclaringType.WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
+                        opCodeMethodInfoPart.Result = null;
+                        this.Output.WriteLine(string.Empty);
                     }
 
                     this.WriteCall(
@@ -1468,7 +1486,7 @@ namespace Il2Native.Logic
                     // if this is Struct we already have an address in LLVM
                     if (!opCodeTypePart.Operand.IsStructureType())
                     {
-                        var nextOp = opCode.NextOpCode(this);
+                        var nextOp = opCode.Next;
                         var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
                         this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
@@ -1502,7 +1520,7 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
                     writer.Indent++;
 
-                    opCode.NextOpCode(this).JumpProcessed = true;
+                    opCode.Next.JumpProcessed = true;
 
                     break;
 
@@ -1891,6 +1909,14 @@ namespace Il2Native.Logic
                         opCode.Result = opCode.OpCodeOperands[0].Result;
                         return;
                     }
+                    else if (!type.IsPointer && !type.IsByRef && type.IntTypeBitSize() == PointerSize * 8)
+                    {
+                        // using int as intptr
+                        type = this.ResolveType("System.IntPtr");
+                        this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], type.ToPointerType());
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                    }
+
                     break;
                 case Code.Ldind_I1:
                     // it can be Bool or Byte, leave it null
@@ -1984,7 +2010,10 @@ namespace Il2Native.Logic
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
 
-            opCode.Result = null;
+            if (opCode.Result != null && !opCode.Result.Type.ToDereferencedType().IsStructureType())
+            {
+                opCode.Result = null;
+            }
 
             this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
         }
@@ -2565,7 +2594,7 @@ namespace Il2Native.Logic
 
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
-                effectiveFromType.Type.WriteTypePrefix(writer);
+                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType());
                 writer.WriteLine(" {0}, null", fromType);
 
                 writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
@@ -3280,7 +3309,7 @@ namespace Il2Native.Logic
                     this.Output.Write(" = ");
                 }
 
-                if (method.IsDllImport)
+                if (method.IsUnmanagedDllImport)
                 {
                     this.Output.Write("dllimport ");
                 }
@@ -4482,14 +4511,14 @@ namespace Il2Native.Logic
             }
 
             var current = lastOpCode;
-            while (current != null && firstOpCode.GroupAddressStart <= current.AddressStart && current.AddressStart >= stopAddress)
+            while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/ current.AddressStart >= stopAddress)
             {
                 if (current.CreatedLabel != null)
                 {
                     return current.CreatedLabel;
                 }
 
-                current = current.PreviousOpCode(this);
+                current = current.Previous;
             }
 
             return null;
@@ -4531,7 +4560,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
-            if (methodBase.IsUnmanaged || methodBase.IsDllImport)
+            if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
             {
                 return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
             }
@@ -4920,7 +4949,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Stind_I1:
                     //type = this.ResolveType("System.Byte");
-                    
+
                     // it can be Bool or Byte, leave it null
                     ////type = this.ResolveType("System.SByte");
                     var result = this.ResultOf(opCode.OpCodeOperands[0]);
@@ -5224,7 +5253,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
             writer.Indent++;
 
-            opCode.NextOpCode(this).JumpProcessed = true;
+            opCode.Next.JumpProcessed = true;
         }
 
         /// <summary>
@@ -5495,7 +5524,7 @@ namespace Il2Native.Logic
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
-                var previousOpCode = opCode.PreviousOpCode(this);
+                var previousOpCode = opCode.Previous;
                 var splitBlock = previousOpCode == null
                                  || (previousOpCode != null
                                      && (previousOpCode.OpCode.FlowControl == FlowControl.Meta

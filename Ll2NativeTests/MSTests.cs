@@ -68,7 +68,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool UsingRoslyn = false;
+        private const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>
@@ -89,7 +89,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = false;
+        private const bool CompileWithOptimization = true;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -278,6 +278,39 @@ namespace Ll2NativeTests
 	            }
              */
 
+            /*
+                using System;
+
+                    internal struct RuntimeFieldHandleInternal
+                    {
+                        internal RuntimeFieldHandleInternal(IntPtr value)
+                        {
+                            m_handle = value;
+                        }
+
+                        internal IntPtr m_handle;
+                    }
+
+
+                class X {
+
+	                public void Test(IntPtr p)
+	                {
+		                Console.WriteLine (p.GetType());
+	                }
+
+	                public unsafe static int Main (string [] args)
+	                {	
+		                var i = 9;
+                                fixed(IntPtr* pBigResult = new IntPtr[10])
+                                {
+                                        RuntimeFieldHandleInternal runtimeFieldHandle = new RuntimeFieldHandleInternal(pBigResult[i]);
+                                }
+
+		                return 0;
+	                }
+                }
+             */
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
@@ -375,19 +408,18 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
+                            10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
                             247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319
                         });
 
             if (UsingRoslyn)
             {
-                // 49 - bug in execution
                 // object o = -(2147483648); type is "int", not "long" in Roslyn
-                skip.AddRange(new[] { 49, 129 });
+                skip.AddRange(new[] { 129 });
             }
 
-            foreach (var index in Enumerable.Range(205, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }

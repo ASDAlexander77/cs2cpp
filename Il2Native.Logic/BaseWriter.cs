@@ -36,11 +36,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        protected readonly StackBranches Stacks = new StackBranches();
+
+        /// <summary>
+        /// </summary>
         public BaseWriter()
         {
             this.StaticConstructors = new List<IConstructor>();
             this.Ops = new List<OpCodePart>();
-            this.Stack = new Stack<OpCodePart>();
             this.OpsByGroupAddressStart = new SortedDictionary<int, OpCodePart>();
             this.OpsByGroupAddressEnd = new SortedDictionary<int, OpCodePart>();
             this.OpsByAddressStart = new SortedDictionary<int, OpCodePart>();
@@ -114,10 +117,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<OpCodePart> Ops { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        protected Stack<OpCodePart> Stack { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -405,8 +404,7 @@ namespace Il2Native.Logic
                 case Code.Ldc_I4_S:
                     return new ReturnResult(opCode.UseAsNull ? this.ResolveType("System.Void").ToPointerType() : this.ResolveType("System.Int32"))
                                {
-                                   IsConst =
-                                       true
+                                   IsConst = true
                                };
                 case Code.Ldc_I8:
                     return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
@@ -482,7 +480,7 @@ namespace Il2Native.Logic
         public virtual void StartProcess()
         {
             this.Ops.Clear();
-            this.Stack.Clear();
+            this.Stacks.Clear();
             this.OpsByAddressStart.Clear();
             this.OpsByAddressEnd.Clear();
             this.OpsByGroupAddressStart.Clear();
@@ -553,10 +551,10 @@ namespace Il2Native.Logic
 
                     var catchOfFinallyClause = new CatchOfFinallyClause
                                                    {
-                                                       Flags = exceptionHandlingClause.Flags, 
-                                                       Offset = exceptionHandlingClause.HandlerOffset, 
-                                                       Length = exceptionHandlingClause.HandlerLength, 
-                                                       Catch = exceptionHandlingClause.CatchType, 
+                                                       Flags = exceptionHandlingClause.Flags,
+                                                       Offset = exceptionHandlingClause.HandlerOffset,
+                                                       Length = exceptionHandlingClause.HandlerLength,
+                                                       Catch = exceptionHandlingClause.CatchType,
                                                        OwnerTry = tryItem
                                                    };
 
@@ -718,43 +716,22 @@ namespace Il2Native.Logic
 
             var opCodeParts = new List<OpCodePart>(size);
 
-            PhiNodes lastPhiNodes = null;
             for (var i = 1; i <= size || varArg; i++)
             {
                 var isVarArg = i > size && varArg;
                 // take value from Stack
-                var opCodePartUsed = PopValue(opCodePart, isVarArg);
+                var opCodePartUsed = PopValue(isVarArg);
                 if (isVarArg && opCodePartUsed == null)
                 {
                     break;
                 }
 
-                // register second value
-                // TODO: this is still hack, review the code
-                lastPhiNodes = AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, i, opCodePartUsed);
-
                 if (opCodePartUsed.ToCode() == Code.Dup)
                 {
-                    this.Stack.Push(opCodePartUsed.OpCodeOperands[0]);
-                }
-
-                // check here if you have conditional argument (cond) ? a1 : b1;
-                bool whenSecondValueSeparatedByExpression;
-                while (this.IsConditionalExpression(opCodePartUsed, this.Stack, out whenSecondValueSeparatedByExpression))
-                {
-                    var secondValue = this.Stack.Pop();
-                    var alternativeValues = this.AddAlternativeStackValueForConditionalExpression(opCodePartUsed, secondValue, whenSecondValueSeparatedByExpression);
-                    alternativeValues.Values.Add(opCodePartUsed);
+                    this.Stacks.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
                 opCodeParts.Insert(0, opCodePartUsed);
-            }
-
-            // register second value
-            // TODO: this is still hack, review the code
-            if (size > 0 && this.Stack.Count > 0)
-            {
-                AddSecondValueForNullCoalescingExpression(opCodePart, lastPhiNodes, 0, this.Stack.Peek());
             }
 
             opCodePart.OpCodeOperands = opCodeParts.ToArray();
@@ -765,33 +742,16 @@ namespace Il2Native.Logic
             }
 
             this.AdjustTypes(opCodePart);
-
-            if (opCodePart.ToCode() == Code.Pop)
-            {
-                this.AddAlternativeStackValueForNullCoalescingExpression(opCodePart);
-            }
         }
 
-        private OpCodePart PopValue(OpCodePart opCodePart, bool varArg = false)
+        private OpCodePart PopValue(bool varArg = false)
         {
-            if (varArg && this.Stack.Count == 0)
+            if (varArg && !this.Stacks.Any())
             {
                 return null;
             }
 
-            var alternativeValueOnlyOne = this.Stack.Count == 0 && opCodePart.AlternativeValues != null;
-            OpCodePart opCodePartUsed;
-            if (!alternativeValueOnlyOne)
-            {
-                opCodePartUsed = this.Stack.Pop();
-            }
-            else
-            {
-                opCodePartUsed = opCodePart.AlternativeValues.Values.First();
-                opCodePart.AlternativeValues = null;
-            }
-
-            return opCodePartUsed;
+            return this.Stacks.Pop();
         }
 
         /// <summary>
@@ -861,9 +821,10 @@ namespace Il2Native.Logic
         protected IEnumerable<OpCodePart> PrepareWritingMethodBody()
         {
             var ops = this.PreProcessOpCodes(this.Ops).ToList();
+            this.BuildAddressIndexes(ops);
+            this.AssignJumpBlocks(ops);
             this.ProcessAll(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
-            this.AssignJumpBlocks(ops);
             this.AssignExceptionsToOpCodes();
             return ops;
         }
@@ -874,6 +835,8 @@ namespace Il2Native.Logic
         /// </param>
         protected void Process(OpCodePart opCode)
         {
+            this.Stacks.ProcessAlternativeValues(opCode);
+
             var code = opCode.ToCode();
             switch (code)
             {
@@ -1094,6 +1057,8 @@ namespace Il2Native.Logic
 
             this.BuildGroupIndex(opCode);
 
+            this.Stacks.SaveBranchStackValue(opCode, this);
+
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
             {
@@ -1104,9 +1069,10 @@ namespace Il2Native.Logic
                                      && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
             if (!isItMethodWithVoid)
             {
-                this.Stack.Push(opCode);
+                this.Stacks.Push(opCode);
             }
         }
+
 
         /// <summary>
         /// </summary>
@@ -1114,17 +1080,20 @@ namespace Il2Native.Logic
         /// </param>
         protected void ProcessAll(IEnumerable<OpCodePart> opCodes)
         {
+            foreach (var opCodePart in opCodes)
+            {
+                this.Process(opCodePart);
+            }
+        }
+
+        private void BuildAddressIndexes(IEnumerable<OpCodePart> opCodes)
+        {
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
 
             foreach (var opCodePart in opCodes)
             {
                 this.AddAddressIndex(opCodePart);
-            }
-
-            foreach (var opCodePart in opCodes)
-            {
-                this.Process(opCodePart);
             }
         }
 
@@ -1353,39 +1322,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="lastPhiNodes">
-        /// </param>
-        /// <param name="i">
-        /// </param>
-        /// <param name="opCodePartUsed">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static PhiNodes AddSecondValueForNullCoalescingExpression(OpCodePart opCodePart, PhiNodes lastPhiNodes, int i, OpCodePart opCodePartUsed)
-        {
-            if (i == 1 && opCodePart.AlternativeValues != null)
-            {
-                lastPhiNodes = opCodePart.AlternativeValues;
-            }
-
-            if (lastPhiNodes != null && lastPhiNodes.Values.Count != lastPhiNodes.Labels.Count)
-            {
-                lastPhiNodes.Values.Add(opCodePartUsed);
-            }
-
-            lastPhiNodes = null;
-            if (i > 0)
-            {
-                lastPhiNodes = opCodePartUsed.AlternativeValues;
-            }
-
-            return lastPhiNodes;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="last">
         /// </param>
         /// <param name="opCodePartBefore">
@@ -1423,98 +1359,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="closerValue">
-        /// </param>
-        /// <param name="futherValue">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddAlternativeStackValueForConditionalExpression(OpCodePart closerValue, OpCodePart futherValue, bool whenSecondValueSeparatedByExpression)
-        {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = closerValue.PreviousOpCodeGroup(this);
-            while (current != null && (current.OpCode.StackBehaviourPop == StackBehaviour.Pop0 || whenSecondValueSeparatedByExpression)
-                   && !(current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward()))
-            {
-                current = current.PreviousOpCodeGroup(this);
-            }
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, futherValue);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="popCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddAlternativeStackValueForNullCoalescingExpression(OpCodePart popCodePart)
-        {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = popCodePart.PreviousOpCode(this);
-            while (current != null && current.OpCode.StackBehaviourPop == StackBehaviour.Pop0
-                   && !(current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward()))
-            {
-                current = current.PreviousOpCode(this);
-            }
-
-            if (current != null && current.OpCode.FlowControl == FlowControl.Cond_Branch && current.IsJumpForward())
-            {
-                return this.AddPhiValues(current.AddressEnd, current, popCodePart.OpCodeOperands[0]);
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="labelAddress">
-        /// </param>
-        /// <param name="closerValueJump">
-        /// </param>
-        /// <param name="futherValue">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private PhiNodes AddPhiValues(int labelAddress, OpCodePart closerValueJump, OpCodePart futherValue)
-        {
-            Debug.Assert(closerValueJump.IsBranch() || closerValueJump.IsCondBranch());
-
-            var destJump = closerValueJump.JumpOpCode(this);
-
-            // found address
-            if (destJump.AlternativeValues == null)
-            {
-                destJump.AlternativeValues = new PhiNodes();
-
-                // create custom jump point
-                destJump.AlternativeValues.Labels.Add(futherValue.AddressStart);
-                var jumpDestination = futherValue.JumpDestination;
-                if (jumpDestination == null)
-                {
-                    jumpDestination = new List<OpCodePart>();
-                    futherValue.JumpDestination = jumpDestination;
-                }
-
-                // to force creating jump
-                jumpDestination.Add(OpCodePart.CreateNop);
-            }
-
-            destJump.AlternativeValues.Values.Add(futherValue);
-            destJump.AlternativeValues.Labels.Add(labelAddress);
-
-            return destJump.AlternativeValues;
-        }
-
-        /// <summary>
-        /// </summary>
         private void AdjustLocalVariableTypes()
         {
             // replace pinned IntPtr& with Int
@@ -1547,15 +1391,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="currentArgument">
         /// </param>
-        /// <param name="stack">
+        /// <param name="stackBranches">
         /// </param>
         /// <returns>
         /// </returns>
-        private bool IsConditionalExpression(OpCodePart currentArgument, Stack<OpCodePart> stack, out bool whenSecondValueSeparatedByExpression)
+        private bool IsConditionalExpression(OpCodePart currentArgument, StackBranches stackBranches, out bool whenSecondValueSeparatedByExpression)
         {
             whenSecondValueSeparatedByExpression = false;
 
-            if (!stack.Any())
+            if (!stackBranches.Any())
             {
                 return false;
             }
@@ -1565,12 +1409,12 @@ namespace Il2Native.Logic
             var middleJump = firstValue.PreviousOpCodeGroup(this);
             var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
 
-            var secondValue = stack.First();
+            var secondValue = stackBranches.First();
 
             if (!isJumpForward)
             {
                 // check value in stack if it is followed by jump
-                middleJump= secondValue.NextOpCodeGroup(this);
+                middleJump = secondValue.NextOpCodeGroup(this);
                 isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
                 if (!isJumpForward)
                 {
