@@ -1120,6 +1120,12 @@ namespace Il2Native.Logic
 
             if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
             {
+                var nextAlternateValues = current.Next != null ? current.Next.AlternativeValues : null;
+                if (nextAlternateValues != null && nextAlternateValues.Values.Any(v => v.AddressStart == current.AddressStart))
+                {
+                    return current.Next.AddressStart;
+                }
+
                 var address = jumpOrLabel ? current.AddressStart : current.AddressEnd;
                 return address;
             }
