@@ -100,11 +100,13 @@
         {
             if (!this.CompileUnit.IsEmpty)
             {
-                enumTypes = this.CompileUnit[2] as CollectionMetadata;
-                retainedTypes = this.CompileUnit[3] as CollectionMetadata;
-                subprograms = this.CompileUnit[4] as CollectionMetadata;
-                globalVariables = (this.CompileUnit[5] as CollectionMetadata)[0] as CollectionMetadata;
-                importedEntities = this.CompileUnit[6] as CollectionMetadata;
+                var first = this.CompileUnit[0] as CollectionMetadata;
+
+                enumTypes = first[2] as CollectionMetadata;
+                retainedTypes = first[3] as CollectionMetadata;
+                subprograms = first[4] as CollectionMetadata;
+                globalVariables = (first[5] as CollectionMetadata)[0] as CollectionMetadata;
+                importedEntities = first[6] as CollectionMetadata;
 
                 this.file = file;
                 this.fileType = new CollectionMetadata(this.indexedMetadata).Add("0x29", file);
