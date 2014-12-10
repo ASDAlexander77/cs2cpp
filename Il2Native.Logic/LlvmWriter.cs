@@ -683,6 +683,13 @@ namespace Il2Native.Logic
                         this.WriteArrayInit(opCode);
                     }
 
+                    if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
+                    {
+                        // if we call constructor on struct we need to initialize object before
+                        methodBase.DeclaringType.WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
+                        this.Output.WriteLine(string.Empty);
+                    }
+
                     this.WriteCall(
                         opCodeMethodInfoPart,
                         methodBase,

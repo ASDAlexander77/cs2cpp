@@ -281,6 +281,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Init Object method");
             var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             llvmWriter.WriteCall(opCodeNope, method, false, true, false, opCode.Result, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
         }
