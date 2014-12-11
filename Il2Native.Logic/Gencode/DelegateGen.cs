@@ -72,6 +72,8 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.ActualWrite(writer, generatedOperand);
             }
 
+            writer.WriteLine(string.Empty);
+
             // bitcast object to method
             var opCodeNopeForBitCast = OpCodePart.CreateNop;
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
@@ -488,6 +490,10 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// </summary>
             public bool IsVirtual { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsAnonymousDelegate { get; private set; }
 
             /// <summary>
             /// </summary>

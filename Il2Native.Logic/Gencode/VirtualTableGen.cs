@@ -388,7 +388,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     // write pointer to method
                     llvmWriter.WriteMethodReturnType(writer, method);
-                    llvmWriter.WriteMethodParamsDef(writer, method.GetParameters(), true, method.DeclaringType, method.ReturnType, true);
+                    llvmWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
                     writer.Write("* ");
                     llvmWriter.WriteMethodDefinitionName(writer, method);
 

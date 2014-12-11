@@ -171,6 +171,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
+        public bool IsAnonymousDelegate { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public virtual IEnumerable<ILocalVariable> LocalVariables
         {
             get

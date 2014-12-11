@@ -2474,7 +2474,7 @@ namespace Il2Native.Logic
                 this.StaticConstructors.Add(ctor);
             }
 
-            this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, this.ResolveType("System.Void"));
+            this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, this.ThisType, this.ResolveType("System.Void"));
 
             this.WriteMethodNumber();
 
@@ -2492,7 +2492,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
-                this.WriteArgumentCopyDeclarations(ctor.GetParameters(), this.HasMethodThis);
+                this.WriteArgumentCopyDeclarations(ctor, this.HasMethodThis);
 
                 this.Output.StartMethodBody();
             }
@@ -3076,13 +3076,15 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodParamsDef(
             LlvmIndentedTextWriter writer,
-            IEnumerable<IParameter> parameterInfos,
+            IMethod method,
             bool hasThis,
             IType thisType,
             IType returnType,
             bool noArgumentName = false,
             bool varArgs = false)
         {
+            var parameterInfos = method.GetParameters();
+
             writer.Write("(");
 
             var hasParameterWritten = false;
@@ -3118,40 +3120,48 @@ namespace Il2Native.Logic
 
             var index = start;
             var parameterIndex = start;
+            var isAnonymousDelegate = method.IsAnonymousDelegate;
             foreach (var parameter in parameterInfos)
             {
                 this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
-                if (hasParameterWritten)
+                if (isAnonymousDelegate)
                 {
-                    writer.Write(", ");
+                    isAnonymousDelegate = false;
                 }
-
-                parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
-                hasParameterWritten = true;
-
-                if (parameter.ParameterType.IsStructureType())
+                else
                 {
-                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
+                    if (hasParameterWritten)
+                    {
+                        writer.Write(", ");
+                    }
+
+                    parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
+                    hasParameterWritten = true;
+
+                    if (parameter.ParameterType.IsStructureType())
+                    {
+                        this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
+                        if (!noArgumentName)
+                        {
+                            if (!parameter.IsOut && !parameter.IsRef)
+                            {
+                                writer.Write(" byval align " + PointerSize);
+                            }
+
+                            writer.Write(" %\"{0}.", parameterIndex);
+                        }
+                    }
+                    else if (!noArgumentName)
+                    {
+                        writer.Write(" %\"arg.{0}.", parameterIndex);
+                    }
+
                     if (!noArgumentName)
                     {
-                        if (!parameter.IsOut && !parameter.IsRef)
-                        {
-                            writer.Write(" byval align " + PointerSize);
-                        }
-
-                        writer.Write(" %\"{0}.", parameterIndex);
+                        writer.Write(parameter.Name);
+                        writer.Write("\"");
                     }
-                }
-                else if (!noArgumentName)
-                {
-                    writer.Write(" %\"arg.{0}.", parameterIndex);
-                }
-
-                if (!noArgumentName)
-                {
-                    writer.Write(parameter.Name);
-                    writer.Write("\"");
                 }
 
                 index++;
@@ -3210,9 +3220,16 @@ namespace Il2Native.Logic
                 (thisType ?? methodInfo.DeclaringType.ToClass()).WriteTypePrefix(writer);
             }
 
+            var isAnonymousDelegate = methodBase.IsAnonymousDelegate;
             var index = 0;
             foreach (var parameter in methodBase.GetParameters())
             {
+                if (isAnonymousDelegate)
+                {
+                    isAnonymousDelegate = false;
+                    continue;
+                }
+
                 if (index > 0 || hasThis || isStructureType)
                 {
                     writer.Write(", ");
@@ -3363,7 +3380,7 @@ namespace Il2Native.Logic
             {
                 this.WriteMethodParamsDef(
                     this.Output,
-                    method.GetParameters(),
+                    method,
                     this.HasMethodThis,
                     this.ThisType,
                     method.ReturnType,
@@ -3394,7 +3411,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-                this.WriteArgumentCopyDeclarations(method.GetParameters(), this.HasMethodThis);
+                this.WriteArgumentCopyDeclarations(method, this.HasMethodThis);
 
                 this.Output.StartMethodBody();
             }
@@ -5113,17 +5130,29 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="hasThis">
         /// </param>
-        private void WriteArgumentCopyDeclarations(IEnumerable<IParameter> parametersInfo, bool hasThis)
+        private void WriteArgumentCopyDeclarations(IMethod methodInfo, bool hasThis)
         {
+            var parametersInfo = methodInfo.GetParameters();
+
             if (hasThis)
             {
                 this.WriteArgumentCopyDeclaration(null, 0, this.ThisType, true);
             }
 
             var index = hasThis ? 1 : 0;
+            var isAnonymousDelegate = methodInfo.IsAnonymousDelegate;
             foreach (var parameterInfo in parametersInfo)
             {
-                this.WriteArgumentCopyDeclaration(parameterInfo.Name, index++, parameterInfo.ParameterType);
+                if (isAnonymousDelegate)
+                {
+                    isAnonymousDelegate = false;
+                }
+                else
+                {
+                    this.WriteArgumentCopyDeclaration(parameterInfo.Name, index, parameterInfo.ParameterType);
+                }
+
+                index++;
             }
         }
 
@@ -5908,7 +5937,7 @@ namespace Il2Native.Logic
                         this.ReadMethodInfo(ctor, null);
                         this.Output.Write("void ");
                         this.WriteMethodDefinitionName(this.Output, ctor);
-                        this.WriteMethodParamsDef(this.Output, ctor.GetParameters(), this.HasMethodThis, this.ThisType, this.ResolveType("System.Void"));
+                        this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, this.ThisType, this.ResolveType("System.Void"));
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }
@@ -5919,7 +5948,7 @@ namespace Il2Native.Logic
                         this.ReadMethodInfo(method, null);
                         this.WriteMethodReturnType(this.Output, method);
                         this.WriteMethodDefinitionName(this.Output, method);
-                        this.WriteMethodParamsDef(this.Output, method.GetParameters(), this.HasMethodThis, this.ThisType, method.ReturnType);
+                        this.WriteMethodParamsDef(this.Output, method, this.HasMethodThis, this.ThisType, method.ReturnType);
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }
