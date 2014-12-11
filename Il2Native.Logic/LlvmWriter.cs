@@ -340,6 +340,11 @@ namespace Il2Native.Logic
             var line = this.debugInfoGenerator.CurrentDebugLine;
             if (line.HasValue)
             {
+                if (line == 19999)
+                {
+                    int i = 0;
+                }
+
                 this.Output.Write(", !dbg !{0}", line);
             }
         }
@@ -1041,8 +1046,6 @@ namespace Il2Native.Logic
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
                     this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
-
-                    WriteDbgLine(opCode);
 
                     break;
 
@@ -2870,7 +2873,7 @@ namespace Il2Native.Logic
         {
             // find index
             int index;
-            if (!this.indexByFieldInfo.TryGetValue(string.Concat(type.FullName, '.', fieldName), out index))
+            if (!this.indexByFieldInfo.TryGetValue(string.Concat("index:", type.FullName, '.', fieldName), out index))
             {
                 index = this.CalculateFieldIndex(type, fieldName);
             }
@@ -4245,7 +4248,7 @@ namespace Il2Native.Logic
             // no shift needed, it will be applied in WriteFieldAccess
             ////index += this.CalculateFirstFieldPositionInType(type);
 
-            this.indexByFieldInfo[string.Concat(type.FullName, '.', fieldName)] = index;
+            this.indexByFieldInfo[string.Concat("index:", type.FullName, '.', fieldName)] = index;
 
             return index;
         }
