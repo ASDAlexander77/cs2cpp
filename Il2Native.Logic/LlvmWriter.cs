@@ -2848,15 +2848,34 @@ namespace Il2Native.Logic
                 writer.Write(", i32 0");
             }
 
+            var index = this.GetFieldIndex(type, fieldInfo);
+
+            writer.Write(", i32 ");
+            writer.Write(index);
+        }
+
+        public int GetFieldIndex(IType type, IField fieldInfo)
+        {
             // find index
             int index;
             if (!this.indexByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
             {
-                index = this.CalculateFieldIndex(fieldInfo, type);
+                index = this.CalculateFieldIndex(type, fieldInfo);
             }
 
-            writer.Write(", i32 ");
-            writer.Write(index);
+            return index;
+        }
+
+        public int GetFieldIndex(IType type, string fieldName)
+        {
+            // find index
+            int index;
+            if (!this.indexByFieldInfo.TryGetValue(string.Concat(type.FullName, '.', fieldName), out index))
+            {
+                index = this.CalculateFieldIndex(type, fieldName);
+            }
+
+            return index;
         }
 
         /// <summary>
@@ -4178,15 +4197,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="fieldInfo">
-        /// </param>
         /// <param name="type">
+        /// </param>
+        /// <param name="fieldInfo">
         /// </param>
         /// <returns>
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        private int CalculateFieldIndex(IField fieldInfo, IType type)
+        private int CalculateFieldIndex(IType type, IField fieldInfo)
         {
             var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
@@ -4204,6 +4223,29 @@ namespace Il2Native.Logic
             index += this.CalculateFirstFieldPositionInType(type);
 
             this.indexByFieldInfo[fieldInfo.GetFullName()] = index;
+
+            return index;
+        }
+
+        private int CalculateFieldIndex(IType type, string fieldName)
+        {
+            var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            var index = 0;
+
+            while (index < list.Count && !list[index].Name.Equals(fieldName))
+            {
+                index++;
+            }
+
+            if (index == list.Count)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            // no shift needed, it will be applied in WriteFieldAccess
+            ////index += this.CalculateFirstFieldPositionInType(type);
+
+            this.indexByFieldInfo[string.Concat(type.FullName, '.', fieldName)] = index;
 
             return index;
         }

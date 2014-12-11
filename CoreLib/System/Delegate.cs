@@ -11,8 +11,8 @@ namespace System
     [Serializable()]
     public abstract class Delegate
     {
-        private Object obj;
-        private IntPtr methodPtr;
+        private Object _target;
+        private IntPtr _methodPtr;
 
         public override bool Equals(Object obj)
         {
@@ -38,7 +38,7 @@ namespace System
 
             get
             {
-                return this.obj;
+                return this._target;
             }
         }
 
@@ -61,7 +61,7 @@ namespace System
 
         public unsafe void* ToPointer()
         {
-            return methodPtr.ToPointer();
+            return _methodPtr.ToPointer();
         }
     }
 }
