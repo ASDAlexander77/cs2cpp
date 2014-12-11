@@ -875,14 +875,23 @@ namespace Il2Native.Logic
 
                     var localType = this.LocalInfo[index].LocalType;
 
+                    var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                     if (localType.IsStructureType() && !localType.IsByRef)
                     {
-                        opCode.Result = new FullyDefinedReference(this.GetLocalVarName(index), localType);
-                        this.WriteLlvmLoad(opCode, localType, opCode.OpCodeOperands[0].Result);
+                        firstOperand = opCode.OpCodeOperands[0];
+                        if (firstOperand.Result.Type.IsPrimitiveType())
+                        {
+                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
+                        }
+                        else
+                        {
+                            opCode.Result = destination;
+                            this.WriteLlvmLoad(opCode, localType, firstOperand.Result);
+                        }
                     }
                     else
                     {
-                        this.WriteLlvmSave(opCode, localType, 0, new FullyDefinedReference(this.GetLocalVarName(index), localType));
+                        this.WriteLlvmSave(opCode, localType, 0, destination);
                     }
 
                     WriteDbgLine(opCode);
@@ -4815,6 +4824,13 @@ namespace Il2Native.Logic
             }
 
             Debug.Assert(!type.IsVoid());
+
+            if (opCode.OpCodeOperands[1].Result.Type.IsStructureType())
+            {
+                // load index from struct type
+                this.WriteLlvmLoadPrimitiveFromStructure(opCode.OpCodeOperands[1], opCode.OpCodeOperands[1].Result);
+                this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[1], this.GetIntTypeByByteSize(PointerSize));
+            }
 
             this.BinaryOper(
                 writer,

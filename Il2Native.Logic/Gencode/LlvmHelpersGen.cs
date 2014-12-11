@@ -789,6 +789,57 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
+        public static void WriteLlvmSavePrimitiveIntoStructure(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, FullyDefinedReference destination)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Copy primitive data into a structure");
+
+            // write access to a field
+            if (!llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    destination.Type.ToClass(),
+                    destination.Type.ToClass(),
+                    0,
+                    destination))
+            {
+                writer.WriteLine("; No data");
+                return;
+            }
+
+            writer.WriteLine(string.Empty);
+
+            llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
+
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; End of Copy primitive data");
+        }
+
+        public static void WriteLlvmLoadPrimitiveFromStructure(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source)
+        {
+            var writer = llvmWriter.Output;
+
+            // write access to a field
+            if (!llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    source.Type.ToClass(),
+                    source.Type.ToClass(),
+                    0,
+                    source))
+            {
+                writer.WriteLine("; No data");
+                return;
+            }
+
+            writer.WriteLine(string.Empty);
+
+            llvmWriter.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
+
+            writer.WriteLine(string.Empty);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
