@@ -1013,14 +1013,26 @@ namespace Il2Native.Logic
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
-                    this.UnaryOper(
-                        writer,
-                        opCode,
-                        "store",
-                        this.Parameters[actualIndex].ParameterType,
-                        options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
-                    writer.Write(", ");
-                    this.WriteLlvmArgVarAccess(writer, actualIndex, index, true);
+
+                    var argType = this.GetArgType(index);
+                    destination = new FullyDefinedReference(this.GetArgVarName(actualIndex, index), this.GetArgType(index));
+                    if (argType.IsStructureType() && !argType.IsByRef)
+                    {
+                        firstOperand = opCode.OpCodeOperands[0];
+                        if (firstOperand.Result.Type.IsPrimitiveType())
+                        {
+                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
+                        }
+                        else
+                        {
+                            opCode.Result = destination;
+                            this.WriteLlvmLoad(opCode, argType, firstOperand.Result);
+                        }
+                    }
+                    else
+                    {
+                        this.WriteLlvmSave(opCode, argType, 0, destination);
+                    }
 
                     WriteDbgLine(opCode);
 
@@ -2606,7 +2618,7 @@ namespace Il2Native.Logic
 
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
-                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType());
+                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType() || effectiveFromType.Type.IsStructureType());
                 writer.WriteLine(" {0}, null", fromType);
 
                 writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);

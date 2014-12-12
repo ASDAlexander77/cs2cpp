@@ -186,7 +186,7 @@ namespace Il2Native.Logic.Gencode
                     var opCodeNop = OpCodePart.CreateNop;
                     llvmWriter.WriteRethrow(
                         opCodeNop,
-                        llvmWriter.catchScopes.Count > 0 ? llvmWriter.catchScopes.Peek() : null,
+                        upperLevelExceptionHandlingClause,
                         llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek().Catches.First() : null);
                 }
             }
