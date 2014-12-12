@@ -3777,7 +3777,7 @@ namespace Il2Native.Logic
 
             if (!methodReturnType.IsVoid())
             {
-                this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
+                this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
 
                 if (methodReturnType.IsStructureType())
                 {
