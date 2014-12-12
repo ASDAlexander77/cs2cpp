@@ -127,6 +127,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             }
         }
 
+        public bool IsAnonymousDelegate
+        {
+            get
+            {
+                return this.method.IsAnonymousDelegate;
+            }
+        }
+
         public IModule Module
         {
             get

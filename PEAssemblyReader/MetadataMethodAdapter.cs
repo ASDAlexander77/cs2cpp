@@ -317,6 +317,25 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsAnonymousDelegate
+        {
+            get
+            {
+                if (!this.methodDef.Name.StartsWith("<"))
+                {
+                    return false;
+                }
+
+                if (!this.methodDef.Parameters.Any())
+                {
+                    return false;
+                }
+
+                var parameterSymbol = this.methodDef.Parameters.First();
+                return parameterSymbol.Type.SpecialType == SpecialType.System_Object && parameterSymbol.Name == "value";
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string MetadataFullName

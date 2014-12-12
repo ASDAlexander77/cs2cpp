@@ -98,6 +98,22 @@
             out CollectionMetadata globalVariables,
             out CollectionMetadata importedEntities)
         {
+            if (!this.CompileUnit.IsEmpty)
+            {
+                var first = this.CompileUnit[0] as CollectionMetadata;
+
+                enumTypes = first[2] as CollectionMetadata;
+                retainedTypes = first[3] as CollectionMetadata;
+                subprograms = first[4] as CollectionMetadata;
+                globalVariables = (first[5] as CollectionMetadata)[0] as CollectionMetadata;
+                importedEntities = first[6] as CollectionMetadata;
+
+                this.file = file;
+                this.fileType = new CollectionMetadata(this.indexedMetadata).Add("0x29", file);
+
+                return;
+            }
+
             // 4 - C++
             // 12 - C
             var lang = 4;

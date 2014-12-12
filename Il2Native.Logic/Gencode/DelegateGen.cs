@@ -72,6 +72,8 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.ActualWrite(writer, generatedOperand);
             }
 
+            writer.WriteLine(string.Empty);
+
             // bitcast object to method
             var opCodeNopeForBitCast = OpCodePart.CreateNop;
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
@@ -169,8 +171,11 @@ namespace Il2Native.Logic.Gencode
 
             var thisResult = opCode.Result;
 
+            var delegateType = llvmWriter.ResolveType("System.Delegate");
+
             // write access to a field 1
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 0, thisResult);
+            var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
             writer.WriteLine(string.Empty);
 
             // load value 1
@@ -183,7 +188,8 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             // write access to a field 2
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
+            var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
+            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
             writer.WriteLine(string.Empty);
 
             // load value 2
@@ -488,6 +494,10 @@ namespace Il2Native.Logic.Gencode
             /// <summary>
             /// </summary>
             public bool IsVirtual { get; private set; }
+
+            /// <summary>
+            /// </summary>
+            public bool IsAnonymousDelegate { get; private set; }
 
             /// <summary>
             /// </summary>

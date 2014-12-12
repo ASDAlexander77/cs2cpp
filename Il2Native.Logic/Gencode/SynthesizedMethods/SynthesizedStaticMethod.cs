@@ -43,7 +43,6 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             : this(name, declaringType, returnType, parameters)
         {
             this.action = action;
-            this.IsInline = true;
             this.HasProceduralBody = true;
         }
 
