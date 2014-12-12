@@ -2611,11 +2611,13 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!fromType.Type.IsVoid());
+            Debug.Assert(!(fromType is ConstValue));
+            Debug.Assert(!fromType.Type.IsPrimitiveType());
+            Debug.Assert(!fromType.Type.IsStructureType());
+
             if (checkNull)
             {
-                Debug.Assert(!fromType.Type.IsVoid());
-                Debug.Assert(!(fromType is ConstValue));
-
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
                 fromType.Type.WriteTypePrefix(writer);
