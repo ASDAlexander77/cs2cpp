@@ -220,8 +220,10 @@ namespace Il2Native.Logic.Gencode
                 if (!isLeave &&
                     (nextOp == null || nextOp.JumpDestination == null || !nextOp.JumpDestination.Any() || nextOp.GroupAddressStart != endOfHandlerAddress))
                 {
-                    if (nextOp != null && nextOp.CatchOrFinallyBegin == null || opCode.Any(Code.Leave, Code.Leave_S)
-                        || llvmWriter.OpsByAddressStart.Values.Any(op => op.ToCode() == Code.Ret))
+                    var noNext = nextOp == null;
+                    var isNextCatchBlock = nextOp != null && nextOp.CatchOrFinallyBegin != null;
+                    var hasExit = llvmWriter.OpsByAddressStart.Values.Any(op => op.ToCode() == Code.Ret);
+                    if (!isNextCatchBlock && (noNext || isLeave || hasExit))
                     {
                         writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
                         llvmWriter.WriteLabel(writer, string.Concat(".exit", endOfHandlerAddress));
