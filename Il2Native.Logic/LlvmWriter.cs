@@ -2618,7 +2618,7 @@ namespace Il2Native.Logic
 
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
-                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType() || effectiveFromType.Type.IsStructureType());
+                fromType.Type.WriteTypePrefix(writer);
                 writer.WriteLine(" {0}, null", fromType);
 
                 writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
@@ -2628,7 +2628,7 @@ namespace Il2Native.Logic
                 writer.Indent++;
             }
 
-            this.WriteBitcast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
+            this.WriteBitcast(opCodeTypePart, fromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
@@ -4795,7 +4795,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            var op1IsReal = op1ReturnResult.Type.IsReal();
+            var op1IsReal = !op1ReturnResult.Type.UseAsClass && op1ReturnResult.Type.IsReal();
             return op1IsReal;
         }
 
