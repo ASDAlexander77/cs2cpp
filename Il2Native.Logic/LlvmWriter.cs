@@ -29,6 +29,7 @@ namespace Il2Native.Logic
     using PdbReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     /// <summary>
     /// </summary>
@@ -3740,7 +3741,10 @@ namespace Il2Native.Logic
                 normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
-            normalType.WriteGetTypeMethod(this);
+            if (!IlReader.Methods(normalType).Contains(new SynthesizedGetTypeMethod(type, this)))
+            {
+                normalType.WriteGetTypeMethod(this);
+            }
         }
 
         /// <summary>
@@ -4707,35 +4711,6 @@ namespace Il2Native.Logic
         private string GetGlobalConstructorsFunctionName(string assemblyQualifiedName)
         {
             return string.Concat("@\"Global Ctors for ", assemblyQualifiedName, "\"");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="operandIndex">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private IType GetTypeOfReference(OpCodePart opCode, int operandIndex = 0)
-        {
-            IType type = null;
-            if (opCode.HasResult)
-            {
-                type = opCode.Result.Type;
-            }
-            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
-            {
-                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
-                type = resultOf.Type;
-            }
-
-            if (type.IsArray || type.IsByRef || type.IsPointer)
-            {
-                return type.GetElementType();
-            }
-
-            return type;
         }
 
         /// <summary>

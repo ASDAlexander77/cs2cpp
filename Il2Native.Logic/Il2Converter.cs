@@ -802,7 +802,9 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations)
         {
-            var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations).Where(type.TypeNotEquals);
+            var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations)
+                .Where(type.TypeNotEquals)
+                .ToList();
             foreach (var requiredIType in requiredITypes)
             {
                 AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);

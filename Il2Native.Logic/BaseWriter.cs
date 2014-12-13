@@ -1201,6 +1201,12 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Stelem_Ref))
+            {
+                retType = this.GetTypeOfReference(opCodePart);
+                return retType;
+            }
+
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
@@ -1243,6 +1249,24 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (opCodePart.Any(Code.Newobj))
+            {
+                var effectiveoperandPosition = operandPosition;
+                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                var parameters = opCodeConstructorInfoPart.Operand.GetParameters();
+                var index = 0;
+                foreach (var parameter in parameters)
+                {
+                    if (index == effectiveoperandPosition)
+                    {
+                        retType = parameter.ParameterType;
+                        break;
+                    }
+
+                    index++;
+                }
+            }
+
             if (forPhiNodes)
             {
                 if (opCodePart.Any(Code.Castclass))
@@ -1252,6 +1276,35 @@ namespace Il2Native.Logic
             }
 
             return retType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="operandIndex">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected IType GetTypeOfReference(OpCodePart opCode, int operandIndex = 0)
+        {
+            IType type = null;
+            if (opCode.HasResult)
+            {
+                type = opCode.Result.Type;
+            }
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
+            {
+                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
+                type = resultOf.Type;
+            }
+
+            if (type.IsArray || type.IsByRef || type.IsPointer)
+            {
+                return type.GetElementType();
+            }
+
+            return type;
         }
 
         /// <summary>
@@ -1323,6 +1376,12 @@ namespace Il2Native.Logic
             {
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
                 return opCodePartMethod.Operand.ReturnType;
+            }
+
+            if (opCodePart.Any(Code.Newobj))
+            {
+                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                return opCodeConstructorInfoPart.Operand.DeclaringType;
             }
 
             return retType;
