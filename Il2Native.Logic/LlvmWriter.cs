@@ -1554,18 +1554,35 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Mkrefany:
-                    var opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
+                    //var opResult = opCode.OpCodeOperands[0].Result;
+                    //opCode.Result = opResult;
+                    var typedRefType = this.ResolveType("System.TypedReference");
+                    this.WriteSetResultNumber(opCode, typedRefType);
+                    this.WriteAlloca(typedRefType);
+                    writer.WriteLine(string.Empty);
+
                     break;
 
                 case Code.Refanytype:
-                    opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
-                    break;
+                    //var opResult = opCode.OpCodeOperands[0].Result;
+                    //opCode.Result = opResult;
+
+                    opCode.Result = new ConstValue("undef", this.ResolveType("System.Object"));
+
+                    break; 
 
                 case Code.Refanyval:
-                    opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
+
+                    typedRefType = opCode.OpCodeOperands[0].Result.Type;
+
+                    var _targetFieldIndex = this.GetFieldIndex(typedRefType, "Value");
+                    this.WriteFieldAccess(writer, opCode, typedRefType, typedRefType, _targetFieldIndex, opCode.OpCodeOperands[0].Result);
+                    writer.WriteLine(string.Empty);
+                    this.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                    writer.WriteLine(string.Empty);
+                    this.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
+                    writer.WriteLine(string.Empty);
+
                     break;
 
                 case Code.Initblk:
