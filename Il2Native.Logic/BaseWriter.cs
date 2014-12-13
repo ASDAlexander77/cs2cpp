@@ -1201,10 +1201,94 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Stind_I))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Stind_I1))
+            {
+                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                {
+                    type = this.ResolveType("System.SByte");
+                }
+
+                return type;
+            }
+
+            if (opCodePart.Any(Code.Stind_I2))
+            {
+                return ResolveType("System.Int16");
+            }
+
+            if (opCodePart.Any(Code.Stind_I4))
+            {
+                return ResolveType("System.Int32");
+            }
+
+            if (opCodePart.Any(Code.Stind_I8))
+            {
+                return ResolveType("System.Int64");
+            }
+
+            if (opCodePart.Any(Code.Stind_R4))
+            {
+                return ResolveType("System.Single");
+            }
+
+            if (opCodePart.Any(Code.Stind_R8))
+            {
+                return ResolveType("System.Double");
+            }
+
             if (opCodePart.Any(Code.Stelem_Ref))
             {
                 retType = this.GetTypeOfReference(opCodePart);
                 return retType;
+            }
+
+            if (opCodePart.Any(Code.Stelem_I))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Stelem_I1))
+            {
+                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var type = result.Type.GetElementType();
+                if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                {
+                    type = this.ResolveType("System.SByte");
+                }
+
+                return type;
+            }
+
+            if (opCodePart.Any(Code.Stelem_I2))
+            {
+                return ResolveType("System.Int16");
+            }
+
+            if (opCodePart.Any(Code.Stelem_I4))
+            {
+                return ResolveType("System.Int32");
+            }
+
+            if (opCodePart.Any(Code.Stelem_I8))
+            {
+                return ResolveType("System.Int64");
+            }
+
+            if (opCodePart.Any(Code.Stelem_R4))
+            {
+                return ResolveType("System.Single");
+            }
+
+            if (opCodePart.Any(Code.Stelem_R8))
+            {
+                return ResolveType("System.Double");
             }
 
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
