@@ -58,7 +58,7 @@ namespace Il2Native.Logic
             var filePath = Path.GetDirectoryName(name);
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
             var pdbFileName = Path.Combine(filePath, string.Concat(fileNameWithoutExtension, ".pdb"));
-            
+
             var ilReader = new IlReader();
             ilReader.Load(type);
             GenerateLlvm(ilReader, fileNameWithoutExtension, null, pdbFileName, outputFolder, args, new[] { type.FullName });
@@ -631,39 +631,61 @@ namespace Il2Native.Logic
                 }
             }
 
+            var ctors = type.GetConstructors(
+                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            if (ctors != null)
+            {
+                foreach (var @ctor in ctors)
+                {
+                    foreach (var requiredType in GetAllRequiredITypesForMethod(@ctor, genericTypeSpecializations, genericMethodSpecializations))
+                    {
+                        yield return requiredType;
+                    }
+                }
+            }
+
             var methods = type.GetMethods(
                 BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
             if (methods != null)
             {
                 foreach (var method in methods)
                 {
-                    DicoverGenericSpecializedIType(method.ReturnType, genericTypeSpecializations, genericMethodSpecializations);
-
-                    foreach (var param in method.GetParameters())
+                    foreach (var requiredType in GetAllRequiredITypesForMethod(method, genericTypeSpecializations, genericMethodSpecializations))
                     {
-                        DicoverGenericSpecializedIType(param.ParameterType, genericTypeSpecializations, genericMethodSpecializations);
+                        yield return requiredType;
                     }
+                }
+            }
+        }
 
-                    var methodBody = method.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
-                    if (methodBody != null)
+        private static IEnumerable<IType> GetAllRequiredITypesForMethod(
+            IMethod method, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations)
+        {
+            DicoverGenericSpecializedIType(method.ReturnType, genericTypeSpecializations, genericMethodSpecializations);
+
+            foreach (var param in method.GetParameters())
+            {
+                DicoverGenericSpecializedIType(param.ParameterType, genericTypeSpecializations, genericMethodSpecializations);
+            }
+
+            var methodBody = method.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
+            if (methodBody != null)
+            {
+                foreach (var localVar in methodBody.LocalVariables)
+                {
+                    DicoverGenericSpecializedIType(localVar.LocalType, genericTypeSpecializations, genericMethodSpecializations);
+                    if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
                     {
-                        foreach (var localVar in methodBody.LocalVariables)
-                        {
-                            DicoverGenericSpecializedIType(localVar.LocalType, genericTypeSpecializations, genericMethodSpecializations);
-                            if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
-                            {
-                                yield return localVar.LocalType;
-                            }
-                        }
-
-                        var usedStructTypes = new HashSet<IType>();
-                        method.DiscoverRequiredTypesAndMethodsInMethodBody(
-                            genericTypeSpecializations, genericMethodSpecializations, usedStructTypes, new Queue<IMethod>());
-                        foreach (var usedStructType in usedStructTypes)
-                        {
-                            yield return usedStructType;
-                        }
+                        yield return localVar.LocalType;
                     }
+                }
+
+                var usedStructTypes = new HashSet<IType>();
+                method.DiscoverRequiredTypesAndMethodsInMethodBody(
+                    genericTypeSpecializations, genericMethodSpecializations, usedStructTypes, new Queue<IMethod>());
+                foreach (var usedStructType in usedStructTypes)
+                {
+                    yield return usedStructType;
                 }
             }
         }

@@ -84,7 +84,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool MultiCore = true;
+        private const bool MultiCore = false;
 
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2

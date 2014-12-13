@@ -688,7 +688,7 @@ namespace Il2Native.Logic
                 }
 
                 var usedBy = firstOpCode.UsedBy;
-                var requiredType = this.RequiredIncomingType(usedBy.OpCode, forPhiNodes: true);
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition, forPhiNodes: true);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
                     val.RequiredOutgoingType = requiredType;
