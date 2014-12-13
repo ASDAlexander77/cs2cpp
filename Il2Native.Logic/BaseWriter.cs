@@ -688,7 +688,7 @@ namespace Il2Native.Logic
                 }
 
                 var usedBy = firstOpCode.UsedBy;
-                var requiredType = this.RequiredIncomingType(usedBy.OpCode);
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode, forPhiNodes: true);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
                     val.RequiredOutgoingType = requiredType;
@@ -1149,7 +1149,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forPhiNodes = false)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1240,6 +1240,14 @@ namespace Il2Native.Logic
                     }
 
                     index++;
+                }
+            }
+
+            if (forPhiNodes)
+            {
+                if (opCodePart.Any(Code.Castclass))
+                {
+                    return ((OpCodeTypePart)opCodePart).Operand;
                 }
             }
 
