@@ -203,6 +203,9 @@ namespace PEAssemblyReader
                     {
                         localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
                     }
+
+                    var index = 0;
+                    return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
                 }
             }
             catch (UnsupportedSignatureContent)
@@ -212,8 +215,7 @@ namespace PEAssemblyReader
             {
             }
 
-            var index = 0;
-            return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
+            return new ILocalVariable[0];
         }
 
         private IEnumerable<IExceptionHandlingClause> GetExceptionHandlingClauses()
