@@ -2990,6 +2990,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldType(IType fieldType)
         {
+            Debug.Assert(!fieldType.IsGenericParameter);
+
             this.Output.WriteLine(',');
 
             CheckIfExternalDeclarationIsRequired(fieldType);

@@ -936,6 +936,12 @@ namespace PEAssemblyReader
                 return true;
             }
 
+            // TODO: temporary hack to allow cast Array to IEnumerable
+            if (this.IsInterface && type.IsArray)
+            {
+                return true;
+            }
+
             if (this.IsPointer && type.IsPointer && this.GetElementType().IsAssignableFrom(type.GetElementType()))
             {
                 return true;
