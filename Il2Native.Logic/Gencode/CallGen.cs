@@ -17,6 +17,7 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.Exceptions;
 
     using PEAssemblyReader;
+    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -321,15 +322,31 @@ namespace Il2Native.Logic.Gencode
 
             if (isPrimitive || isPrimitivePointer)
             {
-                writer.WriteLine("; Box Primitive type for 'This' parameter");
-
-                var primitiveType = !isPrimitivePointer ? resultOfFirstOperand.Type : resultOfFirstOperand.Type.GetElementType();
-
+                var primitiveType = resultOfFirstOperand.Type;
                 if (isPrimitivePointer)
                 {
+                    writer.WriteLine("; Box Primitive pointer type for 'This' parameter");
+
+                    primitiveType = resultOfFirstOperand.Type.GetElementType();
                     var firstOperandResult = opCodeFirstOperand.Result;
                     opCodeFirstOperand.Result = null;
                     llvmWriter.WriteLlvmLoad(opCodeFirstOperand, firstOperandResult.Type.ToDereferencedType(), firstOperandResult);
+                }
+                else
+                {
+                    writer.WriteLine("; Box Primitive type(void*) for 'This' parameter");
+                    var intType = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);
+                    if (intType.TypeEquals(primitiveType) )
+                    {
+                        var declType = (opCodeMethodInfo as OpCodeMethodInfoPart).Operand.DeclaringType;
+                        Debug.Assert(declType.IsStructureType(), "only Struct type can be used");
+                        primitiveType = declType.ToClass();
+                        llvmWriter.AdjustIntConvertableTypes(writer, opCodeMethodInfo.OpCodeOperands[0], declType.ToPointerType()); 
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "only Int type allowed");
+                    }
                 }
 
                 // convert value to object

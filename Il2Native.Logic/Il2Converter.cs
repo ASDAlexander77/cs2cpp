@@ -749,6 +749,7 @@ namespace Il2Native.Logic
             {
                 foreach (var type in genericTypeSpecializations)
                 {
+                    Debug.Assert(type != null);
                     ProcessGenericTypeToFindRequiredTypesForType(requiredTypes, requiredTypesSyncRoot, type, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations);
                 }
             }
@@ -773,6 +774,7 @@ namespace Il2Native.Logic
         private static void ProcessGenericTypeToFindRequiredTypesForType(
             ICollection<Tuple<IType, List<IType>>> requiredTypes, object requiredTypesSyncRoot, IType type, HashSet<IType> subSetGenericTypeSpecializations, HashSet<IMethod> subSetGenericMethodSpecializations)
         {
+            Debug.Assert(type != null);
             Debug.WriteLine("Analyzing generic type: {0}", type);
 
             var requiredITypesToAdd = new List<IType>();
@@ -802,9 +804,10 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations)
         {
+            Debug.Assert(type != null);
+
             var requiredITypes = GetAllRequiredITypesForIType(type, genericTypeSpecializations, genericMethodSpecializations)
-                .Where(type.TypeNotEquals)
-                .ToList();
+                .Where(type.TypeNotEquals);
             foreach (var requiredIType in requiredITypes)
             {
                 AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);

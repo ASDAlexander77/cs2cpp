@@ -1507,14 +1507,32 @@ namespace Il2Native.Logic
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
                     opCodeTypePart = opCode as OpCodeTypePart;
+                    var nextOp = opCode.Next;
 
                     // if this is Struct we already have an address in LLVM
                     if (!opCodeTypePart.Operand.IsStructureType())
                     {
-                        var nextOp = opCode.Next;
                         var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
                         this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
+                    }
+
+                    var firstOperandResult = nextOp.OpCodeOperands[0].Result;
+                    var isPrimitive = firstOperandResult.Type.IsPrimitiveTypeOrEnum();
+
+                    if (isPrimitive)
+                    {
+                        // box it
+                        writer.WriteLine("; Constrained: Box Primitive type for 'This' parameter");
+
+                        // convert value to object
+                        var opCodeMethodInfo = opCode.Next as OpCodeMethodInfoPart;
+                        opCodeMethodInfo.Result = null;
+                        var opCodeNone = OpCodePart.CreateNop;
+                        opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                        firstOperandResult.Type.ToClass().WriteCallBoxObjectMethod(this, opCodeNone);
+                        nextOp.OpCodeOperands[0].Result = opCodeNone.Result;
+                        writer.WriteLine(string.Empty);
                     }
 
                     break;
@@ -3741,7 +3759,8 @@ namespace Il2Native.Logic
                 normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
-            if (!IlReader.Methods(normalType).Contains(new SynthesizedGetTypeMethod(type, this)))
+            var customGetType = new SynthesizedGetTypeMethod(type, this);
+            if (!IlReader.Methods(normalType).Any(m => m.IsMatchingOverride(customGetType)))
             {
                 normalType.WriteGetTypeMethod(this);
             }

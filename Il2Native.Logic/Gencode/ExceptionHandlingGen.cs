@@ -223,7 +223,7 @@ namespace Il2Native.Logic.Gencode
                     var noNext = nextOp == null;
                     var isNextCatchBlock = nextOp != null && nextOp.CatchOrFinallyBegin != null;
                     var hasExit = llvmWriter.OpsByAddressStart.Values.Any(op => op.ToCode() == Code.Ret);
-                    if (!isNextCatchBlock && (noNext || isLeave || hasExit))
+                    if (!isNextCatchBlock && !noNext && (isLeave || hasExit))
                     {
                         writer.WriteLine("br label %.exit{0}", endOfHandlerAddress);
                         llvmWriter.WriteLabel(writer, string.Concat(".exit", endOfHandlerAddress));
