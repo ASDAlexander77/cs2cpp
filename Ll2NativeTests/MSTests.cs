@@ -13,6 +13,9 @@ namespace Ll2NativeTests
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Runtime.ExceptionServices;
+    using System.Runtime.InteropServices;
+    using System.Threading;
 
     using Il2Native.Logic;
 

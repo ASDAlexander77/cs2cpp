@@ -3762,7 +3762,7 @@ namespace Il2Native.Logic
             }
 
             var customGetType = new SynthesizedGetTypeMethod(type, this);
-            if (!IlReader.Methods(normalType).Any(m => m.IsMatchingOverride(customGetType)))
+            if (normalType.BaseType == null || !IlReader.Methods(normalType).Any(m => m.IsMatchingOverride(customGetType)))
             {
                 normalType.WriteGetTypeMethod(this);
             }
