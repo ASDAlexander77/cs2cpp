@@ -688,7 +688,7 @@ namespace Il2Native.Logic
                 }
 
                 var usedBy = firstOpCode.UsedBy;
-                var requiredType = this.RequiredIncomingType(usedBy.OpCode);
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition, forPhiNodes: true);
                 foreach (var val in opCodePart.AlternativeValues.Values)
                 {
                     val.RequiredOutgoingType = requiredType;
@@ -1149,7 +1149,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forPhiNodes = false)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1201,6 +1201,96 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Stind_I))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Stind_I1))
+            {
+                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                {
+                    type = this.ResolveType("System.SByte");
+                }
+
+                return type;
+            }
+
+            if (opCodePart.Any(Code.Stind_I2))
+            {
+                return ResolveType("System.Int16");
+            }
+
+            if (opCodePart.Any(Code.Stind_I4))
+            {
+                return ResolveType("System.Int32");
+            }
+
+            if (opCodePart.Any(Code.Stind_I8))
+            {
+                return ResolveType("System.Int64");
+            }
+
+            if (opCodePart.Any(Code.Stind_R4))
+            {
+                return ResolveType("System.Single");
+            }
+
+            if (opCodePart.Any(Code.Stind_R8))
+            {
+                return ResolveType("System.Double");
+            }
+
+            if (opCodePart.Any(Code.Stelem_Ref))
+            {
+                retType = this.GetTypeOfReference(opCodePart);
+                return retType;
+            }
+
+            if (opCodePart.Any(Code.Stelem_I))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Stelem_I1))
+            {
+                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var type = result.Type.GetElementType();
+                if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                {
+                    type = this.ResolveType("System.SByte");
+                }
+
+                return type;
+            }
+
+            if (opCodePart.Any(Code.Stelem_I2))
+            {
+                return ResolveType("System.Int16");
+            }
+
+            if (opCodePart.Any(Code.Stelem_I4))
+            {
+                return ResolveType("System.Int32");
+            }
+
+            if (opCodePart.Any(Code.Stelem_I8))
+            {
+                return ResolveType("System.Int64");
+            }
+
+            if (opCodePart.Any(Code.Stelem_R4))
+            {
+                return ResolveType("System.Single");
+            }
+
+            if (opCodePart.Any(Code.Stelem_R8))
+            {
+                return ResolveType("System.Double");
+            }
+
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
             {
                 retType = ((OpCodeTypePart)opCodePart).Operand;
@@ -1243,7 +1333,62 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (opCodePart.Any(Code.Newobj))
+            {
+                var effectiveoperandPosition = operandPosition;
+                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                var parameters = opCodeConstructorInfoPart.Operand.GetParameters();
+                var index = 0;
+                foreach (var parameter in parameters)
+                {
+                    if (index == effectiveoperandPosition)
+                    {
+                        retType = parameter.ParameterType;
+                        break;
+                    }
+
+                    index++;
+                }
+            }
+
+            if (forPhiNodes)
+            {
+                if (opCodePart.Any(Code.Castclass))
+                {
+                    return ((OpCodeTypePart)opCodePart).Operand;
+                }
+            }
+
             return retType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="operandIndex">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected IType GetTypeOfReference(OpCodePart opCode, int operandIndex = 0)
+        {
+            IType type = null;
+            if (opCode.HasResult)
+            {
+                type = opCode.Result.Type;
+            }
+            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
+            {
+                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
+                type = resultOf.Type;
+            }
+
+            if (type.IsArray || type.IsByRef || type.IsPointer)
+            {
+                return type.GetElementType();
+            }
+
+            return type;
         }
 
         /// <summary>
@@ -1315,6 +1460,12 @@ namespace Il2Native.Logic
             {
                 var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
                 return opCodePartMethod.Operand.ReturnType;
+            }
+
+            if (opCodePart.Any(Code.Newobj))
+            {
+                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                return opCodeConstructorInfoPart.Operand.DeclaringType;
             }
 
             return retType;

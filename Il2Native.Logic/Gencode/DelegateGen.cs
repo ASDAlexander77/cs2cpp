@@ -174,32 +174,38 @@ namespace Il2Native.Logic.Gencode
             var delegateType = llvmWriter.ResolveType("System.Delegate");
 
             // write access to a field 1
-            var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
-            writer.WriteLine(string.Empty);
+            try
+            {
+                var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
 
-            // load value 1
-            opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_1, 0, 0) };
-            llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-            writer.WriteLine(string.Empty);
+                // load value 1
+                opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_1, 0, 0) };
+                llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                writer.WriteLine(string.Empty);
 
-            // save value 1
-            llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
-            writer.WriteLine(string.Empty);
+                // save value 1
+                llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
+                writer.WriteLine(string.Empty);
 
-            // write access to a field 2
-            var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
-            writer.WriteLine(string.Empty);
+                // write access to a field 2
+                var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
 
-            // load value 2
-            opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_2, 0, 0) };
-            llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-            writer.WriteLine(string.Empty);
+                // load value 2
+                opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_2, 0, 0) };
+                llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                writer.WriteLine(string.Empty);
 
-            // save value 2
-            llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
-            writer.WriteLine(string.Empty);
+                // save value 2
+                llvmWriter.SaveToField(opCode, opCode.Result.Type, 0);
+                writer.WriteLine(string.Empty);
+            }
+            catch (KeyNotFoundException)
+            {
+            }
 
             writer.WriteLine("ret void");
 
@@ -235,65 +241,76 @@ namespace Il2Native.Logic.Gencode
 
             var thisResult = opCode.Result;
 
+            var delegateType = llvmWriter.ResolveType("System.Delegate");
+
             // write access to a field 1
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 0, thisResult);
-            writer.WriteLine(string.Empty);
+            try
+            {
+                var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
 
-            var objectMemberAccessResultNumber = opCode.Result;
+                var objectMemberAccessResultNumber = opCode.Result;
 
-            // load value 1
-            opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
-            writer.WriteLine(string.Empty);
+                // load value 1
+                opCode.Result = null;
+                llvmWriter.WriteLlvmLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
+                writer.WriteLine(string.Empty);
 
-            var objectResultNumber = opCode.Result;
+                var objectResultNumber = opCode.Result;
 
-            // write access to a field 2
-            llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, method.DeclaringType.BaseType.BaseType, 1, thisResult);
-            writer.WriteLine(string.Empty);
+                // write access to a field 2
+                var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
 
-            // additional step to extract value from IntPtr structure
-            llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
-            writer.WriteLine(string.Empty);
+                // additional step to extract value from IntPtr structure
+                llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                writer.WriteLine(string.Empty);
 
-            // load value 2
-            var methodMemberAccessResultNumber = opCode.Result;
+                // load value 2
+                var methodMemberAccessResultNumber = opCode.Result;
 
-            // load value 1
-            opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
-            writer.WriteLine(string.Empty);
+                // load value 1
+                opCode.Result = null;
+                llvmWriter.WriteLlvmLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
+                writer.WriteLine(string.Empty);
 
-            var methodResultNumber = opCode.Result;
+                var methodResultNumber = opCode.Result;
 
-            // switch code if method is static
-            var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
-            writer.Write("icmp ne ");
-            objectResultNumber.Type.WriteTypePrefix(writer);
-            writer.Write(" ");
-            writer.Write(objectResultNumber);
-            writer.WriteLine(", null");
-            llvmWriter.WriteCondBranch(writer, compareResult, "normal", "static");
+                // switch code if method is static
+                var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
+                writer.Write("icmp ne ");
+                objectResultNumber.Type.WriteTypePrefix(writer);
+                writer.Write(" ");
+                writer.Write(objectResultNumber);
+                writer.WriteLine(", null");
+                llvmWriter.WriteCondBranch(writer, compareResult, "normal", "static");
 
-            // normal brunch
-            var callResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
+                // normal brunch
+                var callResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
 
-            var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-            returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            returnNormal.OpCodeOperands[0].Result = callResult;
-            llvmWriter.WriteReturn(writer, returnNormal, method.ReturnType);
-            writer.WriteLine(string.Empty);
+                var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+                returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
+                returnNormal.OpCodeOperands[0].Result = callResult;
+                llvmWriter.WriteReturn(writer, returnNormal, method.ReturnType);
+                writer.WriteLine(string.Empty);
 
-            // static brunch
-            llvmWriter.WriteLabel(writer, "static");
+                // static brunch
+                llvmWriter.WriteLabel(writer, "static");
 
-            var callStaticResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, true);
+                var callStaticResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, true);
 
-            var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-            returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            returnStatic.OpCodeOperands[0].Result = callStaticResult;
-            llvmWriter.WriteReturn(writer, returnStatic, method.ReturnType);
-            writer.WriteLine(string.Empty);
+                var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+                returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
+                returnStatic.OpCodeOperands[0].Result = callStaticResult;
+                llvmWriter.WriteReturn(writer, returnStatic, method.ReturnType);
+                writer.WriteLine(string.Empty);
+            }
+            catch (KeyNotFoundException)
+            {
+                writer.WriteLine("unreachable");
+            }
 
             writer.Indent--;
             writer.WriteLine("}");

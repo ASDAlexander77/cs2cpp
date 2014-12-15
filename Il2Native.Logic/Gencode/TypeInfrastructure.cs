@@ -121,7 +121,20 @@ namespace Il2Native.Logic.Gencode
                 () =>
                 {
                     // TODO: here send predifined byte array data with info for Type
-                    var runtimeType = llvmWriter.ResolveType("System.RuntimeType");
+                    IType runtimeType = null;
+                    try
+                    {
+                        runtimeType = llvmWriter.ResolveType("System.RuntimeType");
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        opCode.Result = new ConstValue(null, llvmWriter.ResolveType("System.Type"));
+                        writer.Write("ret ");
+                        llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
+                        writer.WriteLine(" null");
+                        return;
+                    }
+
                     var byteType = llvmWriter.ResolveType("System.Byte");
                     var byteArrayType = byteType.ToArrayType(1);
                     var bytes = type.GenerateTypeInfoBytes();

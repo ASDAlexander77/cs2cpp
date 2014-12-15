@@ -29,6 +29,7 @@ namespace Il2Native.Logic
     using PdbReader;
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     /// <summary>
     /// </summary>
@@ -1013,14 +1014,26 @@ namespace Il2Native.Logic
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     var actualIndex = index - (this.HasMethodThis ? 1 : 0);
-                    this.UnaryOper(
-                        writer,
-                        opCode,
-                        "store",
-                        this.Parameters[actualIndex].ParameterType,
-                        options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
-                    writer.Write(", ");
-                    this.WriteLlvmArgVarAccess(writer, actualIndex, index, true);
+
+                    var argType = this.GetArgType(index);
+                    destination = new FullyDefinedReference(this.GetArgVarName(actualIndex, index), this.GetArgType(index));
+                    if (argType.IsStructureType() && !argType.IsByRef)
+                    {
+                        firstOperand = opCode.OpCodeOperands[0];
+                        if (firstOperand.Result.Type.IsPrimitiveType())
+                        {
+                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
+                        }
+                        else
+                        {
+                            opCode.Result = destination;
+                            this.WriteLlvmLoad(opCode, argType, firstOperand.Result);
+                        }
+                    }
+                    else
+                    {
+                        this.WriteLlvmSave(opCode, argType, 0, destination);
+                    }
 
                     WriteDbgLine(opCode);
 
@@ -1494,14 +1507,32 @@ namespace Il2Native.Logic
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
                     opCodeTypePart = opCode as OpCodeTypePart;
+                    var nextOp = opCode.Next;
 
                     // if this is Struct we already have an address in LLVM
                     if (!opCodeTypePart.Operand.IsStructureType())
                     {
-                        var nextOp = opCode.Next;
                         var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
                         this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
+                    }
+
+                    var firstOperandResult = nextOp.OpCodeOperands[0].Result;
+                    var isPrimitive = firstOperandResult.Type.IsPrimitiveTypeOrEnum();
+
+                    if (isPrimitive)
+                    {
+                        // box it
+                        writer.WriteLine("; Constrained: Box Primitive type for 'This' parameter");
+
+                        // convert value to object
+                        var opCodeMethodInfo = opCode.Next as OpCodeMethodInfoPart;
+                        opCodeMethodInfo.Result = null;
+                        var opCodeNone = OpCodePart.CreateNop;
+                        opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                        firstOperandResult.Type.ToClass().WriteCallBoxObjectMethod(this, opCodeNone);
+                        nextOp.OpCodeOperands[0].Result = opCodeNone.Result;
+                        writer.WriteLine(string.Empty);
                     }
 
                     break;
@@ -1542,18 +1573,35 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Mkrefany:
-                    var opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
+                    //var opResult = opCode.OpCodeOperands[0].Result;
+                    //opCode.Result = opResult;
+                    var typedRefType = this.ResolveType("System.TypedReference");
+                    this.WriteSetResultNumber(opCode, typedRefType);
+                    this.WriteAlloca(typedRefType);
+                    writer.WriteLine(string.Empty);
+
                     break;
 
                 case Code.Refanytype:
-                    opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
-                    break;
+                    //var opResult = opCode.OpCodeOperands[0].Result;
+                    //opCode.Result = opResult;
+
+                    opCode.Result = new ConstValue("undef", this.ResolveType("System.Object"));
+
+                    break; 
 
                 case Code.Refanyval:
-                    opResult = opCode.OpCodeOperands[0].Result;
-                    opCode.Result = opResult;
+
+                    typedRefType = opCode.OpCodeOperands[0].Result.Type;
+
+                    var _targetFieldIndex = this.GetFieldIndex(typedRefType, "Value");
+                    this.WriteFieldAccess(writer, opCode, typedRefType, typedRefType, _targetFieldIndex, opCode.OpCodeOperands[0].Result);
+                    writer.WriteLine(string.Empty);
+                    this.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                    writer.WriteLine(string.Empty);
+                    this.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
+                    writer.WriteLine(string.Empty);
+
                     break;
 
                 case Code.Initblk:
@@ -2599,14 +2647,16 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!fromType.Type.IsVoid());
+            Debug.Assert(!(fromType is ConstValue));
+            Debug.Assert(!fromType.Type.IsPrimitiveType());
+            Debug.Assert(!fromType.Type.IsStructureType());
+
             if (checkNull)
             {
-                Debug.Assert(!fromType.Type.IsVoid());
-                Debug.Assert(!(fromType is ConstValue));
-
                 var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.ResolveType("System.Boolean"));
                 writer.Write("icmp eq ");
-                effectiveFromType.Type.WriteTypePrefix(writer, effectiveFromType.Type.IsPrimitiveType());
+                fromType.Type.WriteTypePrefix(writer);
                 writer.WriteLine(" {0}, null", fromType);
 
                 writer.WriteLine("br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}", testNullResultNumber, opCodeTypePart.AddressStart);
@@ -2616,7 +2666,7 @@ namespace Il2Native.Logic
                 writer.Indent++;
             }
 
-            this.WriteBitcast(opCodeTypePart, effectiveFromType, this.ResolveType("System.Byte"));
+            this.WriteBitcast(opCodeTypePart, fromType, this.ResolveType("System.Byte"));
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
@@ -2940,6 +2990,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldType(IType fieldType)
         {
+            Debug.Assert(!fieldType.IsGenericParameter);
+
             this.Output.WriteLine(',');
 
             CheckIfExternalDeclarationIsRequired(fieldType);
@@ -3709,7 +3761,11 @@ namespace Il2Native.Logic
                 normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
-            normalType.WriteGetTypeMethod(this);
+            var customGetType = new SynthesizedGetTypeMethod(type, this);
+            if (normalType.BaseType == null || !IlReader.Methods(normalType).Any(m => m.IsMatchingOverride(customGetType)))
+            {
+                normalType.WriteGetTypeMethod(this);
+            }
         }
 
         /// <summary>
@@ -3777,7 +3833,7 @@ namespace Il2Native.Logic
 
             if (!methodReturnType.IsVoid())
             {
-                this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.AdjustIntTypes);
+                this.UnaryOper(writer, opCode, "ret", methodReturnType, options: opts | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
 
                 if (methodReturnType.IsStructureType())
                 {
@@ -4020,7 +4076,7 @@ namespace Il2Native.Logic
             // get all required types for type definition
             var requiredTypes = new List<IType>();
             Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null, null);
-            foreach (var requiredType in requiredTypes)
+            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
@@ -4682,35 +4738,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        /// <param name="operandIndex">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private IType GetTypeOfReference(OpCodePart opCode, int operandIndex = 0)
-        {
-            IType type = null;
-            if (opCode.HasResult)
-            {
-                type = opCode.Result.Type;
-            }
-            else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
-            {
-                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
-                type = resultOf.Type;
-            }
-
-            if (type.IsArray || type.IsByRef || type.IsPointer)
-            {
-                return type.GetElementType();
-            }
-
-            return type;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
         /// <returns>
         /// </returns>
         private bool IntTypeRequired(OpCodePart opCode)
@@ -4783,7 +4810,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            var op1IsReal = op1ReturnResult.Type.IsReal();
+            var op1IsReal = !op1ReturnResult.Type.UseAsClass && op1ReturnResult.Type.IsReal();
             return op1IsReal;
         }
 

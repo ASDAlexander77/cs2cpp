@@ -5,7 +5,12 @@ namespace System
 {
 
     [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Never)]
-    public struct TypedReference { }
+    public struct TypedReference 
+    {
+        private IntPtr Type;
+
+        private IntPtr Value;
+    }
 
 }
 
