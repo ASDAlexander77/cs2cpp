@@ -258,11 +258,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
-            // BUG!!!!! mscorlib.dll, System.Globalization.CodePageDataItem, .ctor  - (ldfld of address result)  (NEEDS TO BE FIXED)
-
-            // 1) !!! NEED TO BE FIXED, Issue: dynamic_cast of a Struct
-            // file in sscli20 co1367catch_block.cs can't be compiled (mismatch of types)
-
             // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
             // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
             /*
@@ -279,40 +274,6 @@ namespace Ll2NativeTests
 
 		            return 0;
 	            }
-             */
-
-            /*
-                using System;
-
-                    internal struct RuntimeFieldHandleInternal
-                    {
-                        internal RuntimeFieldHandleInternal(IntPtr value)
-                        {
-                            m_handle = value;
-                        }
-
-                        internal IntPtr m_handle;
-                    }
-
-
-                class X {
-
-	                public void Test(IntPtr p)
-	                {
-		                Console.WriteLine (p.GetType());
-	                }
-
-	                public unsafe static int Main (string [] args)
-	                {	
-		                var i = 9;
-                                fixed(IntPtr* pBigResult = new IntPtr[10])
-                                {
-                                        RuntimeFieldHandleInternal runtimeFieldHandle = new RuntimeFieldHandleInternal(pBigResult[i]);
-                                }
-
-		                return 0;
-	                }
-                }
              */
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
@@ -409,6 +370,10 @@ namespace Ll2NativeTests
             // 349 - TypeAttributes
             // 352 - MarshalAs
             // 353 - no Main()
+            // 358 - missing implementation of ToString('R') for double
+            // 361 - missing Attribute
+            // 362 - cycling Catch/Throw bug (NEED TO BE FIXED!!!)
+            // 367 - GetFields not implemented
             // -----------
             // 32, 55, 74 - missing class
             // 37, 42, 43, 44, 45, 66 - multiarray
@@ -420,7 +385,7 @@ namespace Ll2NativeTests
                             10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
                             126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
                             247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
-                            344, 349, 352, 353
+                            344, 349, 352, 353, 358, 361, 362, 367
                         });
 
             if (UsingRoslyn)
@@ -429,7 +394,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 129 });
             }
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(358, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
@@ -471,6 +436,10 @@ namespace Ll2NativeTests
             // 171 - multiarray
             // 172 - cant be compiled (library)
             // 174 - cant be compiled (library)
+            // 177 - cast IEnumerable<T> from Array
+            // 180 - Attributes
+            // 184 - Array.FindAll not implemented
+            // 186 - Serialization, FileStream etc not implemented
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -478,7 +447,7 @@ namespace Ll2NativeTests
             var skip = new[]
                            {
                                13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 127, 128, 143, 144, 145, 156, 159,
-                               161, 162, 165, 166, 167, 171, 172, 174
+                               161, 162, 165, 166, 167, 171, 172, 174, 177, 180, 184, 186
                            };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {

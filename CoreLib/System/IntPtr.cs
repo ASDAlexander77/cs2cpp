@@ -40,6 +40,7 @@ namespace System
             {
                 return (m_value == ((IntPtr)obj).m_value);
             }
+
             return false;
         }
 

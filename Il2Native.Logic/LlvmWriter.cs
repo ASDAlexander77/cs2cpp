@@ -3744,7 +3744,7 @@ namespace Il2Native.Logic
             var isEnum = normalType.IsEnum;
             var canBeBoxed = normalType.IsPrimitiveType() || normalType.IsStructureType() || isEnum;
             var canBeUnboxed = canBeBoxed;
-            var excluded = normalType.FullName == "System.Enum" || normalType.FullName == "System.IntPtr" || normalType.FullName == "System.UIntPtr";
+            var excluded = normalType.FullName == "System.Enum";
 
             if (canBeBoxed && !excluded)
             {
@@ -4075,7 +4075,8 @@ namespace Il2Native.Logic
 
             // get all required types for type definition
             var requiredTypes = new List<IType>();
-            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null, null);
+            ISet<IType> processedAlready = new HashSet<IType>();
+            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, new HashSet<IType>(), requiredTypes, null, null, processedAlready);
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
