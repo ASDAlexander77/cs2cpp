@@ -3,25 +3,25 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
-
-    using System;
     using System.Reflection;
-    using System.Threading;
-    using System.Runtime.CompilerServices;
+
     [Serializable()]
     public abstract class Delegate
     {
-        private Object _target;
-        private IntPtr _methodPtr;
+        internal Object _target;
+        internal IntPtr _methodPtr;
 
         public override bool Equals(Object obj)
         {
-            throw new NotImplementedException();
-        }
+            if (obj == null || this.GetType() != obj.GetType())
+                return false;
 
-        public static Delegate Combine(Delegate a, Delegate b)
-        {
-            throw new NotImplementedException();
+            Delegate d = (Delegate)obj;
+
+            if (_target == d._target && _methodPtr == d._methodPtr)
+                return true;
+
+            return false;
         }
 
         public MethodInfo Method
@@ -42,26 +42,59 @@ namespace System
             }
         }
 
+        public static Delegate Combine(Delegate a, Delegate b)
+        {
+            if ((Object)a == null)
+                return b;
+
+            return a.CombineImpl(b);
+        }
+
         public static Delegate Remove(Delegate source, Delegate value)
         {
-            throw new NotImplementedException();
+            if (source == null)
+                return null;
+
+            if (value == null)
+                return source;
+
+            if (source.GetType() != value.GetType())
+                throw new ArgumentException("DlgtTypeMis");
+
+            return source.RemoveImpl(value);
         }
 
 
         public static bool operator ==(Delegate d1, Delegate d2)
         {
-            throw new NotImplementedException();
+            if ((Object)d1 == null)
+                return (Object)d2 == null;
+
+            return d1.Equals(d2);
         }
 
 
         public static bool operator !=(Delegate d1, Delegate d2)
         {
-            throw new NotImplementedException();
+            if ((Object)d1 == null)
+                return (Object)d2 != null;
+
+            return !d1.Equals(d2);
         }
 
         public unsafe void* ToPointer()
         {
             return _methodPtr.ToPointer();
+        }
+
+        protected virtual Delegate CombineImpl(Delegate d)
+        {
+            throw new NotSupportedException("Combine");
+        }
+
+        protected virtual Delegate RemoveImpl(Delegate d)
+        {
+            return (d.Equals(this)) ? null : this;
         }
     }
 }

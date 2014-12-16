@@ -456,7 +456,6 @@ namespace Ll2NativeTests
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
             // 117 - "xxx is int[]" treated as "xxx is int": NEED TO BE FIXED (when __Array__<T> is used)
             // 119 - typeof pointer
-            // 126 - can't be compiled, Debug Trace: (29,10): error CS0246: The type or namespace name 'List<T>' could not be found (are you missing a using directive or an assembly reference?)
             // 127 - Delegate.Combine not implemented
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
@@ -478,7 +477,7 @@ namespace Ll2NativeTests
 
             var skip = new[]
                            {
-                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 126, 127, 128, 143, 144, 145, 156, 159,
+                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 127, 128, 143, 144, 145, 156, 159,
                                161, 162, 165, 166, 167, 171, 172, 174
                            };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
