@@ -128,7 +128,8 @@ namespace Il2Native.Logic
             var count = fields.Count();
             var number = 1;
 
-            Debug.Assert(!type.IsGenericType || !type.IsArray);
+            Debug.Assert(!type.IsGenericTypeDefinition);
+            Debug.Assert(!type.IsArray);
 
             codeWriter.WriteTypeStart(type, genericContext);
             codeWriter.WriteBeforeFields(count);

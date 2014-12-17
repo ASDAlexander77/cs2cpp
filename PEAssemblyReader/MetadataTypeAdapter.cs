@@ -363,7 +363,7 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                if (current.HasElementType && current.GetElementType().IsGenericTypeDefinition)
+                if (current.ToBareType().IsGenericTypeDefinition)
                 {
                     return true;
                 }

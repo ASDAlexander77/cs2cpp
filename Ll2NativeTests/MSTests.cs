@@ -30,7 +30,6 @@ namespace Ll2NativeTests
     public class MSTests
     {
 #if _DISK_C_
-
         private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
         private const string SourcePathCustom = @"C:\Temp\tests\";
         private const string OutputPath = @"C:\Temp\IlCTests\";
