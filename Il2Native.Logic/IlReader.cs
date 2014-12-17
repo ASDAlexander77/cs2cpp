@@ -1132,6 +1132,9 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!method.IsGenericMethodDefinition);
+            Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition);
+
             this.usedGenericSpecialiazedMethods.Add(method);
 
             this.DiscoverRequiredTypesAndMethodsInMethod(method, stackCall);

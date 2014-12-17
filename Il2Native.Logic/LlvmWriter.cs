@@ -3368,6 +3368,9 @@ namespace Il2Native.Logic
                 return;
             }
 
+            Debug.Assert(!method.IsGenericMethodDefinition);
+            Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition);
+
             this.StartProcess();
 
             this.processedMethods.Add(method);
