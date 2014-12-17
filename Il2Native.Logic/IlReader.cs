@@ -1127,7 +1127,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (this.usedGenericSpecialiazedMethods.Contains(method))
+            if (method.IsGenericMethodDefinition || method.DeclaringType.IsGenericTypeDefinition || this.usedGenericSpecialiazedMethods.Contains(method))
             {
                 return;
             }
