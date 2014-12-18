@@ -268,7 +268,6 @@ namespace Ll2NativeTests
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
-            // 28 - bug in execution (Hashtable)
             // 32 - multi array
             // 36 - bug in execution (NotImplemented)
             // 37 - multi array
@@ -291,19 +290,16 @@ namespace Ll2NativeTests
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
             // 109 - DateTime.Now.ToString (NotImplemented)
-            // 117 - not implemented Hashtable
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute
             // 126 - calling ToString on Interface, (CONSIDER FIXING IT)
-            // 127 - IsDerined not implemented
+            // 127 - IsDerived not implemented
             // 128 - using Attributes
-            // 130 - not compilable (Debug Trace: (24,20): error CS0037: Cannot convert null to 'System.IntPtr' because it is a non-nullable value type)
             // 132 - Reflection
             // 135 - Reflection
             // 149 - Delegate.Combine (NotImplemented)
             // 157 - reflection, attributes
             // 158 - reflection, attributes
-            // 171 - Roslyn can't handle it!!!
             // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
             // 177 - using Reflection
             // 178 - using Reflection
@@ -341,7 +337,6 @@ namespace Ll2NativeTests
             // 282 - error:  error CS1502: The best overloaded method match for 'System.Convert.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
             // 286 - Xml (not implemented)
             // 287 - System.Type, GetConstructors, IsSealed
-            // 294 - lock, Monitor.Enter/Exit
             // 295 - System.Reflection
             // 296 - GetElementType (NotImplemented)
             // 297 - System.Reflection
@@ -372,9 +367,9 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 28, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 117, 118, 120,
-                            126, 127, 128, 130, 132, 135, 149, 157, 158, 171, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 294, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
+                            10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
+                            126, 127, 128, 132, 135, 149, 157, 158, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
+                            247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
                             344, 349, 352, 353, 358, 361, 362, 367
                         });
 
@@ -384,7 +379,7 @@ namespace Ll2NativeTests
                 skip.AddRange(new[] { 129 });
             }
 
-            foreach (var index in Enumerable.Range(358, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("test-{0}", index));
             }
