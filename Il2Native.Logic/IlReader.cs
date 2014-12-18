@@ -841,6 +841,8 @@ namespace Il2Native.Logic
                         var method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
+
+                        this.AddStructType(method.ReturnType);
                         foreach (var methodParameter in method.GetParameters())
                         {
                             this.AddStructType(methodParameter.ParameterType);
