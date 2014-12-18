@@ -36,6 +36,11 @@ namespace System
             return ((IList)this)[index];
         }
 
+        public void SetValue(Object value, int index)
+        {
+            ((IList)this)[index] = value;
+        }
+
         public extern int Length
         {
             [MethodImpl(MethodImplOptions.InternalCall)]

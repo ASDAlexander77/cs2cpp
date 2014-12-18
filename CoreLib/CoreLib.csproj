@@ -77,6 +77,7 @@
     <Compile Include="System\Collections\Generic\KeyValuePair.cs" />
     <Compile Include="System\Collections\Generic\List.cs" />
     <Compile Include="System\Collections\IDictionaryEnumerator.cs" />
+    <Compile Include="System\Collections\KeyValuePairs.cs" />
     <Compile Include="System\ComponentModel\EditorBrowsableAttribute.cs" />
     <Compile Include="System\Console.cs" />
     <Compile Include="System\Convert.cs" />
