@@ -6216,6 +6216,9 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDeclarationStart(IType type)
         {
+            Debug.Assert(!type.IsGenericTypeDefinition);
+            Debug.Assert(!type.IsArray);
+
             this.Output.Write("%");
 
             type.WriteTypeName(this.Output, false);
