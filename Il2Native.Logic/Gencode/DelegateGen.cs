@@ -106,7 +106,14 @@ namespace Il2Native.Logic.Gencode
             }
             else if (method.Name == "Invoke")
             {
-                llvmWriter.WriteDelegateInvoke(method);
+                if (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
+                {
+                    llvmWriter.WriteMultiDelegateInvoke(method);
+                }
+                else
+                {
+                    llvmWriter.WriteDelegateInvoke(method);
+                }
             }
             else
             {
@@ -120,12 +127,15 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void DefaultStub(this LlvmWriter llvmWriter, IMethod method)
+        private static void DefaultStub(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false)
         {
             var writer = llvmWriter.Output;
 
-            writer.WriteLine(" {");
-            writer.Indent++;
+            if (!disableCurlyBrakets)
+            {
+                writer.WriteLine(" {");
+                writer.Indent++;
+            }
 
             writer.Write("ret ");
 
@@ -139,8 +149,11 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(" undef");
             }
 
-            writer.Indent--;
-            writer.WriteLine("}");
+            if (!disableCurlyBrakets)
+            {
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
         }
 
         /// <summary>
@@ -219,12 +232,120 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void WriteDelegateInvoke(this LlvmWriter llvmWriter, IMethod method)
+        private static void WriteDelegateInvoke(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false, bool disableLoadingParams = false)
+        {
+            var writer = llvmWriter.Output;
+
+            if (!disableCurlyBrakets)
+            {
+                writer.WriteLine(" {");
+                writer.Indent++;
+            }
+
+            var opCode = OpCodePart.CreateNop;
+
+            if (!disableLoadingParams)
+            {
+                // create this variable
+                llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
+                for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
+                {
+                    llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
+                }
+            }
+
+            // load 'this' variable
+            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
+            writer.WriteLine(string.Empty);
+
+            var thisResult = opCode.Result;
+
+            var delegateType = llvmWriter.ResolveType("System.Delegate");
+
+            // write access to a field 1
+            try
+            {
+                var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
+
+                var objectMemberAccessResultNumber = opCode.Result;
+
+                // load value 1
+                opCode.Result = null;
+                llvmWriter.WriteLlvmLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
+                writer.WriteLine(string.Empty);
+
+                var objectResultNumber = opCode.Result;
+
+                // write access to a field 2
+                var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
+                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
+                writer.WriteLine(string.Empty);
+
+                // additional step to extract value from IntPtr structure
+                llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                writer.WriteLine(string.Empty);
+
+                // load value 2
+                var methodMemberAccessResultNumber = opCode.Result;
+
+                // load value 1
+                opCode.Result = null;
+                llvmWriter.WriteLlvmLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
+                writer.WriteLine(string.Empty);
+
+                var methodResultNumber = opCode.Result;
+
+                // switch code if method is static
+                var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
+                writer.Write("icmp ne ");
+                objectResultNumber.Type.WriteTypePrefix(writer);
+                writer.Write(" ");
+                writer.Write(objectResultNumber);
+                writer.WriteLine(", null");
+                llvmWriter.WriteCondBranch(writer, compareResult, "normal", "static");
+
+                // normal brunch
+                var callResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
+
+                var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+                returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
+                returnNormal.OpCodeOperands[0].Result = callResult;
+                llvmWriter.WriteReturn(writer, returnNormal, method.ReturnType);
+                writer.WriteLine(string.Empty);
+
+                // static brunch
+                llvmWriter.WriteLabel(writer, "static");
+
+                var callStaticResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, true);
+
+                var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+                returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
+                returnStatic.OpCodeOperands[0].Result = callStaticResult;
+                llvmWriter.WriteReturn(writer, returnStatic, method.ReturnType);
+                writer.WriteLine(string.Empty);
+            }
+            catch (KeyNotFoundException)
+            {
+                writer.WriteLine("unreachable");
+            }
+
+            if (!disableCurlyBrakets)
+            {
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
+        }
+
+        private static void WriteMultiDelegateInvoke(this LlvmWriter llvmWriter, IMethod method)
         {
             var writer = llvmWriter.Output;
 
             writer.WriteLine(" {");
             writer.Indent++;
+
+            writer.WriteLine("; MultiDelegate Invoke");
 
             var opCode = OpCodePart.CreateNop;
 
@@ -314,6 +435,67 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent--;
             writer.WriteLine("}");
+        }
+
+        public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IType> parameters)
+        {
+            code = new object[]
+                    {
+                        Code.Ldarg_0,
+                        
+                        Code.Ldfld,
+                        1,
+                        0,
+                        0,
+                        0,
+
+                        Code.Brtrue_S,
+                        5,
+
+                        Code.Call,
+                        2,
+                        0,
+                        0,
+                        0,
+
+                        // iterate - for now default stub
+                        Code.Call,
+                        3,
+                        0,
+                        0,
+                        0,
+                    };
+
+            parameters = method.GetParameters().Select(p => p.ParameterType).ToList();
+            locals = new List<IType>();
+
+            tokenResolutions = new List<object>();
+
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
+
+            // call Delegate.Invoke
+            tokenResolutions.Add(new SynthesizedStaticMethod(
+                "",
+                method.DeclaringType,
+                codeWriter.ResolveType("System.Void"),
+                new List<IType>(),
+                (llvmWriter, opCode) =>
+                {
+                    // get element size
+                    llvmWriter.WriteDelegateInvoke(method, true, true);
+                }));
+
+            // call Default stub for now - "ret undef";
+            tokenResolutions.Add(new SynthesizedStaticMethod(
+                "",
+                method.DeclaringType,
+                codeWriter.ResolveType("System.Void"),
+                new List<IType>(),
+                (llvmWriter, opCode) =>
+                {
+                    // get element size
+                    llvmWriter.DefaultStub(method, true);
+                }));
         }
 
         /// <summary>

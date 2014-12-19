@@ -289,6 +289,7 @@ namespace Ll2NativeTests
             // 102 - using Reflection
             // 105 - IAsyncResult (NotImplemented)
             // 106 - IAsyncResult (NotImplemented) (missing)
+            // 107 - IAsyncResult (NotImplemented)
             // 109 - DateTime.Now.ToString (NotImplemented)
             // 118 - not implemented Attribute
             // 120 - not implemented Attribute

@@ -30,6 +30,19 @@
                 }
             }
 
+            // dynamiclly generated method for MulticastDelegate
+            if (method.IsDelegateFunctionBody()
+                && (method.Name == "Invoke")
+                && (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate"))
+            {
+                object[] code;
+                IList<object> tokenResolutions;
+                IList<IType> locals;
+                IList<IType> parameters;
+                DelegateGen.GetMulticastDelegateInvoke(method, codeWriter, out code, out tokenResolutions, out locals, out parameters);
+                return MethodBodyBank.GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
+            }
+
             return method;
         }
 
@@ -54,7 +67,7 @@
 #endif
         }
 
-        private static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
+        public static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IType> parameters)
         {
             return new SynthesizedMethodDecorator(
                 m, 

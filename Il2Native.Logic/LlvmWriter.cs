@@ -89,6 +89,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly IDictionary<string, int> poisitionByFieldInfo = new SortedDictionary<string, int>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
 
         /// <summary>
@@ -2901,19 +2905,19 @@ namespace Il2Native.Logic
                 writer.Write(", i32 0");
             }
 
-            var index = this.GetFieldIndex(type, fieldInfo);
+            var index = this.GetFieldPosition(type, fieldInfo);
 
             writer.Write(", i32 ");
             writer.Write(index);
         }
 
-        public int GetFieldIndex(IType type, IField fieldInfo)
+        public int GetFieldPosition(IType type, IField fieldInfo)
         {
             // find index
             int index;
-            if (!this.indexByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
+            if (!this.poisitionByFieldInfo.TryGetValue(fieldInfo.GetFullName(), out index))
             {
-                index = this.CalculateFieldIndex(type, fieldInfo);
+                index = this.CalculateFieldPosition(type, fieldInfo);
             }
 
             return index;
@@ -2923,7 +2927,7 @@ namespace Il2Native.Logic
         {
             // find index
             int index;
-            if (!this.indexByFieldInfo.TryGetValue(string.Concat("index:", type.FullName, '.', fieldName), out index))
+            if (!this.indexByFieldInfo.TryGetValue(string.Concat(type.FullName, '.', fieldName), out index))
             {
                 index = this.CalculateFieldIndex(type, fieldName);
             }
@@ -4268,7 +4272,7 @@ namespace Il2Native.Logic
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        private int CalculateFieldIndex(IType type, IField fieldInfo)
+        private int CalculateFieldPosition(IType type, IField fieldInfo)
         {
             var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
@@ -4285,7 +4289,7 @@ namespace Il2Native.Logic
 
             index += this.CalculateFirstFieldPositionInType(type);
 
-            this.indexByFieldInfo[fieldInfo.GetFullName()] = index;
+            this.poisitionByFieldInfo[fieldInfo.GetFullName()] = index;
 
             return index;
         }
@@ -4308,7 +4312,7 @@ namespace Il2Native.Logic
             // no shift needed, it will be applied in WriteFieldAccess
             ////index += this.CalculateFirstFieldPositionInType(type);
 
-            this.indexByFieldInfo[string.Concat("index:", type.FullName, '.', fieldName)] = index;
+            this.indexByFieldInfo[string.Concat(type.FullName, '.', fieldName)] = index;
 
             return index;
         }
