@@ -629,6 +629,12 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsByRef.CompareTo(type.IsByRef);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             if (!this.HasDeclaringType && !type.HasDeclaringType)
             {
                 return 0;
@@ -1012,6 +1018,26 @@ namespace PEAssemblyReader
         public IType ToPointerType()
         {
             return new PointerTypeSymbol(this.typeDef).ResolveGeneric(this.GenericContext);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IParameter ToParameter(bool isOut = false, bool isRef = false)
+        {
+            var refKind = RefKind.None;
+            if (isOut)
+            {
+                refKind |= RefKind.Out;
+            }
+
+            if (isRef)
+            {
+                refKind |= RefKind.Ref;
+            }
+
+            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind), this.GenericContext);
         }
 
         /// <summary>

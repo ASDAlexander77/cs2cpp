@@ -84,7 +84,7 @@
                 "",
                 codeWriter.ResolveType("System.Array"),
                 codeWriter.ResolveType("System.Int32"),
-                new[] { codeWriter.ResolveType("System.Array") },
+                new[] { codeWriter.ResolveType("System.Array").ToParameter() },
                 (llvmWriter, opCode) =>
                 {
                     // get element size
@@ -94,7 +94,7 @@
                 "",
                 codeWriter.ResolveType("System.Array"),
                 codeWriter.ResolveType("System.Void"),
-                new[] { codeWriter.ResolveType("System.Byte").ToPointerType(), codeWriter.ResolveType("System.Byte").ToPointerType(), codeWriter.ResolveType("System.Int32") },
+                new[] { codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(), codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(), codeWriter.ResolveType("System.Int32").ToParameter() },
                 (llvmWriter, opCode) =>
                 {
                     // copy data
@@ -109,12 +109,12 @@
             var locals = new List<IType>();
             locals.Add(codeWriter.ResolveType("System.Int32"));
 
-            var parameters = new List<IType>();
-            parameters.Add(codeWriter.ResolveType("System.Array"));
-            parameters.Add(codeWriter.ResolveType("System.Int32"));
-            parameters.Add(codeWriter.ResolveType("System.Array"));
-            parameters.Add(codeWriter.ResolveType("System.Int32"));
-            parameters.Add(codeWriter.ResolveType("System.Int32"));
+            var parameters = new List<IParameter>();
+            parameters.Add(codeWriter.ResolveType("System.Array").ToParameter());
+            parameters.Add(codeWriter.ResolveType("System.Int32").ToParameter());
+            parameters.Add(codeWriter.ResolveType("System.Array").ToParameter());
+            parameters.Add(codeWriter.ResolveType("System.Int32").ToParameter());
+            parameters.Add(codeWriter.ResolveType("System.Int32").ToParameter());
 
             MethodBodyBank.Register(ArrayCopyGen.Name, ArrayCopyGen.ByteCode, tokenResolutions, locals, parameters);
         }

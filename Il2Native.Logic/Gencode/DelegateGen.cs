@@ -437,7 +437,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("}");
         }
 
-        public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IType> parameters)
+        public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
             code = new object[]
                     {
@@ -466,7 +466,7 @@ namespace Il2Native.Logic.Gencode
                         0,
                     };
 
-            parameters = method.GetParameters().Select(p => p.ParameterType).ToList();
+            parameters = method.GetParameters().ToList();
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
@@ -478,7 +478,7 @@ namespace Il2Native.Logic.Gencode
                 "",
                 method.DeclaringType,
                 codeWriter.ResolveType("System.Void"),
-                new List<IType>(),
+                new List<IParameter>(),
                 (llvmWriter, opCode) =>
                 {
                     // get element size
@@ -490,7 +490,7 @@ namespace Il2Native.Logic.Gencode
                 "",
                 method.DeclaringType,
                 codeWriter.ResolveType("System.Void"),
-                new List<IType>(),
+                new List<IParameter>(),
                 (llvmWriter, opCode) =>
                 {
                     // get element size

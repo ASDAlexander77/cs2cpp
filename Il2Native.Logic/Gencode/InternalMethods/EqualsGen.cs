@@ -113,8 +113,8 @@
             locals.Add(codeWriter.ResolveType("System.Int32"));
             locals.Add(codeWriter.ResolveType("System.Int32"));
 
-            var parameters = new List<IType>();
-            parameters.Add(codeWriter.ResolveType("System.Object"));
+            var parameters = new List<IParameter>();
+            parameters.Add(codeWriter.ResolveType("System.Object").ToParameter());
 
             MethodBodyBank.Register(EqualsGen.Name, EqualsGen.ByteCode, tokenResolutions, locals, parameters);
         }

@@ -250,5 +250,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToPointerType();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IParameter ToParameter(bool isOut = false, bool isRef = false);
     }
 }

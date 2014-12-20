@@ -32,11 +32,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.method = method;
         }
 
-        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IEnumerable<IType> parameters, IModule module) : this(method)
+        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IEnumerable<IParameter> parameters, IModule module) : this(method)
         {
             this.methodBody = methodBody;
             this.module = module;
-            this.parameters = parameters.Select(t => new SynthesizedValueParameter(t)).ToList();
+            this.parameters = parameters;
         }
 
         public string AssemblyQualifiedName 

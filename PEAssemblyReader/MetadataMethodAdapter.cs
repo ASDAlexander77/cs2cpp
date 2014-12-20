@@ -51,6 +51,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IEnumerable<IParameter>> lazyParameters;
+
+        /// <summary>
+        /// </summary>
         private readonly MethodSymbol methodDef;
 
         /// <summary>
@@ -71,6 +75,7 @@ namespace PEAssemblyReader
             this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
             this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
+            this.lazyParameters = new Lazy<IEnumerable<IParameter>>(this.CalculateParameters);
         }
 
         /// <summary>
@@ -540,7 +545,12 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IParameter> GetParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
+            return this.lazyParameters.Value;
+        }
+
+        public IEnumerable<IParameter> CalculateParameters()
+        {
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext)).ToList();
         }
 
         /// <summary>

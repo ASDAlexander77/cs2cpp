@@ -99,7 +99,6 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedNewMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\SynthesizedValueParameter.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />
     <Compile Include="Metadata\Model\CollectionMetadata.cs" />
     <Compile Include="Metadata\Model\Metadata.cs" />
