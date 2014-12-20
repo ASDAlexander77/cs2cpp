@@ -1024,7 +1024,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IParameter ToParameter(bool isOut = false, bool isRef = false)
+        public IParameter ToParameter(bool isOut = false, bool isRef = false, string name = "value")
         {
             var refKind = RefKind.None;
             if (isOut)
@@ -1037,7 +1037,7 @@ namespace PEAssemblyReader
                 refKind |= RefKind.Ref;
             }
 
-            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind), this.GenericContext);
+            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind, name), this.GenericContext);
         }
 
         /// <summary>
