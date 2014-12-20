@@ -336,6 +336,10 @@ namespace Il2Native.Logic.Gencode
             parameters = method.GetParameters().ToList();
 
             var bytesShift = parameters.Count > 4 ? (parameters.Count - 4) * 2 + 4 : parameters.Count;
+            if (!method.ReturnType.IsVoid())
+            {
+                bytesShift++;
+            }
 
             var codeList = new List<object>();
             codeList.AddRange(new object[]
