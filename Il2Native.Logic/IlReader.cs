@@ -1158,7 +1158,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.usedGenericSpecialiazedTypes.Add(type);
+            this.usedGenericSpecialiazedTypes.Add(type.ToBareType().ToNormal());
         }
 
         /// <summary>

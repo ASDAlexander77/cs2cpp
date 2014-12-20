@@ -298,7 +298,6 @@ namespace Ll2NativeTests
             // 128 - using Attributes
             // 132 - Reflection
             // 135 - Reflection
-            // 149 - Delegate.Combine (NotImplemented)
             // 157 - reflection, attributes
             // 158 - reflection, attributes
             // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
@@ -308,9 +307,6 @@ namespace Ll2NativeTests
             // 181 - using Reflection
             // 183 - using BeginInvoke
             // 187 - using Specialized Collections
-            // 207 - Delegate.Combine (NotImplemented)
-            // 209 - Delegate.Combine (NotImplemented)
-            // 216 - Delegate.Combine (NotImplemented)
             // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
             // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
@@ -324,15 +320,12 @@ namespace Ll2NativeTests
             // 240 - the same as 239
             // 247 - ArrayList - GetEnumator is not implemented
             // 250 - FieldsOffset attribute not implemented
-            // 252 - Delegate.Combine (NotImplemented)
             // 253 - System.Reflection
             // 254 - System.Reflection 
             // 263 - string with sbyte*
-            // 264 - Delegate.Combine (NotImplemented)
             // 266 - IConvertable 
             // 269 - ArgIterator
             // 273 - GetCustomAttributes
-            // 275 - Delegate.Combine (NotImplemented)
             // 276 - GetType.GetEvents(); (NotImplemented)
             // 279 - Enum ToString with Flags
             // 282 - error:  error CS1502: The best overloaded method match for 'System.Convert.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
@@ -352,7 +345,6 @@ namespace Ll2NativeTests
             // 319 - missing DecimalConstantAttribute
             // 329 - GetCustromAttributes
             // 330 - int to IFormattable
-            // 344 - Delegate.Combine (NotImplemented)
             // 349 - TypeAttributes
             // 352 - MarshalAs
             // 353 - no Main()
@@ -369,9 +361,9 @@ namespace Ll2NativeTests
                     new[]
                         {
                             10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
-                            126, 127, 128, 132, 135, 149, 157, 158, 174, 177, 178, 180, 181, 183, 187, 207, 209, 216, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 252, 253, 254, 263, 264, 266, 269, 273, 275, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
-                            344, 349, 352, 353, 358, 361, 362, 367
+                            126, 127, 128, 132, 135, 157, 158, 174, 177, 178, 180, 181, 183, 187, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
+                            247, 250, 253, 254, 263, 266, 269, 273, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
+                            349, 352, 353, 358, 361, 362, 367
                         });
 
             if (UsingRoslyn)
@@ -392,10 +384,8 @@ namespace Ll2NativeTests
         public void TestGenCompileAndRunLlvm()
         {
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
-            // 46 - Delegate.Combine not implemented
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
-            // 52 - using new() (NEED TO BE FIXED), Debug Trace: (9,10): error CS0656: Missing compiler required member 'System.Activator.CreateInstance'
             // 56 - bug in execution (NotImplemented)
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 66 - using typeof (typeof (Foo<>))
@@ -407,13 +397,11 @@ namespace Ll2NativeTests
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
             // 117 - "xxx is int[]" treated as "xxx is int": NEED TO BE FIXED (when __Array__<T> is used)
             // 119 - typeof pointer
-            // 127 - Delegate.Combine not implemented
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
             // 145 - using multiarray
             // 156 - can't compile (seems it is lib)
-            // 159 - Dictionary<K, V> NotImplemented
             // 161 - can't compile (seems it is lib)
             // 162 - GetType. findMember
             // 165 - cant be compiled (library)
@@ -432,7 +420,7 @@ namespace Ll2NativeTests
 
             var skip = new[]
                            {
-                               13, 17, 31, 40, 46, 47, 51, 52, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 127, 128, 143, 144, 145, 156, 159,
+                               13, 17, 31, 40, 47, 51, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 128, 143, 144, 145, 156, 
                                161, 162, 165, 166, 167, 171, 172, 174, 177, 180, 184, 186
                            };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))

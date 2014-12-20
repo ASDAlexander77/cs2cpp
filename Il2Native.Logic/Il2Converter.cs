@@ -419,10 +419,11 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.IsGenericType && !type.IsGenericTypeDefinition && !genericSpecializations.Contains(type) && !TypeHasGenericParameter(type)
+            var bareType = type.ToBareType().ToNormal();
+            if (type.IsGenericType && !type.IsGenericTypeDefinition && !genericSpecializations.Contains(bareType) && !TypeHasGenericParameter(type)
                 && !TypeHasGenericParameterInGenericArguments(type))
             {
-                genericSpecializations.Add(type);
+                genericSpecializations.Add(bareType);
 
                 // todo the same for base class and interfaces
                 foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations, processedAlready))
@@ -604,9 +605,11 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private static IEnumerable<IType> GetAllRequiredITypesForIType(
-            IType type, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> processedAlready)
+            IType typeSource, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> processedAlready)
         {
-            Debug.Assert(type != null);
+            Debug.Assert(typeSource != null);
+
+            var type = typeSource.ToBareType().ToNormal();
 
             if (processedAlready.Contains(type))
             {
