@@ -106,14 +106,7 @@ namespace Il2Native.Logic.Gencode
             }
             else if (method.Name == "Invoke")
             {
-                if (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
-                {
-                    llvmWriter.WriteMultiDelegateInvoke(method);
-                }
-                else
-                {
-                    llvmWriter.WriteDelegateInvoke(method);
-                }
+                llvmWriter.WriteDelegateInvoke(method);
             }
             else
             {
@@ -338,111 +331,16 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        private static void WriteMultiDelegateInvoke(this LlvmWriter llvmWriter, IMethod method)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.WriteLine(" {");
-            writer.Indent++;
-
-            writer.WriteLine("; MultiDelegate Invoke");
-
-            var opCode = OpCodePart.CreateNop;
-
-            // create this variable
-            llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
-            for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
-            {
-                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
-            }
-
-            // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
-            writer.WriteLine(string.Empty);
-
-            var thisResult = opCode.Result;
-
-            var delegateType = llvmWriter.ResolveType("System.Delegate");
-
-            // write access to a field 1
-            try
-            {
-                var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
-                writer.WriteLine(string.Empty);
-
-                var objectMemberAccessResultNumber = opCode.Result;
-
-                // load value 1
-                opCode.Result = null;
-                llvmWriter.WriteLlvmLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
-                writer.WriteLine(string.Empty);
-
-                var objectResultNumber = opCode.Result;
-
-                // write access to a field 2
-                var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
-                writer.WriteLine(string.Empty);
-
-                // additional step to extract value from IntPtr structure
-                llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
-                writer.WriteLine(string.Empty);
-
-                // load value 2
-                var methodMemberAccessResultNumber = opCode.Result;
-
-                // load value 1
-                opCode.Result = null;
-                llvmWriter.WriteLlvmLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
-                writer.WriteLine(string.Empty);
-
-                var methodResultNumber = opCode.Result;
-
-                // switch code if method is static
-                var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
-                writer.Write("icmp ne ");
-                objectResultNumber.Type.WriteTypePrefix(writer);
-                writer.Write(" ");
-                writer.Write(objectResultNumber);
-                writer.WriteLine(", null");
-                llvmWriter.WriteCondBranch(writer, compareResult, "normal", "static");
-
-                // normal brunch
-                var callResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
-
-                var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-                returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                returnNormal.OpCodeOperands[0].Result = callResult;
-                llvmWriter.WriteReturn(writer, returnNormal, method.ReturnType);
-                writer.WriteLine(string.Empty);
-
-                // static brunch
-                llvmWriter.WriteLabel(writer, "static");
-
-                var callStaticResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, true);
-
-                var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-                returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                returnStatic.OpCodeOperands[0].Result = callStaticResult;
-                llvmWriter.WriteReturn(writer, returnStatic, method.ReturnType);
-                writer.WriteLine(string.Empty);
-            }
-            catch (KeyNotFoundException)
-            {
-                writer.WriteLine("unreachable");
-            }
-
-            writer.Indent--;
-            writer.WriteLine("}");
-        }
-
         public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
-            code = new object[]
+            parameters = method.GetParameters().ToList();
+
+            var bytesShift = parameters.Count > 4 ? (parameters.Count - 4) * 2 + 4 : parameters.Count;
+
+            var codeList = new List<object>();
+            codeList.AddRange(new object[]
                     {
                         Code.Ldarg_0,
-                        
                         Code.Ldfld,
                         1,
                         0,
@@ -458,22 +356,116 @@ namespace Il2Native.Logic.Gencode
                         0,
                         0,
 
-                        // iterate - for now default stub
-                        Code.Call,
+                        // multicast
+                        Code.Ldc_I4_0,
+                        Code.Stloc_0,
+
+                        Code.Br_S,
+                        0x11 + bytesShift,
+
+                        Code.Ldarg_0,
+                        Code.Ldfld,
                         3,
                         0,
                         0,
                         0,
-                    };
 
-            parameters = method.GetParameters().ToList();
+                        Code.Ldloc_0,
+                        Code.Ldelem_Ref
+                    });
+
+            var index = 1;
+            foreach (var parameter in parameters)
+            {
+                if (index > 4)
+                {
+                    codeList.Add(Code.Ldarg_S);
+                    codeList.Add(index);
+                }
+                else
+                {
+                    switch (index)
+                    {
+                        case 1:
+                            codeList.Add(Code.Ldarg_1);
+                            break;
+                        case 2:
+                            codeList.Add(Code.Ldarg_2);
+                            break;
+                        case 3:
+                            codeList.Add(Code.Ldarg_3);
+                            break;
+                    }
+                }
+
+                index++;
+            }
+
+            codeList.AddRange(new object[]
+                    {
+                        Code.Callvirt,
+                        4,
+                        0,
+                        0,
+                        0,
+                    });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(new object[] 
+                    { 
+                        Code.Stloc_1
+                    });
+            }
+
+            codeList.AddRange(new object[]
+                    {
+                        Code.Ldloc_0,
+                        Code.Ldc_I4_1,
+                        Code.Add,
+                        Code.Stloc_0,
+
+                        // for test
+                        Code.Ldloc_0,
+                        Code.Ldarg_0,
+                        Code.Ldfld,
+                        1,
+                        0,
+                        0,
+                        0,
+                        Code.Blt_S,
+                        -(0x1a + bytesShift)
+                    });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(new object[] 
+                    { 
+                        Code.Ldloc_1
+                    });
+            }
+
+            codeList.AddRange(new object[] 
+                    { 
+                        Code.Ret
+                    });
+
+            code = codeList.ToArray();
+
             locals = new List<IType>();
+            locals.Add(codeWriter.ResolveType("System.Int32"));
+            if (!method.ReturnType.IsVoid())
+            {
+                locals.Add(method.ReturnType);
+            }
 
             tokenResolutions = new List<object>();
 
+            // 1
             tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
 
             // call Delegate.Invoke
+            // 2
             tokenResolutions.Add(new SynthesizedStaticMethod(
                 "",
                 method.DeclaringType,
@@ -485,17 +477,12 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.WriteDelegateInvoke(method, true, true);
                 }));
 
+            // 3
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList"));
+
             // call Default stub for now - "ret undef";
-            tokenResolutions.Add(new SynthesizedStaticMethod(
-                "",
-                method.DeclaringType,
-                codeWriter.ResolveType("System.Void"),
-                new List<IParameter>(),
-                (llvmWriter, opCode) =>
-                {
-                    // get element size
-                    llvmWriter.DefaultStub(method, true);
-                }));
+            // 4
+            tokenResolutions.Add(IlReader.Methods(method.DeclaringType).First(m => m.Name == "Invoke"));
         }
 
         /// <summary>
