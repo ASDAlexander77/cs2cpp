@@ -272,6 +272,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             return this.method.CompareTo(obj);
         }
 
+        public override int GetHashCode()
+        {
+            return this.method.GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.method.Equals(obj);
+        }
+
         public IEnumerable<IType> GetGenericArguments()
         {
             return this.method.GetGenericArguments();

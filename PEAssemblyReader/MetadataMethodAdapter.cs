@@ -441,7 +441,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            return this.MetadataFullName.CompareTo(name.MetadataFullName);
+            return this.FullName.CompareTo(name.FullName);
         }
 
         /// <summary>
@@ -452,13 +452,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override bool Equals(object obj)
         {
-            var type = obj as IName;
-            if (type != null)
-            {
-                return this.CompareTo(type) == 0;
-            }
-
-            return base.Equals(obj);
+            return this.ToString().CompareTo(obj.ToString()) == 0;
         }
 
         /// <summary>
