@@ -257,18 +257,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </exception>
         public int CompareTo(object obj)
         {
-            throw new NotImplementedException();
-        }
+            var name = obj as IName;
+            if (name == null)
+            {
+                return 1;
+            }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="obj">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public override bool Equals(object obj)
-        {
-            return this.ToString().Equals(obj.ToString());
+            return this.MetadataFullName.CompareTo(name.MetadataFullName);
         }
 
         /// <summary>
@@ -298,6 +293,17 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public override int GetHashCode()
         {
             return this.ToString().GetHashCode();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var type = obj as IName;
+            if (type != null)
+            {
+                return this.CompareTo(type) == 0;
+            }
+
+            return base.Equals(obj);
         }
 
         /// <summary>

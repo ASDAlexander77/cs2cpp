@@ -5962,7 +5962,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
                 foreach (
-                    var rttiPointerDecl in this.typeRttiPointerDeclRequired.Where(rttiPointerDecl => !this.processedRttiPointerTypes.Contains(rttiPointerDecl)))
+                    var rttiPointerDecl in this.typeRttiPointerDeclRequired.Where(rdp => !this.processedRttiPointerTypes.Contains(rdp)))
                 {
                     ////rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
                     rttiPointerDecl.WriteRttiPointerClassName(this.Output);
@@ -5980,7 +5980,7 @@ namespace Il2Native.Logic
                 do
                 {
                     any = false;
-                    foreach (var rttiDecl in this.typeRttiDeclRequired.ToList().Where(rttiDecl => !this.processedRttiTypes.Contains(rttiDecl)))
+                    foreach (var rttiDecl in this.typeRttiDeclRequired.ToList().Where(rd => !this.processedRttiTypes.Contains(rd)))
                     {
                         ////rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
                         rttiDecl.WriteRttiClassName(this.Output);
@@ -5997,7 +5997,7 @@ namespace Il2Native.Logic
             if (this.typeDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
-                foreach (var opaqueType in this.typeDeclRequired.Where(opaqueType => !this.processedTypes.Contains(opaqueType) && !opaqueType.IsArray))
+                foreach (var opaqueType in this.typeDeclRequired.Where(ot => !this.processedTypes.Contains(ot) && !ot.IsArray))
                 {
                     this.WriteTypeDeclarationStart(opaqueType.ToClass());
                     this.Output.WriteLine("opaque");
@@ -6007,7 +6007,7 @@ namespace Il2Native.Logic
             if (this.methodDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
-                foreach (var externalMethodDecl in this.methodDeclRequired.Where(externalMethodDecl => !this.processedMethods.Contains(externalMethodDecl)))
+                foreach (var externalMethodDecl in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m)))
                 {
                     this.Output.Write("declare ");
 
