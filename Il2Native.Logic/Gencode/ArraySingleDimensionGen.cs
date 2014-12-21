@@ -13,6 +13,7 @@ namespace Il2Native.Logic.Gencode
     using Il2Native.Logic.CodeParts;
 
     using PEAssemblyReader;
+    using System;
 
     /// <summary>
     /// </summary>
@@ -29,6 +30,10 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         public const int ArrayDataStartsWith = 5;
+
+        /// <summary>
+        /// </summary>
+        public const int ArraySupportFields = 2;
 
         /// <summary>
         /// </summary>
@@ -189,9 +194,14 @@ namespace Il2Native.Logic.Gencode
                                   ? int.Parse(opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
                                   : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(true);
 
-            var bytesIndex = llvmWriter.GetBytesIndex(data);
+            arrayLength = arrayLength.Align(LlvmWriter.PointerSize);
+
+            var subData = new byte[arrayLength];
+            Array.Copy(data, subData, arrayLength);
+
+            var bytesIndex = llvmWriter.GetBytesIndex(subData);
             var byteType = llvmWriter.ResolveType("System.Byte");
-            var arrayData = llvmWriter.GetArrayTypeReference(string.Concat("@.bytes", bytesIndex), byteType, data.Length);
+            var arrayData = llvmWriter.GetArrayTypeReference(string.Concat("@.bytes", bytesIndex), byteType, arrayLength);
 
             var storedResult = opCode.OpCodeOperands[0].Result;
 
@@ -257,13 +267,33 @@ namespace Il2Native.Logic.Gencode
             var resMul = opCode.Result;
 
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("add i32 {1}, {0}", resMul, arraySystemType.GetTypeSize() + 2 * intType.GetTypeSize(true)); // add header size
+            writer.Write("add i32 {1}, {0}", resMul, arraySystemType.GetTypeSize() + ArraySupportFields * intType.GetTypeSize(true)); // add header size
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;
 
+            // align size
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("srem i32 {1}, {0}", resAdd, LlvmWriter.PointerSize); // add header size
+            writer.WriteLine(string.Empty);
+
+            var resSRem = opCode.Result;
+
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("sub i32 {1}, {0}", resSRem, LlvmWriter.PointerSize); // add header size
+            writer.WriteLine(string.Empty);
+
+            var resSub = opCode.Result;
+
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("add i32 {1}, {0}", resAdd, resSub); // add header size
+            writer.WriteLine(string.Empty);
+
+            var resSize = opCode.Result;
+
+            // new alloc
             var resAlloc = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.Write("call i8* @{1}(i32 {0})", resAdd, llvmWriter.GetAllocator());
+            writer.Write("call i8* @{1}(i32 {0})", resSize, llvmWriter.GetAllocator());
 
             writer.WriteLine(string.Empty);
             llvmWriter.WriteTestNullValueAndThrowException(writer, opCode, resAlloc, "System.OutOfMemoryException", "new_arr");
@@ -273,7 +303,7 @@ namespace Il2Native.Logic.Gencode
             if (!llvmWriter.Gc)
             {
                 writer.WriteLine(
-                    "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", resAlloc, resAdd, LlvmWriter.PointerSize /*Align*/);
+                    "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)", resAlloc, resSize, LlvmWriter.PointerSize /*Align*/);
             }
 
             var opCodeTemp = OpCodePart.CreateNop;

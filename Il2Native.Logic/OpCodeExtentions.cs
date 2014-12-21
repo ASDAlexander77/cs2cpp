@@ -1157,5 +1157,10 @@ namespace Il2Native.Logic
             startOrEnd = false;
             return false;
         }
+
+        public static int Align(this int unalign, int alignSize)
+        {
+            return unalign + alignSize - unalign % alignSize;
+        }
     }
 }

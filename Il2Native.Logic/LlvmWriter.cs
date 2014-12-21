@@ -163,6 +163,8 @@ namespace Il2Native.Logic
             var extension = Path.GetExtension(fileName);
             var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
+
+            // custom settings
             var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
@@ -180,8 +182,8 @@ namespace Il2Native.Logic
             {
                 this.Target = this.Target ?? "armv7-none-linux-androideabi";
                 this.Gctors = false;
-                this.IsLlvm35 = true;
-                this.IsLlvm34OrLower = false;
+                ////this.IsLlvm35 = false;
+                ////this.IsLlvm34OrLower = false;
             }
             else if (args != null && args.Contains("emscripten"))
             {
