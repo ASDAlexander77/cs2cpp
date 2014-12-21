@@ -335,7 +335,7 @@ namespace Il2Native.Logic.Gencode
         {
             parameters = method.GetParameters().ToList();
 
-            var bytesShift = parameters.Count > 4 ? (parameters.Count - 4) * 2 + 4 : parameters.Count;
+            var bytesShift = parameters.Count > (4 - 1) ? (parameters.Count - (4 - 1)) * 2 + (4 - 1) : parameters.Count;
             if (!method.ReturnType.IsVoid())
             {
                 bytesShift++;
@@ -381,7 +381,7 @@ namespace Il2Native.Logic.Gencode
             var index = 1;
             foreach (var parameter in parameters)
             {
-                if (index > 4)
+                if (index > 3)
                 {
                     codeList.Add(Code.Ldarg_S);
                     codeList.Add(index);
