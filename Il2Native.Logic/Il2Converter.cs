@@ -905,23 +905,27 @@ namespace Il2Native.Logic
             {
                 var before = typesWithRequired.Count;
                 var toRemove = new List<Tuple<IType, List<IType>>>();
+                var syncToRemove = new object();
 
                 // step 1 find Root;
                 if (concurrent)
                 {
-                    Parallel.ForEach(typesWithRequired, type => RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject));
+                    Parallel.ForEach(typesWithRequired, type => RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject, syncToRemove));
                 }
                 else
                 {
                     foreach (var type in typesWithRequired)
                     {
-                        RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject);
+                        RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject, syncToRemove);
                     }
                 }
 
-                foreach (var type in toRemove)
+                lock (syncToRemove)
                 {
-                    typesWithRequired.Remove(type);
+                    foreach (var type in toRemove)
+                    {
+                        typesWithRequired.Remove(type);
+                    }
                 }
 
                 var after = typesWithRequired.Count;
@@ -944,7 +948,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void RemoveAllResolvedTypesForType(Tuple<IType, List<IType>> type, List<IType> newOrder, ISet<IType> allTypes, ICollection<Tuple<IType, List<IType>>> toRemove, object syncObject)
+        private static void RemoveAllResolvedTypesForType(Tuple<IType, List<IType>> type, List<IType> newOrder, ISet<IType> allTypes, ICollection<Tuple<IType, List<IType>>> toRemove, object syncObject, object syncToRemove)
         {
             var requiredITypes = type.Item2;
 
@@ -961,7 +965,11 @@ namespace Il2Native.Logic
                 return;
             }
 
-            toRemove.Add(type);
+            lock (syncToRemove)
+            {
+                toRemove.Add(type);
+            }
+
             lock (syncObject)
             {
                 newOrder.Add(type.Item1);

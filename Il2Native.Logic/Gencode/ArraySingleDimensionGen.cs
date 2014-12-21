@@ -197,7 +197,7 @@ namespace Il2Native.Logic.Gencode
             arrayLength = arrayLength.Align(LlvmWriter.PointerSize);
 
             var subData = new byte[arrayLength];
-            Array.Copy(data, subData, arrayLength);
+            Array.Copy(data, subData, Math.Min(data.Length, arrayLength));
 
             var bytesIndex = llvmWriter.GetBytesIndex(subData);
             var byteType = llvmWriter.ResolveType("System.Byte");
