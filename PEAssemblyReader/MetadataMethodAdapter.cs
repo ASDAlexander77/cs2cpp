@@ -51,6 +51,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyToString;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<IEnumerable<IParameter>> lazyParameters;
 
         /// <summary>
@@ -76,6 +80,7 @@ namespace PEAssemblyReader
             this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyParameters = new Lazy<IEnumerable<IParameter>>(this.CalculateParameters);
+            this.lazyToString = new Lazy<string>(this.CalculateToString);
         }
 
         /// <summary>
@@ -587,6 +592,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public override string ToString()
+        {
+            return CalculateToString();
+        }
+
+        private string CalculateToString()
         {
             var result = new StringBuilder();
 
