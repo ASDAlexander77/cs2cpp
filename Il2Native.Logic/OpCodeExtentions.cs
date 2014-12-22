@@ -189,6 +189,13 @@ namespace Il2Native.Logic
             return field.FieldType;
         }
 
+        public static IField GetFieldByName(this IType classType, string fieldName)
+        {
+            var normalType = classType.ToNormal();
+            var field = IlReader.Fields(normalType).FirstOrDefault(f => f.Name == fieldName);
+            return field;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="field">
@@ -1149,6 +1156,11 @@ namespace Il2Native.Logic
 
             startOrEnd = false;
             return false;
+        }
+
+        public static int Align(this int unalign, int alignSize)
+        {
+            return unalign + alignSize - unalign % alignSize;
         }
     }
 }

@@ -298,6 +298,9 @@ namespace System
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public unsafe static extern int sprintf(byte* buffer, byte* format, int t);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public unsafe static extern int sprintf(byte* buffer, byte* format, long t);
+
         public static String Format(long value, bool isInteger, String format, NumberFormatInfo info)
         {
             char formatCh;

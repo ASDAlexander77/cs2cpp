@@ -841,6 +841,8 @@ namespace Il2Native.Logic
                         var method = module.ResolveMethod(token, genericContext);
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
+
+                        this.AddStructType(method.ReturnType);
                         foreach (var methodParameter in method.GetParameters())
                         {
                             this.AddStructType(methodParameter.ParameterType);
@@ -1127,10 +1129,13 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (this.usedGenericSpecialiazedMethods.Contains(method))
+            if (method.IsGenericMethodDefinition || method.DeclaringType.IsGenericTypeDefinition || this.usedGenericSpecialiazedMethods.Contains(method))
             {
                 return;
             }
+
+            Debug.Assert(!method.IsGenericMethodDefinition);
+            Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition);
 
             this.usedGenericSpecialiazedMethods.Add(method);
 
@@ -1153,7 +1158,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.usedGenericSpecialiazedTypes.Add(type);
+            this.usedGenericSpecialiazedTypes.Add(type.ToBareType().ToNormal());
         }
 
         /// <summary>

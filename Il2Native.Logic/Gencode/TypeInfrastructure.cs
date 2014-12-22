@@ -151,9 +151,9 @@ namespace Il2Native.Logic.Gencode
                     var noOpCmpXchg = OpCodePart.CreateNop;
                     noOpCmpXchg.OpCodeOperands = new[] { OpCodePart.CreateNop, OpCodePart.CreateNop, OpCodePart.CreateNop };
                     noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
-                    noOpCmpXchg.OpCodeOperands[1].Result = new ConstValue(null, operandType);
-                    noOpCmpXchg.OpCodeOperands[2].Result = newObjectResult;
-                    noOpCmpXchg.InterlockBase("cmpxchg ", llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic", !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower, llvmWriter);
+                    noOpCmpXchg.OpCodeOperands[1].Result = newObjectResult;
+                    noOpCmpXchg.OpCodeOperands[2].Result = new ConstValue(null, operandType);
+                    noOpCmpXchg.InterlockBase("cmpxchg ", llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic", !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower, llvmWriter, new [] {0, 2, 1});
                     writer.WriteLine(string.Empty);
 
                     // load again

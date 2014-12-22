@@ -3,16 +3,19 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace System.Threading
 {
-
     using System;
-    using System.Threading;
-    using System.Runtime.CompilerServices;
+
     public static class Monitor
     {
+        public static void Enter(Object obj)
+        {
+            
+        }
         
-        public static extern void Enter(Object obj);
-        
-        public static extern void Exit(Object obj);
+        public static void Exit(Object obj)
+        {
+            
+        }
     }
 }
 

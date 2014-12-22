@@ -120,12 +120,15 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void DefaultStub(this LlvmWriter llvmWriter, IMethod method)
+        private static void DefaultStub(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false)
         {
             var writer = llvmWriter.Output;
 
-            writer.WriteLine(" {");
-            writer.Indent++;
+            if (!disableCurlyBrakets)
+            {
+                writer.WriteLine(" {");
+                writer.Indent++;
+            }
 
             writer.Write("ret ");
 
@@ -139,8 +142,11 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(" undef");
             }
 
-            writer.Indent--;
-            writer.WriteLine("}");
+            if (!disableCurlyBrakets)
+            {
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
         }
 
         /// <summary>
@@ -219,20 +225,26 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void WriteDelegateInvoke(this LlvmWriter llvmWriter, IMethod method)
+        private static void WriteDelegateInvoke(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false, bool disableLoadingParams = false)
         {
             var writer = llvmWriter.Output;
 
-            writer.WriteLine(" {");
-            writer.Indent++;
+            if (!disableCurlyBrakets)
+            {
+                writer.WriteLine(" {");
+                writer.Indent++;
+            }
 
             var opCode = OpCodePart.CreateNop;
 
-            // create this variable
-            llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
-            for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
+            if (!disableLoadingParams)
             {
-                llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
+                // create this variable
+                llvmWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
+                for (var i = 1; i <= llvmWriter.GetArgCount() + 1; i++)
+                {
+                    llvmWriter.WriteArgumentCopyDeclaration(llvmWriter.GetArgName(i), i, llvmWriter.GetArgType(i));
+                }
             }
 
             // load 'this' variable
@@ -312,8 +324,169 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("unreachable");
             }
 
-            writer.Indent--;
-            writer.WriteLine("}");
+            if (!disableCurlyBrakets)
+            {
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
+        }
+
+        public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            parameters = method.GetParameters().ToList();
+
+            var bytesShift = parameters.Count > (4 - 1) ? (parameters.Count - (4 - 1)) * 2 + (4 - 1) : parameters.Count;
+            if (!method.ReturnType.IsVoid())
+            {
+                bytesShift++;
+            }
+
+            var codeList = new List<object>();
+            codeList.AddRange(new object[]
+                    {
+                        Code.Ldarg_0,
+                        Code.Ldfld,
+                        1,
+                        0,
+                        0,
+                        0,
+
+                        Code.Brtrue_S,
+                        5,
+
+                        Code.Call,
+                        2,
+                        0,
+                        0,
+                        0,
+
+                        // multicast
+                        Code.Ldc_I4_0,
+                        Code.Stloc_0,
+
+                        Code.Br_S,
+                        0x11 + bytesShift,
+
+                        Code.Ldarg_0,
+                        Code.Ldfld,
+                        3,
+                        0,
+                        0,
+                        0,
+
+                        Code.Ldloc_0,
+                        Code.Ldelem_Ref
+                    });
+
+            var index = 1;
+            foreach (var parameter in parameters)
+            {
+                if (index > 3)
+                {
+                    codeList.Add(Code.Ldarg_S);
+                    codeList.Add(index);
+                }
+                else
+                {
+                    switch (index)
+                    {
+                        case 1:
+                            codeList.Add(Code.Ldarg_1);
+                            break;
+                        case 2:
+                            codeList.Add(Code.Ldarg_2);
+                            break;
+                        case 3:
+                            codeList.Add(Code.Ldarg_3);
+                            break;
+                    }
+                }
+
+                index++;
+            }
+
+            codeList.AddRange(new object[]
+                    {
+                        Code.Callvirt,
+                        4,
+                        0,
+                        0,
+                        0,
+                    });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(new object[] 
+                    { 
+                        Code.Stloc_1
+                    });
+            }
+
+            codeList.AddRange(new object[]
+                    {
+                        Code.Ldloc_0,
+                        Code.Ldc_I4_1,
+                        Code.Add,
+                        Code.Stloc_0,
+
+                        // for test
+                        Code.Ldloc_0,
+                        Code.Ldarg_0,
+                        Code.Ldfld,
+                        1,
+                        0,
+                        0,
+                        0,
+                        Code.Blt_S,
+                        -(0x1a + bytesShift)
+                    });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(new object[] 
+                    { 
+                        Code.Ldloc_1
+                    });
+            }
+
+            codeList.AddRange(new object[] 
+                    { 
+                        Code.Ret
+                    });
+
+            code = codeList.ToArray();
+
+            locals = new List<IType>();
+            locals.Add(codeWriter.ResolveType("System.Int32"));
+            if (!method.ReturnType.IsVoid())
+            {
+                locals.Add(method.ReturnType);
+            }
+
+            tokenResolutions = new List<object>();
+
+            // 1
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
+
+            // call Delegate.Invoke
+            // 2
+            tokenResolutions.Add(new SynthesizedStaticMethod(
+                "",
+                method.DeclaringType,
+                codeWriter.ResolveType("System.Void"),
+                new List<IParameter>(),
+                (llvmWriter, opCode) =>
+                {
+                    // get element size
+                    llvmWriter.WriteDelegateInvoke(method, true, true);
+                }));
+
+            // 3
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList"));
+
+            // call Default stub for now - "ret undef";
+            // 4
+            tokenResolutions.Add(IlReader.Methods(method.DeclaringType).First(m => m.Name == "Invoke"));
         }
 
         /// <summary>

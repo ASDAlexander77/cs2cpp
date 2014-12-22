@@ -51,6 +51,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<string> lazyToString;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IEnumerable<IParameter>> lazyParameters;
+
+        /// <summary>
+        /// </summary>
         private readonly MethodSymbol methodDef;
 
         /// <summary>
@@ -71,6 +79,8 @@ namespace PEAssemblyReader
             this.lazyMetadataName = new Lazy<string>(this.CalculateMetadataName);
             this.lazyMetadataFullName = new Lazy<string>(this.CalculateMetadataFullName);
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
+            this.lazyParameters = new Lazy<IEnumerable<IParameter>>(this.CalculateParameters);
+            this.lazyToString = new Lazy<string>(this.CalculateToString);
         }
 
         /// <summary>
@@ -436,7 +446,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            return this.MetadataFullName.CompareTo(name.MetadataFullName);
+            return this.FullName.CompareTo(name.FullName);
         }
 
         /// <summary>
@@ -447,13 +457,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override bool Equals(object obj)
         {
-            var type = obj as IName;
-            if (type != null)
-            {
-                return this.CompareTo(type) == 0;
-            }
-
-            return base.Equals(obj);
+            return this.ToString().CompareTo(obj.ToString()) == 0;
         }
 
         /// <summary>
@@ -540,7 +544,12 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IParameter> GetParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext));
+            return this.lazyParameters.Value;
+        }
+
+        public IEnumerable<IParameter> CalculateParameters()
+        {
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext)).ToList();
         }
 
         /// <summary>
@@ -583,6 +592,11 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public override string ToString()
+        {
+            return CalculateToString();
+        }
+
+        private string CalculateToString()
         {
             var result = new StringBuilder();
 

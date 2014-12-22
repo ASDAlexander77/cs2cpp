@@ -77,7 +77,7 @@
                 "",
                 codeWriter.ResolveType("System.Object"), 
                 codeWriter.ResolveType("System.Byte").ToPointerType(),
-                new[] { codeWriter.ResolveType("System.Int32") },
+                new[] { codeWriter.ResolveType("System.Int32").ToParameter() },
                 (llvmWriter, opCode) =>
             {
                 // write method allocation
@@ -87,7 +87,7 @@
                 "",
                 codeWriter.ResolveType("System.Object"),
                 codeWriter.ResolveType("System.Void"),
-                new[] { codeWriter.ResolveType("System.Byte").ToPointerType(), codeWriter.ResolveType("System.Byte").ToPointerType(), codeWriter.ResolveType("System.Int32") },
+                new[] { codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(), codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(), codeWriter.ResolveType("System.Int32").ToParameter() },
                 (llvmWriter, opCode) =>
                 {
                     // write method copy
@@ -99,7 +99,7 @@
             locals.Add(codeWriter.ResolveType("System.Byte").ToPointerType());
             locals.Add(codeWriter.ResolveType("System.Int32"));
 
-            var parameters = new List<IType>();
+            var parameters = new List<IParameter>();
 
             MethodBodyBank.Register(MemberwiseCloneGen.Name, MemberwiseCloneGen.ByteCode, tokenResolutions, locals, parameters);
         }

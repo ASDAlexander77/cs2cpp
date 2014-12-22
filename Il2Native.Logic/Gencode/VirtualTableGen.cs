@@ -78,6 +78,9 @@ namespace Il2Native.Logic.Gencode
             // get all virtual methods in current type and replace or append
             foreach (var virtualOrAbstractMethod in IlReader.Methods(thisType).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride))
             {
+                Debug.Assert(!virtualOrAbstractMethod.IsGenericMethodDefinition);
+                Debug.Assert(!virtualOrAbstractMethod.DeclaringType.IsGenericTypeDefinition);
+
                 if (virtualOrAbstractMethod.IsAbstract && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
                     virtualTable.Add(new LlvmWriter.Pair<IMethod, IMethod> { Key = virtualOrAbstractMethod, Value = virtualOrAbstractMethod });

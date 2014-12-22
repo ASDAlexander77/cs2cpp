@@ -363,7 +363,7 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                if (current.HasElementType && current.GetElementType().IsGenericTypeDefinition)
+                if (current.HasElementType && current.ToBareType().IsGenericTypeDefinition)
                 {
                     return true;
                 }
@@ -376,7 +376,7 @@ namespace PEAssemblyReader
                 current = current.DeclaringType;
             }
 
-            return false;
+            return current.IsGenericParameter;
         }
 
         /// <summary>
@@ -624,6 +624,12 @@ namespace PEAssemblyReader
             }
 
             cmp = this.Namespace.CompareTo(type.Namespace);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            cmp = this.IsByRef.CompareTo(type.IsByRef);
             if (cmp != 0)
             {
                 return cmp;
@@ -1012,6 +1018,26 @@ namespace PEAssemblyReader
         public IType ToPointerType()
         {
             return new PointerTypeSymbol(this.typeDef).ResolveGeneric(this.GenericContext);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IParameter ToParameter(bool isOut = false, bool isRef = false, string name = "value")
+        {
+            var refKind = RefKind.None;
+            if (isOut)
+            {
+                refKind |= RefKind.Out;
+            }
+
+            if (isRef)
+            {
+                refKind |= RefKind.Ref;
+            }
+
+            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind, name), this.GenericContext);
         }
 
         /// <summary>

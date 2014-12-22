@@ -16,11 +16,21 @@
 
         public IField ResolveField(int token, IGenericContext genericContext)
         {
+            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            {
+                return tokenResolutions[token - 1] as IField;
+            }
+
             return this.method.Module.ResolveField(token, genericContext);
         }
 
         public IMember ResolveMember(int token, IGenericContext genericContext)
         {
+            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            {
+                return tokenResolutions[token - 1] as IMember;
+            }
+
             return this.method.Module.ResolveMember(token, genericContext);
         }
 

@@ -32,14 +32,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IType> parameters)
+        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IParameter> parameters)
             : base(declaringType, name)
         {
             this.returnType = returnType;
-            this.parameters = parameters.Select(p => new SynthesizedValueParameter(p)).ToList();
+            this.parameters = parameters.ToList();
         }
 
-        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IType> parameters, Action<LlvmWriter, OpCodePart> action)
+        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IParameter> parameters, Action<LlvmWriter, OpCodePart> action)
             : this(name, declaringType, returnType, parameters)
         {
             this.action = action;

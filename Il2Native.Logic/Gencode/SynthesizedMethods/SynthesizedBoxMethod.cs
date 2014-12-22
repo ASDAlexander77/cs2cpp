@@ -42,7 +42,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </returns>
         public override IEnumerable<IParameter> GetParameters()
         {
-            return new[] { new SynthesizedValueParameter(this.Type.ToNormal()) };
+            return new[] { this.Type.ToNormal().ToParameter() };
         }
     }
 }

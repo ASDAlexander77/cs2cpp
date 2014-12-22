@@ -73,7 +73,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter)
+        public static void InterlockBase(this OpCodePart opCodeMethodInfo, string oper, string attribs, bool extractValue, LlvmWriter llvmWriter, int[] operands)
         {
             var writer = llvmWriter.Output;
 
@@ -109,16 +109,9 @@ namespace Il2Native.Logic.Gencode
             writer.Write(oper);
 
             var index = 0;
-            foreach (var operand in opCodeMethodInfo.OpCodeOperands)
+            foreach (var operandNumber in operands)
             {
-                if (index++ > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                operand.Result.Type.WriteTypePrefix(writer);
-                writer.Write(' ');
-                llvmWriter.WriteResult(operand.Result);
+                llvmWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
             }
 
             writer.WriteLine(attribs);
@@ -141,6 +134,21 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; {0} end", oper);
+        }
+
+        private static int WriteParameter(this LlvmWriter llvmWriter, int index, OpCodePart operand)
+        {
+            LlvmIndentedTextWriter writer = llvmWriter.Output;
+
+            if (index++ > 0)
+            {
+                writer.Write(", ");
+            }
+
+            operand.Result.Type.WriteTypePrefix(writer);
+            writer.Write(' ');
+            llvmWriter.WriteResult(operand.Result);
+            return index;
         }
 
         /// <summary>
@@ -199,12 +207,12 @@ namespace Il2Native.Logic.Gencode
 
                 case "Exchange`1":
                 case "Exchange":
-                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter);
+                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter, new [] {0, 1});
                     break;
 
                 case "CompareExchange`1":
                 case "CompareExchange":
-                    opCodeMethodInfo.InterlockBase("cmpxchg ", llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic", !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower, llvmWriter);
+                    opCodeMethodInfo.InterlockBase("cmpxchg ", llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic", !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower, llvmWriter, new [] {0, 2, 1});
                     break;
             }
         }

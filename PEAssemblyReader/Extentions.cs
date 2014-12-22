@@ -101,6 +101,21 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        public static IType ToBareType(this IType type)
+        {
+            var current = type;
+            while (current.HasElementType)
+            {
+                current = current.GetElementType();
+            }
+
+            return current;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="symbol">
         /// </param>
         /// <param name="sb">

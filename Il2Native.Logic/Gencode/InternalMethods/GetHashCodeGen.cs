@@ -77,7 +77,7 @@
             locals.Add(codeWriter.ResolveType("System.Int32"));
             locals.Add(codeWriter.ResolveType("System.Byte").ToPointerType());
 
-            var parameters = new List<IType>();
+            var parameters = new List<IParameter>();
 
             MethodBodyBank.Register(GetHashCodeGen.Name, GetHashCodeGen.ByteCode, tokenResolutions, locals, parameters);
         }
