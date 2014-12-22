@@ -29,6 +29,9 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* format, int t);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public unsafe static extern int wprintf(char* format, long t);
+
         public static int Read()
         {
             throw new NotImplementedException();
