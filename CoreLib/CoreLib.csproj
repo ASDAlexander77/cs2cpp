@@ -114,6 +114,11 @@
     <Compile Include="System\IntPtr.cs" />
     <Compile Include="System\InvalidCastException.cs" />
     <Compile Include="System\InvalidOperationException.cs" />
+    <Compile Include="System\IO\FileAccess.cs" />
+    <Compile Include="System\IO\FileMode.cs" />
+    <Compile Include="System\IO\FileOptions.cs" />
+    <Compile Include="System\IO\FileShare.cs" />
+    <Compile Include="System\IO\FileStream.cs" />
     <Compile Include="System\IO\TextWriter.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />
@@ -151,6 +156,8 @@
     <Compile Include="System\Text\UTF8Decoder.cs" />
     <Compile Include="System\Text\UTF8Encoding.cs" />
     <Compile Include="System\ThreadAttributes.cs" />
+    <Compile Include="System\Threading\LazyInitializer.cs" />
+    <Compile Include="System\Threading\Volatile.cs" />
     <Compile Include="System\TimeSpan.cs" />
     <Compile Include="System\TimeZone.cs" />
     <Compile Include="System\Type.cs" />
