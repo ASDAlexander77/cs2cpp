@@ -165,7 +165,7 @@ namespace System.Collections
 
         public virtual IEnumerator GetEnumerator()
         {
-            return new Array.SZArrayEnumerator(_items, 0, _size);
+            return new Array.ArrayEnumerator<object>(_items, 0, _size);
         }
 
         public virtual int IndexOf(Object value)
