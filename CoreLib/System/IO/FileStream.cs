@@ -1104,6 +1104,7 @@ namespace System.IO
             int r = 0;
 
             hr = 0;
+            numBytesWritten = handle.WriteFile(bytes, offset, count);
 
             return numBytesWritten;
         }

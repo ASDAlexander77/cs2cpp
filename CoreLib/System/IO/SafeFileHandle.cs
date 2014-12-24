@@ -1,8 +1,7 @@
 ﻿namespace System.IO
 {
-    using System;
-    using System.Runtime.CompilerServices;
-    using System.Text;
+    using Runtime.CompilerServices;
+    using Text;
 
     public class SafeFileHandle
     {
@@ -14,6 +13,9 @@
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private extern unsafe static int fread(void* ptr, int size, int count, void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fwrite(void* ptr, int size, int count, void* stream);
 
         private unsafe void* file;
 
@@ -109,6 +111,17 @@
                 fixed (byte* bytesPtr = &bytes[offset])
                 {
                     return fread(bytesPtr, sizeof(byte), count, this.file);
+                }
+            }
+        }
+
+        internal int WriteFile(byte[] bytes, int offset, int count)
+        {
+            unsafe
+            {
+                fixed (byte* bytesPtr = &bytes[offset])
+                {
+                    return fwrite(bytesPtr, sizeof(byte), count, this.file);
                 }
             }
         }
