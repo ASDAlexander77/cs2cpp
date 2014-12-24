@@ -554,6 +554,7 @@ namespace System.IO
 
         private void FlushOSBuffer()
         {
+            _handle.Flush();
         }
 
         // Reading is done by blocks from the file, but someone could read

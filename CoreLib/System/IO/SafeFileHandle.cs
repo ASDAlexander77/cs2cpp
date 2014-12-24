@@ -17,6 +17,9 @@
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private extern unsafe static int fwrite(void* ptr, int size, int count, void* stream);
 
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fflush(void* stream);
+
         private unsafe void* file;
 
         internal bool IsInvalid
@@ -123,6 +126,14 @@
                 {
                     return fwrite(bytesPtr, sizeof(byte), count, this.file);
                 }
+            }
+        }
+
+        public void Flush()
+        {
+            unsafe
+            {
+                fflush(this.file);
             }
         }
     }
