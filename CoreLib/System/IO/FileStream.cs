@@ -366,7 +366,7 @@ namespace System.IO
 
         // Verifies that this handle supports synchronous IO operations (unless you
         // didn't open it for either reading or writing).
-        private unsafe void VerifyHandleIsSync()
+        private void VerifyHandleIsSync()
         {
             // Do NOT use this method on pipes.  Reading or writing to a pipe may
             // cause an app to block incorrectly, introducing a deadlock (depending
@@ -720,7 +720,7 @@ namespace System.IO
             return n;
         }
 
-        private unsafe int ReadCore(byte[] buffer, int offset, int count)
+        private int ReadCore(byte[] buffer, int offset, int count)
         {
             // Make sure we are reading from the right spot
             if (_exposedHandle)
@@ -1061,7 +1061,7 @@ namespace System.IO
 
 
         // __ConsoleStream also uses this code. 
-        private unsafe int ReadFileNative(SafeFileHandle handle, byte[] bytes, int offset, int count, out int hr)
+        private int ReadFileNative(SafeFileHandle handle, byte[] bytes, int offset, int count, out int hr)
         {
             // Don't corrupt memory when multiple threads are erroneously writing
             // to this stream simultaneously.
@@ -1079,6 +1079,7 @@ namespace System.IO
             int numBytesRead = 0;
 
             hr = 0;
+            numBytesRead = handle.ReadFile(bytes, offset, count);
 
             return numBytesRead;
         }

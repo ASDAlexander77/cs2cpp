@@ -10,7 +10,10 @@
         private extern unsafe static void* fopen(byte* fileName, byte* mode);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static void* fclose(void* fileHandler);
+        private extern unsafe static int fclose(void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fread(void* ptr, int size, int count, void* stream);
 
         private unsafe void* file;
 
@@ -95,6 +98,17 @@
                 fixed (byte* modePtr = &Encoding.ASCII.GetBytes(fileMode)[0])
                 {
                     this.file = fopen(fileNamePtr, modePtr);
+                }
+            }
+        }
+
+        internal int ReadFile(byte[] bytes, int offset, int count)
+        {
+            unsafe
+            {
+                fixed (byte* bytesPtr = &bytes[offset])
+                {
+                    return fread(bytesPtr, sizeof(byte), count, this.file);
                 }
             }
         }

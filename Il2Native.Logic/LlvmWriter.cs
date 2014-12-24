@@ -347,11 +347,6 @@ namespace Il2Native.Logic
             var line = this.debugInfoGenerator.CurrentDebugLine;
             if (line.HasValue)
             {
-                if (line == 19999)
-                {
-                    int i = 0;
-                }
-
                 this.Output.Write(", !dbg !{0}", line);
             }
         }

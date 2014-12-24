@@ -10,8 +10,6 @@ namespace System
 
     public static class GC
     {
-
-        
         private static bool AnyPendingFinalizers()
         {
             throw new NotImplementedException();
@@ -25,12 +23,10 @@ namespace System
         
         public static void SuppressFinalize(Object obj)
         {
-            throw new NotImplementedException();
+            ////throw new NotImplementedException();
         }
 
-        
         public static extern void ReRegisterForFinalize(Object obj);
-
     }
 }
 
