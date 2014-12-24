@@ -53,6 +53,7 @@ namespace Ll2NativeTests
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+        private const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
         private const bool Llvm35Support = false;
         private const bool Llvm34Support = false;
@@ -82,7 +83,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = false;
+        private const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
@@ -91,7 +92,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        private const bool CompileWithOptimization = true;
+        private const bool CompileWithOptimization = false;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -131,6 +132,16 @@ namespace Ll2NativeTests
         {
             //Debug.Listeners.Clear();
             Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
+        }
+
+        /// </summary>
+        [TestMethod]
+        public void TestSscli()
+        {
+            foreach (var file in Directory.EnumerateFiles(SscliSourcePath, "*.cs", SearchOption.AllDirectories))
+            {
+                CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", true);
+            }
         }
 
         /// <summary>
@@ -611,13 +622,13 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void Compile(string fileName, string source = SourcePath, string output = OutputPath)
+        private static void Compile(string fileName, string source = SourcePath)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
             try
             {
-                Convert(fileName);
+                Convert(fileName, source);
             }
             catch (BadImageFormatException ex)
             {
@@ -639,11 +650,31 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void CompileAndRun(string fileName, string source = SourcePath)
+        private static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
         {
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
 
-            Convert(fileName, source);
+            if (!ignoreBadFiles)
+            {
+                Convert(fileName, source);
+            }
+            else
+            {
+                try
+                {
+                    Convert(fileName, source);
+                }
+                catch (BadImageFormatException ex)
+                {
+                    Debug.WriteLine(ex);
+                    return;
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Debug.WriteLine(ex);
+                    return;
+                }
+            }
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 

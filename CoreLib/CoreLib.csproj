@@ -120,6 +120,7 @@
     <Compile Include="System\IO\FileOptions.cs" />
     <Compile Include="System\IO\FileShare.cs" />
     <Compile Include="System\IO\FileStream.cs" />
+    <Compile Include="System\IO\SafeFileHandle.cs" />
     <Compile Include="System\IO\TextWriter.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />

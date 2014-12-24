@@ -390,6 +390,13 @@ namespace Il2Native.Logic
             return method.IsUnmanaged && !method.IsUnmanagedMethodReference && !method.Name.StartsWith("llvm_");
         }
 
+        public static bool IsSkipped(this IMethod method)
+        {
+            return method.IsUnmanaged && !method.IsUnmanagedMethodReference && 
+                (method.Name == "llvm_memcpy_p0i8_p0i8_i32"
+                || method.Name == "llvm_memset_p0i8_i32");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

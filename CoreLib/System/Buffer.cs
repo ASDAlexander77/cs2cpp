@@ -207,7 +207,7 @@
 
         internal unsafe static void Memcpy(byte* dest, byte* src, int len)
         {
-            llvm_memcpy_p0i8_p0i8_i32(dest, src, len, IntPtr.Size, false);
+            llvm_memcpy_p0i8_p0i8_i32(dest, src, len, 4, false);
         }
     }
 }

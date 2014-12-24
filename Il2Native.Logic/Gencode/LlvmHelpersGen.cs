@@ -193,6 +193,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
+                    Debug.Assert(!toType.IsPointer);
                     llvmWriter.UnaryOper(writer, opCode, "ptrtoint", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else if (toType.IsPointer || toType.IsByRef)
@@ -973,6 +974,8 @@ namespace Il2Native.Logic.Gencode
         public static void WritePtrToInt(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
         {
             var writer = llvmWriter.Output;
+
+            Debug.Assert(!toType.IsPointer);
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("ptrtoint ");

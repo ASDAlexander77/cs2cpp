@@ -35,18 +35,6 @@ using System.Threading;
 
 namespace System.IO
 {
-
-    public class SafeFileHandle
-    {
-        public bool IsInvalid;
-        public bool IsClosed { get; set; }
-
-        internal void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     // This is an internal object implementing IAsyncResult with fields
     // for all of the relevant data necessary to complete the IO operation.
     // This is used by AsyncFSCallback and all of the async methods.
@@ -302,6 +290,10 @@ namespace System.IO
                 _canRead = (access & FileAccess.Read) != 0;
                 _canWrite = (access & FileAccess.Write) != 0;
             }
+
+            // create safehandle
+            _handle = new IO.SafeFileHandle();
+            _handle.OpenFile(filePath, mode, access);
 
             _canSeek = true;
             _isPipe = false;
@@ -585,10 +577,7 @@ namespace System.IO
         // and there is left over data (_writePos > 0), this function must be called.
         private void FlushWrite(bool calledFromFinalizer)
         {
-            
-
             WriteCore(_buffer, 0, _writePos);
-
             _writePos = 0;
         }
 
@@ -943,14 +932,6 @@ namespace System.IO
 
         private unsafe void WriteCore(byte[] buffer, int offset, int count)
         {
-            
-            
-
-            
-            
-            
-            
-
             // Make sure we are writing to the position that we think we are
             if (_exposedHandle)
                 VerifyOSHandlePosition();

@@ -1651,14 +1651,14 @@ namespace Il2Native.Logic
             }
 
             // pointer to int, int to pointerf
-            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && opCode.Result.Type.IsPointer)
+            if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef && opCode.Result.Type.IsPointer)
             {
                 this.LlvmIntConvert(opCode, "ptrtoint", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
-            if (opCode.Result.Type.IntTypeBitSize() > 0 && destType.IsPointer && !opCode.Result.Type.IsPointer)
+            if (opCode.Result.Type.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) && !opCode.Result.Type.IsPointer)
             {
                 this.LlvmIntConvert(opCode, "inttoptr", destType);
                 writer.WriteLine(string.Empty);
@@ -3395,7 +3395,8 @@ namespace Il2Native.Logic
                 this.MainMethod = method;
             }
 
-            if (method.IsAbstract)
+            if (method.IsAbstract
+                || method.IsSkipped())
             {
                 return;
             }

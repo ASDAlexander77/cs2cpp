@@ -29,16 +29,6 @@
             }
         }
 
-        public static float Read(ref float location)
-        {
-            return Interlocked.CompareExchange(ref location, 0, 0);
-        }
-
-        public static double Read(ref double location)
-        {
-            return Interlocked.CompareExchange(ref location, 0, 0);
-        }
-
         public static T Read<T>(ref T location) where T : class
         {
             return Interlocked.CompareExchange(ref location, default(T), default(T));
@@ -63,16 +53,6 @@
                     Interlocked.Exchange(ref *(long*)pLocation, (long)value);
                 }
             }
-        }
-
-        public static void Write(ref float location, float value)
-        {
-            Interlocked.Exchange(ref location, value);
-        }
-
-        public static void Write(ref double location, double value)
-        {
-            Interlocked.Exchange(ref location, value);
         }
 
         public static void Write<T>(ref T location, T value) where T : class
