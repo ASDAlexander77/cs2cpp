@@ -46,7 +46,7 @@
 
         internal void Dispose()
         {
-            if (this.IsInvalid)
+            if (!this.IsInvalid)
             {
                 unsafe
                 {

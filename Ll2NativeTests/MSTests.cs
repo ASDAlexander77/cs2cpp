@@ -83,7 +83,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool DebugInfo = false;
+        private const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
@@ -624,7 +624,10 @@ namespace Ll2NativeTests
         /// </param>
         private static void Compile(string fileName, string source = SourcePath)
         {
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
             try
             {
@@ -641,7 +644,10 @@ namespace Ll2NativeTests
                 return;
             }
 
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Compiling LLVM for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
             ExecCompile(fileName, justCompile: true);
         }
@@ -652,7 +658,10 @@ namespace Ll2NativeTests
         /// </param>
         private static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
         {
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
             if (!ignoreBadFiles)
             {
