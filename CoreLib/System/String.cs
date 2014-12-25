@@ -643,6 +643,25 @@ namespace System
             return str;
         }
 
+        unsafe static internal String CreateStringFromEncoding(
+            byte* bytes, int byteLength, Encoding encoding)
+        {
+            // Get our string length
+            int stringLength = encoding.GetCharCount(bytes, byteLength, null);
+
+            // They gave us an empty string if they needed one
+            // 0 bytelength might be possible if there's something in an encoder
+            if (stringLength == 0)
+                return String.Empty;
+
+            String s = new String('\x0', stringLength);
+            fixed (char* pTempChars = &s.chars[0])
+            {
+                int doubleCheck = encoding.GetChars(bytes, byteLength, pTempChars, stringLength, null);
+            }
+
+            return s;
+        }
     }
 }
 

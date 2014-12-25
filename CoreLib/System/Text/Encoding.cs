@@ -1,7 +1,7 @@
-#define FEATURE_UTF7
-#define FEATURE_UTF32
+//#define FEATURE_UTF7
+//#define FEATURE_UTF32
 #define FEATURE_ASCII
-#define FEATURE_LATIN1
+//#define FEATURE_LATIN1
 
 namespace System.Text
 {

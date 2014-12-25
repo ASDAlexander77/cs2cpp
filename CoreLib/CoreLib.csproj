@@ -176,6 +176,7 @@
     <Compile Include="System\Text\InternalEncoderBestFitFallback.cs" />
     <Compile Include="System\Text\Normalization.cs" />
     <Compile Include="System\Text\StringBuilder.cs" />
+    <Compile Include="System\Text\UnicodeEncoding.cs" />
     <Compile Include="System\Text\UTF8Encoding.cs" />
     <Compile Include="System\ThreadAttributes.cs" />
     <Compile Include="System\Threading\LazyInitializer.cs" />
