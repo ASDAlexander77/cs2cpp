@@ -869,10 +869,11 @@ namespace Il2Native.Logic
             {
                 case Code.Call:
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    var size = (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) +
+                               methodBase.GetParameters().Count();
                     this.FoldNestedOpCodes(
                         opCode,
-                        (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) +
-                        methodBase.GetParameters().Count(),
+                        size,
                         methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
@@ -1544,74 +1545,6 @@ namespace Il2Native.Logic
             {
                 this.OpsByGroupAddressEnd[opCodePart.GroupAddressEnd] = opCodePart;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="currentArgument">
-        /// </param>
-        /// <param name="stackBranches">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private bool IsConditionalExpression
-            (OpCodePart currentArgument, StackBranches stackBranches,
-                out bool whenSecondValueSeparatedByExpression)
-        {
-            whenSecondValueSeparatedByExpression = false;
-
-            if (!stackBranches.Any())
-            {
-                return false;
-            }
-
-            var firstValue = currentArgument;
-
-            var middleJump = firstValue.PreviousOpCodeGroup(this);
-            var isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
-
-            var secondValue = stackBranches.First();
-
-            if (!isJumpForward)
-            {
-                // check value in stack if it is followed by jump
-                middleJump = secondValue.NextOpCodeGroup(this);
-                isJumpForward = middleJump != null && middleJump.IsBranch() && middleJump.IsJumpForward();
-                if (!isJumpForward)
-                {
-                    return false;
-                }
-
-                whenSecondValueSeparatedByExpression = true;
-            }
-
-            while (true)
-            {
-                var firstCondJump = secondValue.PreviousOpCodeGroup(this);
-                if (firstCondJump == null)
-                {
-                    return false;
-                }
-
-                var isCondJumpForward = firstCondJump != null && firstCondJump.IsCondBranch() &&
-                                        firstCondJump.IsJumpForward()
-                                        && firstCondJump.JumpAddress() == middleJump.AddressEnd;
-                if (!isCondJumpForward)
-                {
-                    secondValue = firstCondJump;
-                    continue;
-                }
-
-                break;
-            }
-
-            // expression is not full yet
-            if (firstValue.GroupAddressEnd != middleJump.JumpAddress())
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private OpCodePart PopValue(bool varArg = false)
