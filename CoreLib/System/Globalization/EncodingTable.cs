@@ -114,7 +114,7 @@ namespace System.Globalization
             int i;
             for (i = 0; i < lastCodePageItem; i++)
             {
-                arrayEncodingInfo[i] = new EncodingInfo(codePageDataPtr[i].codePage, codePageDataPtr[i].Names,
+                arrayEncodingInfo[i] = new EncodingInfo(codePageDataPtr[i].codePage, codePageDataPtr[i].Names[0],
                     "Globalization.cp_" + codePageDataPtr[i].codePage);
             }
 
@@ -252,7 +252,7 @@ namespace System.Globalization
         internal UInt16 codePage;
         internal UInt16 uiFamilyCodePage;
         internal uint flags;
-        internal string Names;
+        internal string[] Names;
     }
 
 }

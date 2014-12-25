@@ -472,7 +472,7 @@ namespace System.Text
         {
             get
             {
-                return "Globalization.cp_" + m_codePage);
+                return "Globalization.cp_" + m_codePage;
             }
         }
 

@@ -127,7 +127,7 @@
                 {
                     return false;
                 }
-                return String.Compare(x, y);
+                return String.Compare(x, y) == 0;
             }
             return x.Equals(y);
         }

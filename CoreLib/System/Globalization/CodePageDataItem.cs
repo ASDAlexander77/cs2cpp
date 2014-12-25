@@ -1,9 +1,6 @@
 ﻿namespace System.Globalization
 {
-    using System.Text;
-    using System.Runtime.Remoting;
     using System;
-    using System.Security;
 
     //
     // Data item for EncodingTable.  Along with EncodingTable, they are used by 
@@ -31,48 +28,13 @@
             m_flags = EncodingTable.codePageDataPtr[dataIndex].flags;
         }
 
-        unsafe internal static String CreateString(sbyte* pStrings, uint index)
-        {
-            if (pStrings[0] == '|') // |str1|str2|str3
-            {
-                int start = 1;
-
-                for (int i = 1; true; i++)
-                {
-                    sbyte ch = pStrings[i];
-
-                    if ((ch == '|') || (ch == 0))
-                    {
-                        if (index == 0)
-                        {
-                            return new String(pStrings, start, i - start);
-                        }
-
-                        index--;
-                        start = i + 1;
-
-                        if (ch == 0)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                throw new ArgumentException("pStrings");
-            }
-            else
-            {
-                return new String(pStrings);
-            }
-        }
-
         unsafe public String WebName
         {
             get
             {
                 if (m_webName == null)
                 {
-                    m_webName = CreateString(EncodingTable.codePageDataPtr[m_dataIndex].Names, 0);
+                    m_webName = EncodingTable.codePageDataPtr[m_dataIndex].Names[0];
                 }
                 return m_webName;
             }
@@ -92,7 +54,7 @@
             {
                 if (m_headerName == null)
                 {
-                    m_headerName = CreateString(EncodingTable.codePageDataPtr[m_dataIndex].Names, 1);
+                    m_headerName = EncodingTable.codePageDataPtr[m_dataIndex].Names[1];
                 }
                 return m_headerName;
             }
@@ -104,7 +66,7 @@
             {
                 if (m_bodyName == null)
                 {
-                    m_bodyName = CreateString(EncodingTable.codePageDataPtr[m_dataIndex].Names, 2);
+                    m_bodyName = EncodingTable.codePageDataPtr[m_dataIndex].Names[2];
                 }
                 return m_bodyName;
             }
