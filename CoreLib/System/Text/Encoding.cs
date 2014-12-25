@@ -169,10 +169,6 @@ namespace System.Text
 
         internal int m_codePage = 0;
 
-        // dataItem should be internal (not private). otherwise it will break during the deserialization
-        // of the data came from Everett
-        internal CodePageDataItem dataItem = null;
-
         [NonSerialized]
         internal bool m_deserializedFromEverett = false;
 
@@ -365,12 +361,6 @@ namespace System.Text
 #endif
                         default:
                             {
-                                // Is it a valid code page?
-                                if (EncodingTable.GetCodePageDataItem(codepage) == null)
-                                {
-                                    throw new NotSupportedException("NoCodepageData");
-                                }
-
                                 result = UTF8;
                                 break;
                             }
@@ -396,74 +386,10 @@ namespace System.Text
 
             return fallbackEncoding;
         }
-
-        // Returns an Encoding object for a given name or a given code page value.
-        //
-        
-        public static Encoding GetEncoding(String name)
-        {
-            //
-            // NOTE: If you add a new encoding that can be requested by name, be sure to
-            // add the corresponding item in EncodingTable.
-            // Otherwise, the code below will throw exception when trying to call
-            // EncodingTable.GetCodePageFromName().
-            //
-            return (GetEncoding(EncodingTable.GetCodePageFromName(name)));
-        }
-
-        // Returns an Encoding object for a given name or a given code page value.
-        //
-        
-        public static Encoding GetEncoding(String name,
-            EncoderFallback encoderFallback, DecoderFallback decoderFallback)
-        {
-            //
-            // NOTE: If you add a new encoding that can be requested by name, be sure to
-            // add the corresponding item in EncodingTable.
-            // Otherwise, the code below will throw exception when trying to call
-            // EncodingTable.GetCodePageFromName().
-            //
-            return (GetEncoding(EncodingTable.GetCodePageFromName(name), encoderFallback, decoderFallback));
-        }
-
-        // Return a list of all EncodingInfo objects describing all of our encodings
-        
-        public static EncodingInfo[] GetEncodings()
-        {
-            return EncodingTable.GetEncodings();
-        }
-
-        
+       
         public virtual byte[] GetPreamble()
         {
             return EmptyArray<Byte>.Value;
-        }
-
-        private void GetDataItem()
-        {
-            if (dataItem == null)
-            {
-                dataItem = EncodingTable.GetCodePageDataItem(m_codePage);
-                if (dataItem == null)
-                {
-                    throw new NotSupportedException("NoCodepageData");
-                }
-            }
-        }
-
-        // Returns the name for this encoding that can be used with mail agent body tags.
-        // If the encoding may not be used, the string is empty.
-
-        public virtual String BodyName
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return (dataItem.BodyName);
-            }
         }
 
         // Returns the human-readable description of the encoding ( e.g. Hebrew (DOS)).
@@ -476,111 +402,6 @@ namespace System.Text
             }
         }
 
-        // Returns the name for this encoding that can be used with mail agent header
-        // tags.  If the encoding may not be used, the string is empty.
-
-        public virtual String HeaderName
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return (dataItem.HeaderName);
-            }
-        }
-
-        // Returns the array of IANA-registered names for this encoding.  If there is an
-        // IANA preferred name, it is the first name in the array.
-
-        public virtual String WebName
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return (dataItem.WebName);
-            }
-        }
-
-        // Returns the windows code page that most closely corresponds to this encoding.
-
-        public virtual int WindowsCodePage
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return (dataItem.UIFamilyCodePage);
-            }
-        }
-
-
-        // True if and only if the encoding is used for display by browsers clients.
-
-        public virtual bool IsBrowserDisplay
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return ((dataItem.Flags & MIMECONTF_BROWSER) != 0);
-            }
-        }
-
-        // True if and only if the encoding is used for saving by browsers clients.
-
-        public virtual bool IsBrowserSave
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return ((dataItem.Flags & MIMECONTF_SAVABLE_BROWSER) != 0);
-            }
-        }
-
-        // True if and only if the encoding is used for display by mail and news clients.
-
-        public virtual bool IsMailNewsDisplay
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return ((dataItem.Flags & MIMECONTF_MAILNEWS) != 0);
-            }
-        }
-
-
-        // True if and only if the encoding is used for saving documents by mail and
-        // news clients
-
-        public virtual bool IsMailNewsSave
-        {
-            get
-            {
-                if (dataItem == null)
-                {
-                    GetDataItem();
-                }
-                return ((dataItem.Flags & MIMECONTF_SAVABLE_MAILNEWS) != 0);
-            }
-        }
-
-        // True if and only if the encoding only uses single byte code points.  (Ie, ASCII, 1252, etc)
-
         [System.Runtime.InteropServices.ComVisible(false)]
         public virtual bool IsSingleByte
         {
@@ -589,7 +410,6 @@ namespace System.Text
                 return false;
             }
         }
-
 
         [System.Runtime.InteropServices.ComVisible(false)]
         public EncoderFallback EncoderFallback

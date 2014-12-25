@@ -100,8 +100,6 @@
     <Compile Include="System\FlagsAttribute.cs" />
     <Compile Include="System\FormatException.cs" />
     <Compile Include="System\GC.cs" />
-    <Compile Include="System\Globalization\CodePageDataItem.cs" />
-    <Compile Include="System\Globalization\EncodingTable.cs" />
     <Compile Include="System\Guid.cs" />
     <Compile Include="System\IAsyncResult.cs" />
     <Compile Include="System\ICloneable.cs" />
