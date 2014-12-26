@@ -17,6 +17,7 @@ namespace Il2Native.Logic
     using System.Reflection.Emit;
     using CodeParts;
     using Exceptions;
+    using Gencode;
     using PEAssemblyReader;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
@@ -476,6 +477,9 @@ namespace Il2Native.Logic
                     }
 
                     return null;
+
+                case Code.Localloc:
+                    return new ReturnResult(ResolveType("System.Byte").ToPointerType());
             }
 
             return null;
@@ -530,6 +534,17 @@ namespace Il2Native.Logic
                 {
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
                 }
+            }
+            
+            requiredType = this.RequiredArithmeticIncomingType(opCode);
+            if (requiredType != null)
+            {
+                foreach (var opCodeOperand in opCode.OpCodeOperands)
+                {
+                    opCodeOperand.RequiredOutgoingType = requiredType;
+                }
+
+                opCode.RequiredIncomingType = requiredType;
             }
         }
 
@@ -695,9 +710,12 @@ namespace Il2Native.Logic
 
                 var usedBy = firstOpCode.UsedBy;
                 var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition, true);
-                foreach (var val in opCodePart.AlternativeValues.Values)
+                if (requiredType != null)
                 {
-                    val.RequiredOutgoingType = requiredType;
+                    foreach (var val in opCodePart.AlternativeValues.Values)
+                    {
+                        val.RequiredOutgoingType = requiredType;
+                    }
                 }
             }
         }
@@ -1125,6 +1143,92 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected bool IsFloatingPointOp(OpCodePart opCode)
+        {
+            return opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0])
+                   || opCode.OpCodeOperands.Length > 1 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[1]);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected bool IsFloatingPointOpOperand(OpCodePart opCode)
+        {
+            var op1ReturnResult = ResultOf(opCode);
+
+            // TODO: result of unbox is null, fix it
+            if (op1ReturnResult == null || op1ReturnResult.Type == null)
+            {
+                return false;
+            }
+
+            var op1IsReal = !op1ReturnResult.Type.UseAsClass && op1ReturnResult.Type.IsReal();
+            return op1IsReal;
+        }
+
+        protected int IntOpBitSize(OpCodePart opCode)
+        {
+            return Math.Max(
+                opCode.OpCodeOperands.Length > 0 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[0]) : 0,
+                opCode.OpCodeOperands.Length > 1 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[1]) : 0);
+        }
+
+        protected int IntOpOperandBitSize(OpCodePart opCode)
+        {
+            var op1ReturnResult = ResultOf(opCode);
+
+            if (op1ReturnResult == null || op1ReturnResult.Type == null || op1ReturnResult.IsConst)
+            {
+                return 0;
+            }
+
+            return op1ReturnResult.Type.IntTypeBitSize();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected bool IsPointerArithmetic(OpCodePart opCode)
+        {
+            if (opCode == null || opCode.OpCodeOperands == null)
+            {
+                return false;
+            }
+
+            if (!opCode.OpCodeOperands.Any(o => o.Result.Type.IsPointer))
+            {
+                return false;
+            }
+
+            if (opCode.Any(
+                Code.Add,
+                Code.Add_Ovf,
+                Code.Add_Ovf_Un,
+                Code.Sub,
+                Code.Sub_Ovf,
+                Code.Sub_Ovf_Un,
+                Code.Mul,
+                Code.Mul_Ovf,
+                Code.Mul_Ovf_Un))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="methodInfo">
         /// </param>
         /// <param name="genericContext">
@@ -1177,7 +1281,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forPhiNodes = false)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forPhiNodes = false, bool forArithmeticOperations = false)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1386,7 +1490,46 @@ namespace Il2Native.Logic
                 }
             }
 
+            if (forArithmeticOperations)
+            {
+                return this.RequiredArithmeticIncomingType(opCodePart) ?? retType;
+            }
+
             return retType;
+        }
+
+        private IType RequiredArithmeticIncomingType(OpCodePart opCodePart)
+        {
+            if (!opCodePart.Any(
+                Code.Add,
+                Code.Sub,
+                Code.Mul,
+                Code.Div,
+                Code.Div_Un,
+                Code.Rem,
+                Code.Rem_Un,
+                Code.Shl,
+                Code.Shr,
+                Code.Shr_Un,
+                Code.And,
+                Code.Or,
+                Code.Xor))
+            {
+                return null;
+            }
+
+            if (this.IsFloatingPointOp(opCodePart))
+            {
+                return null;
+            }
+
+            var intOpBitSize = this.IntOpBitSize(opCodePart);
+            if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
+            {
+                return this.GetIntTypeByBitSize(intOpBitSize);
+            }
+
+            return this.GetIntTypeByByteSize(LlvmWriter.PointerSize);
         }
 
         /// <summary>
@@ -1464,6 +1607,66 @@ namespace Il2Native.Logic
             {
                 var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                 return opCodeConstructorInfoPart.Operand.DeclaringType;
+            }
+
+            if (opCodePart.Any(Code.Conv_I8, Code.Conv_Ovf_I8, Code.Conv_Ovf_I8_Un))
+            {
+                return ResolveType("System.Int64");
+            }
+
+            if (opCodePart.Any(Code.Conv_I4, Code.Conv_Ovf_I4, Code.Conv_Ovf_I4_Un))
+            {
+                return ResolveType("System.Int32");
+            }
+
+            if (opCodePart.Any(Code.Conv_I2, Code.Conv_Ovf_I2, Code.Conv_Ovf_I2_Un))
+            {
+                return ResolveType("System.Int16");
+            }
+
+            if (opCodePart.Any(Code.Conv_I1, Code.Conv_Ovf_I1, Code.Conv_Ovf_I1_Un))
+            {
+                return ResolveType("System.SByte");
+            }
+
+            if (opCodePart.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I_Un))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Conv_U8, Code.Conv_Ovf_U8, Code.Conv_Ovf_U8_Un))
+            {
+                return ResolveType("System.UInt64");
+            }
+
+            if (opCodePart.Any(Code.Conv_U4, Code.Conv_Ovf_U4, Code.Conv_Ovf_U4_Un))
+            {
+                return ResolveType("System.UInt32");
+            }
+
+            if (opCodePart.Any(Code.Conv_U2, Code.Conv_Ovf_U2, Code.Conv_Ovf_U2_Un))
+            {
+                return ResolveType("System.UInt16");
+            }
+
+            if (opCodePart.Any(Code.Conv_U1, Code.Conv_Ovf_U1, Code.Conv_Ovf_U1_Un))
+            {
+                return ResolveType("System.Byte");
+            }
+
+            if (opCodePart.Any(Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un))
+            {
+                return ResolveType("System.Void").ToPointerType();
+            }
+
+            if (opCodePart.Any(Code.Conv_R4))
+            {
+                return ResolveType("System.Single");
+            }
+
+            if (opCodePart.Any(Code.Conv_R8))
+            {
+                return ResolveType("System.Double");
             }
 
             return retType;

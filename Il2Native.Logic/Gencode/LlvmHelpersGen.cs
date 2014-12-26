@@ -139,7 +139,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetIntTypeByByteSize(this LlvmWriter llvmWriter, int byteSize)
+        public static IType GetIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
         {
             IType toType = null;
             switch (byteSize)
@@ -154,6 +154,31 @@ namespace Il2Native.Logic.Gencode
                     toType = llvmWriter.ResolveType("System.Int32");
                     break;
                 case 8:
+                    toType = llvmWriter.ResolveType("System.Int64");
+                    break;
+            }
+
+            return toType;
+        }
+
+        public static IType GetIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        {
+            IType toType = null;
+            switch (bitSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Boolean");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.Byte");
+                    break;
+                case 16:
+                    toType = llvmWriter.ResolveType("System.Int16");
+                    break;
+                case 32:
+                    toType = llvmWriter.ResolveType("System.Int32");
+                    break;
+                case 64:
                     toType = llvmWriter.ResolveType("System.Int64");
                     break;
             }
