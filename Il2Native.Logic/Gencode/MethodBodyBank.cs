@@ -30,6 +30,7 @@
                 }
             }
 
+#if !FOR_MSCORLIBTEST
             // dynamiclly generated method for MulticastDelegate
             if (method.IsDelegateFunctionBody()
                 && (method.Name == "Invoke")
@@ -42,6 +43,7 @@
                 DelegateGen.GetMulticastDelegateInvoke(method, codeWriter, out code, out tokenResolutions, out locals, out parameters);
                 return MethodBodyBank.GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
             }
+#endif 
 
             return method;
         }

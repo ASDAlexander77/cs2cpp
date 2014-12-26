@@ -470,13 +470,7 @@ namespace Il2Native.Logic
                 case Code.Unbox_Any:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
-                    res = this.ResultOf(opCode.OpCodeOperands[0]);
-                    if (res != null)
-                    {
-                        return new ReturnResult(res.Type);
-                    }
-
-                    return null;
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
 
                 case Code.Localloc:
                     return new ReturnResult(ResolveType("System.Byte").ToPointerType());
@@ -709,12 +703,21 @@ namespace Il2Native.Logic
                 }
 
                 var usedBy = firstOpCode.UsedBy;
-                var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition, true);
+                var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition);
                 if (requiredType != null)
                 {
                     foreach (var val in opCodePart.AlternativeValues.Values)
                     {
                         val.RequiredOutgoingType = requiredType;
+                    }
+                }
+                else
+                {
+                    requiredType = this.RequiredOutgoingType(usedBy.OpCode);
+                    foreach (var val in opCodePart.AlternativeValues.Values)
+                    {
+                        val.RequiredOutgoingType = requiredType;
+                        val.RequiredIncomingType = requiredType;
                     }
                 }
             }
@@ -1281,7 +1284,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forPhiNodes = false, bool forArithmeticOperations = false)
+        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forArithmeticOperations = false)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1482,14 +1485,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (forPhiNodes)
-            {
-                if (opCodePart.Any(Code.Castclass))
-                {
-                    return ((OpCodeTypePart)opCodePart).Operand;
-                }
-            }
-
             if (forArithmeticOperations)
             {
                 return this.RequiredArithmeticIncomingType(opCodePart) ?? retType;
@@ -1607,6 +1602,11 @@ namespace Il2Native.Logic
             {
                 var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                 return opCodeConstructorInfoPart.Operand.DeclaringType;
+            }
+
+            if (opCodePart.Any(Code.Castclass))
+            {
+                return ((OpCodeTypePart)opCodePart).Operand;
             }
 
             if (opCodePart.Any(Code.Conv_I8, Code.Conv_Ovf_I8, Code.Conv_Ovf_I8_Un))

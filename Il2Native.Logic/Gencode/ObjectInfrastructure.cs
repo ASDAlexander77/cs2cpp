@@ -403,11 +403,7 @@ namespace Il2Native.Logic.Gencode
 
             if (opCode.Result.Type.IntTypeBitSize() != llvmWriter.ResolveType("System.Int32").IntTypeBitSize())
             {
-                var storeResult = opCode.Result;
-                var retResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Int32"));
-                opCode.Result = storeResult;
                 llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.ResolveType("System.Int32"));
-                opCode.Result = retResult;
                 writer.WriteLine(string.Empty);
             }
 

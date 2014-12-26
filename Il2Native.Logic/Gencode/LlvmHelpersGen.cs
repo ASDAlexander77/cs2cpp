@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
+    using System.CodeDom;
     using System.Diagnostics;
     using System.Linq;
 
@@ -20,6 +21,7 @@ namespace Il2Native.Logic.Gencode
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
     using Il2Native.Logic.Gencode.InternalMethods;
     using System.Reflection;
+    using System.Reflection.Emit;
 
     /// <summary>
     /// </summary>
@@ -273,7 +275,13 @@ namespace Il2Native.Logic.Gencode
 
             var incomingResult = opCode.Result;
 
-            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type, toType);
+            llvmWriter.ProcessOperator(
+                writer,
+                opCode,
+                intConvert,
+                opCode.Result.Type,
+                toType,
+                LlvmWriter.OperandOptions.GenerateResult);
 
             var returnResult = opCode.Result;
 

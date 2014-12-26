@@ -2525,35 +2525,40 @@ namespace Il2Native.Logic
             }
         }
 
+        public void AdjustResultTypeToOutgoingType(OpCodePart opCode)
+        {
+            AdjustResultTypeToOutgoingType(opCode, opCode.RequiredOutgoingType);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        public void AdjustResultTypeToOutgoingType(OpCodePart opCode)
+        public void AdjustResultTypeToOutgoingType(OpCodePart opCode, IType requiredOutgoingType)
         {
             // cast result if required
-            if (opCode.RequiredOutgoingType != null && opCode.Result != null &&
-                opCode.RequiredOutgoingType.TypeNotEquals(opCode.Result.Type)
+            if (requiredOutgoingType != null && opCode.Result != null &&
+                requiredOutgoingType.TypeNotEquals(opCode.Result.Type)
                 && !(opCode.Result is ConstValue))
             {
                 bool castRequired;
                 bool intAdjustmentRequired;
                 this.DetectConversion(
                     opCode.Result.Type,
-                    opCode.RequiredOutgoingType,
+                    requiredOutgoingType,
                     out castRequired,
                     out intAdjustmentRequired);
 
                 if (castRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.WriteCast(opCode, opCode.Result, opCode.RequiredOutgoingType);
+                    this.WriteCast(opCode, opCode.Result, requiredOutgoingType);
                 }
 
                 if (intAdjustmentRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredOutgoingType);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, requiredOutgoingType);
                 }
             }
         }
@@ -4171,7 +4176,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
 
             var firstValueWithRequiredType =
-                opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredIncomingType != null);
+                opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredIncomingType != null && !(v.Result is ConstValue));
             var firstValueRequiredType = firstValueWithRequiredType != null
                 ? firstValueWithRequiredType.RequiredIncomingType
                 : null;
@@ -4180,9 +4185,18 @@ namespace Il2Native.Logic
             if (phiType == null)
             {
                 var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
-                phiType = (value != null ? value.Result.Type : null)
-                          ?? opCode.AlternativeValues.Values.First().RequiredOutgoingType
-                          ?? opCode.AlternativeValues.Values.First().Result.Type;
+                var firstNonConstValue = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
+                if (firstNonConstValue != null)
+                {
+                    phiType = (value != null ? value.Result.Type : null)
+                              ?? firstNonConstValue.RequiredOutgoingType
+                              ?? firstNonConstValue.Result.Type;
+                }
+            }
+
+            if (phiType == null)
+            {
+                phiType = opCode.AlternativeValues.Values.First().Result.Type;
             }
 
             var structUsed = false;
@@ -4226,6 +4240,8 @@ namespace Il2Native.Logic
             }
 
             writer.WriteLine(string.Empty);
+
+            AdjustResultTypeToOutgoingType(nopeCode, RequiredIncomingType(opCode));
 
             opCode.AlternativeValues.Values.Last().Result = structUsed
                 ? nopeCode.Result.ToNormalType()
