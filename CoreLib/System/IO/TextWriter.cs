@@ -1,20 +1,44 @@
-﻿namespace System.IO
-{
-    using System;
-    using System.Text;
-    using System.Runtime.CompilerServices;
+﻿using System;
+using System.Text;
+using System.Threading;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Globalization;
 
+namespace System.IO
+{
+    // This abstract base class represents a writer that can write a sequential
+    // stream of characters. A subclass must minimally implement the 
+    // Write(char) method.
+    //
+    // This class is intended for character output, not bytes.  
+    // There are methods on the Stream class for writing bytes. 
     [Serializable]
+    [ComVisible(true)]
     public abstract class TextWriter : IDisposable
     {
         public static readonly TextWriter Null = new NullTextWriter();
 
+        // This should be initialized to Environment.NewLine, but
+        // to avoid loading Environment unnecessarily so I've duplicated
+        // the value here.
+#if !PLATFORM_UNIX
         private const String InitialNewLine = "\r\n";
 
         protected char[] CoreNewLine = new char[] { '\r', '\n' };
+#else
+        private const String InitialNewLine = "\n";
+
+        protected char[] CoreNewLine = new char[] {'\n'};
+
+#endif // !PLATFORM_UNIX
+
+        // Can be null - if so, ask for the Thread's CurrentCulture every time.
+        private IFormatProvider InternalFormatProvider;
 
         protected TextWriter()
         {
+            InternalFormatProvider = null;  // Ask for CurrentCulture all the time.
         }
 
         // Closes this TextWriter and releases any system resources associated with the
@@ -72,11 +96,11 @@
             }
         }
 
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public static TextWriter Synchronized(TextWriter writer)
         {
             if (writer == null)
                 throw new ArgumentNullException("writer");
+
             if (writer is SyncTextWriter)
                 return writer;
 
@@ -107,13 +131,13 @@
         public virtual void Write(char[] buffer, int index, int count)
         {
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException("buffer", "Buffer");
             if (index < 0)
-                throw new ArgumentOutOfRangeException("index");
+                throw new ArgumentOutOfRangeException("index", "NeedNonNegNum");
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException("count", "NeedNonNegNum");
             if (buffer.Length - index < count)
-                throw new ArgumentException();
+                throw new ArgumentException("InvalidOffLen");
 
             for (int i = 0; i < count; i++) Write(buffer[index + i]);
         }
@@ -123,7 +147,7 @@
         //
         public virtual void Write(bool value)
         {
-            Write(value.ToString());
+            Write(value ? Boolean.TrueString : Boolean.FalseString);
         }
 
         // Writes the text representation of an integer to the text stream. The
@@ -205,11 +229,13 @@
         {
             if (value != null)
             {
-                Write(value.ToString());
+                IFormattable f = value as IFormattable;
+                if (f != null)
+                    Write(f.ToString());
+                else
+                    Write(value.ToString());
             }
         }
-
-
 
         // Writes out a formatted string.  Uses the same semantics as
         // String.Format.
@@ -371,7 +397,8 @@
                 // backing store this way, potentially.
                 int vLen = value.Length;
                 int nlLen = CoreNewLine.Length;
-                char[] chars = value.ToCharArray(0, vLen);
+                char[] chars = new char[vLen + nlLen];
+                value.CopyTo(0, chars, 0, vLen);
                 // CoreNewLine will almost always be 2 chars, and possibly 1.
                 if (nlLen == 2)
                 {
@@ -381,7 +408,7 @@
                 else if (nlLen == 1)
                     chars[vLen] = CoreNewLine[0];
                 else
-                    Array.Copy(CoreNewLine, 0, chars, vLen * 2, nlLen * 2);
+                    Buffer.InternalBlockCopy(CoreNewLine, 0, chars, vLen * 2, nlLen * 2);
                 Write(chars, 0, vLen + nlLen);
             }
             /*
@@ -401,10 +428,15 @@
             }
             else
             {
-                WriteLine(value.ToString());
+                // Call WriteLine(value.ToString), not Write(Object), WriteLine().
+                // This makes calls to WriteLine(Object) atomic.
+                IFormattable f = value as IFormattable;
+                if (f != null)
+                    WriteLine(f.ToString());
+                else
+                    WriteLine(value.ToString());
             }
         }
-
 
         // Writes out a formatted string and a new line.  Uses the same 
         // semantics as String.Format.
@@ -438,7 +470,7 @@
             WriteLine(String.Format(format, arg));
         }
 
-        [Serializable()]
+        [Serializable]
         private sealed class NullTextWriter : TextWriter
         {
             internal NullTextWriter()
@@ -448,7 +480,7 @@
 
             public override Encoding Encoding
             {
-                get { return Encoding.ASCII; }
+                get { return Encoding.Default; }
             }
 
             public override void Write(char[] buffer, int index, int count)
@@ -474,7 +506,7 @@
             }
         }
 
-        [Serializable()]
+        [Serializable]
         internal sealed class SyncTextWriter : TextWriter, IDisposable
         {
             private TextWriter _out;

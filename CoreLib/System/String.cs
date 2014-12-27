@@ -662,6 +662,33 @@ namespace System
 
             return s;
         }
+
+        unsafe public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
+        {
+            if (destination == null)
+                throw new ArgumentNullException("destination");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException("count", "NegativeCount");
+            if (sourceIndex < 0)
+                throw new ArgumentOutOfRangeException("sourceIndex", "Index");
+            if (count > Length - sourceIndex)
+                throw new ArgumentOutOfRangeException("sourceIndex", "IndexCount");
+            if (destinationIndex > destination.Length - count || destinationIndex < 0)
+                throw new ArgumentOutOfRangeException("destinationIndex", "IndexCount");
+
+            // Note: fixed does not like empty arrays
+            if (count > 0)
+            {
+                fixed (char* src = &this.chars[0])
+                fixed (char* dest = destination)
+                    wstrcpy(dest + destinationIndex, src + sourceIndex, count);
+            }
+        }
+
+        internal static unsafe void wstrcpy(char* dmem, char* smem, int charCount)
+        {
+            Buffer.Memcpy((byte*)dmem, (byte*)smem, charCount * 2); // 2 used everywhere instead of sizeof(char)
+        }
     }
 }
 
