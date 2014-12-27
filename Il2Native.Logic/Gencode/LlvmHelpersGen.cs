@@ -392,6 +392,12 @@ namespace Il2Native.Logic.Gencode
                 return true;
             }
 
+            if (methodInfo.IsThreadingFunction())
+            {
+                methodInfo.WriteThreadingFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
             if (methodInfo.IsActivatorFunction())
             {
                 methodInfo.WriteActivatorFunction(opCodeMethodInfo, llvmWriter);

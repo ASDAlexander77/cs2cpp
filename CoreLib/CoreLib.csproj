@@ -125,10 +125,13 @@
     <Compile Include="System\IO\FileStream.cs" />
     <Compile Include="System\IO\MemoryStream.cs" />
     <Compile Include="System\IO\SafeFileHandle.cs" />
+    <Compile Include="System\IO\StreamReader.cs" />
+    <Compile Include="System\IO\StreamWriter.cs" />
     <Compile Include="System\IO\StringReader.cs" />
     <Compile Include="System\IO\StringWriter.cs" />
     <Compile Include="System\IO\TextReader.cs" />
     <Compile Include="System\IO\TextWriter.cs" />
+    <Compile Include="System\IO\__ConsoleStream.cs" />
     <Compile Include="System\IO\__Error.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />
