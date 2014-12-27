@@ -24,9 +24,6 @@
         public unsafe static extern int wprintf(char* format, double d);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, float d);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* format, int t);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]

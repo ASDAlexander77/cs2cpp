@@ -1521,10 +1521,10 @@ namespace Il2Native.Logic
             var intOpBitSize = this.IntOpBitSize(opCodePart);
             if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
             {
-                return this.GetIntTypeByBitSize(intOpBitSize);
+                return this.GetUIntTypeByBitSize(intOpBitSize);
             }
 
-            return this.GetIntTypeByByteSize(LlvmWriter.PointerSize);
+            return this.GetUIntTypeByByteSize(LlvmWriter.PointerSize);
         }
 
         /// <summary>

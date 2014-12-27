@@ -147,7 +147,7 @@ namespace Il2Native.Logic.Gencode
             switch (byteSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.Byte");
+                    toType = llvmWriter.ResolveType("System.SByte");
                     break;
                 case 2:
                     toType = llvmWriter.ResolveType("System.Int16");
@@ -172,7 +172,7 @@ namespace Il2Native.Logic.Gencode
                     toType = llvmWriter.ResolveType("System.Boolean");
                     break;
                 case 8:
-                    toType = llvmWriter.ResolveType("System.Byte");
+                    toType = llvmWriter.ResolveType("System.SByte");
                     break;
                 case 16:
                     toType = llvmWriter.ResolveType("System.Int16");
@@ -188,6 +188,60 @@ namespace Il2Native.Logic.Gencode
             return toType;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="byteSize">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetUIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
+        {
+            IType toType = null;
+            switch (byteSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Byte");
+                    break;
+                case 2:
+                    toType = llvmWriter.ResolveType("System.UInt16");
+                    break;
+                case 4:
+                    toType = llvmWriter.ResolveType("System.UInt32");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.UInt64");
+                    break;
+            }
+
+            return toType;
+        }
+
+        public static IType GetUIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        {
+            IType toType = null;
+            switch (bitSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Boolean");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.Byte");
+                    break;
+                case 16:
+                    toType = llvmWriter.ResolveType("System.UInt16");
+                    break;
+                case 32:
+                    toType = llvmWriter.ResolveType("System.UInt32");
+                    break;
+                case 64:
+                    toType = llvmWriter.ResolveType("System.UInt64");
+                    break;
+            }
+
+            return toType;
+        }
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
