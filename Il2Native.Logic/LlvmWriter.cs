@@ -495,7 +495,7 @@ namespace Il2Native.Logic
             methodNumberIncremental++;
         }
 
-        // TODO: if DynamicCast does not work for an interface then something wrong with this value, (it should return value equals to the number of inheritance route * pointer size, 
+        // TODO: if DynamicCast does not work for an type then something wrong with this value, (it should return value equals to the number of inheritance route * pointer size, 
         // if type can't be found in inheritance route it should return -2, if casts from type which inheritce more then one time it should return -3
         // for inheritance root for objects equals 0 (as it is all the time first)
 
@@ -979,7 +979,7 @@ namespace Il2Native.Logic
 
             if (!found)
             {
-                throw new KeyNotFoundException("interface can't be found");
+                throw new KeyNotFoundException("type can't be found");
             }
 
             return interfaceIndex;
@@ -3472,8 +3472,8 @@ namespace Il2Native.Logic
                 LlvmHelpersGen.SetCustomLabel(opCodeTypePart, label);
             }
 
-            this.typeRttiDeclRequired.Add(effectiveFromType.Type);
-            this.typeRttiDeclRequired.Add(toType);
+            this.AddRequiredRttiDeclaration(effectiveFromType.Type);
+            this.AddRequiredRttiDeclaration(toType);
         }
 
         /// <summary>
@@ -3745,7 +3745,7 @@ namespace Il2Native.Logic
         {
             var objectResult = opCode.Result;
 
-            writer.WriteLine("; Get interface '{0}' of '{1}'", @interface, declaringTypeIn);
+            writer.WriteLine("; Get type '{0}' of '{1}'", @interface, declaringTypeIn);
 
             var declaringType = declaringTypeIn.ToClass();
 
@@ -5948,7 +5948,7 @@ namespace Il2Native.Logic
                 type = type.BaseType;
                 if (type == null)
                 {
-                    // throw new IndexOutOfRangeException("Could not find an interface");
+                    // throw new IndexOutOfRangeException("Could not find an type");
                     break;
                 }
 
@@ -5980,7 +5980,7 @@ namespace Il2Native.Logic
             return true;
         }
 
-        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the interface belong to
+        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the type belong to
 
         /// <summary>
         /// </summary>
@@ -6328,6 +6328,18 @@ namespace Il2Native.Logic
             }
         }
 
+        public void AddRequiredRttiDeclaration(IType type)
+        {
+            if (type.IsByRef)
+            {
+                this.typeRttiDeclRequired.Add(type.GetElementType());
+            }
+            else
+            {
+                this.typeRttiDeclRequired.Add(type);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="method">
@@ -6369,7 +6381,7 @@ namespace Il2Native.Logic
                     ////rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
                     rttiPointerDecl.WriteRttiPointerClassName(this.Output);
                     rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
-                    this.typeRttiDeclRequired.Add(rttiPointerDecl);
+                    this.AddRequiredRttiDeclaration(rttiPointerDecl);
                     this.Output.WriteLine(string.Empty);
                 }
             }
@@ -6383,8 +6395,7 @@ namespace Il2Native.Logic
                 {
                     any = false;
                     foreach (
-                        var rttiDecl in
-                            this.typeRttiDeclRequired.ToList().Where(rd => !this.processedRttiTypes.Contains(rd)))
+                        var rttiDecl in this.typeRttiDeclRequired.ToList().Where(rd => !this.processedRttiTypes.Contains(rd)))
                     {
                         ////rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
                         rttiDecl.WriteRttiClassName(this.Output);

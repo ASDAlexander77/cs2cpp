@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System.CodeDom.Compiler;
+    using System.Diagnostics;
     using System.Linq;
 
     using PEAssemblyReader;
@@ -149,14 +150,14 @@ namespace Il2Native.Logic.Gencode
 
             if (type.BaseType != null)
             {
-                llvmWriter.typeRttiDeclRequired.Add(type.BaseType);
+                llvmWriter.AddRequiredRttiDeclaration(type.BaseType);
             }
 
             if (anyInterface)
             {
                 foreach (var @interface in type.GetInterfaces())
                 {
-                    llvmWriter.typeRttiDeclRequired.Add(@interface);
+                    llvmWriter.AddRequiredRttiDeclaration(@interface);
                 }
 
                 if (type.BaseType == null && onlyInterface)
