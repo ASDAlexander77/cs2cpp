@@ -39,11 +39,11 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<IType, int> sizeByType = new SortedDictionary<IType, int>();
+        private static readonly IDictionary<string, int> sizeByType = new SortedDictionary<string, int>();
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<IType, IList<MemberLocationInfo>> membersLayoutByType = new SortedDictionary<IType, IList<MemberLocationInfo>>();
+        private static readonly IDictionary<string, IList<MemberLocationInfo>> membersLayoutByType = new SortedDictionary<string, IList<MemberLocationInfo>>();
 
         /// <summary>
         /// </summary>
@@ -246,12 +246,12 @@ namespace Il2Native.Logic.Gencode
 
             // find index
             int size;
-            if (!sizeByType.TryGetValue(type, out size))
+            if (!sizeByType.TryGetValue(type.ToString(), out size))
             {
                 IList<MemberLocationInfo> membersLayout;
                 size = type.CalculateSize(out membersLayout);
-                sizeByType[type] = size;
-                membersLayoutByType[type] = membersLayout;
+                sizeByType[type.ToString()] = size;
+                membersLayoutByType[type.ToString()] = membersLayout;
             }
 
             return size;
@@ -260,7 +260,7 @@ namespace Il2Native.Logic.Gencode
         public static int GetFieldOffset(this IField field)
         {
             IList<MemberLocationInfo> membersLayout;
-            while (!membersLayoutByType.TryGetValue(field.DeclaringType, out membersLayout))
+            while (!membersLayoutByType.TryGetValue(field.DeclaringType.ToString(), out membersLayout))
             {
                 GetTypeSize(field.DeclaringType);
             }

@@ -132,6 +132,7 @@
     <Compile Include="System\IO\TextReader.cs" />
     <Compile Include="System\IO\TextWriter.cs" />
     <Compile Include="System\IO\__ConsoleStream.cs" />
+    <Compile Include="System\IO\__DebugOutputTextWriter.cs" />
     <Compile Include="System\IO\__Error.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />

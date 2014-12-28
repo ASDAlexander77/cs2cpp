@@ -63,5 +63,10 @@
         {
             throw new ObjectDisposedException("WriterClosed");
         }
+
+        internal static void WinIOError(int errCode, string msg)
+        {
+            throw new IOException(msg);
+        }
     }
 }
