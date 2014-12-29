@@ -529,7 +529,7 @@ namespace Il2Native.Logic
                     usedOpCode1.OpCodeOperands[0].UseAsNull = true;
                 }
             }
-            
+
             requiredType = this.RequiredArithmeticIncomingType(opCode);
             if (requiredType != null)
             {
@@ -713,11 +713,26 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    requiredType = this.RequiredOutgoingType(usedBy.OpCode);
-                    foreach (var val in opCodePart.AlternativeValues.Values)
+                    requiredType = this.RequiredOutgoingType(firstOpCode)
+                                   ?? opCodePart.AlternativeValues.Values.Select(v => this.RequiredOutgoingType(v)).FirstOrDefault(v => v != null)
+                                   ?? opCodePart.AlternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                    if (requiredType != null &&
+                        opCodePart.AlternativeValues.Values.Any(
+                            v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {
-                        val.RequiredOutgoingType = requiredType;
-                        val.RequiredIncomingType = requiredType;
+                        // find base type, for example if first value is IDictionary and second is Object then required type should be Object
+                        foreach (var requiredItem in opCodePart.AlternativeValues.Values.Select(this.RequiredOutgoingType).Where(t => t != null))
+                        {
+                            if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) || requiredItem.IsObject)
+                            {
+                                requiredType = requiredItem;
+                            }
+                        }
+
+                        foreach (var val in opCodePart.AlternativeValues.Values)
+                        {
+                            val.RequiredOutgoingType = requiredType;
+                        }
                     }
                 }
             }
@@ -752,11 +767,6 @@ namespace Il2Native.Logic
                 if (isVarArg && opCodePartUsed == null)
                 {
                     break;
-                }
-
-                if (opCodePartUsed.ToCode() == Code.Dup)
-                {
-                    this.Stacks.Push(opCodePartUsed.OpCodeOperands[0]);
                 }
 
                 opCodeParts.Insert(0, opCodePartUsed);
@@ -1128,6 +1138,11 @@ namespace Il2Native.Logic
                                      && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
             if (!isItMethodWithVoid)
             {
+                if (opCode.Any(Code.Dup))
+                {
+                    this.Stacks.Push(opCode.OpCodeOperands[0]);
+                }
+
                 this.Stacks.Push(opCode);
             }
         }

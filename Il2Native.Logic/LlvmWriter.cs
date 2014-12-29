@@ -4176,7 +4176,12 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
 
             var firstValueWithRequiredType =
-                opCode.AlternativeValues.Values.FirstOrDefault(v => v.RequiredIncomingType != null && !(v.Result is ConstValue));
+                opCode.AlternativeValues.Values.FirstOrDefault(
+                    v => v.RequiredOutgoingType != null && !(v.Result is ConstValue))
+                ??
+                opCode.AlternativeValues.Values.FirstOrDefault(
+                    v => v.RequiredIncomingType != null && !(v.Result is ConstValue));
+
             var firstValueRequiredType = firstValueWithRequiredType != null
                 ? firstValueWithRequiredType.RequiredIncomingType
                 : null;

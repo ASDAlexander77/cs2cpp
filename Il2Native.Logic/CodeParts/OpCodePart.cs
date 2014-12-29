@@ -176,10 +176,15 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public IType ReadExceptionFromStackType { get; set; }
 
+        private IType _requiredIncomingType;
         /// <summary>
         /// used to adjust operand type
         /// </summary>
-        public IType RequiredIncomingType { get; set; }
+        public IType RequiredIncomingType
+        {
+            get { return _requiredIncomingType; }
+            set { _requiredIncomingType = value; }
+        }
 
         /// <summary>
         /// used to adjust result of OpCode type

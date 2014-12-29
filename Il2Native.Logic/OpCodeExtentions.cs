@@ -952,6 +952,16 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool TypeEquals(this IType type, IType other)
         {
+            if (type == null && other == null)
+            {
+                return true;
+            }
+
+            if (type != null && other == null || type == null && other != null)
+            {
+                return false;
+            }
+
             return type != null && other.CompareTo(type) == 0;
         }
 

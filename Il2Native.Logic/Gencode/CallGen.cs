@@ -336,7 +336,8 @@ namespace Il2Native.Logic.Gencode
                 {
                     writer.WriteLine("; Box Primitive type(void*) for 'This' parameter");
                     var intType = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);
-                    if (intType.TypeEquals(primitiveType) )
+                    var uintType = llvmWriter.GetUIntTypeByByteSize(LlvmWriter.PointerSize);
+                    if (intType.TypeEquals(primitiveType) || uintType.TypeEquals(primitiveType))
                     {
                         var declType = (opCodeMethodInfo as OpCodeMethodInfoPart).Operand.DeclaringType;
                         Debug.Assert(declType.IsStructureType(), "only Struct type can be used");
