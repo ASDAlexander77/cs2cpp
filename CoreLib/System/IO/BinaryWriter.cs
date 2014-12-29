@@ -366,9 +366,9 @@ namespace System.IO
                     // Figure out how many chars to process this round.
                     int charCount = (numLeft > _maxChars) ? _maxChars : numLeft;
                     int byteLen;
-                    fixed (char* pChars = value)
+                    fixed (char* pChars = &value.ToCharArray()[0])
                     {
-                        fixed (byte* pBytes = _largeByteBuffer)
+                        fixed (byte* pBytes = &_largeByteBuffer[0])
                         {
                             byteLen = _encoder.GetBytes(pChars + charStart, charCount, pBytes, LargeByteBufferSize, charCount == numLeft);
                         }

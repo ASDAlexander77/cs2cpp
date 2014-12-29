@@ -1019,6 +1019,8 @@ namespace Il2Native.Logic
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(writer, opCode);
             this.WriteExceptionHandlersProlog(writer, opCode);
+
+            opCode.ResultAtExit = opCode.Result;
         }
 
         /// <summary>
@@ -1542,6 +1544,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Dup:
+                    opCode.Result = opCode.OpCodeOperands[0].Result;
                     break;
 
                 case Code.Box:
@@ -4177,10 +4180,10 @@ namespace Il2Native.Logic
 
             var firstValueWithRequiredType =
                 opCode.AlternativeValues.Values.FirstOrDefault(
-                    v => v.RequiredOutgoingType != null && !(v.Result is ConstValue))
+                    v => v.RequiredOutgoingType != null && !(v.ResultAtExit is ConstValue))
                 ??
                 opCode.AlternativeValues.Values.FirstOrDefault(
-                    v => v.RequiredIncomingType != null && !(v.Result is ConstValue));
+                    v => v.RequiredIncomingType != null && !(v.ResultAtExit is ConstValue));
 
             var firstValueRequiredType = firstValueWithRequiredType != null
                 ? firstValueWithRequiredType.RequiredIncomingType
@@ -4189,19 +4192,19 @@ namespace Il2Native.Logic
             var phiType = firstValueRequiredType;
             if (phiType == null)
             {
-                var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
-                var firstNonConstValue = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.Result is ConstValue));
+                var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
+                var firstNonConstValue = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
                 if (firstNonConstValue != null)
                 {
-                    phiType = (value != null ? value.Result.Type : null)
+                    phiType = (value != null ? value.ResultAtExit.Type : null)
                               ?? firstNonConstValue.RequiredOutgoingType
-                              ?? firstNonConstValue.Result.Type;
+                              ?? firstNonConstValue.ResultAtExit.Type;
                 }
             }
 
             if (phiType == null)
             {
-                phiType = opCode.AlternativeValues.Values.First().Result.Type;
+                phiType = opCode.AlternativeValues.Values.First().ResultAtExit.Type;
             }
 
             var structUsed = false;
@@ -4216,9 +4219,9 @@ namespace Il2Native.Logic
             {
                 foreach (
                     var val in
-                        opCode.AlternativeValues.Values.Where(v => v.Result is ConstValue && v.Any(Code.Ldc_I4_0)))
+                        opCode.AlternativeValues.Values.Where(v => v.ResultAtExit is ConstValue && v.Any(Code.Ldc_I4_0)))
                 {
-                    val.Result = new ConstValue(null, ResolveType("System.Void").ToPointerType());
+                    val.ResultAtExit = new ConstValue(null, ResolveType("System.Void").ToPointerType());
                 }
             }
 
@@ -4237,7 +4240,7 @@ namespace Il2Native.Logic
                 var values = opCode.AlternativeValues.Values;
                 this.WritePhiNodeLabel(
                     writer,
-                    values[index].Result,
+                    values[index].ResultAtExit,
                     values[index],
                     values[index],
                     string.Concat("a", opCode.AlternativeValues.Labels[index]),
@@ -4347,7 +4350,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IncrementalResult WriteSetResultNumber(OpCodePart opCode, IType type, bool dupShift = false)
+        public IncrementalResult WriteSetResultNumber(OpCodePart opCode, IType type)
         {
             var writer = this.Output;
 
@@ -4359,14 +4362,7 @@ namespace Il2Native.Logic
             var llvmResult = new IncrementalResult(this.resultNumberIncremental, type);
             if (opCode != null)
             {
-                if (dupShift)
-                {
-                    opCode.ResultWithDupShift = llvmResult;
-                }
-                else
-                {
-                    opCode.Result = llvmResult;
-                }
+                opCode.Result = llvmResult;
             }
 
             return llvmResult;
