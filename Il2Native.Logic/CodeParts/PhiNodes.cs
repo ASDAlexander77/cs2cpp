@@ -7,10 +7,10 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+using System.Collections.Generic;
+
 namespace Il2Native.Logic.CodeParts
 {
-    using System.Collections.Generic;
-
     /// <summary>
     /// </summary>
     public class PhiNodes

@@ -390,6 +390,13 @@ namespace Il2Native.Logic
             return method.IsUnmanaged && !method.IsUnmanagedMethodReference && !method.Name.StartsWith("llvm_");
         }
 
+        public static bool IsSkipped(this IMethod method)
+        {
+            return method.IsUnmanaged && !method.IsUnmanagedMethodReference && 
+                (method.Name == "llvm_memcpy_p0i8_p0i8_i32"
+                || method.Name == "llvm_memset_p0i8_i32");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -945,6 +952,16 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool TypeEquals(this IType type, IType other)
         {
+            if (type == null && other == null)
+            {
+                return true;
+            }
+
+            if (type != null && other == null || type == null && other != null)
+            {
+                return false;
+            }
+
             return type != null && other.CompareTo(type) == 0;
         }
 

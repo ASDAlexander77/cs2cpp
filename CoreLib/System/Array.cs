@@ -33,12 +33,12 @@ namespace System
 
         public Object GetValue(int index)
         {
-            return ((IList)this)[index];
+            throw new NotImplementedException();
         }
 
         public void SetValue(Object value, int index)
         {
-            ((IList)this)[index] = value;
+            throw new NotImplementedException();
         }
 
         public extern int Length
@@ -80,12 +80,13 @@ namespace System
             
             get
             {
-                throw new NotImplementedException();
+                return this.GetValue(index);
             }
             
             set
             {
-                throw new NotImplementedException();
+                this.SetValue(value, index);
+
             }
         }
 
@@ -760,6 +761,11 @@ namespace System
                 return comparison(x, y);
             }
         }
+    }
+
+    internal static class EmptyArray<T>
+    {
+        public static readonly T[] Value = new T[0];
     }
 }
 

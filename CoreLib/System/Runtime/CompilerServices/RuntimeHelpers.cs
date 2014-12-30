@@ -49,10 +49,12 @@ namespace System.Runtime.CompilerServices
         
         public static extern void RunClassConstructor(RuntimeTypeHandle type);
 
-        extern public static int OffsetToStringData
+        public static int OffsetToStringData
         {
-            
-            get;
+            get
+            {   
+                throw new NotSupportedException();
+            }
         }
     }
 }

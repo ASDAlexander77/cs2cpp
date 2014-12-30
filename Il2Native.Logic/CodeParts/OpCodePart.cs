@@ -176,10 +176,15 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public IType ReadExceptionFromStackType { get; set; }
 
+        private IType _requiredIncomingType;
         /// <summary>
         /// used to adjust operand type
         /// </summary>
-        public IType RequiredIncomingType { get; set; }
+        public IType RequiredIncomingType
+        {
+            get { return _requiredIncomingType; }
+            set { _requiredIncomingType = value; }
+        }
 
         /// <summary>
         /// used to adjust result of OpCode type
@@ -190,47 +195,16 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public FullyDefinedReference Result
         {
-            get
-            {
-                if (this.result != null)
-                {
-                    return this.result;
-                }
-
-                if (this.Any(Code.Dup))
-                {
-                    return this.OpCodeOperands[0].Result;
-                }
-
-                return this.result;
-            }
-
-            set
-            {
-                ////if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
-                ////{
-                ////    this.Next.Result = this.result;
-                ////}
-                
-                this.result = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>
-        /// TODO: you need to get rid of it when you stop allowing rewriting result of OpCode uncontrollablly (as you do in 'newarray' and etc)
-        /// so OpCode should get only one result only once and second time whem 'cast' happends
         /// </summary>
-        public FullyDefinedReference ResultWithDupShift
+        public FullyDefinedReference ResultAtExit
         {
-            set
-            {
-                if (value != null && this.result != null && this.Next != null && this.Next.Any(Code.Dup) && this.Next.OpCodeOperands[0].Equals(this))
-                {
-                    this.Next.Result = this.result;
-                }
-
-                this.result = value;
-            }
+            get;
+            set;
         }
 
         /// <summary>

@@ -54,7 +54,6 @@ namespace System.Threading
             
             get;
         }
-
         
         extern public void Join();
         
@@ -74,12 +73,14 @@ namespace System.Threading
             
             get;
         }
-
         
         public static AppDomain GetDomain()
         {
             throw new NotImplementedException();
         }
+
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void MemoryBarrier();
     }
 
     ////// declaring a local var of this enum type and passing it by ref into a function that needs to do a

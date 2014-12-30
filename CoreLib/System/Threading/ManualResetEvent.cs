@@ -8,14 +8,21 @@ namespace System.Threading
     using System.Runtime.CompilerServices;
     public sealed class ManualResetEvent : WaitHandle
     {
-        
-        extern public ManualResetEvent(bool initialState);
 
-        
-        extern public bool Reset();
+        public ManualResetEvent(bool initialState)
+        {
+            throw new NotImplementedException();
+        }
 
-        
-        extern public bool Set();
+        public bool Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Set()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

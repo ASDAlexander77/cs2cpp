@@ -38,6 +38,7 @@ namespace Ll2NativeTests
         private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
         private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+        private const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
         private const bool Llvm35Support = false;
         private const bool Llvm34Support = false;
@@ -53,6 +54,7 @@ namespace Ll2NativeTests
         private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
         private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+        private const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
         private const bool Llvm35Support = false;
         private const bool Llvm34Support = false;
@@ -70,7 +72,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool UsingRoslyn = true;
+        private const bool UsingRoslyn = false;
 
         /// <summary>
         /// </summary>
@@ -131,6 +133,16 @@ namespace Ll2NativeTests
         {
             //Debug.Listeners.Clear();
             Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
+        }
+
+        /// </summary>
+        [TestMethod]
+        public void TestSscli()
+        {
+            foreach (var file in Directory.EnumerateFiles(SscliSourcePath, "*.cs", SearchOption.AllDirectories))
+            {
+                CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", true);
+            }
         }
 
         /// <summary>
@@ -274,8 +286,6 @@ namespace Ll2NativeTests
             // 39 - using Attributes
             // 43 - multi array
             // 50 - missing
-            // 52 - bug in execution (NotImplemented, ArrayList, Hashtable)
-            // 57 - bug in execution (NotImplemented, EventHandler)
             // 67 - missing
             // 68 - using enum
             // 74 - using StreamReader
@@ -360,7 +370,7 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 52, 53, 55, 57, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
+                            10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 53, 55, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
                             126, 127, 128, 132, 135, 157, 158, 174, 177, 178, 180, 181, 183, 187, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
                             247, 250, 253, 254, 263, 266, 269, 273, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
                             349, 352, 353, 358, 361, 362, 367
@@ -613,13 +623,16 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void Compile(string fileName, string source = SourcePath, string output = OutputPath)
+        private static void Compile(string fileName, string source = SourcePath)
         {
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
             try
             {
-                Convert(fileName);
+                Convert(fileName, source);
             }
             catch (BadImageFormatException ex)
             {
@@ -632,7 +645,10 @@ namespace Ll2NativeTests
                 return;
             }
 
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Compiling LLVM for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
             ExecCompile(fileName, justCompile: true);
         }
@@ -641,11 +657,34 @@ namespace Ll2NativeTests
         /// </summary>
         /// <param name="index">
         /// </param>
-        private static void CompileAndRun(string fileName, string source = SourcePath)
+        private static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
         {
+            Trace.WriteLine("==========================================================================");
             Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
 
-            Convert(fileName, source);
+            if (!ignoreBadFiles)
+            {
+                Convert(fileName, source);
+            }
+            else
+            {
+                try
+                {
+                    Convert(fileName, source);
+                }
+                catch (BadImageFormatException ex)
+                {
+                    Debug.WriteLine(ex);
+                    return;
+                }
+                catch (FileNotFoundException ex)
+                {
+                    Debug.WriteLine(ex);
+                    return;
+                }
+            }
 
             Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
 

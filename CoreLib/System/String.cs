@@ -643,6 +643,52 @@ namespace System
             return str;
         }
 
+        unsafe static internal String CreateStringFromEncoding(
+            byte* bytes, int byteLength, Encoding encoding)
+        {
+            // Get our string length
+            int stringLength = encoding.GetCharCount(bytes, byteLength, null);
+
+            // They gave us an empty string if they needed one
+            // 0 bytelength might be possible if there's something in an encoder
+            if (stringLength == 0)
+                return String.Empty;
+
+            String s = new String('\x0', stringLength);
+            fixed (char* pTempChars = &s.chars[0])
+            {
+                int doubleCheck = encoding.GetChars(bytes, byteLength, pTempChars, stringLength, null);
+            }
+
+            return s;
+        }
+
+        unsafe public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
+        {
+            if (destination == null)
+                throw new ArgumentNullException("destination");
+            if (count < 0)
+                throw new ArgumentOutOfRangeException("count", "NegativeCount");
+            if (sourceIndex < 0)
+                throw new ArgumentOutOfRangeException("sourceIndex", "Index");
+            if (count > Length - sourceIndex)
+                throw new ArgumentOutOfRangeException("sourceIndex", "IndexCount");
+            if (destinationIndex > destination.Length - count || destinationIndex < 0)
+                throw new ArgumentOutOfRangeException("destinationIndex", "IndexCount");
+
+            // Note: fixed does not like empty arrays
+            if (count > 0)
+            {
+                fixed (char* src = &this.chars[0])
+                fixed (char* dest = destination)
+                    wstrcpy(dest + destinationIndex, src + sourceIndex, count);
+            }
+        }
+
+        internal static unsafe void wstrcpy(char* dmem, char* smem, int charCount)
+        {
+            Buffer.Memcpy((byte*)dmem, (byte*)smem, charCount * 2); // 2 used everywhere instead of sizeof(char)
+        }
     }
 }
 

@@ -1,429 +1,568 @@
-﻿namespace System
+﻿#define USE_DEBUG_CONSOLE
+
+namespace System
 {
     using System;
-    using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
+    using System.IO;
     using System.Text;
+    using System.Threading;
+    using System.Runtime.InteropServices;
 
+    // Provides static fields for console input & output.  Use 
+    // Console.In for input from the standard input stream (stdin),
+    // Console.Out for output to stdout, and Console.Error
+    // for output to stderr.  If any of those console streams are 
+    // redirected from the command line, these streams will be redirected.
+    // A program can also redirect its own output or input with the 
+    // SetIn, SetOut, and SetError methods.
+    // 
+    // The distinction between Console.Out & Console.Error is useful
+    // for programs that redirect output to a file or a pipe.  Note that
+    // stdout & stderr can be output to different files at the same
+    // time from the DOS command line:
+    // 
+    // someProgram 1> out 2> err
+    // 
+    //Contains only static data.  Serializable attribute not required.
     public static class Console
     {
-        private static string NewLine = "\r\n";
-        private static string PrintString = "%.*s";
-        private static string PrintDouble = "%f";
-        private static string PrintLong = "%lld";
-        private static string PrintInt = "%ld";
-        private static string PrintChar = "%c";
+        internal const int STD_INPUT_HANDLE = -10;
+        internal const int STD_OUTPUT_HANDLE = -11;
+        internal const int STD_ERROR_HANDLE = -12;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* chars);
+        private const int DefaultConsoleBufferSize = 256;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, int length, char* chars);
+        // Beep range - see MSDN.
+        private const int MinBeepFrequency = 37;
+        private const int MaxBeepFrequency = 32767;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, double d);
+        private static volatile TextReader _in;
+        private static volatile TextWriter _out;
+        private static volatile TextWriter _error;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, float d);
+        // For ResetColor
+        private static volatile bool _haveReadDefaultColors;
+        private static volatile byte _defaultColors;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, int t);
+        private static volatile Encoding _inputEncoding = null;
+        private static volatile Encoding _outputEncoding = null;
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, long t);
+        private static volatile bool _stdInRedirectQueried = false;
+        private static volatile bool _stdOutRedirectQueried = false;
+        private static volatile bool _stdErrRedirectQueried = false;
+
+        private static bool _isStdInRedirected;
+        private static bool _isStdOutRedirected;
+        private static bool _isStdErrRedirected;
+
+        // Private object for locking instead of locking on a public type for SQL reliability work.
+        // Use this for internal synchronization during initialization, wiring up events, or for short, non-blocking OS calls.
+        private static volatile Object s_InternalSyncObject;
+
+        private static Object InternalSyncObject
+        {
+            get
+            {
+                if (s_InternalSyncObject == null)
+                {
+                    Object o = new Object();
+                    Interlocked.CompareExchange<Object>(ref s_InternalSyncObject, o, null);
+                }
+                return s_InternalSyncObject;
+            }
+        }
+
+        public static TextReader In
+        {
+            get
+            {
+                // Because most applications don't use stdin, we can delay 
+                // initialize it slightly better startup performance.
+                if (_in == null)
+                {
+                    lock (InternalSyncObject)
+                    {
+                        if (_in == null)
+                        {
+                            // Set up Console.In
+                            Stream s = OpenStandardInput(DefaultConsoleBufferSize);
+                            TextReader tr;
+                            if (s == Stream.Null)
+                            {
+                                tr = StreamReader.Null;
+                            }
+                            else
+                            {
+                                // Hopefully Encoding.GetEncoding doesn't load as many classes now.
+                                Encoding enc = InputEncoding;
+                                tr =
+                                    TextReader.Synchronized(
+                                        new StreamReader(s, enc, false, DefaultConsoleBufferSize, true));
+                            }
+
+                            Thread.MemoryBarrier();
+                            _in = tr;
+                        }
+                    }
+                }
+                return _in;
+            }
+        }
+
+        public static TextWriter Out
+        {
+            get
+            {
+                // Hopefully this is inlineable.
+                if (_out == null)
+                {
+                    InitializeStdOutError(true);
+                }
+                return _out;
+            }
+        }
+
+        public static TextWriter Error
+        {
+            get
+            {
+                // Hopefully this is inlineable.
+                if (_error == null)
+                {
+                    InitializeStdOutError(false);
+                }
+                return _error;
+            }
+        }
+
+        // For console apps, the console handles are set to values like 3, 7, 
+        // and 11 OR if you've been created via CreateProcess, possibly -1
+        // or 0.  -1 is definitely invalid, while 0 is probably invalid.
+        // Also note each handle can independently be invalid or good.
+        // For Windows apps, the console handles are set to values like 3, 7, 
+        // and 11 but are invalid handles - you may not write to them.  However,
+        // you can still spawn a Windows app via CreateProcess and read stdout
+        // and stderr.
+        // So, we always need to check each handle independently for validity
+        // by trying to write or read to it, unless it is -1.
+
+        // We do not do a security check here, under the assumption that this
+        // cannot create a security hole, but only waste a user's time or 
+        // cause a possible denial of service attack.
+
+        private static void InitializeStdOutError(bool stdout)
+        {
+            // Set up Console.Out or Console.Error.
+            lock (InternalSyncObject)
+            {
+                if (stdout && _out != null)
+                {
+                    return;
+                }
+                else if (!stdout && _error != null)
+                {
+                    return;
+                }
+
+                TextWriter writer = null;
+#if USE_DEBUG_CONSOLE
+                writer = new __DebugOutputTextWriter();
+#else
+                Stream s;
+                if (stdout)
+                {
+                    s = OpenStandardOutput(DefaultConsoleBufferSize);
+                }
+                else
+                {
+                    s = OpenStandardError(DefaultConsoleBufferSize);
+                }
+
+                if (s == Stream.Null)
+                {
+                    writer = TextWriter.Synchronized(StreamWriter.Null);
+                }
+                else
+                {
+                    Encoding encoding = OutputEncoding;
+                    StreamWriter stdxxx = new StreamWriter(s, encoding, DefaultConsoleBufferSize, true);
+                    stdxxx.HaveWrittenPreamble = true;
+                    stdxxx.AutoFlush = true;
+                    writer = TextWriter.Synchronized(stdxxx);
+                }
+#endif // USE_DEBUG_CONSOLE
+
+                if (stdout)
+                {
+                    _out = writer;
+                }
+                else
+                {
+                    _error = writer;
+                }
+            }
+        }
+
+        private static Stream GetStandardFile(int stdHandleName, FileAccess access, int bufferSize)
+        {
+            Stream console = new __ConsoleStream(null, access);
+            return console;
+        }
+
+        public static Encoding InputEncoding
+        {
+            get
+            {
+                if (null != _inputEncoding)
+                {
+                    return _inputEncoding;
+                }
+
+                lock (InternalSyncObject)
+                {
+                    if (null != _inputEncoding)
+                    {
+                        return _inputEncoding;
+                    }
+
+                    _inputEncoding = Encoding.UTF8;
+                    return _inputEncoding;
+                }
+            }
+        } // public static Encoding InputEncoding
+
+        public static Encoding OutputEncoding
+        {
+            get
+            {
+                if (null != _outputEncoding)
+                {
+                    return _outputEncoding;
+                }
+
+                lock (InternalSyncObject)
+                {
+                    if (null != _outputEncoding)
+                    {
+                        return _outputEncoding;
+                    }
+
+                    _outputEncoding = Encoding.UTF8;
+                    return _outputEncoding;
+                }
+            }
+        } // public static Encoding OutputEncoding
+
+        public static void Beep()
+        {
+            Beep(800, 200);
+        }
+
+        public static void Beep(int frequency, int duration)
+        {
+            if (frequency < MinBeepFrequency || frequency > MaxBeepFrequency)
+            {
+                throw new ArgumentOutOfRangeException("frequency");
+            }
+            if (duration <= 0)
+            {
+                throw new ArgumentOutOfRangeException("duration");
+            }
+
+            // Note that Beep over Remote Desktop connections does not currently
+
+            // work.  Ignore any failures here.
+            throw new NotImplementedException();
+        }
+
+        public static Stream OpenStandardError()
+        {
+            return OpenStandardError(DefaultConsoleBufferSize);
+        }
+
+        public static Stream OpenStandardError(int bufferSize)
+        {
+            if (bufferSize < 0)
+            {
+                throw new ArgumentOutOfRangeException("bufferSize", "NeedNonNegNum");
+            }
+
+            return GetStandardFile(STD_ERROR_HANDLE, FileAccess.Write, bufferSize);
+        }
+
+        public static Stream OpenStandardInput()
+        {
+            return OpenStandardInput(DefaultConsoleBufferSize);
+        }
+
+        public static Stream OpenStandardInput(int bufferSize)
+        {
+            if (bufferSize < 0)
+            {
+                throw new ArgumentOutOfRangeException("bufferSize", "NeedNonNegNum");
+            }
+
+            return GetStandardFile(STD_INPUT_HANDLE, FileAccess.Read, bufferSize);
+        }
+
+        public static Stream OpenStandardOutput()
+        {
+            return OpenStandardOutput(DefaultConsoleBufferSize);
+        }
+
+        public static Stream OpenStandardOutput(int bufferSize)
+        {
+            if (bufferSize < 0)
+            {
+                throw new ArgumentOutOfRangeException("bufferSize", "NeedNonNegNum");
+            }
+
+            return GetStandardFile(STD_OUTPUT_HANDLE, FileAccess.Write, bufferSize);
+        }
+
+        public static void SetIn(TextReader newIn)
+        {
+            if (newIn == null)
+            {
+                throw new ArgumentNullException("newIn");
+            }
+
+            newIn = TextReader.Synchronized(newIn);
+            lock (InternalSyncObject)
+            {
+                _in = newIn;
+            }
+        }
+
+        public static void SetOut(TextWriter newOut)
+        {
+            if (newOut == null)
+            {
+                throw new ArgumentNullException("newOut");
+            }
+
+            newOut = TextWriter.Synchronized(newOut);
+            lock (InternalSyncObject)
+            {
+                _out = newOut;
+            }
+        }
+
+        public static void SetError(TextWriter newError)
+        {
+            if (newError == null)
+            {
+                throw new ArgumentNullException("newError");
+            }
+
+            newError = TextWriter.Synchronized(newError);
+            lock (InternalSyncObject)
+            {
+                _error = newError;
+            }
+        }
 
         public static int Read()
         {
-            throw new NotImplementedException();
+            return In.Read();
         }
 
         public static String ReadLine()
         {
-            throw new NotImplementedException();
+            return In.ReadLine();
         }
 
         public static void WriteLine()
         {
-            unsafe
-            {
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine();
         }
 
         public static void WriteLine(bool value)
         {
-            throw new NotImplementedException();
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(char value)
         {
-            unsafe
-            {
-                fixed (char* pc = &PrintChar.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pc, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(char[] buffer)
         {
-            unsafe
-            {
-                fixed (char* ps = &PrintString.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                fixed (char* b = &buffer[0])
-                {
-                    wprintf(ps, buffer.Length, b);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(buffer);
         }
 
         public static void WriteLine(char[] buffer, int index, int count)
         {
-            throw new NotImplementedException();
+            Out.WriteLine(buffer, index, count);
         }
 
         public static void WriteLine(decimal value)
         {
-            throw new NotImplementedException();
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(double value)
         {
-            unsafe
-            {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pd, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(float value)
         {
-            unsafe
-            {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pd, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(int value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         [CLSCompliant(false)]
         public static void WriteLine(uint value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(long value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         [CLSCompliant(false)]
         public static void WriteLine(ulong value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
-        public static void WriteLine(object value)
+        public static void WriteLine(Object value)
         {
-            WriteLine(value.ToString());
+            Out.WriteLine(value);
         }
 
-        public static void WriteLine(string value)
+        public static void WriteLine(String value)
         {
-            var chars = value.ToCharArray();
-            unsafe
-            {
-                fixed (char* ps = &PrintString.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                fixed (char* c = &chars[0])
-                {
-                    wprintf(ps, chars.Length, c);
-                    wprintf(nl);
-                }
-            }
+            Out.WriteLine(value);
         }
 
         public static void WriteLine(String format, Object arg0)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0);
-            WriteLine(sb.ToString());
+            Out.WriteLine(format, arg0);
         }
 
         public static void WriteLine(String format, Object arg0, Object arg1)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0, arg1);
-            WriteLine(sb.ToString());
+            Out.WriteLine(format, arg0, arg1);
         }
 
         public static void WriteLine(String format, Object arg0, Object arg1, Object arg2)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0, arg1, arg2);
-            WriteLine(sb.ToString());
+            Out.WriteLine(format, arg0, arg1, arg2);
         }
 
         public static void WriteLine(String format, params Object[] arg)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg);
-            WriteLine(sb.ToString());
+            if (arg == null) // avoid ArgumentNullException from String.Format
+            {
+                Out.WriteLine(format, null, null); // faster than Out.WriteLine(format, (Object)arg);
+            }
+            else
+            {
+                Out.WriteLine(format, arg);
+            }
         }
 
         public static void Write(String format, Object arg0)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0);
-            Write(sb.ToString());
+            Out.Write(format, arg0);
         }
 
         public static void Write(String format, Object arg0, Object arg1)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0, arg1);
-            Write(sb.ToString());
+            Out.Write(format, arg0, arg1);
         }
 
         public static void Write(String format, Object arg0, Object arg1, Object arg2)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg0, arg1, arg2);
-            Write(sb.ToString());
+            Out.Write(format, arg0, arg1, arg2);
         }
 
         public static void Write(String format, params Object[] arg)
         {
-            var sb = new StringBuilder();
-            sb.AppendFormat(format, arg);
-            Write(sb.ToString());
+            if (arg == null) // avoid ArgumentNullException from String.Format
+            {
+                Out.Write(format, null, null); // faster than Out.Write(format, (Object)arg);
+            }
+            else
+            {
+                Out.Write(format, arg);
+            }
         }
 
         public static void Write(bool value)
         {
-            throw new NotImplementedException();
+            Out.Write(value);
         }
 
         public static void Write(char value)
         {
-            unsafe
-            {
-                fixed (char* pc = &PrintChar.ToCharArray()[0])
-                {
-                    wprintf(pc, value);
-                }
-            }
+            Out.Write(value);
         }
 
         public static void Write(char[] buffer)
         {
-            unsafe
-            {
-                fixed (char* b = &buffer[0])
-                {
-                    wprintf(b);
-                }
-            }
+            Out.Write(buffer);
         }
 
         public static void Write(char[] buffer, int index, int count)
         {
-            throw new NotImplementedException();
+            Out.Write(buffer, index, count);
         }
 
         public static void Write(double value)
         {
-            unsafe
-            {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                {
-                    wprintf(pd, value);
-                }
-            }
+            Out.Write(value);
         }
 
         public static void Write(decimal value)
         {
-            throw new NotImplementedException();
+            Out.Write(value);
         }
 
         public static void Write(float value)
         {
-            unsafe
-            {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                {
-                    wprintf(pd, value);
-                }
-            }
+            Out.Write(value);
         }
 
         public static void Write(int value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                }
-            }
+            Out.Write(value);
         }
 
         [CLSCompliant(false)]
         public static void Write(uint value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                }
-            }
+            Out.Write(value);
         }
 
         public static void Write(long value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                }
-            }
+            Out.Write(value);
         }
 
         [CLSCompliant(false)]
         public static void Write(ulong value)
         {
-            unsafe
-            {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                {
-                    wprintf(pi, value);
-                }
-            }
+            Out.Write(value);
         }
 
         public static void Write(Object value)
         {
-            Write(value.ToString());
+            Out.Write(value);
         }
 
         public static void Write(String value)
         {
-            unsafe
-            {
-                fixed (char* p = &value.ToCharArray()[0])
-                {
-                    wprintf(p);
-                }
-            }
+            Out.Write(value);
         }
-
-        public static class Out
-        {
-            public static void WriteLine(object value)
-            {
-                WriteLine(value.ToString());
-            }
-
-            public static void WriteLine(String format, params Object[] arg)
-            {
-                var sb = new StringBuilder();
-                sb.AppendFormat(format, arg);
-                WriteLine(sb.ToString());
-            }
-
-            public static void Write(object value)
-            {
-                Write(value.ToString());
-            }
-
-            public static void Write(String format, params Object[] arg)
-            {
-                var sb = new StringBuilder();
-                sb.AppendFormat(format, arg);
-                Write(sb.ToString());
-            }
-        }
-
-        public static class Error
-        {
-            public static void WriteLine(object value)
-            {
-                WriteLine(value.ToString());
-            }
-
-            public static void WriteLine(String format, params Object[] arg)
-            {
-                var sb = new StringBuilder();
-                sb.AppendFormat(format, arg);
-                WriteLine(sb.ToString());
-            }
-
-            public static void Write(object value)
-            {
-                Write(value.ToString());
-            }
-
-            public static void Write(String format, params Object[] arg)
-            {
-                var sb = new StringBuilder();
-                sb.AppendFormat(format, arg);
-                Write(sb.ToString());
-            }
-        }
-    }
-}
+    } // public static class Console
+} // namespace System

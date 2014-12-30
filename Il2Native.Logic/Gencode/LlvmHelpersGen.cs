@@ -9,6 +9,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
+    using System.CodeDom;
     using System.Diagnostics;
     using System.Linq;
 
@@ -20,6 +21,7 @@ namespace Il2Native.Logic.Gencode
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
     using Il2Native.Logic.Gencode.InternalMethods;
     using System.Reflection;
+    using System.Reflection.Emit;
 
     /// <summary>
     /// </summary>
@@ -139,13 +141,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetIntTypeByByteSize(this LlvmWriter llvmWriter, int byteSize)
+        public static IType GetIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
         {
             IType toType = null;
             switch (byteSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.Byte");
+                    toType = llvmWriter.ResolveType("System.SByte");
                     break;
                 case 2:
                     toType = llvmWriter.ResolveType("System.Int16");
@@ -161,6 +163,85 @@ namespace Il2Native.Logic.Gencode
             return toType;
         }
 
+        public static IType GetIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        {
+            IType toType = null;
+            switch (bitSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Boolean");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.SByte");
+                    break;
+                case 16:
+                    toType = llvmWriter.ResolveType("System.Int16");
+                    break;
+                case 32:
+                    toType = llvmWriter.ResolveType("System.Int32");
+                    break;
+                case 64:
+                    toType = llvmWriter.ResolveType("System.Int64");
+                    break;
+            }
+
+            return toType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="byteSize">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IType GetUIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
+        {
+            IType toType = null;
+            switch (byteSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Byte");
+                    break;
+                case 2:
+                    toType = llvmWriter.ResolveType("System.UInt16");
+                    break;
+                case 4:
+                    toType = llvmWriter.ResolveType("System.UInt32");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.UInt64");
+                    break;
+            }
+
+            return toType;
+        }
+
+        public static IType GetUIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        {
+            IType toType = null;
+            switch (bitSize)
+            {
+                case 1:
+                    toType = llvmWriter.ResolveType("System.Boolean");
+                    break;
+                case 8:
+                    toType = llvmWriter.ResolveType("System.Byte");
+                    break;
+                case 16:
+                    toType = llvmWriter.ResolveType("System.UInt16");
+                    break;
+                case 32:
+                    toType = llvmWriter.ResolveType("System.UInt32");
+                    break;
+                case 64:
+                    toType = llvmWriter.ResolveType("System.UInt64");
+                    break;
+            }
+
+            return toType;
+        }
         /// <summary>
         /// </summary>
         /// <param name="llvmWriter">
@@ -193,6 +274,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
+                    Debug.Assert(!toType.IsPointer);
                     llvmWriter.UnaryOper(writer, opCode, "ptrtoint", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else if (toType.IsPointer || toType.IsByRef)
@@ -247,7 +329,13 @@ namespace Il2Native.Logic.Gencode
 
             var incomingResult = opCode.Result;
 
-            llvmWriter.ProcessOperator(writer, opCode, intConvert, opCode.Result.Type, toType);
+            llvmWriter.ProcessOperator(
+                writer,
+                opCode,
+                intConvert,
+                opCode.Result.Type,
+                toType,
+                LlvmWriter.OperandOptions.GenerateResult);
 
             var returnResult = opCode.Result;
 
@@ -301,6 +389,12 @@ namespace Il2Native.Logic.Gencode
             if (methodInfo.IsInterlockedFunction())
             {
                 methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);
+                return true;
+            }
+
+            if (methodInfo.IsThreadingFunction())
+            {
+                methodInfo.WriteThreadingFunction(opCodeMethodInfo, llvmWriter);
                 return true;
             }
 
@@ -592,7 +686,7 @@ namespace Il2Native.Logic.Gencode
             }
             else if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || toType.IsByRef || bareType.IsDerivedFrom(toType) || (fromResult is ConstValue))
             {
-                llvmWriter.WriteSetResultNumber(opCode, toType, true);
+                llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
                 fromResult.Type.WriteTypePrefix(writer, true);
                 writer.Write(' ');
@@ -973,6 +1067,8 @@ namespace Il2Native.Logic.Gencode
         public static void WritePtrToInt(this LlvmWriter llvmWriter, OpCodePart opCode, FullyDefinedReference source, IType toType)
         {
             var writer = llvmWriter.Output;
+
+            Debug.Assert(!toType.IsPointer);
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("ptrtoint ");

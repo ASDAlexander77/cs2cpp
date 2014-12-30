@@ -52,12 +52,6 @@ namespace System.Threading
         public static extern int Exchange(ref long location1, long value);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern int Exchange(ref float location1, float value);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern int Exchange(ref double location1, double value);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern int Exchange(ref object location1, object value);
 
         //[MethodImpl(MethodImplOptions.InternalCall)]
@@ -80,12 +74,6 @@ namespace System.Threading
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern long CompareExchange(ref long location1, long value, long comparand);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern float CompareExchange(ref float location1, float value, float comparand);
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern double CompareExchange(ref double location1, double value, double comparand);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern object CompareExchange(ref object location1, object value, object comparand);
