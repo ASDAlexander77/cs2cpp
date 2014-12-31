@@ -1246,11 +1246,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (results.Errors.HasErrors)
-            {
-                throw new Exception();
-            }
-
             this.DllFilePath = outDll;
             this.PdbFilePath = outPdb;
 

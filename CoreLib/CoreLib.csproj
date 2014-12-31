@@ -118,12 +118,15 @@
     <Compile Include="System\IO\BinaryReader.cs" />
     <Compile Include="System\IO\BinaryWriter.cs" />
     <Compile Include="System\IO\EndOfStreamException.cs" />
+    <Compile Include="System\IO\File.cs" />
     <Compile Include="System\IO\FileAccess.cs" />
     <Compile Include="System\IO\FileMode.cs" />
     <Compile Include="System\IO\FileOptions.cs" />
     <Compile Include="System\IO\FileShare.cs" />
     <Compile Include="System\IO\FileStream.cs" />
+    <Compile Include="System\IO\Iterator.cs" />
     <Compile Include="System\IO\MemoryStream.cs" />
+    <Compile Include="System\IO\ReadLinesIterator.cs" />
     <Compile Include="System\IO\SafeFileHandle.cs" />
     <Compile Include="System\IO\StreamReader.cs" />
     <Compile Include="System\IO\StreamWriter.cs" />

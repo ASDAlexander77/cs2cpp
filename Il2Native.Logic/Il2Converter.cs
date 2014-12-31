@@ -767,7 +767,13 @@ namespace Il2Native.Logic
             {
                 foreach (var type in genericTypeSpecializations)
                 {
+                    if (type == null)
+                    {
+                        continue;
+                    }
+
                     Debug.Assert(type != null);
+
                     ProcessGenericTypeToFindRequiredTypesForType(requiredTypes, requiredTypesSyncRoot, type, subSetGenericTypeSpecializations, genericMethodSpecializations, processedAlready);
                 }
             }
@@ -784,6 +790,7 @@ namespace Il2Native.Logic
                 // join types
                 foreach (var discoveredType in subSetGenericTypeSpecializations)
                 {
+                    Debug.Assert(discoveredType != null);
                     genericTypeSpecializations.Add(discoveredType);
                 }
             }

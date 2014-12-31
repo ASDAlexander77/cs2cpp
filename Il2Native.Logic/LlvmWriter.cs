@@ -4180,31 +4180,26 @@ namespace Il2Native.Logic
 
             var firstValueWithRequiredType =
                 opCode.AlternativeValues.Values.FirstOrDefault(
-                    v => v.RequiredOutgoingType != null && !(v.ResultAtExit is ConstValue))
-                ??
-                opCode.AlternativeValues.Values.FirstOrDefault(
-                    v => v.RequiredIncomingType != null && !(v.ResultAtExit is ConstValue));
-
+                    v => v.RequiredOutgoingType != null && !(v.ResultAtExit is ConstValue));
+            
             var firstValueRequiredType = firstValueWithRequiredType != null
-                ? firstValueWithRequiredType.RequiredIncomingType
+                ? firstValueWithRequiredType.RequiredOutgoingType
                 : null;
 
             var phiType = firstValueRequiredType;
             if (phiType == null)
             {
-                var value = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
                 var firstNonConstValue = opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
                 if (firstNonConstValue != null)
                 {
-                    phiType = (value != null ? value.ResultAtExit.Type : null)
-                              ?? firstNonConstValue.RequiredOutgoingType
-                              ?? firstNonConstValue.ResultAtExit.Type;
+                    phiType = firstNonConstValue.ResultAtExit.Type ?? firstNonConstValue.RequiredOutgoingType;
                 }
             }
 
             if (phiType == null)
             {
-                phiType = opCode.AlternativeValues.Values.First().ResultAtExit.Type;
+                var firstValue = opCode.AlternativeValues.Values.First();
+                phiType = firstValue.RequiredOutgoingType ?? firstValue.ResultAtExit.Type;
             }
 
             var structUsed = false;
