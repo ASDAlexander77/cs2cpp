@@ -1230,7 +1230,7 @@ namespace Il2Native.Logic
             parameters.GenerateExecutable = false;
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions = string.Concat(
-                string.Format("/optimize{0} /unsafe+", this.DebugInfo ? "-" : "+"),
+                string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty),
                 string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 

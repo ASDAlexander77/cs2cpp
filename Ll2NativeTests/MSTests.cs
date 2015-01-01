@@ -72,7 +72,7 @@ namespace Ll2NativeTests
 
         /// <summary>
         /// </summary>
-        private const bool UsingRoslyn = false;
+        private const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>

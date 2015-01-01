@@ -669,7 +669,7 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
-                if (ThisType.IsGenericType)
+                if (ThisType.IsGenericType || method.IsGenericMethod)
                 {
                     this.Output.Write("linkonce_odr ");
                 }

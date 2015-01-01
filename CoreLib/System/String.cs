@@ -35,17 +35,33 @@ namespace System
 
         private char[] chars;
 
+        public override int GetHashCode()
+        {
+            int h = 0;
+            int len = this.Length;
+
+            if (h == 0 && len > 0)
+            {
+                for (int i = 0; i < len; i++)
+                {
+                    h = 31 * h + chars[i];
+                }
+            }
+
+            return h;
+        }
+
         public override bool Equals(object obj)
         {
-            String s = obj as String;
+            var s = obj as string;
             if (s != null)
             {
-                return String.Equals(this, s);
+                return Equals(this, s);
             }
 
             return false;
         }
-       
+
         public static bool Equals(String a, String b)
         {
             if (a == null && b == null)
@@ -57,7 +73,7 @@ namespace System
             {
                 return false;
             }
-            
+
             var charsA = a.chars;
             var charsB = b.chars;
 
@@ -123,7 +139,7 @@ namespace System
             return Equals(a, b);
         }
 
-        
+
         public static bool operator !=(String a, String b)
         {
             return !Equals(a, b);
@@ -137,12 +153,12 @@ namespace System
                 return this.chars[index];
             }
         }
-        
+
         public char[] ToCharArray()
         {
             return this.chars;
         }
-        
+
         public char[] ToCharArray(int startIndex, int length)
         {
             var newChars = new char[length];
@@ -174,7 +190,7 @@ namespace System
             // TODO:
             return null;
         }
-        
+
         public String[] Split(char[] separator, int count)
         {
             //throw new NotImplementedException();
@@ -182,25 +198,25 @@ namespace System
             return null;
         }
 
-        
+
         public String Substring(int startIndex)
         {
             return new String(this.chars, startIndex, this.chars.Length - startIndex);
         }
 
-        
+
         public String Substring(int startIndex, int length)
         {
             return new String(this.chars, startIndex, length);
         }
 
-        
+
         public String Trim(params char[] trimChars)
         {
             return this.TrimHelper(trimChars, TrimBoth);
         }
 
-        
+
         public String TrimStart(params char[] trimChars)
         {
             return this.TrimHelper(trimChars, TrimHead);
@@ -269,7 +285,7 @@ namespace System
                 return new String(this.chars, start, len);
             }
         }
-        
+
         public String(char[] value, int startIndex, int length)
         {
             this.chars = new char[length];
@@ -280,7 +296,7 @@ namespace System
         {
             this.chars = value;
         }
-        
+
         public String(char c, int count)
         {
             this.chars = new char[count];
@@ -354,17 +370,17 @@ namespace System
 
             return 0;
         }
-        
+
         public int CompareTo(Object value)
         {
             throw new NotImplementedException();
         }
-        
+
         public int CompareTo(String strB)
         {
             throw new NotImplementedException();
         }
-        
+
         public int IndexOf(char value)
         {
             for (var index = 0; index < this.chars.Length; index++)
@@ -378,7 +394,7 @@ namespace System
             return -1;
         }
 
-        
+
         public int IndexOf(char value, int startIndex)
         {
             for (var index = startIndex; index < this.chars.Length; index++)
@@ -391,7 +407,7 @@ namespace System
 
             return -1;
         }
-        
+
         public int IndexOf(char value, int startIndex, int count)
         {
             for (var index = startIndex; index < Math.Min(count, this.chars.Length); index++)
@@ -404,22 +420,22 @@ namespace System
 
             return -1;
         }
-        
+
         public extern int IndexOfAny(char[] anyOf);
 
-        
+
         public extern int IndexOfAny(char[] anyOf, int startIndex);
 
-        
+
         public extern int IndexOfAny(char[] anyOf, int startIndex, int count);
-       
+
         public int IndexOf(String value)
         {
             throw new NotImplementedException();
         }
-        
+
         public extern int IndexOf(String value, int startIndex);
-        
+
         public extern int IndexOf(String value, int startIndex, int count);
 
         public static bool IsNullOrEmpty(String value)
@@ -467,48 +483,77 @@ namespace System
             }
 
             return result.ToString();
-        }       
+        }
 
         public int LastIndexOf(char value)
         {
             throw new NotImplementedException();
         }
 
-        
+
         public extern int LastIndexOf(char value, int startIndex);
 
-        
+
         public extern int LastIndexOf(char value, int startIndex, int count);
 
-        
+
         public extern int LastIndexOfAny(char[] anyOf);
 
-        
+
         public extern int LastIndexOfAny(char[] anyOf, int startIndex);
 
-        
+
         public extern int LastIndexOfAny(char[] anyOf, int startIndex, int count);
-       
+
         public int LastIndexOf(String value)
         {
             throw new NotImplementedException();
         }
-       
+
         public extern int LastIndexOf(String value, int startIndex);
 
-        
+
         public extern int LastIndexOf(String value, int startIndex, int count);
 
-        
+
         public String ToLower()
         {
-            throw new NotImplementedException();
+            var newChars = new char[this.chars.Length];
+
+            for (var i = 0; i < this.chars.Length; i++)
+            {
+                var c = this.chars[i];
+                if ('A' <= c && c <= 'Z')
+                {
+                    newChars[i] = (char)(c | 0x20);
+                }
+                else
+                {
+                    newChars[i] = c;
+                }
+            }
+
+            return new string(newChars);
         }
 
-        
         public String ToUpper()
         {
-            throw new NotImplementedException();
+            var newChars = new char[this.chars.Length];
+
+            for (var i = 0; i < this.chars.Length; i++)
+            {
+                var c = this.chars[i];
+                if ('a' <= c && c <= 'z')
+                {
+                    newChars[i] = (char)(c & ~0x20);
+                }
+                else
+                {
+                    newChars[i] = c;
+                }
+            }
+
+            return new string(newChars);
         }
 
         public override String ToString()
@@ -516,7 +561,7 @@ namespace System
             return this;
         }
 
-        
+
         public String Trim()
         {
             return this.TrimHelper(this.chars, TrimBoth);
@@ -589,7 +634,7 @@ namespace System
             return String.Concat(sArgs);
         }
 
-        
+
         public static String Concat(String str0, String str1)
         {
             var sb = new Text.StringBuilder();
@@ -598,7 +643,7 @@ namespace System
             return sb.ToString();
         }
 
-        
+
         public static String Concat(String str0, String str1, String str2)
         {
             var sb = new Text.StringBuilder();
@@ -608,7 +653,7 @@ namespace System
             return sb.ToString();
         }
 
-        
+
         public static String Concat(String str0, String str1, String str2, String str3)
         {
             var sb = new Text.StringBuilder();
@@ -619,7 +664,7 @@ namespace System
             return sb.ToString();
         }
 
-        
+
         public static String Concat(params String[] values)
         {
             var sb = new Text.StringBuilder();

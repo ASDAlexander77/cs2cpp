@@ -767,12 +767,11 @@ namespace Il2Native.Logic
             {
                 foreach (var type in genericTypeSpecializations)
                 {
+                    Debug.Assert(type != null);
                     if (type == null)
                     {
                         continue;
                     }
-
-                    Debug.Assert(type != null);
 
                     ProcessGenericTypeToFindRequiredTypesForType(requiredTypes, requiredTypesSyncRoot, type, subSetGenericTypeSpecializations, genericMethodSpecializations, processedAlready);
                 }
