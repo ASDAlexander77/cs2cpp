@@ -700,7 +700,7 @@ namespace System
                 return String.Empty;
 
             String s = new String('\x0', stringLength);
-            fixed (char* pTempChars = &s.chars[0])
+            fixed (char* pTempChars = s)
             {
                 int doubleCheck = encoding.GetChars(bytes, byteLength, pTempChars, stringLength, null);
             }
@@ -724,7 +724,7 @@ namespace System
             // Note: fixed does not like empty arrays
             if (count > 0)
             {
-                fixed (char* src = &this.chars[0])
+                fixed (char* src = this.chars)
                 fixed (char* dest = destination)
                     wstrcpy(dest + destinationIndex, src + sourceIndex, count);
             }

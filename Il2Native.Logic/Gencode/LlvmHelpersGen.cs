@@ -279,7 +279,12 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (toType.IsPointer || toType.IsByRef)
                 {
-                    llvmWriter.UnaryOper(writer, opCode, "inttoptr", resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
+                    llvmWriter.UnaryOper(
+                        writer,
+                        opCode,
+                        resultOf.Type.IsValueType() ? "inttoptr" : "bitcast",
+                        resultType: toType,
+                        options: LlvmWriter.OperandOptions.GenerateResult);
                 }
                 else
                 {

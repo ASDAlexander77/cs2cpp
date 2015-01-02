@@ -29,6 +29,8 @@ namespace PEAssemblyReader
         /// </summary>
         private IType localTypeReplaced;
 
+        private Lazy<IType> lazyLocalType;
+
         /// <summary>
         /// </summary>
         /// <param name="localInfo">
@@ -40,6 +42,8 @@ namespace PEAssemblyReader
             Debug.Assert(localInfo.Type.TypeKind != TypeKind.Error);
             this.localInfo = localInfo;
             this.LocalIndex = index;
+
+            this.lazyLocalType = new Lazy<IType>(this.CaluclateLocalType);
         }
 
         /// <summary>
@@ -76,8 +80,7 @@ namespace PEAssemblyReader
                     return this.localTypeReplaced;
                 }
 
-                var localType = this.localInfo.Type.ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
-                return localType;
+                return this.lazyLocalType.Value;
             }
 
             set
@@ -96,6 +99,11 @@ namespace PEAssemblyReader
             {
                 throw new NotImplementedException();
             }
+        }
+
+        private IType CaluclateLocalType()
+        {
+            return this.localInfo.Type.ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
         }
     }
 }

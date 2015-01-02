@@ -53,7 +53,8 @@ namespace System.Runtime.CompilerServices
         {
             get
             {   
-                throw new NotSupportedException();
+                // return offset of first element
+                return sizeof(int) * 2 + IntPtr.Size * 3;
             }
         }
     }

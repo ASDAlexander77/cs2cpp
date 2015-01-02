@@ -1508,6 +1508,20 @@ namespace Il2Native.Logic
             return retType;
         }
 
+        protected IType GetEffectiveLocalType(ILocalVariable local)
+        {
+            var effectiveLocalType = local.LocalType;
+            if (effectiveLocalType.IsPinned)
+            {
+                var localPinnedType = effectiveLocalType.FullName == "System.IntPtr"
+                                          ? ResolveType("System.Void").ToPointerType()
+                                          : effectiveLocalType.IsValueType ? effectiveLocalType.ToPointerType() : effectiveLocalType;
+                return localPinnedType;
+            }
+
+            return effectiveLocalType;
+        }
+
         private IType RequiredArithmeticIncomingType(OpCodePart opCodePart)
         {
             if (!opCodePart.Any(
@@ -1731,9 +1745,7 @@ namespace Il2Native.Logic
             // replace pinned IntPtr& with Int
             foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
             {
-                localInfo.LocalType = localInfo.LocalType.FullName == "System.IntPtr"
-                    ? this.ResolveType("System.Void").ToPointerType()
-                    : localInfo.LocalType.ToPointerType();
+                localInfo.LocalType = GetEffectiveLocalType(localInfo);
             }
         }
 

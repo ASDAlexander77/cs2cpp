@@ -2145,18 +2145,30 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
+
                     var intPtrOper = this.IntTypeRequired(opCode);
                     var nativeIntType = intPtrOper
                         ? ResolveType("System.Int32")
                         : ResolveType("System.Void").ToPointerType();
-                    this.LlvmConvert(
-                        opCode,
-                        "fptoui",
-                        "trunc",
-                        nativeIntType,
-                        !intPtrOper,
-                        ResolveType("System.IntPtr"),
-                        ResolveType("System.UIntPtr"));
+
+                    var requiredOutgoingType = this.RequiredIncomingType(opCode.UsedBy.OpCode);
+                    if (requiredOutgoingType.TypeEquals(ResolveType("System.Char").ToPointerType()) &&
+                        opCode.OpCodeOperands[0].Result.Type.TypeEquals(ResolveType("System.String")))
+                    {
+                        // load address of first char of the string
+                        this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(ResolveType("System.String"), "chars"));
+
+                        writer.WriteLine(string.Empty);
+                        
+                        var memberAccessResultNumber = opCode.Result;
+                        opCode.Result = null;
+                        this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
+                    }
+                    else
+                    {
+                        this.LlvmConvert(
+                            opCode, "fptoui", "ptrtoint", nativeIntType, !intPtrOper, ResolveType("System.IntPtr"), ResolveType("System.UIntPtr"));
+                    }
                     break;
 
                 case Code.Conv_I4:
@@ -4181,7 +4193,7 @@ namespace Il2Native.Logic
             var firstValueWithRequiredType =
                 opCode.AlternativeValues.Values.FirstOrDefault(
                     v => v.RequiredOutgoingType != null && !(v.ResultAtExit is ConstValue));
-            
+
             var firstValueRequiredType = firstValueWithRequiredType != null
                 ? firstValueWithRequiredType.RequiredOutgoingType
                 : null;
@@ -5040,19 +5052,6 @@ namespace Il2Native.Logic
         private string GetArgVarName(IParameter parameter, int index)
         {
             return this.GetArgVarName(parameter.Name, index);
-        }
-
-        private IType GetEffectiveLocalType(ILocalVariable local)
-        {
-            if (local.LocalType.IsPinned)
-            {
-                var localPinnedType = local.LocalType.FullName == "System.IntPtr"
-                    ? ResolveType("System.Void").ToPointerType()
-                    : local.LocalType.ToPointerType();
-                return localPinnedType;
-            }
-
-            return local.LocalType;
         }
 
         /// <summary>
@@ -6131,7 +6130,7 @@ namespace Il2Native.Logic
             foreach (var local in locals)
             {
                 this.Output.Write("{0} = ", this.GetLocalVarName(local.LocalIndex));
-                this.WriteAlloca(this.GetEffectiveLocalType(local));
+                this.WriteAlloca(GetEffectiveLocalType(local));
 
                 this.CheckIfExternalDeclarationIsRequired(local.LocalType);
 
