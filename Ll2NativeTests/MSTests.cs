@@ -292,7 +292,6 @@ namespace Ll2NativeTests
             // 77 - using enum
             // 85 - using UnmanagedType
             // 91 - using Reflection
-            // 95 - NEED TO BE FIXED, init double in a class
             // 99 - using GetType
             // 100 - using DllImport      
             // 101 - using Reflection
@@ -328,7 +327,6 @@ namespace Ll2NativeTests
             // 238 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
             // 239 - can't be compiled (5,10): error CS0246: The type or namespace name 'Conditional' could not be found (are you missing a using directive or an assembly reference?)
             // 240 - the same as 239
-            // 247 - ArrayList - GetEnumator is not implemented
             // 250 - FieldsOffset attribute not implemented
             // 253 - System.Reflection
             // 254 - System.Reflection 
@@ -370,9 +368,9 @@ namespace Ll2NativeTests
                 new List<int>(
                     new[]
                         {
-                            10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 53, 55, 66, 67, 68, 74, 77, 85, 91, 95, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
+                            10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 49, 50, 53, 55, 66, 67, 68, 74, 77, 85, 91, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
                             126, 127, 128, 132, 135, 157, 158, 174, 177, 178, 180, 181, 183, 187, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            247, 250, 253, 254, 263, 266, 269, 273, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
+                            250, 253, 254, 263, 266, 269, 273, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
                             349, 352, 353, 358, 361, 362, 367
                         });
 

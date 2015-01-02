@@ -1534,10 +1534,7 @@ namespace Il2Native.Logic
                 Code.Rem_Un,
                 Code.Shl,
                 Code.Shr,
-                Code.Shr_Un,
-                Code.And,
-                Code.Or,
-                Code.Xor))
+                Code.Shr_Un))
             {
                 return null;
             }
