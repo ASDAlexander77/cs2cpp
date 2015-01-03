@@ -1127,10 +1127,13 @@ namespace PEAssemblyReader
 
             sb.Append(this.typeDef.Name);
 
-            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            if (!this.IsGenericParameter)
             {
-                sb.Append('`');
-                sb.Append(this.typeDef.GetArity());
+                if (this.IsGenericType || this.IsGenericTypeDefinition)
+                {
+                    sb.Append('`');
+                    sb.Append(this.typeDef.GetArity());
+                }
             }
 
             if (this.IsArray)
@@ -1164,22 +1167,25 @@ namespace PEAssemblyReader
 
             sb.Append(this.typeDef.Name);
 
-            if (this.IsGenericType || this.IsGenericTypeDefinition)
+            if (!this.IsGenericParameter)
             {
-                sb.Append('<');
-
-                var index = 0;
-                foreach (var genArg in this.GenericTypeArguments)
+                if (this.IsGenericType || this.IsGenericTypeDefinition)
                 {
-                    if (index++ > 0)
+                    sb.Append('<');
+
+                    var index = 0;
+                    foreach (var genArg in this.GenericTypeArguments)
                     {
-                        sb.Append(",");
+                        if (index++ > 0)
+                        {
+                            sb.Append(",");
+                        }
+
+                        sb.Append(genArg.FullName);
                     }
 
-                    sb.Append(genArg.FullName);
+                    sb.Append('>');
                 }
-
-                sb.Append('>');
             }
 
             if (this.IsArray)

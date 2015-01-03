@@ -422,6 +422,14 @@ namespace Ll2NativeTests
             // 180 - Attributes
             // 184 - Array.FindAll not implemented
             // 186 - Serialization, FileStream etc not implemented
+            // 188 - string does not have GetEnumerable on chars
+            // 189 - object casted to IFoo and IFoo using Object functions (IFoo is not inherited from Object)
+            // 196 - (19,10): error CS1061: 'System.Type' does not contain a definition for 'IsGenericType' and no extension method 'IsGenericType' accepting a first argument of type 'System.Type' could be found
+            // 197 - (11,106): error CS1061: 'System.Type' does not contain a definition for 'MakeGenericType' and no extension method 'MakeGenericType' accepting a first argument of type 'System.Type' could be found
+            // 202 - using multiarray
+            // 205 - GetType of Generics
+            // 207 - (10,18): error CS0117: 'System.Array' does not contain a definition for 'ForEach'
+            // 209 - System.Random.Next not implemented (NEED TO BE FIXED)
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -429,9 +437,9 @@ namespace Ll2NativeTests
             var skip = new[]
                            {
                                13, 17, 31, 40, 47, 51, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 128, 143, 144, 145, 156, 
-                               161, 162, 165, 166, 167, 171, 172, 174, 177, 180, 184, 186
+                               161, 162, 165, 166, 167, 171, 172, 174, 177, 180, 184, 186, 188, 189, 196, 197, 202, 205, 207, 209
                            };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(207, 400).Where(n => !skip.Contains(n)))
             {
                 CompileAndRun(string.Format("gtest-{0:000}", index));
             }

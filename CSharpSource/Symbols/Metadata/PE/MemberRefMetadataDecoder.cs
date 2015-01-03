@@ -91,6 +91,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE
                 }
             }
 
+            // TODO: ASD ADDON
+            ArrayTypeSymbol arrayTypeSymbol = this.containingType as ArrayTypeSymbol;
+            if ((object)arrayTypeSymbol != null && position == 0 && arrayTypeSymbol.ElementType is TypeParameterSymbol)
+            {
+                return arrayTypeSymbol.ElementType;
+            }
+
             return new UnsupportedMetadataTypeSymbol(); // associated type does not have type parameters
         }
 

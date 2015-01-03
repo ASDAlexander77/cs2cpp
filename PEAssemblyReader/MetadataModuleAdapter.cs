@@ -105,6 +105,42 @@ namespace PEAssemblyReader
 
             var methodHandle = MetadataTokens.Handle(token);
 
+            /*
+             * FIX for Roslyn code
+             *  internal override Symbol GetSymbolForMemberRef(MemberReferenceHandle memberRef, TypeSymbol scope = null, bool methodsOnly = false)
+                {
+                    TypeSymbol targetTypeSymbol = GetMemberRefTypeSymbol(memberRef);
+
+                    // TODO: ASD: MY ADDON
+                    if (targetTypeSymbol == null)
+                    {
+                        Handle container = Module.GetContainingTypeOrThrow(memberRef);
+                        HandleType containerType = container.HandleType;
+                        if (containerType == HandleType.Method)
+                        {
+                            return GetSymbolForILToken(container);
+                        }
+                    }
+             
+                    ...
+             */
+
+            /*
+             * FIX for Roslyn Code - 2
+                protected override TypeSymbol GetGenericTypeParamSymbol(int position)
+                {
+                    ...
+                    // TODO: ASD ADDON
+                    ArrayTypeSymbol arrayTypeSymbol = this.containingType as ArrayTypeSymbol;
+                    if ((object)arrayTypeSymbol != null && position == 0 && arrayTypeSymbol.ElementType is TypeParameterSymbol)
+                    {
+                        return arrayTypeSymbol.ElementType;
+                    }
+
+                    ...
+                }             
+             */
+
             var methodSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(methodHandle) as MethodSymbol;
             if (methodSymbol != null)
             {
