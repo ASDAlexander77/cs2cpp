@@ -526,6 +526,8 @@ namespace System
 
             char fmt = ParseFormatSpecifier(format, out digits);
             int precision = FLOAT_PRECISION;
+
+            number = new NUMBER();
             switch (fmt & 0xFFD)
             {
                 case 'R':
@@ -533,7 +535,6 @@ namespace System
                     //we parse the number using 7 digits and then determine if it round trips to the same
                     //value.  If it does, we convert that NUMBER to a string, otherwise we reparse using 9 digits
                     //and display that.
-                    number = new NUMBER();
                     DoubleToNumber(argsValue, FLOAT_PRECISION, ref number);
 
                     if (number.scale == SCALE_NAN)
@@ -1000,7 +1001,7 @@ namespace System
                     dst = buffer;
 
                     RoundNumber(ref number, number.scale + digits); // Don't change this line to use digPos since digCount could have its sign changed.
-                    dst = FormatCurrency(dst, number, digits, numfmt);
+                    dst = FormatCurrency(dst, ref number, digits, numfmt);
                     break;
                 case 'F':
                     if (digits < 0) digits = numfmt.NumberDecimalDigits;
@@ -1142,7 +1143,7 @@ namespace System
                     dst = buffer;
 
                     RoundNumber(ref number, number.scale + digits);
-                    dst = FormatPercent(dst, number, digits, numfmt);
+                    dst = FormatPercent(dst, ref number, digits, numfmt);
                     break;
                 default:
                     throw new FormatException("Format_BadFormatSpecifier");
@@ -1155,6 +1156,537 @@ namespace System
 
             return new String(buffer, 0, (int)(dst - buffer));
         }
+
+        private unsafe static string NumberToStringFormat(ref NUMBER number, string str, NumberFormatInfo numfmt)
+        {
+            int digitCount;
+            int decimalPos;
+            int firstDigit;
+            int lastDigit;
+            int digPos;
+            int scientific;
+            int percent;
+            int permille;
+            int thousandPos;
+            int thousandCount = 0;
+            int thousandSeps;
+            int scaleAdjust;
+            int adjust;
+            char* section = null;
+            char* src = null;
+            char* dst = null;
+            char* dig = null;
+            char ch;
+
+            fixed (char* format = str)
+            fixed (char* digits = number.digits)
+            {
+                section = FindSection(format, digits[0] == 0 ? 2 : number.sign > 0 ? 1 : 0);
+
+            ParseSection:
+                digitCount = 0;
+                decimalPos = -1;
+                firstDigit = 0x7FFFFFFF;
+                lastDigit = 0;
+                scientific = 0;
+                percent = 0;
+                permille = 0;
+                thousandPos = -1;
+                thousandSeps = 0;
+                scaleAdjust = 0;
+                src = section;
+
+                while ((ch = *src++) != 0 && ch != ';')
+                {
+                    switch (ch)
+                    {
+                        case '#':
+                            digitCount++;
+                            break;
+                        case '0':
+                            if (firstDigit == 0x7FFFFFFF)
+                                firstDigit = digitCount;
+                            digitCount++;
+                            lastDigit = digitCount;
+                            break;
+                        case '.':
+                            if (decimalPos < 0)
+                            {
+                                decimalPos = digitCount;
+                            }
+                            break;
+                        case ',':
+                            if (digitCount > 0 && decimalPos < 0)
+                            {
+                                if (thousandPos >= 0)
+                                {
+                                    if (thousandPos == digitCount)
+                                    {
+                                        thousandCount++;
+                                        break;
+                                    }
+                                    thousandSeps = 1;
+                                }
+                                thousandPos = digitCount;
+                                thousandCount = 1;
+                            }
+                            break;
+                        case '%':
+                            percent++;
+                            scaleAdjust += 2;
+                            break;
+                        case (char)0x2030:
+                            permille++;
+                            scaleAdjust += 3;
+                            break;
+                        case '\'':
+                        case '"':
+                            while (*src != 0 && *src++ != ch)
+                                ;
+                            break;
+                        case '\\':
+                            if (*src != 0)
+                                src++;
+                            break;
+                        case 'E':
+                        case 'e':
+                            if (*src == '0' || ((*src == '+' || *src == '-') && src[1] == '0'))
+                            {
+                                while (*++src == '0')
+                                    ;
+                                scientific = 1;
+                            }
+                            break;
+                    }
+                }
+
+                if (decimalPos < 0)
+                    decimalPos = digitCount;
+                if (thousandPos >= 0)
+                {
+                    if (thousandPos == decimalPos)
+                    {
+                        scaleAdjust -= thousandCount * 3;
+                    }
+                    else
+                    {
+                        thousandSeps = 1;
+                    }
+                }
+                if (digits[0] != 0)
+                {
+                    number.scale += scaleAdjust;
+                    int pos = scientific > 0 ? digitCount : number.scale + digitCount - decimalPos;
+                    RoundNumber(ref number, pos);
+                    if (digits[0] == 0)
+                    {
+                        src = FindSection(format, 2);
+                        if (src != section)
+                        {
+                            section = src;
+                            goto ParseSection;
+                        }
+                    }
+                }
+                else
+                {
+                    number.sign = 0; // We need to format -0 without the sign set.
+                    number.scale = 0; // Decimals with scale ('0.00') should be rounded.
+                }
+
+                firstDigit = firstDigit < decimalPos ? decimalPos - firstDigit : 0;
+                lastDigit = lastDigit > decimalPos ? decimalPos - lastDigit : 0;
+                if (scientific > 0)
+                {
+                    digPos = decimalPos;
+                    adjust = 0;
+                }
+                else
+                {
+                    digPos = number.scale > decimalPos ? number.scale : decimalPos;
+                    adjust = number.scale - decimalPos;
+                }
+                src = section;
+                dig = digits;
+
+                // Find maximum number of characters that the destination string can grow by
+                // in the following while loop.  Use this to avoid buffer overflows.
+                // Longest strings are potentially +/- signs with 10 digit exponents,
+                // or decimal numbers, or the while loops copying from a quote or a \ onwards.
+                // Check for positive and negative
+                int maxStrIncLen = 0;
+                // We need this to be UINT64 since the percent computation could go beyond a UINT.
+                if (number.sign > 0)
+                {
+                    maxStrIncLen = numfmt.NegativeSign.Length;
+                }
+                else
+                {
+                    maxStrIncLen = numfmt.PositiveSign.Length;
+                }
+
+                // Add for any big decimal seperator
+                maxStrIncLen += numfmt.NumberDecimalSeparator.Length;
+
+                // Add for scientific
+                if (scientific > 0)
+                {
+                    int inc1 = numfmt.PositiveSign.Length;
+                    int inc2 = numfmt.NegativeSign.Length;
+                    maxStrIncLen += (inc1 > inc2) ? inc1 : inc2;
+                }
+
+                // Add for percent separator
+                if (percent > 0)
+                {
+                    maxStrIncLen += numfmt.PercentSymbol.Length * percent;
+                }
+
+                // Add for permilli separator
+                if (permille > 0)
+                {
+                    maxStrIncLen += numfmt.PerMilleSymbol.Length * permille;
+                }
+
+                //adjust can be negative, so we make this an int instead of an unsigned int.
+                // adjust represents the number of characters over the formatting eg. format string is "0000" and you are trying to
+                // format 100000 (6 digits). Means adjust will be 2. On the other hand if you are trying to format 10 adjust will be
+                // -2 and we'll need to fixup these digits with 0 padding if we have 0 formatting as in this example.
+                int adjustLen = (adjust > 0) ? adjust : 0; // We need to add space for these extra characters anyway.
+
+                int bufferLen2 = 125;
+                int* thousandsSepPos = stackalloc int[bufferLen2];
+                int thousandsSepCtr = -1;
+
+                if (thousandSeps > 0)
+                {
+                    // Fixup possible buffer overrun problems
+                    // We need to precompute this outside the number formatting loop
+                    if (numfmt.NumberGroupSizes.Length == 0)
+                    {
+                        thousandSeps = 0; // Nothing to add
+                    }
+                    else
+                    {
+                        ////thousandsSepPos = (int*)thousands.AllocThrows(bufferLen2 * sizeof (INT32));
+                        //                        - We need this array to figure out where to insert the thousands seperator. We would have to traverse the string
+                        // backwords. PIC formatting always traverses forwards. These indices are precomputed to tell us where to insert
+                        // the thousands seperator so we can get away with traversing forwards. Note we only have to compute upto digPos.
+                        // The max is not bound since you can have formatting strings of the form "000,000..", and this
+                        // should handle that case too.
+
+                        int[] groupDigits = numfmt.NumberGroupSizes;
+
+                        int groupSizeIndex = 0; // index into the groupDigits array.
+                        int groupTotalSizeCount = 0;
+                        int groupSizeLen = numfmt.NumberGroupSizes.Length; // the length of groupDigits array.
+                        if (groupSizeLen != 0)
+                            groupTotalSizeCount = groupDigits[groupSizeIndex];
+                        // the current running total of group size.
+                        int groupSize = groupTotalSizeCount;
+
+                        int totalDigits = digPos + ((adjust < 0) ? adjust : 0); // actual number of digits in o/p
+                        int numDigits = (firstDigit > totalDigits) ? firstDigit : totalDigits;
+                        while (numDigits > groupTotalSizeCount)
+                        {
+                            if (groupSize == 0)
+                                break;
+                            thousandsSepPos[++thousandsSepCtr] = groupTotalSizeCount;
+                            if (groupSizeIndex < groupSizeLen - 1)
+                            {
+                                groupSizeIndex++;
+                                groupSize = groupDigits[groupSizeIndex];
+                            }
+                            groupTotalSizeCount += groupSize;
+                            if (bufferLen2 - thousandsSepCtr < 10)
+                            {
+                                // Slack of 10
+                                throw new OutOfMemoryException();
+                            }
+                        }
+
+                        // We already have computed the number of separators above. Simply add space for them.
+                        adjustLen += ((thousandsSepCtr + 1) * numfmt.NumberGroupSeparator.Length);
+                    }
+                }
+
+                maxStrIncLen += adjustLen;
+
+                // Allocate temp buffer - gotta deal with Schertz' 500 MB strings.
+                // Some computations like when you specify Int32.MaxValue-2 %'s and each percent is setup to be Int32.MaxValue in length
+                // will generate a result that will be larget than an unsigned int can hold. This is to protect against overflow.
+                int tempLen = str.Length + maxStrIncLen + 10; // Include a healthy amount of temp space.
+                if ((uint)tempLen > 0x7FFFFFFF)
+                {
+                    throw new OverflowException();
+                }
+
+                int bufferLen = tempLen;
+                if (bufferLen < 250) // Stay under 512 bytes
+                    bufferLen = 250; // This is to prevent unneccessary calls to resize
+                char* buffer = stackalloc char[bufferLen];
+                dst = buffer;
+
+                if (number.sign > 0 && section == format)
+                {
+                    AddStringRef(&dst, numfmt.NegativeSign);
+                }
+
+                bool decimalWritten = false;
+
+                while ((ch = *src++) != 0 && ch != ';')
+                {
+                    // Make sure temp buffer is big enough, else resize it.
+                    if (bufferLen - (uint)(dst - buffer) < 10)
+                    {
+                        throw new OutOfMemoryException();
+                    }
+
+                    if (adjust > 0)
+                    {
+                        switch (ch)
+                        {
+                            case '#':
+                            case '0':
+                            case '.':
+                                while (adjust > 0)
+                                {
+                                    // digPos will be one greater than thousandsSepPos[thousandsSepCtr] since we are at
+                                    // the character after which the groupSeparator needs to be appended.
+                                    *dst++ = *dig != 0 ? *dig++ : '0';
+                                    if (thousandSeps > 0 && digPos > 1 && thousandsSepCtr >= 0)
+                                    {
+                                        if (digPos == thousandsSepPos[thousandsSepCtr] + 1)
+                                        {
+                                            AddStringRef(&dst, numfmt.NumberGroupSeparator);
+                                            thousandsSepCtr--;
+                                        }
+                                    }
+                                    digPos--;
+                                    adjust--;
+                                }
+                                break;
+                        }
+                    }
+
+                    switch (ch)
+                    {
+                        case '#':
+                        case '0':
+                            {
+                                if (adjust < 0)
+                                {
+                                    adjust++;
+                                    ch = (char)(digPos <= firstDigit ? '0' : 0);
+                                }
+                                else
+                                {
+                                    ch = (char)(*dig != 0 ? *dig++ : digPos > lastDigit ? '0' : 0);
+                                }
+                                if (ch != 0)
+                                {
+                                    *dst++ = ch;
+                                    if (thousandSeps > 0 && digPos > 1 && thousandsSepCtr >= 0)
+                                    {
+                                        if (digPos == thousandsSepPos[thousandsSepCtr] + 1)
+                                        {
+                                            AddStringRef(&dst, numfmt.NumberGroupSeparator);
+                                            thousandsSepCtr--;
+                                        }
+                                    }
+                                }
+
+                                digPos--;
+                                break;
+                            }
+                        case '.':
+                            {
+                                if (digPos != 0 || decimalWritten)
+                                {
+                                    // For compatability, don't echo repeated decimals
+                                    break;
+                                }
+                                // If the format has trailing zeros or the format has a decimal and digits remain
+                                if (lastDigit < 0
+                                    || (decimalPos < digitCount && *dig != 0))
+                                {
+                                    AddStringRef(&dst, numfmt.NumberDecimalSeparator);
+                                    decimalWritten = true;
+                                }
+                                break;
+                            }
+                        case (char)0x2030:
+                            AddStringRef(&dst, numfmt.PerMilleSymbol);
+                            break;
+                        case '%':
+                            AddStringRef(&dst, numfmt.PercentSymbol);
+                            break;
+                        case ',':
+                            break;
+                        case '\'':
+                        case '"':
+                            // Buffer overflow possibility
+                            while (*src != 0 && *src != ch)
+                            {
+                                *dst++ = *src++;
+                                if ((uint)(dst - buffer) == bufferLen - 1)
+                                {
+                                    if (bufferLen - (uint)(dst - buffer) < maxStrIncLen)
+                                    {
+                                        throw new OutOfMemoryException();
+                                    }
+                                }
+                            }
+                            if (*src != 0)
+                                src++;
+                            break;
+                        case '\\':
+                            if (*src != 0)
+                                *dst++ = *src++;
+                            break;
+                        case 'E':
+                        case 'e':
+                            {
+                                string sign = null;
+                                int i = 0;
+                                if (scientific > 0)
+                                {
+                                    if (*src == '0')
+                                    {
+                                        //Handles E0, which should format the same as E-0
+                                        i++;
+                                    }
+                                    else if (*src == '+' && src[1] == '0')
+                                    {
+                                        //Handles E+0
+                                        sign = numfmt.PositiveSign;
+                                    }
+                                    else if (*src == '-' && src[1] == '0')
+                                    {
+                                        //Handles E-0
+                                        //Do nothing, this is just a place holder s.t. we don't break out of the loop.
+                                    }
+                                    else
+                                    {
+                                        *dst++ = ch;
+                                        break;
+                                    }
+                                    while (*++src == '0')
+                                        i++;
+                                    if (i > 10)
+                                        i = 10;
+                                    int exp = digits[0] == 0 ? 0 : number.scale - decimalPos;
+                                    dst = FormatExponent(dst, exp, ch, sign, numfmt.NegativeSign, i);
+                                    scientific = 0;
+                                }
+                                else
+                                {
+                                    *dst++ = ch; // Copy E or e to output
+                                    if (*src == '+' || *src == '-')
+                                    {
+                                        *dst++ = *src++;
+                                    }
+                                    while (*src == '0')
+                                    {
+                                        *dst++ = *src++;
+                                    }
+                                }
+                                break;
+                            }
+                        default:
+                            *dst++ = ch;
+                            break;
+                    }
+                }
+                if (!((dst - buffer >= 0) && (dst - buffer <= (int)bufferLen)))
+                {
+                    throw new OutOfMemoryException();
+                }
+
+                return new String(buffer, 0, (int)(dst - buffer));
+            }
+        }
+
+        private static unsafe char* FindSection(char* format, int section)
+        {
+            char* src;
+            char ch;
+            if (section == 0) return format;
+            src = format;
+            for (; ; )
+            {
+                switch (ch = *src++)
+                {
+                    case '\'':
+                    case '"':
+                        while (*src != 0 && *src++ != ch) ;
+                        break;
+                    case '\\':
+                        if (*src != 0) src++;
+                        break;
+                    case ';':
+                        if (--section != 0) break;
+                        if (*src != 0 && *src != ';') return src;
+
+                        goto case '\0';
+
+                    case '\0':
+                        return format;
+                }
+            }
+        }
+
+        private static string[] posCurrencyFormats = new[]
+        {
+            "$#",
+            "#$",
+            "$ #",
+            "# $"
+        };
+
+        private static string[] negCurrencyFormats = new[]
+        {
+            "($#)",
+            "-$#",
+            "$-#",
+            "$#-",
+            "(#$)",
+            "-#$",
+            "#-$",
+            "#$-",
+            "-# $",
+            "-$ #",
+            "# $-",
+            "$ #-",
+            "$ -#",
+            "#- $",
+            "($ #)",
+            "(# $)"
+        };
+
+        private static string[] posPercentFormats = new[]
+        {
+            "# %",
+            "#%",
+            "%#",
+            "% #"
+        };
+
+        private static string[] negPercentFormats = new[]
+        {
+            "-# %",
+            "-#%",
+            "-%#",
+            "%-#",
+            "%#-",
+            "#-%",
+            "#%-",
+            "-% #",
+            "# %-",
+            "% #-",
+            "% -#",
+            "#- %"
+        };
 
         private static string[] negNumberFormats = new[]
         {
@@ -1411,6 +1943,83 @@ namespace System
                 buffer = FormatExponent(buffer, e, expChar, numfmt.PositiveSign, numfmt.NegativeSign, 3);
                 return buffer;
             }
+        }
+
+        private unsafe static char* FormatCurrency(char* buffer, ref NUMBER number, int digits, NumberFormatInfo numfmt)
+        {
+            char ch;
+            var fmtStr = number.sign > 0
+                ? negCurrencyFormats[numfmt.CurrencyNegativePattern]
+                : posCurrencyFormats[numfmt.CurrencyPositivePattern];
+
+            fixed (char* fmtPtr = fmtStr)
+            {
+                char* fmt = fmtPtr;
+                while ((ch = *fmt++) != 0)
+                {
+                    switch (ch)
+                    {
+                        case '#':
+                            buffer = FormatFixed(
+                                buffer,
+                                ref number,
+                                digits,
+                                numfmt.CurrencyGroupSizes,
+                                numfmt.CurrencyDecimalSeparator,
+                                numfmt.CurrencyGroupSeparator);
+                            break;
+                        case '-':
+                            AddStringRef(&buffer, numfmt.NegativeSign);
+                            break;
+                        case '$':
+                            AddStringRef(&buffer, numfmt.CurrencySymbol);
+                            break;
+                        default:
+                            *buffer++ = ch;
+                            break;
+                    }
+                }
+            }
+            return buffer;
+        }
+
+        private unsafe static char* FormatPercent(char* buffer, ref NUMBER number, int digits, NumberFormatInfo numfmt)
+        {
+            char ch;
+            var fmtStr = number.sign > 0
+                ? negPercentFormats[numfmt.PercentNegativePattern]
+                : posPercentFormats[numfmt.PercentPositivePattern];
+
+            fixed (char* fmtPtr = fmtStr)
+            {
+                char* fmt = fmtPtr;
+                while ((ch = *fmt++) != 0)
+                {
+                    switch (ch)
+                    {
+                        case '#':
+                            buffer = FormatFixed(
+                                buffer,
+                                ref number,
+                                digits,
+                                numfmt.PercentGroupSizes,
+                                numfmt.PercentDecimalSeparator,
+                                numfmt.PercentGroupSeparator);
+                            break;
+                        case '-':
+                            AddStringRef(&buffer, numfmt.NegativeSign);
+                            break;
+                        case '%':
+                            AddStringRef(&buffer, numfmt.PercentSymbol);
+                            break;
+                        default:
+                            *buffer++ = ch;
+                            break;
+                    }
+                }
+            }
+
+            return buffer;
         }
 
         private unsafe static void AddStringRef(char** ppBuffer, string strRef)
