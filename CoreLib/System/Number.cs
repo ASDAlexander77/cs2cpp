@@ -280,14 +280,15 @@ namespace System
     {
         public const int INT32_PRECISION = 10;
         public const int UINT32_PRECISION = INT32_PRECISION;
-        public const int INT64_PRECISION = 19;
-        public const int UINT64_PRECISION = 20;
+        public const int long_PRECISION = 19;
+        public const int Ulong_PRECISION = 20;
         public const int FLOAT_PRECISION = 7;
         public const int DOUBLE_PRECISION = 15;
         public const int LARGE_BUFFER_SIZE = 600;
         public const int MIN_BUFFER_SIZE = 105;
         public const uint SCALE_NAN = 0x80000000;
         public const uint SCALE_INF = 0x7FFFFFFF;
+        public const int DECIMAL_PRECISION = 29;
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double modf(double x, ref double intpart);
@@ -326,10 +327,10 @@ namespace System
                         Int32ToNumber(value, ref number);
                         if (fmt != 0)
                         {
-                            //retString = NumberToString(ref number, fmt, digits, info);
+                            retString = NumberToString(ref number, fmt, digits, info);
                             break;
                         }
-                        //retString = NumberToStringFormat(ref number, format, info);
+                        retString = NumberToStringFormat(ref number, format, info);
                         break;
                     }
 
@@ -347,10 +348,10 @@ namespace System
                     Int32ToNumber(value, ref number);
                     if (fmt != 0)
                     {
-                        //retString = NumberToString(ref number, fmt, digits, info);
+                        retString = NumberToString(ref number, fmt, digits, info);
                         break;
                     }
-                    //retString = NumberToStringFormat(ref number, format, info);
+                    retString = NumberToStringFormat(ref number, format, info);
                     break;
 
             }
@@ -378,10 +379,10 @@ namespace System
                         UInt32ToNumber(value, ref number);
                         if (fmt != 0)
                         {
-                            //retString = NumberToString(ref number, fmt, digits, info);
+                            retString = NumberToString(ref number, fmt, digits, info);
                             break;
                         }
-                        //retString = NumberToStringFormat(ref number, format, info);
+                        retString = NumberToStringFormat(ref number, format, info);
                         break;
                     }
 
@@ -399,10 +400,10 @@ namespace System
                     UInt32ToNumber(value, ref number);
                     if (fmt != 0)
                     {
-                        //retString = NumberToString(ref number, fmt, digits, info);
+                        retString = NumberToString(ref number, fmt, digits, info);
                         break;
                     }
-                    //retString = NumberToStringFormat(ref number, format, info);
+                    retString = NumberToStringFormat(ref number, format, info);
                     break;
 
             }
@@ -430,10 +431,10 @@ namespace System
                         Int64ToNumber(value, ref number);
                         if (fmt != 0)
                         {
-                            //retString = NumberToString(ref number, fmt, digits, info);
+                            retString = NumberToString(ref number, fmt, digits, info);
                             break;
                         }
-                        //retString = NumberToStringFormat(ref number, format, info);
+                        retString = NumberToStringFormat(ref number, format, info);
                         break;
                     }
 
@@ -451,10 +452,10 @@ namespace System
                     Int64ToNumber(value, ref number);
                     if (fmt != 0)
                     {
-                        //retString = NumberToString(ref number, fmt, digits, info);
+                        retString = NumberToString(ref number, fmt, digits, info);
                         break;
                     }
-                    //retString = NumberToStringFormat(ref number, format, info);
+                    retString = NumberToStringFormat(ref number, format, info);
                     break;
 
             }
@@ -482,10 +483,10 @@ namespace System
                         UInt64ToNumber(value, ref number);
                         if (fmt != 0)
                         {
-                            //retString = NumberToString(ref number, fmt, digits, info);
+                            retString = NumberToString(ref number, fmt, digits, info);
                             break;
                         }
-                        //retString = NumberToStringFormat(ref number, format, info);
+                        retString = NumberToStringFormat(ref number, format, info);
                         break;
                     }
 
@@ -503,10 +504,10 @@ namespace System
                     UInt64ToNumber(value, ref number);
                     if (fmt != 0)
                     {
-                        //retString = NumberToString(ref number, fmt, digits, info);
+                        retString = NumberToString(ref number, fmt, digits, info);
                         break;
                     }
-                    //retString = NumberToStringFormat(ref number, format, info);
+                    retString = NumberToStringFormat(ref number, format, info);
                     break;
 
             }
@@ -598,11 +599,11 @@ namespace System
 
             if (fmt != 0)
             {
-                //retVal = NumberToString( ref number, fmt, digits, info);
+                retVal = NumberToString(ref number, fmt, digits, info);
             }
             else
             {
-                //retVal = NumberToStringFormat( ref number, format, info);
+                retVal = NumberToStringFormat(ref number, format, info);
             }
 
         lExit:
@@ -966,6 +967,460 @@ namespace System
             value = n;
             return true;
         }
+
+        private unsafe static string NumberToString(ref NUMBER number, char format, int digits, NumberFormatInfo numfmt, bool bDecimal = false)
+        {
+            long newBufferLen = MIN_BUFFER_SIZE;
+
+            //CQuickBytesSpecifySize<LARGE_BUFFER_SIZE * sizeof(WCHAR)> buf;
+
+            char* buffer = stackalloc char[LARGE_BUFFER_SIZE];
+            char* dst = null;
+            int digCount = 0;
+
+            switch (format & 0xFFDF)
+            {
+                case 'C':
+                    if (digits < 0) digits = numfmt.CurrencyDecimalDigits;
+                    if (number.scale < 0)
+                        digCount = 0;
+                    else
+                        digCount = number.scale + digits;
+
+                    newBufferLen += digCount;
+                    newBufferLen += numfmt.NegativeSign.Length; // For number and exponent
+                    newBufferLen += ((long)numfmt.CurrencyGroupSizes.Length * digCount); // For all the grouping sizes
+                    newBufferLen += numfmt.CurrencyDecimalSeparator.Length;
+                    newBufferLen += numfmt.CurrencySymbol.Length;
+
+                    if (newBufferLen > Int32.MaxValue)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    dst = buffer;
+
+                    RoundNumber(ref number, number.scale + digits); // Don't change this line to use digPos since digCount could have its sign changed.
+                    dst = FormatCurrency(dst, number, digits, numfmt);
+                    break;
+                case 'F':
+                    if (digits < 0) digits = numfmt.NumberDecimalDigits;
+
+                    if (number.scale < 0)
+                        digCount = 0;
+                    else
+                        digCount = number.scale + digits;
+
+
+                    newBufferLen += digCount;
+                    newBufferLen += numfmt.NegativeSign.Length; // For number and exponent
+                    newBufferLen += numfmt.NumberDecimalSeparator.Length;
+
+                    if (newBufferLen > Int32.MaxValue)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    dst = buffer;
+
+                    RoundNumber(ref number, number.scale + digits);
+                    if (number.sign > 0)
+                    {
+                        AddStringRef(&dst, numfmt.NegativeSign);
+                    }
+
+                    dst = FormatFixed(dst, ref number, digits, null, numfmt.NumberDecimalSeparator, null);
+                    break;
+                case 'N':
+                    if (digits < 0) digits = numfmt.NumberDecimalDigits; // Since we are using digits in our calculation
+
+                    if (number.scale < 0)
+                        digCount = 0;
+                    else
+                        digCount = number.scale + digits;
+
+
+                    newBufferLen += digCount;
+                    newBufferLen += numfmt.NegativeSign.Length; // For number and exponent
+                    newBufferLen += ((long)numfmt.NumberGroupSizes.Length) * digCount; // For all the grouping sizes
+                    newBufferLen += numfmt.NumberDecimalSeparator.Length;
+
+                    if (newBufferLen > Int32.MaxValue)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    dst = buffer;
+
+                    RoundNumber(ref number, number.scale + digits);
+                    dst = FormatNumber(dst, ref number, digits, numfmt);
+                    break;
+                case 'E':
+                    if (digits < 0) digits = 6;
+                    digits++;
+
+                    newBufferLen += digits;
+                    newBufferLen += (((long)numfmt.NegativeSign.Length + numfmt.PositiveSign.Length) * 2); // For number and exponent
+                    newBufferLen += numfmt.NumberDecimalSeparator.Length;
+
+                    if (newBufferLen > Int32.MaxValue)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    dst = buffer;
+
+                    RoundNumber(ref number, digits);
+                    if (number.sign > 0)
+                    {
+                        AddStringRef(&dst, numfmt.NegativeSign);
+                    }
+                    dst = FormatScientific(dst, number, digits, format, numfmt);
+                    break;
+                case 'G':
+                    {
+                        bool enableRounding = true;
+                        if (digits < 1)
+                        {
+                            if (bDecimal && (digits == -1))
+                            { // Default to 29 digits precision only for G formatting without a precision specifier
+                                digits = DECIMAL_PRECISION;
+                                enableRounding = false;  // Turn off rounding for ECMA compliance to output trailing 0's after decimal as significant
+                            }
+                            else
+                            {
+                                digits = number.precision;
+                            }
+                        }
+
+                        newBufferLen += digits;
+                        newBufferLen += ((numfmt.NegativeSign.Length + numfmt.PositiveSign.Length) * 2); // For number and exponent
+                        newBufferLen += numfmt.NumberDecimalSeparator.Length;
+
+                        if (newBufferLen > Int32.MaxValue)
+                        {
+                            throw new IndexOutOfRangeException();
+                        }
+                        dst = buffer;
+
+                        if (enableRounding) // Don't round for G formatting without precision
+                            RoundNumber(ref number, digits); // This also fixes up the minus zero case
+                        else
+                        {
+                            fixed (char* digitsPtr = number.digits)
+                            {
+                                if (bDecimal && (digitsPtr[0] == 0))
+                                {
+                                    // Minus zero should be formatted as 0
+                                    number.sign = 0;
+                                }
+                            }
+                        }
+                        if (number.sign > 0)
+                        {
+                            AddStringRef(&dst, numfmt.NegativeSign);
+                        }
+                        dst = FormatGeneral(dst, number, digits, format - ('G' - 'E'), numfmt, !enableRounding);
+                    }
+                    break;
+                case 'P':
+                    if (digits < 0) digits = numfmt.PercentDecimalDigits;
+                    number.scale += 2;
+
+                    if (number.scale < 0)
+                        digCount = 0;
+                    else
+                        digCount = number.scale + digits;
+
+
+                    newBufferLen += digCount;
+                    newBufferLen += numfmt.NegativeSign.Length; // For number and exponent
+                    newBufferLen += ((long)numfmt.PercentGroupSeparator.Length) * digCount; // For all the grouping sizes
+                    newBufferLen += numfmt.PercentDecimalSeparator.Length;
+                    newBufferLen += numfmt.PercentSymbol.Length;
+
+                    if (newBufferLen > Int32.MaxValue)
+                    {
+                        throw new IndexOutOfRangeException();
+                    }
+                    dst = buffer;
+
+                    RoundNumber(ref number, number.scale + digits);
+                    dst = FormatPercent(dst, number, digits, numfmt);
+                    break;
+                default:
+                    throw new FormatException("Format_BadFormatSpecifier");
+            }
+
+            if (!((dst - buffer >= 0) && (dst - buffer) <= newBufferLen))
+            {
+                throw new OutOfMemoryException();
+            }
+
+            return new String(buffer, 0, (int)(dst - buffer));
+        }
+
+        private static string[] negNumberFormats = new[]
+        {
+            "(#)",
+            "-#",
+            "- #",
+            "#-",
+            "# -",
+        };
+
+        private static string posNumberFormat = "#";
+
+        private unsafe static char* FormatNumber(char* buffer, ref NUMBER number, int digits, NumberFormatInfo numfmt)
+        {
+            char ch;
+            var fmtStr = number.sign > 0
+                ? negNumberFormats[numfmt.NumberNegativePattern]
+                : posNumberFormat;
+
+            fixed (char* fmtPtr = fmtStr)
+            {
+                char* fmt = fmtPtr;
+                while ((ch = *fmt++) != 0)
+                {
+                    switch (ch)
+                    {
+                        case '#':
+                            buffer = FormatFixed(
+                                buffer,
+                                ref number,
+                                digits,
+                                numfmt.NumberGroupSizes,
+                                numfmt.NumberDecimalSeparator,
+                                numfmt.NumberGroupSeparator);
+                            break;
+                        case '-':
+                            AddStringRef(&buffer, numfmt.NegativeSign);
+                            break;
+                        default:
+                            *buffer++ = ch;
+                            break;
+                    }
+                }
+            }
+
+            return buffer;
+        }
+
+        private unsafe static char* FormatFixed(char* buffer, ref NUMBER number, int digits,
+            int[] groupDigits, string sDecimal, string sGroup)
+        {
+            int digPos = number.scale;
+            fixed (char* digPtr = number.digits)
+            {
+                char* dig = digPtr;
+                if (digPos > 0)
+                {
+                    if (groupDigits != null)
+                    {
+
+                        int groupSizeIndex = 0; // index into the groupDigits array.
+                        int groupSizeCount = groupDigits[groupSizeIndex]; // the current total of group size.
+                        int groupSizeLen = groupDigits.Length; // the length of groupDigits array.
+                        int bufferSize = digPos; // the length of the result buffer string.
+                        int groupSeparatorLen = sGroup.Length; // the length of the group separator string.
+                        int groupSize = 0; // the current group size.
+
+                        //
+                        // Find out the size of the string buffer for the result.
+                        //
+                        if (groupSizeLen != 0) // You can pass in 0 length arrays
+                        {
+                            while (digPos > groupSizeCount)
+                            {
+                                groupSize = groupDigits[groupSizeIndex];
+                                if (groupSize == 0)
+                                {
+                                    break;
+                                }
+
+                                bufferSize += groupSeparatorLen;
+                                if (groupSizeIndex < groupSizeLen - 1)
+                                {
+                                    groupSizeIndex++;
+                                }
+                                groupSizeCount += groupDigits[groupSizeIndex];
+                                if (groupSizeCount < 0 || bufferSize < 0)
+                                {
+                                    throw new ArgumentOutOfRangeException(); // if we overflow
+                                }
+                            }
+                            if (groupSizeCount == 0)
+                                // If you passed in an array with one entry as 0, groupSizeCount == 0
+                                groupSize = 0;
+                            else
+                                groupSize = groupDigits[0];
+                        }
+
+                        groupSizeIndex = 0;
+                        int digitCount = 0;
+                        int digStart;
+                        int digLength = (int)wcslen(dig);
+                        digStart = (digPos < digLength) ? digPos : digLength;
+                        char* p = buffer + bufferSize - 1;
+                        for (int i = digPos - 1; i >= 0; i--)
+                        {
+                            *(p--) = (i < digStart) ? dig[i] : '0';
+
+                            if (groupSize > 0)
+                            {
+                                digitCount++;
+                                if (digitCount == groupSize && i != 0)
+                                {
+                                    for (int j = groupSeparatorLen - 1; j >= 0; j--)
+                                    {
+                                        *(p--) = sGroup[j];
+                                    }
+
+                                    if (groupSizeIndex < groupSizeLen - 1)
+                                    {
+                                        groupSizeIndex++;
+                                        groupSize = groupDigits[groupSizeIndex];
+                                    }
+                                    digitCount = 0;
+                                }
+                            }
+                        }
+                        if (p < buffer - 1)
+                        {
+                            // This indicates a buffer underflow since we write in backwards. 
+                            throw new OutOfMemoryException();
+                        }
+                        buffer += bufferSize;
+                        dig += digStart;
+                    }
+                    else
+                    {
+                        do
+                        {
+                            *buffer++ = *dig != 0 ? *dig++ : '0';
+                        } while (--digPos > 0);
+                    }
+                }
+                else
+                {
+                    *buffer++ = '0';
+                }
+                if (digits > 0)
+                {
+                    AddStringRef(&buffer, sDecimal);
+                    while (digPos < 0 && digits > 0)
+                    {
+                        *buffer++ = '0';
+                        digPos++;
+                        digits--;
+                    }
+                    while (digits > 0)
+                    {
+                        *buffer++ = *dig != 0 ? *dig++ : '0';
+                        digits--;
+                    }
+                }
+            }
+
+            return buffer;
+        }
+
+        private unsafe static char* FormatGeneral(char* buffer, ref NUMBER number, int digits, char expChar,
+            NumberFormatInfo numfmt, bool bSuppressScientific = false)
+        {
+            int digPos = number.scale;
+            int scientific = 0;
+            if (!bSuppressScientific) { // Don't switch to scientific notation
+                if (digPos > digits || digPos < -3) {
+                    digPos = 1;
+                    scientific = 1;
+                }
+            }
+            fixed (char* digPtr = number.digits)
+            {
+                char* dig = digPtr;
+                if (digPos > 0)
+                {
+                    do
+                    {
+                        *buffer++ = *dig != 0 ? *dig++ : '0';
+                    } while (--digPos > 0);
+                }
+                else
+                {
+                    *buffer++ = '0';
+                }
+                if (*dig != 0 || digPos < 0)
+                {
+                    AddStringRef(&buffer, numfmt.NumberDecimalSeparator);
+                    while (digPos < 0)
+                    {
+                        *buffer++ = '0';
+                        digPos++;
+                    }
+                    while (*dig != 0)
+                    {
+                        *buffer++ = *dig++;
+                    }
+                }
+                if (scientific > 0)
+                    buffer = FormatExponent(
+                        buffer,
+                        number.scale - 1,
+                        expChar,
+                        numfmt.PositiveSign,
+                        numfmt.NegativeSign,
+                        2);
+            }
+
+            return buffer;
+        }
+
+        private unsafe static void AddStringRef(char** ppBuffer, string strRef)
+        {
+            fixed (char* buffer = strRef)
+            {
+                int length = strRef.Length;
+                for (char* str = buffer; str < buffer + length; (*ppBuffer)++, str++)
+                {
+                    **ppBuffer = *str;
+                }
+            }
+        }
+
+        private unsafe static void RoundNumber(ref NUMBER number, int pos)
+        {
+            fixed (char* digits = number.digits)
+            {
+                int i = 0;
+                while (i < pos && digits[i] != 0)
+                    i++;
+                if (i == pos && digits[i] >= '5')
+                {
+                    while (i > 0 && digits[i - 1] == '9')
+                        i--;
+                    if (i > 0)
+                    {
+                        digits[i - 1]++;
+                    }
+                    else
+                    {
+                        number.scale++;
+                        digits[0] = '1';
+                        i = 1;
+                    }
+                }
+                else
+                {
+                    while (i > 0 && digits[i - 1] == '0')
+                        i--;
+                }
+                if (i == 0)
+                {
+                    number.scale = 0;
+                    number.sign = 0;
+                }
+                digits[i] = '\0';
+            }
+        }
+
 
         private static byte[] rgexp64Power10 = new byte[]
         {
@@ -1447,7 +1902,7 @@ namespace System
                     currSymbol = null;
                     ansicurrSymbol = null;
                     // We already found the currency symbol. There should not be more currency symbols. Set
-                    // currSymbol to NULL so that we won't search it again in the later code path.
+                    // currSymbol to null so that we won't search it again in the later code path.
                     p = next - 1;
                 }
                 else
@@ -2031,8 +2486,8 @@ namespace System
 
         private static unsafe void Int64ToNumber(long value, ref NUMBER number)
         {
-            char* buffer = stackalloc char[INT64_PRECISION + 1];
-            number.precision = INT64_PRECISION;
+            char* buffer = stackalloc char[long_PRECISION + 1];
+            number.precision = long_PRECISION;
             if (value >= 0)
             {
                 number.sign = 0;
@@ -2046,13 +2501,13 @@ namespace System
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = buffer + INT64_PRECISION;
+                char* p = buffer + long_PRECISION;
                 while (((ulong)value & 0xFFFFFFFF00000000) > 0)
                 {
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                 }
                 p = Int32ToDecChars(p, (uint)value, 0);
-                int i = (int)(buffer + INT64_PRECISION - p);
+                int i = (int)(buffer + long_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
@@ -2061,20 +2516,20 @@ namespace System
 
         private static unsafe void UInt64ToNumber(ulong value, ref NUMBER number)
         {
-            char* buffer = stackalloc char[UINT64_PRECISION + 1];
-            number.precision = UINT64_PRECISION;
+            char* buffer = stackalloc char[Ulong_PRECISION + 1];
+            number.precision = Ulong_PRECISION;
             number.sign = 0;
 
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = buffer + UINT64_PRECISION;
+                char* p = buffer + Ulong_PRECISION;
                 while (((ulong)value & 0xFFFFFFFF00000000) > 0)
                 {
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                 }
                 p = Int32ToDecChars(p, (uint)value, 0);
-                int i = (int)(buffer + UINT64_PRECISION - p);
+                int i = (int)(buffer + Ulong_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
