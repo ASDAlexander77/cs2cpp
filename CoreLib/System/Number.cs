@@ -1071,7 +1071,7 @@ namespace System
                     {
                         AddStringRef(&dst, numfmt.NegativeSign);
                     }
-                    dst = FormatScientific(dst, number, digits, format, numfmt);
+                    dst = FormatScientific(dst, ref number, digits, format, numfmt);
                     break;
                 case 'G':
                     {
@@ -1116,7 +1116,7 @@ namespace System
                         {
                             AddStringRef(&dst, numfmt.NegativeSign);
                         }
-                        dst = FormatGeneral(dst, number, digits, format - ('G' - 'E'), numfmt, !enableRounding);
+                        dst = FormatGeneral(dst, ref number, digits, (char)(format - ('G' - 'E')), numfmt, !enableRounding);
                     }
                     break;
                 case 'P':
@@ -1327,8 +1327,10 @@ namespace System
         {
             int digPos = number.scale;
             int scientific = 0;
-            if (!bSuppressScientific) { // Don't switch to scientific notation
-                if (digPos > digits || digPos < -3) {
+            if (!bSuppressScientific)
+            { // Don't switch to scientific notation
+                if (digPos > digits || digPos < -3)
+                {
                     digPos = 1;
                     scientific = 1;
                 }
@@ -1371,6 +1373,44 @@ namespace System
             }
 
             return buffer;
+        }
+
+        private unsafe static char* FormatExponent(char* buffer, int value, char expChar,
+            string posSignStr, string negSignStr, int minDigits)
+        {
+            char* digits = stackalloc char[11];
+            *buffer++ = expChar;
+            if (value < 0)
+            {
+                AddStringRef(&buffer, negSignStr);
+                value = -value;
+            }
+            else if (posSignStr != null)
+            {
+                AddStringRef(&buffer, posSignStr);
+            }
+
+            char* p = Int32ToDecChars(digits + 10, (uint)value, minDigits);
+            int i = (int)(digits + 10 - p);
+            while (--i >= 0) *buffer++ = *p++;
+            return buffer;
+        }
+
+        private unsafe static char* FormatScientific(char* buffer, ref NUMBER number, int digits, char expChar,
+            NumberFormatInfo numfmt)
+        {
+            fixed (char* digPtr = number.digits)
+            {
+                char* dig = digPtr;
+                *buffer++ = *dig != 0 ? *dig++ : '0';
+                if (digits != 1) // For E0 we would like to suppress the decimal point
+                    AddStringRef(&buffer, numfmt.NumberDecimalSeparator);
+                while (--digits > 0)
+                    *buffer++ = *dig != 0 ? *dig++ : '0';
+                int e = digPtr[0] == 0 ? 0 : number.scale - 1;
+                buffer = FormatExponent(buffer, e, expChar, numfmt.PositiveSign, numfmt.NegativeSign, 3);
+                return buffer;
+            }
         }
 
         private unsafe static void AddStringRef(char** ppBuffer, string strRef)
