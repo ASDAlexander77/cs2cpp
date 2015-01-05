@@ -100,6 +100,9 @@
     <Compile Include="System\FlagsAttribute.cs" />
     <Compile Include="System\FormatException.cs" />
     <Compile Include="System\GC.cs" />
+    <Compile Include="System\Globalization\CultureData.cs" />
+    <Compile Include="System\Globalization\DigitShapes.cs" />
+    <Compile Include="System\Globalization\NumberStyles.cs" />
     <Compile Include="System\Guid.cs" />
     <Compile Include="System\IAsyncResult.cs" />
     <Compile Include="System\ICloneable.cs" />
@@ -158,6 +161,7 @@
     <Compile Include="System\RuntimeMethodHandle.cs" />
     <Compile Include="System\RuntimeType.cs" />
     <Compile Include="System\RuntimeTypeHandle.cs" />
+    <Compile Include="System\Runtime\CompilerServices\FixedBufferAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\IsVolatile.cs" />
     <Compile Include="System\Runtime\InteropServices\CallingConvention.cs" />
     <Compile Include="System\StringComparer.cs" />

@@ -17,6 +17,8 @@ namespace System.Globalization
         internal ResourceManager m_rm;
         [NonSerialized]
         private CultureInfo m_parent;
+        [NonSerialized]
+        internal bool m_isInherited;
         const string c_ResourceBase = "System.Globalization.Resources.CultureInfo";
         internal string EnsureStringResource(ref string str, System.Globalization.Resources.CultureInfo.StringResources id)
         {
@@ -79,6 +81,29 @@ namespace System.Globalization
             set;
         }
 
+        public static CultureInfo CurrentCulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = CurrentCultureInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    CurrentCultureInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo CurrentCultureInternal
+        {
+            get;
+
+            set;
+        }
+
         public virtual CultureInfo Parent
         {
             get
@@ -110,44 +135,6 @@ namespace System.Globalization
             }
         }
 
-        public static CultureInfo[] GetCultures(CultureTypes types)
-        {
-            ArrayList listCultures = new ArrayList();
-            //Look for all assemblies/satellite assemblies
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int iAssembly = 0; iAssembly < assemblies.Length; iAssembly++)
-            {
-                Assembly assembly = assemblies[iAssembly];
-                string mscorlib = "mscorlib";
-                string fullName = assembly.FullName;
-                // consider adding startswith ?
-                if ((mscorlib.Length <= fullName.Length) && (fullName.Substring(0, mscorlib.Length) == mscorlib))
-                {
-                    string[] resources = assembly.GetManifestResourceNames();
-                    for (int iResource = 0; iResource < resources.Length; iResource++)
-                    {
-                        string resource = resources[iResource];
-                        string ciResource = c_ResourceBase;
-                        if (ciResource.Length < resource.Length && resource.Substring(0, ciResource.Length) == ciResource)
-                        {
-                            //System.Globalization.Resources.CultureInfo.<culture>.tinyresources
-                            string cultureName = resource.Substring(ciResource.Length, resource.Length - ciResource.Length - System.Resources.ResourceManager.s_fileExtension.Length);
-                            // remove the leading "."
-                            if (cultureName != "")
-                            {
-                                cultureName = cultureName.Substring(1, cultureName.Length - 1);
-                            }
-
-                            // if GetManifestResourceNames() changes, we need to change this code to ensure the index is the same.
-                            listCultures.Add(new CultureInfo(new ResourceManager(c_ResourceBase, cultureName, iResource, typeof(CultureInfo).Assembly, assembly)));
-                        }
-                    }
-                }
-            }
-
-            return (CultureInfo[])listCultures.ToArray(typeof(CultureInfo));
-        }
-
         public virtual String Name
         {
             get
@@ -161,71 +148,24 @@ namespace System.Globalization
             return m_name;
         }
 
-//        public virtual Object GetFormat(Type formatType) {
-//            if (formatType == typeof(NumberFormatInfo)) {
-//                return (NumberFormat);
-//            }
-//            if (formatType == typeof(DateTimeFormatInfo)) {
-//                return (DateTimeFormat);
-//            }
-//            return (null);
-//        }
+        public virtual Object GetFormat(Type formatType)
+        {
+            if (formatType == typeof(NumberFormatInfo))
+            {
+                return (NumberFormat);
+            }
+            if (formatType == typeof(DateTimeFormatInfo))
+            {
+                return (DateTimeFormat);
+            }
+            return (null);
+        }
 
-//        internal static void CheckNeutral(CultureInfo culture) {
-//            if (culture.IsNeutralCulture) {
-//                    BCLDebug.Assert(culture.m_name != null, "[CultureInfo.CheckNeutral]Always expect m_name to be set");
-//                    throw new NotSupportedException(
-//                                    Environment.GetResourceString("Argument_CultureInvalidFormat",
-//                                    culture.m_name));
-//            }
-//        }
-
-//        [System.Runtime.InteropServices.ComVisible(false)]
-//        public CultureTypes CultureTypes
-//        {
-//            get
-//            {
-//                CultureTypes types = 0;
-
-//                if (m_cultureTableRecord.IsNeutralCulture)
-//                    types |= CultureTypes.NeutralCultures;
-//                else 
-//                    types |= CultureTypes.SpecificCultures;
-
-//                if (m_cultureTableRecord.IsSynthetic)
-//                    types |= CultureTypes.WindowsOnlyCultures | CultureTypes.InstalledWin32Cultures; // Synthetic is installed culture too.
-//                else
-//                {
-//                    // Not Synthetic
-//                    if (CultureTable.IsInstalledLCID(cultureID)) 
-//                        types |= CultureTypes.InstalledWin32Cultures;
-                        
-//                    if (!m_cultureTableRecord.IsCustomCulture || m_cultureTableRecord.IsReplacementCulture)
-//                        types |= CultureTypes.FrameworkCultures;
-//                }
-
-//                if (m_cultureTableRecord.IsCustomCulture)
-//                {
-//                    types |= CultureTypes.UserCustomCulture;
-
-//                    if (m_cultureTableRecord.IsReplacementCulture)
-//                        types |= CultureTypes.ReplacementCultures;
-//                }
-
-
-//                return types;
-//            }
-//        }
-
-        public virtual NumberFormatInfo NumberFormat {
-            get {
-
-                if(numInfo == null)
-                {
-                    numInfo = new NumberFormatInfo(this);
-                }
-
-                return numInfo;
+        public virtual NumberFormatInfo NumberFormat
+        {
+            get
+            {
+                return NumberFormatInfo.InvariantInfo;
             }
         }
 

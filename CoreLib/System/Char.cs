@@ -141,6 +141,28 @@ namespace System
             return (((highSurrogate - HIGH_SURROGATE_START) * 0x400) + (lowSurrogate - LOW_SURROGATE_START) + UNICODE_PLANE01_START);
         }
 
+        public static bool IsSurrogatePair(String s, int index)
+        {
+            if (s == null)
+            {
+                throw new ArgumentNullException("s");
+            }
+            if (index < 0 || index >= s.Length)
+            {
+                throw new ArgumentOutOfRangeException("index");
+            }
+            if (index + 1 < s.Length)
+            {
+                return (IsSurrogatePair(s[index], s[index + 1]));
+            }
+            return (false);
+        }
+
+        public static bool IsSurrogatePair(char highSurrogate, char lowSurrogate)
+        {
+            return ((highSurrogate >= HIGH_SURROGATE_START && highSurrogate <= HIGH_SURROGATE_END) &&
+                    (lowSurrogate >= LOW_SURROGATE_START && lowSurrogate <= LOW_SURROGATE_END));
+        }
     }
 }
 

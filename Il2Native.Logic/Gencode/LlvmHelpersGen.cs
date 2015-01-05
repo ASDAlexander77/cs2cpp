@@ -458,11 +458,13 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
+            var result = opCode.Result;
+
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            opCode.Result.Type.WriteTypePrefix(writer, true);
+            result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
+            llvmWriter.WriteResult(result);
             writer.Write(" to ");
             toType.WriteTypePrefix(writer, true);
         }

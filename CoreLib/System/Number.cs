@@ -1,9 +1,5 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
-
     using System;
     using System.Globalization;
     using System.Runtime.CompilerServices;
@@ -144,7 +140,7 @@ namespace System
     // user-defined format strings. The following table describes the formatting
     // characters that are supported in user defined format strings.
     //
-    //
+    // 
     // 0 - Digit placeholder. If the value being
     // formatted has a digit in the position where the '0' appears in the format
     // string, then that digit is copied to the output string. Otherwise, a '0' is
@@ -278,305 +274,2121 @@ namespace System
     // specified. Note, however, that the Parse methods do not accept
     // NaNs or Infinities.
     //
-    //This class contains only static members and does not need to be serializable
-    internal static class Number
+    //This class contains only static members and does not need to be serializable 
+
+    internal class Number
     {
-        private static byte[] PrintDouble = new byte[] { (byte)'%', (byte)'f', 0 };
-
-        private static byte[] PrintLong = new byte[] { (byte)'%', (byte)'l', (byte)'l', (byte)'d', 0 };
-
-        private static byte[] PrintInt = new byte[] { (byte)'%', (byte)'l', (byte)'d', 0 };
-
-        private static byte[] buffer = new byte[128];
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int sprintf(byte* buffer, byte* format, double d);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int sprintf(byte* buffer, byte* format, float d);
+        public const int INT32_PRECISION = 10;
+        public const int UINT32_PRECISION = INT32_PRECISION;
+        public const int INT64_PRECISION = 19;
+        public const int UINT64_PRECISION = 20;
+        public const int FLOAT_PRECISION = 7;
+        public const int DOUBLE_PRECISION = 15;
+        public const int LARGE_BUFFER_SIZE = 600;
+        public const int MIN_BUFFER_SIZE = 105;
+        public const uint SCALE_NAN = 0x80000000;
+        public const uint SCALE_INF = 0x7FFFFFFF;
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int sprintf(byte* buffer, byte* format, int t);
+        public static extern double modf(double x, ref double intpart);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int sprintf(byte* buffer, byte* format, long t);
-
-        public static String Format(long value, bool isInteger, String format, NumberFormatInfo info)
+        private Number()
         {
-            char formatCh;
-            int precision;
-            ValidateFormat(format, out formatCh, out precision);
-
-            String result = FormatNative(value, formatCh, precision);
-            return PostProcessInteger(value, result, formatCh, precision, info);
         }
 
-        public static String Format(int value, bool isInteger, String format, NumberFormatInfo info)
-        {
-            char formatCh;
-            int precision;
-            ValidateFormat(format, out formatCh, out precision);
-
-            String result = FormatNative(value, formatCh, precision);
-            return PostProcessInteger(value, result, formatCh, precision, info);
-        }
-
-        public static String Format(double value, bool isInteger, String format, NumberFormatInfo info)
-        {
-            char formatCh;
-            int precision;
-            ValidateFormat(format, out formatCh, out precision);
-
-            String result = FormatNative(value, formatCh, precision);
-            return PostProcessFloat(result, formatCh, info);
-        }
-
-        public static String Format(object value, bool isInteger, String format, NumberFormatInfo info)
+        public static String FormatDecimal(Decimal value, String format, NumberFormatInfo info)
         {
             throw new NotImplementedException();
         }
 
-        private static String FormatNative(long value, char format, int precision)
+        public static String FormatDouble(double value, String format, NumberFormatInfo info)
         {
-            unsafe
-            {
-                fixed (byte* b = &buffer[0])
-                fixed (byte* pi = &PrintLong[0])
-                {
-                    var size = sprintf(b, pi, value);
-                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
-                }
-            }
+            throw new NotImplementedException();
         }
 
-        private static String FormatNative(int value, char format, int precision)
+        public static String FormatInt32(int value, String format, NumberFormatInfo info)
         {
-            unsafe
-            {
-                fixed (byte* b = &buffer[0])
-                fixed (byte* pi = &PrintInt[0])
-                {
-                    var size = sprintf(b, pi, value);
-                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
-                }
-            }
-        }
+            int digits;
+            var fmt = ParseFormatSpecifier(format, out digits);
 
-        private static String FormatNative(double value, char format, int precision)
-        {
-            unsafe
-            {
-                fixed (byte* b = &buffer[0])
-                fixed (byte* pd = &PrintDouble[0])
-                {
-                    var size = sprintf(b, pd, value);
-                    return new String(Encoding.ASCII.GetChars(buffer), 0, size);
-                }
-            }
-        }
+            var retString = string.Empty;
 
-        private static void ValidateFormat(String format, out char formatCh, out int precision)
-        {
-            precision = 0;
+            NUMBER number;
 
-            if (format == null || format == "")
-            {
-                formatCh = 'G';
-                return;
-            }
-
-            formatCh = format[0];
-
-            // ToUpper, since all the supported format characters are invariant in case
-            if (formatCh >= 'a' && formatCh <= 'z')
-            {
-                formatCh = (char)(formatCh - ('a' - 'A'));
-            }
-
-            int formatLen = format.Length;
-
-            if (formatLen > 1)
-            {
-                ushort digit;
-
-                if (formatLen > 4)
-                {
-                    // Invalid Format
-                    throw new ArgumentException();
-                }
-
-                for (int i = 1; i < formatLen; i++)
-                {
-                    digit = (ushort)(format[i] - '0');
-
-                    if (digit > 9)
-                    {
-                        throw new ArgumentException();
-                    }
-
-                    precision = precision * 10 + digit;
-                }
-            }
-
-            // Set default precision, if neccessary + check for valid formatCh
-            switch (formatCh)
+            //ANDing fmt with FFDF has the effect of uppercasing the character because
+            //we've removed the bit that marks lower-case.
+            switch (fmt & 0xFFDF)
             {
                 case 'G':
+                    if (digits > 0)
+                    {
+                        number = new NUMBER();
+                        Int32ToNumber(value, ref number);
+                        if (fmt != 0)
+                        {
+                            //retString = NumberToString(ref number, fmt, digits, info);
+                            break;
+                        }
+                        //retString = NumberToStringFormat(ref number, format, info);
+                        break;
+                    }
+
+                    goto case 'D';
+
+                // fall through
+                case 'D':
+                    retString = Int32ToDecStr(value, digits, info.NegativeSign);
                     break;
                 case 'X':
-                case 'F':
-                case 'N':
-                case 'D':
-                    if (formatLen == 1) precision = 2; // if no precision is specified, use the default
+                    retString = Int32ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
                     break;
                 default:
-                    throw new ArgumentException();
+                    number = new NUMBER();
+                    Int32ToNumber(value, ref number);
+                    if (fmt != 0)
+                    {
+                        //retString = NumberToString(ref number, fmt, digits, info);
+                        break;
+                    }
+                    //retString = NumberToStringFormat(ref number, format, info);
+                    break;
+
             }
+
+            return retString;
         }
 
-        private static String PostProcessInteger(Object value, String original, char format, int precision, NumberFormatInfo info)
+        public static String FormatUInt32(uint value, String format, NumberFormatInfo info)
         {
-            String result = original;
+            int digits;
+            var fmt = ParseFormatSpecifier(format, out digits);
 
-            switch (format)
+            var retString = string.Empty;
+
+            NUMBER number;
+
+            //ANDing fmt with FFDF has the effect of uppercasing the character because
+            //we've removed the bit that marks lower-case.
+            switch (fmt & 0xFFDF)
             {
-                case 'X':
-                    // truncate negative numbers to 
-                    if (result.Length > precision && (result[0] == 'F' || result[0] == 'f'))
+                case 'G':
+                    if (digits > 0)
                     {
-                        int len = result.Length;
+                        number = new NUMBER();
+                        UInt32ToNumber(value, ref number);
+                        if (fmt != 0)
+                        {
+                            //retString = NumberToString(ref number, fmt, digits, info);
+                            break;
+                        }
+                        //retString = NumberToStringFormat(ref number, format, info);
+                        break;
+                    }
 
-                        if (value is sbyte)
+                    goto case 'D';
+
+                // fall through
+                case 'D':
+                    retString = UInt32ToDecStr(value, digits);
+                    break;
+                case 'X':
+                    retString = Int32ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
+                    break;
+                default:
+                    number = new NUMBER();
+                    UInt32ToNumber(value, ref number);
+                    if (fmt != 0)
+                    {
+                        //retString = NumberToString(ref number, fmt, digits, info);
+                        break;
+                    }
+                    //retString = NumberToStringFormat(ref number, format, info);
+                    break;
+
+            }
+
+            return retString;
+        }
+
+        public static String FormatInt64(long value, String format, NumberFormatInfo info)
+        {
+            int digits;
+            var fmt = ParseFormatSpecifier(format, out digits);
+
+            var retString = string.Empty;
+
+            NUMBER number;
+
+            //ANDing fmt with FFDF has the effect of uppercasing the character because
+            //we've removed the bit that marks lower-case.
+            switch (fmt & 0xFFDF)
+            {
+                case 'G':
+                    if (digits > 0)
+                    {
+                        number = new NUMBER();
+                        Int64ToNumber(value, ref number);
+                        if (fmt != 0)
                         {
-                            if (len > 2)
-                            {
-                                result = result.Substring(len - 2, 2);
-                            }
+                            //retString = NumberToString(ref number, fmt, digits, info);
+                            break;
                         }
-                        else if (value is short)
+                        //retString = NumberToStringFormat(ref number, format, info);
+                        break;
+                    }
+
+                    goto case 'D';
+
+                // fall through
+                case 'D':
+                    retString = Int64ToDecStr(value, digits, info.NegativeSign);
+                    break;
+                case 'X':
+                    retString = Int64ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
+                    break;
+                default:
+                    number = new NUMBER();
+                    Int64ToNumber(value, ref number);
+                    if (fmt != 0)
+                    {
+                        //retString = NumberToString(ref number, fmt, digits, info);
+                        break;
+                    }
+                    //retString = NumberToStringFormat(ref number, format, info);
+                    break;
+
+            }
+
+            return retString;
+        }
+
+        public static String FormatUInt64(ulong value, String format, NumberFormatInfo info)
+        {
+            int digits;
+            var fmt = ParseFormatSpecifier(format, out digits);
+
+            var retString = string.Empty;
+
+            NUMBER number;
+
+            //ANDing fmt with FFDF has the effect of uppercasing the character because
+            //we've removed the bit that marks lower-case.
+            switch (fmt & 0xFFDF)
+            {
+                case 'G':
+                    if (digits > 0)
+                    {
+                        number = new NUMBER();
+                        UInt64ToNumber(value, ref number);
+                        if (fmt != 0)
                         {
-                            if (len > 4)
-                            {
-                                result = result.Substring(len - 4, 4);
-                            }
+                            //retString = NumberToString(ref number, fmt, digits, info);
+                            break;
                         }
+                        //retString = NumberToStringFormat(ref number, format, info);
+                        break;
+                    }
+
+                    goto case 'D';
+
+                // fall through
+                case 'D':
+                    retString = UInt64ToDecStr(value, digits);
+                    break;
+                case 'X':
+                    retString = Int64ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
+                    break;
+                default:
+                    number = new NUMBER();
+                    UInt64ToNumber(value, ref number);
+                    if (fmt != 0)
+                    {
+                        //retString = NumberToString(ref number, fmt, digits, info);
+                        break;
+                    }
+                    //retString = NumberToStringFormat(ref number, format, info);
+                    break;
+
+            }
+
+            return retString;
+        }
+
+        public static String FormatSingle(float value, String format, NumberFormatInfo info)
+        {
+            NUMBER number;
+            int digits;
+            double dTest;
+            double argsValue = value;
+
+            string retVal;
+
+            char fmt = ParseFormatSpecifier(format, out digits);
+            int precision = FLOAT_PRECISION;
+            switch (fmt & 0xFFD)
+            {
+                case 'R':
+                    //In order to give numbers that are both friendly to display and round-trippable,
+                    //we parse the number using 7 digits and then determine if it round trips to the same
+                    //value.  If it does, we convert that NUMBER to a string, otherwise we reparse using 9 digits
+                    //and display that.
+                    number = new NUMBER();
+                    DoubleToNumber(argsValue, FLOAT_PRECISION, ref number);
+
+                    if (number.scale == SCALE_NAN)
+                    {
+                        retVal = info.NaNSymbol;
+                        goto lExit;
+                    }
+
+                    if (number.scale == SCALE_INF)
+                    {
+                        retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
+                        goto lExit;
+                    }
+
+                    unsafe
+                    {
+                        NumberToDouble(ref number, &dTest);
+                    }
+
+                    var fTest = (float)dTest;
+
+                    if (fTest == value)
+                    {
+                        retVal = NumberToString(ref number, 'G', FLOAT_PRECISION, info);
+                        goto lExit;
+                    }
+
+                    DoubleToNumber(argsValue, 9, ref number);
+                    retVal = NumberToString(ref number, 'G', 9, info);
+                    goto lExit;
+
+                case 'E':
+                    // Here we round values less than E14 to 15 digits
+                    if (digits > 6)
+                    {
+                        precision = 9;
                     }
                     break;
 
-                case 'N':
-                    // InsertGroupSeperators, AppendTrailingZeros, ReplaceNegativeSign
-                    result = InsertGroupSeperators(result, info);
-                    goto case 'F'; // falls through
-                case 'F':
-                    // AppendTrailingZeros, ReplaceNegativeSign
-                    result = AppendTrailingZeros(result, precision, info);
-                    goto case 'G'; // falls through
                 case 'G':
-                    result = ReplaceNegativeSign(result, info);
+                    // Here we round values less than G15 to 15 digits, G16 and G17 will not be touched
+                    if (digits > 7)
+                    {
+                        precision = 9;
+                    }
                     break;
+
             }
 
-            return result;
-        }
+            DoubleToNumber(value, precision, ref number);
 
-        private static String PostProcessFloat(String original, char format, NumberFormatInfo info)
-        {
-            String result = original;
-
-            if (format == 'N')
+            if (number.scale == SCALE_NAN)
             {
-                result = InsertGroupSeperators(result, info);
+                retVal = info.NaNSymbol;
+                goto lExit;
             }
 
-            result = ReplaceDecimalSeperator(result, info);
-            result = ReplaceNegativeSign(result, info);
-
-            return result;
-        }
-
-        private static String AppendTrailingZeros(String original, int count, NumberFormatInfo info)
-        {
-            if (count > 0)
+            if (number.scale == SCALE_INF)
             {
-                return original + info.NumberDecimalSeparator + new String('0', count);
+                retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
+                goto lExit;
+            }
+
+            if (fmt != 0)
+            {
+                //retVal = NumberToString( ref number, fmt, digits, info);
             }
             else
             {
-                return original;
+                //retVal = NumberToStringFormat( ref number, format, info);
+            }
+
+        lExit:
+            return retVal;
+
+        }
+
+        public unsafe static Boolean NumberBufferToDecimal(byte* number, ref Decimal value)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal unsafe static Boolean NumberBufferToDouble(byte* number, ref Double value)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal static unsafe string FormatNumberBuffer(byte* number, string format, NumberFormatInfo info, char* allDigits)
+        {
+            throw new NotImplementedException();
+        }
+
+        // Constants used by number parsing
+        private const Int32 NumberMaxDigits = 50;
+
+        private const Int32 Int32Precision = 10;
+        private const Int32 UInt32Precision = Int32Precision;
+        private const Int32 Int64Precision = 19;
+        private const Int32 UInt64Precision = 20;
+
+        // NumberBuffer is a partial wrapper around a stack pointer that maps on to
+        // the native NUMBER struct so that it can be passed to native directly. It 
+        // must be initialized with a stack Byte * of size NumberBufferBytes.
+        // For performance, this structure should attempt to be completely inlined.
+        // 
+        // It should always be initialized like so:
+        //
+        // Byte * numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+        // NumberBuffer number = new NumberBuffer(numberBufferBytes);
+        //
+        // For performance, when working on the buffer in managed we use the values in this
+        // structure, except for the digits, and pack those values into the byte buffer
+        // if called out to managed.
+
+        internal unsafe struct NumberBuffer
+        {
+
+            // Enough space for NumberMaxDigit characters plus null and 3 32 bit integers and a pointer
+            public static readonly Int32 NumberBufferBytes = 12 + ((NumberMaxDigits + 1) * 2) + IntPtr.Size;
+
+
+            private Byte* baseAddress;
+
+            public Char* digits;
+            public Int32 precision;
+            public Int32 scale;
+            public Boolean sign;
+
+
+            public NumberBuffer(Byte* stackBuffer)
+            {
+                this.baseAddress = stackBuffer;
+                this.digits = (((Char*)stackBuffer) + 6);
+                this.precision = 0;
+                this.scale = 0;
+                this.sign = false;
+            }
+
+
+            public Byte* PackForNative()
+            {
+                Int32* baseInteger = (Int32*)baseAddress;
+                baseInteger[0] = precision;
+                baseInteger[1] = scale;
+                baseInteger[2] = sign ? 1 : 0;
+                return baseAddress;
             }
         }
 
-        private static String ReplaceNegativeSign(String original, NumberFormatInfo info)
+        private static Boolean HexNumberToInt32(ref NumberBuffer number, ref Int32 value)
         {
-            //if (original[0] == '-')
-            //{
-            //    return info.NegativeSign + original.Substring(1);
-            //}
-            //else
-            //{
-            return original;
-            //}
+            UInt32 passedValue = 0;
+            Boolean returnValue = HexNumberToUInt32(ref number, ref passedValue);
+            value = (Int32)passedValue;
+            return returnValue;
         }
 
-        private static String ReplaceDecimalSeperator(String original, NumberFormatInfo info)
+        private static Boolean HexNumberToInt64(ref NumberBuffer number, ref Int64 value)
         {
-            //int pos = original.IndexOf('.');
-
-            //if (pos != -1)
-            //{
-            //    return original.Substring(0, pos) + info.NumberDecimalSeparator + original.Substring(pos + 1);
-            //}
-            //else
-            //{
-            return original;
-            //}
+            UInt64 passedValue = 0;
+            Boolean returnValue = HexNumberToUInt64(ref number, ref passedValue);
+            value = (Int64)passedValue;
+            return returnValue;
         }
 
-        private static String InsertGroupSeperators(String original, NumberFormatInfo info)
+
+        private unsafe static Boolean HexNumberToUInt32(ref NumberBuffer number, ref UInt32 value)
         {
-            int digitsStartPos = (original[0] == '-') ? 1 : 0;
 
-            int decimalPointPos = original.IndexOf('.');
-            if (decimalPointPos == -1) decimalPointPos = original.Length;
-
-            String prefix = (digitsStartPos == 1) ? "-" : "";
-            String suffix = original.Substring(decimalPointPos);
-            String digits = original.Substring(digitsStartPos, decimalPointPos - digitsStartPos);
-
-            String result = String.Empty;
-
-            int[] groupSizes = info.NumberGroupSizes;
-
-            int sizeInd = 0;
-            int size = groupSizes[sizeInd];
-            int pos = digits.Length - size;
-
-            String seperator = info.NumberGroupSeparator;
-            int lastSizeInd = groupSizes.Length - 1;
-
-            while (pos > 0)
+            Int32 i = number.scale;
+            if (i > UInt32Precision || i < number.precision)
             {
-                result = seperator + digits.Substring(pos, size) + result;
+                return false;
+            }
+            Char* p = number.digits;
 
-                if (sizeInd < lastSizeInd)
+
+            UInt32 n = 0;
+            while (--i >= 0)
+            {
+                if (n > ((UInt32)0xFFFFFFFF / 16))
                 {
-                    sizeInd++;
-                    size = groupSizes[sizeInd];
+                    return false;
+                }
+                n *= 16;
+                if (*p != '\0')
+                {
+                    UInt32 newN = n;
+                    if (*p != '\0')
+                    {
+                        if (*p >= '0' && *p <= '9')
+                        {
+                            newN += (UInt32)(*p - '0');
+                        }
+                        else
+                        {
+                            if (*p >= 'A' && *p <= 'F')
+                            {
+                                newN += (UInt32)((*p - 'A') + 10);
+                            }
+                            else
+                            {
 
-                    if (size == 0) // per spec, when we see a 0, we leave the remaining digits ungrouped.
+                                newN += (UInt32)((*p - 'a') + 10);
+                            }
+                        }
+                        p++;
+                    }
+
+                    // Detect an overflow here...
+                    if (newN < n)
+                    {
+                        return false;
+                    }
+                    n = newN;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+
+        private unsafe static Boolean HexNumberToUInt64(ref NumberBuffer number, ref UInt64 value)
+        {
+
+            Int32 i = number.scale;
+            if (i > UInt64Precision || i < number.precision)
+            {
+                return false;
+            }
+            Char* p = number.digits;
+
+
+            UInt64 n = 0;
+            while (--i >= 0)
+            {
+                if (n > (0xFFFFFFFFFFFFFFFF / 16))
+                {
+                    return false;
+                }
+                n *= 16;
+                if (*p != '\0')
+                {
+                    UInt64 newN = n;
+                    if (*p != '\0')
+                    {
+                        if (*p >= '0' && *p <= '9')
+                        {
+                            newN += (UInt64)(*p - '0');
+                        }
+                        else
+                        {
+                            if (*p >= 'A' && *p <= 'F')
+                            {
+                                newN += (UInt64)((*p - 'A') + 10);
+                            }
+                            else
+                            {
+                                newN += (UInt64)((*p - 'a') + 10);
+                            }
+                        }
+                        p++;
+                    }
+
+                    // Detect an overflow here...
+                    if (newN < n)
+                    {
+                        return false;
+                    }
+                    n = newN;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+        private static Boolean IsWhite(char ch)
+        {
+            return (((ch) == 0x20) || ((ch) >= 0x09 && (ch) <= 0x0D));
+        }
+
+
+        private unsafe static Boolean NumberToInt32(ref NumberBuffer number, ref Int32 value)
+        {
+
+            Int32 i = number.scale;
+            if (i > Int32Precision || i < number.precision)
+            {
+                return false;
+            }
+            char* p = number.digits;
+
+            Int32 n = 0;
+            while (--i >= 0)
+            {
+                if ((UInt32)n > (0x7FFFFFFF / 10))
+                {
+                    return false;
+                }
+                n *= 10;
+                if (*p != '\0')
+                {
+                    n += (Int32)(*p++ - '0');
+                }
+            }
+            if (number.sign)
+            {
+                n = -n;
+                if (n > 0)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (n < 0)
+                {
+                    return false;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+
+        private unsafe static Boolean NumberToInt64(ref NumberBuffer number, ref Int64 value)
+        {
+
+            Int32 i = number.scale;
+            if (i > Int64Precision || i < number.precision)
+            {
+                return false;
+            }
+            char* p = number.digits;
+
+            Int64 n = 0;
+            while (--i >= 0)
+            {
+                if ((UInt64)n > (0x7FFFFFFFFFFFFFFF / 10))
+                {
+                    return false;
+                }
+                n *= 10;
+                if (*p != '\0')
+                {
+                    n += (Int32)(*p++ - '0');
+                }
+            }
+            if (number.sign)
+            {
+                n = -n;
+                if (n > 0)
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (n < 0)
+                {
+                    return false;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+
+        private unsafe static Boolean NumberToUInt32(ref NumberBuffer number, ref UInt32 value)
+        {
+
+            Int32 i = number.scale;
+            if (i > UInt32Precision || i < number.precision || number.sign)
+            {
+                return false;
+            }
+            char* p = number.digits;
+
+            UInt32 n = 0;
+            while (--i >= 0)
+            {
+                if (n > (0xFFFFFFFF / 10))
+                {
+                    return false;
+                }
+                n *= 10;
+                if (*p != '\0')
+                {
+                    UInt32 newN = n + (UInt32)(*p++ - '0');
+                    // Detect an overflow here...
+                    if (newN < n)
+                    {
+                        return false;
+                    }
+                    n = newN;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+
+        private unsafe static bool NumberToUInt64(ref NumberBuffer number, ref UInt64 value)
+        {
+            Int32 i = number.scale;
+            if (i > UInt64Precision || i < number.precision || number.sign)
+            {
+                return false;
+            }
+            char* p = number.digits;
+
+            UInt64 n = 0;
+            while (--i >= 0)
+            {
+                if (n > (0xFFFFFFFFFFFFFFFF / 10))
+                {
+                    return false;
+                }
+                n *= 10;
+                if (*p != '\0')
+                {
+                    UInt64 newN = n + (UInt64)(*p++ - '0');
+                    // Detect an overflow here...
+                    if (newN < n)
+                    {
+                        return false;
+                    }
+                    n = newN;
+                }
+            }
+            value = n;
+            return true;
+        }
+
+        private static byte[] rgexp64Power10 = new byte[]
+        {
+            // exponents for both powers of 10 and 0.1
+            /*1*/ 4, /*2*/ 7, /*3*/ 10, /*4*/ 14, /*5*/ 17, /*6*/ 20, /*7*/ 24, /*8*/ 27, /*9*/ 30, /*10*/
+                    34, /*11*/ 37, /*12*/ 40, /*13*/ 44, /*14*/ 47, /*15*/ 50,
+        };
+
+        private static ulong[] rgval64Power10 = new ulong[]
+        {
+            // powers of 10
+            /*1*/ (0xa000000000000000), /*2*/ (0xc800000000000000), /*3*/ (0xfa00000000000000), /*4*/
+                    (0x9c40000000000000), /*5*/ (0xc350000000000000), /*6*/
+                    (0xf424000000000000), /*7*/ (0x9896800000000000), /*8*/ (0xbebc200000000000), /*9*/
+                    (0xee6b280000000000), /*10*/ (0x9502f90000000000), /*11*/
+                    (0xba43b74000000000), /*12*/ (0xe8d4a51000000000), /*13*/ (0x9184e72a00000000), /*14*/
+                    (0xb5e620f480000000), /*15*/ (0xe35fa931a0000000),
+
+                    // powers of 0.1
+                    /*1*/ (0xcccccccccccccccd), /*2*/ (0xa3d70a3d70a3d70b), /*3*/
+                    (0x83126e978d4fdf3c), /*4*/ (0xd1b71758e219652e), /*5*/ (0xa7c5ac471b478425), /*6*/
+                    (0x8637bd05af6c69b7), /*7*/ (0xd6bf94d5e57a42be), /*8*/
+                    (0xabcc77118461ceff), /*9*/ (0x89705f4136b4a599), /*10*/ (0xdbe6fecebdedd5c2), /*11*/
+                    (0xafebff0bcb24ab02), /*12*/ (0x8cbccc096f5088cf), /*13*/
+                    (0xe12e13424bb40e18), /*14*/ (0xb424dc35095cd813), /*15*/ (0x901d7cf73ab0acdc),
+        };
+
+        private static short[] rgexp64Power10By16 = new short[] 
+        { 
+            // exponents for both powers of 10^16 and 0.1^16
+            /*1*/ 54, /*2*/ 107, /*3*/ 160, /*4*/ 213, /*5*/ 266, /*6*/ 319, /*7*/ 373, /*8*/ 426, /*9*/
+                    479, /*10*/ 532, /*11*/ 585, /*12*/ 638, /*13*/ 691, /*14*/ 745, /*15*/
+                    798, /*16*/ 851, /*17*/ 904, /*18*/ 957, /*19*/ 1010, /*20*/ 1064, /*21*/ 1117, 
+        };
+
+        private static ulong[] rgval64Power10By16 = new ulong[]
+        {
+            // powers of 10^16
+            /*1*/ (0x8e1bc9bf04000000), /*2*/ (0x9dc5ada82b70b59e), /*3*/ (0xaf298d050e4395d6), /*4*/
+                    (0xc2781f49ffcfa6d4), /*5*/ (0xd7e77a8f87daf7fa), /*6*/
+                    (0xefb3ab16c59b14a0), /*7*/ (0x850fadc09923329c), /*8*/ (0x93ba47c980e98cde), /*9*/
+                    (0xa402b9c5a8d3a6e6), /*10*/ (0xb616a12b7fe617a8), /*11*/
+                    (0xca28a291859bbf90), /*12*/ (0xe070f78d39275566), /*13*/
+                    (0xf92e0c3537826140), /*14*/ (0x8a5296ffe33cc92c), /*15*/
+                    (0x9991a6f3d6bf1762), /*16*/ (0xaa7eebfb9df9de8a), /*17*/
+                    (0xbd49d14aa79dbc7e), /*18*/ (0xd226fc195c6a2f88), /*19*/
+                    (0xe950df20247c83f8), /*20*/ (0x81842f29f2cce373), /*21*/
+                    (0x8fcac257558ee4e2),
+
+                    // powers of 0.1^16
+                    /*1*/ (0xe69594bec44de160), /*2*/ (0xcfb11ead453994c3), /*3*/
+                    (0xbb127c53b17ec165), /*4*/ (0xa87fea27a539e9b3), /*5*/ (0x97c560ba6b0919b5), /*6*/
+                    (0x88b402f7fd7553ab), /*7*/ (0xf64335bcf065d3a0), /*8*/
+                    (0xddd0467c64bce4c4), /*9*/ (0xc7caba6e7c5382ed), /*10*/ (0xb3f4e093db73a0b7), /*11*/
+                    (0xa21727db38cb0053), /*12*/ (0x91ff83775423cc29), /*13*/
+                    (0x8380dea93da4bc82), /*14*/ (0xece53cec4a314f00), /*15*/
+                    (0xd5605fcdcf32e217), /*16*/ (0xc0314325637a1978), /*17*/
+                    (0xad1c8eab5ee43ba2), /*18*/ (0x9becce62836ac5b0), /*19*/
+                    (0x8c71dcd9ba0b495c), /*20*/ (0xfd00b89747823938), /*21*/
+                    (0xe3e27a444d8d991a),
+        };
+
+        private unsafe static void NumberToDouble(ref NUMBER number, double* value)
+        {
+            fixed (char* srcPtr = number.digits)
+            {
+                char* src = srcPtr;
+                ulong val;
+                int exp;
+                int remaining;
+                int total;
+                int count;
+                int scale;
+                int absscale;
+                int index;
+
+                total = (int)wcslen(src);
+                remaining = total;
+
+                // skip the leading zeros
+                while (*src == '0')
+                {
+                    remaining--;
+                    src++;
+                }
+
+                if (remaining == 0)
+                {
+                    *value = 0.0;
+                    goto done;
+                }
+
+                count = Math.Min(remaining, 9);
+                remaining -= count;
+                val = (ulong)DigitsToInt(src, count);
+
+                if (remaining > 0)
+                {
+                    count = Math.Min(remaining, 9);
+                    remaining -= count;
+
+                    // get the denormalized power of 10
+                    uint mult = (uint)(rgval64Power10[count - 1] >> (64 - rgexp64Power10[count - 1]));
+                    val = (ulong)((uint)val * (uint)mult) + (ulong)DigitsToInt(src + 9, count);
+                }
+
+                scale = number.scale - (total - remaining);
+                absscale = Math.Abs(scale);
+                if (absscale >= 22 * 16)
+                {
+                    // overflow / underflow
+                    *(ulong*)&value = (scale > 0) ? 0x7FF0000000000000U : 0;
+                    goto done;
+                }
+
+                exp = 64;
+
+                // normalize the mantisa
+                if ((val & 0xFFFFFFFF00000000) == 0)
+                {
+                    val <<= 32;
+                    exp -= 32;
+                }
+                if ((val & 0xFFFF000000000000) == 0)
+                {
+                    val <<= 16;
+                    exp -= 16;
+                }
+                if ((val & 0xFF00000000000000) == 0)
+                {
+                    val <<= 8;
+                    exp -= 8;
+                }
+                if ((val & 0xF000000000000000) == 0)
+                {
+                    val <<= 4;
+                    exp -= 4;
+                }
+                if ((val & 0xC000000000000000) == 0)
+                {
+                    val <<= 2;
+                    exp -= 2;
+                }
+                if ((val & 0x8000000000000000) == 0)
+                {
+                    val <<= 1;
+                    exp -= 1;
+                }
+
+                index = absscale & 15;
+                if (index > 0)
+                {
+                    int multexp = rgexp64Power10[index - 1];
+                    // the exponents are shared between the inverted and regular table
+                    exp += (scale < 0) ? (-multexp + 1) : multexp;
+
+                    ulong multval = rgval64Power10[index + ((scale < 0) ? 15 : 0) - 1];
+                    val = Mul64Lossy(val, multval, &exp);
+                }
+
+                index = absscale >> 4;
+                if (index > 0)
+                {
+                    int multexp = rgexp64Power10By16[index - 1];
+                    // the exponents are shared between the inverted and regular table
+                    exp += (scale < 0) ? (-multexp + 1) : multexp;
+
+                    ulong multval = rgval64Power10By16[index + ((scale < 0) ? 21 : 0) - 1];
+                    val = Mul64Lossy(val, multval, &exp);
+                }
+
+                // round & scale down
+                if (((uint)val & (1 << 10)) > 0)
+                {
+                    // IEEE round to even
+                    ulong tmp = val + ((1 << 10) - 1) + (((uint)val >> 11) & 1);
+                    if (tmp < val)
+                    {
+                        // overflow
+                        tmp = (tmp >> 1) | (0x8000000000000000);
+                        exp += 1;
+                    }
+                    val = tmp;
+                }
+                val >>= 11;
+
+                exp += 0x3FE;
+
+                if (exp <= 0)
+                {
+                    if (exp <= -52)
+                    {
+                        // underflow
+                        val = 0;
+                    }
+                    else
+                    {
+                        // denormalized
+                        val >>= (-exp + 1);
+                    }
+                }
+                else if (exp >= 0x7FF)
+                {
+                    // overflow
+                    val = (0x7FF0000000000000);
+                }
+                else
+                {
+                    val = ((ulong)exp << 52) + (val & (0x000FFFFFFFFFFFFF));
+                }
+
+                *(ulong*)&value = val;
+
+            done:
+                if (number.sign > 0) *(ulong*)&value |= (0x8000000000000000);
+            }
+        }
+
+        private unsafe static ulong Mul64Lossy(ulong a, ulong b, int* pexp)
+        {
+            // it's ok to losse some precision here - Mul64 will be called
+            // at most twice during the conversion, so the error won't propagate
+            // to any of the 53 significant bits of the result
+            ulong val = ((ulong)((uint)(a >> 32) * (uint)(b >> 32))) +
+                (((ulong)((uint)(a >> 32) * (uint)b)) >> 32) +
+                (((ulong)((uint)a * (uint)(b >> 32))) >> 32);
+
+            // normalize
+            if ((val & (0x8000000000000000)) == 0) { val <<= 1; *pexp -= 1; }
+
+            return val;
+        }
+
+        private unsafe static int DigitsToInt(char* p, int count)
+        {
+            char* end = p + count;
+            int res = *p - '0';
+            for (p = p + 1; p < end; p++)
+            {
+                res = 10 * res + *p - '0';
+            }
+
+            return res;
+        }
+
+        private unsafe static long wcslen(char* s)
+        {
+            char* p = s;
+            while (*p > 0)
+                p++;
+
+            return p - s;
+        }
+
+        private unsafe static char* MatchChars(char* p, string str)
+        {
+            fixed (char* stringPointer = str)
+            {
+                return MatchChars(p, stringPointer);
+            }
+        }
+
+        private unsafe static char* MatchChars(char* p, char* str)
+        {
+
+
+            if (*str == '\0')
+            {
+                return null;
+            }
+            for (; (*str != '\0'); p++, str++)
+            {
+                if (*p != *str)
+                { //We only hurt the failure case
+                    if ((*str == '\u00A0') && (*p == '\u0020'))
+                    {// This fix is for French or Kazakh cultures. Since a user cannot type 0xA0 as a 
+                        // space character we use 0x20 space character instead to mean the same.
+                        continue;
+                    }
+                    return null;
+                }
+            }
+            return p;
+        }
+
+
+        internal unsafe static Decimal ParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            Decimal result = 0;
+
+            StringToNumber(value, options, ref number, numfmt, true);
+
+            if (!NumberBufferToDecimal(number.PackForNative(), ref result))
+            {
+                throw new OverflowException(Environment.GetResourceString("Overflow_Decimal"));
+            }
+            return result;
+        }
+
+
+        internal unsafe static Double ParseDouble(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
+            }
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            Double d = 0;
+
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
+            {
+                //If we failed TryStringToNumber, it may be from one of our special strings.
+                //Check the three with which we're concerned and rethrow if it's not one of
+                //those strings.
+                String sTrim = value.Trim();
+                if (sTrim.Equals(numfmt.PositiveInfinitySymbol))
+                {
+                    return Double.PositiveInfinity;
+                }
+                if (sTrim.Equals(numfmt.NegativeInfinitySymbol))
+                {
+                    return Double.NegativeInfinity;
+                }
+                if (sTrim.Equals(numfmt.NaNSymbol))
+                {
+                    return Double.NaN;
+                }
+                throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
+            }
+
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
+            {
+                throw new OverflowException(Environment.GetResourceString("Overflow_Double"));
+            }
+
+            return d;
+        }
+
+
+        internal unsafe static Int32 ParseInt32(String s, NumberStyles style, NumberFormatInfo info)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            Int32 i = 0;
+
+            StringToNumber(s, style, ref number, info, false);
+
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToInt32(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_Int32"));
+                }
+            }
+            else
+            {
+                if (!NumberToInt32(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_Int32"));
+                }
+            }
+            return i;
+        }
+
+
+        internal unsafe static Int64 ParseInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            Int64 i = 0;
+
+            StringToNumber(value, options, ref number, numfmt, false);
+
+            if ((options & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToInt64(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_Int64"));
+                }
+            }
+            else
+            {
+                if (!NumberToInt64(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_Int64"));
+                }
+            }
+            return i;
+        }
+
+
+        private unsafe static Boolean ParseNumber(ref char* str, NumberStyles options, ref NumberBuffer number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
+        {
+
+            const Int32 StateSign = 0x0001;
+            const Int32 StateParens = 0x0002;
+            const Int32 StateDigits = 0x0004;
+            const Int32 StateNonZero = 0x0008;
+            const Int32 StateDecimal = 0x0010;
+            const Int32 StateCurrency = 0x0020;
+
+            number.scale = 0;
+            number.sign = false;
+            string decSep;                  // decimal separator from NumberFormatInfo.
+            string groupSep;                // group separator from NumberFormatInfo.
+            string currSymbol = null;       // currency symbol from NumberFormatInfo.
+
+            // The alternative currency symbol used in ANSI codepage, that can not roundtrip between ANSI and Unicode.
+            // Currently, only ja-JP and ko-KR has non-null values (which is U+005c, backslash)
+            string ansicurrSymbol = null;   // currency symbol from NumberFormatInfo.
+            string altdecSep = null;        // decimal separator from NumberFormatInfo as a decimal
+            string altgroupSep = null;      // group separator from NumberFormatInfo as a decimal
+
+            Boolean parsingCurrency = false;
+            if ((options & NumberStyles.AllowCurrencySymbol) != 0)
+            {
+                currSymbol = numfmt.CurrencySymbol;
+                if (numfmt.ansiCurrencySymbol != null)
+                {
+                    ansicurrSymbol = numfmt.ansiCurrencySymbol;
+                }
+                // The idea here is to match the currency separators and on failure match the number separators to keep the perf of VB's IsNumeric fast.
+                // The values of decSep are setup to use the correct relevant separator (currency in the if part and decimal in the else part).
+                altdecSep = numfmt.NumberDecimalSeparator;
+                altgroupSep = numfmt.NumberGroupSeparator;
+                decSep = numfmt.CurrencyDecimalSeparator;
+                groupSep = numfmt.CurrencyGroupSeparator;
+                parsingCurrency = true;
+            }
+            else
+            {
+                decSep = numfmt.NumberDecimalSeparator;
+                groupSep = numfmt.NumberGroupSeparator;
+            }
+
+            Int32 state = 0;
+            Boolean signflag = false; // Cache the results of "options & PARSE_LEADINGSIGN && !(state & STATE_SIGN)" to avoid doing this twice
+            Boolean bigNumber = (sb != null); // When a StringBuilder is provided then we use it in place of the number.digits char[50]
+            Boolean bigNumberHex = (bigNumber && ((options & NumberStyles.AllowHexSpecifier) != 0));
+            Int32 maxParseDigits = bigNumber ? Int32.MaxValue : NumberMaxDigits;
+
+            char* p = str;
+            char ch = *p;
+            char* next;
+
+            while (true)
+            {
+                // Eat whitespace unless we've found a sign which isn't followed by a currency symbol.
+                // "-Kr 1231.47" is legal but "- 1231.47" is not.
+                if (IsWhite(ch) && ((options & NumberStyles.AllowLeadingWhite) != 0) && (((state & StateSign) == 0) || (((state & StateSign) != 0) && (((state & StateCurrency) != 0) || numfmt.numberNegativePattern == 2))))
+                {
+                    // Do nothing here. We will increase p at the end of the loop.
+                }
+                else if ((signflag = (((options & NumberStyles.AllowLeadingSign) != 0) && ((state & StateSign) == 0))) && ((next = MatchChars(p, numfmt.positiveSign)) != null))
+                {
+                    state |= StateSign;
+                    p = next - 1;
+                }
+                else if (signflag && (next = MatchChars(p, numfmt.negativeSign)) != null)
+                {
+                    state |= StateSign;
+                    number.sign = true;
+                    p = next - 1;
+                }
+                else if (ch == '(' && ((options & NumberStyles.AllowParentheses) != 0) && ((state & StateSign) == 0))
+                {
+                    state |= StateSign | StateParens;
+                    number.sign = true;
+                }
+                else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null) || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
+                {
+                    state |= StateCurrency;
+                    currSymbol = null;
+                    ansicurrSymbol = null;
+                    // We already found the currency symbol. There should not be more currency symbols. Set
+                    // currSymbol to NULL so that we won't search it again in the later code path.
+                    p = next - 1;
+                }
+                else
+                {
+                    break;
+                }
+                ch = *++p;
+            }
+            Int32 digCount = 0;
+            Int32 digEnd = 0;
+            while (true)
+            {
+                if ((ch >= '0' && ch <= '9') || (((options & NumberStyles.AllowHexSpecifier) != 0) && ((ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'))))
+                {
+                    state |= StateDigits;
+
+                    if (ch != '0' || (state & StateNonZero) != 0 || bigNumberHex)
+                    {
+                        if (digCount < maxParseDigits)
+                        {
+                            if (bigNumber)
+                                sb.Append(ch);
+                            else
+                                number.digits[digCount++] = ch;
+                            if (ch != '0' || parseDecimal)
+                            {
+                                digEnd = digCount;
+                            }
+                        }
+                        if ((state & StateDecimal) == 0)
+                        {
+                            number.scale++;
+                        }
+                        state |= StateNonZero;
+                    }
+                    else if ((state & StateDecimal) != 0)
+                    {
+                        number.scale--;
+                    }
+                }
+                else if (((options & NumberStyles.AllowDecimalPoint) != 0) && ((state & StateDecimal) == 0) && ((next = MatchChars(p, decSep)) != null || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altdecSep)) != null))
+                {
+                    state |= StateDecimal;
+                    p = next - 1;
+                }
+                else if (((options & NumberStyles.AllowThousands) != 0) && ((state & StateDigits) != 0) && ((state & StateDecimal) == 0) && ((next = MatchChars(p, groupSep)) != null || ((parsingCurrency) && (state & StateCurrency) == 0) && (next = MatchChars(p, altgroupSep)) != null))
+                {
+                    p = next - 1;
+                }
+                else
+                {
+                    break;
+                }
+                ch = *++p;
+            }
+
+            Boolean negExp = false;
+            number.precision = digEnd;
+            if (bigNumber)
+                sb.Append('\0');
+            else
+                number.digits[digEnd] = '\0';
+            if ((state & StateDigits) != 0)
+            {
+                if ((ch == 'E' || ch == 'e') && ((options & NumberStyles.AllowExponent) != 0))
+                {
+                    char* temp = p;
+                    ch = *++p;
+                    if ((next = MatchChars(p, numfmt.positiveSign)) != null)
+                    {
+                        ch = *(p = next);
+                    }
+                    else if ((next = MatchChars(p, numfmt.negativeSign)) != null)
+                    {
+                        ch = *(p = next);
+                        negExp = true;
+                    }
+                    if (ch >= '0' && ch <= '9')
+                    {
+                        Int32 exp = 0;
+                        do
+                        {
+                            exp = exp * 10 + (ch - '0');
+                            ch = *++p;
+                            if (exp > 1000)
+                            {
+                                exp = 9999;
+                                while (ch >= '0' && ch <= '9')
+                                {
+                                    ch = *++p;
+                                }
+                            }
+                        } while (ch >= '0' && ch <= '9');
+                        if (negExp)
+                        {
+                            exp = -exp;
+                        }
+                        number.scale += exp;
+                    }
+                    else
+                    {
+                        p = temp;
+                        ch = *p;
+                    }
+                }
+                while (true)
+                {
+                    if (IsWhite(ch) && ((options & NumberStyles.AllowTrailingWhite) != 0))
+                    {
+                    }
+                    else if ((signflag = (((options & NumberStyles.AllowTrailingSign) != 0) && ((state & StateSign) == 0))) && (next = MatchChars(p, numfmt.positiveSign)) != null)
+                    {
+                        state |= StateSign;
+                        p = next - 1;
+                    }
+                    else if (signflag && (next = MatchChars(p, numfmt.negativeSign)) != null)
+                    {
+                        state |= StateSign;
+                        number.sign = true;
+                        p = next - 1;
+                    }
+                    else if (ch == ')' && ((state & StateParens) != 0))
+                    {
+                        state &= ~StateParens;
+                    }
+                    else if ((currSymbol != null && (next = MatchChars(p, currSymbol)) != null) || (ansicurrSymbol != null && (next = MatchChars(p, ansicurrSymbol)) != null))
+                    {
+                        currSymbol = null;
+                        ansicurrSymbol = null;
+                        p = next - 1;
+                    }
+                    else
                     {
                         break;
                     }
+                    ch = *++p;
                 }
+                if ((state & StateParens) == 0)
+                {
+                    if ((state & StateNonZero) == 0)
+                    {
+                        if (!parseDecimal)
+                        {
+                            number.scale = 0;
+                        }
+                        if ((state & StateDecimal) == 0)
+                        {
+                            number.sign = false;
+                        }
+                    }
+                    str = p;
+                    return true;
+                }
+            }
+            str = p;
+            return false;
+        }
 
-                pos -= size;
+
+        internal unsafe static Single ParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException("value");
             }
 
-            result = prefix + digits.Substring(0, size + pos) + result + suffix;
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            Double d = 0;
 
-            return result;
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
+            {
+                //If we failed TryStringToNumber, it may be from one of our special strings.
+                //Check the three with which we're concerned and rethrow if it's not one of
+                //those strings.
+                String sTrim = value.Trim();
+                if (sTrim.Equals(numfmt.PositiveInfinitySymbol))
+                {
+                    return Single.PositiveInfinity;
+                }
+                if (sTrim.Equals(numfmt.NegativeInfinitySymbol))
+                {
+                    return Single.NegativeInfinity;
+                }
+                if (sTrim.Equals(numfmt.NaNSymbol))
+                {
+                    return Single.NaN;
+                }
+                throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
+            }
+
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
+            {
+                throw new OverflowException(Environment.GetResourceString("Overflow_Single"));
+            }
+            Single castSingle = (Single)d;
+            if (Single.IsInfinity(castSingle))
+            {
+                throw new OverflowException(Environment.GetResourceString("Overflow_Single"));
+            }
+            return castSingle;
+        }
+
+
+        internal unsafe static UInt32 ParseUInt32(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            UInt32 i = 0;
+
+            StringToNumber(value, options, ref number, numfmt, false);
+
+            if ((options & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToUInt32(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_UInt32"));
+                }
+            }
+            else
+            {
+                if (!NumberToUInt32(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_UInt32"));
+                }
+            }
+
+            return i;
+        }
+
+
+        internal unsafe static UInt64 ParseUInt64(String value, NumberStyles options, NumberFormatInfo numfmt)
+        {
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            UInt64 i = 0;
+
+            StringToNumber(value, options, ref number, numfmt, false);
+            if ((options & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToUInt64(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_UInt64"));
+                }
+            }
+            else
+            {
+                if (!NumberToUInt64(ref number, ref i))
+                {
+                    throw new OverflowException(Environment.GetResourceString("Overflow_UInt64"));
+                }
+            }
+            return i;
+        }
+
+
+        private unsafe static void StringToNumber(String str, NumberStyles options, ref NumberBuffer number, NumberFormatInfo info, Boolean parseDecimal)
+        {
+
+            if (str == null)
+            {
+                throw new ArgumentNullException("String");
+            }
+
+            fixed (char* stringPointer = str)
+            {
+                char* p = stringPointer;
+                if (!ParseNumber(ref p, options, ref number, null, info, parseDecimal)
+                    || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
+                {
+                    throw new FormatException(Environment.GetResourceString("Format_InvalidString"));
+                }
+            }
+        }
+
+        private static Boolean TrailingZeros(String s, Int32 index)
+        {
+            // For compatability, we need to allow trailing zeros at the end of a number string
+            for (int i = index; i < s.Length; i++)
+            {
+                if (s[i] != '\0')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+            if (!TryStringToNumber(value, options, ref number, numfmt, true))
+            {
+                return false;
+            }
+
+            if (!NumberBufferToDecimal(number.PackForNative(), ref result))
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseDouble(String value, NumberStyles options, NumberFormatInfo numfmt, out Double result)
+        {
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
+            {
+                return false;
+            }
+            if (!NumberBufferToDouble(number.PackForNative(), ref result))
+            {
+                return false;
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseInt32(String s, NumberStyles style, NumberFormatInfo info, out Int32 result)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+            if (!TryStringToNumber(s, style, ref number, info, false))
+            {
+                return false;
+            }
+
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToInt32(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!NumberToInt32(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseInt64(String s, NumberStyles style, NumberFormatInfo info, out Int64 result)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+            if (!TryStringToNumber(s, style, ref number, info, false))
+            {
+                return false;
+            }
+
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToInt64(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!NumberToInt64(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseSingle(String value, NumberStyles options, NumberFormatInfo numfmt, out Single result)
+        {
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+            Double d = 0;
+
+            if (!TryStringToNumber(value, options, ref number, numfmt, false))
+            {
+                return false;
+            }
+            if (!NumberBufferToDouble(number.PackForNative(), ref d))
+            {
+                return false;
+            }
+            Single castSingle = (Single)d;
+            if (Single.IsInfinity(castSingle))
+            {
+                return false;
+            }
+
+            result = castSingle;
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseUInt32(String s, NumberStyles style, NumberFormatInfo info, out UInt32 result)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+            if (!TryStringToNumber(s, style, ref number, info, false))
+            {
+                return false;
+            }
+
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToUInt32(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!NumberToUInt32(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        internal unsafe static Boolean TryParseUInt64(String s, NumberStyles style, NumberFormatInfo info, out UInt64 result)
+        {
+
+            Byte* numberBufferBytes = stackalloc Byte[NumberBuffer.NumberBufferBytes];
+            NumberBuffer number = new NumberBuffer(numberBufferBytes);
+            result = 0;
+
+            if (!TryStringToNumber(s, style, ref number, info, false))
+            {
+                return false;
+            }
+
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            {
+                if (!HexNumberToUInt64(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                if (!NumberToUInt64(ref number, ref result))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        internal static Boolean TryStringToNumber(String str, NumberStyles options, ref NumberBuffer number, NumberFormatInfo numfmt, Boolean parseDecimal)
+        {
+            return TryStringToNumber(str, options, ref number, null, numfmt, parseDecimal);
+        }
+
+
+
+        internal unsafe static Boolean TryStringToNumber(String str, NumberStyles options, ref NumberBuffer number, StringBuilder sb, NumberFormatInfo numfmt, Boolean parseDecimal)
+        {
+
+            if (str == null)
+            {
+                return false;
+            }
+
+            fixed (char* stringPointer = str)
+            {
+                char* p = stringPointer;
+                if (!ParseNumber(ref p, options, ref number, sb, numfmt, parseDecimal)
+                    || (p - stringPointer < str.Length && !TrailingZeros(str, (int)(p - stringPointer))))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static char ParseFormatSpecifier(string str, out int digits)
+        {
+            if (str != null)
+            {
+                var i = 0;
+                char ch = str[i];
+                if (i < str.Length)
+                {
+                    if (ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z')
+                    {
+                        i++;
+                        int n = -1;
+                        if (str[i] >= '0' && str[i] <= '9')
+                        {
+                            n = str[i++] - '0';
+                            while (str[i] >= '0' && str[i] <= '9')
+                            {
+                                n = n * 10 + str[i++] - '0';
+                                if (n >= 10) break;
+                            }
+                        }
+                        if (i >= str.Length)
+                        {
+                            digits = n;
+                            return ch;
+                        }
+                    }
+
+                    digits = -1;
+                    return '\0';
+                }
+            }
+
+            digits = -1;
+            return 'G';
+        }
+
+        private static unsafe void Int32ToNumber(int value, ref NUMBER number)
+        {
+            char* buffer = stackalloc char[INT32_PRECISION + 1];
+            number.precision = INT32_PRECISION;
+            if (value >= 0)
+            {
+                number.sign = 0;
+            }
+            else
+            {
+                number.sign = 1;
+                value = -value;
+            }
+
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+                char* p = Int32ToDecChars(buffer + INT32_PRECISION, (uint)value, 0);
+                int i = (int)(buffer + INT32_PRECISION - p);
+                number.scale = i;
+                while (--i >= 0) *dst++ = *p++;
+                *dst = '\0';
+            }
+        }
+
+        private static unsafe void UInt32ToNumber(uint value, ref NUMBER number)
+        {
+            char* buffer = stackalloc char[UINT32_PRECISION + 1];
+            number.precision = UINT32_PRECISION;
+            number.sign = 0;
+
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+                char* p = Int32ToDecChars(buffer + UINT32_PRECISION, (uint)value, 0);
+                int i = (int)(buffer + UINT32_PRECISION - p);
+                number.scale = i;
+                while (--i >= 0) *dst++ = *p++;
+                *dst = '\0';
+            }
+        }
+
+        private static unsafe void Int64ToNumber(long value, ref NUMBER number)
+        {
+            char* buffer = stackalloc char[INT64_PRECISION + 1];
+            number.precision = INT64_PRECISION;
+            if (value >= 0)
+            {
+                number.sign = 0;
+            }
+            else
+            {
+                number.sign = 1;
+                value = -value;
+            }
+
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+                char* p = buffer + INT64_PRECISION;
+                while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                {
+                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                }
+                p = Int32ToDecChars(p, (uint)value, 0);
+                int i = (int)(buffer + INT64_PRECISION - p);
+                number.scale = i;
+                while (--i >= 0) *dst++ = *p++;
+                *dst = '\0';
+            }
+        }
+
+        private static unsafe void UInt64ToNumber(ulong value, ref NUMBER number)
+        {
+            char* buffer = stackalloc char[UINT64_PRECISION + 1];
+            number.precision = UINT64_PRECISION;
+            number.sign = 0;
+
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+                char* p = buffer + UINT64_PRECISION;
+                while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                {
+                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                }
+                p = Int32ToDecChars(p, (uint)value, 0);
+                int i = (int)(buffer + UINT64_PRECISION - p);
+                number.scale = i;
+                while (--i >= 0) *dst++ = *p++;
+                *dst = '\0';
+            }
+        }
+
+        private unsafe static void DoubleToNumber(double value, int precision, ref NUMBER number)
+        {
+            number.precision = precision;
+            fixed (char* dstPtr = number.digits)
+            {
+                char* dst = dstPtr;
+                char* src = DoubleHelper.ecvt(value, precision, ref number.scale, ref number.sign);
+                if (*src != '0')
+                {
+                    while (*src > 0) *dst++ = *src++;
+                }
+
+                *dst = '\0';
+            }
+        }
+
+        private unsafe static uint Int64DivMod1E9(ulong* value)
+        {
+            var rem = (uint)(*value % 1000000000);
+            *value /= 1000000000;
+            return rem;
+        }
+
+        private unsafe static char* Int32ToDecChars(char* p, uint value, int digits)
+        {
+            while (--digits >= 0 || value != 0)
+            {
+                *--p = (char)(value % 10 + '0');
+                value /= 10;
+            }
+
+            return p;
+        }
+
+        private unsafe static char* Int32ToHexChars(char* p, uint value, int hexBase, int digits)
+        {
+            while (--digits >= 0 || value != 0)
+            {
+                int digit = (int)(value & 0xF);
+                *--p = (char)(digit + (digit < 10 ? '0' : hexBase));
+                value >>= 4;
+            }
+
+            return p;
+        }
+
+        private unsafe static string Int32ToHexStr(uint value, int hexBase, int digits)
+        {
+            char* buffer = stackalloc char[100];
+            if (digits < 1) digits = 1;
+            char* p = Int32ToHexChars(buffer + 100, value, hexBase, digits);
+            return new String(p, 0, (int)(buffer + 100 - p));
+        }
+
+        private unsafe static string Int64ToHexStr(ulong value, int hexBase, int digits)
+        {
+            char* buffer = stackalloc char[100];
+            char* p;
+            if ((value & 0xffffffff00000000) > 0)
+            {
+                Int32ToHexChars(buffer + 100, (uint)value, hexBase, 8);
+                p = Int32ToHexChars(buffer + 100 - 8, (uint)(value & 0xffffffff00000000) >> 32, hexBase, digits - 8);
+            }
+            else
+            {
+                if (digits < 1) digits = 1;
+                p = Int32ToHexChars(buffer + 100, (uint)value, hexBase, digits);
+            }
+
+            return new String(p, 0, (int)(buffer + 100 - p));
+        }
+
+        private unsafe static string Int32ToDecStr(int value, int digits, string sNegative)
+        {
+            if (digits < 1) digits = 1;
+
+            int maxDigitsLength = (digits > 15) ? digits : 15; // Since an int32 can have maximum of 10 chars as a String
+            int bufferLength = (maxDigitsLength > 100) ? maxDigitsLength : 100;
+            int negLength = 0;
+            fixed (char* src = sNegative)
+            {
+                if (value < 0)
+                {
+                    negLength = sNegative.Length;
+                    if (negLength > bufferLength - maxDigitsLength)
+                    {
+                        bufferLength = negLength + maxDigitsLength;
+                    }
+                }
+
+                char* buffer = stackalloc char[bufferLength];
+                char* p = Int32ToDecChars(buffer + bufferLength, (uint)(value >= 0 ? value : -value), digits);
+                if (value < 0)
+                {
+                    for (int i = negLength - 1; i >= 0; i--)
+                    {
+                        *(--p) = *(src + i);
+                    }
+                }
+
+                return new String(p, 0, (int)(buffer + bufferLength - p));
+            }
+        }
+
+        private unsafe static string UInt32ToDecStr(uint value, int digits)
+        {
+            char* buffer = stackalloc char[100];
+            if (digits < 1) digits = 1;
+            char* p = Int32ToDecChars(buffer + 100, value, digits);
+            return new String(p, 0, (int)(buffer + 100 - p));
+        }
+
+        private unsafe static string Int64ToDecStr(long value, int digits, string sNegative)
+        {
+            if (digits < 1) digits = 1;
+            int sign = (int)((ulong)value & 0xffffffff00000000) >> 32;
+
+            int maxDigitsLength = (digits > 20) ? digits : 20;
+            int bufferLength = (maxDigitsLength > 100) ? maxDigitsLength : 100;
+            int negLength = 0;
+            fixed (char* src = sNegative)
+            {
+                if (sign < 0)
+                {
+                    value = -value;
+                    negLength = sNegative.Length;
+                    if (negLength > bufferLength - maxDigitsLength)
+                    {
+                        bufferLength = negLength + maxDigitsLength;
+                    }
+                }
+
+                char* buffer = stackalloc char[bufferLength];
+                char* p = buffer + bufferLength;
+                while (((ulong)value & 0xffffffff00000000) > 0)
+                {
+                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                    digits -= 9;
+                }
+                p = Int32ToDecChars(p, (uint)value, digits);
+
+                if (sign < 0)
+                {
+                    for (int i = negLength - 1; i >= 0; i--)
+                    {
+                        *(--p) = *(src + i);
+                    }
+                }
+
+                return new String(p, 0, (int)(buffer + bufferLength - p));
+            }
+        }
+
+        private unsafe static string UInt64ToDecStr(ulong value, int digits)
+        {
+            char* buffer = stackalloc char[100];
+            if (digits < 1) digits = 1;
+
+            char* p = buffer + 100;
+            while ((value & 0xffffffff00000000) > 0)
+            {
+                p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
+                digits -= 9;
+            }
+
+            p = Int32ToDecChars(p, (uint)value, digits);
+            return new String(p, 0, (int)(buffer + 100 - p));
+        }
+
+        public unsafe struct NUMBER
+        {
+            public const int NUMBER_MAXDIGITS = 50;
+
+            public int precision;
+            public int scale;
+            public int sign;
+            public fixed char digits[NUMBER_MAXDIGITS + 1];
+        }
+
+        internal unsafe static class DoubleHelper
+        {
+            private const int NDIG = 350;
+
+            internal static char* ecvt(double arg, int ndigits, ref int decptp, ref int signp)
+            {
+                return cvt(arg, ndigits, ref decptp, ref signp, 1);
+            }
+
+            internal static char* fcvt(double arg, int ndigits, ref int decptp, ref int signp)
+            {
+                return cvt(arg, ndigits, ref decptp, ref signp, 0);
+            }
+
+            private static char* cvt(double arg, int ndigits, ref int decptp, ref int signp, int eflag)
+            {
+                int decpt;
+                double fi = 0.0, fj = 0.0;
+                char* p;
+                char* p1;
+                char* buf = stackalloc char[NDIG];
+
+                if (ndigits < 0)
+                    ndigits = 0;
+                if (ndigits >= NDIG - 1)
+                    ndigits = NDIG - 2;
+
+                decpt = 0;
+                signp = 0;
+                p = &buf[0];
+
+                if (arg == 0)
+                {
+                    decptp = 0;
+                    while (p < &buf[ndigits])
+                        *p++ = '0';
+                    *p = '\0';
+                    return (buf);
+                }
+                else if (arg < 0)
+                {
+                    signp = 1;
+                    arg = -arg;
+                }
+
+                arg = modf(arg, ref fi);
+                p1 = &buf[NDIG];
+
+                /* Do integer part */
+
+                if (fi != 0)
+                {
+                    while (fi != 0)
+                    {
+                        fj = modf(fi / 10, ref fi);
+                        *--p1 = (char)((int)((fj + 0.03) * 10) + '0');
+                        decpt++;
+                    }
+                    while (p1 < &buf[NDIG])
+                        *p++ = *p1++;
+                }
+                else if (arg > 0)
+                {
+                    while ((fj = arg * 10) < 1)
+                    {
+                        arg = fj;
+                        decpt--;
+                    }
+                }
+                decptp = decpt;
+
+                /* Do the fractional part.
+                 * p pts to where fraction should be concatenated.
+                 * p1 is how far conversion must go to.
+                 */
+                p1 = &buf[ndigits];
+                if (eflag == 0)
+                {
+                    /* fcvt must provide ndigits after decimal pt */
+                    p1 += decpt;
+                    /* if decpt was negative, we might be done for fcvt */
+                    if (p1 < &buf[0])
+                    {
+                        buf[0] = '\0';
+                        return (buf);
+                    }
+                }
+
+                while (p <= p1 && p < &buf[NDIG])
+                {
+                    arg *= 10;
+                    arg = modf(arg, ref fj);
+                    *p++ = (char)((int)fj + '0');
+                }
+
+                /* If we converted all the way to the end of the buf, don't mess with
+                 * rounding since there's nothing significant out here anyway.
+                 */
+                if (p1 >= &buf[NDIG])
+                {
+                    buf[NDIG - 1] = '\0';
+                    return (buf);
+                }
+
+                /* Round by adding 5 to last digit and propagating carries. */
+                p = p1;
+                *p1 += (char)5;
+                while (*p1 > '9')
+                {
+                    *p1 = '0';
+                    if (p1 > buf)
+                    {
+                        ++*--p1;
+                    }
+                    else
+                    {
+                        *p1 = '1';
+                        (decptp)++;
+                        if (eflag == 0)
+                        {
+                            if (p > buf)
+                                *p = '0';
+                            p++;
+                        }
+                    }
+                }
+                *p = '\0';
+                return (buf);
+            }
         }
     }
 }
-
-

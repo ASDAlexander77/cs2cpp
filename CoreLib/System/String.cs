@@ -306,6 +306,13 @@ namespace System
             }
         }
 
+        public unsafe String(char* src, int startIndex, int length)
+        {
+            this.chars = new char[length];
+            fixed (char* dest = this.chars)
+                wstrcpy(dest, src + startIndex, length);
+        }
+
         public static int Compare(String a, String b)
         {
             if (a == null && b == null)

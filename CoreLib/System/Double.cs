@@ -1,310 +1,272 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace System
 {
-
-    using System;
     using System.Globalization;
-    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
 
-    [Serializable]
     public struct Double
     {
         internal double m_value;
 
+        //
         // Public Constants
-
-        // Summary:
-        //     Represents the smallest possible value of a System.Double. This field is
-        //     constant.
+        //
         public const double MinValue = -1.7976931348623157E+308;
-        //
-        // Summary:
-        //     Represents the largest possible value of a System.Double. This field is constant.
         public const double MaxValue = 1.7976931348623157E+308;
-        //
-        // Summary:
-        //     Represents the smallest positive System.Double value that is greater than
-        //     zero. This field is constant.
-        // 
-        // Note:
-        // Real value of Epsilon: 4.9406564584124654e-324 (0x1), but JVC misparses that
-        // number, giving 2*Epsilon (0x2).
-        public const double Epsilon = 4.9406564584124650E-324;
-        //
-        // Summary:
-        //     Represents negative infinity. This field is constant.
+
+        // Note Epsilon should be a double whose hex representation is 0x1
+        // on little endian machines.
+        public const double Epsilon = 4.9406564584124654E-324;
         public const double NegativeInfinity = (double)-1.0 / (double)(0.0);
-        //
-        // Summary:
-        //     Represents positive infinity. This field is constant.
         public const double PositiveInfinity = (double)1.0 / (double)(0.0);
-        //        
-        // Summary:
-        //     Represents a value that is not a number (NaN). This field is constant.
-        public const double NaN = 0.0 / 0.0;
-        //
-        // Summary:
-        //     Compares this instance to a specified double-precision floating-point number
-        //     and returns an integer that indicates whether the value of this instance
-        //     is less than, equal to, or greater than the value of the specified double-precision
-        //     floating-point number.
-        //
-        // Parameters:
-        //   value:
-        //     A double-precision floating-point number to compare.
-        //
-        // Returns:
-        //     A signed number indicating the relative values of this instance and value.Return
-        //     Value Description Less than zero This instance is less than value.-or- This
-        //     instance is not a number (System.Double.NaN) and value is a number. Zero
-        //     This instance is equal to value.-or- Both this instance and value are not
-        //     a number (System.Double.NaN), System.Double.PositiveInfinity, or System.Double.NegativeInfinity.
-        //     Greater than zero This instance is greater than value.-or- This instance
-        //     is a number and value is not a number (System.Double.NaN).
-        
-        public static extern int CompareTo(double d, double value);
-        //
-        // Summary:
-        //     Returns a value indicating whether the specified number evaluates to negative
-        //     or positive infinity
-        //
-        // Parameters:
-        //   d:
-        //     A double-precision floating-point number.
-        //
-        // Returns:
-        //     true if d evaluates to System.Double.PositiveInfinity or System.Double.NegativeInfinity;
-        //     otherwise, false.
-        
-        public static extern bool IsInfinity(double d);
-        //
-        // Summary:
-        //     Returns a value indicating whether the specified number evaluates to a value
-        //     that is not a number (System.Double.NaN).
-        //
-        // Parameters:
-        //   d:
-        //     A double-precision floating-point number.
-        //
-        // Returns:
-        //     true if d evaluates to System.Double.NaN; otherwise, false.
-        
-        public static bool IsNaN(double d)
+        public const double NaN = (double)0.0 / (double)0.0;
+
+        internal static double NegativeZero = BitConverter.Int64BitsToDouble(unchecked((long)0x8000000000000000));
+
+        public unsafe static bool IsInfinity(double d)
         {
-            return d != d;
+            return (*(long*)(&d) & 0x7FFFFFFFFFFFFFFF) == 0x7FF0000000000000;
         }
 
-        //
-        // Summary:
-        //     Returns a value indicating whether the specified number evaluates to negative
-        //     infinity.
-        //
-        // Parameters:
-        //   d:
-        //     A double-precision floating-point number.
-        //
-        // Returns:
-        //     true if d evaluates to System.Double.NegativeInfinity; otherwise, false.
-        
-        public static bool IsNegativeInfinity(double d)
-        {
-            throw new NotImplementedException();
-        }
-
-        //
-        // Summary:
-        //     Returns a value indicating whether the specified number evaluates to positive
-        //     infinity.
-        //
-        // Parameters:
-        //   d:
-        //     A double-precision floating-point number.
-        //
-        // Returns:
-        //     true if d evaluates to System.Double.PositiveInfinity; otherwise, false.
-        
         public static bool IsPositiveInfinity(double d)
         {
-            throw new NotImplementedException();
-        }
-
-        //
-        // Summary:
-        //     Converts the string representation of a number in a specified style and culture-specific
-        //     format to its double-precision floating-point number equivalent.
-        //
-        // Parameters:
-        //   s:
-        //     A string that contains a number to convert.
-        //
-        //   style:
-        //     A bitwise combination of enumeration values that indicate the style elements
-        //     that can be present in s. A typical value to specify is System.Globalization.NumberStyles.Float
-        //     combined with System.Globalization.NumberStyles.AllowThousands.
-        //
-        //   provider:
-        //     An object that supplies culture-specific formatting information about s.
-        //
-        // Returns:
-        //     A double-precision floating-point number that is equivalent to the numeric
-        //     value or symbol specified in s.
-        //
-        // Exceptions:
-        //   System.ArgumentNullException:
-        //     s is null.
-        //
-        //   System.FormatException:
-        //     s does not represent a numeric value.
-        //
-        //   System.ArgumentException:
-        //     style is not a System.Globalization.NumberStyles value. -or-style is the
-        //     System.Globalization.NumberStyles.AllowHexSpecifier value.
-        //
-        //   System.OverflowException:
-        //     s represents a number that is less than System.Double.MinValue or greater
-        //     than System.Double.MaxValue.
-        public static double Parse(String s)
-        {
-            if (s == null)
+            //Jit will generate inlineable code with this
+            if (d == double.PositiveInfinity)
             {
-                throw new ArgumentNullException();
+                return true;
             }
-
-            return Convert.ToDouble(s);
-        }
-        //
-        // Summary:
-        //     Converts the numeric value of this instance to its equivalent string representation.
-        //
-        // Returns:
-        //     The string representation of the value of this instance.        
-        public override String ToString()
-        {
-            ////if(IsPositiveInfinity(this))
-            ////{
-            ////    return "Infinity";
-            ////}
-            ////else if(IsNegativeInfinity(this))
-            ////{
-            ////    return "-Infinity";
-            ////}
-            ////else if(IsNaN(this))
-            ////{
-            ////    return "NaN";
-            ////}
-
-            return Number.Format(m_value, false, "G", NumberFormatInfo.CurrentInfo);
-        }
-        //
-        // Summary:
-        //     Converts the numeric value of this instance to its equivalent string representation,
-        //     using the specified format.
-        //
-        // Parameters:
-        //   format:
-        //     A numeric format string.
-        //
-        // Returns:
-        //     The string representation of the value of this instance as specified by format.
-        //
-        // Exceptions:
-        //   System.FormatException:
-        //     format is invalid.
-        public String ToString(String format)
-        {
-            ////if (IsPositiveInfinity(this))
-            ////{
-            ////    return "Infinity";
-            ////}
-            ////else if (IsNegativeInfinity(this))
-            ////{
-            ////    return "-Infinity";
-            ////}
-            ////else if (IsNaN(this))
-            ////{
-            ////    return "NaN";
-            ////}
-
-            return Number.Format(m_value, false, format, NumberFormatInfo.CurrentInfo);
-        }
-        //
-        // Summary:
-        //     Converts the string representation of a number to its double-precision floating-point
-        //     number equivalent. A return value indicates whether the conversion succeeded
-        //     or failed.
-        //
-        // Parameters:
-        //   s:
-        //     A string containing a number to convert.
-        //
-        //   result:
-        //     When this method returns, contains the double-precision floating-point number
-        //     equivalent to the s parameter, if the conversion succeeded, or zero if the
-        //     conversion failed. The conversion fails if the s parameter is null, is not
-        //     a number in a valid format, or represents a number less than System.Double.MinValue
-        //     or greater than System.Double.MaxValue. This parameter is passed uninitialized.
-        //
-        // Returns:
-        //     true if s was converted successfully; otherwise, false.
-        public static bool TryParse(string s, out double result)
-        {
-            result = 0.0;
-
-            if (s == null)
+            else
             {
                 return false;
             }
+        }
 
-            try
+        public static bool IsNegativeInfinity(double d)
+        {
+            //Jit will generate inlineable code with this
+            if (d == double.NegativeInfinity)
             {
-                result = Convert.ToDouble(s);
                 return true;
             }
-            catch
+            else
             {
-                result = 0.0;
+                return false;
             }
-            return false;
         }
+
+        internal unsafe static bool IsNegative(double d)
+        {
+            return (*(UInt64*)(&d) & 0x8000000000000000) == 0x8000000000000000;
+        }
+
+        public unsafe static bool IsNaN(double d)
+        {
+            return (*(UInt64*)(&d) & 0x7FFFFFFFFFFFFFFFL) > 0x7FF0000000000000L;
+        }
+
+
+        // Compares this object to another object, returning an instance of System.Relation.
+        // Null is considered less than any instance.
         //
-        // Summary:
-        //     Converts the string representation of a number in a specified style and culture-specific
-        //     format to its double-precision floating-point number equivalent. A return
-        //     value indicates whether the conversion succeeded or failed.
+        // If object is not of type Double, this method throws an ArgumentException.
         //
-        // Parameters:
-        //   s:
-        //     A string containing a number to convert.
+        // Returns a value less than zero if this  object
         //
-        //   style:
-        //     A bitwise combination of System.Globalization.NumberStyles values that indicates
-        //     the permitted format of s. A typical value to specify is System.Globalization.NumberStyles.Float
-        //     combined with System.Globalization.NumberStyles.AllowThousands.
+        public int CompareTo(Object value)
+        {
+            if (value == null)
+            {
+                return 1;
+            }
+            if (value is Double)
+            {
+                double d = (double)value;
+                if (m_value < d) return -1;
+                if (m_value > d) return 1;
+                if (m_value == d) return 0;
+
+                // At least one of the values is NaN.
+                if (IsNaN(m_value))
+                    return (IsNaN(d) ? 0 : -1);
+                else
+                    return 1;
+            }
+            throw new ArgumentException(Environment.GetResourceString("Arg_MustBeDouble"));
+        }
+
+        public int CompareTo(Double value)
+        {
+            if (m_value < value) return -1;
+            if (m_value > value) return 1;
+            if (m_value == value) return 0;
+
+            // At least one of the values is NaN.
+            if (IsNaN(m_value))
+                return (IsNaN(value) ? 0 : -1);
+            else
+                return 1;
+        }
+
+        // True if obj is another Double with the same value as the current instance.  This is
+        // a method of object equality, that only returns true if obj is also a double.
+        public override bool Equals(Object obj)
+        {
+            if (!(obj is Double))
+            {
+                return false;
+            }
+            double temp = ((Double)obj).m_value;
+            // This code below is written this way for performance reasons i.e the != and == check is intentional.
+            if (temp == m_value)
+            {
+                return true;
+            }
+            return IsNaN(temp) && IsNaN(m_value);
+        }
+
+        public static bool operator ==(Double left, Double right)
+        {
+            return left == right;
+        }
+
+        public static bool operator !=(Double left, Double right)
+        {
+            return left != right;
+        }
+
+        public static bool operator <(Double left, Double right)
+        {
+            return left < right;
+        }
+
+        public static bool operator >(Double left, Double right)
+        {
+            return left > right;
+        }
+
+        public static bool operator <=(Double left, Double right)
+        {
+            return left <= right;
+        }
+
+        public static bool operator >=(Double left, Double right)
+        {
+            return left >= right;
+        }
+
+        public bool Equals(Double obj)
+        {
+            if (obj == m_value)
+            {
+                return true;
+            }
+            return IsNaN(obj) && IsNaN(m_value);
+        }
+
+        public unsafe override int GetHashCode()
+        {
+            double d = m_value;
+            if (d == 0)
+            {
+                // Ensure that 0 and -0 have the same hash code
+                return 0;
+            }
+            long value = *(long*)(&d);
+            return unchecked((int)value) ^ ((int)(value >> 32));
+        }
+
+        public override String ToString()
+        {
+            return Number.FormatDouble(m_value, null, NumberFormatInfo.CurrentInfo);
+        }
+
+        public String ToString(String format)
+        {
+            return Number.FormatDouble(m_value, format, NumberFormatInfo.CurrentInfo);
+        }
+
+        public String ToString(IFormatProvider provider)
+        {
+            return Number.FormatDouble(m_value, null, NumberFormatInfo.GetInstance(provider));
+        }
+
+        public String ToString(String format, IFormatProvider provider)
+        {
+            return Number.FormatDouble(m_value, format, NumberFormatInfo.GetInstance(provider));
+        }
+
+        public static double Parse(String s)
+        {
+            return Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.CurrentInfo);
+        }
+
+        public static double Parse(String s, NumberStyles style)
+        {
+            NumberFormatInfo.ValidateParseStyleFloatingPoint(style);
+            return Parse(s, style, NumberFormatInfo.CurrentInfo);
+        }
+
+        public static double Parse(String s, IFormatProvider provider)
+        {
+            return Parse(s, NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.GetInstance(provider));
+        }
+
+        public static double Parse(String s, NumberStyles style, IFormatProvider provider)
+        {
+            NumberFormatInfo.ValidateParseStyleFloatingPoint(style);
+            return Parse(s, style, NumberFormatInfo.GetInstance(provider));
+        }
+
+        // Parses a double from a String in the given style.  If
+        // a NumberFormatInfo isn't specified, the current culture's
+        // NumberFormatInfo is assumed.
         //
-        //   provider:
-        //     An System.IFormatProvider that supplies culture-specific formatting information
-        //     about s.
+        // This method will not throw an OverflowException, but will return
+        // PositiveInfinity or NegativeInfinity for a number that is too
+        // large or too small.
         //
-        //   result:
-        //     When this method returns, contains a double-precision floating-point number
-        //     equivalent to the numeric value or symbol contained in s, if the conversion
-        //     succeeded, or zero if the conversion failed. The conversion fails if the
-        //     s parameter is null, is not in a format compliant with style, represents
-        //     a number less than System.SByte.MinValue or greater than System.SByte.MaxValue,
-        //     or if style is not a valid combination of System.Globalization.NumberStyles
-        //     enumerated constants. This parameter is passed uninitialized.
-        //
-        // Returns:
-        //     true if s was converted successfully; otherwise, false.
-        //
-        // Exceptions:
-        //   System.ArgumentException:
-        //     style is not a System.Globalization.NumberStyles value. -or-style includes
-        //     the System.Globalization.NumberStyles.AllowHexSpecifier value.
-//        public static bool TryParse(string s, NumberStyles style, IFormatProvider provider, out double result);
+        private static double Parse(String s, NumberStyles style, NumberFormatInfo info)
+        {
+            return Number.ParseDouble(s, style, info);
+        }
+
+        public static bool TryParse(String s, out double result)
+        {
+            return TryParse(s, NumberStyles.Float | NumberStyles.AllowThousands, NumberFormatInfo.CurrentInfo, out result);
+        }
+
+        public static bool TryParse(String s, NumberStyles style, IFormatProvider provider, out double result)
+        {
+            NumberFormatInfo.ValidateParseStyleFloatingPoint(style);
+            return TryParse(s, style, NumberFormatInfo.GetInstance(provider), out result);
+        }
+
+        private static bool TryParse(String s, NumberStyles style, NumberFormatInfo info, out double result)
+        {
+            if (s == null)
+            {
+                result = 0;
+                return false;
+            }
+            bool success = Number.TryParseDouble(s, style, info, out result);
+            if (!success)
+            {
+                String sTrim = s.Trim();
+                if (sTrim.Equals(info.PositiveInfinitySymbol))
+                {
+                    result = PositiveInfinity;
+                }
+                else if (sTrim.Equals(info.NegativeInfinitySymbol))
+                {
+                    result = NegativeInfinity;
+                }
+                else if (sTrim.Equals(info.NaNSymbol))
+                {
+                    result = NaN;
+                }
+                else
+                    return false; // We really failed
+            }
+            return true;
+        }
     }
 }
-
-

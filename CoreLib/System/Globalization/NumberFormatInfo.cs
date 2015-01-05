@@ -1,6 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System.Globalization
 namespace System.Globalization
 {
     using System;
@@ -37,90 +34,776 @@ namespace System.Globalization
     //
 
     [Serializable]
-    sealed public class NumberFormatInfo /*: ICloneable, IFormatProvider*/
+    [System.Runtime.InteropServices.ComVisible(true)]
+    sealed public class NumberFormatInfo : ICloneable, IFormatProvider
     {
-        internal int[] numberGroupSizes = null;//new int[] { 3 };
-        internal String positiveSign = null;//"+";
-        internal String negativeSign = null;//"-";
-        internal String numberDecimalSeparator = null;//".";
-        internal String numberGroupSeparator = null;//",";
-        private CultureInfo m_cultureInfo;
-        internal NumberFormatInfo(CultureInfo cultureInfo)
+        // invariantInfo is constant irrespective of your current culture.
+        private static volatile NumberFormatInfo invariantInfo;
+
+        // READTHIS READTHIS READTHIS
+        // This class has an exact mapping onto a native structure defined in COMNumber.cpp
+        // DO NOT UPDATE THIS WITHOUT UPDATING THAT STRUCTURE. IF YOU ADD BOOL, ADD THEM AT THE END.
+        // ALSO MAKE SURE TO UPDATE mscorlib.h in the VM directory to check field offsets.
+        // READTHIS READTHIS READTHIS
+        internal int[] numberGroupSizes = new int[] { 3 };
+        internal int[] currencyGroupSizes = new int[] { 3 };
+        internal int[] percentGroupSizes = new int[] { 3 };
+        internal String positiveSign = "+";
+        internal String negativeSign = "-";
+        internal String numberDecimalSeparator = ".";
+        internal String numberGroupSeparator = ",";
+        internal String currencyGroupSeparator = ",";
+        internal String currencyDecimalSeparator = ".";
+        internal String currencySymbol = "\x00a4";  // U+00a4 is the symbol for International Monetary Fund.
+        // The alternative currency symbol used in Win9x ANSI codepage, that can not roundtrip between ANSI and Unicode.
+        // Currently, only ja-JP and ko-KR has non-null values (which is U+005c, backslash)
+        // NOTE: The only legal values for this string are null and "\x005c"
+        internal String ansiCurrencySymbol = null;
+        internal String nanSymbol = "NaN";
+        internal String positiveInfinitySymbol = "Infinity";
+        internal String negativeInfinitySymbol = "-Infinity";
+        internal String percentDecimalSeparator = ".";
+        internal String percentGroupSeparator = ",";
+        internal String percentSymbol = "%";
+        internal String perMilleSymbol = "\u2030";
+
+        internal String[] nativeDigits = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+        internal int m_dataItem = 0;    // NEVER USED, DO NOT USE THIS! (Serialized in Everett)
+
+        internal int numberDecimalDigits = 2;
+        internal int currencyDecimalDigits = 2;
+        internal int currencyPositivePattern = 0;
+        internal int currencyNegativePattern = 0;
+        internal int numberNegativePattern = 1;
+        internal int percentPositivePattern = 0;
+        internal int percentNegativePattern = 0;
+        internal int percentDecimalDigits = 2;
+
+        internal int digitSubstitution = 1; // DigitShapes.None
+
+        internal bool isReadOnly = false;
+        // We shouldn't be persisting m_useUserOverride (since its useless & we weren't using it),
+        // but since COMNumber.cpp uses it and since serialization isn't implimented, its stuck for now.
+        internal bool m_useUserOverride = false;    // NEVER USED, DO NOT USE THIS! (Serialized in Everett)
+
+        // Is this NumberFormatInfo for invariant culture?
+        internal bool m_isInvariant = false;
+
+        public NumberFormatInfo()
+            : this(null)
         {
-            m_cultureInfo = cultureInfo;
         }
+
+        static private void VerifyDecimalSeparator(String decSep, String propertyName)
+        {
+            if (decSep == null)
+            {
+                throw new ArgumentNullException(propertyName,
+                        Environment.GetResourceString("ArgumentNull_String"));
+            }
+
+            if (decSep.Length == 0)
+            {
+                throw new ArgumentException(Environment.GetResourceString("Argument_EmptyDecString"));
+            }
+
+        }
+
+        static private void VerifyGroupSeparator(String groupSep, String propertyName)
+        {
+            if (groupSep == null)
+            {
+                throw new ArgumentNullException(propertyName,
+                        Environment.GetResourceString("ArgumentNull_String"));
+            }
+        }
+
+        static private void VerifyNativeDigits(String[] nativeDig, String propertyName)
+        {
+            if (nativeDig == null)
+            {
+                throw new ArgumentNullException(propertyName,
+                        Environment.GetResourceString("ArgumentNull_Array"));
+            }
+
+            if (nativeDig.Length != 10)
+            {
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidNativeDigitCount"), propertyName);
+            }
+
+            for (int i = 0; i < nativeDig.Length; i++)
+            {
+                if (nativeDig[i] == null)
+                {
+                    throw new ArgumentNullException(propertyName,
+                            Environment.GetResourceString("ArgumentNull_ArrayValue"));
+                }
+
+
+                if (nativeDig[i].Length != 1)
+                {
+                    if (nativeDig[i].Length != 2)
+                    {
+                        // Not 1 or 2 UTF-16 code points
+                        throw new ArgumentException(Environment.GetResourceString("Argument_InvalidNativeDigitValue"), propertyName);
+                    }
+                    else if (!char.IsSurrogatePair(nativeDig[i][0], nativeDig[i][1]))
+                    {
+                        // 2 UTF-6 code points, but not a surrogate pair
+                        throw new ArgumentException(Environment.GetResourceString("Argument_InvalidNativeDigitValue"), propertyName);
+                    }
+                }
+            }
+        }
+
+        static private void VerifyDigitSubstitution(DigitShapes digitSub, String propertyName)
+        {
+            switch (digitSub)
+            {
+                case DigitShapes.Context:
+                case DigitShapes.None:
+                case DigitShapes.NativeNational:
+                    // Success.
+                    break;
+
+                default:
+                    throw new ArgumentException(Environment.GetResourceString("Argument_InvalidDigitSubstitution"), propertyName);
+            }
+        }
+
+        // We aren't persisting dataItem any more (since its useless & we weren't using it),
+        // Ditto with m_useUserOverride.  Don't use them, we use a local copy of everything.
+        internal NumberFormatInfo(CultureData cultureData)
+        {
+            if (cultureData != null)
+            {
+                // For invariant culture
+                this.m_isInvariant = true;
+            }
+        }
+
+        private void VerifyWritable()
+        {
+            if (isReadOnly)
+            {
+                throw new InvalidOperationException(Environment.GetResourceString("InvalidOperation_ReadOnly"));
+            }
+        }
+
+        // Returns a default NumberFormatInfo that will be universally
+        // supported and constant irrespective of the current culture.
+        // Used by FromString methods.
+        //
+
+        public static NumberFormatInfo InvariantInfo
+        {
+            get
+            {
+                if (invariantInfo == null)
+                {
+                    // Lazy create the invariant info. This cannot be done in a .cctor because exceptions can
+                    // be thrown out of a .cctor stack that will need this.
+                    NumberFormatInfo nfi = new NumberFormatInfo();
+                    nfi.m_isInvariant = true;
+                    invariantInfo = ReadOnly(nfi);
+                }
+                return invariantInfo;
+            }
+        }
+
+
+        public static NumberFormatInfo GetInstance(IFormatProvider formatProvider)
+        {
+            // Fast case for a regular CultureInfo
+            NumberFormatInfo info;
+            CultureInfo cultureProvider = formatProvider as CultureInfo;
+            if (cultureProvider != null && !cultureProvider.m_isInherited)
+            {
+                info = cultureProvider.numInfo;
+                if (info != null)
+                {
+                    return info;
+                }
+                else
+                {
+                    return cultureProvider.NumberFormat;
+                }
+            }
+            // Fast case for an NFI;
+            info = formatProvider as NumberFormatInfo;
+            if (info != null)
+            {
+                return info;
+            }
+            if (formatProvider != null)
+            {
+                info = formatProvider.GetFormat(typeof(NumberFormatInfo)) as NumberFormatInfo;
+                if (info != null)
+                {
+                    return info;
+                }
+            }
+            return CurrentInfo;
+        }
+
+
+
+        public Object Clone()
+        {
+            NumberFormatInfo n = (NumberFormatInfo)MemberwiseClone();
+            n.isReadOnly = false;
+            return n;
+        }
+
+
+        public int CurrencyDecimalDigits
+        {
+            get { return currencyDecimalDigits; }
+            set
+            {
+                if (value < 0 || value > 99)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "CurrencyDecimalDigits");
+                }
+                VerifyWritable();
+                currencyDecimalDigits = value;
+            }
+        }
+
+
+        public String CurrencyDecimalSeparator
+        {
+            get { return currencyDecimalSeparator; }
+            set
+            {
+                VerifyWritable();
+                VerifyDecimalSeparator(value, "CurrencyDecimalSeparator");
+                currencyDecimalSeparator = value;
+            }
+        }
+
+
+        public bool IsReadOnly
+        {
+            get
+            {
+                return isReadOnly;
+            }
+        }
+
+        //
+        // Check the values of the groupSize array.
+        //
+        // Every element in the groupSize array should be between 1 and 9
+        // excpet the last element could be zero.
+        //
+        static internal void CheckGroupSize(String propName, int[] groupSize)
+        {
+            for (int i = 0; i < groupSize.Length; i++)
+            {
+                if (groupSize[i] < 1)
+                {
+                    if (i == groupSize.Length - 1 && groupSize[i] == 0)
+                        return;
+                    throw new ArgumentException(Environment.GetResourceString("Argument_InvalidGroupSize"), propName);
+                }
+                else if (groupSize[i] > 9)
+                {
+                    throw new ArgumentException(Environment.GetResourceString("Argument_InvalidGroupSize"), propName);
+                }
+            }
+        }
+
+
+        public int[] CurrencyGroupSizes
+        {
+            get
+            {
+                return ((int[])currencyGroupSizes.Clone());
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("CurrencyGroupSizes",
+                        Environment.GetResourceString("ArgumentNull_Obj"));
+                }
+                VerifyWritable();
+
+                Int32[] inputSizes = (Int32[])value.Clone();
+                CheckGroupSize("CurrencyGroupSizes", inputSizes);
+                currencyGroupSizes = inputSizes;
+            }
+
+        }
+
+
 
         public int[] NumberGroupSizes
         {
             get
             {
-                if (numberGroupSizes == null)
-                {
-                    String sizesStr = null;
-
-                    m_cultureInfo.EnsureStringResource(ref sizesStr, System.Globalization.Resources.CultureInfo.StringResources.NumberGroupSizes);
-
-                    int sizesLen = sizesStr.Length;
-                    numberGroupSizes = new int[sizesLen];
-
-                    int size;
-                    for (int i = 0; i < sizesLen; i++)
-                    {
-                        size = sizesStr[i] - '0';
-                        if (size > 9 || size < 0)
-                        {
-                            numberGroupSizes = null;
-                            throw new InvalidOperationException();
-                        }
-
-                        numberGroupSizes[i] = size;
-                    }
-                }
-
                 return ((int[])numberGroupSizes.Clone());
             }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("NumberGroupSizes",
+                        Environment.GetResourceString("ArgumentNull_Obj"));
+                }
+                VerifyWritable();
+
+                Int32[] inputSizes = (Int32[])value.Clone();
+                CheckGroupSize("NumberGroupSizes", inputSizes);
+                numberGroupSizes = inputSizes;
+            }
         }
+
+
+        public int[] PercentGroupSizes
+        {
+            get
+            {
+                return ((int[])percentGroupSizes.Clone());
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("PercentGroupSizes",
+                        Environment.GetResourceString("ArgumentNull_Obj"));
+                }
+                VerifyWritable();
+                Int32[] inputSizes = (Int32[])value.Clone();
+                CheckGroupSize("PercentGroupSizes", inputSizes);
+                percentGroupSizes = inputSizes;
+            }
+
+        }
+
+
+        public String CurrencyGroupSeparator
+        {
+            get { return currencyGroupSeparator; }
+            set
+            {
+                VerifyWritable();
+                VerifyGroupSeparator(value, "CurrencyGroupSeparator");
+                currencyGroupSeparator = value;
+            }
+        }
+
+
+        public String CurrencySymbol
+        {
+            get { return currencySymbol; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("CurrencySymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                currencySymbol = value;
+            }
+        }
+
+        // Returns the current culture's NumberFormatInfo.  Used by Parse methods.
+        //
 
         public static NumberFormatInfo CurrentInfo
         {
             get
             {
-                return CultureInfo.CurrentUICulture.NumberFormat;
+                return NumberFormatInfo.InvariantInfo;
             }
         }
+
+
+        public String NaNSymbol
+        {
+            get
+            {
+                return nanSymbol;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("NaNSymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                nanSymbol = value;
+            }
+        }
+
+
+
+        public int CurrencyNegativePattern
+        {
+            get { return currencyNegativePattern; }
+            set
+            {
+                if (value < 0 || value > 15)
+                {
+                    throw new ArgumentOutOfRangeException("CurrencyNegativePattern");
+                }
+                VerifyWritable();
+                currencyNegativePattern = value;
+            }
+        }
+
+
+        public int NumberNegativePattern
+        {
+            get { return numberNegativePattern; }
+            set
+            {
+                //
+                // NOTENOTE: the range of value should correspond to negNumberFormats[] in vm\COMNumber.cpp.
+                //
+                if (value < 0 || value > 4)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "NumberNegativePattern");
+                }
+                VerifyWritable();
+                numberNegativePattern = value;
+            }
+        }
+
+
+        public int PercentPositivePattern
+        {
+            get { return percentPositivePattern; }
+            set
+            {
+                //
+                // NOTENOTE: the range of value should correspond to posPercentFormats[] in vm\COMNumber.cpp.
+                //
+                if (value < 0 || value > 3)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "PercentPositivePattern");
+                }
+                VerifyWritable();
+                percentPositivePattern = value;
+            }
+        }
+
+
+        public int PercentNegativePattern
+        {
+            get { return percentNegativePattern; }
+            set
+            {
+                //
+                // NOTENOTE: the range of value should correspond to posPercentFormats[] in vm\COMNumber.cpp.
+                //
+                if (value < 0 || value > 11)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "PercentNegativePattern");
+                }
+                VerifyWritable();
+                percentNegativePattern = value;
+            }
+        }
+
+
+        public String NegativeInfinitySymbol
+        {
+            get
+            {
+                return negativeInfinitySymbol;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("NegativeInfinitySymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                negativeInfinitySymbol = value;
+            }
+        }
+
 
         public String NegativeSign
         {
-            get
+            get { return negativeSign; }
+            set
             {
-                return m_cultureInfo.EnsureStringResource(ref this.negativeSign, System.Globalization.Resources.CultureInfo.StringResources.NegativeSign);
+                if (value == null)
+                {
+                    throw new ArgumentNullException("NegativeSign",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                negativeSign = value;
             }
         }
+
+
+        public int NumberDecimalDigits
+        {
+            get { return numberDecimalDigits; }
+            set
+            {
+                if (value < 0 || value > 99)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "NumberDecimalDigits");
+                }
+                VerifyWritable();
+                numberDecimalDigits = value;
+            }
+        }
+
 
         public String NumberDecimalSeparator
         {
-            get
+            get { return numberDecimalSeparator; }
+            set
             {
-                return m_cultureInfo.EnsureStringResource(ref this.numberDecimalSeparator, System.Globalization.Resources.CultureInfo.StringResources.NumberDecimalSeparator);
+                VerifyWritable();
+                VerifyDecimalSeparator(value, "NumberDecimalSeparator");
+                numberDecimalSeparator = value;
             }
         }
+
 
         public String NumberGroupSeparator
         {
-            get
+            get { return numberGroupSeparator; }
+            set
             {
-                return m_cultureInfo.EnsureStringResource(ref this.numberGroupSeparator, System.Globalization.Resources.CultureInfo.StringResources.NumberGroupSeparator);
+                VerifyWritable();
+                VerifyGroupSeparator(value, "NumberGroupSeparator");
+                numberGroupSeparator = value;
             }
         }
 
-        public String PositiveSign
+
+        public int CurrencyPositivePattern
+        {
+            get { return currencyPositivePattern; }
+            set
+            {
+                if (value < 0 || value > 3)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "CurrencyPositivePattern");
+                }
+                VerifyWritable();
+                currencyPositivePattern = value;
+            }
+        }
+
+
+        public String PositiveInfinitySymbol
         {
             get
             {
-                return m_cultureInfo.EnsureStringResource(ref this.positiveSign, System.Globalization.Resources.CultureInfo.StringResources.PositiveSign);
+                return positiveInfinitySymbol;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("PositiveInfinitySymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                positiveInfinitySymbol = value;
+            }
+        }
+
+
+        public String PositiveSign
+        {
+            get { return positiveSign; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("PositiveSign",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                positiveSign = value;
+            }
+        }
+
+
+        public int PercentDecimalDigits
+        {
+            get { return percentDecimalDigits; }
+            set
+            {
+                if (value < 0 || value > 99)
+                {
+                    throw new ArgumentOutOfRangeException(
+                                "PercentDecimalDigits");
+                }
+                VerifyWritable();
+                percentDecimalDigits = value;
+            }
+        }
+
+
+        public String PercentDecimalSeparator
+        {
+            get { return percentDecimalSeparator; }
+            set
+            {
+                VerifyWritable();
+                VerifyDecimalSeparator(value, "PercentDecimalSeparator");
+                percentDecimalSeparator = value;
+            }
+        }
+
+
+        public String PercentGroupSeparator
+        {
+            get { return percentGroupSeparator; }
+            set
+            {
+                VerifyWritable();
+                VerifyGroupSeparator(value, "PercentGroupSeparator");
+                percentGroupSeparator = value;
+            }
+        }
+
+
+        public String PercentSymbol
+        {
+            get
+            {
+                return percentSymbol;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("PercentSymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                percentSymbol = value;
+            }
+        }
+
+
+        public String PerMilleSymbol
+        {
+            get { return perMilleSymbol; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("PerMilleSymbol",
+                        Environment.GetResourceString("ArgumentNull_String"));
+                }
+                VerifyWritable();
+                perMilleSymbol = value;
+            }
+        }
+
+
+        [System.Runtime.InteropServices.ComVisible(false)]
+        public String[] NativeDigits
+        {
+            get { return (String[])nativeDigits.Clone(); }
+            set
+            {
+                VerifyWritable();
+                VerifyNativeDigits(value, "NativeDigits");
+                nativeDigits = value;
+            }
+        }
+
+        [System.Runtime.InteropServices.ComVisible(false)]
+        public DigitShapes DigitSubstitution
+        {
+            get { return (DigitShapes)digitSubstitution; }
+            set
+            {
+                VerifyWritable();
+                VerifyDigitSubstitution(value, "DigitSubstitution");
+                digitSubstitution = (int)value;
+            }
+        }
+
+        public Object GetFormat(Type formatType)
+        {
+            return formatType == typeof(NumberFormatInfo) ? this : null;
+        }
+
+        public static NumberFormatInfo ReadOnly(NumberFormatInfo nfi)
+        {
+            if (nfi == null)
+            {
+                throw new ArgumentNullException("nfi");
+            }
+            if (nfi.IsReadOnly)
+            {
+                return (nfi);
+            }
+            NumberFormatInfo info = (NumberFormatInfo)(nfi.MemberwiseClone());
+            info.isReadOnly = true;
+            return info;
+        }
+
+        // private const NumberStyles InvalidNumberStyles = unchecked((NumberStyles) 0xFFFFFC00);
+        private const NumberStyles InvalidNumberStyles = ~(NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
+                                                           | NumberStyles.AllowLeadingSign | NumberStyles.AllowTrailingSign
+                                                           | NumberStyles.AllowParentheses | NumberStyles.AllowDecimalPoint
+                                                           | NumberStyles.AllowThousands | NumberStyles.AllowExponent
+                                                           | NumberStyles.AllowCurrencySymbol | NumberStyles.AllowHexSpecifier);
+
+        internal static void ValidateParseStyleInteger(NumberStyles style)
+        {
+            // Check for undefined flags
+            if ((style & InvalidNumberStyles) != 0)
+            {
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidNumberStyles"), "style");
+            }
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            { // Check for hex number
+                if ((style & ~NumberStyles.HexNumber) != 0)
+                {
+                    throw new ArgumentException(Environment.GetResourceString("Arg_InvalidHexStyle"));
+                }
+            }
+        }
+
+        internal static void ValidateParseStyleFloatingPoint(NumberStyles style)
+        {
+            // Check for undefined flags
+            if ((style & InvalidNumberStyles) != 0)
+            {
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidNumberStyles"), "style");
+            }
+            if ((style & NumberStyles.AllowHexSpecifier) != 0)
+            { // Check for hex number
+                throw new ArgumentException(Environment.GetResourceString("Arg_HexStyleNotSupported"));
             }
         }
     } // NumberFormatInfo
 }
+
+
+
+
+
+
+
 
 
