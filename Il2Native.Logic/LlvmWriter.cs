@@ -1156,6 +1156,10 @@ namespace Il2Native.Logic
                         OperandOptions.AdjustIntTypes | OperandOptions.CastPointersToBytePointer);
                     writer.Write(", align 1");
 
+                    writer.WriteLine(string.Empty);
+
+                    this.WriteMemSet(opCode.Result, opCode.OpCodeOperands[0].Result);
+
                     this.WriteDbgLine(opCode);
 
                     break;
