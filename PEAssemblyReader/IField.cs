@@ -24,6 +24,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsFixed { get; }
+
+        /// <summary>
+        /// </summary>
+        int FixedSize { get; }
+
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         byte[] GetFieldRVAData();

@@ -7,6 +7,7 @@
         Interface,
         Pointer,
         Array,
-        Enum
+        Enum,
+        Whitespace
     }
 }

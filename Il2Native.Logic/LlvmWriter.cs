@@ -1158,7 +1158,7 @@ namespace Il2Native.Logic
 
                     writer.WriteLine(string.Empty);
 
-                    this.WriteMemSet(opCode.Result, opCode.OpCodeOperands[0].Result);
+                    this.WriteMemSet(opCode.Result, opCode.OpCodeOperands[0].Result, 1);
 
                     this.WriteDbgLine(opCode);
 

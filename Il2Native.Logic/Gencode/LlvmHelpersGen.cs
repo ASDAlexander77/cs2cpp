@@ -1049,7 +1049,7 @@ namespace Il2Native.Logic.Gencode
                 /*Align*/);
         }
 
-        public static void WriteMemSet(this LlvmWriter llvmWriter, FullyDefinedReference op1, FullyDefinedReference size)
+        public static void WriteMemSet(this LlvmWriter llvmWriter, FullyDefinedReference op1, FullyDefinedReference size, int align = 0)
         {
             var writer = llvmWriter.Output;
 
@@ -1057,7 +1057,7 @@ namespace Il2Native.Logic.Gencode
             size.Type.WriteTypePrefix(writer);
             writer.Write(" ");
             llvmWriter.WriteResult(size);
-            writer.Write(", i32 {0}, i1 false)", LlvmWriter.PointerSize /*Align*/);
+            writer.Write(", i32 {0}, i1 false)", align > 0 ? align : LlvmWriter.PointerSize/*Align*/);
         }
 
 

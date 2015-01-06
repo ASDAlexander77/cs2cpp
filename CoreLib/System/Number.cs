@@ -1070,6 +1070,9 @@ namespace System
             char* dst = null;
             int digCount = 0;
 
+            Console.WriteLine(format);
+            Console.WriteLine((char) format & 0xFFDF);
+
             switch (format & 0xFFDF)
             {
                 case 'C':
@@ -2006,14 +2009,13 @@ namespace System
             if (value < 0)
             {
                 AddStringRef(&buffer, negSignStr);
-                value = -value;
             }
             else if (posSignStr != null)
             {
                 AddStringRef(&buffer, posSignStr);
             }
 
-            char* p = Int32ToDecChars(digits + 10, (uint)value, minDigits);
+            char* p = Int32ToDecChars(digits + 10, value, minDigits);
             int i = (int)(digits + 10 - p);
             while (--i >= 0) *buffer++ = *p++;
             return buffer;
@@ -3193,15 +3195,18 @@ namespace System
             else
             {
                 number.sign = 1;
-                value = -value;
             }
 
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = Int32ToDecChars(buffer + INT32_PRECISION, (uint)value, 0);
+                char* p = Int32ToDecChars(buffer + INT32_PRECISION, value, 0);
                 int i = (int)(buffer + INT32_PRECISION - p);
                 number.scale = i;
+
+                Console.WriteLine("scale");
+                Console.WriteLine(i);
+
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
             }
@@ -3216,7 +3221,7 @@ namespace System
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = Int32ToDecChars(buffer + UINT32_PRECISION, (uint)value, 0);
+                char* p = Int32ToDecChars(buffer + UINT32_PRECISION, value, 0);
                 int i = (int)(buffer + UINT32_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
@@ -3235,7 +3240,6 @@ namespace System
             else
             {
                 number.sign = 1;
-                value = -value;
             }
 
             fixed (char* dstPtr = number.digits)
@@ -3246,7 +3250,7 @@ namespace System
                 {
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                 }
-                p = Int32ToDecChars(p, (uint)value, 0);
+                p = Int32ToDecChars(p, value, 0);
                 int i = (int)(buffer + long_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
@@ -3268,7 +3272,7 @@ namespace System
                 {
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                 }
-                p = Int32ToDecChars(p, (uint)value, 0);
+                p = Int32ToDecChars(p, value, 0);
                 int i = (int)(buffer + Ulong_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
@@ -3305,6 +3309,61 @@ namespace System
             {
                 *--p = (char)(value % 10 + '0');
                 value /= 10;
+            }
+
+            return p;
+        }
+
+        private unsafe static char* Int32ToDecChars(char* p, ulong value, int digits)
+        {
+            while (--digits >= 0 || value != 0)
+            {
+                *--p = (char)(value % 10 + '0');
+                value /= 10;
+            }
+
+            return p;
+        }
+
+        private unsafe static char* Int32ToDecChars(char* p, int value, int digits)
+        {
+            if (value >= 0)
+            {
+                while (--digits >= 0 || value != 0)
+                {
+                    *--p = (char)(value % 10 + '0');
+                    value /= 10;
+                }
+            }
+            else
+            {
+                while (--digits >= 0 || value != 0)
+                {
+                    *--p = (char)('0' - value % 10);
+                    value /= 10;
+                }
+            }
+
+            return p;
+        }
+
+        private unsafe static char* Int32ToDecChars(char* p, long value, int digits)
+        {
+            if (value >= 0)
+            {
+                while (--digits >= 0 || value != 0)
+                {
+                    *--p = (char)(value % 10 + '0');
+                    value /= 10;
+                }
+            }
+            else
+            {
+                while (--digits >= 0 || value != 0)
+                {
+                    *--p = (char)('0' - value % 10);
+                    value /= 10;
+                }
             }
 
             return p;
@@ -3367,7 +3426,7 @@ namespace System
                 }
 
                 char* buffer = stackalloc char[bufferLength];
-                char* p = Int32ToDecChars(buffer + bufferLength, (uint)(value >= 0 ? value : -value), digits);
+                char* p = Int32ToDecChars(buffer + bufferLength, value, digits);
                 if (value < 0)
                 {
                     for (int i = negLength - 1; i >= 0; i--)
@@ -3400,7 +3459,6 @@ namespace System
             {
                 if (sign < 0)
                 {
-                    value = -value;
                     negLength = sNegative.Length;
                     if (negLength > bufferLength - maxDigitsLength)
                     {
@@ -3415,7 +3473,7 @@ namespace System
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                     digits -= 9;
                 }
-                p = Int32ToDecChars(p, (uint)value, digits);
+                p = Int32ToDecChars(p, value, digits);
 
                 if (sign < 0)
                 {
@@ -3441,7 +3499,7 @@ namespace System
                 digits -= 9;
             }
 
-            p = Int32ToDecChars(p, (uint)value, digits);
+            p = Int32ToDecChars(p, value, digits);
             return new String(p, 0, (int)(buffer + 100 - p));
         }
 
@@ -3452,7 +3510,7 @@ namespace System
             public int precision;
             public int scale;
             public int sign;
-            public fixed char digits[NUMBER_MAXDIGITS + 1];
+            public fixed char digits[NUMBER_MAXDIGITS + 2];
         }
 
         internal unsafe static class DoubleHelper

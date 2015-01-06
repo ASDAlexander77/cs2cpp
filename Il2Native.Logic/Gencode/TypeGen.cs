@@ -185,6 +185,14 @@ namespace Il2Native.Logic.Gencode
                 {
                     // pointer size
                     yield return new MemberLocationInfo(field, LlvmWriter.PointerSize);
+                    if (!excludingStructs && fieldType.IsPointer && field.IsFixed)
+                    {
+                        yield return
+                            new MemberLocationInfo(field, Math.Max(LlvmWriter.PointerSize, field.FixedSize - LlvmWriter.PointerSize))
+                                {
+                                    SubMemberType = MemberTypes.Whitespace
+                                };
+                    }
                 }
                 else if (!excludingStructs && fieldType.IsStructureType())
                 {
@@ -268,7 +276,7 @@ namespace Il2Native.Logic.Gencode
             var memberLocationInfo = membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
             if (memberLocationInfo == null)
             {
-                throw new MissingMemberException(field.FullName);    
+                throw new MissingMemberException(field.FullName);
             }
 
             return memberLocationInfo.Offset;

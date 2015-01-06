@@ -149,6 +149,26 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsFixed
+        {
+            get
+            {
+                return this.fieldDef.IsFixed;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public int FixedSize
+        {
+            get
+            {
+                return this.fieldDef.FixedSize;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string MetadataFullName
         {
             get
