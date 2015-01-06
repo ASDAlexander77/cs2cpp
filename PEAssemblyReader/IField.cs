@@ -30,6 +30,13 @@ namespace PEAssemblyReader
         /// </summary>
         int FixedSize { get; }
 
+        /// <summary>
+        /// </summary>
+        bool HasFixedElementField { get; }
+
+        /// <summary>
+        /// </summary>
+        IField FixedElementField { get; }
 
         /// <summary>
         /// </summary>

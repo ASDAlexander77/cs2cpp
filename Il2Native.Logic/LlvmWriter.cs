@@ -545,7 +545,24 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.WriteFieldType(field.FieldType);
+            this.Output.WriteLine(',');
+
+            this.WriteFieldType(field);
+        }
+
+        public void WriteFieldType(IField field)
+        {
+            if (field.IsFixed)
+            {
+                this.Output.Write("[ {0}", field.FixedSize);
+                this.Output.Write(" x ");
+                this.WriteFieldType(field.FieldType.ToDereferencedType());
+                this.Output.Write(" ]");
+            }
+            else
+            {
+                this.WriteFieldType(field.FieldType);
+            }
         }
 
         /// <summary>
@@ -555,8 +572,6 @@ namespace Il2Native.Logic
         public void WriteFieldType(IType fieldType)
         {
             Debug.Assert(!fieldType.IsGenericParameter);
-
-            this.Output.WriteLine(',');
 
             this.CheckIfExternalDeclarationIsRequired(fieldType);
 
@@ -1184,11 +1199,25 @@ namespace Il2Native.Logic
                 case Code.Ldflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.WriteFieldAccess(writer, opCodeFieldInfoPart);
-                    var fieldLoadResult = opCodeFieldInfoPart.Result;
+                    if (!opCodeFieldInfoPart.Operand.HasFixedElementField)
+                    {
+                        this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+                        var fieldLoadResult = opCodeFieldInfoPart.Result;
 
-                    // convert return type of field to pointer of a field type
-                    opCodeFieldInfoPart.Result = fieldLoadResult.ToPointerType();
+                        // convert return type of field to pointer of a field type
+                        opCodeFieldInfoPart.Result = fieldLoadResult.ToPointerType();
+                    }
+                    else
+                    {
+                        writer = this.Output;
+                        this.WriteSetResultNumber(opCodeFieldInfoPart, opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
+                        writer.Write("bitcast ");
+                        this.WriteFieldType((opCodeFieldInfoPart.OpCodeOperands[0] as OpCodeFieldInfoPart).Operand);
+                        writer.Write("* ");
+                        this.WriteResult(opCodeFieldInfoPart.OpCodeOperands[0].Result);
+                        writer.Write(" to ");
+                        opCodeFieldInfoPart.Operand.FieldType.ToPointerType().WriteTypePrefix(writer, true);
+                    }
 
                     break;
                 case Code.Ldsfld:

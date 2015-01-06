@@ -1070,9 +1070,6 @@ namespace System
             char* dst = null;
             int digCount = 0;
 
-            Console.WriteLine(format);
-            Console.WriteLine((char) format & 0xFFDF);
-
             switch (format & 0xFFDF)
             {
                 case 'C':
@@ -3203,10 +3200,6 @@ namespace System
                 char* p = Int32ToDecChars(buffer + INT32_PRECISION, value, 0);
                 int i = (int)(buffer + INT32_PRECISION - p);
                 number.scale = i;
-
-                Console.WriteLine("scale");
-                Console.WriteLine(i);
-
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
             }

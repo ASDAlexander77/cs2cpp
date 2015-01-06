@@ -184,14 +184,20 @@ namespace Il2Native.Logic.Gencode
                 if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
                 {
                     // pointer size
-                    yield return new MemberLocationInfo(field, LlvmWriter.PointerSize);
-                    if (!excludingStructs && fieldType.IsPointer && field.IsFixed)
+                    if (field.IsFixed)
                     {
-                        yield return
-                            new MemberLocationInfo(field, Math.Max(LlvmWriter.PointerSize, field.FixedSize - LlvmWriter.PointerSize))
-                                {
-                                    SubMemberType = MemberTypes.Whitespace
-                                };
+                        if (!excludingStructs)
+                        {
+                            yield return new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true) * field.FixedSize);
+                        }
+                        else
+                        {
+                            yield return new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true));
+                        }
+                    }
+                    else
+                    {
+                        yield return new MemberLocationInfo(field, LlvmWriter.PointerSize);
                     }
                 }
                 else if (!excludingStructs && fieldType.IsStructureType())

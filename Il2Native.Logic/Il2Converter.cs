@@ -146,6 +146,7 @@ namespace Il2Native.Logic
             }
             else
             {
+                codeWriter.Write("," + Environment.NewLine);
                 codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
             }
 

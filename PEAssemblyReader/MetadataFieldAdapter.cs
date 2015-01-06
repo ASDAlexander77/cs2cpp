@@ -167,6 +167,36 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool HasFixedElementField
+        {
+            get
+            {
+                var peNamedTypeSymbol = this.fieldDef.ContainingType as PENamedTypeSymbol;
+                if (peNamedTypeSymbol != null)
+                {
+                    return peNamedTypeSymbol.FixedElementField != null;
+                }
+
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IField FixedElementField
+        {
+            get
+            {
+                var peNamedTypeSymbol = this.fieldDef.ContainingType as PENamedTypeSymbol;
+                if (peNamedTypeSymbol != null)
+                {
+                    return new MetadataFieldAdapter(peNamedTypeSymbol.FixedElementField, this.GenericContext);
+                }
+
+                return null;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public string MetadataFullName
