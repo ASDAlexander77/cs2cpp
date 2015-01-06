@@ -302,11 +302,6 @@ namespace System
             throw new NotImplementedException();
         }
 
-        public static String FormatDouble(double value, String format, NumberFormatInfo info)
-        {
-            throw new NotImplementedException();
-        }
-
         public static String FormatInt32(int value, String format, NumberFormatInfo info)
         {
             int digits;
@@ -513,6 +508,102 @@ namespace System
             }
 
             return retString;
+        }
+
+        public static String FormatDouble(double value, String format, NumberFormatInfo info)
+        {
+            NUMBER number;
+            int digits;
+            double dTest;
+
+            string retVal;
+
+            char fmt = ParseFormatSpecifier(format, out digits);
+            int precision = DOUBLE_PRECISION;
+
+            number = new NUMBER();
+            switch (fmt & 0xFFD)
+            {
+                case 'R':
+                    //In order to give numbers that are both friendly to display and round-trippable,
+                    //we parse the number using 7 digits and then determine if it round trips to the same
+                    //value.  If it does, we convert that NUMBER to a string, otherwise we reparse using 9 digits
+                    //and display that.
+                    DoubleToNumber(value, DOUBLE_PRECISION, ref number);
+
+                    if (number.scale == SCALE_NAN)
+                    {
+                        retVal = info.NaNSymbol;
+                        goto lExit;
+                    }
+
+                    if (number.scale == SCALE_INF)
+                    {
+                        retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
+                        goto lExit;
+                    }
+
+                    unsafe
+                    {
+                        NumberToDouble(ref number, &dTest);
+                    }
+
+                    var fTest = (float)dTest;
+
+                    if (fTest == value)
+                    {
+                        retVal = NumberToString(ref number, 'G', FLOAT_PRECISION, info);
+                        goto lExit;
+                    }
+
+                    DoubleToNumber(value, 9, ref number);
+                    retVal = NumberToString(ref number, 'G', 17, info);
+                    goto lExit;
+
+                case 'E':
+                    // Here we round values less than E14 to 15 digits
+                    if (digits > 14)
+                    {
+                        precision = 17;
+                    }
+                    break;
+
+                case 'G':
+                    // Here we round values less than G15 to 15 digits, G16 and G17 will not be touched
+                    if (digits > 15)
+                    {
+                        precision = 17;
+                    }
+                    break;
+
+            }
+
+            DoubleToNumber(value, precision, ref number);
+
+            if (number.scale == SCALE_NAN)
+            {
+                retVal = info.NaNSymbol;
+                goto lExit;
+            }
+
+            if (number.scale == SCALE_INF)
+            {
+                retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
+                goto lExit;
+            }
+
+            if (fmt != 0)
+            {
+                retVal = NumberToString(ref number, fmt, digits, info);
+            }
+            else
+            {
+                retVal = NumberToStringFormat(ref number, format, info);
+            }
+
+        lExit:
+            return retVal;
+
         }
 
         public static String FormatSingle(float value, String format, NumberFormatInfo info)

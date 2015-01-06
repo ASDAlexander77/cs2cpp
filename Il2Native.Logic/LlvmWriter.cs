@@ -2151,7 +2151,8 @@ namespace Il2Native.Logic
                         ? ResolveType("System.Int32")
                         : ResolveType("System.Void").ToPointerType();
 
-                    var requiredOutgoingType = this.RequiredIncomingType(opCode.UsedBy.OpCode);
+                    var requiredOutgoingType =
+                        this.RequiredIncomingType(opCode.UsedBy.OpCode.Any(Code.Add) ? opCode.UsedBy.OpCode.UsedBy.OpCode : opCode.UsedBy.OpCode);
                     if (requiredOutgoingType.TypeEquals(ResolveType("System.Char").ToPointerType()) &&
                         opCode.OpCodeOperands[0].Result.Type.TypeEquals(ResolveType("System.String")))
                     {
@@ -2163,6 +2164,9 @@ namespace Il2Native.Logic
                         var memberAccessResultNumber = opCode.Result;
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
+
+                        writer.WriteLine(string.Empty);
+                        this.WriteBitcast(opCode, opCode.Result, ResolveType("System.Void").ToPointerType());
                     }
                     else
                     {

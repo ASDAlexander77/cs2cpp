@@ -321,7 +321,7 @@ namespace System.Globalization
         {
             get
             {
-                return ((int[])currencyGroupSizes.Clone());
+                return currencyGroupSizes;
             }
             set
             {
@@ -345,7 +345,7 @@ namespace System.Globalization
         {
             get
             {
-                return ((int[])numberGroupSizes.Clone());
+                return numberGroupSizes;
             }
             set
             {
@@ -367,7 +367,7 @@ namespace System.Globalization
         {
             get
             {
-                return ((int[])percentGroupSizes.Clone());
+                return percentGroupSizes;
             }
             set
             {
@@ -720,7 +720,7 @@ namespace System.Globalization
         [System.Runtime.InteropServices.ComVisible(false)]
         public String[] NativeDigits
         {
-            get { return (String[])nativeDigits.Clone(); }
+            get { return nativeDigits; }
             set
             {
                 VerifyWritable();
