@@ -3243,14 +3243,14 @@ namespace System
                 {
                     while (((ulong)value & 0xFFFFFFFF00000000) > 0)
                     {
-                        p = Int32ToDecChars(p, (uint)Int64DivMod1E9((ulong*)&value), 9);
+                        p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                     }
                 }
                 else
                 {
                     while ((((ulong)value ^ 0xFFFFFFFF00000000) >> 32) > 0)
                     {
-                        p = Int32ToDecChars(p, (int)Int64DivMod1E9((ulong*)&value), 9);
+                        p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
                     }
                 }
 
@@ -3275,7 +3275,7 @@ namespace System
                 char* p = buffer + Ulong_PRECISION;
                 while (((ulong)value & 0xFFFFFFFF00000000) > 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)(ulong*)&value), 9);
                 }
                 p = Int32ToDecChars(p, (uint)value, 0);
                 int i = (int)(buffer + Ulong_PRECISION - p);
@@ -3299,6 +3299,13 @@ namespace System
 
                 *dst = '\0';
             }
+        }
+
+        private unsafe static int Int64DivMod1E9(long* value)
+        {
+            var rem = (int)(*value % 1000000000);
+            *value /= 1000000000;
+            return rem;
         }
 
         private unsafe static uint Int64DivMod1E9(ulong* value)
@@ -3475,7 +3482,7 @@ namespace System
                 char* p = buffer + bufferLength;
                 while (((ulong)value & 0xffffffff00000000) > 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)(ulong*)&value), 9);
                     digits -= 9;
                 }
                 p = Int32ToDecChars(p, value, digits);
@@ -3500,7 +3507,7 @@ namespace System
             char* p = buffer + 100;
             while ((value & 0xffffffff00000000) > 0)
             {
-                p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
+                p = Int32ToDecChars(p, Int64DivMod1E9((long*)&value), 9);
                 digits -= 9;
             }
 
