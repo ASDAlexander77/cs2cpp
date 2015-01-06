@@ -3239,11 +3239,23 @@ namespace System
             {
                 char* dst = dstPtr;
                 char* p = buffer + long_PRECISION;
-                while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                if (value >= 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                    while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                    {
+                        p = Int32ToDecChars(p, (uint)Int64DivMod1E9((ulong*)&value), 9);
+                    }
                 }
-                p = Int32ToDecChars(p, value, 0);
+                else
+                {
+                    while ((((ulong)value ^ 0xFFFFFFFF00000000) >> 32) > 0)
+                    {
+                        p = Int32ToDecChars(p, (int)Int64DivMod1E9((ulong*)&value), 9);
+                    }
+                }
+
+                p = Int32ToDecChars(p, (int)value, 0);
+
                 int i = (int)(buffer + long_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
@@ -3265,7 +3277,7 @@ namespace System
                 {
                     p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
                 }
-                p = Int32ToDecChars(p, value, 0);
+                p = Int32ToDecChars(p, (uint)value, 0);
                 int i = (int)(buffer + Ulong_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
