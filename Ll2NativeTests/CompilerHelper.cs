@@ -329,26 +329,31 @@
         /// </param>
         public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
         {
-            if (!ignoreBadFiles)
+            try
             {
                 Convert(fileName, source);
             }
-            else
+            catch (BadImageFormatException ex)
             {
-                try
+                Trace.WriteLine(ex);
+
+                if (!ignoreBadFiles)
                 {
-                    Convert(fileName, source);
+                    Assert.Inconclusive("Could not compile it");
                 }
-                catch (BadImageFormatException ex)
+
+                return;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Trace.WriteLine(ex);
+
+                if (!ignoreBadFiles)
                 {
-                    Trace.WriteLine(ex);
-                    return;
+                    Assert.Inconclusive("File not found");
                 }
-                catch (FileNotFoundException ex)
-                {
-                    Trace.WriteLine(ex);
-                    return;
-                }
+
+                return;
             }
 
             ExecCompile(fileName, opt: CompileWithOptimization);
