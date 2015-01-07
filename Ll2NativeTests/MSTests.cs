@@ -485,23 +485,23 @@ namespace Ll2NativeTests
                 var fileName = Path.GetFileName(file);
 
                 // custom for Mono only
+                string groupName;
                 var minusIndex = fileName.IndexOfAny(chars);
                 if (minusIndex > 0)
                 {
-                    var groupName = fileName.Substring(0, minusIndex - 1);
+                    groupName = fileName.Substring(0, minusIndex - 1);
                     if (fileName.IndexOf('-', minusIndex) >= 0)
                     {
                         continue;
                     }
-
-                    subfolders += groupName;
                 }
                 else
                 {
                     continue;
                 }
 
-                var groupper = directoryName + subfolders;
+                var namespaceChain = subfolders + groupName;
+                var groupper = directoryName + namespaceChain;
 
                 if (currentDir != groupper)
                 {
@@ -511,7 +511,7 @@ namespace Ll2NativeTests
                         Debug.WriteLine(@"");
                     }
 
-                    if (currentNamespace != subfolders)
+                    if (currentNamespace != namespaceChain)
                     {
                         if (!string.IsNullOrEmpty(currentNamespace))
                         {
@@ -519,8 +519,8 @@ namespace Ll2NativeTests
                             Debug.WriteLine(@"");
                         }
 
-                        Debug.WriteLine(@"namespace @" + subfolders.Replace("\\", ".@").Replace("-", "_") + " {");
-                        currentNamespace = subfolders;
+                        Debug.WriteLine(@"namespace @" + namespaceChain.Replace("\\", ".@").Replace("-", "_") + " {");
+                        currentNamespace = namespaceChain;
                     }
 
                     Debug.WriteLine(@"[TestClass]");
