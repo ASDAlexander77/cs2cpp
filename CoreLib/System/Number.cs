@@ -280,8 +280,8 @@ namespace System
     {
         public const int INT32_PRECISION = 10;
         public const int UINT32_PRECISION = INT32_PRECISION;
-        public const int long_PRECISION = 19;
-        public const int Ulong_PRECISION = 20;
+        public const int LONG_PRECISION = 19;
+        public const int ULONG_PRECISION = 20;
         public const int FLOAT_PRECISION = 7;
         public const int DOUBLE_PRECISION = 15;
         public const int LARGE_BUFFER_SIZE = 600;
@@ -3156,10 +3156,10 @@ namespace System
                     {
                         i++;
                         int n = -1;
-                        if (str[i] >= '0' && str[i] <= '9')
+                        if (i < str.Length && str[i] >= '0' && str[i] <= '9')
                         {
                             n = str[i++] - '0';
-                            while (str[i] >= '0' && str[i] <= '9')
+                            while (i < str.Length && str[i] >= '0' && str[i] <= '9')
                             {
                                 n = n * 10 + str[i++] - '0';
                                 if (n >= 10) break;
@@ -3224,8 +3224,8 @@ namespace System
 
         private static unsafe void Int64ToNumber(long value, ref NUMBER number)
         {
-            char* buffer = stackalloc char[long_PRECISION + 1];
-            number.precision = long_PRECISION;
+            char* buffer = stackalloc char[LONG_PRECISION + 1];
+            number.precision = LONG_PRECISION;
             if (value >= 0)
             {
                 number.sign = 0;
@@ -3238,12 +3238,12 @@ namespace System
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = buffer + long_PRECISION;
+                char* p = buffer + LONG_PRECISION;
                 if (value >= 0)
                 {
                     while (((ulong)value & 0xFFFFFFFF00000000) > 0)
                     {
-                        p = Int32ToDecChars(p, Int64DivMod1E9((ulong*)&value), 9);
+                        p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
                     }
                 }
                 else
@@ -3256,7 +3256,7 @@ namespace System
 
                 p = Int32ToDecChars(p, (int)value, 0);
 
-                int i = (int)(buffer + long_PRECISION - p);
+                int i = (int)(buffer + LONG_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
@@ -3265,20 +3265,20 @@ namespace System
 
         private static unsafe void UInt64ToNumber(ulong value, ref NUMBER number)
         {
-            char* buffer = stackalloc char[Ulong_PRECISION + 1];
-            number.precision = Ulong_PRECISION;
+            char* buffer = stackalloc char[ULONG_PRECISION + 1];
+            number.precision = ULONG_PRECISION;
             number.sign = 0;
 
             fixed (char* dstPtr = number.digits)
             {
                 char* dst = dstPtr;
-                char* p = buffer + Ulong_PRECISION;
-                while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                char* p = buffer + ULONG_PRECISION;
+                while ((value & 0xFFFFFFFF00000000) > 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)(ulong*)&value), 9);
+                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)&value), 9);
                 }
                 p = Int32ToDecChars(p, (uint)value, 0);
-                int i = (int)(buffer + Ulong_PRECISION - p);
+                int i = (int)(buffer + ULONG_PRECISION - p);
                 number.scale = i;
                 while (--i >= 0) *dst++ = *p++;
                 *dst = '\0';
@@ -3308,13 +3308,6 @@ namespace System
             return rem;
         }
 
-        private unsafe static uint Int64DivMod1E9(ulong* value)
-        {
-            var rem = (uint)(*value % 1000000000);
-            *value /= 1000000000;
-            return rem;
-        }
-
         private unsafe static char* Int32ToDecChars(char* p, uint value, int digits)
         {
             while (--digits >= 0 || value != 0)
@@ -3326,7 +3319,7 @@ namespace System
             return p;
         }
 
-        private unsafe static char* Int32ToDecChars(char* p, ulong value, int digits)
+        private unsafe static char* Int64ToDecChars(char* p, ulong value, int digits)
         {
             while (--digits >= 0 || value != 0)
             {
@@ -3359,7 +3352,7 @@ namespace System
             return p;
         }
 
-        private unsafe static char* Int32ToDecChars(char* p, long value, int digits)
+        private unsafe static char* Int64ToDecChars(char* p, long value, int digits)
         {
             if (value >= 0)
             {
@@ -3408,7 +3401,7 @@ namespace System
             if ((value & 0xffffffff00000000) > 0)
             {
                 Int32ToHexChars(buffer + 100, (uint)value, hexBase, 8);
-                p = Int32ToHexChars(buffer + 100 - 8, (uint)(value & 0xffffffff00000000) >> 32, hexBase, digits - 8);
+                p = Int32ToHexChars(buffer + 100 - 8, (uint)((value & 0xffffffff00000000) >> 32), hexBase, digits - 8);
             }
             else
             {
@@ -3462,7 +3455,7 @@ namespace System
         private unsafe static string Int64ToDecStr(long value, int digits, string sNegative)
         {
             if (digits < 1) digits = 1;
-            int sign = (int)((ulong)value & 0xffffffff00000000) >> 32;
+            int sign = (int)(((ulong)value & 0xffffffff00000000) >> 32);
 
             int maxDigitsLength = (digits > 20) ? digits : 20;
             int bufferLength = (maxDigitsLength > 100) ? maxDigitsLength : 100;
@@ -3480,12 +3473,24 @@ namespace System
 
                 char* buffer = stackalloc char[bufferLength];
                 char* p = buffer + bufferLength;
-                while (((ulong)value & 0xffffffff00000000) > 0)
+                if (value >= 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)(ulong*)&value), 9);
-                    digits -= 9;
+                    while (((ulong)value & 0xFFFFFFFF00000000) > 0)
+                    {
+                        p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
+                        digits -= 9;
+                    }
                 }
-                p = Int32ToDecChars(p, value, digits);
+                else
+                {
+                    while ((((ulong)value ^ 0xFFFFFFFF00000000) >> 32) > 0)
+                    {
+                        p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
+                        digits -= 9;
+                    }
+                }
+
+                p = Int32ToDecChars(p, (int)value, digits);
 
                 if (sign < 0)
                 {
@@ -3511,7 +3516,7 @@ namespace System
                 digits -= 9;
             }
 
-            p = Int32ToDecChars(p, value, digits);
+            p = Int32ToDecChars(p, (uint)value, digits);
             return new String(p, 0, (int)(buffer + 100 - p));
         }
 
