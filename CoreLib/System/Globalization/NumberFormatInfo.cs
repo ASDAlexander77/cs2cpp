@@ -54,7 +54,7 @@ namespace System.Globalization
         internal String numberGroupSeparator = ",";
         internal String currencyGroupSeparator = ",";
         internal String currencyDecimalSeparator = ".";
-        internal String currencySymbol = "\x00a4";  // U+00a4 is the symbol for International Monetary Fund.
+        internal String currencySymbol = "$";  // U+00a4 is the symbol for International Monetary Fund.
         // The alternative currency symbol used in Win9x ANSI codepage, that can not roundtrip between ANSI and Unicode.
         // Currently, only ja-JP and ko-KR has non-null values (which is U+005c, backslash)
         // NOTE: The only legal values for this string are null and "\x005c"
