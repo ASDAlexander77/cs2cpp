@@ -13,9 +13,6 @@ namespace Ll2NativeTests
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-    using System.Runtime.ExceptionServices;
-    using System.Runtime.InteropServices;
-    using System.Threading;
 
     using Il2Native.Logic;
 
@@ -29,72 +26,6 @@ namespace Ll2NativeTests
     [TestClass]
     public class MSTests
     {
-#if _DISK_C_
-        private const string SourcePath = @"C:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"C:\Temp\tests\";
-        private const string OutputPath = @"C:\Temp\IlCTests\";
-        private const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
-        private const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
-        private const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
-        private const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
-        private const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
-        private const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
-
-        private const bool Llvm35Support = false;
-        private const bool Llvm34Support = false;
-        private const string OutputObjectFileExt = "obj";
-        private const string Target = "i686-w64-mingw32";
-#endif
-#if _DISK_D_
-        private const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
-        private const string SourcePathCustom = @"D:\Temp\tests\";
-        private const string OutputPath = @"D:\Temp\IlCTests\";
-        private const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
-        private const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
-        private const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
-        private const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
-        private const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
-        private const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
-
-        private const bool Llvm35Support = false;
-        private const bool Llvm34Support = false;
-        private const string OutputObjectFileExt = "obj";
-        private const string Target = "i686-w64-mingw32";
-#endif
-
-        /// <summary>
-        /// </summary>
-        private const bool Android = false;
-
-        /// <summary>
-        /// </summary>
-        private const bool Emscripten = false;
-
-        /// <summary>
-        /// </summary>
-        private const bool UsingRoslyn = true;
-
-        /// <summary>
-        /// </summary>
-        private const bool GcEnabled = true;
-
-        /// <summary>
-        /// </summary>
-        private const bool GctorsEnabled = true;
-
-        /// <summary>
-        /// </summary>
-        private const bool DebugInfo = true;
-
-        /// <summary>
-        /// </summary>
-        private const bool MultiCore = true;
-
-        /// <summary>
-        /// ex. opt 'file'.ll -o 'file'.bc -O2
-        /// </summary>
-        private const bool CompileWithOptimization = false;
-
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
@@ -123,7 +54,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            Convert("test-1", SourcePathCustom);
+            CompilerHelper.Convert("test-1", CompilerHelper.SourcePathCustom);
         }
 
         /// <summary>
@@ -132,16 +63,16 @@ namespace Ll2NativeTests
         public void TestMscorlibCompile()
         {
             //Debug.Listeners.Clear();
-            Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), OutputPath, GetConverterArgs(false));
+            Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(false));
         }
 
         /// </summary>
         [TestMethod]
         public void TestSscli()
         {
-            foreach (var file in Directory.EnumerateFiles(SscliSourcePath, "*.cs", SearchOption.AllDirectories))
+            foreach (var file in Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
             {
-                CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", true);
+                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", true);
             }
         }
 
@@ -150,16 +81,16 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCoreLib()
         {
-            Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.CoreLibPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(false));
 
-            if (CompileWithOptimization)
+            if (CompilerHelper.CompileWithOptimization)
             {
-                ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
+                CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
+                CompilerHelper.ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", CompilerHelper.Target));
             }
             else
             {
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
+                CompilerHelper.ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target));
             }
         }
 
@@ -171,7 +102,7 @@ namespace Ll2NativeTests
             // todo: 
             // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
             // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
-            Il2Converter.Convert(Path.GetFullPath(OpenGlLibPath), OutputPath, GetConverterArgs(true));
+            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.OpenGlLibPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
         }
 
         /// <summary>
@@ -179,7 +110,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestOpenGlExe()
         {
-            Il2Converter.Convert(Path.GetFullPath(OpenGlExePath), OutputPath, GetConverterArgs(true));
+            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.OpenGlExePath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
         }
 
         /// <summary>
@@ -187,7 +118,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestAndroid()
         {
-            Il2Converter.Convert(Path.GetFullPath(AndroidPath), OutputPath, GetConverterArgs(true));
+            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.AndroidPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
         }
 
         /// <summary>
@@ -229,7 +160,7 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
-                Compile(string.Format("test-{0}", index));
+                CompilerHelper.Compile(string.Format("test-{0}", index));
             }
         }
 
@@ -251,7 +182,7 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
-                Compile(string.Format("gtest-{0:000}", index));
+                CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -374,7 +305,7 @@ namespace Ll2NativeTests
                             349, 352, 353, 358, 361, 362, 367
                         });
 
-            if (UsingRoslyn)
+            if (CompilerHelper.UsingRoslyn)
             {
                 // object o = -(2147483648); type is "int", not "long" in Roslyn
                 skip.AddRange(new[] { 129 });
@@ -382,7 +313,7 @@ namespace Ll2NativeTests
 
             foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
-                CompileAndRun(string.Format("test-{0}", index));
+                CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
         }
 
@@ -441,7 +372,7 @@ namespace Ll2NativeTests
                            };
             foreach (var index in Enumerable.Range(207, 400).Where(n => !skip.Contains(n)))
             {
-                CompileAndRun(string.Format("gtest-{0:000}", index));
+                CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -450,269 +381,79 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestPdbReader()
         {
-            Converter.Convert(CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
+            Converter.Convert(CompilerHelper.CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="includeCoreLib">
-        /// </param>
-        /// <param name="roslyn">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool llvm34Support = Llvm34Support, bool debugInfo = DebugInfo)
+        [TestMethod]
+        public void GenerateTestFromSscliTests()
         {
-            var args = new List<string>();
-            if (includeCoreLib)
+            Debug.WriteLine(@"namespace Ll2NativeTests {");
+            Debug.WriteLine(@"using System;");
+            Debug.WriteLine(@"using System.Collections.Generic;");
+            Debug.WriteLine(@"using System.Diagnostics;");
+            Debug.WriteLine(@"using System.IO;");
+            Debug.WriteLine(@"using System.Linq;");
+            Debug.WriteLine(@"using Il2Native.Logic;");
+            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            Debug.WriteLine(@"using PdbReader;");
+
+            var currentDir = "";
+            var currentNamespace = "";
+            foreach (var file in Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
             {
-                args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
-            }
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+                var directoryName = Path.GetDirectoryName(file);
+                var folderName = Path.GetFileName(directoryName);
+                var subfolders = directoryName.Substring(CompilerHelper.SscliSourcePath.Length);
 
-            if (roslyn)
-            {
-                args.Add("roslyn");
-            }
-
-            if (!gc)
-            {
-                args.Add("gc-");
-            }
-
-            if (!gctors)
-            {
-                args.Add("gctors-");
-            }
-
-            if (llvm35Support)
-            {
-                args.Add("llvm35");
-            }
-            else if (llvm34Support)
-            {
-                args.Add("llvm34");
-            }
-
-            if (debugInfo)
-            {
-                args.Add("debug");
-            }
-
-            if (MultiCore)
-            {
-                args.Add("multi");
-            }
-
-            if (Android)
-            {
-                args.Add("android");
-            }
-
-            if (Emscripten)
-            {
-                args.Add("emscripten");
-            }
-
-            return args.ToArray();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="index">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="format">
-        /// </param>
-        /// <param name="justCompile">
-        /// </param>
-        private static void ExecCompile(string fileName, bool justCompile = false, bool opt = false)
-        {
-            /*
-                call vcvars32.bat
-                llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-win32 -filetype=obj test-%1.ll
-                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib corelib.obj test-%1.obj /OUT:test-%1.exe
-                del test-%1.obj
-            */
-
-            // to test working try/catch with g++ compilation
-            // http://mingw-w64.sourceforge.net/download.php
-            // Windows 32	DWARF	i686 - use this config to test exceptions on windows
-            // GC - http://www.hboehm.info/gc/ (use git and cmake to compile libgc-lib.a file
-            /*
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -march=i686
-                del test-%1.o
-            */
-
-            // if GC Enabled
-            /*
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
-                del test-%1.o 
-             */
-
-            // if GC Enabled with optimization
-            /*
-                opt corelib.ll -o corelib.bc -O2
-                opt test-%1.ll -o test-%1.bc -O2
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
-                del test-%1.o 
-             */
-
-            // Android target - target triple = "armv7-none-linux-androideabi"
-
-            // compile CoreLib
-            if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
-            {
-                if (!File.Exists(Path.Combine(OutputPath, "CoreLib.ll")))
+                if (currentDir != directoryName)
                 {
-                    Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
+                    if (!string.IsNullOrEmpty(currentDir))
+                    {
+                        Debug.WriteLine(@"}");
+                        Debug.WriteLine(@"");
+                    }
+
+                    if (currentNamespace != subfolders)
+                    {
+                        if (!string.IsNullOrEmpty(currentNamespace))
+                        {
+                            Debug.WriteLine(@"}");
+                            Debug.WriteLine(@"");
+                        }
+
+                        Debug.WriteLine(@"namespace @" + subfolders.Replace("\\", ".@") + " {");
+                        currentNamespace = subfolders;
+                    }
+
+                    Debug.WriteLine(@"[TestClass]");
+                    Debug.WriteLine(@"public class @" + folderName + " {");
+                    Debug.WriteLine(@"[TestInitialize]");
+                    Debug.WriteLine(@"public void Initialize() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+                    Debug.WriteLine(@"[TestCleanup]");
+                    Debug.WriteLine(@"public void Cleanup() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+
+                    currentDir = directoryName;
                 }
 
-                if (opt)
-                {
-                    ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
-                }
-                else
-                {
-                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
-                }
+                Debug.WriteLine(@"[TestMethod]");
+                var testMethodName = (fileNameWithoutExtension.Length > 6 ? fileNameWithoutExtension.Insert(6, "_") : fileNameWithoutExtension);
+                Debug.WriteLine(@"public void @" + testMethodName + "() {");
+                Debug.WriteLine(@"var file = Path.Combine(CompilerHelper.SscliSourcePath, @""" + subfolders + @""", """ + Path.GetFileName(file) + @""");");
+                Debug.WriteLine(@"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                Debug.WriteLine(@"}");
+                Debug.WriteLine(@"");
             }
 
-            // file obj
-            if (opt)
-            {
-                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName));
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
-            }
-            else
-            {
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target));
-            }
-
-            if (!justCompile)
-            {
-                // file exe
-                ExecCmd("g++", string.Format("-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
-
-                // test execution
-                ExecCmd(string.Format("{0}.exe", fileName));
-            }
-            else
-            {
-                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
-            }
-        }
-
-        private static void ExecCmd(string fileName, string arguments = "", string workingDir = OutputPath)
-        {
-            var processStartInfo = new ProcessStartInfo();
-            processStartInfo.WorkingDirectory = workingDir;
-            processStartInfo.FileName = fileName;
-            processStartInfo.Arguments = arguments;
-            processStartInfo.CreateNoWindow = true;
-            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-            var processCoreLibObj = Process.Start(processStartInfo);
-            processCoreLibObj.WaitForExit();
-            Assert.AreEqual(0, processCoreLibObj.ExitCode);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="index">
-        /// </param>
-        private static void Compile(string fileName, string source = SourcePath)
-        {
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine(string.Empty);
-
-            try
-            {
-                Convert(fileName, source);
-            }
-            catch (BadImageFormatException ex)
-            {
-                Debug.WriteLine(ex);
-                return;
-            }
-            catch (FileNotFoundException ex)
-            {
-                Debug.WriteLine(ex);
-                return;
-            }
-
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Compiling LLVM for " + fileName);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine(string.Empty);
-
-            ExecCompile(fileName, justCompile: true);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="index">
-        /// </param>
-        private static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
-        {
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
-            Trace.WriteLine("==========================================================================");
-            Trace.WriteLine(string.Empty);
-
-            if (!ignoreBadFiles)
-            {
-                Convert(fileName, source);
-            }
-            else
-            {
-                try
-                {
-                    Convert(fileName, source);
-                }
-                catch (BadImageFormatException ex)
-                {
-                    Debug.WriteLine(ex);
-                    return;
-                }
-                catch (FileNotFoundException ex)
-                {
-                    Debug.WriteLine(ex);
-                    return;
-                }
-            }
-
-            Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
-
-            ExecCompile(fileName, opt: CompileWithOptimization);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="number">
-        /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="fileName">
-        /// </param>
-        /// <param name="format">
-        /// </param>
-        private static void Convert(string fileName, string source = SourcePath)
-        {
-            Il2Converter.Convert(
-                string.Concat(source, string.Format("{0}.cs", fileName)),
-                OutputPath,
-                GetConverterArgs(true));
+            Debug.WriteLine(@"}"); // class
+            Debug.WriteLine(@"}"); // namespaces
+            Debug.WriteLine(@"}"); // global namespace
         }
     }
 }

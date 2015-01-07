@@ -6240,7 +6240,11 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.Output.WriteLine("ret i32 0");
+                var method = "Int32 System.Environment.get_ExitCode()";
+                this.Output.WriteLine("%1 = call i32 @\"{0}\"()", method);
+                this.Output.WriteLine("ret i32 %1");
+
+                CheckIfExternalDeclarationIsRequired(new SynthesizedMethodStringAdapter("get_ExitCode", "System.Environment", this.ResolveType("System.Int32")));
             }
 
             this.Output.Indent--;

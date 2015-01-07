@@ -42,6 +42,7 @@ namespace Il2Native
                 Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 (otherwise 3.6)");
                 Console.WriteLine("  /llvm34                 Enable support LLVM 3.4 or lower version (otherwise 3.6)");
                 Console.WriteLine("  /debug                  Generate debug information");
+                Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine("  /emscripten             Set recommended settings for Emscripten platform");

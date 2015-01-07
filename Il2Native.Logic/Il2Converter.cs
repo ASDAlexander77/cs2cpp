@@ -26,6 +26,8 @@ namespace Il2Native.Logic
     {
         private static bool concurrent = false;
 
+        private static bool verboseOutput = false;
+
         /// <summary>
         /// </summary>
         /// <param name="source">
@@ -259,7 +261,10 @@ namespace Il2Native.Logic
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            Debug.WriteLine("Converting {0}, Mode: {1}", type, mode);
+            if (verboseOutput)
+            {
+                Trace.WriteLine(string.Format("Converting {0}, Mode: {1}", type, mode));
+            }
 
             var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
@@ -518,6 +523,7 @@ namespace Il2Native.Logic
         private static void GenerateLlvm(IlReader ilReader, string fileName, string sourceFilePath, string pdbFilePath, string outputFolder, string[] args, string[] filter = null)
         {
             concurrent = args != null && args.Any(a => a == "multi");
+            verboseOutput = args != null && args.Any(a => a == "verbose");
             var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
@@ -800,7 +806,10 @@ namespace Il2Native.Logic
             ICollection<Tuple<IType, List<IType>>> requiredTypes, object requiredTypesSyncRoot, IType type, ISet<IType> subSetGenericTypeSpecializations, ISet<IMethod> subSetGenericMethodSpecializations, ISet<IType> processedAlready)
         {
             Debug.Assert(type != null);
-            Debug.WriteLine("Analyzing generic type: {0}", type);
+            if (verboseOutput)
+            {
+                Trace.WriteLine(string.Format("Analyzing generic type: {0}", type));
+            }
 
             var requiredITypesToAdd = new List<IType>();
             ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, subSetGenericTypeSpecializations, subSetGenericMethodSpecializations, processedAlready);
@@ -885,7 +894,10 @@ namespace Il2Native.Logic
 
         private static void ProcessNextRequiredTypesForType(ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, IType type, List<Tuple<IType, List<IType>>> typesWithRequired, object typesWithRequiredSyncRoot, ISet<IType> processedAlready)
         {
-            Debug.WriteLine("Reading info about type: {0}", type);
+            if (verboseOutput)
+            {
+                Trace.WriteLine(string.Format("Reading info about type: {0}", type));
+            }
 
             var requiredITypesToAdd = new List<IType>();
             ProcessNextRequiredITypes(type, new HashSet<IType>(), requiredITypesToAdd, genericTypeSpecializations, genericMethodSpecializations, processedAlready);
