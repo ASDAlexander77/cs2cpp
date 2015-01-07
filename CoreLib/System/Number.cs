@@ -440,7 +440,7 @@ namespace System
                     retString = Int64ToDecStr(value, digits, info.NegativeSign);
                     break;
                 case 'X':
-                    retString = Int64ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
+                    retString = Int64ToHexStr((ulong)value, fmt - ('X' - 'A' + 10), digits);
                     break;
                 default:
                     number = new NUMBER();
@@ -492,7 +492,7 @@ namespace System
                     retString = UInt64ToDecStr(value, digits);
                     break;
                 case 'X':
-                    retString = Int64ToHexStr((uint)value, fmt - ('X' - 'A' + 10), digits);
+                    retString = Int64ToHexStr(value, fmt - ('X' - 'A' + 10), digits);
                     break;
                 default:
                     number = new NUMBER();
