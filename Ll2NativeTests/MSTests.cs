@@ -455,5 +455,102 @@ namespace Ll2NativeTests
             Debug.WriteLine(@"}"); // namespaces
             Debug.WriteLine(@"}"); // global namespace
         }
+
+        [TestMethod]
+        public void GenerateTestFromMonoTests()
+        {
+            Debug.WriteLine(@"namespace Ll2NativeTests {");
+            Debug.WriteLine(@"using System;");
+            Debug.WriteLine(@"using System.Collections.Generic;");
+            Debug.WriteLine(@"using System.Diagnostics;");
+            Debug.WriteLine(@"using System.IO;");
+            Debug.WriteLine(@"using System.Linq;");
+            Debug.WriteLine(@"using Il2Native.Logic;");
+            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            Debug.WriteLine(@"using PdbReader;");
+
+            var chars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+            var currentDir = "";
+            var currentNamespace = "";
+            var enumerateFiles = Directory.EnumerateFiles(CompilerHelper.SourcePath, "*.cs", SearchOption.AllDirectories).ToArray();
+            Array.Sort(enumerateFiles);
+            foreach (var file in enumerateFiles)
+            {
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+
+                var directoryName = Path.GetDirectoryName(file);
+                var folderName = Path.GetFileName(directoryName);
+                var subfolders = directoryName.Substring(Math.Min(directoryName.Length, CompilerHelper.SourcePath.Length));
+                var fileName = Path.GetFileName(file);
+
+                // custom for Mono only
+                var minusIndex = fileName.IndexOfAny(chars);
+                if (minusIndex > 0)
+                {
+                    var groupName = fileName.Substring(0, minusIndex - 1);
+                    if (fileName.IndexOf('-', minusIndex) >= 0)
+                    {
+                        continue;
+                    }
+
+                    subfolders += groupName;
+                }
+                else
+                {
+                    continue;
+                }
+
+                var groupper = directoryName + subfolders;
+
+                if (currentDir != groupper)
+                {
+                    if (!string.IsNullOrEmpty(currentDir))
+                    {
+                        Debug.WriteLine(@"}");
+                        Debug.WriteLine(@"");
+                    }
+
+                    if (currentNamespace != subfolders)
+                    {
+                        if (!string.IsNullOrEmpty(currentNamespace))
+                        {
+                            Debug.WriteLine(@"}");
+                            Debug.WriteLine(@"");
+                        }
+
+                        Debug.WriteLine(@"namespace @" + subfolders.Replace("\\", ".@").Replace("-", "_") + " {");
+                        currentNamespace = subfolders;
+                    }
+
+                    Debug.WriteLine(@"[TestClass]");
+                    Debug.WriteLine(@"public class @" + folderName.Replace("-", "_") + " {");
+                    Debug.WriteLine(@"[TestInitialize]");
+                    Debug.WriteLine(@"public void Initialize() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+                    Debug.WriteLine(@"[TestCleanup]");
+                    Debug.WriteLine(@"public void Cleanup() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+
+                    currentDir = groupper;
+                }
+
+                Debug.WriteLine(@"[TestMethod]");
+                var testMethodName = fileNameWithoutExtension.Replace("-", "_");
+                Debug.WriteLine(@"public void @" + testMethodName + "() {");
+                Debug.WriteLine(@"var file = Path.Combine(CompilerHelper.SourcePath, @""" + subfolders + @""", """ + fileName + @""");");
+                Debug.WriteLine(@"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                Debug.WriteLine(@"}");
+                Debug.WriteLine(@"");
+            }
+
+            Debug.WriteLine(@"}"); // class
+            Debug.WriteLine(@"}"); // namespaces
+            Debug.WriteLine(@"}"); // global namespace
+        }
     }
 }
