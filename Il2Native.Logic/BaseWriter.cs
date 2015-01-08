@@ -1539,6 +1539,8 @@ namespace Il2Native.Logic
                 return null;
             }
 
+            var uintRequired = opCodePart.Any(Code.Shl, Code.Shr, Code.Shr_Un);
+
             if (this.IsFloatingPointOp(opCodePart))
             {
                 return null;
@@ -1547,10 +1549,10 @@ namespace Il2Native.Logic
             var intOpBitSize = this.IntOpBitSize(opCodePart);
             if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
             {
-                return this.GetUIntTypeByBitSize(intOpBitSize);
+                return uintRequired ? this.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
             }
 
-            return this.GetUIntTypeByByteSize(LlvmWriter.PointerSize);
+            return uintRequired ? this.GetUIntTypeByByteSize(LlvmWriter.PointerSize) : this.GetIntTypeByByteSize(LlvmWriter.PointerSize);
         }
 
         /// <summary>

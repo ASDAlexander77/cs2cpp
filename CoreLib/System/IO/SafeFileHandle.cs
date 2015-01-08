@@ -12,13 +12,19 @@
         private extern unsafe static int fclose(void* stream);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fread(void* ptr, int size, int count, void* stream);
+        private extern unsafe static int fread(void* ptr, int elementSize, int count, void* stream);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        private extern unsafe static int fwrite(void* ptr, int size, int count, void* stream);
+        private extern unsafe static int fwrite(void* ptr, int elementSize, int count, void* stream);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         private extern unsafe static int fflush(void* stream);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int fseek(void* ptr, int offset, int origin);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static int ftell(void* ptr);
 
         private unsafe void* file;
 
@@ -134,6 +140,19 @@
             unsafe
             {
                 fflush(this.file);
+            }
+        }
+
+        public long SetFilePointer(long offset, SeekOrigin origin)
+        {
+            unsafe
+            {
+                if (fseek(this.file, (int)offset, (int)origin) == 0)
+                {
+                    return ftell(this.file);
+                }
+
+                return -1;
             }
         }
     }

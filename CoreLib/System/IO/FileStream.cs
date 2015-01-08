@@ -836,8 +836,16 @@ namespace System.IO
         private long SeekCore(long offset, SeekOrigin origin)
         {
             long ret = 0;
+
+            ret = _handle.SetFilePointer(offset, origin);
+            if (ret == -1)
+            {
+                __Error.WinIOError(0, String.Empty);
+            }
+
             _pos = ret;
             return ret;
+
         }
 
         // Checks the position of the OS's handle equals what we expect it to.

@@ -2,12 +2,51 @@
 
 namespace System.IO
 {
+    using System.Runtime.CompilerServices;
+
     using Collections.Generic;
     using Text;
 
     [ComVisible(true)]
     public static class File
     {
+        private const short F_OK = 0;
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static void* remove(byte* fileName);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        private extern unsafe static short access(byte* fileName, short mode);
+
+        public static bool Exists(String path)
+        {
+            if (path == null)
+                return false;
+            if (path.Length == 0)
+                return false;
+
+            unsafe
+            {
+                fixed (byte* p = Encoding.UTF8.GetBytes(path))
+                {
+                    return access(p, F_OK) == 0;
+                }
+            }
+        }
+
+        public static void Delete(String path)
+        {
+            if (path == null) throw new ArgumentNullException("path");
+
+            unsafe
+            {
+                fixed (byte* p = Encoding.UTF8.GetBytes(path))
+                {
+                    remove(p);
+                }
+            }
+        }
+
         public static byte[] ReadAllBytes(String path)
         {
             return InternalReadAllBytes(path, true);
