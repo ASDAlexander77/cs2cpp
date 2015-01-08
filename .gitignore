@@ -18,3 +18,5 @@
 /PEAssemblyReader/bin
 StyleCop.Cache
 /packages
+/PdbReader/obj
+/PdbReader/bin
