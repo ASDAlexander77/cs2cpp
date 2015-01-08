@@ -495,7 +495,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        protected void AddOpCode(OpCodePart opCode)
+        public void AddOpCode(OpCodePart opCode)
         {
             this.Ops.Add(opCode);
         }
@@ -830,6 +830,11 @@ namespace Il2Native.Logic
         /// </returns>
         protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
         {
+            if (this.ExceptionHandlingClauses == null)
+            {
+                yield break;
+            }
+
             // insert result of exception
             var exceptionHandling =
                 this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
@@ -848,7 +853,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        protected IEnumerable<OpCodePart> PrepareWritingMethodBody()
+        public IEnumerable<OpCodePart> PrepareWritingMethodBody()
         {
             var ops = this.PreProcessOpCodes(this.Ops).ToList();
             this.BuildAddressIndexes(ops);

@@ -23,6 +23,9 @@ namespace Il2Native.Logic
     using Exceptions;
     using Gencode;
     using Gencode.SynthesizedMethods;
+
+    using Il2Native.Logic.Gencode.InlineMethods;
+
     using PEAssemblyReader;
     using Properties;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -6204,6 +6207,8 @@ namespace Il2Native.Logic
                 this.WriteCallGctors();
             }
 
+            this.WriteLoadingArgumentsForMain(this.MainMethod, null);
+
             if (!MainMethod.ReturnType.IsVoid())
             {
                 this.Output.Write("%1 = call i32 ");
@@ -6249,6 +6254,44 @@ namespace Il2Native.Logic
 
             this.Output.Indent--;
             this.Output.WriteLine("}");
+        }
+
+        private void WriteLoadingArgumentsForMain(IMethod currentMethod, IGenericContext currentGenericContext)
+        {
+            object[] code;
+            IList<object> tokenResolutions;
+            IList<IType> locals;
+            IList<IParameter> parameters;
+            MainGen.GetLoadingArgumentsMethodBody(this.MainMethod.ReturnType.IsVoid(), this, out code, out tokenResolutions, out locals, out parameters);
+            var constructedMethod = MethodBodyBank.GetMethodDecorator(this.MainMethod, code, tokenResolutions, locals, parameters);
+
+            // actual write
+            this.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
+        }
+
+        private void WriteCustomMethodPart(SynthesizedMethodDecorator constructedMethod, IMethod currentMethod, IGenericContext currentGenericContext)
+        {
+            Debug.Assert(currentMethod != null, "Please provide current method to restore method context");
+
+            this.ReadMethodInfo(constructedMethod, currentGenericContext);
+
+            var ilReader = new IlReader();
+            var baseWriter = new BaseWriter();
+            baseWriter.StartProcess();
+            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, null, null))
+            {
+                baseWriter.AddOpCode(opCodePart);
+            }
+
+            var rest = baseWriter.PrepareWritingMethodBody();
+            foreach (var opCodePart in rest)
+            {
+                this.ActualWrite(this.Output, opCodePart, true);
+                this.Output.WriteLine(string.Empty);
+            }
+
+            // restore context
+            this.ReadMethodInfo(currentMethod, currentGenericContext);
         }
 
         /// <summary>

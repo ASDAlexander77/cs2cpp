@@ -67,7 +67,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = false;
+        public const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>

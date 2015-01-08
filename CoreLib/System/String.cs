@@ -715,6 +715,44 @@ namespace System
             return s;
         }
 
+        /// <summary>
+        /// Returns a new string of a specified length in which the beginning of the current string is padded with spaces or with a specified character.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <param name="totalWidth">The number of characters in the resulting string, equal to the number of original characters plus any additional padding characters.</param>
+        /// <param name="paddingChar">The padding character.</param>
+        /// <returns></returns>
+        public string PadLeft(int totalWidth, char paddingChar = ' ')
+        {
+            return PadHelper(this, totalWidth, paddingChar, true);
+        }
+
+        /// <summary>
+        /// Returns a new string of a specified length in which the end of the current string is padded with spaces or with a specified character.
+        /// </summary>
+        /// <param name="original"></param>
+        /// <param name="totalWidth">The number of characters in the resulting string, equal to the number of original characters plus any additional padding characters.</param>
+        /// <param name="paddingChar">The padding character.</param>
+        /// <returns></returns>
+        public string PadRight(int totalWidth, char paddingChar = ' ')
+        {
+            return PadHelper(this, totalWidth, paddingChar, false);
+        }
+
+        private static string PadHelper(string original, int totalWidth, char paddingChar, bool appendLeft)
+        {
+            // this seems to be quicker than a simple while (length < totalWidth) pad
+            if (original.Length >= totalWidth)
+                return original;
+            StringBuilder result = new StringBuilder(totalWidth);
+            int padCount = totalWidth - original.Length;
+            for (int i = 0; i < padCount; i++)
+                result.Append(paddingChar);
+            if (appendLeft)
+                return result + original;
+            return original + result;
+        }
+
         unsafe public void CopyTo(int sourceIndex, char[] destination, int destinationIndex, int count)
         {
             if (destination == null)
