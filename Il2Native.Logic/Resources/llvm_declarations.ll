@@ -20,6 +20,21 @@ declare { i16, i1 } @llvm.smul.with.overflow.i16(i16, i16) #0
 declare { i32, i1 } @llvm.smul.with.overflow.i32(i32, i32) #0
 declare { i64, i1 } @llvm.smul.with.overflow.i64(i64, i64) #0
 
+declare { i8, i1 } @llvm.uadd.with.overflow.i8(i8, i8) #0
+declare { i16, i1 } @llvm.uadd.with.overflow.i16(i16, i16) #0
+declare { i32, i1 } @llvm.uadd.with.overflow.i32(i32, i32) #0
+declare { i64, i1 } @llvm.uadd.with.overflow.i64(i64, i64) #0
+
+declare { i8, i1 } @llvm.usub.with.overflow.i8(i8, i8) #0
+declare { i16, i1 } @llvm.usub.with.overflow.i16(i16, i16) #0
+declare { i32, i1 } @llvm.usub.with.overflow.i32(i32, i32) #0
+declare { i64, i1 } @llvm.usub.with.overflow.i64(i64, i64) #0
+
+declare { i8, i1 } @llvm.umul.with.overflow.i8(i8, i8) #0
+declare { i16, i1 } @llvm.umul.with.overflow.i16(i16, i16) #0
+declare { i32, i1 } @llvm.umul.with.overflow.i32(i32, i32) #0
+declare { i64, i1 } @llvm.umul.with.overflow.i64(i64, i64) #0
+
 attributes #88801 = { nounwind }
 attributes #88802 = { nounwind }
 

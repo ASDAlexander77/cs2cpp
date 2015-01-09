@@ -1,85 +1,219 @@
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Apache License 2.0 (Apache)
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-using System;
-using System.Runtime.CompilerServices;
-
 namespace System
 {
-    /// <summary>
-    /// Represents a pseudo-random number generator, a device that produces a
-    /// sequence of numbers that meet certain statistical requirements for
-    /// randomness.
-    /// </summary>
+
+    using System;
+    using System.Runtime;
+    using System.Runtime.CompilerServices;
+    using System.Globalization;
+
+    [System.Runtime.InteropServices.ComVisible(true)]
+    [Serializable]
     public class Random
     {
-        private object _random;
+        //
+        // Private Constants 
+        //
+        private const int MBIG = Int32.MaxValue;
+        private const int MSEED = 161803398;
+        private const int MZ = 0;
 
-        /// <summary>
-        /// Initializes a new instance of the Random class, using a time-
-        /// dependent default seed value.
-        /// </summary>
-        
+
+        //
+        // Member Variables
+        //
+        private int inext;
+        private int inextp;
+        private int[] SeedArray = new int[56];
+
+        //
+        // Public Constants
+        //
+
+        //
+        // Native Declarations
+        //
+
+        //
+        // Constructors
+        //
+
         public Random()
+            : this((int)DateTime.Now.Ticks)
         {
-            // TODO: Not Implemented
-            ////throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Initializes a new instance of the Random class, using the specified
-        /// seed value.
-        /// </summary>
-        /// <param name="seed">A number used to calculate a starting value for
-        /// the pseudo-random number sequence.</param>
-        
-        public extern Random(int seed);
+        public Random(int Seed)
+        {
+            int ii;
+            int mj, mk;
 
-        /// <summary>
-        /// Returns a nonnegative random number.
-        /// </summary>
-        /// <returns>A 32-bit signed integer greater than or equal to zero and
-        /// less than MaxValue.</returns>
+            //Initialize our Seed array.
+            //This algorithm comes from Numerical Recipes in C (2nd Ed.)
+            int subtraction = (Seed == Int32.MinValue) ? Int32.MaxValue : Math.Abs(Seed);
+            mj = MSEED - subtraction;
+            SeedArray[55] = mj;
+            mk = 1;
+            for (int i = 1; i < 55; i++)
+            {  //Apparently the range [1..55] is special (Knuth) and so we're wasting the 0'th position.
+                ii = (21 * i) % 55;
+                SeedArray[ii] = mk;
+                mk = mj - mk;
+                if (mk < 0) mk += MBIG;
+                mj = SeedArray[ii];
+            }
+            for (int k = 1; k < 5; k++)
+            {
+                for (int i = 1; i < 56; i++)
+                {
+                    SeedArray[i] -= SeedArray[1 + (i + 30) % 55];
+                    if (SeedArray[i] < 0) SeedArray[i] += MBIG;
+                }
+            }
+            inext = 0;
+            inextp = 21;
+            Seed = 1;
+        }
 
+        //
+        // Package Private Methods
+        //
+
+        /*====================================Sample====================================
+        **Action: Return a new random number [0..1) and reSeed the Seed array.
+        **Returns: A double [0..1)
+        **Arguments: None
+        **Exceptions: None
+        ==============================================================================*/
+        protected virtual double Sample()
+        {
+            //Including this division at the end gives us significantly improved
+            //random number distribution.
+            return (InternalSample() * (1.0 / MBIG));
+        }
+
+        private int InternalSample()
+        {
+            int retVal;
+            int locINext = inext;
+            int locINextp = inextp;
+
+            if (++locINext >= 56) locINext = 1;
+            if (++locINextp >= 56) locINextp = 1;
+
+            retVal = SeedArray[locINext] - SeedArray[locINextp];
+
+            if (retVal == MBIG) retVal--;
+            if (retVal < 0) retVal += MBIG;
+
+            SeedArray[locINext] = retVal;
+
+            inext = locINext;
+            inextp = locINextp;
+
+            return retVal;
+        }
+
+        //
+        // Public Instance Methods
+        // 
+
+
+        /*=====================================Next=====================================
+        **Returns: An int [0..Int32.MaxValue)
+        **Arguments: None
+        **Exceptions: None.
+        ==============================================================================*/
         public virtual int Next()
         {
-            throw new NotImplementedException();
+            return InternalSample();
         }
 
-        /// <summary>
-        /// Returns a nonnegative random number less than the specified maximum.
-        /// </summary>
-        /// <param name="maxValue">The exclusive upper bound of the random number
-        /// to be generated. maxValue must be greater than or equal to zero.</param>
-        /// <returns>A 32-bit signed integer greater than or equal to zero, and
-        /// less than maxValue.</returns>
+        private double GetSampleForLargeRange()
+        {
+            // The distribution of double value returned by Sample 
+            // is not distributed well enough for a large range.
+            // If we use Sample for a range [Int32.MinValue..Int32.MaxValue)
+            // We will end up getting even numbers only.
 
+            int result = InternalSample();
+            // Note we can't use addition here. The distribution will be bad if we do that.
+            bool negative = (InternalSample() % 2 == 0) ? true : false;  // decide the sign based on second sample
+            if (negative)
+            {
+                result = -result;
+            }
+            double d = result;
+            d += (Int32.MaxValue - 1); // get a number in range [0 .. 2 * Int32MaxValue - 1)
+            d /= 2 * (uint)Int32.MaxValue - 1;
+            return d;
+        }
+
+
+        /*=====================================Next=====================================
+        **Returns: An int [minvalue..maxvalue)
+        **Arguments: minValue -- the least legal value for the Random number.
+        **           maxValue -- One greater than the greatest legal return value.
+        **Exceptions: None.
+        ==============================================================================*/
+        public virtual int Next(int minValue, int maxValue)
+        {
+            if (minValue > maxValue)
+            {
+                throw new ArgumentOutOfRangeException("minValue", Environment.GetResourceString("Argument_MinMaxValue", "minValue", "maxValue"));
+            }
+
+            long range = (long)maxValue - minValue;
+            if (range <= (long)Int32.MaxValue)
+            {
+                return ((int)(Sample() * range) + minValue);
+            }
+            else
+            {
+                return (int)((long)(GetSampleForLargeRange() * range) + minValue);
+            }
+        }
+
+
+        /*=====================================Next=====================================
+        **Returns: An int [0..maxValue)
+        **Arguments: maxValue -- One more than the greatest legal return value.
+        **Exceptions: None.
+        ==============================================================================*/
         public virtual int Next(int maxValue)
         {
-            throw new NotImplementedException();
+            if (maxValue < 0)
+            {
+                throw new ArgumentOutOfRangeException("maxValue", Environment.GetResourceString("ArgumentOutOfRange_MustBePositive", "maxValue"));
+            }
+
+            return (int)(Sample() * maxValue);
         }
 
-        /// <summary>
-        /// Returns a random number between 0.0 and 1.0.
-        /// </summary>
-        /// <returns>A double-precision floating point number greater than or equal
-        /// to 0.0, and less than 1.0.</returns>
-        
+
+        /*=====================================Next=====================================
+        **Returns: A double [0..1)
+        **Arguments: None
+        **Exceptions: None
+        ==============================================================================*/
         public virtual double NextDouble()
         {
-            throw new NotImplementedException();
+            return Sample();
         }
 
-        /// <summary>
-        /// Fills the elements of a specified array of bytes with random numbers.
-        /// </summary>
-        /// <param name="buffer">An array of bytes to contain random numbers.</param>
-        
+
+        /*==================================NextBytes===================================
+        **Action:  Fills the byte array with random bytes [0..0x7f].  The entire array is filled.
+        **Returns:Void
+        **Arugments:  buffer -- the array to be filled.
+        **Exceptions: None
+        ==============================================================================*/
         public virtual void NextBytes(byte[] buffer)
         {
-            throw new NotImplementedException();
+            if (buffer == null) throw new ArgumentNullException("buffer");
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                buffer[i] = (byte)(InternalSample() % (Byte.MaxValue + 1));
+            }
         }
     }
 }
-
-

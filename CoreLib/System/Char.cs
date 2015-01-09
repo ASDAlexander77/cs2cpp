@@ -70,6 +70,50 @@ namespace System
             return (c >= '0' && c <= '9');
         }
 
+        private static bool IsWhiteSpaceLatin1(char c)
+        {
+
+            // There are characters which belong to UnicodeCategory.Control but are considered as white spaces.
+            // We use code point comparisons for these characters here as a temporary fix.
+
+            // U+0009 = <control> HORIZONTAL TAB
+            // U+000a = <control> LINE FEED
+            // U+000b = <control> VERTICAL TAB
+            // U+000c = <contorl> FORM FEED
+            // U+000d = <control> CARRIAGE RETURN
+            // U+0085 = <control> NEXT LINE
+            // U+00a0 = NO-BREAK SPACE
+            if ((c == ' ') || (c >= '\x0009' && c <= '\x000d') || c == '\x00a0' || c == '\x0085')
+            {
+                return (true);
+            }
+
+            return (false);
+        }
+
+        // Return true for all characters below or equal U+00ff, which is ASCII + Latin-1 Supplement.
+        private static bool IsLatin1(char ch)
+        {
+            return (ch <= '\x00ff');
+        }
+
+        // Return true for all characters below or equal U+007f, which is ASCII.
+        private static bool IsAscii(char ch)
+        {
+            return (ch <= '\x007f');
+        }
+
+        public static bool IsWhiteSpace(char c)
+        {
+            if (IsLatin1(c))
+            {
+                return (IsWhiteSpaceLatin1(c));
+            }
+
+            throw new NotImplementedException();
+        }
+
+
         public static bool IsSurrogate(char c)
         {
             return (c >= HIGH_SURROGATE_START && c <= LOW_SURROGATE_END);

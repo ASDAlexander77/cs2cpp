@@ -144,6 +144,7 @@
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />
     <Compile Include="System\MulticastDelegate.cs" />
+    <Compile Include="System\MulticastNotSupportedException.cs" />
     <Compile Include="System\NonSerializedAttribute.cs" />
     <Compile Include="System\NotImplementedException.cs" />
     <Compile Include="System\NotSupportedException.cs" />

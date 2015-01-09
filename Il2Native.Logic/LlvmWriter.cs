@@ -1455,9 +1455,10 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Add_Ovf:
-                case Code.Add_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "sadd");
-
+                    break;
+                case Code.Add_Ovf_Un:
+                    this.WriteOverflowWithThrow(writer, opCode, "uadd");
                     break;
                 case Code.Mul:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1471,9 +1472,10 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Mul_Ovf:
-                case Code.Mul_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "smul");
-
+                    break;
+                case Code.Mul_Ovf_Un:
+                    this.WriteOverflowWithThrow(writer, opCode, "umul");
                     break;
                 case Code.Sub:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
@@ -1487,17 +1489,19 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Sub_Ovf:
-                case Code.Sub_Ovf_Un:
                     this.WriteOverflowWithThrow(writer, opCode, "ssub");
-
+                    break;
+                case Code.Sub_Ovf_Un:
+                    this.WriteOverflowWithThrow(writer, opCode, "usub");
                     break;
                 case Code.Div:
                 case Code.Div_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    var isUnsigned = opCode.IsUnsigned() || opCode.Any(Code.Div_Un);
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fdiv" : "sdiv",
+                        isFloatingPoint ? "fdiv" : isUnsigned ? "udiv" : "sdiv",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
 
                     this.WriteDbgLine(opCode);
@@ -1506,10 +1510,11 @@ namespace Il2Native.Logic
                 case Code.Rem:
                 case Code.Rem_Un:
                     isFloatingPoint = this.IsFloatingPointOp(opCode);
+                    isUnsigned = opCode.IsUnsigned() || opCode.Any(Code.Rem_Un);
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "frem" : "srem",
+                        isFloatingPoint ? "frem" : isUnsigned ? "urem" : "srem",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
 
                     this.WriteDbgLine(opCode);

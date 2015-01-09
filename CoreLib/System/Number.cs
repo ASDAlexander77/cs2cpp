@@ -3146,7 +3146,7 @@ namespace System
 
         private static char ParseFormatSpecifier(string str, out int digits)
         {
-            if (str != null)
+            if (str != null && str.Length > 0)
             {
                 var i = 0;
                 char ch = str[i];

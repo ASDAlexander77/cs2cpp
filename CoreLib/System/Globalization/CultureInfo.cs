@@ -10,7 +10,8 @@ namespace System.Globalization
     using System.Runtime.CompilerServices;
     using System.Reflection;
     using System.Resources;
-    public class CultureInfo /*: ICloneable , IFormatProvider*/ {
+    public class CultureInfo : /*ICloneable, */IFormatProvider
+    {
         internal NumberFormatInfo numInfo = null;
         internal DateTimeFormatInfo dateTimeInfo = null;
         internal string m_name = null;
@@ -104,6 +105,29 @@ namespace System.Globalization
             set;
         }
 
+        public static CultureInfo InvariantCulture
+        {
+            get
+            {
+                //only one system-wide culture.  We do not currently support per-thread cultures
+                CultureInfo culture = CurrentInvariantInternal;
+                if (culture == null)
+                {
+                    culture = new CultureInfo("");
+                    CurrentInvariantInternal = culture;
+                }
+
+                return culture;
+            }
+        }
+
+        private static CultureInfo CurrentInvariantInternal
+        {
+            get;
+
+            set;
+        }
+
         public virtual CultureInfo Parent
         {
             get
@@ -154,10 +178,10 @@ namespace System.Globalization
             {
                 return (NumberFormat);
             }
-            if (formatType == typeof(DateTimeFormatInfo))
-            {
-                return (DateTimeFormat);
-            }
+            //if (formatType == typeof(DateTimeFormatInfo))
+            //{
+            //    return (DateTimeFormat);
+            //}
             return (null);
         }
 

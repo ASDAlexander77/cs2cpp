@@ -645,8 +645,24 @@ namespace Il2Native.Logic
                 case "System.Int16":
                 case "System.Int32":
                 case "System.Int64":
+                case "System.IntPtr":
                 case "System.Single":
                 case "System.Double":
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsUnsignedType(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.Byte":
+                case "System.UInt16":
+                case "System.UInt32":
+                case "System.UInt64":
+                case "System.UIntPtr":
                     return true;
             }
 
@@ -705,27 +721,6 @@ namespace Il2Native.Logic
             }
 
             return result1.Type.IsUnsignedType() && result2.Type.IsUnsignedType();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="thisType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsUnsignedType(this IType thisType)
-        {
-            switch (thisType.FullName)
-            {
-                case "System.Byte":
-                case "System.Char":
-                case "System.UInt16":
-                case "System.UInt32":
-                case "System.UInt64":
-                    return true;
-            }
-
-            return false;
         }
 
         /// <summary>
