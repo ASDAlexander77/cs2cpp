@@ -72,7 +72,7 @@
         public static SynthesizedMethodDecorator GetMethodDecorator(IMethod m, IEnumerable<object> code, IList<object> tokenResolutions, IList<IType> locals, IList<IParameter> parameters)
         {
             return new SynthesizedMethodDecorator(
-                m, 
+                m,
                 new SynthesizedMethodBodyDecorator(m.GetMethodBody(), locals, Transform(code).ToArray()),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));

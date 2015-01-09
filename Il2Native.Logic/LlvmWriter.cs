@@ -6276,7 +6276,9 @@ namespace Il2Native.Logic
             IList<IType> locals;
             IList<IParameter> parameters;
             MainGen.GetLoadingArgumentsMethodBody(this.MainMethod.ReturnType.IsVoid(), this, out code, out tokenResolutions, out locals, out parameters);
-            var constructedMethod = MethodBodyBank.GetMethodDecorator(this.MainMethod, code, tokenResolutions, locals, parameters);
+
+            var mainEntry = new SynthesizedStaticMethod("main", this.MainMethod.DeclaringType, this.MainMethod.ReturnType, this.MainMethod.GetParameters());
+            var constructedMethod = MethodBodyBank.GetMethodDecorator(mainEntry, code, tokenResolutions, locals, parameters);
 
             // actual write
             var opCodes = this.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
