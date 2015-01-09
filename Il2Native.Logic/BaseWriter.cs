@@ -1256,7 +1256,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        protected void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
+        public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
         {
             this.Parameters = methodInfo.GetParameters().ToArray();
             this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);

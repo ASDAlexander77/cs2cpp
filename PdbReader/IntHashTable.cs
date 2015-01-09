@@ -213,7 +213,7 @@ namespace PdbReader
 
             if (!(loadFactorPerc >= 10 && loadFactorPerc <= 100))
             {
-                throw new ArgumentOutOfRangeException("loadFactorPerc", string.Format("ArgumentOutOfRange_IntHashTableLoadFactor", 10, 100));
+                throw new ArgumentOutOfRangeException("loadFactorPerc", "ArgumentOutOfRange_IntHashTableLoadFactor");
             }
 
             // Based on perf work, .72 is the optimal load factor for this table.

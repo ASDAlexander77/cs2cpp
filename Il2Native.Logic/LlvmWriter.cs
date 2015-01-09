@@ -5772,7 +5772,10 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
             writer.Indent++;
 
-            opCode.Next.JumpProcessed = true;
+            if (opCode.Next != null)
+            {
+                opCode.Next.JumpProcessed = true;
+            }
         }
 
         /// <summary>
@@ -6194,7 +6197,15 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteMainFunction()
         {
-            this.Output.Write("define i32 @main()");
+            var hasParameters = MainMethod.GetParameters().Any();
+            if (!hasParameters)
+            {
+                this.Output.Write("define i32 @main()");
+            }
+            else
+            {
+                this.Output.Write("define i32 @main(i32 %\"arg.0.value\", i8** %\"arg.1.value\")");
+            }
 
             this.WriteMethodNumber();
 
@@ -6202,12 +6213,23 @@ namespace Il2Native.Logic
 
             this.Output.Indent++;
 
+            // create locals and args
+            if (hasParameters)
+            {
+                this.Output.WriteLine("%local0 = alloca { i8*, i8*, i8*, i32, i32, [ 0 x %\"System.String\"* ] }*, align 4");
+                this.Output.WriteLine("%local1 = alloca i32, align 4");
+                this.Output.WriteLine("%\"0.value\" = alloca i32, align 4");
+                this.Output.WriteLine("store i32 %\"arg.0.value\", i32* %\"0.value\", align 4");
+                this.Output.WriteLine("%\"1.value\" = alloca i8**, align 4");
+                this.Output.WriteLine("store i8** %\"arg.1.value\", i8*** %\"1.value\", align 4");
+            }
+
             if (!this.Gctors)
             {
                 this.WriteCallGctors();
             }
 
-            this.WriteLoadingArgumentsForMain(this.MainMethod, null);
+            var result = hasParameters ? this.WriteLoadingArgumentsForMain(this.MainMethod, null) : null;
 
             if (!MainMethod.ReturnType.IsVoid())
             {
@@ -6218,23 +6240,14 @@ namespace Il2Native.Logic
                 this.Output.Write("call void ");
             }
 
-            var parameters = MainMethod.GetParameters();
-
             this.WriteMethodDefinitionName(this.Output, MainMethod);
             this.Output.Write("(");
 
-            var index = 0;
-            foreach (var parameter in parameters)
+            if (hasParameters)
             {
-                if (index > 0)
-                {
-                    this.Output.Write(", ");
-                }
-
-                parameter.ParameterType.WriteTypePrefix(this.Output);
-                this.Output.Write(" null");
-
-                index++;
+                result.Type.WriteTypePrefix(this.Output);
+                this.Output.Write(" ");
+                this.WriteResult(result);
             }
 
             this.Output.WriteLine(");");
@@ -6256,7 +6269,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine("}");
         }
 
-        private void WriteLoadingArgumentsForMain(IMethod currentMethod, IGenericContext currentGenericContext)
+        private FullyDefinedReference WriteLoadingArgumentsForMain(IMethod currentMethod, IGenericContext currentGenericContext)
         {
             object[] code;
             IList<object> tokenResolutions;
@@ -6266,10 +6279,11 @@ namespace Il2Native.Logic
             var constructedMethod = MethodBodyBank.GetMethodDecorator(this.MainMethod, code, tokenResolutions, locals, parameters);
 
             // actual write
-            this.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
+            var opCodes = this.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
+            return opCodes.First(op => op.Any(Code.Newarr)).Result;
         }
 
-        private void WriteCustomMethodPart(SynthesizedMethodDecorator constructedMethod, IMethod currentMethod, IGenericContext currentGenericContext)
+        private IEnumerable<OpCodePart> WriteCustomMethodPart(SynthesizedMethodDecorator constructedMethod, IMethod currentMethod, IGenericContext currentGenericContext)
         {
             Debug.Assert(currentMethod != null, "Please provide current method to restore method context");
 
@@ -6277,8 +6291,9 @@ namespace Il2Native.Logic
 
             var ilReader = new IlReader();
             var baseWriter = new BaseWriter();
+            baseWriter.ReadMethodInfo(constructedMethod, currentGenericContext);
             baseWriter.StartProcess();
-            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, null, null))
+            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, currentGenericContext, null))
             {
                 baseWriter.AddOpCode(opCodePart);
             }
@@ -6292,6 +6307,8 @@ namespace Il2Native.Logic
 
             // restore context
             this.ReadMethodInfo(currentMethod, currentGenericContext);
+
+            return rest;
         }
 
         /// <summary>

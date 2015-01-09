@@ -313,6 +313,37 @@ namespace System
                 wstrcpy(dest, src + startIndex, length);
         }
 
+        public unsafe String(byte* src)
+        {
+            if (src == null)
+            {
+                throw new ArgumentNullException("src");
+            }
+
+            var count = (int)strlen(src);
+            this.chars = new char[Encoding.UTF8.GetCharCount(src, count)];
+            fixed (char* p = this.chars)
+            {
+                Encoding.UTF8.GetChars(src, count, p, this.chars.Length);
+            }
+        }
+
+        public unsafe String(byte* src, int startIndex, int length)
+        {
+            if (src == null)
+            {
+                throw new ArgumentNullException("src");
+            }
+
+            var startSrc = src + startIndex;
+            var count = (int)strlen(startSrc);
+            this.chars = new char[Encoding.UTF8.GetCharCount(startSrc, length)];
+            fixed (char* p = this.chars)
+            {
+                Encoding.UTF8.GetChars(src, count, p, this.chars.Length);
+            }
+        }
+
         public static int Compare(String a, String b)
         {
             if (a == null && b == null)
@@ -778,6 +809,15 @@ namespace System
         internal static unsafe void wstrcpy(char* dmem, char* smem, int charCount)
         {
             Buffer.Memcpy((byte*)dmem, (byte*)smem, charCount * 2); // 2 used everywhere instead of sizeof(char)
+        }
+
+        private unsafe static long strlen(byte* s)
+        {
+            byte* p = s;
+            while (*p > 0)
+                p++;
+
+            return p - s;
         }
     }
 }
