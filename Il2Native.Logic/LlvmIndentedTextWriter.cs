@@ -10,6 +10,7 @@ namespace Il2Native.Logic
 {
     using System;
     using System.CodeDom.Compiler;
+    using System.Diagnostics;
     using System.IO;
     using System.Text;
 
@@ -42,6 +43,7 @@ namespace Il2Native.Logic
         /// </summary>
         public void EndMethodBody()
         {
+            Debug.Assert(this.sw != null);
             this.sw.Close();
 
             var savedIndent = this.Indent;

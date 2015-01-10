@@ -34,7 +34,7 @@
         public const string OutputPath = @"D:\Temp\IlCTests\";
         public const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
-        public const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
+        public const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
         public const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         public const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
@@ -67,7 +67,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = false;
+        public const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
@@ -76,7 +76,7 @@
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        public const bool CompileWithOptimization = true;
+        public const bool CompileWithOptimization = false;
 
         /// <summary>
         /// </summary>

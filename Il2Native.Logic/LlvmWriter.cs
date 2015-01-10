@@ -438,6 +438,9 @@ namespace Il2Native.Logic
         {
             this.StartProcess();
 
+            Debug.Assert(!ctor.IsGenericMethodDefinition);
+            Debug.Assert(!ctor.DeclaringType.IsGenericTypeDefinition);
+
             this.processedMethods.Add(ctor);
             if (ctor.Token.HasValue)
             {
@@ -613,23 +616,23 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodStart(IMethod method, IGenericContext genericContext)
         {
-            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Name == method.Name))
-            {
-                return;
-            }
+            this.StartProcess();
 
             Debug.Assert(!method.IsGenericMethodDefinition);
             Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition);
 
-            this.StartProcess();
-
-            this.processedMethods.Add(method);
             if (method.Token.HasValue)
             {
                 this.methodsByToken[method.Token.Value] = method;
             }
 
             ReadMethodInfo(method, genericContext);
+            this.processedMethods.Add(method);
+
+            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Name == method.Name))
+            {
+                return;
+            }
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) &&
                          method.Name.Equals("Main");

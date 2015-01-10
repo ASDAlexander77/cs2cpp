@@ -83,6 +83,7 @@
     <Compile Include="System\Console.cs" />
     <Compile Include="System\Convert.cs" />
     <Compile Include="System\CLSCompliantAttribute.cs" />
+    <Compile Include="System\Currency.cs" />
     <Compile Include="System\DateTime.cs" />
     <Compile Include="System\DayOfWeek.cs" />
     <Compile Include="System\DBNull.cs" />
@@ -143,6 +144,7 @@
     <Compile Include="System\IO\__Error.cs" />
     <Compile Include="System\MarshalByRefObject.cs" />
     <Compile Include="System\Math.cs" />
+    <Compile Include="System\MidpointRounding.cs" />
     <Compile Include="System\MulticastDelegate.cs" />
     <Compile Include="System\MulticastNotSupportedException.cs" />
     <Compile Include="System\NonSerializedAttribute.cs" />
@@ -163,6 +165,7 @@
     <Compile Include="System\RuntimeMethodHandle.cs" />
     <Compile Include="System\RuntimeType.cs" />
     <Compile Include="System\RuntimeTypeHandle.cs" />
+    <Compile Include="System\Runtime\CompilerServices\DecimalConstantAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\FixedBufferAttribute.cs" />
     <Compile Include="System\Runtime\CompilerServices\IsVolatile.cs" />
     <Compile Include="System\Runtime\InteropServices\CallingConvention.cs" />

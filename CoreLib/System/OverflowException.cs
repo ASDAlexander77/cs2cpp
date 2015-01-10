@@ -12,6 +12,11 @@
             : base(message)
         {
         }
+
+        public OverflowException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 }
 

@@ -12,6 +12,11 @@
             : base(message)
         {
         }
+
+        public ArithmeticException(string message, Exception inner)
+            : base(message, inner)
+        {
+        }
     }
 }
 
