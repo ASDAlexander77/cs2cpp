@@ -38,7 +38,7 @@ namespace System
         //
 
         public Random()
-            : this((int)DateTime.Now.Ticks)
+            : this(Environment.TickCount)
         {
         }
 

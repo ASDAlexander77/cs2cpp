@@ -3275,7 +3275,7 @@ namespace System
                 char* p = buffer + ULONG_PRECISION;
                 while ((value & 0xFFFFFFFF00000000) > 0)
                 {
-                    p = Int32ToDecChars(p, Int64DivMod1E9((long*)&value), 9);
+                    p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
                 }
                 p = Int32ToDecChars(p, (uint)value, 0);
                 int i = (int)(buffer + ULONG_PRECISION - p);
@@ -3304,6 +3304,13 @@ namespace System
         private unsafe static int Int64DivMod1E9(long* value)
         {
             var rem = (int)(*value % 1000000000);
+            *value /= 1000000000;
+            return rem;
+        }
+
+        private unsafe static uint Int64DivMod1E9(ulong* value)
+        {
+            var rem = (uint)(*value % 1000000000);
             *value /= 1000000000;
             return rem;
         }
@@ -3512,7 +3519,7 @@ namespace System
             char* p = buffer + 100;
             while ((value & 0xffffffff00000000) > 0)
             {
-                p = Int32ToDecChars(p, Int64DivMod1E9((long*)&value), 9);
+                p = Int32ToDecChars(p, Int64DivMod1E9(&value), 9);
                 digits -= 9;
             }
 

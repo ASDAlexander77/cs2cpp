@@ -40,6 +40,11 @@ namespace System
          */
         public const char MinValue = (char)0x00;
 
+        public override int GetHashCode()
+        {
+            return (int)m_value | ((int)m_value << 16);
+        }
+
         public override String ToString()
         {
             return new String(m_value, 1);

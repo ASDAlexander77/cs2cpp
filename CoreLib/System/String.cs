@@ -409,6 +409,110 @@ namespace System
             return 0;
         }
 
+        public bool Equals(String value, StringComparison comparisonType)
+        {
+            if (comparisonType < StringComparison.CurrentCulture || comparisonType > StringComparison.OrdinalIgnoreCase)
+                throw new ArgumentException(Environment.GetResourceString("NotSupported_StringComparison"), "comparisonType");
+
+            if ((Object)this == (Object)value)
+            {
+                return true;
+            }
+
+            if ((Object)value == null)
+            {
+                return false;
+            }
+
+            switch (comparisonType)
+            {
+                case StringComparison.CurrentCulture:
+                case StringComparison.CurrentCultureIgnoreCase:
+                case StringComparison.InvariantCulture:
+                case StringComparison.InvariantCultureIgnoreCase:
+                    throw new NotImplementedException();
+
+                case StringComparison.Ordinal:
+                    if (this.Length != value.Length)
+                        return false;
+                    return EqualsHelper(this, value);
+
+                case StringComparison.OrdinalIgnoreCase:
+                    if (this.Length != value.Length)
+                        return false;
+
+                    return (CompareOrdinalIgnoreCaseHelper(this, value) == 0);
+
+                default:
+                    throw new ArgumentException(Environment.GetResourceString("NotSupported_StringComparison"), "comparisonType");
+            }
+        }
+
+        private unsafe static int CompareOrdinalIgnoreCaseHelper(String strA, String strB)
+        {
+            int length = Math.Min(strA.Length, strB.Length);
+
+            fixed (char* ap = strA.chars) fixed (char* bp = strB.chars)
+            {
+                char* a = ap;
+                char* b = bp;
+
+                while (length != 0)
+                {
+                    int charA = *a;
+                    int charB = *b;
+
+                    // uppercase both chars - notice that we need just one compare per char
+                    if ((uint)(charA - 'a') <= (uint)('z' - 'a')) charA -= 0x20;
+                    if ((uint)(charB - 'a') <= (uint)('z' - 'a')) charB -= 0x20;
+
+                    //Return the (case-insensitive) difference between them.
+                    if (charA != charB)
+                        return charA - charB;
+
+                    // Next char
+                    a++; b++;
+                    length--;
+                }
+
+                return strA.Length - strB.Length;
+            }
+        }
+
+        private unsafe static bool EqualsHelper(String strA, String strB)
+        {
+            int length = strA.Length;
+
+            fixed (char* ap = strA.chars) fixed (char* bp = strB.chars)
+            {
+                char* a = ap;
+                char* b = bp;
+
+                while (length >= 10)
+                {
+                    if (*(int*)a != *(int*)b) return false;
+                    if (*(int*)(a + 2) != *(int*)(b + 2)) return false;
+                    if (*(int*)(a + 4) != *(int*)(b + 4)) return false;
+                    if (*(int*)(a + 6) != *(int*)(b + 6)) return false;
+                    if (*(int*)(a + 8) != *(int*)(b + 8)) return false;
+                    a += 10; b += 10; length -= 10;
+                }
+
+                // This depends on the fact that the String objects are
+                // always zero terminated and that the terminating zero is not included
+                // in the length. For odd string sizes, the last compare will include
+                // the zero terminator.
+                while (length > 0)
+                {
+                    if (*(int*)a != *(int*)b) break;
+                    a += 2; b += 2; length -= 2;
+                }
+
+                return (length <= 0);
+            }
+        }
+
+
         public int CompareTo(Object value)
         {
             throw new NotImplementedException();

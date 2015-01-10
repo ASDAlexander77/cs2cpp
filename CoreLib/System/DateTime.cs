@@ -109,7 +109,7 @@ namespace System
         private static readonly int[] DaysToMonth366 = {
             0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366};
 
-        private static readonly int[] timeBuffer = new int[2];
+        private static readonly int[] timeBuffer = new int[4];
 
         private ulong m_ticks;
 
@@ -349,10 +349,11 @@ namespace System
                 unsafe
                 {
                     fixed (int* p = &timeBuffer[0])
+                    fixed (int* p2 = &timeBuffer[2])
                     {
-                        if (gettimeofday(p, null) == 0)
+                        if (gettimeofday(p, p2) == 0)
                         {
-                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10, DateTimeKind.Local);
+                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10 + p2[2] * TicksPerMinute);
                         }
                     }
 
