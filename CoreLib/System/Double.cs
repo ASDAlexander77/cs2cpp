@@ -1,9 +1,14 @@
 namespace System
 {
+
+    using System;
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct Double
+    [Serializable]
+    [StructLayout(LayoutKind.Sequential)]
+    [System.Runtime.InteropServices.ComVisible(true)]
+    public struct Double : IComparable, IFormattable
     {
         internal double m_value;
 
@@ -162,6 +167,9 @@ namespace System
             return IsNaN(obj) && IsNaN(m_value);
         }
 
+        //The hashcode for a double is the absolute value of the integer representation
+        //of that double.
+        //
         public unsafe override int GetHashCode()
         {
             double d = m_value;

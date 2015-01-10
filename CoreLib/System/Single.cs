@@ -1,8 +1,13 @@
 namespace System
 {
-    using System.Globalization;
 
-    public struct Single
+    using System.Globalization;
+    using System.Runtime.InteropServices;
+
+    [Serializable]
+    [System.Runtime.InteropServices.StructLayout(LayoutKind.Sequential)]
+    [System.Runtime.InteropServices.ComVisible(true)]
+    public struct Single : IComparable, IFormattable
     {
         internal float m_value;
 
@@ -142,6 +147,7 @@ namespace System
                 return 0;
             }
             int v = *(int*)(&f);
+
             return v;
         }
 
@@ -240,5 +246,6 @@ namespace System
             return true;
 
         }
+
     }
 }

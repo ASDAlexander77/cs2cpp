@@ -1939,15 +1939,15 @@ namespace Il2Native.Logic
                     {
                         case Code.Beq:
                         case Code.Beq_S:
-                            oper = isFloatingPoint ? "fcmp oeq" : "icmp eq";
+                            oper = isFloatingPoint ? "fcmp ueq" : "icmp eq";
                             break;
                         case Code.Bne_Un:
                         case Code.Bne_Un_S:
-                            oper = isFloatingPoint ? "fcmp one" : "icmp ne";
+                            oper = isFloatingPoint ? "fcmp une" : "icmp ne";
                             break;
                         case Code.Blt:
                         case Code.Blt_S:
-                            oper = isFloatingPoint ? "fcmp olt" : "icmp {0}lt";
+                            oper = isFloatingPoint ? "fcmp ult" : "icmp {0}lt";
                             break;
                         case Code.Blt_Un:
                         case Code.Blt_Un_S:
@@ -1955,7 +1955,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Ble:
                         case Code.Ble_S:
-                            oper = isFloatingPoint ? "fcmp ole" : "icmp {0}le";
+                            oper = isFloatingPoint ? "fcmp ule" : "icmp {0}le";
                             break;
                         case Code.Ble_Un:
                         case Code.Ble_Un_S:
@@ -1963,7 +1963,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Bgt:
                         case Code.Bgt_S:
-                            oper = isFloatingPoint ? "fcmp ogt" : "icmp {0}gt";
+                            oper = isFloatingPoint ? "fcmp ugt" : "icmp {0}gt";
                             break;
                         case Code.Bgt_Un:
                         case Code.Bgt_Un_S:
@@ -1971,7 +1971,7 @@ namespace Il2Native.Logic
                             break;
                         case Code.Bge:
                         case Code.Bge_S:
-                            oper = isFloatingPoint ? "fcmp oge" : "icmp {0}ge";
+                            oper = isFloatingPoint ? "fcmp uge" : "icmp {0}ge";
                             break;
                         case Code.Bge_Un:
                         case Code.Bge_Un_S:
@@ -2045,7 +2045,7 @@ namespace Il2Native.Logic
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fcmp oeq" : "icmp eq",
+                        isFloatingPoint ? "fcmp ueq" : "icmp eq",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                         ResolveType("System.Boolean"));
@@ -2059,7 +2059,7 @@ namespace Il2Native.Logic
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fcmp olt" : string.Format("icmp {0}lt", sign),
+                        isFloatingPoint ? "fcmp ult" : string.Format("icmp {0}lt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                         ResolveType("System.Boolean"));
@@ -2086,7 +2086,7 @@ namespace Il2Native.Logic
                     this.BinaryOper(
                         writer,
                         opCode,
-                        isFloatingPoint ? "fcmp ogt" : string.Format("icmp {0}gt", sign),
+                        isFloatingPoint ? "fcmp ugt" : string.Format("icmp {0}gt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                         ResolveType("System.Boolean"));
