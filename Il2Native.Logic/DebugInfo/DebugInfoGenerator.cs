@@ -36,6 +36,8 @@
 
         private readonly IDictionary<IType, object> typesMetadataCache = new SortedDictionary<IType, object>();
 
+        private readonly IDictionary<IType, object> typeStructuresMetadataCache = new SortedDictionary<IType, object>();
+
         private readonly IDictionary<int, object> subrangeTypeCache = new SortedDictionary<int, object>();
 
         private CollectionMetadata currentFunction;
@@ -56,7 +58,7 @@
 
         private int functionNumberUsedArgs = -1;
 
-        private bool structuresByName = false;
+        private bool structuresByName = true;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -199,7 +201,7 @@
             var typeMember = fieldMetadata.Add(
                 string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", field.Name, line, size, align, offset, flags),
                 this.file,
-                this.structuresByName || structureType == null ? (object)this.DefineType(field.DeclaringType) : (object)structureType,
+                this.structuresByName || structureType == null ? (object)this.FindStructure(field.DeclaringType) : (object)structureType,
                 this.DefineType(field.FieldType));
 
             if (this.structuresByName)
@@ -244,7 +246,7 @@
             var typeMember = fieldMetadata.Add(
                 string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", fieldName, line, size, align, offset, flags),
                 this.file,
-                this.structuresByName || structureType == null ? (object)this.DefineType(fieldDeclaringType) : (object)structureType,
+                this.structuresByName || structureType == null ? (object)this.FindStructure(fieldDeclaringType) : (object)structureType,
                 definedMedataType);
 
             if (this.structuresByName)
@@ -331,6 +333,17 @@
             return this.tagExpression;
         }
 
+        public object FindStructure(IType type)
+        {
+            object typeMetadata;
+            if (this.typesMetadataCache.TryGetValue(type, out typeMetadata))
+            {
+                return typeMetadata;
+            }
+
+            return null;
+        }
+
         public object DefineType(IType type)
         {
             var line = 0;
@@ -356,20 +369,32 @@
             else if (type.IsArray)
             {
                 var structureType = new CollectionMetadata(this.indexedMetadata);
-                var reference = this.structuresByName ? (object)type.FullName : (object)structureType;
-                this.typesMetadataCache[type] = reference;
+                var structureOrStructureRef = this.structuresByName ? (object)type.FullName : (object)structureType;
+                var pointer = DefinePointerType(structureType, line, offset);
+
+                this.typeStructuresMetadataCache[type] = structureOrStructureRef;
+                this.typesMetadataCache[type] = pointer;
+
                 this.DefineStructureType(type, line, offset, flags, structureType, this.DefineArrayMembers(type, structureType));
 
-                typeMetadata = reference;
+                typeMetadata = pointer;
             }
             else
             {
                 var structureType = new CollectionMetadata(this.indexedMetadata);
-                var reference = this.structuresByName ? (object)type.FullName : (object)structureType;
-                this.typesMetadataCache[type] = reference;
+                var structureOrStructureRef = this.structuresByName ? (object)type.FullName : (object)structureType;
+                object pointer = null;
+                if (!type.IsStructureType())
+                {
+                    pointer = DefinePointerType(structureType, line, offset);
+                }
+
+                this.typeStructuresMetadataCache[type] = structureOrStructureRef;
+                this.typesMetadataCache[type] = pointer ?? structureOrStructureRef;
+
                 this.DefineStructureType(type, line, offset, flags, structureType);
 
-                typeMetadata = reference;
+                typeMetadata = pointer ?? structureOrStructureRef;
             }
 
             return typeMetadata;
@@ -526,12 +551,12 @@
 
             var members = new CollectionMetadata(this.indexedMetadata);
 
-            var elementsCount = 0;
-            var countOffset = 3 * LlvmWriter.PointerSize + 2 * sizeof(int);
-            var dataOffset = (countOffset + LlvmWriter.PointerSize);
+            var elementsCount = 10;
+            var countOffset = 16; // 3 * pointerSize + sizeof(int)
+            var dataOffset = 20; // + pointer size
 
             members.Add(this.DefineMember("count", this.writer.ResolveType("System.Int32"), countOffset * 8, type, true, structureType));
-            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount), elementsCount));
+            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount), 0));
 
             return members;
         }
@@ -591,18 +616,22 @@
         private CollectionMetadata DefinePointerType(IType type, int line, int offset)
         {
             Debug.Assert(type != null && type.IsPointer);
+            return DefinePointerType(this.DefineType(type.ToDereferencedType()), line, offset);
+        }
 
+        private CollectionMetadata DefinePointerType(object typeDefinition, int line, int offset)
+        {
             return
                 new CollectionMetadata(this.indexedMetadata).Add(
                     string.Format(
                         @"0x0f\00\00{0}\00{1}\00{2}\00{3}",
                         line,
-                        type.GetTypeSize(true) * 8,
+                        LlvmWriter.PointerSize * 8,
                         LlvmWriter.PointerSize * 8,
                         offset),
                     null,
                     null,
-                    this.DefineType(type.ToDereferencedType()));
+                    typeDefinition);
         }
 
         private CollectionMetadata DefineCArrayType(IType type, int line, int offset, int count = 0)
