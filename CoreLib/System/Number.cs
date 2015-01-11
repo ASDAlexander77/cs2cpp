@@ -286,8 +286,8 @@ namespace System
         public const int DOUBLE_PRECISION = 15;
         public const int LARGE_BUFFER_SIZE = 600;
         public const int MIN_BUFFER_SIZE = 105;
-        public const uint SCALE_NAN = 0x80000000;
-        public const uint SCALE_INF = 0x7FFFFFFF;
+        public const int SCALE_NAN = unchecked((int)0x80000000);
+        public const int SCALE_INF = 0x7FFFFFFF;
         public const int DECIMAL_PRECISION = 29;
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
@@ -531,13 +531,13 @@ namespace System
                     //and display that.
                     DoubleToNumber(value, DOUBLE_PRECISION, ref number);
 
-                    if (number.scale == SCALE_NAN)
+                    if (number.isNan)
                     {
                         retVal = info.NaNSymbol;
                         goto lExit;
                     }
 
-                    if (number.scale == SCALE_INF)
+                    if (number.isInf)
                     {
                         retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
                         goto lExit;
@@ -580,13 +580,13 @@ namespace System
 
             DoubleToNumber(value, precision, ref number);
 
-            if (number.scale == SCALE_NAN)
+            if (number.isNan)
             {
                 retVal = info.NaNSymbol;
                 goto lExit;
             }
 
-            if (number.scale == SCALE_INF)
+            if (number.isInf)
             {
                 retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
                 goto lExit;
@@ -628,13 +628,13 @@ namespace System
                     //and display that.
                     DoubleToNumber(argsValue, FLOAT_PRECISION, ref number);
 
-                    if (number.scale == SCALE_NAN)
+                    if (number.isNan)
                     {
                         retVal = info.NaNSymbol;
                         goto lExit;
                     }
 
-                    if (number.scale == SCALE_INF)
+                    if (number.isInf)
                     {
                         retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
                         goto lExit;
@@ -677,13 +677,13 @@ namespace System
 
             DoubleToNumber(value, precision, ref number);
 
-            if (number.scale == SCALE_NAN)
+            if (number.isNan)
             {
                 retVal = info.NaNSymbol;
                 goto lExit;
             }
 
-            if (number.scale == SCALE_INF)
+            if (number.isInf)
             {
                 retVal = (number.sign > 0 ? info.NegativeInfinitySymbol : info.PositiveInfinitySymbol);
                 goto lExit;
@@ -710,7 +710,14 @@ namespace System
 
         internal unsafe static Boolean NumberBufferToDouble(byte* number, ref Double value)
         {
-            throw new NotImplementedException();
+            double d = 0;
+            NumberToDouble((NUMBER*) number, &d);
+            if ((*(ulong*)(&d) & 0x7FFFFFFFFFFFFFFFL) >= 0x7FF0000000000000L) {
+                return false;
+            }
+
+            value = d;
+            return true;
         }
 
         internal static unsafe string FormatNumberBuffer(byte* number, string format, NumberFormatInfo info, char* allDigits)
@@ -2393,10 +2400,10 @@ namespace System
             return val;
         }
 
-        private unsafe static int DigitsToInt(char* p, int count)
+        private unsafe static uint DigitsToInt(char* p, int count)
         {
             char* end = p + count;
-            int res = *p - '0';
+            uint res = (uint) (*p - '0');
             for (p = p + 1; p < end; p++)
             {
                 res = 10 * res + *p - '0';
@@ -3287,9 +3294,20 @@ namespace System
 
         private unsafe static void DoubleToNumber(double value, int precision, ref NUMBER number)
         {
-            number.precision = precision;
             fixed (char* dstPtr = number.digits)
             {
+                if ((*(ulong*)(&value) & 0x7FFFFFFFFFFFFFFFL) >= 0x7FF0000000000000L)
+                {
+                    var isNaN = Double.IsNaN(value);
+                    number.scale = isNaN ? SCALE_NAN : SCALE_INF;
+                    number.sign = Double.IsNegative(value) ? 1 : 0;
+                    number.isNan = isNaN;
+                    number.isInf = !isNaN;
+                    *dstPtr = '\0';
+                    return;
+                }
+
+                number.precision = precision;
                 char* dst = dstPtr;
                 char* src = DoubleHelper.ecvt(value, precision, ref number.scale, ref number.sign);
                 if (*src != '0')
@@ -3527,6 +3545,136 @@ namespace System
             return new String(p, 0, (int)(buffer + 100 - p));
         }
 
+        private unsafe static void NumberToDouble(NUMBER* number, double* value)
+        {
+            ulong val;
+            int exp;
+            char* src = number->digits;
+            int remaining;
+            int total;
+            int count;
+            int scale;
+            int absscale;
+            int index;
+
+            total = (int)wcslen(src);
+            remaining = total;
+
+            // skip the leading zeros
+            while (*src == '0')
+            {
+                remaining--;
+                src++;
+            }
+
+            if (remaining == 0)
+            {
+                *value = 0;
+                goto done;
+            }
+
+            count = Math.Min(remaining, 9);
+            remaining -= count;
+            val = DigitsToInt(src, count);
+
+            if (remaining > 0)
+            {
+                count = Math.Min(remaining, 9);
+                remaining -= count;
+
+                // get the denormalized power of 10
+                uint mult = (uint)(rgval64Power10[count - 1] >> (64 - rgexp64Power10[count - 1]));
+                val = ((ulong)((uint)(val)) * (ulong)((uint)(mult))) + DigitsToInt(src + 9, count);
+            }
+
+            scale = number->scale - (total - remaining);
+            absscale = Math.Abs(scale);
+            if (absscale >= 22 * 16)
+            {
+                // overflow / underflow
+                *(ulong*)value = (scale > 0) ? (ulong)0x7FF0000000000000 : 0;
+                goto done;
+            }
+
+            exp = 64;
+
+            // normalize the mantisa
+            if ((val & 0xFFFFFFFF00000000) == 0) { val <<= 32; exp -= 32; }
+            if ((val & 0xFFFF000000000000) == 0) { val <<= 16; exp -= 16; }
+            if ((val & 0xFF00000000000000) == 0) { val <<= 8; exp -= 8; }
+            if ((val & 0xF000000000000000) == 0) { val <<= 4; exp -= 4; }
+            if ((val & 0xC000000000000000) == 0) { val <<= 2; exp -= 2; }
+            if ((val & 0x8000000000000000) == 0) { val <<= 1; exp -= 1; }
+
+            index = absscale & 15;
+            if (index > 0)
+            {
+                int multexp = rgexp64Power10[index - 1];
+                // the exponents are shared between the inverted and regular table
+                exp += (scale < 0) ? (-multexp + 1) : multexp;
+
+                ulong multval = rgval64Power10[index + ((scale < 0) ? 15 : 0) - 1];
+                val = Mul64Lossy(val, multval, &exp);
+            }
+
+            index = absscale >> 4;
+            if (index > 0)
+            {
+                int multexp = rgexp64Power10By16[index - 1];
+                // the exponents are shared between the inverted and regular table
+                exp += (scale < 0) ? (-multexp + 1) : multexp;
+
+                ulong multval = rgval64Power10By16[index + ((scale < 0) ? 21 : 0) - 1];
+                val = Mul64Lossy(val, multval, &exp);
+            }
+
+            // round & scale down
+            if (((uint)val & (1 << 10)) > 0)
+            {
+                // IEEE round to even
+                ulong tmp = val + ((1 << 10) - 1) + (((uint)val >> 11) & 1);
+                if (tmp < val)
+                {
+                    // overflow
+                    tmp = (tmp >> 1) | 0x8000000000000000;
+                    exp += 1;
+                }
+                val = tmp;
+            }
+            val >>= 11;
+
+            exp += 0x3FE;
+
+            if (exp <= 0)
+            {
+                if (exp <= -52)
+                {
+                    // underflow
+                    val = 0;
+                }
+                else
+                {
+                    // denormalized
+                    val >>= (-exp + 1);
+                }
+            }
+            else
+                if (exp >= 0x7FF)
+                {
+                    // overflow
+                    val = 0x7FF0000000000000;
+                }
+                else
+                {
+                    val = ((ulong)exp << 52) + (val & 0x000FFFFFFFFFFFFF);
+                }
+
+            *(ulong*)value = val;
+
+        done:
+            if (number->sign > 0) *(ulong*)value |= 0x8000000000000000;
+        }
+
         public unsafe struct NUMBER
         {
             public const int NUMBER_MAXDIGITS = 50;
@@ -3534,6 +3682,8 @@ namespace System
             public int precision;
             public int scale;
             public int sign;
+            public bool isNan;
+            public bool isInf;
             public fixed char digits[NUMBER_MAXDIGITS + 2];
         }
 

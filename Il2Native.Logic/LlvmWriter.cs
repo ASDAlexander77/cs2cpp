@@ -627,12 +627,13 @@ namespace Il2Native.Logic
             }
 
             ReadMethodInfo(method, genericContext);
-            this.processedMethods.Add(method);
 
             if (method.IsUnmanaged && this.processedMethods.Any(m => m.Name == method.Name))
             {
                 return;
             }
+
+            this.processedMethods.Add(method);
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) &&
                          method.Name.Equals("Main");

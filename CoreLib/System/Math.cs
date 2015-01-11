@@ -78,10 +78,13 @@ namespace System
         public static extern double atan(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public static extern double atan2(double value);
+        public static extern double atan2(double y, double x);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double exp(double value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern float fabsf(float value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double fabs(double value);
@@ -109,7 +112,12 @@ namespace System
 
         public static double Atan2(double y, double x)
         {
-            return atan2(x);
+            if (Double.IsInfinity(x) && Double.IsInfinity(y))
+            {
+                return (x / y);      // create a NaN
+            }
+
+            return atan2(y, x);
         }
 
         public static Decimal Ceiling(Decimal d)
@@ -282,13 +290,44 @@ namespace System
             return log10(d);
         }
 
-        public static double Exp(double d)
+        public static double Exp(double x)
         {
-            return exp(d);
+            if (Double.IsInfinity(x))
+            {
+                if (x < 0)
+                    return (+0.0);
+                return (x);      // Must be + infinity
+            }
+
+
+            return exp(x);
         }
 
         public static double Pow(double x, double y)
         {
+            unsafe
+            {
+                double r1;
+                if (Double.IsInfinity(y))
+                {
+                    if (*(ulong*)&x == 0x3FF0000000000000)
+                    {
+                        return x;
+                    }
+
+                    if (*(ulong*)&x == 0xBFF0000000000000)
+                    {
+                        *(ulong*)&r1 = 0xFFF8000000000000;
+                        return r1;
+                    }
+                }
+                else if (Double.IsNaN(y) || Double.IsNaN(x))
+                {
+                    *(ulong*)&r1 = 0xFFF8000000000000;
+                    return r1;
+                }
+            }
+
             return pow(x, y);
         }
 
@@ -435,7 +474,7 @@ namespace System
 
         public static float Abs(float value)
         {
-            return (float)fabs(value);
+            return fabsf(value);
         }
 
         // This is special code to handle NaN (We need to make sure NaN's aren't 
