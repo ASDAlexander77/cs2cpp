@@ -56,7 +56,7 @@
 
         private int functionNumberUsedArgs = -1;
 
-        private bool structuresByName = true;
+        private bool structuresByName = false;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -224,10 +224,10 @@
         }
 
 
-        public CollectionMetadata DefineMember(string fieldName, IType fieldType, int offset, IType fieldDeclaringType, bool create = false, CollectionMetadata structureType = null, object definedMedataType = null)
+        public CollectionMetadata DefineMember(string fieldName, IType fieldType, int offset, IType fieldDeclaringType, bool create = false, CollectionMetadata structureType = null, object definedMedataType = null, int count = 1)
         {
             var line = 0;
-            var size = fieldType.GetTypeSize(true) * 8;
+            var size = fieldType.GetTypeSize(true) * 8 * count;
             var align = LlvmWriter.PointerSize * 8;
 
             // static
@@ -525,8 +525,14 @@
             Debug.Assert(type != null && type.IsArray);
 
             var members = new CollectionMetadata(this.indexedMetadata);
-            members.Add(this.DefineMember("count", this.writer.ResolveType("System.Int32"), 16, type, true, structureType));
-            members.Add(this.DefineMember("array", type, 20, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0)));
+
+            var elementsCount = 0;
+            var countOffset = 3 * LlvmWriter.PointerSize + 2 * sizeof(int);
+            var dataOffset = (countOffset + LlvmWriter.PointerSize);
+
+            members.Add(this.DefineMember("count", this.writer.ResolveType("System.Int32"), countOffset * 8, type, true, structureType));
+            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount), elementsCount));
+
             return members;
         }
 
@@ -576,7 +582,7 @@
                         type.GetTypeSize(true) * 8,
                         LlvmWriter.PointerSize * 8,
                         offset,
-                        Flags,
+                        flags,
                         typeCode),
                     null,
                     null);
@@ -614,7 +620,7 @@
                     null,
                     null,
                     this.DefineType(type.ToDereferencedType()),
-                    this.DefineSubrangeType(count),
+                    new CollectionMetadata(this.indexedMetadata).Add(this.DefineSubrangeType(count)),
                     null,
                     null,
                     null);
