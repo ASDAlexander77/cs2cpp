@@ -341,7 +341,7 @@
                 return typeMetadata;
             }
 
-            return null;
+            throw new KeyNotFoundException();
         }
 
         public object DefineType(IType type)
@@ -366,6 +366,11 @@
                 typeMetadata = this.DefinePointerType(type, line, offset);
                 this.typesMetadataCache[type] = typeMetadata;                
             }
+            else if (type.IsByRef)
+            {
+                typeMetadata = this.DefineByRefType(type, line, offset);
+                this.typesMetadataCache[type] = typeMetadata;
+            }
             else if (type.IsArray)
             {
                 var structureType = new CollectionMetadata(this.indexedMetadata);
@@ -384,7 +389,7 @@
                 var structureType = new CollectionMetadata(this.indexedMetadata);
                 var structureOrStructureRef = this.structuresByName ? (object)type.FullName : (object)structureType;
                 object pointer = null;
-                if (!type.IsStructureType())
+                if (!type.IsStructureType() && !type.IsEnum)
                 {
                     pointer = DefinePointerType(structureType, line, offset);
                 }
@@ -617,6 +622,12 @@
         {
             Debug.Assert(type != null && type.IsPointer);
             return DefinePointerType(this.DefineType(type.ToDereferencedType()), line, offset);
+        }
+
+        private CollectionMetadata DefineByRefType(IType type, int line, int offset)
+        {
+            Debug.Assert(type != null && type.IsByRef);
+            return DefinePointerType(this.DefineType(type.GetElementType()), line, offset);
         }
 
         private CollectionMetadata DefinePointerType(object typeDefinition, int line, int offset)

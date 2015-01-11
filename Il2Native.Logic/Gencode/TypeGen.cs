@@ -282,6 +282,11 @@ namespace Il2Native.Logic.Gencode
             var memberLocationInfo = membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
             if (memberLocationInfo == null)
             {
+                if (field.Name == "Value" && field.DeclaringType.ToNormal().IsPrimitiveTypeOrEnum())
+                {
+                    return LlvmWriter.PointerSize;
+                }
+
                 throw new MissingMemberException(field.FullName);
             }
 
