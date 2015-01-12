@@ -90,10 +90,16 @@ namespace System
         public static extern double fabs(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double fmod(double value1, double value2);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern double round(double value);
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern unsafe double modf(double p, double* value);
+
+        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
+        public static extern double copysign(double value1, double value2);
 
         public static double Acos(double d)
         {
@@ -200,9 +206,31 @@ namespace System
             return tanh(value);
         }
 
-        public static double Round(double a)
+        public static double Round(double d)
         {
-            return round(a);
+            //return round(a);
+
+            double tempVal;
+            double flrTempVal;
+            // If the number has no fractional part do nothing
+            // This shortcut is necessary to workaround precision loss in borderline cases on some platforms
+            if (d == (long)d)
+                return d;
+            tempVal = (d + 0.5);
+            //We had a number that was equally close to 2 integers. 
+            //We need to return the even one.
+            flrTempVal = floor(tempVal);
+            if (flrTempVal == tempVal)
+            {
+                if (0 != fmod(tempVal, 2.0))
+                {
+                    flrTempVal -= 1.0;
+                }
+            }
+
+            flrTempVal = copysign(flrTempVal, d);
+            return flrTempVal;
+
         }
 
         public static double Round(double value, int digits)
