@@ -9,7 +9,7 @@ namespace System
     using Globalization;
 
     [Serializable]
-    public struct Char
+    public struct Char : IConvertible
     {
         internal const int UNICODE_PLANE00_END = 0x00ffff;
         // The starting codepoint for Unicode plane 1.  Plane 1 contains 0x010000 ~ 0x01ffff.
@@ -47,7 +47,47 @@ namespace System
 
         public override String ToString()
         {
-            return new String(m_value, 1);
+            return Char.ToString(m_value);
+        }
+
+        public String ToString(IFormatProvider provider)
+        {
+            return Char.ToString(m_value);
+        }
+
+        public static String ToString(char c)
+        {
+            return new String(c, 1);
+        }
+
+        public static char Parse(String s)
+        {
+            if (s == null)
+            {
+                throw new ArgumentNullException("s");
+            }
+
+            if (s.Length != 1)
+            {
+                throw new FormatException(Environment.GetResourceString("Format_NeedSingleChar"));
+            }
+
+            return s[0];
+        }
+
+        public static bool TryParse(String s, out Char result)
+        {
+            result = '\0';
+            if (s == null)
+            {
+                return false;
+            }
+            if (s.Length != 1)
+            {
+                return false;
+            }
+            result = s[0];
+            return true;
         }
 
         public char ToLower()
@@ -211,6 +251,104 @@ namespace System
         {
             return ((highSurrogate >= HIGH_SURROGATE_START && highSurrogate <= HIGH_SURROGATE_END) &&
                     (lowSurrogate >= LOW_SURROGATE_START && lowSurrogate <= LOW_SURROGATE_END));
+        }
+
+        //
+        // IConvertible implementation
+        //    
+        public TypeCode GetTypeCode()
+        {
+            return TypeCode.Char;
+        }
+
+        /// <internalonly/>
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Char", "Boolean"));
+        }
+
+        /// <internalonly/>
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            return m_value;
+        }
+
+        /// <internalonly/>
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(m_value);
+        }
+
+        /// <internalonly/>
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(m_value);
+        }
+
+        /// <internalonly/>
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(m_value);
+        }
+
+        /// <internalonly/>
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(m_value);
+        }
+
+        /// <internalonly/>
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return Convert.ToInt32(m_value);
+        }
+
+        /// <internalonly/>
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(m_value);
+        }
+
+        /// <internalonly/>
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(m_value);
+        }
+
+        /// <internalonly/>
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(m_value);
+        }
+
+        /// <internalonly/>
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Char", "Single"));
+        }
+
+        /// <internalonly/>
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Char", "Double"));
+        }
+
+        /// <internalonly/>
+        Decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Char", "Decimal"));
+        }
+
+        /// <internalonly/>
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Char", "DateTime"));
+        }
+
+        /// <internalonly/>
+        Object IConvertible.ToType(Type type, IFormatProvider provider)
+        {
+            return Convert.DefaultToType((IConvertible)this, type, provider);
         }
     }
 }

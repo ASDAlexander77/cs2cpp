@@ -6,7 +6,7 @@ namespace System.Globalization
 {
     using System;
     using System.Collections;
-    public sealed class DateTimeFormatInfo /*: ICloneable, IFormatProvider*/
+    public sealed class DateTimeFormatInfo : /*ICloneable,*/ IFormatProvider
     {
         internal String amDesignator = null;
         internal String pmDesignator = null;
@@ -220,6 +220,58 @@ namespace System.Globalization
             get
             {
                 return m_cultureInfo.EnsureStringArrayResource(ref monthNames, System.Globalization.Resources.CultureInfo.StringResources.MonthNames);
+            }
+        }
+
+        public static DateTimeFormatInfo GetInstance(IFormatProvider provider)
+        {
+            // Fast case for a regular CultureInfo
+            DateTimeFormatInfo info;
+            CultureInfo cultureProvider = provider as CultureInfo;
+            if (cultureProvider != null && !cultureProvider.m_isInherited)
+            {
+                return cultureProvider.DateTimeFormat;
+            }
+            // Fast case for a DTFI;
+            info = provider as DateTimeFormatInfo;
+            if (info != null)
+            {
+                return info;
+            }
+            // Wasn't cultureInfo or DTFI, do it the slower way
+            if (provider != null)
+            {
+                info = provider.GetFormat(typeof(DateTimeFormatInfo)) as DateTimeFormatInfo;
+                if (info != null)
+                {
+                    return info;
+                }
+            }
+            // Couldn't get anything, just use currentInfo as fallback
+            return CurrentInfo;
+        }
+
+        public Object GetFormat(Type formatType)
+        {
+            return (formatType == typeof(DateTimeFormatInfo) ? this : null);
+        }
+
+        internal const DateTimeStyles InvalidDateTimeStyles = ~(DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowTrailingWhite
+                                                               | DateTimeStyles.AllowInnerWhite | DateTimeStyles.NoCurrentDateDefault
+                                                               | DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeLocal
+                                                               | DateTimeStyles.AssumeUniversal | DateTimeStyles.RoundtripKind);
+
+        internal static void ValidateStyles(DateTimeStyles style, String parameterName) {
+            if ((style & InvalidDateTimeStyles) != 0) {
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidDateTimeStyles"), parameterName);
+            }
+            if (((style & (DateTimeStyles.AssumeLocal)) != 0) && ((style & (DateTimeStyles.AssumeUniversal)) != 0)) {
+                throw new ArgumentException(Environment.GetResourceString("Argument_ConflictingDateTimeStyles"), parameterName);
+            }
+
+            if (((style & DateTimeStyles.RoundtripKind) != 0)
+                && ((style & (DateTimeStyles.AssumeLocal | DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal)) != 0)) {
+                throw new ArgumentException(Environment.GetResourceString("Argument_ConflictingDateTimeRoundtripStyles"), parameterName);
             }
         }
     }

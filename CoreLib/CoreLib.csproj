@@ -93,6 +93,7 @@
     <Compile Include="System\Diagnostics\Stopwatch.cs" />
     <Compile Include="System\DivideByZeroException.cs" />
     <Compile Include="System\Double.cs" />
+    <Compile Include="System\Empty.cs" />
     <Compile Include="System\Enum.cs" />
     <Compile Include="System\Environment.cs" />
     <Compile Include="System\EventArgs.cs" />
@@ -102,12 +103,15 @@
     <Compile Include="System\FormatException.cs" />
     <Compile Include="System\GC.cs" />
     <Compile Include="System\Globalization\CultureData.cs" />
+    <Compile Include="System\Globalization\DateTimeParse.cs" />
+    <Compile Include="System\Globalization\DateTimeStyles.cs" />
     <Compile Include="System\Globalization\DigitShapes.cs" />
     <Compile Include="System\Globalization\NumberStyles.cs" />
     <Compile Include="System\Guid.cs" />
     <Compile Include="System\IAsyncResult.cs" />
     <Compile Include="System\ICloneable.cs" />
     <Compile Include="System\IComparable.cs" />
+    <Compile Include="System\IConvertible.cs" />
     <Compile Include="System\ICustomFormatter.cs" />
     <Compile Include="System\IDisposable.cs" />
     <Compile Include="System\IFormatProvider.cs" />
@@ -159,6 +163,7 @@
     <Compile Include="System\OutOfMemoryException.cs" />
     <Compile Include="System\OverflowException.cs" />
     <Compile Include="System\ParamArrayAttribute.cs" />
+    <Compile Include="System\ParseNumbers.cs" />
     <Compile Include="System\Random.cs" />
     <Compile Include="System\RuntimeArgumentHandle.cs" />
     <Compile Include="System\RuntimeFieldHandle.cs" />

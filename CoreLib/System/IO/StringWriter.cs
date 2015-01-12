@@ -19,16 +19,30 @@ namespace System.IO
         private bool _isOpen;
 
         // Constructs a new StringWriter. A new StringBuilder is automatically
+        // created and associated with the new StringWriter.
         public StringWriter()
-            : this(new StringBuilder())
+            : this(new StringBuilder(), CultureInfo.CurrentCulture)
         {
         }
 
+        public StringWriter(IFormatProvider formatProvider)
+            : this(new StringBuilder(), formatProvider)
+        {
+        }
+
+        // Constructs a new StringWriter that writes to the given StringBuilder.
+        // 
         public StringWriter(StringBuilder sb)
-            : base()
+            : this(sb, CultureInfo.CurrentCulture)
+        {
+        }
+
+        public StringWriter(StringBuilder sb, IFormatProvider formatProvider)
+            : base(formatProvider)
         {
             if (sb == null)
-                throw new ArgumentNullException("sb", "Buffer");
+                throw new ArgumentNullException("sb", Environment.GetResourceString("ArgumentNull_Buffer"));
+            
             _sb = sb;
             _isOpen = true;
         }
@@ -85,13 +99,14 @@ namespace System.IO
         public override void Write(char[] buffer, int index, int count)
         {
             if (buffer == null)
-                throw new ArgumentNullException("buffer", "Buffer");
+                throw new ArgumentNullException("buffer", Environment.GetResourceString("ArgumentNull_Buffer"));
             if (index < 0)
-                throw new ArgumentOutOfRangeException("index", "NeedNonNegNum");
+                throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_NeedNonNegNum"));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "NeedNonNegNum");
+                throw new ArgumentOutOfRangeException("count", Environment.GetResourceString("ArgumentOutOfRange_NeedNonNegNum"));
             if (buffer.Length - index < count)
-                throw new ArgumentException("InvalidOffLen");
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidOffLen"));
+            
 
             if (!_isOpen)
                 __Error.WriterClosed();

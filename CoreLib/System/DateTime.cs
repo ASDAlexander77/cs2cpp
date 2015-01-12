@@ -54,7 +54,7 @@ namespace System
      *
      */
     [Serializable()]
-    public struct DateTime
+    public struct DateTime : IConvertible
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern unsafe int gettimeofday(int* time, int* timezome);
@@ -432,6 +432,55 @@ namespace System
             }
         }
 
+        // Constructs a DateTime from a string. The string must specify a
+        // date and optionally a time in a culture-specific or universal format.
+        // Leading and trailing whitespace characters are allowed.
+        // 
+        public static DateTime Parse(String s)
+        {
+            return (DateTimeParse.Parse(s, DateTimeFormatInfo.CurrentInfo, DateTimeStyles.None));
+        }
+
+        // Constructs a DateTime from a string. The string must specify a
+        // date and optionally a time in a culture-specific or universal format.
+        // Leading and trailing whitespace characters are allowed.
+        // 
+        public static DateTime Parse(String s, IFormatProvider provider)
+        {
+            return (DateTimeParse.Parse(s, DateTimeFormatInfo.GetInstance(provider), DateTimeStyles.None));
+        }
+
+        public static DateTime Parse(String s, IFormatProvider provider, DateTimeStyles styles)
+        {
+            DateTimeFormatInfo.ValidateStyles(styles, "styles");
+            return (DateTimeParse.Parse(s, DateTimeFormatInfo.GetInstance(provider), styles));
+        }
+
+        // Constructs a DateTime from a string. The string must specify a
+        // date and optionally a time in a culture-specific or universal format.
+        // Leading and trailing whitespace characters are allowed.
+        // 
+        public static DateTime ParseExact(String s, String format, IFormatProvider provider)
+        {
+            return (DateTimeParse.ParseExact(s, format, DateTimeFormatInfo.GetInstance(provider), DateTimeStyles.None));
+        }
+
+        // Constructs a DateTime from a string. The string must specify a
+        // date and optionally a time in a culture-specific or universal format.
+        // Leading and trailing whitespace characters are allowed.
+        // 
+        public static DateTime ParseExact(String s, String format, IFormatProvider provider, DateTimeStyles style)
+        {
+            DateTimeFormatInfo.ValidateStyles(style, "style");
+            return (DateTimeParse.ParseExact(s, format, DateTimeFormatInfo.GetInstance(provider), style));
+        }
+
+        public static DateTime ParseExact(String s, String[] formats, IFormatProvider provider, DateTimeStyles style)
+        {
+            DateTimeFormatInfo.ValidateStyles(style, "style");
+            return DateTimeParse.ParseExactMultiple(s, formats, DateTimeFormatInfo.GetInstance(provider), style);
+        }
+
         public TimeSpan Subtract(DateTime val)
         {
             return new TimeSpan((long)(m_ticks & TickMask) - (long)(val.m_ticks & TickMask));
@@ -455,6 +504,15 @@ namespace System
             return DateTimeFormat.Format(this, format, DateTimeFormatInfo.CurrentInfo);
         }
 
+        public String ToString(IFormatProvider provider)
+        {
+            return DateTimeFormat.Format(this, null, DateTimeFormatInfo.GetInstance(provider));
+        }
+
+        public String ToString(String format, IFormatProvider provider)
+        {
+            return DateTimeFormat.Format(this, format, DateTimeFormatInfo.GetInstance(provider));
+        }
 
         public extern DateTime ToUniversalTime();
 
@@ -548,6 +606,101 @@ namespace System
             if (part == DatePartMonth) return m;
             // Return 1-based day-of-month
             return n - days[m - 1] + 1;
+        }
+
+        public TypeCode GetTypeCode()
+        {
+            return TypeCode.DateTime;
+        }
+
+
+        /// <internalonly/>
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Boolean"));
+        }
+
+        /// <internalonly/>
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Char"));
+        }
+
+        /// <internalonly/>
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "SByte"));
+        }
+
+        /// <internalonly/>
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Byte"));
+        }
+
+        /// <internalonly/>
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Int16"));
+        }
+
+        /// <internalonly/>
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "UInt16"));
+        }
+
+        /// <internalonly/>
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Int32"));
+        }
+
+        /// <internalonly/>
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "UInt32"));
+        }
+
+        /// <internalonly/>
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Int64"));
+        }
+
+        /// <internalonly/>
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "UInt64"));
+        }
+
+        /// <internalonly/>
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Single"));
+        }
+
+        /// <internalonly/>
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Double"));
+        }
+
+        /// <internalonly/>
+        Decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "DateTime", "Decimal"));
+        }
+
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            return this;
+        }
+
+        /// <internalonly/>
+        Object IConvertible.ToType(Type type, IFormatProvider provider)
+        {
+            return Convert.DefaultToType((IConvertible)this, type, provider);
         }
     }
 }

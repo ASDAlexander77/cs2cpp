@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Globalization;
 
 namespace System.IO
@@ -39,6 +40,22 @@ namespace System.IO
         protected TextWriter()
         {
             InternalFormatProvider = null;  // Ask for CurrentCulture all the time.
+        }
+
+        protected TextWriter(IFormatProvider formatProvider)
+        {
+            InternalFormatProvider = formatProvider;
+        }
+
+        public virtual IFormatProvider FormatProvider
+        {
+            get
+            {
+                if (InternalFormatProvider == null)
+                    return CultureInfo.CurrentCulture;
+                else
+                    return InternalFormatProvider;
+            }
         }
 
         // Closes this TextWriter and releases any system resources associated with the
@@ -95,7 +112,7 @@ namespace System.IO
                 CoreNewLine = value.ToCharArray();
             }
         }
-
+        
         public static TextWriter Synchronized(TextWriter writer)
         {
             if (writer == null)
@@ -131,13 +148,14 @@ namespace System.IO
         public virtual void Write(char[] buffer, int index, int count)
         {
             if (buffer == null)
-                throw new ArgumentNullException("buffer", "Buffer");
+                throw new ArgumentNullException("buffer", Environment.GetResourceString("ArgumentNull_Buffer"));
             if (index < 0)
-                throw new ArgumentOutOfRangeException("index", "NeedNonNegNum");
+                throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_NeedNonNegNum"));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count", "NeedNonNegNum");
+                throw new ArgumentOutOfRangeException("count", Environment.GetResourceString("ArgumentOutOfRange_NeedNonNegNum"));
             if (buffer.Length - index < count)
-                throw new ArgumentException("InvalidOffLen");
+                throw new ArgumentException(Environment.GetResourceString("Argument_InvalidOffLen"));
+            
 
             for (int i = 0; i < count; i++) Write(buffer[index + i]);
         }
@@ -147,7 +165,7 @@ namespace System.IO
         //
         public virtual void Write(bool value)
         {
-            Write(value ? Boolean.TrueString : Boolean.FalseString);
+            Write(value ? Boolean.TrueLiteral : Boolean.FalseLiteral);
         }
 
         // Writes the text representation of an integer to the text stream. The
@@ -156,7 +174,7 @@ namespace System.IO
         //
         public virtual void Write(int value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes the text representation of an integer to the text stream. The
@@ -166,7 +184,7 @@ namespace System.IO
         [CLSCompliant(false)]
         public virtual void Write(uint value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes the text representation of a long to the text stream. The
@@ -175,7 +193,7 @@ namespace System.IO
         //
         public virtual void Write(long value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes the text representation of an unsigned long to the text 
@@ -185,7 +203,7 @@ namespace System.IO
         [CLSCompliant(false)]
         public virtual void Write(ulong value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes the text representation of a float to the text stream. The
@@ -194,7 +212,7 @@ namespace System.IO
         //
         public virtual void Write(float value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes the text representation of a double to the text stream. The
@@ -203,12 +221,12 @@ namespace System.IO
         //
         public virtual void Write(double value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         public virtual void Write(Decimal value)
         {
-            Write(value.ToString());
+            Write(value.ToString(FormatProvider));
         }
 
         // Writes a string to the text stream. If the given string is null, nothing
@@ -231,7 +249,7 @@ namespace System.IO
             {
                 IFormattable f = value as IFormattable;
                 if (f != null)
-                    Write(f.ToString());
+                    Write(f.ToString(null, FormatProvider));
                 else
                     Write(value.ToString());
             }
@@ -242,7 +260,7 @@ namespace System.IO
         // 
         public virtual void Write(String format, Object arg0)
         {
-            Write(String.Format(format, arg0));
+            Write(String.Format(FormatProvider, format, arg0));
         }
 
         // Writes out a formatted string.  Uses the same semantics as
@@ -250,7 +268,7 @@ namespace System.IO
         // 
         public virtual void Write(String format, Object arg0, Object arg1)
         {
-            Write(String.Format(format, arg0, arg1));
+            Write(String.Format(FormatProvider, format, arg0, arg1));
         }
 
         // Writes out a formatted string.  Uses the same semantics as
@@ -258,7 +276,7 @@ namespace System.IO
         // 
         public virtual void Write(String format, Object arg0, Object arg1, Object arg2)
         {
-            Write(String.Format(format, arg0, arg1, arg2));
+            Write(String.Format(FormatProvider, format, arg0, arg1, arg2));
         }
 
         // Writes out a formatted string.  Uses the same semantics as
@@ -266,7 +284,7 @@ namespace System.IO
         // 
         public virtual void Write(String format, params Object[] arg)
         {
-            Write(String.Format(format, arg));
+            Write(String.Format(FormatProvider, format, arg));
         }
 
 
@@ -432,7 +450,7 @@ namespace System.IO
                 // This makes calls to WriteLine(Object) atomic.
                 IFormattable f = value as IFormattable;
                 if (f != null)
-                    WriteLine(f.ToString());
+                    WriteLine(f.ToString(null, FormatProvider));
                 else
                     WriteLine(value.ToString());
             }
@@ -443,7 +461,7 @@ namespace System.IO
         // 
         public virtual void WriteLine(String format, Object arg0)
         {
-            WriteLine(String.Format(format, arg0));
+            WriteLine(String.Format(FormatProvider, format, arg0));
         }
 
         // Writes out a formatted string and a new line.  Uses the same 
@@ -451,7 +469,7 @@ namespace System.IO
         // 
         public virtual void WriteLine(String format, Object arg0, Object arg1)
         {
-            WriteLine(String.Format(format, arg0, arg1));
+            WriteLine(String.Format(FormatProvider, format, arg0, arg1));
         }
 
         // Writes out a formatted string and a new line.  Uses the same 
@@ -459,7 +477,7 @@ namespace System.IO
         // 
         public virtual void WriteLine(String format, Object arg0, Object arg1, Object arg2)
         {
-            WriteLine(String.Format(format, arg0, arg1, arg2));
+            WriteLine(String.Format(FormatProvider, format, arg0, arg1, arg2));
         }
 
         // Writes out a formatted string and a new line.  Uses the same 
@@ -467,14 +485,14 @@ namespace System.IO
         // 
         public virtual void WriteLine(String format, params Object[] arg)
         {
-            WriteLine(String.Format(format, arg));
+            WriteLine(String.Format(FormatProvider, format, arg));
         }
 
         [Serializable]
         private sealed class NullTextWriter : TextWriter
         {
             internal NullTextWriter()
-                : base()
+                : base(CultureInfo.InvariantCulture)
             {
             }
 
@@ -512,7 +530,7 @@ namespace System.IO
             private TextWriter _out;
 
             internal SyncTextWriter(TextWriter t)
-                : base()
+                : base(t.FormatProvider)
             {
                 _out = t;
             }
@@ -520,6 +538,11 @@ namespace System.IO
             public override Encoding Encoding
             {
                 get { return _out.Encoding; }
+            }
+
+            public override IFormatProvider FormatProvider
+            {
+                get { return _out.FormatProvider; }
             }
 
             public override String NewLine

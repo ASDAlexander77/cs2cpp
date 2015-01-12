@@ -3,7 +3,7 @@ namespace System
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct Int32
+    public struct Int32 : IConvertible
     {
         internal int m_value;
 
@@ -128,6 +128,103 @@ namespace System
         {
             NumberFormatInfo.ValidateParseStyleInteger(style);
             return Number.TryParseInt32(s, style, NumberFormatInfo.GetInstance(provider), out result);
+        }
+
+        //
+        // IConvertible implementation
+        // 
+
+        public TypeCode GetTypeCode()
+        {
+            return TypeCode.Int32;
+        }
+
+        /// <internalonly/>
+        bool IConvertible.ToBoolean(IFormatProvider provider)
+        {
+            return Convert.ToBoolean(m_value);
+        }
+
+        /// <internalonly/>
+        char IConvertible.ToChar(IFormatProvider provider)
+        {
+            return Convert.ToChar(m_value);
+        }
+
+        /// <internalonly/>
+        sbyte IConvertible.ToSByte(IFormatProvider provider)
+        {
+            return Convert.ToSByte(m_value);
+        }
+
+        /// <internalonly/>
+        byte IConvertible.ToByte(IFormatProvider provider)
+        {
+            return Convert.ToByte(m_value);
+        }
+
+        /// <internalonly/>
+        short IConvertible.ToInt16(IFormatProvider provider)
+        {
+            return Convert.ToInt16(m_value);
+        }
+
+        /// <internalonly/>
+        ushort IConvertible.ToUInt16(IFormatProvider provider)
+        {
+            return Convert.ToUInt16(m_value);
+        }
+
+        int IConvertible.ToInt32(IFormatProvider provider)
+        {
+            return m_value;
+        }
+
+        /// <internalonly/>
+        uint IConvertible.ToUInt32(IFormatProvider provider)
+        {
+            return Convert.ToUInt32(m_value);
+        }
+
+        long IConvertible.ToInt64(IFormatProvider provider)
+        {
+            return Convert.ToInt64(m_value);
+        }
+
+        /// <internalonly/>
+        ulong IConvertible.ToUInt64(IFormatProvider provider)
+        {
+            return Convert.ToUInt64(m_value);
+        }
+
+        /// <internalonly/>
+        float IConvertible.ToSingle(IFormatProvider provider)
+        {
+            return Convert.ToSingle(m_value);
+        }
+
+        /// <internalonly/>
+        double IConvertible.ToDouble(IFormatProvider provider)
+        {
+            return Convert.ToDouble(m_value);
+        }
+
+        /// <internalonly/>
+        Decimal IConvertible.ToDecimal(IFormatProvider provider)
+        {
+            return Convert.ToDecimal(m_value);
+        }
+
+        /// <internalonly/>
+        DateTime IConvertible.ToDateTime(IFormatProvider provider)
+        {
+            throw new InvalidCastException(Environment.GetResourceString("InvalidCast_FromTo", "Int32", "DateTime"));
+        }
+
+        /// <internalonly/>
+        Object IConvertible.ToType(Type type, IFormatProvider provider)
+        {
+            return Convert.DefaultToType((IConvertible)this, type, provider);
         }
     }
 }

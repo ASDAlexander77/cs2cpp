@@ -48,6 +48,11 @@
             return name + Space + value;
         }
 
+        public static string GetResourceString(string name, int value)
+        {
+            return name + Space + value;
+        }
+
         public static string GetResourceString(string name, string value, string value2)
         {
             return name + Space + value + Space + value2;
