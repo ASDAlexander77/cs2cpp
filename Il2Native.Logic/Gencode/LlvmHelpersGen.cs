@@ -306,6 +306,12 @@ namespace Il2Native.Logic.Gencode
                         return;
                     }
 
+                    if (intSize == opCode.OpCodeOperands[0].Result.Type.IntTypeBitSize())
+                    {
+                        opCode.Result = opCode.OpCodeOperands[0].Result;
+                        return;
+                    }
+
                     llvmWriter.UnaryOper(writer, opCode, intConvert, resultType: toType, options: LlvmWriter.OperandOptions.GenerateResult);
                 }
 

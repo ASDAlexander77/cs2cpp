@@ -90,7 +90,7 @@ namespace System
         
         public MethodInfo GetMethod(String name, Type[] types)
         {
-            throw new NotImplementedException();
+            return new RuntimeMethodInfo();
         }
         
         public MethodInfo GetMethod(String name, BindingFlags bindingAttr)
