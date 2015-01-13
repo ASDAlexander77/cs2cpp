@@ -575,9 +575,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo);
-            llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.DeclaringType);
-
             IType thisType;
             bool hasThisArgument;
             OpCodePart opCodeFirstOperand;
@@ -597,6 +594,9 @@ namespace Il2Native.Logic.Gencode
                 out isIndirectMethodCall,
                 out ownerOfExplicitInterface,
                 out requiredType);
+
+            llvmWriter.CheckIfMethodExternalDeclarationIsRequired(methodInfo, ownerOfExplicitInterface);
+            llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.DeclaringType);
 
             if (hasThisArgument)
             {

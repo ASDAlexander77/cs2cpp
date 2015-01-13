@@ -136,7 +136,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IMethod> methodDeclRequired = new HashSet<IMethod>();
+        private readonly HashSet<MethodKey> methodDeclRequired = new HashSet<MethodKey>();
 
         private readonly IDictionary<int, IMethod> methodsByToken = new SortedDictionary<int, IMethod>();
 
@@ -1835,14 +1835,14 @@ namespace Il2Native.Logic
                             this.Output.Write("bitcast (");
                             this.WriteMethodPointerType(this.Output, opCodeMethodInfoPart.Operand);
                             this.Output.Write(" ");
-                            this.Output.Write(this.GetFullMethodName(opCodeMethodInfoPart.Operand));
+                            this.Output.Write(opCodeMethodInfoPart.Operand.GetFullMethodName());
                             this.Output.Write(" to i8*)");
                         });
                     var value = new FullyDefinedReference(convertString, ResolveType("System.Byte").ToPointerType());
 
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
-                    this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
+                    this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
                     break;
 
@@ -1908,7 +1908,7 @@ namespace Il2Native.Logic
                     voidPtrType = ResolveType("System.Void").ToPointerType();
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
 
-                    this.CheckIfExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
+                    this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
                     this.WriteDbgLine(opCode);
 
@@ -2696,7 +2696,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="methodBase">
         /// </param>
-        public void CheckIfExternalDeclarationIsRequired(IMethod methodBase)
+        public void CheckIfMethodExternalDeclarationIsRequired(IMethod methodBase, IType ownerOfExplicitInterface = null)
         {
             if (methodBase.Name.StartsWith("%"))
             {
@@ -2705,7 +2705,7 @@ namespace Il2Native.Logic
 
             if (methodBase.AssemblyQualifiedName != AssemblyQualifiedName)
             {
-                this.methodDeclRequired.Add(methodBase);
+                this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
             }
         }
 
@@ -3856,7 +3856,7 @@ namespace Il2Native.Logic
             IMethod methodBase,
             IType ownerOfExplicitInterface = null)
         {
-            writer.Write(this.GetFullMethodName(methodBase, ownerOfExplicitInterface));
+            writer.Write(methodBase.GetFullMethodName(ownerOfExplicitInterface));
         }
 
         /// <summary>
@@ -5105,45 +5105,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="methodBase">
-        /// </param>
-        /// <param name="ownerOfExplicitInterface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private string GetFullMethodName(IMethod methodBase, IType ownerOfExplicitInterface = null)
-        {
-            if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
-            {
-                return string.Concat(
-                    '@',
-                    methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
-            }
-
-            if (methodBase.ToString().StartsWith("%"))
-            {
-                return methodBase.ToString();
-            }
-
-            var sb = new StringBuilder();
-            sb.Append("@\"");
-
-            if (ownerOfExplicitInterface != null)
-            {
-                sb.Append(methodBase.ToString(ownerOfExplicitInterface));
-            }
-            else
-            {
-                sb.Append(methodBase);
-            }
-
-            sb.Append('"');
-
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// </summary>
         /// <returns>
         /// </returns>
         private string GetGlobalConstructorsFunctionName()
@@ -5957,7 +5918,7 @@ namespace Il2Native.Logic
 
             foreach (var staticCtor in StaticConstructors)
             {
-                this.Output.WriteLine("call void {0}()", this.GetFullMethodName(staticCtor));
+                this.Output.WriteLine("call void {0}()", staticCtor.GetFullMethodName());
             }
 
             this.Output.WriteLine("ret void");
@@ -6050,7 +6011,7 @@ namespace Il2Native.Logic
 
                     foreach (var methodInVirtualTable in virtualTable)
                     {
-                        this.CheckIfExternalDeclarationIsRequired(methodInVirtualTable.Value);
+                        this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTable.Value);
                     }
 
                     index++;
@@ -6271,7 +6232,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine("%1 = call i32 @\"{0}\"()", method);
                 this.Output.WriteLine("ret i32 %1");
 
-                CheckIfExternalDeclarationIsRequired(new SynthesizedMethodStringAdapter("get_ExitCode", "System.Environment", this.ResolveType("System.Int32")));
+                this.CheckIfMethodExternalDeclarationIsRequired(new SynthesizedMethodStringAdapter("get_ExitCode", "System.Environment", this.ResolveType("System.Int32")));
             }
 
             this.Output.Indent--;
@@ -6531,8 +6492,10 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
                 foreach (
-                    var externalMethodDecl in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m)))
+                    var methodKey in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m.Method)))
                 {
+                    var externalMethodDecl = methodKey.Method;
+
                     this.Output.Write("declare ");
 
                     var ctor = externalMethodDecl as IConstructor;
@@ -6556,8 +6519,8 @@ namespace Il2Native.Logic
                     {
                         ReadMethodInfo(method, null);
                         this.WriteMethodReturnType(this.Output, method);
-                        this.WriteMethodDefinitionName(this.Output, method);
-                        this.WriteMethodParamsDef(this.Output, method, HasMethodThis, ThisType, method.ReturnType);
+                        this.WriteMethodDefinitionName(this.Output, method, methodKey.OwnerOfExplicitInterface);
+                        this.WriteMethodParamsDef(this.Output, method, HasMethodThis, methodKey.OwnerOfExplicitInterface ?? ThisType, method.ReturnType);
                         this.Output.WriteLine(string.Empty);
                     }
                 }

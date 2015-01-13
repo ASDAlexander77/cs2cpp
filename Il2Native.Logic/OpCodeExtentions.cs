@@ -213,6 +213,46 @@ namespace Il2Native.Logic
             return sb.ToString();
         }
 
+
+        /// <summary>
+        /// </summary>
+        /// <param name="methodBase">
+        /// </param>
+        /// <param name="ownerOfExplicitInterface">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetFullMethodName(this IMethod methodBase, IType ownerOfExplicitInterface = null)
+        {
+            if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
+            {
+                return string.Concat(
+                    '@',
+                    methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
+            }
+
+            if (methodBase.ToString().StartsWith("%"))
+            {
+                return methodBase.ToString();
+            }
+
+            var sb = new StringBuilder();
+            sb.Append("@\"");
+
+            if (ownerOfExplicitInterface != null)
+            {
+                sb.Append(methodBase.ToString(ownerOfExplicitInterface));
+            }
+            else
+            {
+                sb.Append(methodBase);
+            }
+
+            sb.Append('"');
+
+            return sb.ToString();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="thisTypeString">

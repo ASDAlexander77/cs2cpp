@@ -395,7 +395,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Write("* ");
                     llvmWriter.WriteMethodDefinitionName(writer, method);
 
-                    llvmWriter.CheckIfExternalDeclarationIsRequired(method);
+                    llvmWriter.CheckIfMethodExternalDeclarationIsRequired(method);
                 }
 
                 writer.Write(" to i8*)");

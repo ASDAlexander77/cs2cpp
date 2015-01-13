@@ -446,7 +446,7 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            return this.FullName.CompareTo(name.FullName);
+            return this.ToString().CompareTo(name.ToString());
         }
 
         /// <summary>
@@ -643,6 +643,11 @@ namespace PEAssemblyReader
         /// </returns>
         public string ToString(IType ownerOfExplicitInterface)
         {
+            if (ownerOfExplicitInterface == null)
+            {
+                return this.ToString();
+            }
+
             var result = new StringBuilder();
 
             // write return type

@@ -374,6 +374,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </exception>
         public string ToString(IType ownerOfExplicitInterface)
         {
+            if (ownerOfExplicitInterface == null)
+            {
+                return ToString();
+            }
+
             throw new NotImplementedException();
         }
 
