@@ -54,7 +54,7 @@ namespace System
      *
      */
     [Serializable()]
-    public struct DateTime : IConvertible
+    public struct DateTime : IFormattable, IConvertible
     {
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
         public static extern unsafe int gettimeofday(int* time, int* timezome);

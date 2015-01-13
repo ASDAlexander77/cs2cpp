@@ -150,7 +150,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IMethod> processedMethods = new HashSet<IMethod>();
+        private readonly HashSet<MethodKey> processedMethods = new HashSet<MethodKey>();
 
         /// <summary>
         /// </summary>
@@ -441,7 +441,7 @@ namespace Il2Native.Logic
             Debug.Assert(!ctor.IsGenericMethodDefinition);
             Debug.Assert(!ctor.DeclaringType.IsGenericTypeDefinition);
 
-            this.processedMethods.Add(ctor);
+            this.processedMethods.Add(new MethodKey(ctor, null));
             if (ctor.Token.HasValue)
             {
                 this.methodsByToken[ctor.Token.Value] = ctor;
@@ -628,12 +628,12 @@ namespace Il2Native.Logic
 
             ReadMethodInfo(method, genericContext);
 
-            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Name == method.Name))
+            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Method.Name == method.Name))
             {
                 return;
             }
 
-            this.processedMethods.Add(method);
+            this.processedMethods.Add(new MethodKey(method, null));
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) &&
                          method.Name.Equals("Main");
@@ -6201,6 +6201,16 @@ namespace Il2Native.Logic
 
             var result = hasParameters ? this.WriteLoadingArgumentsForMain(this.MainMethod, null) : null;
 
+            if (MainMethod.ReturnType.IsVoid())
+            {
+                var method = "Void System.Environment.set_ExitCode(Int32)";
+                this.Output.WriteLine("call void @\"{0}\"(i32 0)", method);
+
+                this.CheckIfMethodExternalDeclarationIsRequired(
+                    new SynthesizedMethodStringAdapter(
+                        "set_ExitCode", "System.Environment", this.ResolveType("System.Void"), new[] { this.ResolveType("System.Int32").ToParameter() }));
+            }
+
             if (!MainMethod.ReturnType.IsVoid())
             {
                 this.Output.Write("%1 = call i32 ");
@@ -6492,7 +6502,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
                 foreach (
-                    var methodKey in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m.Method)))
+                    var methodKey in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m)))
                 {
                     var externalMethodDecl = methodKey.Method;
 

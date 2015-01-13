@@ -3,7 +3,7 @@ namespace System
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct UInt16 : IConvertible
+    public struct UInt16 : IFormattable, IConvertible
     {
         private ushort m_value;
 

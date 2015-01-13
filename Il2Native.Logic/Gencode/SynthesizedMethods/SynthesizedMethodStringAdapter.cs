@@ -17,17 +17,20 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         private string typeFullName;
 
+        private IParameter[] parameters;
+
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
         /// <param name="methodName">
         /// </param>
-        public SynthesizedMethodStringAdapter(string methodName, string typeFullName, IType returnType)
+        public SynthesizedMethodStringAdapter(string methodName, string typeFullName, IType returnType, IParameter[] parameters = null)
         {
             this.typeFullName = typeFullName;
             this.Type = returnType.ToNormal();
             this.MethodName = methodName;
+            this.parameters = parameters;
         }
 
         /// <summary>
@@ -87,5 +90,15 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <summary>
         /// </summary>
         protected IType Type { get; set; }
+
+        public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
+        {
+            if (this.parameters == null)
+            {
+                return new IParameter[0];
+            }
+
+            return this.parameters;
+        }
     }
 }

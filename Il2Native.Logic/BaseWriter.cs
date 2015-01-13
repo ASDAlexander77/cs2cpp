@@ -1539,7 +1539,8 @@ namespace Il2Native.Logic
                 Code.Rem_Un,
                 Code.Shl,
                 Code.Shr,
-                Code.Shr_Un))
+                Code.Shr_Un,
+                Code.Not))
             {
                 return null;
             }

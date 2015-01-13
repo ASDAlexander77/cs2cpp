@@ -146,7 +146,9 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public static void Clear()
         {
+            fieldsShiftByType.Clear();
             sizeByType.Clear();
+            membersLayoutByType.Clear();
         }
 
         /// <summary>

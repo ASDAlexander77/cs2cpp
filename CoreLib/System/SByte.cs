@@ -3,7 +3,7 @@ namespace System
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct SByte : IConvertible
+    public struct SByte : IFormattable, IConvertible
     {
         private sbyte m_value;
 

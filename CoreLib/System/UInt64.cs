@@ -3,7 +3,7 @@ namespace System
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct UInt64 : IConvertible
+    public struct UInt64 : IFormattable, IConvertible
     {
         private ulong m_value;
 

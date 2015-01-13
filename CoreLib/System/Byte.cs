@@ -3,7 +3,7 @@ namespace System
     using System.Globalization;
     using System.Runtime.InteropServices;
 
-    public struct Byte : IConvertible
+    public struct Byte : IFormattable, IConvertible
     {
         private byte m_value;
 
