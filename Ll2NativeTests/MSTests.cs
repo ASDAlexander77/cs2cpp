@@ -79,7 +79,8 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestCoreLib()
+        public void 
+            TestCoreLib()
         {
             Il2Converter.Convert(Path.GetFullPath(CompilerHelper.CoreLibPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(false));
 
