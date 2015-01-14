@@ -43,6 +43,11 @@
                 output.Write("i32 ");
                 output.Write(value.ToString());
             }
+            else if (value is long)
+            {
+                output.Write("i64 ");
+                output.Write(value.ToString());
+            }
             else if (value is bool)
             {
                 output.Write("i1 ");

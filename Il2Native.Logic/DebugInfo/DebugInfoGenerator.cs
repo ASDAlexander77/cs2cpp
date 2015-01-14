@@ -123,7 +123,8 @@
 
             // 4 - C++
             // 12 - C
-            var lang = 4;
+            // 11 - Java
+            var lang = 12;
 
             var compilationUnit = new CollectionMetadata(this.indexedMetadata).Add(
                 string.Format(@"0x11\00{0}\00{1}\000\00\000\00\001", lang, IdentityString),
@@ -560,8 +561,9 @@
             var countOffset = 16; // 3 * pointerSize + sizeof(int)
             var dataOffset = 20; // + pointer size
 
-            members.Add(this.DefineMember("count", this.writer.ResolveType("System.Int32"), countOffset * 8, type, true, structureType));
-            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount), 0));
+            var countMember = this.DefineMember("count", this.writer.ResolveType("System.Int32"), countOffset * 8, type, true, structureType);
+            members.Add(countMember);
+            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount, countMember), 0));
 
             return members;
         }
@@ -645,7 +647,7 @@
                     typeDefinition);
         }
 
-        private CollectionMetadata DefineCArrayType(IType type, int line, int offset, int count = 0)
+        private CollectionMetadata DefineCArrayType(IType type, int line, int offset, int count = 0, object countMember = null)
         {
             Debug.Assert(type != null);
 
@@ -660,28 +662,45 @@
                     null,
                     null,
                     this.DefineType(type.ToDereferencedType()),
-                    new CollectionMetadata(this.indexedMetadata).Add(this.DefineSubrangeType(count)),
+                    new CollectionMetadata(this.indexedMetadata).Add(this.DefineSubrangeType(count, countMember)),
                     null,
                     null,
                     null);
         }
 
-        private object DefineSubrangeType(int count)
+        private object DefineSubrangeType(int count, object countMember = null)
         {
+            ////if (countMember != null)
+            ////{
+            ////    count = -1;
+            ////}
+
             object subrangeType;
             if (subrangeTypeCache.TryGetValue(count, out subrangeType))
             {
                 return subrangeType;
             }
 
-            subrangeType = new CollectionMetadata(this.indexedMetadata).Add(
-                string.Format(
-                    @"0x21\000\00{0}",
-                    count));
-
-            subrangeTypeCache[count] = subrangeType;
+            //if (countMember == null)
+            //{
+                subrangeType = new CollectionMetadata(this.indexedMetadata).Add(string.Format(@"0x21\000\00{0}", count));
+                subrangeTypeCache[count] = subrangeType;
+            //}
+            //else
+            //{
+            //    // next line should work but not working.
+            //    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21\000", countMember);
+            //    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21", this.DefineExpression(), this.DefineExpression());
+            //}
 
             return subrangeType;
+        }
+
+        private CollectionMetadata DefineExpression()
+        {
+            // 0x97 - DW_OP_push_object_address
+            // 0x06 - DW_OP_deref
+            return new CollectionMetadata(this.indexedMetadata).Add(@"0x102\0x97\0x06");
         }
 
         private void DefineStructureType(IType type, int line, int offset, int flags, CollectionMetadata structureType)
