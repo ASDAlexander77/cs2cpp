@@ -491,8 +491,10 @@ namespace System
             return new DateTime((long)(m_ticks - (ulong)val.m_ticks));
         }
 
-
-        public extern DateTime ToLocalTime();
+        public DateTime ToLocalTime()
+        {
+            throw new NotImplementedException();
+        }
 
         public override String ToString()
         {
@@ -514,7 +516,10 @@ namespace System
             return DateTimeFormat.Format(this, format, DateTimeFormatInfo.GetInstance(provider));
         }
 
-        public extern DateTime ToUniversalTime();
+        public DateTime ToUniversalTime()
+        {
+            throw new NotImplementedException();
+        }
 
         public static DateTime operator +(DateTime d, TimeSpan t)
         {
