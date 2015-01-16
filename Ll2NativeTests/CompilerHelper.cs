@@ -18,8 +18,8 @@
         public const string OutputPath = @"C:\Temp\IlCTests\";
         public const string CoreLibPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"C:\Dev\Temp\Il2Native\CoreLib\bin\Release\CoreLib.pdb";
-        public const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
-        public const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
+        public const string OpenGlLibPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Debug\BabylonNativeCsLibraryForIl.dll";
+        public const string OpenGlExePath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
         public const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
 
@@ -67,7 +67,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = true;
+        public const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>
@@ -76,7 +76,7 @@
         /// <summary>
         /// ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        public const bool CompileWithOptimization = false;
+        public const bool CompileWithOptimization = true;
 
         /// <summary>
         /// </summary>

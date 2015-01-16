@@ -4,6 +4,7 @@
 namespace System
 {
     using System;
+    using System.Globalization;
     using System.Threading;
     using System.Collections;
     using System.Runtime.CompilerServices;
@@ -629,7 +630,15 @@ namespace System
 
         public int LastIndexOf(char value)
         {
-            throw new NotImplementedException();
+            for (var index = this.chars.Length - 1; index >= 0; index--)
+            {
+                if (this.chars[index] == value)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
 
 
@@ -649,14 +658,30 @@ namespace System
 
         public int LastIndexOf(String value)
         {
-            throw new NotImplementedException();
+            var length = value.chars.Length;
+            for (var index = this.chars.Length - 1; index >= length; index--)
+            {
+                var found = true;
+                for (var valueIndex = 0; valueIndex < length; valueIndex++)
+                {
+                    var index0 = index - length + 1 + valueIndex;
+                    if (index0 >= 0 && this.chars[index0] == value.chars[valueIndex])
+                    {
+                        continue;
+                    }
+
+                    found = false;
+                    break;
+                }
+
+                if (found)
+                {
+                    return index - length + 1;
+                }
+            }
+
+            return -1;
         }
-
-        public extern int LastIndexOf(String value, int startIndex);
-
-
-        public extern int LastIndexOf(String value, int startIndex, int count);
-
 
         public String ToLower()
         {
