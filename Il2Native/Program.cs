@@ -10,6 +10,7 @@
 namespace Il2Native
 {
     using System;
+    using System.IO;
     using System.Linq;
 
     using Il2Native.Logic;
@@ -22,17 +23,19 @@ namespace Il2Native
         /// </summary>
         /// <param name="args">
         /// </param>
-        private static void Main(string[] args)
+        private static int Main(string[] args)
         {
             if (args.Length == 0)
             {
                 Console.WriteLine("C# Native, https://csnative.codeplex.com/");
                 Console.WriteLine("MSIL to LLVM ByteCode compiler");
                 Console.WriteLine(string.Empty);
-                Console.WriteLine("Usage: Il2Bc [options] file...");
-                Console.WriteLine("file:");
+                Console.WriteLine("Usage: Il2Bc [options] file");
+                Console.WriteLine(string.Empty);
+                Console.WriteLine("file:                     Specifies the file or files to be compiled");
                 Console.WriteLine("  .cs                     C# source file");
                 Console.WriteLine("  .dll                    MSIL dll file");
+                Console.WriteLine(string.Empty);
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
@@ -46,11 +49,35 @@ namespace Il2Native
                 Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine("  /emscripten             Set recommended settings for Emscripten platform");
-                return;
+                Console.WriteLine(string.Empty);
+                Console.WriteLine("Example:");
+                Console.WriteLine("  Il2Bc file1.cs          Compiles one C# file");
+                Console.WriteLine("  Il2Bc /roslyn file1.cs file2.cs");
+                Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
+                Console.WriteLine("  Il2Bc file1.dll         Converts one DLL file");
+                return 0;
             }
 
             var processedArgs = args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
-            Il2Converter.Convert(args.First(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))), Environment.CurrentDirectory, processedArgs);
+            var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
+
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
+            if (!sources.All(f => Path.GetFileNameWithoutExtension(f).Equals(fileNameWithoutExtension, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                Console.WriteLine("WARNING!");
+                Console.WriteLine("You can use only one type of files at a time.");
+                return 1;
+            }
+
+            if (fileNameWithoutExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) && sources.Count() > 1)
+            {
+                Console.WriteLine("WARNING!");
+                Console.WriteLine("You can use only one DLL file at a time.");
+                return 1;
+            }
+
+            Il2Converter.Convert(sources, Environment.CurrentDirectory, processedArgs);
+            return 0;
         }
     }
 }

@@ -86,6 +86,8 @@ namespace Il2Native.Logic
         /// </summary>
         private ISet<IType> usedTypes;
 
+        private bool isDll;
+
         /// <summary>
         /// </summary>
         static IlReader()
@@ -327,22 +329,23 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public IlReader(string source, string[] args)
+        public IlReader(string[] source, string[] args)
             : this()
         {
-            this.Source = source;
+            this.Sources = source;
+            this.FirstSource = this.Sources.First();
 
             var coreLibPathArg = args != null ? args.FirstOrDefault(a => a.StartsWith("corelib:")) : null;
             this.CoreLibPath = coreLibPathArg != null ? coreLibPathArg.Substring("corelib:".Length) : null;
             this.UsingRoslyn = args != null && args.Any(a => a == "roslyn");
-            var isDll = this.Source.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
-            this.DefaultDllLocations = isDll
-                                           ? Path.GetDirectoryName(Path.GetFullPath(this.Source))
+            this.isDll = this.FirstSource.EndsWith(".dll", StringComparison.InvariantCultureIgnoreCase);
+            this.DefaultDllLocations = this.isDll
+                                           ? Path.GetDirectoryName(Path.GetFullPath(this.FirstSource))
                                            : null;
             this.DebugInfo = args != null && args.Contains("debug");
-            if (!isDll)
+            if (!this.isDll)
             {
-                this.SourceFilePath = Path.GetFullPath(this.Source);
+                this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
         }
 
@@ -502,7 +505,9 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected string Source { get; private set; }
+        protected string[] Sources { get; private set; }
+
+        protected string FirstSource { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -627,15 +632,14 @@ namespace Il2Native.Logic
         /// </summary>
         public void Load()
         {
-            var isSourceFile = this.Source.EndsWith(".cs", StringComparison.CurrentCultureIgnoreCase);
-            this.Assembly = isSourceFile
-                                ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Source) : this.Compile(this.Source)
-                                : AssemblyMetadata.CreateFromImageStream(new FileStream(this.Source, FileMode.Open, FileAccess.Read));
+            this.Assembly = !this.isDll
+                                ? this.UsingRoslyn ? this.CompileWithRoslyn(this.Sources) : this.Compile(this.Sources)
+                                : AssemblyMetadata.CreateFromImageStream(new FileStream(this.FirstSource, FileMode.Open, FileAccess.Read));
 
-            if (!isSourceFile)
+            if (this.isDll)
             {
-                DllFilePath = this.Source;
-                PdbFilePath = Path.ChangeExtension(this.Source, "pdb");
+                DllFilePath = this.FirstSource;
+                PdbFilePath = Path.ChangeExtension(this.FirstSource, "pdb");
             }
         }
 
@@ -1205,13 +1209,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="source">
+        /// <param name="sources">
         /// </param>
         /// <returns>
         /// </returns>
         /// <exception cref="Exception">
         /// </exception>
-        private AssemblyMetadata Compile(string source)
+        private AssemblyMetadata Compile(string[] sources)
         {
             var language = "CSharp";
             var codeProvider = CodeDomProvider.IsDefinedLanguage(language) ? CodeDomProvider.CreateProvider(language) : null;
@@ -1234,7 +1238,7 @@ namespace Il2Native.Logic
                 string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 
-            var results = codeProvider.CompileAssemblyFromFile(parameters, source);
+            var results = codeProvider.CompileAssemblyFromFile(parameters, sources);
 
             if (results.Errors.Count > 0)
             {
@@ -1258,7 +1262,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private AssemblyMetadata CompileWithRoslyn(string source)
+        private AssemblyMetadata CompileWithRoslyn(string[] source)
         {
             var baseName = Path.GetRandomFileName();
             var nameDll = baseName + ".dll";
@@ -1266,7 +1270,7 @@ namespace Il2Native.Logic
             var outDll = Path.Combine(Path.GetTempPath(), nameDll);
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 
-            var syntaxTree = CSharpSyntaxTree.ParseText(new StreamReader(source).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental));
+            var syntaxTrees = source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
 
             var coreLibRefAssembly = string.IsNullOrWhiteSpace(this.CoreLibPath)
                                          ? new MetadataImageReference(new FileStream(typeof(int).Assembly.Location, FileMode.Open, FileAccess.Read))
@@ -1277,7 +1281,7 @@ namespace Il2Native.Logic
                                                                                  .WithOptimizations(!this.DebugInfo)
                                                                                  .WithRuntimeMetadataVersion("4.5");
 
-            var compilation = CSharpCompilation.Create(nameDll, new[] { syntaxTree }, new[] { coreLibRefAssembly }, options);
+            var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
 
             using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
             using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))

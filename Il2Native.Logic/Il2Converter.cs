@@ -38,9 +38,22 @@ namespace Il2Native.Logic
         /// </param>
         public static void Convert(string source, string outputFolder, string[] args = null)
         {
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(source);
+            Convert(new[] { source }, outputFolder, args);
+        }
 
-            var ilReader = new IlReader(source, args);
+        /// <summary>
+        /// </summary>
+        /// <param name="sources">
+        /// </param>
+        /// <param name="outputFolder">
+        /// </param>
+        /// <param name="args">
+        /// </param>
+        public static void Convert(string[] sources, string outputFolder, string[] args = null)
+        {
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
+
+            var ilReader = new IlReader(sources, args);
             ilReader.Load();
 
             GenerateLlvm(ilReader, fileNameWithoutExtension, ilReader.SourceFilePath, ilReader.PdbFilePath, outputFolder, args);

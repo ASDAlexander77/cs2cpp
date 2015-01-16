@@ -574,12 +574,30 @@ namespace System
 
         public int IndexOf(String value)
         {
-            throw new NotImplementedException();
+            var length = value.chars.Length;
+            for (var index = 0; index < this.chars.Length - length + 1; index++)
+            {
+                var found = true;
+                for (var valueIndex = 0; valueIndex < length; valueIndex++)
+                {
+                    var index0 = index + valueIndex;
+                    if (this.chars[index0] == value.chars[valueIndex])
+                    {
+                        continue;
+                    }
+
+                    found = false;
+                    break;
+                }
+
+                if (found)
+                {
+                    return index;
+                }
+            }
+
+            return -1;
         }
-
-        public extern int IndexOf(String value, int startIndex);
-
-        public extern int IndexOf(String value, int startIndex, int count);
 
         public static bool IsNullOrEmpty(String value)
         {
