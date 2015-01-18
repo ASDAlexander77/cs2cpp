@@ -6,12 +6,12 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Exceptions
 {
     using System;
     using System.Collections.Generic;
     using System.Reflection;
-
     using PEAssemblyReader;
 
     // if Exception is null means Finally Clause
@@ -39,10 +39,7 @@ namespace Il2Native.Logic.Exceptions
         /// </summary>
         public IList<string> FinallyJumps
         {
-            get
-            {
-                return this.lazyFinallyJumps.Value;
-            }
+            get { return this.lazyFinallyJumps.Value; }
         }
 
         /// <summary>

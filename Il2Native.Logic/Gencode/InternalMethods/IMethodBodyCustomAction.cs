@@ -1,6 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
-    using Il2Native.Logic.CodeParts;
+    using CodeParts;
 
     public interface IMethodBodyCustomAction
     {

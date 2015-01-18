@@ -1,16 +1,18 @@
 ﻿namespace Il2Native.Logic.Gencode.InlineMethods
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-
     using PEAssemblyReader;
 
     public class MainGen
     {
-        public static void GetLoadingArgumentsMethodBody(bool isVoid, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetLoadingArgumentsMethodBody(
+            bool isVoid,
+            ICodeWriter codeWriter,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
         {
             var stringType = codeWriter.ResolveType("System.String");
             var bytePointerType = codeWriter.ResolveType("System.Byte").ToPointerType();
@@ -20,47 +22,48 @@
             parameters.Add(bytePointerType.ToPointerType().ToParameter());
 
             var codeList = new List<object>();
-            codeList.AddRange(new object[]
-                    {
-                        Code.Ldarg_0,
-                        Code.Newarr,
-                        1,
-                        0,
-                        0,
-                        0,
-                        Code.Stloc_0,
-                        Code.Ldc_I4_0,
-                        Code.Stloc_1,
-                        Code.Br_S,
-                        24,
-                        Code.Ldloc_0,
-                        Code.Ldloc_1,
-                        Code.Ldarg_1,
-                        Code.Dup,
-                        Code.Sizeof,
-                        2,
-                        0,
-                        0,
-                        0,
-                        Code.Add,
-                        Code.Starg_S,
-                        1,
-                        Code.Ldind_I,
-                        Code.Newobj,
-                        3,
-                        0,
-                        0,
-                        0,
-                        Code.Stelem_Ref,
-                        Code.Ldloc_1,
-                        Code.Ldc_I4_1,
-                        Code.Add,
-                        Code.Stloc_1,
-                        Code.Ldloc_1,
-                        Code.Ldarg_0,
-                        Code.Blt_S,
-                        -28,
-                    });
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Ldarg_0,
+                    Code.Newarr,
+                    1,
+                    0,
+                    0,
+                    0,
+                    Code.Stloc_0,
+                    Code.Ldc_I4_0,
+                    Code.Stloc_1,
+                    Code.Br_S,
+                    24,
+                    Code.Ldloc_0,
+                    Code.Ldloc_1,
+                    Code.Ldarg_1,
+                    Code.Dup,
+                    Code.Sizeof,
+                    2,
+                    0,
+                    0,
+                    0,
+                    Code.Add,
+                    Code.Starg_S,
+                    1,
+                    Code.Ldind_I,
+                    Code.Newobj,
+                    3,
+                    0,
+                    0,
+                    0,
+                    Code.Stelem_Ref,
+                    Code.Ldloc_1,
+                    Code.Ldc_I4_1,
+                    Code.Add,
+                    Code.Stloc_1,
+                    Code.Ldloc_1,
+                    Code.Ldarg_0,
+                    Code.Blt_S,
+                    -28
+                });
 
             code = codeList.ToArray();
 

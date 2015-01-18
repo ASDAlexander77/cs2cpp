@@ -9,15 +9,15 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Collections.Generic;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedMethodStringAdapter : SynthesizedMethodBase
     {
-        private string typeFullName;
-
-        private IParameter[] parameters;
+        private readonly IParameter[] parameters;
+        private readonly string typeFullName;
 
         /// <summary>
         /// </summary>
@@ -25,7 +25,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="methodName">
         /// </param>
-        public SynthesizedMethodStringAdapter(string methodName, string typeFullName, IType returnType, IParameter[] parameters = null)
+        public SynthesizedMethodStringAdapter(
+            string methodName,
+            string typeFullName,
+            IType returnType,
+            IParameter[] parameters = null)
         {
             this.typeFullName = typeFullName;
             this.Type = returnType.ToNormal();
@@ -37,50 +41,35 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType DeclaringType
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
         /// </summary>
         public override string ExplicitName
         {
-            get
-            {
-                return string.Concat(this.typeFullName, ".", this.MethodName);
-            }
+            get { return string.Concat(this.typeFullName, ".", this.MethodName); }
         }
 
         /// <summary>
         /// </summary>
         public override string FullName
         {
-            get
-            {
-                return string.Concat(this.typeFullName, ".", this.MethodName);
-            }
+            get { return string.Concat(this.typeFullName, ".", this.MethodName); }
         }
 
         /// <summary>
         /// </summary>
         public override string Name
         {
-            get
-            {
-                return this.MethodName;
-            }
+            get { return this.MethodName; }
         }
 
         /// <summary>
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.Type;
-            }
+            get { return this.Type; }
         }
 
         /// <summary>
@@ -91,7 +80,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         protected IType Type { get; set; }
 
-        public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
+        public override IEnumerable<IParameter> GetParameters()
         {
             if (this.parameters == null)
             {

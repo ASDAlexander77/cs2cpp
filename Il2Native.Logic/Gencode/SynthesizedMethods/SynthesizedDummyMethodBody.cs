@@ -10,7 +10,6 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -21,30 +20,21 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
         {
-            get
-            {
-                return new IExceptionHandlingClause[0];
-            }
+            get { return new IExceptionHandlingClause[0]; }
         }
 
         /// <summary>
         /// </summary>
         public bool HasBody
         {
-            get
-            {
-                return true;
-            }
+            get { return true; }
         }
 
         /// <summary>
         /// </summary>
         public IEnumerable<ILocalVariable> LocalVariables
         {
-            get
-            {
-                return new ILocalVariable[0];
-            }
+            get { return new ILocalVariable[0]; }
         }
 
         /// <summary>

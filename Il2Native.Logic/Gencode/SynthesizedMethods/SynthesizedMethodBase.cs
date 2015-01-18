@@ -13,15 +13,27 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     using System.Collections.Generic;
     using System.Reflection;
     using System.Text;
-
     using Microsoft.CodeAnalysis;
-
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedMethodBase : IMethod
     {
+        /// <summary>
+        /// </summary>
+        public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
+        {
+            get { return new IExceptionHandlingClause[0]; }
+        }
+
+        /// <summary>
+        /// </summary>
+        public virtual IEnumerable<ILocalVariable> LocalVariables
+        {
+            get { return new ILocalVariable[0]; }
+        }
+
         /// <summary>
         /// </summary>
         public int? Token { get; private set; }
@@ -34,60 +46,35 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public virtual CallingConventions CallingConvention
         {
-            get
-            {
-                return CallingConventions.Standard;
-            }
+            get { return CallingConventions.Standard; }
         }
 
         /// <summary>
         /// </summary>
         public virtual IType DeclaringType
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
         /// </summary>
         public DllImportData DllImportData
         {
-            get
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-        {
-            get
-            {
-                return new IExceptionHandlingClause[0];
-            }
+            get { return null; }
         }
 
         /// <summary>
         /// </summary>
         public virtual string ExplicitName
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
         /// </summary>
         public virtual string FullName
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
@@ -102,30 +89,21 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public bool IsUnmanagedDllImport
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         /// <summary>
         /// </summary>
         public bool IsExplicitInterfaceImplementation
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         /// <summary>
         /// </summary>
         public bool IsExternal
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         /// <summary>
@@ -145,24 +123,18 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public virtual bool IsStatic { get; private set; }
 
         /// <summary>
-        /// custom field
+        ///     custom field
         /// </summary>
         public bool IsUnmanaged
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         /// <summary>
         /// </summary>
         public bool IsUnmanagedMethodReference
         {
-            get
-            {
-                return false;
-            }
+            get { return false; }
         }
 
         /// <summary>
@@ -175,32 +147,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public virtual IEnumerable<ILocalVariable> LocalVariables
-        {
-            get
-            {
-                return new ILocalVariable[0];
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public string MetadataFullName
         {
-            get
-            {
-                return this.FullName;
-            }
+            get { return this.FullName; }
         }
 
         /// <summary>
         /// </summary>
         public string MetadataName
         {
-            get
-            {
-                return this.Name;
-            }
+            get { return this.Name; }
         }
 
         /// <summary>
@@ -211,10 +167,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public virtual string Name
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
@@ -225,27 +178,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public virtual IType ReturnType
         {
-            get
-            {
-                return null;
-            }
+            get { return null; }
         }
 
         /// <summary>
         /// </summary>
-        public bool IsInline
-        {
-            get;
-            protected set;
-        }
+        public bool IsInline { get; protected set; }
 
         /// <summary>
         /// </summary>
-        public bool HasProceduralBody
-        {
-            get;
-            protected set;
-        }
+        public bool HasProceduralBody { get; protected set; }
 
         /// <summary>
         /// </summary>
@@ -288,29 +230,6 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public override int GetHashCode()
-        {
-            return this.ToString().GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return this.ToString().CompareTo(obj.ToString()) == 0;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public byte[] GetILAsByteArray()
-        {
-            return new byte[0];
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="genericContext">
         /// </param>
         /// <returns>
@@ -340,19 +259,6 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public IType ResolveTypeParameter(IType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="genericContext">
         /// </param>
         /// <returns>
@@ -376,9 +282,45 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             if (ownerOfExplicitInterface == null)
             {
-                return ToString();
+                return this.ToString();
             }
 
+            throw new NotImplementedException();
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.ToString().CompareTo(obj.ToString()) == 0;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public override int GetHashCode()
+        {
+            return this.ToString().GetHashCode();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public byte[] GetILAsByteArray()
+        {
+            return new byte[0];
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        /// <exception cref="NotImplementedException">
+        /// </exception>
+        public IType ResolveTypeParameter(IType type)
+        {
             throw new NotImplementedException();
         }
 

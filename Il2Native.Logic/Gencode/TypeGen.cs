@@ -6,15 +6,14 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
     using System.Linq;
-
-    using Il2Native.Logic.CodeParts;
-
+    using CodeParts;
     using PEAssemblyReader;
 
     /// <summary>
@@ -23,7 +22,8 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes = new SortedDictionary<string, string>();
+        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes =
+            new SortedDictionary<string, string>();
 
         /// <summary>
         /// </summary>
@@ -43,7 +43,8 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, IList<MemberLocationInfo>> membersLayoutByType = new SortedDictionary<string, IList<MemberLocationInfo>>();
+        private static readonly IDictionary<string, IList<MemberLocationInfo>> membersLayoutByType =
+            new SortedDictionary<string, IList<MemberLocationInfo>>();
 
         /// <summary>
         /// </summary>
@@ -151,6 +152,29 @@ namespace Il2Native.Logic.Gencode
             membersLayoutByType.Clear();
         }
 
+        public static int GetFieldOffset(this IField field)
+        {
+            IList<MemberLocationInfo> membersLayout;
+            while (!membersLayoutByType.TryGetValue(field.DeclaringType.ToString(), out membersLayout))
+            {
+                GetTypeSize(field.DeclaringType);
+            }
+
+            var memberLocationInfo =
+                membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
+            if (memberLocationInfo == null)
+            {
+                if (field.Name == "Value" && field.DeclaringType.ToNormal().IsPrimitiveTypeOrEnum())
+                {
+                    return LlvmWriter.PointerSize;
+                }
+
+                throw new MissingMemberException(field.FullName);
+            }
+
+            return memberLocationInfo.Offset;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -190,11 +214,15 @@ namespace Il2Native.Logic.Gencode
                     {
                         if (!excludingStructs)
                         {
-                            yield return new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true) * field.FixedSize);
+                            yield return
+                                new MemberLocationInfo(
+                                    field,
+                                    field.FieldType.ToDereferencedType().GetTypeSize(true) * field.FixedSize);
                         }
                         else
                         {
-                            yield return new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true));
+                            yield return
+                                new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true));
                         }
                     }
                     else
@@ -229,7 +257,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MemberLocationInfo> GetFieldsSizesRecursive(this IType type, bool excludingStructs = false)
+        public static IEnumerable<MemberLocationInfo> GetFieldsSizesRecursive(
+            this IType type,
+            bool excludingStructs = false)
         {
             if (type.BaseType != null)
             {
@@ -273,28 +303,6 @@ namespace Il2Native.Logic.Gencode
             return size;
         }
 
-        public static int GetFieldOffset(this IField field)
-        {
-            IList<MemberLocationInfo> membersLayout;
-            while (!membersLayoutByType.TryGetValue(field.DeclaringType.ToString(), out membersLayout))
-            {
-                GetTypeSize(field.DeclaringType);
-            }
-
-            var memberLocationInfo = membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
-            if (memberLocationInfo == null)
-            {
-                if (field.Name == "Value" && field.DeclaringType.ToNormal().IsPrimitiveTypeOrEnum())
-                {
-                    return LlvmWriter.PointerSize;
-                }
-
-                throw new MissingMemberException(field.FullName);
-            }
-
-            return memberLocationInfo.Offset;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -306,7 +314,10 @@ namespace Il2Native.Logic.Gencode
             if (type.IsInterface)
             {
                 var any = false;
-                foreach (var item in type.GetInterfacesExcludingBaseAllInterfaces().SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+                foreach (
+                    var item in
+                        type.GetInterfacesExcludingBaseAllInterfaces()
+                            .SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
                 {
                     any = true;
                     yield return item;
@@ -331,7 +342,8 @@ namespace Il2Native.Logic.Gencode
             {
                 var enumUnderlyingType = type.GetEnumUnderlyingType();
                 int enumUnderlyingTypeFieldSize;
-                if (enumUnderlyingType.Namespace == "System" && SystemTypeSizes.TryGetValue(enumUnderlyingType.Name, out enumUnderlyingTypeFieldSize))
+                if (enumUnderlyingType.Namespace == "System" &&
+                    SystemTypeSizes.TryGetValue(enumUnderlyingType.Name, out enumUnderlyingTypeFieldSize))
                 {
                     yield return new MemberLocationInfo(type, enumUnderlyingTypeFieldSize);
                 }
@@ -354,7 +366,10 @@ namespace Il2Native.Logic.Gencode
             }
 
             // add shift for interfaces
-            foreach (var item in type.GetInterfacesExcludingBaseAllInterfaces().SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+            foreach (
+                var item in
+                    type.GetInterfacesExcludingBaseAllInterfaces()
+                        .SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
             {
                 yield return item;
             }
@@ -375,7 +390,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsClassCastRequired(this IType requiredType, OpCodePart opCodePart, out bool dynamicCastRequired)
+        public static bool IsClassCastRequired(
+            this IType requiredType,
+            OpCodePart opCodePart,
+            out bool dynamicCastRequired)
         {
             dynamicCastRequired = false;
 
@@ -492,7 +510,8 @@ namespace Il2Native.Logic.Gencode
             do
             {
                 var isReference = !effectiveType.IsValueType;
-                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter
+                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) &&
+                    !effectiveType.IsGenericParameter
                     && !effectiveType.IsArray && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
@@ -512,8 +531,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     break;
                 }
-            }
-            while (effectiveType != null);
+            } while (effectiveType != null);
         }
 
         /// <summary>
@@ -557,7 +575,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteTypeWithoutModifiers(this IType type, LlvmIndentedTextWriter writer, bool isPointer = false)
+        public static void WriteTypeWithoutModifiers(
+            this IType type,
+            LlvmIndentedTextWriter writer,
+            bool isPointer = false)
         {
             var effectiveType = type;
 
@@ -569,7 +590,8 @@ namespace Il2Native.Logic.Gencode
 
             if (!type.IsArray)
             {
-                if (type.UseAsClass || !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
+                if (type.UseAsClass ||
+                    !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
                 {
                     writer.Write('%');
                 }

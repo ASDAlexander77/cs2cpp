@@ -64,17 +64,14 @@ namespace Il2Native.Logic.Properties {
         ///   Looks up a localized string similar to declare i8* @malloc(i32) #99900
         ///
         ///; Function Attrs: nounwind
-        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+        ///;declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
+        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture, i32, i32, i1) #88801
         ///declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
         ///
-        ///attributes #88801 = { nounwind }
-        ///attributes #88802 = { nounwind }
-        ///
-        ///; Exception support - DWARF
-        ///declare i32 @__gxx_personality_v0(...) #78801
-        ///declare i8* @__cxa_allocate_exception(i32) #78802
-        ///declare void @__cxa_free_exception(i8*) #78803
-        ///declare void @__cxa_throw(i8*, i8*, [rest of string was truncated]&quot;;.
+        ///declare { i8, i1 } @llvm.sadd.with.overflow.i8(i8, i8) #0
+        ///declare { i16, i1 } @llvm.sadd.with.overflow.i16(i16, i16) #0
+        ///declare { i32, i1 } @llvm.sadd.with.overflow.i32(i32, i32) #0
+        ///de [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string llvm_declarations {
             get {
@@ -83,20 +80,12 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to declare i8* @malloc(i32) #99900
-        ///
-        ///; Function Attrs: nounwind
-        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
-        ///declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
-        ///
-        ///attributes #88801 = { nounwind }
-        ///attributes #88802 = { nounwind }
-        ///
-        ///; Exception support - DWARF
-        ///declare i32 @__gxx_personality_v0(...) #78801
-        ///declare i8* @__cxa_allocate_exception(i32) #78802
-        ///declare void @__cxa_free_exception(i8*) #78803
-        ///declare void @__cxa_throw(i8*, i8*, [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to declare void @GC_init() #0
+        ///declare i8* @GC_malloc(i32) #0
+        ///declare i8* @GC_malloc_atomic(i32) #0
+        ///declare i8* @GC_realloc(i8*, i32) #0
+        ///declare i32 @GC_get_heap_size() #0
+        ///.
         /// </summary>
         internal static string llvm_gc_declarations {
             get {

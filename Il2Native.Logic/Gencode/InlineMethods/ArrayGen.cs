@@ -10,9 +10,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
-
-    using Il2Native.Logic.CodeParts;
-
+    using CodeParts;
     using PEAssemblyReader;
 
     /// <summary>

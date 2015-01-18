@@ -35,10 +35,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.systemType;
-            }
+            get { return this.systemType; }
         }
     }
 }

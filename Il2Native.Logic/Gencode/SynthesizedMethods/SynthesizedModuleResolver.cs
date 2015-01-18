@@ -1,12 +1,12 @@
 ﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using PEAssemblyReader;
     using System.Collections.Generic;
+    using PEAssemblyReader;
 
     public class SynthesizedModuleResolver : IModule
     {
-        private IMethod method;
-        private IList<object> tokenResolutions;
+        private readonly IMethod method;
+        private readonly IList<object> tokenResolutions;
 
         public SynthesizedModuleResolver(IMethod method, IList<object> tokenResolutions)
         {
@@ -16,9 +16,9 @@
 
         public IField ResolveField(int token, IGenericContext genericContext)
         {
-            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return tokenResolutions[token - 1] as IField;
+                return this.tokenResolutions[token - 1] as IField;
             }
 
             return this.method.Module.ResolveField(token, genericContext);
@@ -26,9 +26,9 @@
 
         public IMember ResolveMember(int token, IGenericContext genericContext)
         {
-            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return tokenResolutions[token - 1] as IMember;
+                return this.tokenResolutions[token - 1] as IMember;
             }
 
             return this.method.Module.ResolveMember(token, genericContext);
@@ -36,9 +36,9 @@
 
         public IMethod ResolveMethod(int token, IGenericContext genericContext)
         {
-            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return tokenResolutions[token - 1] as IMethod;
+                return this.tokenResolutions[token - 1] as IMethod;
             }
 
             return this.method.Module.ResolveMethod(token, genericContext);
@@ -56,9 +56,9 @@
 
         public IType ResolveType(int token, IGenericContext genericContext)
         {
-            if (tokenResolutions != null && tokenResolutions.Count >= token)
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return tokenResolutions[token - 1] as IType;
+                return this.tokenResolutions[token - 1] as IType;
             }
 
             return this.method.Module.ResolveType(token, genericContext);

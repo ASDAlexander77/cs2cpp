@@ -18,11 +18,27 @@
             model.Add(this);
         }
 
+        public int? Index { get; set; }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                var objects = Value as IList<object>;
+                if (objects == null)
+                {
+                    throw new NotSupportedException();
+                }
+
+                return objects.Count == 0;
+            }
+        }
+
         public object this[int index]
         {
             get
             {
-                var objects = this.Value as IList<object>;
+                var objects = Value as IList<object>;
                 if (objects != null)
                 {
                     return objects[index];
@@ -33,7 +49,7 @@
 
             set
             {
-                var objects = this.Value as IList<object>;
+                var objects = Value as IList<object>;
                 if (objects != null)
                 {
                     objects[index] = value;
@@ -44,27 +60,11 @@
             }
         }
 
-        public int? Index { get; set; }
-
         public bool NullIfEmpty { get; set; }
-
-        public bool IsEmpty
-        {
-            get
-            {
-                var objects = this.Value as IList<object>;
-                if (objects == null)
-                {
-                    throw new NotSupportedException();
-                }
-
-                return objects.Count == 0;
-            }
-        }
 
         public CollectionMetadata Add(object value)
         {
-            var objects = this.Value as IList<object>;
+            var objects = Value as IList<object>;
             if (objects != null)
             {
                 objects.Add(value);
@@ -76,7 +76,7 @@
 
         public CollectionMetadata Add(params object[] values)
         {
-            var objects = this.Value as IList<object>;
+            var objects = Value as IList<object>;
             if (objects != null)
             {
                 foreach (var value in values)
@@ -90,14 +90,14 @@
             throw new NotSupportedException();
         }
 
-        public override void WriteTo(System.IO.TextWriter output, bool suppressMetadataKeyword = false)
+        public override void WriteTo(TextWriter output, bool suppressMetadataKeyword = false)
         {
             if (this.NullIfEmpty && this.IsEmpty)
             {
                 return;
             }
 
-            if (Index.HasValue)
+            if (this.Index.HasValue)
             {
                 if (!suppressMetadataKeyword)
                 {
@@ -105,7 +105,7 @@
                 }
 
                 output.Write("!");
-                output.Write(Index.Value);
+                output.Write(this.Index.Value);
                 return;
             }
 
@@ -114,7 +114,7 @@
 
         public void WriteValueTo(TextWriter output, bool suppressMetadataKeyword = false)
         {
-            var objects = this.Value as IList<object>;
+            var objects = Value as IList<object>;
             if (objects == null)
             {
                 throw new NotSupportedException();
@@ -135,7 +135,7 @@
                     output.Write(", ");
                 }
 
-                Metadata.WriteValueTo(output, @object, suppressMetadataKeyword);
+                WriteValueTo(output, @object, suppressMetadataKeyword);
 
                 index++;
             }

@@ -9,20 +9,17 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Linq;
     using System.Collections.Generic;
-
+    using System.Linq;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedMethodBodyDecorator : IMethodBody
     {
-        private readonly IMethodBody methodBody;
-
         private readonly byte[] customBody;
-
         private readonly IEnumerable<ILocalVariable> locals;
+        private readonly IMethodBody methodBody;
 
         public SynthesizedMethodBodyDecorator(IMethodBody methodBody)
         {
@@ -41,20 +38,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
         {
-            get
-            {
-                return this.methodBody.ExceptionHandlingClauses;
-            }
+            get { return this.methodBody.ExceptionHandlingClauses; }
         }
 
         /// <summary>
         /// </summary>
         public bool HasBody
         {
-            get
-            {
-                return this.customBody != null || this.methodBody.HasBody;
-            }
+            get { return this.customBody != null || this.methodBody.HasBody; }
         }
 
         /// <summary>

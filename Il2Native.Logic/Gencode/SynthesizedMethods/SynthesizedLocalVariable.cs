@@ -1,5 +1,6 @@
 ﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System;
     using PEAssemblyReader;
 
     public class SynthesizedLocalVariable : ILocalVariable
@@ -10,21 +11,12 @@
             this.LocalType = type;
         }
 
-        public int LocalIndex
-        {
-            get;
-            private set;
-        }
-
-        public IType LocalType
-        {
-            get;
-            set;
-        }
+        public int LocalIndex { get; private set; }
+        public IType LocalType { get; set; }
 
         public string Name
         {
-            get { throw new System.NotImplementedException(); }
+            get { throw new NotImplementedException(); }
         }
     }
 }

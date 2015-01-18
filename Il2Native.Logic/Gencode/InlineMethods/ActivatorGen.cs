@@ -11,9 +11,7 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Linq;
-
-    using Il2Native.Logic.CodeParts;
-
+    using CodeParts;
     using PEAssemblyReader;
 
     /// <summary>
@@ -57,7 +55,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public static void WriteActivatorFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static void WriteActivatorFunction(
+            this IMethod method,
+            OpCodePart opCodeMethodInfo,
+            LlvmWriter llvmWriter)
         {
             switch (method.MetadataName)
             {

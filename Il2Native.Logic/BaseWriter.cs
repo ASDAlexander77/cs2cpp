@@ -123,6 +123,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        public void AddOpCode(OpCodePart opCode)
+        {
+            this.Ops.Add(opCode);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="parameters">
         /// </param>
         public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
@@ -164,6 +173,57 @@ namespace Il2Native.Logic
         {
             var isThis = oper1.Any(Code.Ldarg_0) && this.HasMethodThis;
             return isThis;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<OpCodePart> PrepareWritingMethodBody()
+        {
+            var ops = this.PreProcessOpCodes(this.Ops).ToList();
+            this.BuildAddressIndexes(ops);
+            this.AssignJumpBlocks(ops);
+            this.ProcessAll(ops);
+            this.CalculateRequiredTypesForAlternativeValues(ops);
+            this.AssignExceptionsToOpCodes();
+            return ops;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="methodInfo">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
+        {
+            this.Parameters = methodInfo.GetParameters().ToArray();
+            this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
+
+            this.MethodReturnType = null;
+            this.ThisType = methodInfo.DeclaringType;
+
+            ////this.GenericMethodArguments = methodBase.GetGenericArguments();
+            var methodBody = methodInfo.ResolveMethodBody(genericContext);
+            this.NoBody = !methodBody.HasBody;
+            if (!this.NoBody)
+            {
+                this.LocalInfo = methodBody.LocalVariables.ToArray();
+
+                this.AdjustLocalVariableTypes();
+
+#if DEBUG
+                Debug.Assert(
+                    genericContext == null || !this.LocalInfo.Any(li => li.LocalType.IsGenericParameter),
+                    "Has Ganaric Parameter");
+#endif
+
+                this.LocalInfoUsed = new bool[this.LocalInfo.Length];
+                this.ExceptionHandlingClauses = methodBody.ExceptionHandlingClauses.ToArray();
+            }
+
+            this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
         }
 
         /// <summary>
@@ -473,7 +533,7 @@ namespace Il2Native.Logic
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
 
                 case Code.Localloc:
-                    return new ReturnResult(ResolveType("System.Byte").ToPointerType());
+                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
             }
 
             return null;
@@ -489,15 +549,6 @@ namespace Il2Native.Logic
             this.OpsByAddressEnd.Clear();
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        public void AddOpCode(OpCodePart opCode)
-        {
-            this.Ops.Add(opCode);
         }
 
         /// <summary>
@@ -714,16 +765,24 @@ namespace Il2Native.Logic
                 else
                 {
                     requiredType = this.RequiredOutgoingType(firstOpCode)
-                                   ?? opCodePart.AlternativeValues.Values.Select(v => this.RequiredOutgoingType(v)).FirstOrDefault(v => v != null)
-                                   ?? opCodePart.AlternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                                   ??
+                                   opCodePart.AlternativeValues.Values.Select(v => this.RequiredOutgoingType(v))
+                                       .FirstOrDefault(v => v != null)
+                                   ??
+                                   opCodePart.AlternativeValues.Values.Select(v => v.RequiredOutgoingType)
+                                       .FirstOrDefault(v => v != null);
                     if (requiredType != null &&
                         opCodePart.AlternativeValues.Values.Any(
                             v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {
                         // find base type, for example if first value is IDictionary and second is Object then required type should be Object
-                        foreach (var requiredItem in opCodePart.AlternativeValues.Values.Select(this.RequiredOutgoingType).Where(t => t != null))
+                        foreach (
+                            var requiredItem in
+                                opCodePart.AlternativeValues.Values.Select(this.RequiredOutgoingType)
+                                    .Where(t => t != null))
                         {
-                            if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) || requiredItem.IsObject)
+                            if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) ||
+                                requiredItem.IsObject)
                             {
                                 requiredType = requiredItem;
                             }
@@ -780,6 +839,20 @@ namespace Il2Native.Logic
             }
 
             this.AdjustTypes(opCodePart);
+        }
+
+        protected IType GetEffectiveLocalType(ILocalVariable local)
+        {
+            var effectiveLocalType = local.LocalType;
+            if (effectiveLocalType.IsPinned)
+            {
+                var localPinnedType = effectiveLocalType.FullName == "System.IntPtr"
+                    ? this.ResolveType("System.Void").ToPointerType()
+                    : effectiveLocalType.IsValueType ? effectiveLocalType.ToPointerType() : effectiveLocalType;
+                return localPinnedType;
+            }
+
+            return effectiveLocalType;
         }
 
         /// <summary>
@@ -849,19 +922,90 @@ namespace Il2Native.Logic
             yield return opCodeNope;
         }
 
+        protected int IntOpBitSize(OpCodePart opCode)
+        {
+            return Math.Max(
+                opCode.OpCodeOperands.Length > 0 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[0]) : 0,
+                opCode.OpCodeOperands.Length > 1 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[1]) : 0);
+        }
+
+        protected int IntOpOperandBitSize(OpCodePart opCode)
+        {
+            var op1ReturnResult = this.ResultOf(opCode);
+
+            if (op1ReturnResult == null || op1ReturnResult.Type == null || op1ReturnResult.IsConst)
+            {
+                return 0;
+            }
+
+            return op1ReturnResult.Type.IntTypeBitSize();
+        }
+
         /// <summary>
         /// </summary>
+        /// <param name="opCode">
+        /// </param>
         /// <returns>
         /// </returns>
-        public IEnumerable<OpCodePart> PrepareWritingMethodBody()
+        protected bool IsFloatingPointOp(OpCodePart opCode)
         {
-            var ops = this.PreProcessOpCodes(this.Ops).ToList();
-            this.BuildAddressIndexes(ops);
-            this.AssignJumpBlocks(ops);
-            this.ProcessAll(ops);
-            this.CalculateRequiredTypesForAlternativeValues(ops);
-            this.AssignExceptionsToOpCodes();
-            return ops;
+            return opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0])
+                   || opCode.OpCodeOperands.Length > 1 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[1]);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected bool IsFloatingPointOpOperand(OpCodePart opCode)
+        {
+            var op1ReturnResult = this.ResultOf(opCode);
+
+            // TODO: result of unbox is null, fix it
+            if (op1ReturnResult == null || op1ReturnResult.Type == null)
+            {
+                return false;
+            }
+
+            var op1IsReal = !op1ReturnResult.Type.UseAsClass && op1ReturnResult.Type.IsReal();
+            return op1IsReal;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected bool IsPointerArithmetic(OpCodePart opCode)
+        {
+            if (opCode == null || opCode.OpCodeOperands == null)
+            {
+                return false;
+            }
+
+            if (!opCode.OpCodeOperands.Any(o => o.Result.Type.IsPointer))
+            {
+                return false;
+            }
+
+            if (opCode.Any(
+                Code.Add,
+                Code.Add_Ovf,
+                Code.Add_Ovf_Un,
+                Code.Sub,
+                Code.Sub_Ovf,
+                Code.Sub_Ovf_Un,
+                Code.Mul,
+                Code.Mul_Ovf,
+                Code.Mul_Ovf_Un))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1166,128 +1310,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected bool IsFloatingPointOp(OpCodePart opCode)
-        {
-            return opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0])
-                   || opCode.OpCodeOperands.Length > 1 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[1]);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected bool IsFloatingPointOpOperand(OpCodePart opCode)
-        {
-            var op1ReturnResult = ResultOf(opCode);
-
-            // TODO: result of unbox is null, fix it
-            if (op1ReturnResult == null || op1ReturnResult.Type == null)
-            {
-                return false;
-            }
-
-            var op1IsReal = !op1ReturnResult.Type.UseAsClass && op1ReturnResult.Type.IsReal();
-            return op1IsReal;
-        }
-
-        protected int IntOpBitSize(OpCodePart opCode)
-        {
-            return Math.Max(
-                opCode.OpCodeOperands.Length > 0 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[0]) : 0,
-                opCode.OpCodeOperands.Length > 1 ? this.IntOpOperandBitSize(opCode.OpCodeOperands[1]) : 0);
-        }
-
-        protected int IntOpOperandBitSize(OpCodePart opCode)
-        {
-            var op1ReturnResult = ResultOf(opCode);
-
-            if (op1ReturnResult == null || op1ReturnResult.Type == null || op1ReturnResult.IsConst)
-            {
-                return 0;
-            }
-
-            return op1ReturnResult.Type.IntTypeBitSize();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected bool IsPointerArithmetic(OpCodePart opCode)
-        {
-            if (opCode == null || opCode.OpCodeOperands == null)
-            {
-                return false;
-            }
-
-            if (!opCode.OpCodeOperands.Any(o => o.Result.Type.IsPointer))
-            {
-                return false;
-            }
-
-            if (opCode.Any(
-                Code.Add,
-                Code.Add_Ovf,
-                Code.Add_Ovf_Un,
-                Code.Sub,
-                Code.Sub_Ovf,
-                Code.Sub_Ovf_Un,
-                Code.Mul,
-                Code.Mul_Ovf,
-                Code.Mul_Ovf_Un))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
-        {
-            this.Parameters = methodInfo.GetParameters().ToArray();
-            this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
-
-            this.MethodReturnType = null;
-            this.ThisType = methodInfo.DeclaringType;
-
-            ////this.GenericMethodArguments = methodBase.GetGenericArguments();
-            var methodBody = methodInfo.ResolveMethodBody(genericContext);
-            this.NoBody = !methodBody.HasBody;
-            if (!this.NoBody)
-            {
-                this.LocalInfo = methodBody.LocalVariables.ToArray();
-
-                this.AdjustLocalVariableTypes();
-
-#if DEBUG
-                Debug.Assert(
-                    genericContext == null || !this.LocalInfo.Any(li => li.LocalType.IsGenericParameter),
-                    "Has Ganaric Parameter");
-#endif
-
-                this.LocalInfoUsed = new bool[this.LocalInfo.Length];
-                this.ExceptionHandlingClauses = methodBody.ExceptionHandlingClauses.ToArray();
-            }
-
-            this.MethodReturnType = !methodInfo.ReturnType.IsVoid() ? methodInfo.ReturnType : null;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         protected void ReadTypeInfo(IType type)
@@ -1304,7 +1326,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected IType RequiredIncomingType(OpCodePart opCodePart, int operandPosition = -1, bool forArithmeticOperations = false)
+        protected IType RequiredIncomingType(
+            OpCodePart opCodePart,
+            int operandPosition = -1,
+            bool forArithmeticOperations = false)
         {
             // TODO: need a good review of required types etc
             IType retType = null;
@@ -1513,54 +1538,6 @@ namespace Il2Native.Logic
             return retType;
         }
 
-        protected IType GetEffectiveLocalType(ILocalVariable local)
-        {
-            var effectiveLocalType = local.LocalType;
-            if (effectiveLocalType.IsPinned)
-            {
-                var localPinnedType = effectiveLocalType.FullName == "System.IntPtr"
-                                          ? ResolveType("System.Void").ToPointerType()
-                                          : effectiveLocalType.IsValueType ? effectiveLocalType.ToPointerType() : effectiveLocalType;
-                return localPinnedType;
-            }
-
-            return effectiveLocalType;
-        }
-
-        private IType RequiredArithmeticIncomingType(OpCodePart opCodePart)
-        {
-            if (!opCodePart.Any(
-                Code.Add,
-                Code.Sub,
-                Code.Mul,
-                Code.Div,
-                Code.Div_Un,
-                Code.Rem,
-                Code.Rem_Un,
-                Code.Shl,
-                Code.Shr,
-                Code.Shr_Un,
-                Code.Not))
-            {
-                return null;
-            }
-
-            var uintRequired = opCodePart.Any(Code.Shl, Code.Shr, Code.Shr_Un);
-
-            if (this.IsFloatingPointOp(opCodePart))
-            {
-                return null;
-            }
-
-            var intOpBitSize = this.IntOpBitSize(opCodePart);
-            if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
-            {
-                return uintRequired ? this.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
-            }
-
-            return uintRequired ? this.GetUIntTypeByByteSize(LlvmWriter.PointerSize) : this.GetIntTypeByByteSize(LlvmWriter.PointerSize);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
@@ -1645,62 +1622,62 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Conv_I8, Code.Conv_Ovf_I8, Code.Conv_Ovf_I8_Un))
             {
-                return ResolveType("System.Int64");
+                return this.ResolveType("System.Int64");
             }
 
             if (opCodePart.Any(Code.Conv_I4, Code.Conv_Ovf_I4, Code.Conv_Ovf_I4_Un))
             {
-                return ResolveType("System.Int32");
+                return this.ResolveType("System.Int32");
             }
 
             if (opCodePart.Any(Code.Conv_I2, Code.Conv_Ovf_I2, Code.Conv_Ovf_I2_Un))
             {
-                return ResolveType("System.Int16");
+                return this.ResolveType("System.Int16");
             }
 
             if (opCodePart.Any(Code.Conv_I1, Code.Conv_Ovf_I1, Code.Conv_Ovf_I1_Un))
             {
-                return ResolveType("System.SByte");
+                return this.ResolveType("System.SByte");
             }
 
             if (opCodePart.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I_Un))
             {
-                return ResolveType("System.Void").ToPointerType();
+                return this.ResolveType("System.Void").ToPointerType();
             }
 
             if (opCodePart.Any(Code.Conv_U8, Code.Conv_Ovf_U8, Code.Conv_Ovf_U8_Un))
             {
-                return ResolveType("System.UInt64");
+                return this.ResolveType("System.UInt64");
             }
 
             if (opCodePart.Any(Code.Conv_U4, Code.Conv_Ovf_U4, Code.Conv_Ovf_U4_Un))
             {
-                return ResolveType("System.UInt32");
+                return this.ResolveType("System.UInt32");
             }
 
             if (opCodePart.Any(Code.Conv_U2, Code.Conv_Ovf_U2, Code.Conv_Ovf_U2_Un))
             {
-                return ResolveType("System.UInt16");
+                return this.ResolveType("System.UInt16");
             }
 
             if (opCodePart.Any(Code.Conv_U1, Code.Conv_Ovf_U1, Code.Conv_Ovf_U1_Un))
             {
-                return ResolveType("System.Byte");
+                return this.ResolveType("System.Byte");
             }
 
             if (opCodePart.Any(Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un))
             {
-                return ResolveType("System.Void").ToPointerType();
+                return this.ResolveType("System.Void").ToPointerType();
             }
 
             if (opCodePart.Any(Code.Conv_R4))
             {
-                return ResolveType("System.Single");
+                return this.ResolveType("System.Single");
             }
 
             if (opCodePart.Any(Code.Conv_R8))
             {
-                return ResolveType("System.Double");
+                return this.ResolveType("System.Double");
             }
 
             return retType;
@@ -1750,7 +1727,7 @@ namespace Il2Native.Logic
             // replace pinned IntPtr& with Int
             foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
             {
-                localInfo.LocalType = GetEffectiveLocalType(localInfo);
+                localInfo.LocalType = this.GetEffectiveLocalType(localInfo);
             }
         }
 
@@ -1790,6 +1767,42 @@ namespace Il2Native.Logic
             }
 
             return this.Stacks.Pop();
+        }
+
+        private IType RequiredArithmeticIncomingType(OpCodePart opCodePart)
+        {
+            if (!opCodePart.Any(
+                Code.Add,
+                Code.Sub,
+                Code.Mul,
+                Code.Div,
+                Code.Div_Un,
+                Code.Rem,
+                Code.Rem_Un,
+                Code.Shl,
+                Code.Shr,
+                Code.Shr_Un,
+                Code.Not))
+            {
+                return null;
+            }
+
+            var uintRequired = opCodePart.Any(Code.Shl, Code.Shr, Code.Shr_Un);
+
+            if (this.IsFloatingPointOp(opCodePart))
+            {
+                return null;
+            }
+
+            var intOpBitSize = this.IntOpBitSize(opCodePart);
+            if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
+            {
+                return uintRequired ? this.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
+            }
+
+            return uintRequired
+                ? this.GetUIntTypeByByteSize(LlvmWriter.PointerSize)
+                : this.GetIntTypeByByteSize(LlvmWriter.PointerSize);
         }
 
         /// <summary>

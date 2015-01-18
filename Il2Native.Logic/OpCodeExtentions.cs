@@ -6,6 +6,7 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     using System.Collections.Generic;
@@ -13,16 +14,19 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection.Emit;
     using System.Text;
-
-    using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Gencode;
-
+    using CodeParts;
+    using Gencode;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public static class OpCodeExtensions
     {
+        public static int Align(this int unalign, int alignSize)
+        {
+            return unalign + alignSize - unalign % alignSize;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -52,7 +56,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="readStaticFields">
         /// </param>
-        public static void DiscoverMethod(this IMethod method, ISet<IType> usedTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
+        public static void DiscoverMethod(
+            this IMethod method,
+            ISet<IType> usedTypes,
+            ISet<IMethod> calledMethods,
+            ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -64,7 +72,6 @@ namespace Il2Native.Logic
             var genericContext = MetadataGenericContext.DiscoverFrom(method);
             foreach (var op in reader.OpCodes(method, genericContext, new Queue<IMethod>()))
             {
-                ;
             }
         }
 
@@ -98,6 +105,35 @@ namespace Il2Native.Logic
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
             {
             }
+        }
+
+        public static int? FindBeginOfBasicBlock(this OpCodePart popCodePart)
+        {
+            // add alternative stack value to and address
+            // 1) find jump address
+            var current = popCodePart;
+
+            // Varpop can pop 0
+            var jumpOrLabel = false;
+            while (current != null && !JumpOrLabelPoint(current, out jumpOrLabel))
+            {
+                current = current.Previous;
+            }
+
+            if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
+            {
+                var nextAlternateValues = current.Next != null ? current.Next.AlternativeValues : null;
+                if (nextAlternateValues != null &&
+                    nextAlternateValues.Values.Any(v => v.AddressStart == current.AddressStart))
+                {
+                    return current.Next.AddressStart;
+                }
+
+                var address = jumpOrLabel ? current.AddressStart : current.AddressEnd;
+                return address;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -163,6 +199,13 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
+        public static IField GetFieldByName(this IType classType, string fieldName)
+        {
+            var normalType = classType.ToNormal();
+            var field = IlReader.Fields(normalType).FirstOrDefault(f => f.Name == fieldName);
+            return field;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="classType">
@@ -188,31 +231,6 @@ namespace Il2Native.Logic
 
             return field.FieldType;
         }
-
-        public static IField GetFieldByName(this IType classType, string fieldName)
-        {
-            var normalType = classType.ToNormal();
-            var field = IlReader.Fields(normalType).FirstOrDefault(f => f.Name == fieldName);
-            return field;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="field">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetFullName(this IField field)
-        {
-            var sb = new StringBuilder();
-
-            sb.Append(field.DeclaringType);
-            sb.Append('.');
-            sb.Append(field.Name);
-
-            return sb.ToString();
-        }
-
 
         /// <summary>
         /// </summary>
@@ -249,6 +267,23 @@ namespace Il2Native.Logic
             }
 
             sb.Append('"');
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="field">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static string GetFullName(this IField field)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append(field.DeclaringType);
+            sb.Append('.');
+            sb.Append(field.Name);
 
             return sb.ToString();
         }
@@ -351,7 +386,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsAnyBranch(this OpCodePart opCodePart)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch;
+            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch ||
+                   opCodePart.OpCode.FlowControl == FlowControl.Branch;
         }
 
         /// <summary>
@@ -373,7 +409,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsCondBranch(this OpCodePart opCodePart)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() != Code.Switch && opCodePart.ToCode() != Code.Leave
+            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() != Code.Switch &&
+                   opCodePart.ToCode() != Code.Leave
                    && opCodePart.ToCode() != Code.Leave_S;
         }
 
@@ -428,13 +465,6 @@ namespace Il2Native.Logic
         public static bool IsExternalLibraryMethod(this IMethod method)
         {
             return method.IsUnmanaged && !method.IsUnmanagedMethodReference && !method.Name.StartsWith("llvm_");
-        }
-
-        public static bool IsSkipped(this IMethod method)
-        {
-            return method.IsUnmanaged && !method.IsUnmanagedMethodReference && 
-                (method.Name == "llvm_memcpy_p0i8_p0i8_i32"
-                || method.Name == "llvm_memset_p0i8_i32");
         }
 
         /// <summary>
@@ -551,7 +581,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
         {
-            if (method.MetadataName == genericMethod.MetadataName && method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
+            if (method.MetadataName == genericMethod.MetadataName &&
+                method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
             {
                 return method.IsMatchingGenericParamsAndReturnType(genericMethod);
             }
@@ -668,7 +699,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsRootOfVirtualTable(this IType type)
         {
-            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType() && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType() &&
+                   (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
         }
 
         /// <summary>
@@ -694,21 +726,6 @@ namespace Il2Native.Logic
             return false;
         }
 
-        public static bool IsUnsignedType(this IType thisType)
-        {
-            switch (thisType.FullName)
-            {
-                case "System.Byte":
-                case "System.UInt16":
-                case "System.UInt32":
-                case "System.UInt64":
-                case "System.UIntPtr":
-                    return true;
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -718,6 +735,13 @@ namespace Il2Native.Logic
         public static bool IsSingle(this IType type)
         {
             return type != null && type.Name == "Single" && type.Namespace == "System";
+        }
+
+        public static bool IsSkipped(this IMethod method)
+        {
+            return method.IsUnmanaged && !method.IsUnmanagedMethodReference &&
+                   (method.Name == "llvm_memcpy_p0i8_p0i8_i32"
+                    || method.Name == "llvm_memset_p0i8_i32");
         }
 
         /// <summary>
@@ -731,8 +755,10 @@ namespace Il2Native.Logic
         public static bool IsStructureType(this IType type, bool recurse = false)
         {
             return type != null
-                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer && !type.IsByRef
-                       || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
+                   &&
+                   (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer &&
+                    !type.IsByRef
+                    || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
         /// <summary>
@@ -761,6 +787,21 @@ namespace Il2Native.Logic
             }
 
             return result1.Type.IsUnsignedType() && result2.Type.IsUnsignedType();
+        }
+
+        public static bool IsUnsignedType(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.Byte":
+                case "System.UInt16":
+                case "System.UInt32":
+                case "System.UInt64":
+                case "System.UIntPtr":
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1076,7 +1117,8 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
+            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) &&
+                genType.MetadataFullName.Equals(type.MetadataFullName))
             {
                 return true;
             }
@@ -1164,37 +1206,11 @@ namespace Il2Native.Logic
             return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
         }
 
-        public static int? FindBeginOfBasicBlock(this OpCodePart popCodePart)
-        {
-            // add alternative stack value to and address
-            // 1) find jump address
-            var current = popCodePart;
-
-            // Varpop can pop 0
-            var jumpOrLabel = false;
-            while (current != null && !(JumpOrLabelPoint(current, out jumpOrLabel)))
-            {
-                current = current.Previous;
-            }
-
-            if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
-            {
-                var nextAlternateValues = current.Next != null ? current.Next.AlternativeValues : null;
-                if (nextAlternateValues != null && nextAlternateValues.Values.Any(v => v.AddressStart == current.AddressStart))
-                {
-                    return current.Next.AddressStart;
-                }
-
-                var address = jumpOrLabel ? current.AddressStart : current.AddressEnd;
-                return address;
-            }
-
-            return null;
-        }
-
         private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)
         {
-            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch || current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward() && !current.Any(Code.Leave, Code.Leave_S))
+            if ((current.OpCode.FlowControl == FlowControl.Cond_Branch ||
+                 current.OpCode.FlowControl == FlowControl.Branch) && current.IsJumpForward() &&
+                !current.Any(Code.Leave, Code.Leave_S))
             {
                 startOrEnd = false;
                 return true;
@@ -1208,11 +1224,6 @@ namespace Il2Native.Logic
 
             startOrEnd = false;
             return false;
-        }
-
-        public static int Align(this int unalign, int alignSize)
-        {
-            return unalign + alignSize - unalign % alignSize;
         }
     }
 }

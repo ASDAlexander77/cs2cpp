@@ -6,10 +6,10 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     using System;
-
     using PEAssemblyReader;
 
     /// <summary>

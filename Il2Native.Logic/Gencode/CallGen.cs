@@ -10,14 +10,12 @@
 namespace Il2Native.Logic.Gencode
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.InteropServices;
-
-    using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Exceptions;
-
+    using CodeParts;
+    using Exceptions;
     using PEAssemblyReader;
-    using System.Diagnostics;
 
     /// <summary>
     /// </summary>
@@ -31,7 +29,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void PreProcessCallParameters(this IMethod methodBase, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static void PreProcessCallParameters(
+            this IMethod methodBase,
+            OpCodePart opCodeMethodInfo,
+            LlvmWriter llvmWriter)
         {
             // check if you need to cast parameter
             if (opCodeMethodInfo.OpCodeOperands == null)
@@ -102,15 +103,15 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void WriteFunctionCallArguments(
-            this IEnumerable<IParameter> parameterInfos, 
-            OpCodePart[] used, 
-            bool @isVirtual, 
-            bool hasThis, 
-            bool isCtor, 
-            FullyDefinedReference resultNumberForThis, 
-            IType thisType, 
-            FullyDefinedReference resultNumberForReturn, 
-            IType returnType, 
+            this IEnumerable<IParameter> parameterInfos,
+            OpCodePart[] used,
+            bool @isVirtual,
+            bool hasThis,
+            bool isCtor,
+            FullyDefinedReference resultNumberForThis,
+            IType thisType,
+            FullyDefinedReference resultNumberForReturn,
+            IType returnType,
             LlvmWriter llvmWriter,
             bool varArg)
         {
@@ -161,8 +162,8 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.CheckIfExternalDeclarationIsRequired(returnType);
 
             var argsContainsThisArg = used != null ? (used.Length - parameterInfos.Count()) > 0 : false;
-            var argShift = (@isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0);
-            
+            var argShift = @isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0;
+
             // add parameters
             foreach (var parameter in parameterInfos)
             {
@@ -203,38 +204,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write(")");
         }
 
-        private static void WriteFunctionCallParameterArgument(this LlvmWriter llvmWriter, OpCodePart opArg, IParameter parameter)
-        {
-            var writer = llvmWriter.Output;
-
-            llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
-
-            parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
-            if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
-            {
-                writer.Write(" byval align " + LlvmWriter.PointerSize);
-            }
-
-            writer.Write(' ');
-            llvmWriter.WriteResult(opArg);
-        }
-
-        private static void WriteFunctionCallVarArgument(this LlvmWriter llvmWriter, OpCodePart opArg, IType type)
-        {
-            var writer = llvmWriter.Output;
-
-            llvmWriter.CheckIfExternalDeclarationIsRequired(type);
-
-            type.WriteTypePrefix(writer, type.IsStructureType());
-            if (type.IsStructureType())
-            {
-                writer.Write(" byval align " + LlvmWriter.PointerSize);
-            }
-
-            writer.Write(' ');
-            llvmWriter.WriteResult(opArg);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="methodInfo">
@@ -243,7 +212,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteFunctionCallAttributes(this IMethod methodInfo, LlvmIndentedTextWriter writer)
         {
-            if (methodInfo.DllImportData != null && methodInfo.DllImportData.CallingConvention == CallingConvention.StdCall)
+            if (methodInfo.DllImportData != null &&
+                methodInfo.DllImportData.CallingConvention == CallingConvention.StdCall)
             {
                 writer.Write("x86_stdcallcc ");
             }
@@ -262,7 +232,11 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void WriteFunctionCallLoadFunctionAddress(
-            this IMethod methodInfo, OpCodePart opCodeMethodInfo, IType thisType, ref FullyDefinedReference methodAddressResultNumber, LlvmWriter llvmWriter)
+            this IMethod methodInfo,
+            OpCodePart opCodeMethodInfo,
+            IType thisType,
+            ref FullyDefinedReference methodAddressResultNumber,
+            LlvmWriter llvmWriter)
         {
             if (!methodInfo.IsUnmanagedMethodReference)
             {
@@ -274,7 +248,9 @@ namespace Il2Native.Logic.Gencode
             // if this is external method reference we need to load reference first
             // %4 = load i32 ()** @__glewCreateProgram, align 4
             // load pointer
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+            llvmWriter.WriteSetResultNumber(
+                opCodeMethodInfo,
+                llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
@@ -297,16 +273,22 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void WriteFunctionCallPrepareThisExpression(
-            this OpCodePart opCodeMethodInfo, IType thisType, OpCodePart opCodeFirstOperand, BaseWriter.ReturnResult resultOfFirstOperand, LlvmWriter llvmWriter)
+            this OpCodePart opCodeMethodInfo,
+            IType thisType,
+            OpCodePart opCodeFirstOperand,
+            BaseWriter.ReturnResult resultOfFirstOperand,
+            LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
             // check if you need to cast this parameter
             var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
-            var isPrimitivePointer = resultOfFirstOperand.Type.IsPointer && resultOfFirstOperand.Type.GetElementType().IsPrimitiveTypeOrEnum();
+            var isPrimitivePointer = resultOfFirstOperand.Type.IsPointer &&
+                                     resultOfFirstOperand.Type.GetElementType().IsPrimitiveTypeOrEnum();
 
             var dynamicCastRequired = false;
-            if (!isPrimitive && !isPrimitivePointer && thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+            if (!isPrimitive && !isPrimitivePointer &&
+                thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
             {
                 writer.WriteLine("; Cast of 'This' parameter");
                 llvmWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -330,7 +312,10 @@ namespace Il2Native.Logic.Gencode
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
                     var firstOperandResult = opCodeFirstOperand.Result;
                     opCodeFirstOperand.Result = null;
-                    llvmWriter.WriteLlvmLoad(opCodeFirstOperand, firstOperandResult.Type.ToDereferencedType(), firstOperandResult);
+                    llvmWriter.WriteLlvmLoad(
+                        opCodeFirstOperand,
+                        firstOperandResult.Type.ToDereferencedType(),
+                        firstOperandResult);
                 }
                 else
                 {
@@ -342,7 +327,10 @@ namespace Il2Native.Logic.Gencode
                         var declType = (opCodeMethodInfo as OpCodeMethodInfoPart).Operand.DeclaringType;
                         Debug.Assert(declType.IsStructureType(), "only Struct type can be used");
                         primitiveType = declType.ToClass();
-                        llvmWriter.AdjustIntConvertableTypes(writer, opCodeMethodInfo.OpCodeOperands[0], declType.ToPointerType()); 
+                        llvmWriter.AdjustIntConvertableTypes(
+                            writer,
+                            opCodeMethodInfo.OpCodeOperands[0],
+                            declType.ToPointerType());
                     }
                     else
                     {
@@ -394,17 +382,17 @@ namespace Il2Native.Logic.Gencode
         /// <param name="requiredType">
         /// </param>
         public static void WriteFunctionCallProlog(
-            this IMethod methodInfo, 
-            OpCodePart opCodeMethodInfo, 
-            bool isVirtual, 
-            bool hasThis, 
-            LlvmWriter llvmWriter, 
-            out IType thisType, 
-            out bool hasThisArgument, 
-            out OpCodePart opCodeFirstOperand, 
-            out BaseWriter.ReturnResult resultOfFirstOperand, 
-            out bool isIndirectMethodCall, 
-            out IType ownerOfExplicitInterface, 
+            this IMethod methodInfo,
+            OpCodePart opCodeMethodInfo,
+            bool isVirtual,
+            bool hasThis,
+            LlvmWriter llvmWriter,
+            out IType thisType,
+            out bool hasThisArgument,
+            out OpCodePart opCodeFirstOperand,
+            out BaseWriter.ReturnResult resultOfFirstOperand,
+            out bool isIndirectMethodCall,
+            out IType ownerOfExplicitInterface,
             out IType requiredType)
         {
             thisType = methodInfo.DeclaringType.ToClass();
@@ -412,14 +400,19 @@ namespace Il2Native.Logic.Gencode
             hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null
                               && opCodeMethodInfo.OpCodeOperands.Length - methodInfo.GetParameters().Count() > 0;
             opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
-                                     ? opCodeMethodInfo.OpCodeOperands[0]
-                                     : null;
+                ? opCodeMethodInfo.OpCodeOperands[0]
+                : null;
             resultOfFirstOperand = opCodeFirstOperand != null ? llvmWriter.ResultOf(opCodeFirstOperand) : null;
 
             isIndirectMethodCall = isVirtual
-                                   && (methodInfo.IsAbstract || methodInfo.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
+                                   &&
+                                   (methodInfo.IsAbstract || methodInfo.IsVirtual ||
+                                    (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
 
-            ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.Type) ? resultOfFirstOperand.Type : null;
+            ownerOfExplicitInterface = isVirtual && thisType.IsInterface &&
+                                       thisType.TypeNotEquals(resultOfFirstOperand.Type)
+                ? resultOfFirstOperand.Type
+                : null;
 
             var rollbackType = false;
             requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;
@@ -429,7 +422,8 @@ namespace Il2Native.Logic.Gencode
                 rollbackType = true;
             }
 
-            if (isIndirectMethodCall && methodInfo.DeclaringType.TypeNotEquals(thisType) && methodInfo.DeclaringType.IsInterface && !thisType.IsInterface
+            if (isIndirectMethodCall && methodInfo.DeclaringType.TypeNotEquals(thisType) &&
+                methodInfo.DeclaringType.IsInterface && !thisType.IsInterface
                 && thisType.HasExplicitInterfaceMethodOverride(methodInfo))
             {
                 // this is explicit call of interface
@@ -451,7 +445,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static FullyDefinedReference WriteFunctionCallResult(this IMethod methodInfo, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static FullyDefinedReference WriteFunctionCallResult(
+            this IMethod methodInfo,
+            OpCodePart opCodeMethodInfo,
+            LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -508,7 +505,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteFunctionCallUnwind(this TryClause tryClause, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static void WriteFunctionCallUnwind(
+            this TryClause tryClause,
+            OpCodePart opCodeMethodInfo,
+            LlvmWriter llvmWriter)
         {
             if (tryClause == null)
             {
@@ -548,7 +548,10 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void WriteFunctionNameExpression(
-            this IMethod methodInfo, FullyDefinedReference methodAddressResultNumber, IType ownerOfExplicitInterface, LlvmWriter llvmWriter)
+            this IMethod methodInfo,
+            FullyDefinedReference methodAddressResultNumber,
+            IType ownerOfExplicitInterface,
+            LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
@@ -562,6 +565,41 @@ namespace Il2Native.Logic.Gencode
                 // default method name
                 llvmWriter.WriteMethodDefinitionName(writer, methodInfo, ownerOfExplicitInterface);
             }
+        }
+
+        private static void WriteFunctionCallParameterArgument(
+            this LlvmWriter llvmWriter,
+            OpCodePart opArg,
+            IParameter parameter)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
+
+            parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
+            if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
+            {
+                writer.Write(" byval align " + llvmWriter.ByValAlign);
+            }
+
+            writer.Write(' ');
+            llvmWriter.WriteResult(opArg);
+        }
+
+        private static void WriteFunctionCallVarArgument(this LlvmWriter llvmWriter, OpCodePart opArg, IType type)
+        {
+            var writer = llvmWriter.Output;
+
+            llvmWriter.CheckIfExternalDeclarationIsRequired(type);
+
+            type.WriteTypePrefix(writer, type.IsStructureType());
+            if (type.IsStructureType())
+            {
+                writer.Write(" byval align " + llvmWriter.ByValAlign);
+            }
+
+            writer.Write(' ');
+            llvmWriter.WriteResult(opArg);
         }
     }
 }

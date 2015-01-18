@@ -6,6 +6,7 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Exceptions
 {
     using System;
@@ -17,16 +18,14 @@ namespace Il2Native.Logic.Exceptions
     {
         /// <summary>
         /// </summary>
-        private readonly Lazy<List<CatchOfFinallyClause>> lazyCatches = new Lazy<List<CatchOfFinallyClause>>(() => new List<CatchOfFinallyClause>());
+        private readonly Lazy<List<CatchOfFinallyClause>> lazyCatches =
+            new Lazy<List<CatchOfFinallyClause>>(() => new List<CatchOfFinallyClause>());
 
         /// <summary>
         /// </summary>
         public List<CatchOfFinallyClause> Catches
         {
-            get
-            {
-                return this.lazyCatches.Value;
-            }
+            get { return this.lazyCatches.Value; }
         }
 
         /// <summary>
@@ -36,23 +35,6 @@ namespace Il2Native.Logic.Exceptions
         /// <summary>
         /// </summary>
         public int Offset { get; set; }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="other">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public int CompareTo(TryClause other)
-        {
-            var cmp = this.Offset.CompareTo(other.Offset);
-            if (cmp != 0)
-            {
-                return cmp;
-            }
-
-            return this.Length.CompareTo(other.Length);
-        }
 
         /// <summary>
         /// </summary>
@@ -69,6 +51,23 @@ namespace Il2Native.Logic.Exceptions
             }
 
             return -1;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="other">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public int CompareTo(TryClause other)
+        {
+            var cmp = this.Offset.CompareTo(other.Offset);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            return this.Length.CompareTo(other.Length);
         }
     }
 }

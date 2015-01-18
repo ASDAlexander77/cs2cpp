@@ -6,59 +6,39 @@
     using System.IO;
     using System.Linq;
     using System.Text;
-
-    using Il2Native.Logic.Gencode;
-    using Il2Native.Logic.Metadata.Model;
-
+    using Gencode;
+    using Metadata.Model;
     using PdbReader;
-
     using PEAssemblyReader;
 
     public class DebugInfoGenerator
     {
         private const string IdentityString = "C# Native compiler";
-
         private readonly string defaultSourceFilePath;
-
         private readonly IDictionary<int, int> indexByOffset = new SortedDictionary<int, int>();
-
         private readonly IList<CollectionMetadata> indexedMetadata = new List<CollectionMetadata>();
-
         private readonly IDictionary<int, string> nameBySlot = new SortedDictionary<int, string>();
-
         private readonly IList<NamedMetadata> namedMetadata = new List<NamedMetadata>(3);
-
         private readonly string pdbFileName;
+        private readonly bool structuresByName = true;
+        private readonly IDictionary<int, object> subrangeTypeCache = new SortedDictionary<int, object>();
+        private readonly IDictionary<string, CollectionMetadata> typeMembersByOffsetMetadataCache =
+            new SortedDictionary<string, CollectionMetadata>();
 
-        private readonly IDictionary<IField, CollectionMetadata> typeMembersMetadataCache = new SortedDictionary<IField, CollectionMetadata>();
-
-        private readonly IDictionary<string, CollectionMetadata> typeMembersByOffsetMetadataCache = new SortedDictionary<string, CollectionMetadata>();
+        private readonly IDictionary<IField, CollectionMetadata> typeMembersMetadataCache =
+            new SortedDictionary<IField, CollectionMetadata>();
 
         private readonly IDictionary<IType, object> typesMetadataCache = new SortedDictionary<IType, object>();
-
         private readonly IDictionary<IType, object> typeStructuresMetadataCache = new SortedDictionary<IType, object>();
-
-        private readonly IDictionary<int, object> subrangeTypeCache = new SortedDictionary<int, object>();
-
         private CollectionMetadata currentFunction;
-
         private CollectionMetadata file;
-
         private CollectionMetadata fileType;
-
-        private CollectionMetadata globalVariables;
-
-        private IMethod methodDefinition;
-
-        private CollectionMetadata retainedTypes;
-
-        private CollectionMetadata tagExpression;
-
-        private LlvmWriter writer;
-
         private int functionNumberUsedArgs = -1;
-
-        private bool structuresByName = true;
+        private CollectionMetadata globalVariables;
+        private IMethod methodDefinition;
+        private CollectionMetadata retainedTypes;
+        private CollectionMetadata tagExpression;
+        private LlvmWriter writer;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -85,16 +65,11 @@
 
         public string DefaultSourceFilePath
         {
-            get
-            {
-                return this.defaultSourceFilePath;
-            }
+            get { return this.defaultSourceFilePath; }
         }
 
         public CollectionMetadata Flags { get; private set; }
-
         public CollectionMetadata Identity { get; private set; }
-
         public IConverter PdbConverter { get; set; }
 
         public void DefineCompilationUnit(
@@ -137,7 +112,8 @@
                 // Subprograms
                 subprograms = new CollectionMetadata(this.indexedMetadata),
                 // Global Variables
-                new CollectionMetadata(this.indexedMetadata).Add(globalVariables = new CollectionMetadata(this.indexedMetadata) { NullIfEmpty = true }),
+                new CollectionMetadata(this.indexedMetadata).Add(
+                    globalVariables = new CollectionMetadata(this.indexedMetadata) { NullIfEmpty = true }),
                 // Imported entities
                 importedEntities = new CollectionMetadata(this.indexedMetadata));
 
@@ -169,7 +145,12 @@
             this.retainedTypes.Add(this.DefineType(field.DeclaringType));
 
             this.globalVariables.Add(
-                string.Format(@"0x34\00{0}\00{1}\00{2}\00{3}\000\001", field.Name, field.Name, PrepareEscape(field.GetFullName()), line),
+                string.Format(
+                    @"0x34\00{0}\00{1}\00{2}\00{3}\000\001",
+                    field.Name,
+                    field.Name,
+                    PrepareEscape(field.GetFullName()),
+                    line),
                 null,
                 this.fileType,
                 this.DefineType(field.FieldType),
@@ -182,7 +163,10 @@
             this.nameBySlot[slot] = name;
         }
 
-        public CollectionMetadata DefineMember(IField field, bool create = false, CollectionMetadata structureType = null)
+        public CollectionMetadata DefineMember(
+            IField field,
+            bool create = false,
+            CollectionMetadata structureType = null)
         {
             var line = 0;
             var size = field.FieldType.GetTypeSize(true) * 8;
@@ -202,7 +186,9 @@
             var typeMember = fieldMetadata.Add(
                 string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", field.Name, line, size, align, offset, flags),
                 this.file,
-                this.structuresByName || structureType == null ? (object)this.FindStructure(field.DeclaringType) : (object)structureType,
+                this.structuresByName || structureType == null
+                    ? this.FindStructure(field.DeclaringType)
+                    : (object)structureType,
                 this.DefineType(field.FieldType));
 
             if (this.structuresByName)
@@ -210,7 +196,7 @@
                 typeMember.Add((object)null);
             }
 
-            typeMembersMetadataCache[field] = typeMember;
+            this.typeMembersMetadataCache[field] = typeMember;
 
             return typeMember;
         }
@@ -223,11 +209,25 @@
             bool create = false,
             CollectionMetadata structureType = null)
         {
-            return DefineMember(fieldName, fieldType, offset, fieldDeclaringType, create, structureType, this.DefineType(fieldType));
+            return this.DefineMember(
+                fieldName,
+                fieldType,
+                offset,
+                fieldDeclaringType,
+                create,
+                structureType,
+                this.DefineType(fieldType));
         }
 
-
-        public CollectionMetadata DefineMember(string fieldName, IType fieldType, int offset, IType fieldDeclaringType, bool create = false, CollectionMetadata structureType = null, object definedMedataType = null, int count = 1)
+        public CollectionMetadata DefineMember(
+            string fieldName,
+            IType fieldType,
+            int offset,
+            IType fieldDeclaringType,
+            bool create = false,
+            CollectionMetadata structureType = null,
+            object definedMedataType = null,
+            int count = 1)
         {
             var line = 0;
             var size = fieldType.GetTypeSize(true) * 8 * count;
@@ -247,7 +247,9 @@
             var typeMember = fieldMetadata.Add(
                 string.Format(@"0xd\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}", fieldName, line, size, align, offset, flags),
                 this.file,
-                this.structuresByName || structureType == null ? (object)this.FindStructure(fieldDeclaringType) : (object)structureType,
+                this.structuresByName || structureType == null
+                    ? this.FindStructure(fieldDeclaringType)
+                    : (object)structureType,
                 definedMedataType);
 
             if (this.structuresByName)
@@ -255,12 +257,15 @@
                 typeMember.Add((object)null);
             }
 
-            typeMembersByOffsetMetadataCache[key] = typeMember;
+            this.typeMembersByOffsetMetadataCache[key] = typeMember;
 
             return typeMember;
         }
 
-        public CollectionMetadata DefineMethod(ISourceMethod method, CollectionMetadata file, out CollectionMetadata functionVariables)
+        public CollectionMetadata DefineMethod(
+            ISourceMethod method,
+            CollectionMetadata file,
+            out CollectionMetadata functionVariables)
         {
             // Flags 256 - definition (as main()), 259 - public (member of a class)
             var flag = 256;
@@ -271,8 +276,12 @@
             // find method definition
             this.methodDefinition = this.writer.MethodsByToken[method.Token];
 
-            var methodReferenceType = this.writer.WriteToString(() => this.writer.WriteMethodPointerType(this.writer.Output, this.methodDefinition));
-            var methodDefinitionName = this.writer.WriteToString(() => this.writer.WriteMethodDefinitionName(this.writer.Output, this.methodDefinition));
+            var methodReferenceType =
+                this.writer.WriteToString(
+                    () => this.writer.WriteMethodPointerType(this.writer.Output, this.methodDefinition));
+            var methodDefinitionName =
+                this.writer.WriteToString(
+                    () => this.writer.WriteMethodDefinitionName(this.writer.Output, this.methodDefinition));
 
             CollectionMetadata subroutineTypes;
             CollectionMetadata parametersTypes;
@@ -288,26 +297,33 @@
                         method.LineNumber,
                         flag,
                         scopeLine),
-                // Source directory (including trailing slash) & file pair
+                    // Source directory (including trailing slash) & file pair
                     file,
-                // Reference to context descriptor
+                    // Reference to context descriptor
                     this.fileType,
-                // Subroutine types
+                    // Subroutine types
                     subroutineTypes = new CollectionMetadata(this.indexedMetadata),
-                // indicates which base type contains the vtable pointer for the derived class
+                    // indicates which base type contains the vtable pointer for the derived class
                     null,
-                // function method reference ex. "i32 ()* @main"                
+                    // function method reference ex. "i32 ()* @main"                
                     new PlainTextMetadata(string.Concat(methodReferenceType, " ", methodDefinitionName)),
-                // Lists function template parameters
+                    // Lists function template parameters
                     null,
-                // Function declaration descriptor
+                    // Function declaration descriptor
                     null,
-                // List of function variables
+                    // List of function variables
                     functionVariables = new CollectionMetadata(this.indexedMetadata));
 
             // add subrouting type
             subroutineTypes.Add(
-                @"0x15\00\000\000\000\000\000\000", null, null, null, parametersTypes = new CollectionMetadata(this.indexedMetadata), null, null, null);
+                @"0x15\00\000\000\000\000\000\000",
+                null,
+                null,
+                null,
+                parametersTypes = new CollectionMetadata(this.indexedMetadata),
+                null,
+                null,
+                null);
 
             this.currentFunction = methodMetadataDefinition;
 
@@ -334,17 +350,6 @@
             return this.tagExpression;
         }
 
-        public object FindStructure(IType type)
-        {
-            object typeMetadata;
-            if (this.typesMetadataCache.TryGetValue(type, out typeMetadata))
-            {
-                return typeMetadata;
-            }
-
-            throw new KeyNotFoundException();
-        }
-
         public object DefineType(IType type)
         {
             var line = 0;
@@ -365,7 +370,7 @@
             else if (type.IsPointer)
             {
                 typeMetadata = this.DefinePointerType(type, line, offset);
-                this.typesMetadataCache[type] = typeMetadata;                
+                this.typesMetadataCache[type] = typeMetadata;
             }
             else if (type.IsByRef)
             {
@@ -375,24 +380,30 @@
             else if (type.IsArray)
             {
                 var structureType = new CollectionMetadata(this.indexedMetadata);
-                var structureOrStructureRef = this.structuresByName ? (object)type.FullName : (object)structureType;
-                var pointer = DefinePointerType(structureType, line, offset);
+                var structureOrStructureRef = this.structuresByName ? type.FullName : (object)structureType;
+                var pointer = this.DefinePointerType(structureType, line, offset);
 
                 this.typeStructuresMetadataCache[type] = structureOrStructureRef;
                 this.typesMetadataCache[type] = pointer;
 
-                this.DefineStructureType(type, line, offset, flags, structureType, this.DefineArrayMembers(type, structureType));
+                this.DefineStructureType(
+                    type,
+                    line,
+                    offset,
+                    flags,
+                    structureType,
+                    this.DefineArrayMembers(type, structureType));
 
                 typeMetadata = pointer;
             }
             else
             {
                 var structureType = new CollectionMetadata(this.indexedMetadata);
-                var structureOrStructureRef = this.structuresByName ? (object)type.FullName : (object)structureType;
+                var structureOrStructureRef = this.structuresByName ? type.FullName : (object)structureType;
                 object pointer = null;
                 if (!type.IsStructureType() && !type.IsEnum)
                 {
-                    pointer = DefinePointerType(structureType, line, offset);
+                    pointer = this.DefinePointerType(structureType, line, offset);
                 }
 
                 this.typeStructuresMetadataCache[type] = structureOrStructureRef;
@@ -406,7 +417,11 @@
             return typeMetadata;
         }
 
-        public CollectionMetadata DefineVariable(string name, IType variableType, DebugVariableType debugVariableType, int index = 0)
+        public CollectionMetadata DefineVariable(
+            string name,
+            IType variableType,
+            DebugVariableType debugVariableType,
+            int index = 0)
         {
             var line = 0;
 
@@ -418,10 +433,10 @@
 
                     if (index == 0)
                     {
-                        functionNumberUsedArgs++;
+                        this.functionNumberUsedArgs++;
                     }
 
-                    line = index * 16777216 + 1 + functionNumberUsedArgs * 5;
+                    line = index * 16777216 + 1 + this.functionNumberUsedArgs * 5;
                     break;
                 case DebugVariableType.Auto:
                     tag = "0x100";
@@ -431,7 +446,21 @@
             var type = this.DefineType(variableType);
 
             return new CollectionMetadata(this.indexedMetadata).Add(
-                string.Format(@"{2}\00{0}\00{1}\000", name, line, tag), this.currentFunction, this.fileType, type);
+                string.Format(@"{2}\00{0}\00{1}\000", name, line, tag),
+                this.currentFunction,
+                this.fileType,
+                type);
+        }
+
+        public object FindStructure(IType type)
+        {
+            object typeMetadata;
+            if (this.typesMetadataCache.TryGetValue(type, out typeMetadata))
+            {
+                return typeMetadata;
+            }
+
+            throw new KeyNotFoundException();
         }
 
         public void GenerateFunction(int token)
@@ -480,7 +509,9 @@
             }
 
             this.writer = writer;
-            this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
+            this.PdbConverter = Converter.GetConverter(
+                this.pdbFileName,
+                new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
 
             // to force generating CompileUnit info
             this.PdbConverter.ConvertFunction(-1);
@@ -502,7 +533,9 @@
 
             output.WriteLine("; Metadata Items");
             foreach (
-                var indexedMetadataItem in this.indexedMetadata.Where(indexedMetadataItem => !indexedMetadataItem.NullIfEmpty || !indexedMetadataItem.IsEmpty))
+                var indexedMetadataItem in
+                    this.indexedMetadata.Where(
+                        indexedMetadataItem => !indexedMetadataItem.NullIfEmpty || !indexedMetadataItem.IsEmpty))
             {
                 output.Write("!{0} = ", indexedMetadataItem.Index);
                 indexedMetadataItem.WriteValueTo(output);
@@ -540,6 +573,77 @@
             return sb.ToString();
         }
 
+        private CollectionMetadata DefineArrayMembers(IType type, CollectionMetadata structureType)
+        {
+            Debug.Assert(type != null && type.IsArray);
+
+            var members = new CollectionMetadata(this.indexedMetadata);
+
+            var elementsCount = 10;
+            var countOffset = 16; // 3 * pointerSize + sizeof(int)
+            var dataOffset = 20; // + pointer size
+
+            var countMember = this.DefineMember(
+                "count",
+                this.writer.ResolveType("System.Int32"),
+                countOffset * 8,
+                type,
+                true,
+                structureType);
+            members.Add(countMember);
+            members.Add(
+                this.DefineMember(
+                    "array",
+                    type,
+                    dataOffset * 8,
+                    type,
+                    true,
+                    structureType,
+                    this.DefineCArrayType(type.GetElementType(), 0, 0, elementsCount, countMember),
+                    0));
+
+            return members;
+        }
+
+        private CollectionMetadata DefineByRefType(IType type, int line, int offset)
+        {
+            Debug.Assert(type != null && type.IsByRef);
+            return this.DefinePointerType(this.DefineType(type.GetElementType()), line, offset);
+        }
+
+        private CollectionMetadata DefineCArrayType(
+            IType type,
+            int line,
+            int offset,
+            int count = 0,
+            object countMember = null)
+        {
+            Debug.Assert(type != null);
+
+            return
+                new CollectionMetadata(this.indexedMetadata).Add(
+                    string.Format(
+                        @"0x1\00\00{0}\00{1}\00{2}\00{3}\000\000",
+                        line,
+                        count * type.GetTypeSize(true) * 8,
+                        LlvmWriter.PointerSize * 8,
+                        offset),
+                    null,
+                    null,
+                    this.DefineType(type.ToDereferencedType()),
+                    new CollectionMetadata(this.indexedMetadata).Add(this.DefineSubrangeType(count, countMember)),
+                    null,
+                    null,
+                    null);
+        }
+
+        private CollectionMetadata DefineExpression()
+        {
+            // 0x97 - DW_OP_push_object_address
+            // 0x06 - DW_OP_deref
+            return new CollectionMetadata(this.indexedMetadata).Add(@"0x102\0x97\0x06");
+        }
+
         private CollectionMetadata DefineMembers(IType type, CollectionMetadata structureType)
         {
             var members = new CollectionMetadata(this.indexedMetadata);
@@ -551,21 +655,25 @@
             return members;
         }
 
-        private CollectionMetadata DefineArrayMembers(IType type, CollectionMetadata structureType)
+        private CollectionMetadata DefinePointerType(IType type, int line, int offset)
         {
-            Debug.Assert(type != null && type.IsArray);
+            Debug.Assert(type != null && type.IsPointer);
+            return this.DefinePointerType(this.DefineType(type.ToDereferencedType()), line, offset);
+        }
 
-            var members = new CollectionMetadata(this.indexedMetadata);
-
-            var elementsCount = 10;
-            var countOffset = 16; // 3 * pointerSize + sizeof(int)
-            var dataOffset = 20; // + pointer size
-
-            var countMember = this.DefineMember("count", this.writer.ResolveType("System.Int32"), countOffset * 8, type, true, structureType);
-            members.Add(countMember);
-            members.Add(this.DefineMember("array", type, dataOffset * 8, type, true, structureType, DefineCArrayType(type.GetElementType(), 0, 0, elementsCount, countMember), 0));
-
-            return members;
+        private CollectionMetadata DefinePointerType(object typeDefinition, int line, int offset)
+        {
+            return
+                new CollectionMetadata(this.indexedMetadata).Add(
+                    string.Format(
+                        @"0x0f\00\00{0}\00{1}\00{2}\00{3}",
+                        line,
+                        LlvmWriter.PointerSize * 8,
+                        LlvmWriter.PointerSize * 8,
+                        offset),
+                    null,
+                    null,
+                    typeDefinition);
         }
 
         private CollectionMetadata DefinePrimitiveType(IType type, int line, int offset, int flags)
@@ -595,7 +703,7 @@
                     }
                     else if (type.IsPointer)
                     {
-                        typeCode = 1;                        
+                        typeCode = 1;
                     }
                     else
                     {
@@ -604,7 +712,7 @@
 
                     break;
             }
-            
+
             return
                 new CollectionMetadata(this.indexedMetadata).Add(
                     string.Format(
@@ -620,52 +728,40 @@
                     null);
         }
 
-        private CollectionMetadata DefinePointerType(IType type, int line, int offset)
+        private void DefineStructureType(IType type, int line, int offset, int flags, CollectionMetadata structureType)
         {
-            Debug.Assert(type != null && type.IsPointer);
-            return DefinePointerType(this.DefineType(type.ToDereferencedType()), line, offset);
+            this.DefineStructureType(type, line, offset, flags, structureType, this.DefineMembers(type, structureType));
         }
 
-        private CollectionMetadata DefineByRefType(IType type, int line, int offset)
+        private void DefineStructureType(
+            IType type,
+            int line,
+            int offset,
+            int flags,
+            CollectionMetadata structureType,
+            CollectionMetadata members)
         {
-            Debug.Assert(type != null && type.IsByRef);
-            return DefinePointerType(this.DefineType(type.GetElementType()), line, offset);
-        }
+            structureType.Add(
+                string.Format(
+                    @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000",
+                    type.Name,
+                    line,
+                    type.GetTypeSize(true) * 8,
+                    LlvmWriter.PointerSize * 8,
+                    offset,
+                    flags),
+                this.file,
+                null,
+                null,
+                members,
+                null,
+                null,
+                this.structuresByName ? type.FullName : null);
 
-        private CollectionMetadata DefinePointerType(object typeDefinition, int line, int offset)
-        {
-            return
-                new CollectionMetadata(this.indexedMetadata).Add(
-                    string.Format(
-                        @"0x0f\00\00{0}\00{1}\00{2}\00{3}",
-                        line,
-                        LlvmWriter.PointerSize * 8,
-                        LlvmWriter.PointerSize * 8,
-                        offset),
-                    null,
-                    null,
-                    typeDefinition);
-        }
-
-        private CollectionMetadata DefineCArrayType(IType type, int line, int offset, int count = 0, object countMember = null)
-        {
-            Debug.Assert(type != null);
-
-            return
-                new CollectionMetadata(this.indexedMetadata).Add(
-                    string.Format(
-                        @"0x1\00\00{0}\00{1}\00{2}\00{3}\000\000",
-                        line,
-                        count * type.GetTypeSize(true) * 8,
-                        LlvmWriter.PointerSize * 8,
-                        offset),
-                    null,
-                    null,
-                    this.DefineType(type.ToDereferencedType()),
-                    new CollectionMetadata(this.indexedMetadata).Add(this.DefineSubrangeType(count, countMember)),
-                    null,
-                    null,
-                    null);
+            if (this.structuresByName)
+            {
+                this.retainedTypes.Add(structureType);
+            }
         }
 
         private object DefineSubrangeType(int count, object countMember = null)
@@ -676,55 +772,24 @@
             ////}
 
             object subrangeType;
-            if (subrangeTypeCache.TryGetValue(count, out subrangeType))
+            if (this.subrangeTypeCache.TryGetValue(count, out subrangeType))
             {
                 return subrangeType;
             }
 
-            //if (countMember == null)
-            //{
-                subrangeType = new CollectionMetadata(this.indexedMetadata).Add(string.Format(@"0x21\000\00{0}", count));
-                subrangeTypeCache[count] = subrangeType;
-            //}
-            //else
-            //{
-            //    // next line should work but not working.
-            //    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21\000", countMember);
-            //    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21", this.DefineExpression(), this.DefineExpression());
-            //}
+            ////if (countMember == null)
+            ////{
+            subrangeType = new CollectionMetadata(this.indexedMetadata).Add(string.Format(@"0x21\000\00{0}", count));
+            this.subrangeTypeCache[count] = subrangeType;
+            ////}
+            ////else
+            ////{
+            ////    // next line should work but not working.
+            ////    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21\000", countMember);
+            ////    //subrangeType = new CollectionMetadata(this.indexedMetadata).Add(@"0x21", this.DefineExpression(), this.DefineExpression());
+            ////}
 
             return subrangeType;
-        }
-
-        private CollectionMetadata DefineExpression()
-        {
-            // 0x97 - DW_OP_push_object_address
-            // 0x06 - DW_OP_deref
-            return new CollectionMetadata(this.indexedMetadata).Add(@"0x102\0x97\0x06");
-        }
-
-        private void DefineStructureType(IType type, int line, int offset, int flags, CollectionMetadata structureType)
-        {
-            DefineStructureType(type, line, offset, flags, structureType, this.DefineMembers(type, structureType));
-        }
-
-        private void DefineStructureType(IType type, int line, int offset, int flags, CollectionMetadata structureType, CollectionMetadata members)
-        {
-            structureType.Add(
-                    string.Format(
-                        @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000", type.Name, line, type.GetTypeSize(true) * 8, LlvmWriter.PointerSize * 8, offset, flags),
-                    this.file,
-                    null,
-                    null,
-                    members,
-                    null,
-                    null,
-                    this.structuresByName ? type.FullName : null);
-
-            if (structuresByName)
-            {
-                this.retainedTypes.Add(structureType);
-            }
         }
     }
 }

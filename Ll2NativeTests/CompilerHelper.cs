@@ -5,9 +5,7 @@
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-
     using Il2Native.Logic;
-
     using Microsoft.VisualStudio.TestTools.UnitTesting;
 
     public static class CompilerHelper
@@ -34,9 +32,16 @@
         public const string OutputPath = @"D:\Temp\IlCTests\";
         public const string CoreLibPath = @"..\..\..\CoreLib\bin\Release\CoreLib.dll";
         public const string CoreLibPdbPath = @"..\..\..\CoreLib\bin\Release\CoreLib.pdb";
-        public const string OpenGlLibPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
-        public const string OpenGlExePath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
-        public const string AndroidPath = @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
+        public const string OpenGlLibPath =
+            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
+
+        public const string OpenGlExePath =
+            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
+
+        public const string AndroidPath =
+            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
+
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
         public const bool Llvm35Support = false;
@@ -74,7 +79,7 @@
         public const bool MultiCore = true;
 
         /// <summary>
-        /// ex. opt 'file'.ll -o 'file'.bc -O2
+        ///     ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
         public const bool CompileWithOptimization = true;
 
@@ -90,7 +95,14 @@
         /// </param>
         /// <returns>
         /// </returns>
-        public static string[] GetConverterArgs(bool includeCoreLib, bool roslyn = UsingRoslyn, bool gc = GcEnabled, bool gctors = GctorsEnabled, bool llvm35Support = Llvm35Support, bool llvm34Support = Llvm34Support, bool debugInfo = DebugInfo)
+        public static string[] GetConverterArgs(
+            bool includeCoreLib,
+            bool roslyn = UsingRoslyn,
+            bool gc = GcEnabled,
+            bool gctors = GctorsEnabled,
+            bool llvm35Support = Llvm35Support,
+            bool llvm34Support = Llvm34Support,
+            bool debugInfo = DebugInfo)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -175,7 +187,6 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-
             /*
                 call vcvars32.bat
                 llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
@@ -248,18 +259,29 @@
             if (!justCompile)
             {
                 // file exe
-                ExecCmd("g++", string.Format("-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .", fileName, OutputObjectFileExt));
+                ExecCmd(
+                    "g++",
+                    string.Format(
+                        "-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .",
+                        fileName,
+                        OutputObjectFileExt));
 
                 // test execution
                 ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
             }
             else
             {
-                Assert.IsTrue(File.Exists(Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
+                Assert.IsTrue(
+                    File.Exists(
+                        Path.Combine(OutputPath, string.Format("{0}{1}.{2}", OutputPath, fileName, OutputObjectFileExt))));
             }
         }
 
-        public static void ExecCmd(string fileName, string arguments = "", string workingDir = OutputPath, bool readOutput = false)
+        public static void ExecCmd(
+            string fileName,
+            string arguments = "",
+            string workingDir = OutputPath,
+            bool readOutput = false)
         {
             var processStartInfo = new ProcessStartInfo();
             processStartInfo.WorkingDirectory = workingDir;
@@ -320,7 +342,7 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-            ExecCompile(fileName, justCompile: true);
+            ExecCompile(fileName, true);
         }
 
         /// <summary>
@@ -386,9 +408,9 @@
         public static void AssertUiEnabled(bool enable)
         {
             foreach (var def in from object listener in Debug.Listeners
-                                let def = listener as System.Diagnostics.DefaultTraceListener
-                                where listener is System.Diagnostics.DefaultTraceListener
-                                select def)
+                let def = listener as DefaultTraceListener
+                where listener is DefaultTraceListener
+                select def)
             {
                 def.AssertUiEnabled = enable;
             }

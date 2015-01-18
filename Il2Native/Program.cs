@@ -12,8 +12,7 @@ namespace Il2Native
     using System;
     using System.IO;
     using System.Linq;
-
-    using Il2Native.Logic;
+    using Logic;
 
     /// <summary>
     /// </summary>
@@ -39,7 +38,8 @@ namespace Il2Native
                 Console.WriteLine("Options:");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
-                Console.WriteLine("  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi, asmjs-unknown-emscripten");
+                Console.WriteLine(
+                    "  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi, asmjs-unknown-emscripten");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
                 Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 (otherwise 3.6)");
@@ -58,18 +58,24 @@ namespace Il2Native
                 return 0;
             }
 
-            var processedArgs = args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
+            var processedArgs =
+                args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
             var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
 
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
-            if (!sources.All(f => Path.GetFileNameWithoutExtension(f).Equals(fileNameWithoutExtension, StringComparison.InvariantCultureIgnoreCase)))
+            if (
+                !sources.All(
+                    f =>
+                        Path.GetFileNameWithoutExtension(f)
+                            .Equals(fileNameWithoutExtension, StringComparison.InvariantCultureIgnoreCase)))
             {
                 Console.WriteLine("WARNING!");
                 Console.WriteLine("You can use only one type of files at a time.");
                 return 1;
             }
 
-            if (fileNameWithoutExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) && sources.Count() > 1)
+            if (fileNameWithoutExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) &&
+                sources.Count() > 1)
             {
                 Console.WriteLine("WARNING!");
                 Console.WriteLine("You can use only one DLL file at a time.");

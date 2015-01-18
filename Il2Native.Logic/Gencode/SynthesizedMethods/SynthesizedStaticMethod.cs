@@ -10,21 +10,20 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-
+    using CodeParts;
+    using InternalMethods;
     using PEAssemblyReader;
-    using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Gencode.InternalMethods;
-    using System.Collections.Generic;
 
     /// <summary>
     /// </summary>
     public class SynthesizedStaticMethod : SynthesizedMethodTypeBase, IMethodBodyCustomAction
     {
-        private IType returnType;
-        private IEnumerable<IParameter> parameters;
-        private Action<LlvmWriter, OpCodePart> action;
+        private readonly Action<LlvmWriter, OpCodePart> action;
+        private readonly IEnumerable<IParameter> parameters;
+        private readonly IType returnType;
 
         /// <summary>
         /// </summary>
@@ -32,43 +31,41 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IParameter> parameters)
+        public SynthesizedStaticMethod(
+            string name,
+            IType declaringType,
+            IType returnType,
+            IEnumerable<IParameter> parameters)
             : base(declaringType, name)
         {
             this.returnType = returnType;
             this.parameters = parameters.ToList();
         }
 
-        public SynthesizedStaticMethod(string name, IType declaringType, IType returnType, IEnumerable<IParameter> parameters, Action<LlvmWriter, OpCodePart> action)
+        public SynthesizedStaticMethod(
+            string name,
+            IType declaringType,
+            IType returnType,
+            IEnumerable<IParameter> parameters,
+            Action<LlvmWriter, OpCodePart> action)
             : this(name, declaringType, returnType, parameters)
         {
             this.action = action;
-            this.HasProceduralBody = true;
+            HasProceduralBody = true;
         }
 
         /// <summary>
         /// </summary>
         public override CallingConventions CallingConvention
         {
-            get
-            {
-                return CallingConventions.Standard;
-            }
+            get { return CallingConventions.Standard; }
         }
 
         /// <summary>
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.returnType;
-            }
-        }
-
-        public override IEnumerable<IParameter> GetParameters()
-        {
-            return this.parameters;
+            get { return this.returnType; }
         }
 
         public void Execute(LlvmWriter writer, OpCodePart opCode)
@@ -77,6 +74,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             {
                 this.action.Invoke(writer, opCode);
             }
+        }
+
+        public override IEnumerable<IParameter> GetParameters()
+        {
+            return this.parameters;
         }
     }
 }

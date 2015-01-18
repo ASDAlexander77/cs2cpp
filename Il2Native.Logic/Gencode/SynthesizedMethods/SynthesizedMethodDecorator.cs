@@ -9,14 +9,11 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Linq;
     using System.Collections.Generic;
     using System.Reflection;
-
-    using Microsoft.CodeAnalysis;
-
-    using PEAssemblyReader;
     using System.Text;
+    using Microsoft.CodeAnalysis;
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -24,262 +21,172 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         private readonly IMethod method;
         private readonly IMethodBody methodBody;
-        private readonly IEnumerable<IParameter> parameters;
         private readonly IModule module;
+        private readonly IEnumerable<IParameter> parameters;
 
         public SynthesizedMethodDecorator(IMethod method)
         {
             this.method = method;
         }
 
-        public SynthesizedMethodDecorator(IMethod method, IMethodBody methodBody, IEnumerable<IParameter> parameters, IModule module) : this(method)
+        public SynthesizedMethodDecorator(
+            IMethod method,
+            IMethodBody methodBody,
+            IEnumerable<IParameter> parameters,
+            IModule module) : this(method)
         {
             this.methodBody = methodBody;
             this.module = module;
             this.parameters = parameters;
         }
 
-        public string AssemblyQualifiedName 
+        public string AssemblyQualifiedName
         {
-            get
-            {
-                return this.method.AssemblyQualifiedName;
-            }
+            get { return this.method.AssemblyQualifiedName; }
         }
 
         public IType DeclaringType
         {
-            get
-            {
-                return this.method.DeclaringType;
-            }
+            get { return this.method.DeclaringType; }
         }
 
         public string FullName
         {
-            get
-            {
-                return this.method.FullName;
-            }
+            get { return this.method.FullName; }
         }
 
         public string MetadataFullName
         {
-            get
-            {
-                return this.method.MetadataFullName;
-            }
+            get { return this.method.MetadataFullName; }
         }
 
         public string MetadataName
         {
-            get
-            {
-                return this.method.MetadataName;
-            }
+            get { return this.method.MetadataName; }
         }
 
         public string Name
         {
-            get
-            {
-                return this.method.Name;
-            }
+            get { return this.method.Name; }
         }
 
         public string Namespace
         {
-            get
-            {
-                return this.method.Namespace;
-            }
+            get { return this.method.Namespace; }
         }
 
         public bool IsAbstract
         {
-            get
-            {
-                return this.method.IsAbstract;
-            }
+            get { return this.method.IsAbstract; }
         }
 
         public bool IsOverride
         {
-            get
-            {
-                return this.method.IsOverride;
-            }
+            get { return this.method.IsOverride; }
         }
 
         public bool IsStatic
         {
-            get
-            {
-                return this.method.IsStatic;
-            }
+            get { return this.method.IsStatic; }
         }
 
         public bool IsVirtual
         {
-            get
-            {
-                return this.method.IsVirtual;
-            }
+            get { return this.method.IsVirtual; }
         }
 
         public bool IsAnonymousDelegate
         {
-            get
-            {
-                return this.method.IsAnonymousDelegate;
-            }
+            get { return this.method.IsAnonymousDelegate; }
         }
 
         public IModule Module
         {
-            get
-            {
-                return this.module ?? this.method.Module;
-            }
+            get { return this.module ?? this.method.Module; }
         }
 
         public int? Token
         {
-            get
-            {
-                return this.method.Token;
-            }
+            get { return this.method.Token; }
         }
 
         public CallingConventions CallingConvention
         {
-            get
-            {
-                return this.method.CallingConvention;
-            }
+            get { return this.method.CallingConvention; }
         }
 
         public DllImportData DllImportData
         {
-            get
-            {
-                return this.method.DllImportData;
-            }
+            get { return this.method.DllImportData; }
         }
 
         public string ExplicitName
         {
-            get
-            {
-                return this.method.ExplicitName;
-            }
+            get { return this.method.ExplicitName; }
         }
 
         public bool IsConstructor
         {
-            get
-            {
-                return this.method.IsConstructor;
-            }
+            get { return this.method.IsConstructor; }
         }
 
         public bool IsUnmanagedDllImport
         {
-            get
-            {
-                return this.method.IsUnmanagedDllImport;
-            }
+            get { return this.method.IsUnmanagedDllImport; }
         }
 
         public bool IsExplicitInterfaceImplementation
         {
-            get
-            {
-                return this.method.IsExplicitInterfaceImplementation;
-            }
+            get { return this.method.IsExplicitInterfaceImplementation; }
         }
 
         public bool IsExternal
         {
-            get
-            {
-                return this.method.IsExternal;
-            }
+            get { return this.method.IsExternal; }
         }
 
         public bool IsGenericMethod
         {
-            get
-            {
-                return this.method.IsGenericMethod;
-            }
+            get { return this.method.IsGenericMethod; }
         }
 
         public bool IsGenericMethodDefinition
         {
-            get
-            {
-                return this.method.IsGenericMethodDefinition;
-            }
+            get { return this.method.IsGenericMethodDefinition; }
         }
 
         public bool IsUnmanaged
         {
-            get
-            {
-                return this.method.IsUnmanaged;
-            }
+            get { return this.method.IsUnmanaged; }
         }
 
         public bool IsUnmanagedMethodReference
         {
-            get
-            {
-                return this.method.IsUnmanagedMethodReference;
-            }
+            get { return this.method.IsUnmanagedMethodReference; }
         }
 
         public IType ReturnType
         {
-            get
-            {
-                return this.method.ReturnType;
-            }
+            get { return this.method.ReturnType; }
         }
 
         /// <summary>
         /// </summary>
         public bool IsInline
         {
-            get
-            {
-                return this.method.IsInline;
-            }
+            get { return this.method.IsInline; }
         }
 
         /// <summary>
         /// </summary>
         public bool HasProceduralBody
         {
-            get
-            {
-                return this.method.HasProceduralBody;
-            }
+            get { return this.method.HasProceduralBody; }
         }
 
         public int CompareTo(object obj)
         {
             return this.method.CompareTo(obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return this.method.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return this.method.Equals(obj);
         }
 
         public IEnumerable<IType> GetGenericArguments()
@@ -320,6 +227,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public string ToString(IType ownerOfExplicitInterface)
         {
             return this.method.ToString(ownerOfExplicitInterface);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return this.method.Equals(obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.method.GetHashCode();
         }
 
         public override string ToString()

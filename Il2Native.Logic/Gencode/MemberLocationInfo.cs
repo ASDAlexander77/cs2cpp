@@ -40,6 +40,18 @@
             }
         }
 
+        public object Member { get; set; }
+
+        public MemberTypes MemberType { get; set; }
+
+        public int Offset { get; set; }
+
+        public int Size { get; set; }
+
+        public object SubMember { get; set; }
+
+        public MemberTypes SubMemberType { get; set; }
+
         public void SetMainMember(IField field)
         {
             this.Member = field;
@@ -47,17 +59,5 @@
             this.SubMemberType = this.MemberType;
             this.SubMember = this.Member;
         }
-
-        public int Size { get; set; }
-
-        public int Offset { get; set; }
-
-        public MemberTypes MemberType { get; set; }
-
-        public object Member { get; set; }
-
-        public MemberTypes SubMemberType { get; set; }
-
-        public object SubMember { get; set; }
     }
 }

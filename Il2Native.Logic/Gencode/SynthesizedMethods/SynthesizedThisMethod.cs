@@ -10,14 +10,13 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Reflection;
-
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public class SynthesizedThisMethod : SynthesizedMethodTypeBase
     {
-        private IType returnType;
+        private readonly IType returnType;
 
         /// <summary>
         /// </summary>
@@ -36,20 +35,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override CallingConventions CallingConvention
         {
-            get
-            {
-                return CallingConventions.HasThis;
-            }
+            get { return CallingConventions.HasThis; }
         }
 
         /// <summary>
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.returnType;
-            }
+            get { return this.returnType; }
         }
     }
 }

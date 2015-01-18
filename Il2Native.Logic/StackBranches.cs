@@ -1,16 +1,102 @@
 ﻿namespace Il2Native.Logic
 {
-    using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
-
-    using Il2Native.Logic.CodeParts;
+    using CodeParts;
 
     public class StackBranches
     {
-        private Stack<OpCodePart> main = new Stack<OpCodePart>();
+        private readonly Stack<OpCodePart> main = new Stack<OpCodePart>();
+
+        public bool Any()
+        {
+            return this.main.Any();
+        }
+
+        public void Clear()
+        {
+            this.main.Clear();
+        }
+
+        public OpCodePart First()
+        {
+            return this.main.First();
+        }
+
+        public OpCodePart Peek()
+        {
+            return this.main.Peek();
+        }
+
+        public OpCodePart Pop()
+        {
+            return this.main.Pop();
+        }
+
+        public void ProcessAlternativeValues(OpCodePart opCodePart)
+        {
+            // read all alternative values from other branches
+            if (opCodePart.JumpDestination == null)
+            {
+                return;
+            }
+
+            var previousFlow = opCodePart.Previous != null ? opCodePart.Previous.OpCode.FlowControl : FlowControl.Break;
+            var noMainEntry = previousFlow == FlowControl.Branch || previousFlow == FlowControl.Return ||
+                              previousFlow == FlowControl.Throw || previousFlow == FlowControl.Break;
+            var entires = opCodePart.JumpDestination.Where(opCode => opCode.IsJumpForward());
+            var entriesList = entires as IList<OpCodePart> ?? entires.ToList();
+            ////if (entriesList.Count() <= (noMainEntry ? 1 : 0))
+            if (!entriesList.Any())
+            {
+                return;
+            }
+
+            var values =
+                entriesList.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
+            if (!values.Any())
+            {
+                return;
+            }
+
+            var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
+            if (alternativeValues == null)
+            {
+                return;
+            }
+
+            var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
+            if (alternativeValues.Values.Count() == 1)
+            {
+                // it just one value, we can push it back to stack
+                if (!this.main.Any() || this.main.All(op => op.AddressStart != firstValue.AddressStart))
+                {
+                    this.main.Push(firstValue);
+                }
+
+                return;
+            }
+
+            opCodePart.AlternativeValues = alternativeValues;
+
+            if (noMainEntry)
+            {
+                return;
+            }
+
+            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+            {
+                this.main.Pop();
+            }
+
+            this.main.Push(firstValue);
+        }
+
+        public void Push(OpCodePart opCodePart)
+        {
+            this.main.Push(opCodePart);
+        }
 
         public void SaveBranchStackValue(OpCodePart opCode, BaseWriter baseWriter)
         {
@@ -51,78 +137,38 @@
             }
         }
 
-        public void Push(OpCodePart opCodePart)
+        private static void AddPhiValue(PhiNodes phiNodes, OpCodePart value)
         {
-            this.main.Push(opCodePart);
-        }
-
-        public void ProcessAlternativeValues(OpCodePart opCodePart)
-        {
-            // read all alternative values from other branches
-            if (opCodePart.JumpDestination == null)
+            var currentLabel = value.FindBeginOfBasicBlock();
+            phiNodes.Values.Add(value);
+            if (currentLabel.HasValue)
             {
-                return;
+                phiNodes.Labels.Add(currentLabel.Value);
             }
-
-            var previousFlow = opCodePart.Previous != null ? opCodePart.Previous.OpCode.FlowControl : FlowControl.Break;
-            var noMainEntry = previousFlow == FlowControl.Branch || previousFlow == FlowControl.Return || previousFlow == FlowControl.Throw || previousFlow == FlowControl.Break;
-            var entires = opCodePart.JumpDestination.Where(opCode => opCode.IsJumpForward());
-            var entriesList = entires as IList<OpCodePart> ?? entires.ToList();
-            //if (entriesList.Count() <= (noMainEntry ? 1 : 0))
-            if (!entriesList.Any())
+            else
             {
-                return;
-            }
-
-            var values = entriesList.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
-            if (!values.Any())
-            {
-                return;
-            }
-
-            var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
-            if (alternativeValues == null)
-            {
-                return;
-            }
-
-            var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
-            if (alternativeValues.Values.Count() == 1)
-            {
-                // it just one value, we can push it back to stack
-                if (!this.main.Any() || this.main.All(op => op.AddressStart != firstValue.AddressStart))
+                // we need to create a label
+                var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0
+                    ? value.OpCodeOperands[0]
+                    : value;
+                if (opCode.JumpDestination == null)
                 {
-                    this.main.Push(firstValue);
+                    opCode.JumpDestination = new List<OpCodePart>();
                 }
 
-                return;
+                opCode.JumpDestination.Add(value);
+
+                phiNodes.Labels.Add(opCode.AddressStart);
             }
-
-            opCodePart.AlternativeValues = alternativeValues;
-
-            if (noMainEntry)
-            {
-                return;
-            }
-
-            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
-            {
-                this.main.Pop();
-            }
-
-            this.main.Push(firstValue);
-        }
-
-        public OpCodePart Pop()
-        {
-            return this.main.Pop();
         }
 
         private static PhiNodes GetPhiValues(IEnumerable<OpCodePart> values, OpCodePart currentValue)
         {
             var phiNodes = new PhiNodes();
             var any = false;
-            foreach (var alternateValue in values.Where(alternateValue => currentValue == null || !alternateValue.Equals(currentValue)))
+            foreach (
+                var alternateValue in
+                    values.Where(alternateValue => currentValue == null || !alternateValue.Equals(currentValue)))
             {
                 AddPhiValue(phiNodes, alternateValue);
                 any = true;
@@ -146,49 +192,6 @@
             }
 
             return null;
-        }
-
-        private static void AddPhiValue(PhiNodes phiNodes, OpCodePart value)
-        {
-            var currentLabel = value.FindBeginOfBasicBlock();
-            phiNodes.Values.Add(value);
-            if (currentLabel.HasValue)
-            {
-                phiNodes.Labels.Add(currentLabel.Value);
-            }
-            else
-            {
-                // we need to create a label
-                var opCode = value.OpCodeOperands != null && value.OpCodeOperands.Length > 0 ? value.OpCodeOperands[0] : value;
-                if (opCode.JumpDestination == null)
-                {
-                    opCode.JumpDestination = new List<OpCodePart>();
-                }
-
-                opCode.JumpDestination.Add(value);
-
-                phiNodes.Labels.Add(opCode.AddressStart);
-            }
-        }
-
-        public OpCodePart Peek()
-        {
-            return this.main.Peek();
-        }
-
-        public OpCodePart First()
-        {
-            return this.main.First();
-        }
-
-        public bool Any()
-        {
-            return this.main.Any();
-        }
-
-        public void Clear()
-        {
-            this.main.Clear();
         }
     }
 }

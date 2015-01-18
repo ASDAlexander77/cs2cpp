@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Il2Native.Logic
+﻿namespace Il2Native.Logic
 {
     using System.Diagnostics;
-
     using PEAssemblyReader;
 
     [DebuggerDisplay("{key}")]
     public class MethodKey
     {
-        private string key;
+        private readonly string key;
 
         public MethodKey(IMethod method, IType ownerOfExplicitInterface)
         {
@@ -23,13 +16,7 @@ namespace Il2Native.Logic
         }
 
         public IMethod Method { get; private set; }
-
         public IType OwnerOfExplicitInterface { get; private set; }
-
-        public override int GetHashCode()
-        {
-            return this.key.GetHashCode();
-        }
 
         public override bool Equals(object obj)
         {
@@ -40,6 +27,11 @@ namespace Il2Native.Logic
             }
 
             return this.key.Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.key.GetHashCode();
         }
     }
 }

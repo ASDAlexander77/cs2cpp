@@ -6,16 +6,15 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Gencode
 {
-    using System.Text;
-
-    using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-
-    using PEAssemblyReader;
-    using System.Collections.Generic;
     using System;
+    using System.Collections.Generic;
+    using System.Text;
+    using CodeParts;
+    using PEAssemblyReader;
+    using SynthesizedMethods;
 
     /// <summary>
     /// </summary>
@@ -100,11 +99,18 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="operandType">
         /// </param>
-        public static void WriteGetTypeStaticObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType type, IType operandType)
+        public static void WriteGetTypeStaticObject(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType type,
+            IType operandType)
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
+            llvmWriter.WriteLlvmLoad(
+                opCode,
+                operandType,
+                new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
             writer.WriteLine(string.Empty);
 
             var result = opCode.Result;
@@ -141,24 +147,47 @@ namespace Il2Native.Logic.Gencode
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
                     var firstParameterValue =
                         new FullyDefinedReference(
-                            llvmWriter.GetArrayTypeReference(string.Format("@.bytes{0}", bytesIndex), byteType, bytes.Length), byteArrayType);
+                            llvmWriter.GetArrayTypeReference(
+                                string.Format("@.bytes{0}", bytesIndex),
+                                byteType,
+                                bytes.Length),
+                            byteArrayType);
 
                     opCode.Result = null;
-                    var newObjectResult = llvmWriter.WriteNewWithCallingConstructor(opCode, runtimeType, byteArrayType, firstParameterValue);
+                    var newObjectResult = llvmWriter.WriteNewWithCallingConstructor(
+                        opCode,
+                        runtimeType,
+                        byteArrayType,
+                        firstParameterValue);
                     writer.WriteLine(string.Empty);
 
                     // call cmp exchnage
                     var noOpCmpXchg = OpCodePart.CreateNop;
-                    noOpCmpXchg.OpCodeOperands = new[] { OpCodePart.CreateNop, OpCodePart.CreateNop, OpCodePart.CreateNop };
-                    noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType.ToPointerType());
+                    noOpCmpXchg.OpCodeOperands = new[]
+                    {
+                        OpCodePart.CreateNop,
+                        OpCodePart.CreateNop,
+                        OpCodePart.CreateNop
+                    };
+                    noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(
+                        type.GetTypeStaticFieldName(),
+                        operandType.ToPointerType());
                     noOpCmpXchg.OpCodeOperands[1].Result = newObjectResult;
                     noOpCmpXchg.OpCodeOperands[2].Result = new ConstValue(null, operandType);
-                    noOpCmpXchg.InterlockBase("cmpxchg ", llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic", !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower, llvmWriter, new [] {0, 2, 1});
+                    noOpCmpXchg.InterlockBase(
+                        "cmpxchg ",
+                        llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
+                        !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower,
+                        llvmWriter,
+                        new[] { 0, 2, 1 });
                     writer.WriteLine(string.Empty);
 
                     // load again
                     opCode.Result = null;
-                    llvmWriter.WriteLlvmLoad(opCode, operandType, new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
+                    llvmWriter.WriteLlvmLoad(
+                        opCode,
+                        operandType,
+                        new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
                     writer.WriteLine(string.Empty);
 
                     writer.Write("ret ");
@@ -200,7 +229,10 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            writer.Write("{0} = {1}global ", type.GetTypeStaticFieldName(), type.IsGenericType ? "linkonce_odr " : string.Empty);
+            writer.Write(
+                "{0} = {1}global ",
+                type.GetTypeStaticFieldName(),
+                type.IsGenericType ? "linkonce_odr " : string.Empty);
             llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
             writer.WriteLine(" null");
         }

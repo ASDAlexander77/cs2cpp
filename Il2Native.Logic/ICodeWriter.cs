@@ -6,22 +6,17 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     using System.Collections.Generic;
-
-    using Il2Native.Logic.CodeParts;
-
+    using CodeParts;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
     public interface ICodeWriter
     {
-        /// <summary>
-        /// </summary>
-        IType ResolveType(string fullTypeName);
-
         /// <summary>
         /// </summary>
         void Close();
@@ -39,6 +34,10 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         bool IsProcessed(IType type);
+
+        /// <summary>
+        /// </summary>
+        IType ResolveType(string fullTypeName);
 
         /// <summary>
         /// </summary>

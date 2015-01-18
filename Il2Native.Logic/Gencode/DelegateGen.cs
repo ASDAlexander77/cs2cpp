@@ -6,26 +6,189 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
-
-    using Il2Native.Logic.CodeParts;
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-
+    using CodeParts;
     using Microsoft.CodeAnalysis;
-
     using PEAssemblyReader;
-
+    using SynthesizedMethods;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
     /// </summary>
     public static class DelegateGen
     {
+        public static void GetMulticastDelegateInvoke(
+            IMethod method,
+            ICodeWriter codeWriter,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            parameters = method.GetParameters().ToList();
+
+            var bytesShift = parameters.Count > (4 - 1) ? (parameters.Count - (4 - 1)) * 2 + (4 - 1) : parameters.Count;
+            if (!method.ReturnType.IsVoid())
+            {
+                bytesShift++;
+            }
+
+            var codeList = new List<object>();
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Ldarg_0,
+                    Code.Ldfld,
+                    1,
+                    0,
+                    0,
+                    0,
+                    Code.Brtrue_S,
+                    5,
+                    Code.Call,
+                    2,
+                    0,
+                    0,
+                    0,
+
+                    // multicast
+                    Code.Ldc_I4_0,
+                    Code.Stloc_0,
+                    Code.Br_S,
+                    0x11 + bytesShift,
+                    Code.Ldarg_0,
+                    Code.Ldfld,
+                    3,
+                    0,
+                    0,
+                    0,
+                    Code.Ldloc_0,
+                    Code.Ldelem_Ref
+                });
+
+            var index = 1;
+            foreach (var parameter in parameters)
+            {
+                if (index > 3)
+                {
+                    codeList.Add(Code.Ldarg_S);
+                    codeList.Add(index);
+                }
+                else
+                {
+                    switch (index)
+                    {
+                        case 1:
+                            codeList.Add(Code.Ldarg_1);
+                            break;
+                        case 2:
+                            codeList.Add(Code.Ldarg_2);
+                            break;
+                        case 3:
+                            codeList.Add(Code.Ldarg_3);
+                            break;
+                    }
+                }
+
+                index++;
+            }
+
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Callvirt,
+                    4,
+                    0,
+                    0,
+                    0
+                });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(
+                    new object[]
+                    {
+                        Code.Stloc_1
+                    });
+            }
+
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Ldloc_0,
+                    Code.Ldc_I4_1,
+                    Code.Add,
+                    Code.Stloc_0,
+
+                    // for test
+                    Code.Ldloc_0,
+                    Code.Ldarg_0,
+                    Code.Ldfld,
+                    1,
+                    0,
+                    0,
+                    0,
+                    Code.Blt_S,
+                    -(0x1a + bytesShift)
+                });
+
+            if (!method.ReturnType.IsVoid())
+            {
+                codeList.AddRange(
+                    new object[]
+                    {
+                        Code.Ldloc_1
+                    });
+            }
+
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Ret
+                });
+
+            code = codeList.ToArray();
+
+            locals = new List<IType>();
+            locals.Add(codeWriter.ResolveType("System.Int32"));
+            if (!method.ReturnType.IsVoid())
+            {
+                locals.Add(method.ReturnType);
+            }
+
+            tokenResolutions = new List<object>();
+
+            // 1
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
+
+            // call Delegate.Invoke
+            // 2
+            tokenResolutions.Add(
+                new SynthesizedStaticMethod(
+                    string.Empty,
+                    method.DeclaringType,
+                    codeWriter.ResolveType("System.Void"),
+                    new List<IParameter>(),
+                    (llvmWriter, opCode) =>
+                    {
+                        // get element size
+                        llvmWriter.WriteDelegateInvoke(method, true, true);
+                    }));
+
+            // 3
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList"));
+
+            // call Default stub for now - "ret undef";
+            // 4
+            tokenResolutions.Add(IlReader.Methods(method.DeclaringType).First(m => m.Name == "Invoke"));
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="method">
@@ -39,7 +202,8 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            return method.Name == ".ctor" || method.Name == "Invoke" || method.Name == "BeginInvoke" || method.Name == "EndInvoke";
+            return method.Name == ".ctor" || method.Name == "Invoke" || method.Name == "BeginInvoke" ||
+                   method.Name == "EndInvoke";
         }
 
         /// <summary>
@@ -57,7 +221,11 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static FullyDefinedReference WriteCallInvokeMethod(
-            this LlvmWriter llvmWriter, FullyDefinedReference objectResult, FullyDefinedReference methodResult, IMethod invokeMethod, bool isStatic)
+            this LlvmWriter llvmWriter,
+            FullyDefinedReference objectResult,
+            FullyDefinedReference methodResult,
+            IMethod invokeMethod,
+            bool isStatic)
         {
             var writer = llvmWriter.Output;
 
@@ -65,7 +233,9 @@ namespace Il2Native.Logic.Gencode
             var opCodeNope = OpCodePart.CreateNop;
 
             opCodeNope.OpCodeOperands =
-                Enumerable.Range(0, invokeMethod.GetParameters().Count()).Select(p => new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + 1)).ToArray();
+                Enumerable.Range(0, invokeMethod.GetParameters().Count())
+                    .Select(p => new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + 1))
+                    .ToArray();
 
             foreach (var generatedOperand in opCodeNope.OpCodeOperands)
             {
@@ -78,7 +248,12 @@ namespace Il2Native.Logic.Gencode
             var opCodeNopeForBitCast = OpCodePart.CreateNop;
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
             opCodeNopeForBitCast.OpCodeOperands[0].Result = methodResult;
-            llvmWriter.UnaryOper(writer, opCodeNopeForBitCast, "bitcast", methodResult.Type, options: LlvmWriter.OperandOptions.GenerateResult);
+            llvmWriter.UnaryOper(
+                writer,
+                opCodeNopeForBitCast,
+                "bitcast",
+                methodResult.Type,
+                options: LlvmWriter.OperandOptions.GenerateResult);
             writer.Write(" to ");
             llvmWriter.WriteMethodPointerType(writer, method);
             writer.WriteLine(string.Empty);
@@ -86,7 +261,14 @@ namespace Il2Native.Logic.Gencode
             method.MethodResult = opCodeNopeForBitCast.Result;
 
             // actual call
-            llvmWriter.WriteCall(opCodeNope, method, false, !isStatic, false, objectResult, llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            llvmWriter.WriteCall(
+                opCodeNope,
+                method,
+                false,
+                !isStatic,
+                false,
+                objectResult,
+                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
             writer.WriteLine(string.Empty);
 
             return opCodeNope.Result;
@@ -172,7 +354,10 @@ namespace Il2Native.Logic.Gencode
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(
+                opCode,
+                method.DeclaringType,
+                new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
@@ -183,7 +368,13 @@ namespace Il2Native.Logic.Gencode
             try
             {
                 var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
+                llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    method.DeclaringType,
+                    delegateType,
+                    _targetFieldIndex,
+                    thisResult);
                 writer.WriteLine(string.Empty);
 
                 // load value 1
@@ -197,7 +388,13 @@ namespace Il2Native.Logic.Gencode
 
                 // write access to a field 2
                 var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
+                llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    method.DeclaringType,
+                    delegateType,
+                    _methodPtrFieldIndex,
+                    thisResult);
                 writer.WriteLine(string.Empty);
 
                 // load value 2
@@ -225,7 +422,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void WriteDelegateInvoke(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false, bool disableLoadingParams = false)
+        private static void WriteDelegateInvoke(
+            this LlvmWriter llvmWriter,
+            IMethod method,
+            bool disableCurlyBrakets = false,
+            bool disableLoadingParams = false)
         {
             var writer = llvmWriter.Output;
 
@@ -248,7 +449,10 @@ namespace Il2Native.Logic.Gencode
             }
 
             // load 'this' variable
-            llvmWriter.WriteLlvmLoad(opCode, method.DeclaringType, new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
+            llvmWriter.WriteLlvmLoad(
+                opCode,
+                method.DeclaringType,
+                new FullyDefinedReference(llvmWriter.GetThisName(), method.DeclaringType));
             writer.WriteLine(string.Empty);
 
             var thisResult = opCode.Result;
@@ -259,7 +463,13 @@ namespace Il2Native.Logic.Gencode
             try
             {
                 var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _targetFieldIndex, thisResult);
+                llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    method.DeclaringType,
+                    delegateType,
+                    _targetFieldIndex,
+                    thisResult);
                 writer.WriteLine(string.Empty);
 
                 var objectMemberAccessResultNumber = opCode.Result;
@@ -273,7 +483,13 @@ namespace Il2Native.Logic.Gencode
 
                 // write access to a field 2
                 var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
-                llvmWriter.WriteFieldAccess(writer, opCode, method.DeclaringType, delegateType, _methodPtrFieldIndex, thisResult);
+                llvmWriter.WriteFieldAccess(
+                    writer,
+                    opCode,
+                    method.DeclaringType,
+                    delegateType,
+                    _methodPtrFieldIndex,
+                    thisResult);
                 writer.WriteLine(string.Empty);
 
                 // additional step to extract value from IntPtr structure
@@ -311,7 +527,11 @@ namespace Il2Native.Logic.Gencode
                 // static brunch
                 llvmWriter.WriteLabel(writer, "static");
 
-                var callStaticResult = llvmWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, true);
+                var callStaticResult = llvmWriter.WriteCallInvokeMethod(
+                    objectResultNumber,
+                    methodResultNumber,
+                    method,
+                    true);
 
                 var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
                 returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
@@ -329,164 +549,6 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent--;
                 writer.WriteLine("}");
             }
-        }
-
-        public static void GetMulticastDelegateInvoke(IMethod method, ICodeWriter codeWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
-        {
-            parameters = method.GetParameters().ToList();
-
-            var bytesShift = parameters.Count > (4 - 1) ? (parameters.Count - (4 - 1)) * 2 + (4 - 1) : parameters.Count;
-            if (!method.ReturnType.IsVoid())
-            {
-                bytesShift++;
-            }
-
-            var codeList = new List<object>();
-            codeList.AddRange(new object[]
-                    {
-                        Code.Ldarg_0,
-                        Code.Ldfld,
-                        1,
-                        0,
-                        0,
-                        0,
-
-                        Code.Brtrue_S,
-                        5,
-
-                        Code.Call,
-                        2,
-                        0,
-                        0,
-                        0,
-
-                        // multicast
-                        Code.Ldc_I4_0,
-                        Code.Stloc_0,
-
-                        Code.Br_S,
-                        0x11 + bytesShift,
-
-                        Code.Ldarg_0,
-                        Code.Ldfld,
-                        3,
-                        0,
-                        0,
-                        0,
-
-                        Code.Ldloc_0,
-                        Code.Ldelem_Ref
-                    });
-
-            var index = 1;
-            foreach (var parameter in parameters)
-            {
-                if (index > 3)
-                {
-                    codeList.Add(Code.Ldarg_S);
-                    codeList.Add(index);
-                }
-                else
-                {
-                    switch (index)
-                    {
-                        case 1:
-                            codeList.Add(Code.Ldarg_1);
-                            break;
-                        case 2:
-                            codeList.Add(Code.Ldarg_2);
-                            break;
-                        case 3:
-                            codeList.Add(Code.Ldarg_3);
-                            break;
-                    }
-                }
-
-                index++;
-            }
-
-            codeList.AddRange(new object[]
-                    {
-                        Code.Callvirt,
-                        4,
-                        0,
-                        0,
-                        0,
-                    });
-
-            if (!method.ReturnType.IsVoid())
-            {
-                codeList.AddRange(new object[] 
-                    { 
-                        Code.Stloc_1
-                    });
-            }
-
-            codeList.AddRange(new object[]
-                    {
-                        Code.Ldloc_0,
-                        Code.Ldc_I4_1,
-                        Code.Add,
-                        Code.Stloc_0,
-
-                        // for test
-                        Code.Ldloc_0,
-                        Code.Ldarg_0,
-                        Code.Ldfld,
-                        1,
-                        0,
-                        0,
-                        0,
-                        Code.Blt_S,
-                        -(0x1a + bytesShift)
-                    });
-
-            if (!method.ReturnType.IsVoid())
-            {
-                codeList.AddRange(new object[] 
-                    { 
-                        Code.Ldloc_1
-                    });
-            }
-
-            codeList.AddRange(new object[] 
-                    { 
-                        Code.Ret
-                    });
-
-            code = codeList.ToArray();
-
-            locals = new List<IType>();
-            locals.Add(codeWriter.ResolveType("System.Int32"));
-            if (!method.ReturnType.IsVoid())
-            {
-                locals.Add(method.ReturnType);
-            }
-
-            tokenResolutions = new List<object>();
-
-            // 1
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
-
-            // call Delegate.Invoke
-            // 2
-            tokenResolutions.Add(new SynthesizedStaticMethod(
-                "",
-                method.DeclaringType,
-                codeWriter.ResolveType("System.Void"),
-                new List<IParameter>(),
-                (llvmWriter, opCode) =>
-                {
-                    // get element size
-                    llvmWriter.WriteDelegateInvoke(method, true, true);
-                }));
-
-            // 3
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList"));
-
-            // call Default stub for now - "ret undef";
-            // 4
-            tokenResolutions.Add(IlReader.Methods(method.DeclaringType).First(m => m.Name == "Invoke"));
         }
 
         /// <summary>
@@ -522,7 +584,11 @@ namespace Il2Native.Logic.Gencode
             /// <param name="isStatic">
             /// </param>
             public SynthesizedInvokeMethod(
-                LlvmWriter writer, FullyDefinedReference objectResult, FullyDefinedReference methodResult, IMethod invokeMethod, bool isStatic)
+                LlvmWriter writer,
+                FullyDefinedReference objectResult,
+                FullyDefinedReference methodResult,
+                IMethod invokeMethod,
+                bool isStatic)
             {
                 this.writer = writer;
                 this.objectResult = objectResult;
@@ -530,6 +596,24 @@ namespace Il2Native.Logic.Gencode
                 this.invokeMethod = invokeMethod;
                 this.isStatic = isStatic;
             }
+
+            /// <summary>
+            /// </summary>
+            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
+            {
+                get { return new IExceptionHandlingClause[0]; }
+            }
+
+            /// <summary>
+            /// </summary>
+            public IEnumerable<ILocalVariable> LocalVariables
+            {
+                get { return new ILocalVariable[0]; }
+            }
+
+            /// <summary>
+            /// </summary>
+            public FullyDefinedReference MethodResult { get; set; }
 
             /// <summary>
             /// </summary>
@@ -543,60 +627,35 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public CallingConventions CallingConvention
             {
-                get
-                {
-                    return this.isStatic ? CallingConventions.Standard : CallingConventions.HasThis;
-                }
+                get { return this.isStatic ? CallingConventions.Standard : CallingConventions.HasThis; }
             }
 
             /// <summary>
             /// </summary>
             public IType DeclaringType
             {
-                get
-                {
-                    return this.objectResult.Type;
-                }
+                get { return this.objectResult.Type; }
             }
 
             /// <summary>
             /// </summary>
             public DllImportData DllImportData
             {
-                get
-                {
-                    return null;
-                }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get
-                {
-                    return new IExceptionHandlingClause[0];
-                }
+                get { return null; }
             }
 
             /// <summary>
             /// </summary>
             public string ExplicitName
             {
-                get
-                {
-                    return this.MethodResult.ToString();
-                }
+                get { return this.MethodResult.ToString(); }
             }
 
             /// <summary>
             /// </summary>
             public string FullName
             {
-                get
-                {
-                    return this.MethodResult.ToString();
-                }
+                get { return this.MethodResult.ToString(); }
             }
 
             /// <summary>
@@ -611,30 +670,21 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public bool IsUnmanagedDllImport
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             /// <summary>
             /// </summary>
             public bool IsExplicitInterfaceImplementation
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             /// <summary>
             /// </summary>
             public bool IsExternal
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             /// <summary>
@@ -653,32 +703,23 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public bool IsStatic
             {
-                get
-                {
-                    return this.isStatic;
-                }
+                get { return this.isStatic; }
             }
 
             /// <summary>
-            /// custom field
+            ///     custom field
             /// </summary>
             public bool IsUnmanaged
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             /// <summary>
-            /// custom field
+            ///     custom field
             /// </summary>
             public bool IsUnmanagedMethodReference
             {
-                get
-                {
-                    return false;
-                }
+                get { return false; }
             }
 
             /// <summary>
@@ -691,37 +732,17 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get
-                {
-                    return new ILocalVariable[0];
-                }
-            }
-
-            /// <summary>
-            /// </summary>
             public string MetadataFullName
             {
-                get
-                {
-                    return this.FullName;
-                }
+                get { return this.FullName; }
             }
 
             /// <summary>
             /// </summary>
             public string MetadataName
             {
-                get
-                {
-                    return this.ExplicitName;
-                }
+                get { return this.ExplicitName; }
             }
-
-            /// <summary>
-            /// </summary>
-            public FullyDefinedReference MethodResult { get; set; }
 
             /// <summary>
             /// </summary>
@@ -731,10 +752,7 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public string Name
             {
-                get
-                {
-                    return this.MethodResult.ToString();
-                }
+                get { return this.MethodResult.ToString(); }
             }
 
             /// <summary>
@@ -745,27 +763,16 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public IType ReturnType
             {
-                get
-                {
-                    return this.invokeMethod.ReturnType;
-                }
+                get { return this.invokeMethod.ReturnType; }
             }
 
             /// <summary>
             /// </summary>
-            public bool IsInline
-            {
-                get;
-                protected set;
-            }
+            public bool IsInline { get; protected set; }
 
             /// <summary>
             /// </summary>
-            public bool HasProceduralBody
-            {
-                get;
-                protected set;
-            }
+            public bool HasProceduralBody { get; protected set; }
 
             /// <summary>
             /// </summary>
@@ -778,17 +785,6 @@ namespace Il2Native.Logic.Gencode
             public int CompareTo(object obj)
             {
                 throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="obj">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public override bool Equals(object obj)
-            {
-                return this.ToString().Equals(obj.ToString());
             }
 
             /// <summary>
@@ -809,24 +805,6 @@ namespace Il2Native.Logic.Gencode
             public IEnumerable<IType> GetGenericParameters()
             {
                 throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public override int GetHashCode()
-            {
-                return this.ToString().GetHashCode();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
             }
 
             /// <summary>
@@ -860,19 +838,6 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
-            }
-
-            /// <summary>
-            /// </summary>
             /// <param name="genericContext">
             /// </param>
             /// <returns>
@@ -893,6 +858,48 @@ namespace Il2Native.Logic.Gencode
             /// <exception cref="NotImplementedException">
             /// </exception>
             public string ToString(IType ownerOfExplicitInterface)
+            {
+                throw new NotImplementedException();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="obj">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            public override bool Equals(object obj)
+            {
+                return this.ToString().Equals(obj.ToString());
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public override int GetHashCode()
+            {
+                return this.ToString().GetHashCode();
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <returns>
+            /// </returns>
+            public byte[] GetILAsByteArray()
+            {
+                return new byte[0];
+            }
+
+            /// <summary>
+            /// </summary>
+            /// <param name="type">
+            /// </param>
+            /// <returns>
+            /// </returns>
+            /// <exception cref="NotImplementedException">
+            /// </exception>
+            public IType ResolveTypeParameter(IType type)
             {
                 throw new NotImplementedException();
             }

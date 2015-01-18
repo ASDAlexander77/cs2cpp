@@ -6,10 +6,10 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.CodeParts
 {
     using System.Reflection.Emit;
-
     using PEAssemblyReader;
 
     /// <summary>

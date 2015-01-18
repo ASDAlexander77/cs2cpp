@@ -10,7 +10,6 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -30,10 +29,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.Type.ToClass();
-            }
+            get { return Type.ToClass(); }
         }
 
         /// <summary>
@@ -42,7 +38,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </returns>
         public override IEnumerable<IParameter> GetParameters()
         {
-            return new[] { this.Type.ToNormal().ToParameter() };
+            return new[] { Type.ToNormal().ToParameter() };
         }
     }
 }

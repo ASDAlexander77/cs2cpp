@@ -1,13 +1,12 @@
 ﻿namespace Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter
 {
+    using Metadata.Model;
     using PdbReader;
-    using Il2Native.Logic.Metadata.Model;
 
     public class DebugInfoSourceFileEntry : ISourceFileEntry
     {
-        private DebugInfoGenerator debugInfoGenerator;
-
-        private CollectionMetadata file;
+        private readonly DebugInfoGenerator debugInfoGenerator;
+        private readonly CollectionMetadata file;
 
         public DebugInfoSourceFileEntry(DebugInfoGenerator debugInfoGenerator, string directory, string fileName)
         {
@@ -25,7 +24,7 @@
 
         public ICompileUnitEntry DefineCompilationUnit()
         {
-            return new DebugInfoCompileUnitEntry(debugInfoGenerator, this, this.file);
+            return new DebugInfoCompileUnitEntry(this.debugInfoGenerator, this, this.file);
         }
     }
 }

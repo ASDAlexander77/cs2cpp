@@ -29,7 +29,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             : base(type, ".new")
         {
             this.writer = writer;
-            this.Type = type.ToClass();
+            Type = type.ToClass();
         }
     }
 }

@@ -6,6 +6,7 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Ll2NativeTests
 {
     using System;
@@ -13,105 +14,201 @@ namespace Ll2NativeTests
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-
     using Il2Native.Logic;
-
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-
     using PdbReader;
 
     /// <summary>
-    /// Summary description for MSTests
+    ///     Summary description for MSTests
     /// </summary>
     [TestClass]
     public class MSTests
     {
         /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
+        ///     Gets or sets the test context which provides
+        ///     information about and functionality for the current test run.
+        /// </summary>
         public TestContext TestContext { get; set; }
 
-        #region Additional test attributes
-
-        // You can use the following additional attributes as you write your tests:
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        #endregion
-
-        /// <summary>
-        /// </summary>
         [TestMethod]
-        public void TestCustomConvert()
+        public void GenerateTestFromMonoTests()
         {
-            CompilerHelper.Convert("test-1", CompilerHelper.SourcePathCustom);
-        }
+            Debug.WriteLine(@"namespace Ll2NativeTests {");
+            Debug.WriteLine(@"using System;");
+            Debug.WriteLine(@"using System.Collections.Generic;");
+            Debug.WriteLine(@"using System.Diagnostics;");
+            Debug.WriteLine(@"using System.IO;");
+            Debug.WriteLine(@"using System.Linq;");
+            Debug.WriteLine(@"using Il2Native.Logic;");
+            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            Debug.WriteLine(@"using PdbReader;");
 
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestMscorlibCompile()
-        {
-            //Debug.Listeners.Clear();
-            Il2Converter.Convert(Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(false));
-        }
+            var chars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
 
-        /// </summary>
-        [TestMethod]
-        public void TestSscli()
-        {
-            foreach (var file in Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
+            var currentDir = "";
+            var currentNamespace = "";
+            var enumerateFiles =
+                Directory.EnumerateFiles(CompilerHelper.SourcePath, "*.cs", SearchOption.AllDirectories).ToArray();
+            Array.Sort(enumerateFiles);
+            foreach (var file in enumerateFiles)
             {
-                CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + "\\", true);
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+
+                var directoryName = Path.GetDirectoryName(file);
+                var folderName = Path.GetFileName(directoryName);
+                var subfolders =
+                    directoryName.Substring(Math.Min(directoryName.Length, CompilerHelper.SourcePath.Length));
+                var fileName = Path.GetFileName(file);
+
+                // custom for Mono only
+                string groupName;
+                var minusIndex = fileName.IndexOfAny(chars);
+                if (minusIndex > 0)
+                {
+                    groupName = fileName.Substring(0, minusIndex - 1);
+                    if (fileName.IndexOf('-', minusIndex) >= 0)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    continue;
+                }
+
+                var namespaceChain = subfolders + groupName;
+                var groupper = directoryName + namespaceChain;
+
+                if (currentDir != groupper)
+                {
+                    if (!string.IsNullOrEmpty(currentDir))
+                    {
+                        Debug.WriteLine(@"}");
+                        Debug.WriteLine(@"");
+                    }
+
+                    if (currentNamespace != namespaceChain)
+                    {
+                        if (!string.IsNullOrEmpty(currentNamespace))
+                        {
+                            Debug.WriteLine(@"}");
+                            Debug.WriteLine(@"");
+                        }
+
+                        Debug.WriteLine(@"namespace @" + namespaceChain.Replace("\\", ".@").Replace("-", "_") + " {");
+                        currentNamespace = namespaceChain;
+                    }
+
+                    Debug.WriteLine(@"[TestClass]");
+                    Debug.WriteLine(@"public class @" + folderName.Replace("-", "_") + " {");
+                    Debug.WriteLine(@"[TestInitialize]");
+                    Debug.WriteLine(@"public void Initialize() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+                    Debug.WriteLine(@"[TestCleanup]");
+                    Debug.WriteLine(@"public void Cleanup() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+
+                    currentDir = groupper;
+                }
+
+                Debug.WriteLine(@"[TestMethod]");
+                var testMethodName = fileNameWithoutExtension.Replace("-", "_");
+                Debug.WriteLine(@"public void @" + testMethodName + "() {");
+                Debug.WriteLine(
+                    @"var file = Path.Combine(CompilerHelper.SourcePath, @""" + subfolders + @""", """ + fileName +
+                    @""");");
+                Debug.WriteLine(
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                Debug.WriteLine(@"}");
+                Debug.WriteLine(@"");
             }
+
+            Debug.WriteLine(@"}"); // class
+            Debug.WriteLine(@"}"); // namespaces
+            Debug.WriteLine(@"}"); // global namespace
         }
 
-        /// <summary>
-        /// </summary>
         [TestMethod]
-        public void 
-            TestCoreLib()
+        public void GenerateTestFromSscliTests()
         {
-            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.CoreLibPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(false));
+            Debug.WriteLine(@"namespace Ll2NativeTests {");
+            Debug.WriteLine(@"using System;");
+            Debug.WriteLine(@"using System.Collections.Generic;");
+            Debug.WriteLine(@"using System.Diagnostics;");
+            Debug.WriteLine(@"using System.IO;");
+            Debug.WriteLine(@"using System.Linq;");
+            Debug.WriteLine(@"using Il2Native.Logic;");
+            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
+            Debug.WriteLine(@"using PdbReader;");
 
-            if (CompilerHelper.CompileWithOptimization)
+            var currentDir = "";
+            var currentNamespace = "";
+            foreach (
+                var file in
+                    Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
             {
-                CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-                CompilerHelper.ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", CompilerHelper.Target));
-            }
-            else
-            {
-                CompilerHelper.ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target));
-            }
-        }
+                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
+                var directoryName = Path.GetDirectoryName(file);
+                var folderName = Path.GetFileName(directoryName);
+                var subfolders = directoryName.Substring(CompilerHelper.SscliSourcePath.Length);
 
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestOpenGlLib()
-        {
-            // todo: 
-            // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
-            // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
-            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.OpenGlLibPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
-        }
+                if (currentDir != directoryName)
+                {
+                    if (!string.IsNullOrEmpty(currentDir))
+                    {
+                        Debug.WriteLine(@"}");
+                        Debug.WriteLine(@"");
+                    }
 
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestOpenGlExe()
-        {
-            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.OpenGlExePath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
+                    if (currentNamespace != subfolders)
+                    {
+                        if (!string.IsNullOrEmpty(currentNamespace))
+                        {
+                            Debug.WriteLine(@"}");
+                            Debug.WriteLine(@"");
+                        }
+
+                        Debug.WriteLine(@"namespace @" + subfolders.Replace("\\", ".@") + " {");
+                        currentNamespace = subfolders;
+                    }
+
+                    Debug.WriteLine(@"[TestClass]");
+                    Debug.WriteLine(@"public class @" + folderName + " {");
+                    Debug.WriteLine(@"[TestInitialize]");
+                    Debug.WriteLine(@"public void Initialize() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+                    Debug.WriteLine(@"[TestCleanup]");
+                    Debug.WriteLine(@"public void Cleanup() { ");
+                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
+                    Debug.WriteLine(@"}");
+                    Debug.WriteLine(@"");
+
+                    currentDir = directoryName;
+                }
+
+                Debug.WriteLine(@"[TestMethod]");
+                var testMethodName = (fileNameWithoutExtension.Length > 6
+                    ? fileNameWithoutExtension.Insert(6, "_")
+                    : fileNameWithoutExtension);
+                Debug.WriteLine(@"public void @" + testMethodName + "() {");
+                Debug.WriteLine(
+                    @"var file = Path.Combine(CompilerHelper.SscliSourcePath, @""" + subfolders + @""", """ +
+                    Path.GetFileName(file) + @""");");
+                Debug.WriteLine(
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                Debug.WriteLine(@"}");
+                Debug.WriteLine(@"");
+            }
+
+            Debug.WriteLine(@"}"); // class
+            Debug.WriteLine(@"}"); // namespaces
+            Debug.WriteLine(@"}"); // global namespace
         }
 
         /// <summary>
@@ -119,7 +216,10 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestAndroid()
         {
-            Il2Converter.Convert(Path.GetFullPath(CompilerHelper.AndroidPath), CompilerHelper.OutputPath, CompilerHelper.GetConverterArgs(true));
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.AndroidPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(true));
         }
 
         /// <summary>
@@ -153,37 +253,35 @@ namespace Ll2NativeTests
             var skip =
                 new List<int>(
                     new[]
-                        {
-                            10, 100, 251, 300, 301, 304, 305, 353, 386, 387, 444, 482, 528, 535, 550, 551, 616, 631, 709, 817, 864
-                        });
+                    {
+                        10,
+                        100,
+                        251,
+                        300,
+                        301,
+                        304,
+                        305,
+                        353,
+                        386,
+                        387,
+                        444,
+                        482,
+                        528,
+                        535,
+                        550,
+                        551,
+                        616,
+                        631,
+                        709,
+                        817,
+                        864
+                    });
 
             Debug.Listeners.Clear();
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.Compile(string.Format("test-{0}", index));
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
-        public void TestGenCompile()
-        {
-            // 66 - using typeof (typeof (Foo<>))
-
-            var skip =
-                new List<int>(
-                    new[]
-                        { 
-                            66
-                        });
-
-            Debug.Listeners.Clear();
-
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -303,12 +401,99 @@ namespace Ll2NativeTests
             var skip =
                 new List<int>(
                     new[]
-                        {
-                            9, 10, 19, 32, 36, 37, 39, 42, 43, 44, 45, 50, 53, 55, 66, 67, 68, 74, 77, 85, 91, 99, 100, 101, 102, 105, 106, 107, 109, 115, 118, 120,
-                            126, 127, 128, 132, 135, 157, 158, 174, 177, 178, 180, 181, 183, 187, 219, 220, 229, 230, 231, 232, 233, 236, 238, 239, 240, 
-                            250, 253, 254, 263, 266, 269, 273, 276, 279, 282, 286, 287, 295, 296, 297, 300, 301, 304, 305, 308, 311, 313, 318, 319, 329, 330,
-                            349, 352, 353, 358, 361, 362, 367, 382
-                        });
+                    {
+                        9,
+                        10,
+                        19,
+                        32,
+                        36,
+                        37,
+                        39,
+                        42,
+                        43,
+                        44,
+                        45,
+                        50,
+                        53,
+                        55,
+                        66,
+                        67,
+                        68,
+                        74,
+                        77,
+                        85,
+                        91,
+                        99,
+                        100,
+                        101,
+                        102,
+                        105,
+                        106,
+                        107,
+                        109,
+                        115,
+                        118,
+                        120,
+                        126,
+                        127,
+                        128,
+                        132,
+                        135,
+                        157,
+                        158,
+                        174,
+                        177,
+                        178,
+                        180,
+                        181,
+                        183,
+                        187,
+                        219,
+                        220,
+                        229,
+                        230,
+                        231,
+                        232,
+                        233,
+                        236,
+                        238,
+                        239,
+                        240,
+                        250,
+                        253,
+                        254,
+                        263,
+                        266,
+                        269,
+                        273,
+                        276,
+                        279,
+                        282,
+                        286,
+                        287,
+                        295,
+                        296,
+                        297,
+                        300,
+                        301,
+                        304,
+                        305,
+                        308,
+                        311,
+                        313,
+                        318,
+                        319,
+                        329,
+                        330,
+                        349,
+                        352,
+                        353,
+                        358,
+                        361,
+                        362,
+                        367,
+                        382
+                    });
 
             if (CompilerHelper.UsingRoslyn)
             {
@@ -319,6 +504,62 @@ namespace Ll2NativeTests
             foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void
+            TestCoreLib()
+        {
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.CoreLibPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false));
+
+            if (CompilerHelper.CompileWithOptimization)
+            {
+                CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
+                CompilerHelper.ExecCmd(
+                    "llc",
+                    string.Format("-filetype=obj -mtriple={0} CoreLib.bc", CompilerHelper.Target));
+            }
+            else
+            {
+                CompilerHelper.ExecCmd(
+                    "llc",
+                    string.Format("-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target));
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestCustomConvert()
+        {
+            CompilerHelper.Convert("test-1", CompilerHelper.SourcePathCustom);
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestGenCompile()
+        {
+            // 66 - using typeof (typeof (Foo<>))
+
+            var skip =
+                new List<int>(
+                    new[]
+                    {
+                        66
+                    });
+
+            Debug.Listeners.Clear();
+
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
+            {
+                CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
             }
         }
 
@@ -371,14 +612,94 @@ namespace Ll2NativeTests
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[]
-                           {
-                               13, 17, 31, 40, 47, 51, 53, 56, 65, 66, 72, 77, 78, 98, 99, 102, 109, 117, 119, 128, 143, 144, 145, 156, 
-                               161, 162, 165, 166, 167, 171, 172, 174, 177, 180, 184, 186, 188, 189, 196, 197, 202, 205, 207, 209
-                           };
+            {
+                13,
+                17,
+                31,
+                40,
+                47,
+                51,
+                53,
+                56,
+                65,
+                66,
+                72,
+                77,
+                78,
+                98,
+                99,
+                102,
+                109,
+                117,
+                119,
+                128,
+                143,
+                144,
+                145,
+                156,
+                161,
+                162,
+                165,
+                166,
+                167,
+                171,
+                172,
+                174,
+                177,
+                180,
+                184,
+                186,
+                188,
+                189,
+                196,
+                197,
+                202,
+                205,
+                207,
+                209
+            };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile()
+        {
+            //Debug.Listeners.Clear();
+            Il2Converter.Convert(
+                Path.GetFullPath(
+                    @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestOpenGlExe()
+        {
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.OpenGlExePath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(true));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestOpenGlLib()
+        {
+            // todo: 
+            // 1) class Condition method _getEffectiveTarget when it is returning Object it does not cast Interface to an Object, to replicate the issue change returning type to Object
+            // 2) the same as 1) but in InterpolateValueAction when saving value 'value = this._target[this._property]'
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.OpenGlLibPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(true));
         }
 
         /// <summary>
@@ -389,173 +710,37 @@ namespace Ll2NativeTests
             Converter.Convert(CompilerHelper.CoreLibPdbPath, new DummySymbolWriter.DummySymbolWriter());
         }
 
+        /// </summary>
         [TestMethod]
-        public void GenerateTestFromSscliTests()
+        public void TestSscli()
         {
-            Debug.WriteLine(@"namespace Ll2NativeTests {");
-            Debug.WriteLine(@"using System;");
-            Debug.WriteLine(@"using System.Collections.Generic;");
-            Debug.WriteLine(@"using System.Diagnostics;");
-            Debug.WriteLine(@"using System.IO;");
-            Debug.WriteLine(@"using System.Linq;");
-            Debug.WriteLine(@"using Il2Native.Logic;");
-            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
-            Debug.WriteLine(@"using PdbReader;");
-
-            var currentDir = "";
-            var currentNamespace = "";
-            foreach (var file in Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
+            foreach (
+                var file in
+                    Directory.EnumerateFiles(CompilerHelper.SscliSourcePath, "*.cs", SearchOption.AllDirectories))
             {
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
-                var directoryName = Path.GetDirectoryName(file);
-                var folderName = Path.GetFileName(directoryName);
-                var subfolders = directoryName.Substring(CompilerHelper.SscliSourcePath.Length);
-
-                if (currentDir != directoryName)
-                {
-                    if (!string.IsNullOrEmpty(currentDir))
-                    {
-                        Debug.WriteLine(@"}");
-                        Debug.WriteLine(@"");
-                    }
-
-                    if (currentNamespace != subfolders)
-                    {
-                        if (!string.IsNullOrEmpty(currentNamespace))
-                        {
-                            Debug.WriteLine(@"}");
-                            Debug.WriteLine(@"");
-                        }
-
-                        Debug.WriteLine(@"namespace @" + subfolders.Replace("\\", ".@") + " {");
-                        currentNamespace = subfolders;
-                    }
-
-                    Debug.WriteLine(@"[TestClass]");
-                    Debug.WriteLine(@"public class @" + folderName + " {");
-                    Debug.WriteLine(@"[TestInitialize]");
-                    Debug.WriteLine(@"public void Initialize() { ");
-                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
-                    Debug.WriteLine(@"}");
-                    Debug.WriteLine(@"");
-                    Debug.WriteLine(@"[TestCleanup]");
-                    Debug.WriteLine(@"public void Cleanup() { ");
-                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
-                    Debug.WriteLine(@"}");
-                    Debug.WriteLine(@"");
-
-                    currentDir = directoryName;
-                }
-
-                Debug.WriteLine(@"[TestMethod]");
-                var testMethodName = (fileNameWithoutExtension.Length > 6 ? fileNameWithoutExtension.Insert(6, "_") : fileNameWithoutExtension);
-                Debug.WriteLine(@"public void @" + testMethodName + "() {");
-                Debug.WriteLine(@"var file = Path.Combine(CompilerHelper.SscliSourcePath, @""" + subfolders + @""", """ + Path.GetFileName(file) + @""");");
-                Debug.WriteLine(@"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
-                Debug.WriteLine(@"}");
-                Debug.WriteLine(@"");
+                CompilerHelper.CompileAndRun(
+                    Path.GetFileNameWithoutExtension(file),
+                    Path.GetDirectoryName(file) + "\\",
+                    true);
             }
-
-            Debug.WriteLine(@"}"); // class
-            Debug.WriteLine(@"}"); // namespaces
-            Debug.WriteLine(@"}"); // global namespace
         }
 
-        [TestMethod]
-        public void GenerateTestFromMonoTests()
-        {
-            Debug.WriteLine(@"namespace Ll2NativeTests {");
-            Debug.WriteLine(@"using System;");
-            Debug.WriteLine(@"using System.Collections.Generic;");
-            Debug.WriteLine(@"using System.Diagnostics;");
-            Debug.WriteLine(@"using System.IO;");
-            Debug.WriteLine(@"using System.Linq;");
-            Debug.WriteLine(@"using Il2Native.Logic;");
-            Debug.WriteLine(@"using Microsoft.VisualStudio.TestTools.UnitTesting;");
-            Debug.WriteLine(@"using PdbReader;");
+        #region Additional test attributes
 
-            var chars = new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+        // You can use the following additional attributes as you write your tests:
+        // Use ClassInitialize to run code before running the first test in the class
+        // [ClassInitialize()]
+        // public static void MyClassInitialize(TestContext testContext) { }
+        // Use ClassCleanup to run code after all tests in a class have run
+        // [ClassCleanup()]
+        // public static void MyClassCleanup() { }
+        // Use TestInitialize to run code before running each test 
+        // [TestInitialize()]
+        // public void MyTestInitialize() { }
+        // Use TestCleanup to run code after each test has run
+        // [TestCleanup()]
+        // public void MyTestCleanup() { }
 
-            var currentDir = "";
-            var currentNamespace = "";
-            var enumerateFiles = Directory.EnumerateFiles(CompilerHelper.SourcePath, "*.cs", SearchOption.AllDirectories).ToArray();
-            Array.Sort(enumerateFiles);
-            foreach (var file in enumerateFiles)
-            {
-                var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file);
-
-                var directoryName = Path.GetDirectoryName(file);
-                var folderName = Path.GetFileName(directoryName);
-                var subfolders = directoryName.Substring(Math.Min(directoryName.Length, CompilerHelper.SourcePath.Length));
-                var fileName = Path.GetFileName(file);
-
-                // custom for Mono only
-                string groupName;
-                var minusIndex = fileName.IndexOfAny(chars);
-                if (minusIndex > 0)
-                {
-                    groupName = fileName.Substring(0, minusIndex - 1);
-                    if (fileName.IndexOf('-', minusIndex) >= 0)
-                    {
-                        continue;
-                    }
-                }
-                else
-                {
-                    continue;
-                }
-
-                var namespaceChain = subfolders + groupName;
-                var groupper = directoryName + namespaceChain;
-
-                if (currentDir != groupper)
-                {
-                    if (!string.IsNullOrEmpty(currentDir))
-                    {
-                        Debug.WriteLine(@"}");
-                        Debug.WriteLine(@"");
-                    }
-
-                    if (currentNamespace != namespaceChain)
-                    {
-                        if (!string.IsNullOrEmpty(currentNamespace))
-                        {
-                            Debug.WriteLine(@"}");
-                            Debug.WriteLine(@"");
-                        }
-
-                        Debug.WriteLine(@"namespace @" + namespaceChain.Replace("\\", ".@").Replace("-", "_") + " {");
-                        currentNamespace = namespaceChain;
-                    }
-
-                    Debug.WriteLine(@"[TestClass]");
-                    Debug.WriteLine(@"public class @" + folderName.Replace("-", "_") + " {");
-                    Debug.WriteLine(@"[TestInitialize]");
-                    Debug.WriteLine(@"public void Initialize() { ");
-                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(false);");
-                    Debug.WriteLine(@"}");
-                    Debug.WriteLine(@"");
-                    Debug.WriteLine(@"[TestCleanup]");
-                    Debug.WriteLine(@"public void Cleanup() { ");
-                    Debug.WriteLine(@"CompilerHelper.AssertUiEnabled(true);");
-                    Debug.WriteLine(@"}");
-                    Debug.WriteLine(@"");
-
-                    currentDir = groupper;
-                }
-
-                Debug.WriteLine(@"[TestMethod]");
-                var testMethodName = fileNameWithoutExtension.Replace("-", "_");
-                Debug.WriteLine(@"public void @" + testMethodName + "() {");
-                Debug.WriteLine(@"var file = Path.Combine(CompilerHelper.SourcePath, @""" + subfolders + @""", """ + fileName + @""");");
-                Debug.WriteLine(@"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
-                Debug.WriteLine(@"}");
-                Debug.WriteLine(@"");
-            }
-
-            Debug.WriteLine(@"}"); // class
-            Debug.WriteLine(@"}"); // namespaces
-            Debug.WriteLine(@"}"); // global namespace
-        }
+        #endregion
     }
 }

@@ -6,11 +6,11 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     using System;
     using System.Diagnostics;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -65,6 +65,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
+        public FullyDefinedReference ToByRefType()
+        {
+            return this.ToType(this.Type.ToByRefType());
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public FullyDefinedReference ToClassType()
         {
             return this.ToType(this.Type.ToClass());
@@ -77,15 +86,6 @@ namespace Il2Native.Logic
         public FullyDefinedReference ToDereferencedType()
         {
             return this.ToType(this.Type.ToDereferencedType());
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public FullyDefinedReference ToByRefType()
-        {
-            return this.ToType(this.Type.ToByRefType());
         }
 
         /// <summary>

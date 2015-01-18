@@ -9,10 +9,7 @@
 
 namespace Il2Native.Logic.Gencode
 {
-    using System.Linq;
-
-    using Il2Native.Logic.CodeParts;
-
+    using CodeParts;
     using PEAssemblyReader;
 
     /// <summary>
@@ -56,7 +53,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteThreadingFunction(this IMethod method, OpCodePart opCodeMethodInfo, LlvmWriter llvmWriter)
+        public static void WriteThreadingFunction(
+            this IMethod method,
+            OpCodePart opCodeMethodInfo,
+            LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 

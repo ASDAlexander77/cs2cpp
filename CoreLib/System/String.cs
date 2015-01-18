@@ -208,6 +208,37 @@ namespace System
 
         public String Substring(int startIndex, int length)
         {
+            //Bounds Checking.
+            if (startIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndex"));
+            }
+
+            if (startIndex > Length)
+            {
+                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndexLargerThanLength"));
+            }
+
+            if (length < 0)
+            {
+                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_NegativeLength"));
+            }
+
+            if (startIndex > Length - length)
+            {
+                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_IndexLength"));
+            }
+
+            if (length == 0)
+            {
+                return String.Empty;
+            }
+
+            if (startIndex == 0 && length == this.Length)
+            {
+                return this;
+            }
+
             return new String(this.chars, startIndex, length);
         }
 
@@ -343,6 +374,71 @@ namespace System
             {
                 Encoding.UTF8.GetChars(src, count, p, this.chars.Length);
             }
+        }
+
+        public static int Compare(string a, int indexA, string b, int indexB, int length)
+        {
+            if (a == null && b == null)
+            {
+                return 0;
+            }
+
+            if (a == null)
+            {
+                return 1;
+            }
+
+            if (b == null)
+            {
+                return -1;
+            }
+
+            var charsA = a.chars;
+            var charsB = b.chars;
+
+            if (charsA == null && charsB == null)
+            {
+                return 0;
+            }
+
+            if (charsA == null)
+            {
+                return 1;
+            }
+
+            if (charsB == null)
+            {
+                return -1;
+            }
+
+            if (charsA.Length - indexA < length)
+            {
+                return 1;
+            }
+
+            if (charsB.Length - indexB < length)
+            {
+                return -1;
+            }
+
+            var len = length;
+            for (var index = 0; index < len; index++)
+            {
+                var cA = charsA[index + indexA];
+                var cB = charsB[index + indexB];
+
+                if (cA < cB)
+                {
+                    return 1;
+                }
+
+                if (cA > cB)
+                {
+                    return -1;
+                }
+            }
+
+            return 0;            
         }
 
         public static int Compare(String a, String b)

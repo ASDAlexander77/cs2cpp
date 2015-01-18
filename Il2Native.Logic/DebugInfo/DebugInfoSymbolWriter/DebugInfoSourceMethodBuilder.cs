@@ -1,16 +1,18 @@
 ﻿namespace Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter
 {
-    using Il2Native.Logic.Metadata.Model;
-
+    using Metadata.Model;
     using PdbReader;
 
     public class DebugInfoSourceMethodBuilder : ISourceMethodBuilder
     {
-        private DebugInfoGenerator debugInfoGenerator;
+        private readonly DebugInfoGenerator debugInfoGenerator;
+        private readonly CollectionMetadata function;
 
-        private CollectionMetadata function;
-
-        public DebugInfoSourceMethodBuilder(DebugInfoGenerator debugInfoGenerator, ISourceMethod method, CollectionMetadata file, CollectionMetadata subprograms)
+        public DebugInfoSourceMethodBuilder(
+            DebugInfoGenerator debugInfoGenerator,
+            ISourceMethod method,
+            CollectionMetadata file,
+            CollectionMetadata subprograms)
         {
             this.debugInfoGenerator = debugInfoGenerator;
 

@@ -1,7 +1,6 @@
 ﻿namespace Il2Native.Logic.DebugInfo.DebugInfoSymbolWriter
 {
     using System.IO;
-
     using PdbReader;
 
     public class DebugInfoSymbolWriter : ISymbolWriter

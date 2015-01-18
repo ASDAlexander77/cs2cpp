@@ -10,7 +10,6 @@
 namespace Il2Native.Logic
 {
     using System.Collections.Generic;
-
     using PEAssemblyReader;
 
     /// <summary>

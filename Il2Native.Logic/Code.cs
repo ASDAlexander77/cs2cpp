@@ -6,6 +6,7 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     /// <summary>
@@ -15,874 +16,881 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         Nop = 0, // 0
-        /// <summary>
-        /// </summary>
-        Break, 
 
         /// <summary>
         /// </summary>
-        Ldarg_0, 
+        Break,
 
         /// <summary>
         /// </summary>
-        Ldarg_1, 
+        Ldarg_0,
 
         /// <summary>
         /// </summary>
-        Ldarg_2, 
+        Ldarg_1,
 
         /// <summary>
         /// </summary>
-        Ldarg_3, 
+        Ldarg_2,
 
         /// <summary>
         /// </summary>
-        Ldloc_0, 
+        Ldarg_3,
 
         /// <summary>
         /// </summary>
-        Ldloc_1, 
+        Ldloc_0,
 
         /// <summary>
         /// </summary>
-        Ldloc_2, 
+        Ldloc_1,
 
         /// <summary>
         /// </summary>
-        Ldloc_3, 
+        Ldloc_2,
+
+        /// <summary>
+        /// </summary>
+        Ldloc_3,
 
         /// <summary>
         /// </summary>
         Stloc_0, // 10
-        /// <summary>
-        /// </summary>
-        Stloc_1, 
 
         /// <summary>
         /// </summary>
-        Stloc_2, 
+        Stloc_1,
 
         /// <summary>
         /// </summary>
-        Stloc_3, 
+        Stloc_2,
 
         /// <summary>
         /// </summary>
-        Ldarg_S, 
+        Stloc_3,
 
         /// <summary>
         /// </summary>
-        Ldarga_S, 
+        Ldarg_S,
 
         /// <summary>
         /// </summary>
-        Starg_S, 
+        Ldarga_S,
 
         /// <summary>
         /// </summary>
-        Ldloc_S, 
+        Starg_S,
 
         /// <summary>
         /// </summary>
-        Ldloca_S, 
+        Ldloc_S,
 
         /// <summary>
         /// </summary>
-        Stloc_S, 
+        Ldloca_S,
+
+        /// <summary>
+        /// </summary>
+        Stloc_S,
 
         /// <summary>
         /// </summary>
         Ldnull, // 20
-        /// <summary>
-        /// </summary>
-        Ldc_I4_M1, 
 
         /// <summary>
         /// </summary>
-        Ldc_I4_0, 
+        Ldc_I4_M1,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_1, 
+        Ldc_I4_0,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_2, 
+        Ldc_I4_1,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_3, 
+        Ldc_I4_2,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_4, 
+        Ldc_I4_3,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_5, 
+        Ldc_I4_4,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_6, 
+        Ldc_I4_5,
 
         /// <summary>
         /// </summary>
-        Ldc_I4_7, 
+        Ldc_I4_6,
+
+        /// <summary>
+        /// </summary>
+        Ldc_I4_7,
 
         /// <summary>
         /// </summary>
         Ldc_I4_8, // 30
-        /// <summary>
-        /// </summary>
-        Ldc_I4_S, 
 
         /// <summary>
         /// </summary>
-        Ldc_I4, 
+        Ldc_I4_S,
 
         /// <summary>
         /// </summary>
-        Ldc_I8, 
+        Ldc_I4,
 
         /// <summary>
         /// </summary>
-        Ldc_R4, 
+        Ldc_I8,
 
         /// <summary>
         /// </summary>
-        Ldc_R8, 
+        Ldc_R4,
+
+        /// <summary>
+        /// </summary>
+        Ldc_R8,
 
         /// <summary>
         /// </summary>
         UNKNOWN, // TODO: 35, here should be something different
+
         /// <summary>
         /// </summary>
         Dup, // 36
-        /// <summary>
-        /// </summary>
-        Pop, 
 
         /// <summary>
         /// </summary>
-        Jmp, 
+        Pop,
 
         /// <summary>
         /// </summary>
-        Call, 
+        Jmp,
+
+        /// <summary>
+        /// </summary>
+        Call,
 
         /// <summary>
         /// </summary>
         Calli, // 40
+
         /// <summary>
         /// </summary>
-        Ret, 
+        Ret,
 
         /// <summary>
         /// </summary>
-        Br_S, 
+        Br_S,
 
         /// <summary>
         /// </summary>
-        Brfalse_S, 
+        Brfalse_S,
 
         /// <summary>
         /// </summary>
-        Brtrue_S, 
+        Brtrue_S,
 
         /// <summary>
         /// </summary>
-        Beq_S, 
+        Beq_S,
 
         /// <summary>
         /// </summary>
-        Bge_S, 
+        Bge_S,
 
         /// <summary>
         /// </summary>
-        Bgt_S, 
+        Bgt_S,
 
         /// <summary>
         /// </summary>
-        Ble_S, 
+        Ble_S,
 
         /// <summary>
         /// </summary>
-        Blt_S, 
+        Blt_S,
 
         /// <summary>
         /// </summary>
-        Bne_Un_S, 
+        Bne_Un_S,
 
         /// <summary>
         /// </summary>
-        Bge_Un_S, 
+        Bge_Un_S,
 
         /// <summary>
         /// </summary>
-        Bgt_Un_S, 
+        Bgt_Un_S,
 
         /// <summary>
         /// </summary>
-        Ble_Un_S, 
+        Ble_Un_S,
 
         /// <summary>
         /// </summary>
-        Blt_Un_S, 
+        Blt_Un_S,
 
         /// <summary>
         /// </summary>
-        Br, 
+        Br,
 
         /// <summary>
         /// </summary>
-        Brfalse, 
+        Brfalse,
 
         /// <summary>
         /// </summary>
-        Brtrue, 
+        Brtrue,
 
         /// <summary>
         /// </summary>
-        Beq, 
+        Beq,
 
         /// <summary>
         /// </summary>
-        Bge, 
+        Bge,
 
         /// <summary>
         /// </summary>
-        Bgt, 
+        Bgt,
 
         /// <summary>
         /// </summary>
-        Ble, 
+        Ble,
 
         /// <summary>
         /// </summary>
-        Blt, 
+        Blt,
 
         /// <summary>
         /// </summary>
-        Bne_Un, 
+        Bne_Un,
 
         /// <summary>
         /// </summary>
-        Bge_Un, 
+        Bge_Un,
 
         /// <summary>
         /// </summary>
-        Bgt_Un, 
+        Bgt_Un,
 
         /// <summary>
         /// </summary>
-        Ble_Un, 
+        Ble_Un,
 
         /// <summary>
         /// </summary>
-        Blt_Un, 
+        Blt_Un,
 
         /// <summary>
         /// </summary>
-        Switch, 
+        Switch,
 
         /// <summary>
         /// </summary>
-        Ldind_I1, 
+        Ldind_I1,
 
         /// <summary>
         /// </summary>
-        Ldind_U1, 
+        Ldind_U1,
 
         /// <summary>
         /// </summary>
-        Ldind_I2, 
+        Ldind_I2,
 
         /// <summary>
         /// </summary>
-        Ldind_U2, 
+        Ldind_U2,
 
         /// <summary>
         /// </summary>
-        Ldind_I4, 
+        Ldind_I4,
 
         /// <summary>
         /// </summary>
-        Ldind_U4, 
+        Ldind_U4,
 
         /// <summary>
         /// </summary>
-        Ldind_I8, 
+        Ldind_I8,
 
         /// <summary>
         /// </summary>
-        Ldind_I, 
+        Ldind_I,
 
         /// <summary>
         /// </summary>
-        Ldind_R4, 
+        Ldind_R4,
 
         /// <summary>
         /// </summary>
-        Ldind_R8, 
+        Ldind_R8,
 
         /// <summary>
         /// </summary>
-        Ldind_Ref, 
+        Ldind_Ref,
 
         /// <summary>
         /// </summary>
-        Stind_Ref, 
+        Stind_Ref,
 
         /// <summary>
         /// </summary>
-        Stind_I1, 
+        Stind_I1,
 
         /// <summary>
         /// </summary>
-        Stind_I2, 
+        Stind_I2,
 
         /// <summary>
         /// </summary>
-        Stind_I4, 
+        Stind_I4,
 
         /// <summary>
         /// </summary>
-        Stind_I8, 
+        Stind_I8,
 
         /// <summary>
         /// </summary>
-        Stind_R4, 
+        Stind_R4,
 
         /// <summary>
         /// </summary>
-        Stind_R8, 
+        Stind_R8,
 
         /// <summary>
         /// </summary>
-        Add, 
+        Add,
 
         /// <summary>
         /// </summary>
-        Sub, 
+        Sub,
 
         /// <summary>
         /// </summary>
-        Mul, 
+        Mul,
 
         /// <summary>
         /// </summary>
-        Div, 
+        Div,
 
         /// <summary>
         /// </summary>
-        Div_Un, 
+        Div_Un,
 
         /// <summary>
         /// </summary>
-        Rem, 
+        Rem,
 
         /// <summary>
         /// </summary>
-        Rem_Un, 
+        Rem_Un,
 
         /// <summary>
         /// </summary>
-        And, 
+        And,
 
         /// <summary>
         /// </summary>
-        Or, 
+        Or,
 
         /// <summary>
         /// </summary>
-        Xor, 
+        Xor,
 
         /// <summary>
         /// </summary>
-        Shl, 
+        Shl,
 
         /// <summary>
         /// </summary>
-        Shr, 
+        Shr,
 
         /// <summary>
         /// </summary>
-        Shr_Un, 
+        Shr_Un,
 
         /// <summary>
         /// </summary>
-        Neg, 
+        Neg,
 
         /// <summary>
         /// </summary>
-        Not, 
+        Not,
 
         /// <summary>
         /// </summary>
-        Conv_I1, 
+        Conv_I1,
 
         /// <summary>
         /// </summary>
-        Conv_I2, 
+        Conv_I2,
 
         /// <summary>
         /// </summary>
-        Conv_I4, 
+        Conv_I4,
 
         /// <summary>
         /// </summary>
-        Conv_I8, 
+        Conv_I8,
 
         /// <summary>
         /// </summary>
-        Conv_R4, 
+        Conv_R4,
 
         /// <summary>
         /// </summary>
-        Conv_R8, 
+        Conv_R8,
 
         /// <summary>
         /// </summary>
-        Conv_U4, 
+        Conv_U4,
 
         /// <summary>
         /// </summary>
-        Conv_U8, 
+        Conv_U8,
 
         /// <summary>
         /// </summary>
-        Callvirt = 0x6F, 
+        Callvirt = 0x6F,
 
         /// <summary>
         /// </summary>
-        Cpobj, 
+        Cpobj,
 
         /// <summary>
         /// </summary>
-        Ldobj, 
+        Ldobj,
 
         /// <summary>
         /// </summary>
-        Ldstr, 
+        Ldstr,
 
         /// <summary>
         /// </summary>
-        Newobj, 
+        Newobj,
 
         /// <summary>
         /// </summary>
-        Castclass = 0x74, 
+        Castclass = 0x74,
 
         /// <summary>
         /// </summary>
-        Isinst, 
+        Isinst,
 
         /// <summary>
         /// </summary>
-        Conv_R_Un, 
+        Conv_R_Un,
 
         /// <summary>
         /// </summary>
-        Unbox = 0x79, 
+        Unbox = 0x79,
 
         /// <summary>
         /// </summary>
-        Throw = 0x7A, 
+        Throw = 0x7A,
 
         /// <summary>
         /// </summary>
-        Ldfld = 0x7B, 
+        Ldfld = 0x7B,
 
         /// <summary>
         /// </summary>
-        Ldflda = 0x7C, 
+        Ldflda = 0x7C,
 
         /// <summary>
         /// </summary>
-        Stfld = 0x7D, 
+        Stfld = 0x7D,
 
         /// <summary>
         /// </summary>
-        Ldsfld = 0x7E, 
+        Ldsfld = 0x7E,
 
         /// <summary>
         /// </summary>
-        Ldsflda = 0x7F, 
+        Ldsflda = 0x7F,
 
         /// <summary>
         /// </summary>
-        Stsfld = 0x80, 
+        Stsfld = 0x80,
 
         /// <summary>
         /// </summary>
-        Stobj, 
+        Stobj,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I1_Un, 
+        Conv_Ovf_I1_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I2_Un, 
+        Conv_Ovf_I2_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I4_Un, 
+        Conv_Ovf_I4_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I8_Un, 
+        Conv_Ovf_I8_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U1_Un, 
+        Conv_Ovf_U1_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U2_Un, 
+        Conv_Ovf_U2_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U4_Un, 
+        Conv_Ovf_U4_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U8_Un, 
+        Conv_Ovf_U8_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I_Un, 
+        Conv_Ovf_I_Un,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U_Un, 
+        Conv_Ovf_U_Un,
 
         /// <summary>
         /// </summary>
-        Box = 0x8C, 
+        Box = 0x8C,
 
         /// <summary>
         /// </summary>
-        Newarr, 
+        Newarr,
 
         /// <summary>
         /// </summary>
-        Ldlen, 
+        Ldlen,
 
         /// <summary>
         /// </summary>
-        Ldelema, 
+        Ldelema,
 
         /// <summary>
         /// </summary>
-        Ldelem_I1, 
+        Ldelem_I1,
 
         /// <summary>
         /// </summary>
-        Ldelem_U1, 
+        Ldelem_U1,
 
         /// <summary>
         /// </summary>
-        Ldelem_I2, 
+        Ldelem_I2,
 
         /// <summary>
         /// </summary>
-        Ldelem_U2, 
+        Ldelem_U2,
 
         /// <summary>
         /// </summary>
-        Ldelem_I4, 
+        Ldelem_I4,
 
         /// <summary>
         /// </summary>
-        Ldelem_U4, 
+        Ldelem_U4,
 
         /// <summary>
         /// </summary>
-        Ldelem_I8, 
+        Ldelem_I8,
 
         /// <summary>
         /// </summary>
-        Ldelem_I, 
+        Ldelem_I,
 
         /// <summary>
         /// </summary>
-        Ldelem_R4, 
+        Ldelem_R4,
 
         /// <summary>
         /// </summary>
-        Ldelem_R8, 
+        Ldelem_R8,
 
         /// <summary>
         /// </summary>
-        Ldelem_Ref, 
+        Ldelem_Ref,
 
         /// <summary>
         /// </summary>
-        Stelem_I, 
+        Stelem_I,
 
         /// <summary>
         /// </summary>
-        Stelem_I1, 
+        Stelem_I1,
 
         /// <summary>
         /// </summary>
-        Stelem_I2, 
+        Stelem_I2,
 
         /// <summary>
         /// </summary>
-        Stelem_I4, 
+        Stelem_I4,
 
         /// <summary>
         /// </summary>
-        Stelem_I8, 
+        Stelem_I8,
 
         /// <summary>
         /// </summary>
-        Stelem_R4, 
+        Stelem_R4,
 
         /// <summary>
         /// </summary>
-        Stelem_R8, 
+        Stelem_R8,
 
         /// <summary>
         /// </summary>
-        Stelem_Ref = 0xA2, 
+        Stelem_Ref = 0xA2,
 
         /// <summary>
         /// </summary>
-        Ldelem, 
+        Ldelem,
 
         /// <summary>
         /// </summary>
-        Stelem, 
+        Stelem,
 
         /// <summary>
         /// </summary>
-        Unbox_Any = 0xA5, 
+        Unbox_Any = 0xA5,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I1 = 0xB3, 
+        Conv_Ovf_I1 = 0xB3,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U1, 
+        Conv_Ovf_U1,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I2, 
+        Conv_Ovf_I2,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U2, 
+        Conv_Ovf_U2,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I4, 
+        Conv_Ovf_I4,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U4, 
+        Conv_Ovf_U4,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I8, 
+        Conv_Ovf_I8,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U8, 
+        Conv_Ovf_U8,
 
         /// <summary>
         /// </summary>
-        Refanyval = 0xC2, 
+        Refanyval = 0xC2,
 
         /// <summary>
         /// </summary>
-        Ckfinite, 
+        Ckfinite,
 
         /// <summary>
         /// </summary>
-        Mkrefany = 0xC6, 
+        Mkrefany = 0xC6,
 
         /// <summary>
         /// </summary>
-        Ldtoken = 0xD0, 
+        Ldtoken = 0xD0,
 
         /// <summary>
         /// </summary>
-        Conv_U2, 
+        Conv_U2,
 
         /// <summary>
         /// </summary>
-        Conv_U1, 
+        Conv_U1,
 
         /// <summary>
         /// </summary>
-        Conv_I, 
+        Conv_I,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_I, 
+        Conv_Ovf_I,
 
         /// <summary>
         /// </summary>
-        Conv_Ovf_U, 
+        Conv_Ovf_U,
 
         /// <summary>
         /// </summary>
-        Add_Ovf, 
+        Add_Ovf,
 
         /// <summary>
         /// </summary>
-        Add_Ovf_Un, 
+        Add_Ovf_Un,
 
         /// <summary>
         /// </summary>
-        Mul_Ovf, 
+        Mul_Ovf,
 
         /// <summary>
         /// </summary>
-        Mul_Ovf_Un, 
+        Mul_Ovf_Un,
 
         /// <summary>
         /// </summary>
-        Sub_Ovf, 
+        Sub_Ovf,
 
         /// <summary>
         /// </summary>
-        Sub_Ovf_Un, 
+        Sub_Ovf_Un,
 
         /// <summary>
         /// </summary>
-        Endfinally, 
+        Endfinally,
 
         /// <summary>
         /// </summary>
-        Leave, 
+        Leave,
 
         /// <summary>
         /// </summary>
-        Leave_S, 
+        Leave_S,
 
         /// <summary>
         /// </summary>
-        Stind_I, 
+        Stind_I,
 
         /// <summary>
         /// </summary>
-        Conv_U, 
+        Conv_U,
 
         /// <summary>
         /// </summary>
-        Arglist = 0xE1, 
+        Arglist = 0xE1,
 
         /// <summary>
         /// </summary>
-        Ceq = 0xE2, 
+        Ceq = 0xE2,
 
         /// <summary>
         /// </summary>
-        Cgt = 0xE3, 
+        Cgt = 0xE3,
 
         /// <summary>
         /// </summary>
-        Cgt_Un = 0xE4, 
+        Cgt_Un = 0xE4,
 
         /// <summary>
         /// </summary>
-        Clt = 0xE5, 
+        Clt = 0xE5,
 
         /// <summary>
         /// </summary>
-        Clt_Un = 0xE6, 
+        Clt_Un = 0xE6,
 
         /// <summary>
         /// </summary>
-        Ldftn = 0xE7, 
+        Ldftn = 0xE7,
 
         /// <summary>
         /// </summary>
-        Ldvirtftn = 0xE8, 
+        Ldvirtftn = 0xE8,
 
         /// <summary>
         /// </summary>
-        Ldarg = 0xEA, 
+        Ldarg = 0xEA,
 
         /// <summary>
         /// </summary>
-        Ldarga, 
+        Ldarga,
 
         /// <summary>
         /// </summary>
-        Starg, 
+        Starg,
 
         /// <summary>
         /// </summary>
-        Ldloc, 
+        Ldloc,
 
         /// <summary>
         /// </summary>
-        Ldloca, 
+        Ldloca,
 
         /// <summary>
         /// </summary>
-        Stloc, 
+        Stloc,
 
         /// <summary>
         /// </summary>
-        Localloc = 0xF0, 
+        Localloc = 0xF0,
 
         /// <summary>
         /// </summary>
-        Endfilter = 0xF2, 
+        Endfilter = 0xF2,
 
         /// <summary>
         /// </summary>
-        Unaligned = 0xF3, 
+        Unaligned = 0xF3,
 
         /// <summary>
         /// </summary>
-        Volatile = 0xF4, 
+        Volatile = 0xF4,
 
         /// <summary>
         /// </summary>
-        Tail, 
+        Tail,
 
         /// <summary>
         /// </summary>
-        Initobj = 0xF6, 
+        Initobj = 0xF6,
 
         /// <summary>
         /// </summary>
-        Constrained, 
+        Constrained,
 
         /// <summary>
         /// </summary>
-        Cpblk, 
+        Cpblk,
 
         /// <summary>
         /// </summary>
-        Initblk, 
+        Initblk,
 
         /// <summary>
         /// </summary>
-        No, 
+        No,
 
         /// <summary>
         /// </summary>
-        Rethrow, 
+        Rethrow,
 
         /// <summary>
         /// </summary>
-        Sizeof = 0xFD, 
+        Sizeof = 0xFD,
 
         /// <summary>
         /// </summary>
-        Refanytype = 0xFE, 
+        Refanytype = 0xFE,
 
         /// <summary>
         /// </summary>
-        Readonly = 0xFF, 
+        Readonly = 0xFF
     }
 }

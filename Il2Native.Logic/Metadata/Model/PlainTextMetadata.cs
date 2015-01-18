@@ -11,7 +11,7 @@
 
         public override void WriteTo(TextWriter output, bool suppressMetadataKeyword = false)
         {
-            output.Write(this.Value);
+            output.Write(Value);
         }
     }
 }

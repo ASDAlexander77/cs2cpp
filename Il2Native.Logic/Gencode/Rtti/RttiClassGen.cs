@@ -6,12 +6,11 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Gencode
 {
     using System.CodeDom.Compiler;
-    using System.Diagnostics;
     using System.Linq;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -182,10 +181,10 @@ namespace Il2Native.Logic.Gencode
         public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"", 
-                type.GetRttiStringName(), 
-                type.FullName, 
-                type.FullName.Length, 
+                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"",
+                type.GetRttiStringName(),
+                type.FullName,
+                type.FullName.Length,
                 type.StringLength());
         }
     }

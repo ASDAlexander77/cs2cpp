@@ -6,6 +6,7 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic
 {
     using System;
@@ -46,8 +47,8 @@ namespace Il2Native.Logic
             Debug.Assert(this.sw != null);
             this.sw.Close();
 
-            var savedIndent = this.Indent;
-            this.Indent = 0;
+            var savedIndent = Indent;
+            Indent = 0;
 
             var lines = this.sb.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
             foreach (var line in lines)
@@ -78,7 +79,7 @@ namespace Il2Native.Logic
 
             this.isMethod = false;
 
-            this.Indent = savedIndent;
+            Indent = savedIndent;
         }
 
         /// <summary>
@@ -88,7 +89,7 @@ namespace Il2Native.Logic
             this.isMethod = true;
             this.sb = new StringBuilder();
             this.sw = new IndentedTextWriter(new StringWriter(this.sb));
-            this.sw.Indent = this.Indent;
+            this.sw.Indent = Indent;
             this.sw.WriteLine(string.Empty);
         }
 
@@ -104,7 +105,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(c);
             }
         }
@@ -121,7 +122,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(i);
             }
         }
@@ -138,7 +139,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(i);
             }
         }
@@ -155,7 +156,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(i);
             }
         }
@@ -172,7 +173,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(i);
             }
         }
@@ -189,7 +190,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(i);
             }
         }
@@ -206,7 +207,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(s);
             }
         }
@@ -225,7 +226,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(format, arg0);
             }
         }
@@ -246,7 +247,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(format, arg0, arg1);
             }
         }
@@ -269,7 +270,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(format, arg0, arg1, arg2);
             }
         }
@@ -288,7 +289,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(format, arg);
             }
         }
@@ -305,7 +306,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.WriteLine(s);
             }
         }
@@ -324,7 +325,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.WriteLine(format, arg0);
             }
         }
@@ -345,7 +346,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.WriteLine(format, arg0, arg1);
             }
         }
@@ -368,7 +369,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.WriteLine(format, arg0, arg1, arg2);
             }
         }
@@ -387,7 +388,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.sw.Indent = this.Indent;
+                this.sw.Indent = Indent;
                 this.sw.Write(format, arg);
             }
         }

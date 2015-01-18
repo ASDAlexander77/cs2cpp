@@ -6,10 +6,10 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.Gencode
 {
     using System.CodeDom.Compiler;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -39,8 +39,12 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("{");
             writer.Indent++;
-            writer.WriteLine("i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),");
-            writer.WriteLine("i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),", type.GetRttiStringName(), type.StringLength());
+            writer.WriteLine(
+                "i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv120__si_class_type_infoE, i32 2) to i8*),");
+            writer.WriteLine(
+                "i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),",
+                type.GetRttiStringName(),
+                type.StringLength());
             writer.Write("i8* bitcast (");
             type.BaseType.WriteRttiClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*)", type.BaseType.GetRttiInfoName());

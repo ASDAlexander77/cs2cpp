@@ -11,11 +11,6 @@
 
         public object Value { get; private set; }
 
-        public virtual void WriteTo(TextWriter output, bool suppressMetadataKeyword = false)
-        {
-            WriteValueTo(output, this.Value, suppressMetadataKeyword);
-        }
-
         public static void WriteValueTo(TextWriter output, object value, bool suppressMetadataKeyword = false)
         {
             var metadata = value as Metadata;
@@ -53,6 +48,11 @@
                 output.Write("i1 ");
                 output.Write(value.ToString().ToLowerInvariant());
             }
+        }
+
+        public virtual void WriteTo(TextWriter output, bool suppressMetadataKeyword = false)
+        {
+            WriteValueTo(output, this.Value, suppressMetadataKeyword);
         }
     }
 }

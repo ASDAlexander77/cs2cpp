@@ -6,17 +6,15 @@
 //   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
+
 namespace Il2Native.Logic.CodeParts
 {
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
-
-    using Il2Native.Logic.Exceptions;
-
+    using Exceptions;
     using PEAssemblyReader;
-
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
@@ -53,10 +51,7 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public static OpCodePart CreateNop
         {
-            get
-            {
-                return new OpCodePart(OpCodesEmit.Nop, 0, 0);
-            }
+            get { return new OpCodePart(OpCodesEmit.Nop, 0, 0); }
         }
 
         /// <summary>
@@ -95,10 +90,7 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public virtual int GroupAddressEnd
         {
-            get
-            {
-                return this.AddressEnd;
-            }
+            get { return this.AddressEnd; }
         }
 
         /// <summary>
@@ -108,8 +100,8 @@ namespace Il2Native.Logic.CodeParts
             get
             {
                 return this.OpCodeOperands != null && this.OpCodeOperands.Length > 0 && this.OpCodeOperands[0] != this
-                           ? this.OpCodeOperands[0].GroupAddressStart
-                           : this.AddressStart;
+                    ? this.OpCodeOperands[0].GroupAddressStart
+                    : this.AddressStart;
             }
         }
 
@@ -138,10 +130,7 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public bool HasResult
         {
-            get
-            {
-                return this.Result != null;
-            }
+            get { return this.Result != null; }
         }
 
         /// <summary>
@@ -176,36 +165,23 @@ namespace Il2Native.Logic.CodeParts
         /// </summary>
         public IType ReadExceptionFromStackType { get; set; }
 
-        private IType _requiredIncomingType;
         /// <summary>
-        /// used to adjust operand type
+        ///     used to adjust operand type
         /// </summary>
-        public IType RequiredIncomingType
-        {
-            get { return _requiredIncomingType; }
-            set { _requiredIncomingType = value; }
-        }
+        public IType RequiredIncomingType { get; set; }
 
         /// <summary>
-        /// used to adjust result of OpCode type
+        ///     used to adjust result of OpCode type
         /// </summary>
         public IType RequiredOutgoingType { get; set; }
 
         /// <summary>
         /// </summary>
-        public FullyDefinedReference Result
-        {
-            get;
-            set;
-        }
+        public FullyDefinedReference Result { get; set; }
 
         /// <summary>
         /// </summary>
-        public FullyDefinedReference ResultAtExit
-        {
-            get;
-            set;
-        }
+        public FullyDefinedReference ResultAtExit { get; set; }
 
         /// <summary>
         /// </summary>

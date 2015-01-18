@@ -31,50 +31,35 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType DeclaringType
         {
-            get
-            {
-                return this.Type.Clone();
-            }
+            get { return this.Type.Clone(); }
         }
 
         /// <summary>
         /// </summary>
         public override string ExplicitName
         {
-            get
-            {
-                return string.Concat(this.Type.Name, ".", this.MethodName);
-            }
+            get { return string.Concat(this.Type.Name, ".", this.MethodName); }
         }
 
         /// <summary>
         /// </summary>
         public override string FullName
         {
-            get
-            {
-                return string.Concat(this.Type.FullName, ".", this.MethodName);
-            }
+            get { return string.Concat(this.Type.FullName, ".", this.MethodName); }
         }
 
         /// <summary>
         /// </summary>
         public override string Name
         {
-            get
-            {
-                return this.MethodName;
-            }
+            get { return this.MethodName; }
         }
 
         /// <summary>
         /// </summary>
         public override IType ReturnType
         {
-            get
-            {
-                return this.Type;
-            }
+            get { return this.Type; }
         }
 
         /// <summary>
