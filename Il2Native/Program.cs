@@ -62,19 +62,19 @@ namespace Il2Native
                 args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
             var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
 
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
+            var fileExtension = Path.GetExtension(sources.First());
             if (
                 !sources.All(
                     f =>
-                        Path.GetFileNameWithoutExtension(f)
-                            .Equals(fileNameWithoutExtension, StringComparison.InvariantCultureIgnoreCase)))
+                        Path.GetExtension(f)
+                            .Equals(fileExtension, StringComparison.InvariantCultureIgnoreCase)))
             {
                 Console.WriteLine("WARNING!");
                 Console.WriteLine("You can use only one type of files at a time.");
                 return 1;
             }
 
-            if (fileNameWithoutExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) &&
+            if (fileExtension.Equals("dll", StringComparison.InvariantCultureIgnoreCase) &&
                 sources.Count() > 1)
             {
                 Console.WriteLine("WARNING!");
