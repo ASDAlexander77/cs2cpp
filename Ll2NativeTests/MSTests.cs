@@ -314,6 +314,7 @@ namespace Ll2NativeTests
             // 36 - bug in execution (NotImplemented)
             // 37 - multi array
             // 39 - using Attributes
+            // 40 - enum to string (NotImplemented)
             // 43 - multi array
             // 50 - missing
             // 67 - missing
@@ -346,6 +347,7 @@ namespace Ll2NativeTests
             // 181 - using Reflection
             // 183 - using BeginInvoke
             // 187 - using Specialized Collections
+            // 203 - enum to string (NotImplemented)
             // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
             // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
@@ -409,6 +411,7 @@ namespace Ll2NativeTests
                         36,
                         37,
                         39,
+                        40,
                         42,
                         43,
                         44,
@@ -448,6 +451,7 @@ namespace Ll2NativeTests
                         181,
                         183,
                         187,
+                        203,
                         219,
                         220,
                         229,
