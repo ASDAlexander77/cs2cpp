@@ -89,6 +89,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedInternalGetSizeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInternalGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />

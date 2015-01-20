@@ -520,6 +520,9 @@ namespace Il2Native.Logic
                 yield return method;
             }
 
+            // append C# native compiler infrastructure methods
+            yield return new SynthesizedInternalGetSizeMethod(type, typeResolver);
+
             // append internal methods
             yield return new SynthesizedInternalGetTypeMethod(type, typeResolver);
 

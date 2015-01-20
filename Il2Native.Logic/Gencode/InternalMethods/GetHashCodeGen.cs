@@ -17,15 +17,10 @@
             0,
             0,
             0,
-            Code.Callvirt,
-            2,
-            0,
-            0,
-            0,
             Code.Stloc_2,
             Code.Ldarg_0,
             Code.Castclass,
-            3,
+            2,
             0,
             0,
             0,
@@ -64,15 +59,9 @@
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
-                    "GetType",
+                    SynthesizedInternalGetSizeMethod.Name,
                     typeResolver.ResolveType("System.Object"),
-                    typeResolver.ResolveType("System.Type"),
-                    true));
-            tokenResolutions.Add(
-                new SynthesizedThisMethod(
-                    "get_Size",
-                    typeResolver.ResolveType("System.Type"),
-                    typeResolver.ResolveType("System.Int32"),
+                    typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize),
                     true));
             tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
 

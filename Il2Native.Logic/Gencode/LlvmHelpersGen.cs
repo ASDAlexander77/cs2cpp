@@ -166,35 +166,35 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="typeResolver">
         /// </param>
         /// <param name="byteSize">
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
+        public static IType GetIntTypeByByteSize(this ITypeResolver typeResolver, int byteSize)
         {
             IType toType = null;
             switch (byteSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.SByte");
+                    toType = typeResolver.ResolveType("System.SByte");
                     break;
                 case 2:
-                    toType = llvmWriter.ResolveType("System.Int16");
+                    toType = typeResolver.ResolveType("System.Int16");
                     break;
                 case 4:
-                    toType = llvmWriter.ResolveType("System.Int32");
+                    toType = typeResolver.ResolveType("System.Int32");
                     break;
                 case 8:
-                    toType = llvmWriter.ResolveType("System.Int64");
+                    toType = typeResolver.ResolveType("System.Int64");
                     break;
             }
 
             return toType;
         }
 
-        public static IType GetUIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
+        public static IType GetUIntTypeByBitSize(this ITypeResolver llvmWriter, int bitSize)
         {
             IType toType = null;
             switch (bitSize)
@@ -227,7 +227,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetUIntTypeByByteSize(this BaseWriter llvmWriter, int byteSize)
+        public static IType GetUIntTypeByByteSize(this ITypeResolver llvmWriter, int byteSize)
         {
             IType toType = null;
             switch (byteSize)

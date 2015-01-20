@@ -811,6 +811,7 @@ namespace Il2Native.Logic
             }
 
             normalType.WriteInternalGetTypeMethod(this);
+            normalType.WriteInternalGetSizeMethod(this);
         }
 
         /// <summary>

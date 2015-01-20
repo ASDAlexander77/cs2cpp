@@ -29,7 +29,6 @@
                 }
             }
 
-#if !FOR_MSCORLIBTEST
             // dynamiclly generated method for MulticastDelegate
             if (method.IsDelegateFunctionBody()
                 && (method.Name == "Invoke")
@@ -48,7 +47,6 @@
                     out parameters);
                 return GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
             }
-#endif
 
             return method;
         }
@@ -84,7 +82,6 @@
 
         private static void RegisterAll(ICodeWriter codeWriter)
         {
-#if !FOR_MSCORLIBTEST
             // Object
             GetHashCodeGen.Register(codeWriter);
             EqualsGen.Register(codeWriter);
@@ -94,7 +91,6 @@
             // Array
             ArrayCopyGen.Register(codeWriter);
             ArrayClearGen.Register(codeWriter);
-#endif
         }
 
         private static IEnumerable<byte> Transform(IEnumerable<object> code)

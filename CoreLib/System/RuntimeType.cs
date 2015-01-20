@@ -9,21 +9,11 @@ namespace System
     [Serializable()]
     internal sealed class RuntimeType : Type
     {
-        private readonly int size;
         private readonly string fullName;
 
         public RuntimeType(byte[] rttiData)
         {
-            this.size = BitConverter.ToInt32(rttiData, 0);
-            this.fullName = new string(Encoding.ASCII.GetChars(rttiData, 4, rttiData.Length - 4));
-        }
-
-        public override int Size
-        {
-            get
-            {
-                return this.size;
-            }
+            this.fullName = new string(Encoding.ASCII.GetChars(rttiData, 0, rttiData.Length));
         }
 
         public override MemberTypes MemberType

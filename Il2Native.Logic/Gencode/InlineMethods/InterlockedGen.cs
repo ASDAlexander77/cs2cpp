@@ -156,7 +156,6 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool IsInterlockedFunction(this IMethod method)
         {
-#if !FOR_MSCORLIBTEST
             if (!method.IsStatic)
             {
                 return false;
@@ -177,7 +176,6 @@ namespace Il2Native.Logic.Gencode
                 case "CompareExchange":
                     return true;
             }
-#endif
 
             return false;
         }

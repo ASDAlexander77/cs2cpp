@@ -24,7 +24,6 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool IsThreadingFunction(this IMethod method)
         {
-#if !FOR_MSCORLIBTEST
             if (!method.IsStatic)
             {
                 return false;
@@ -40,7 +39,6 @@ namespace Il2Native.Logic.Gencode
                 case "MemoryBarrier":
                     return true;
             }
-#endif
 
             return false;
         }
