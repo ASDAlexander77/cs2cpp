@@ -323,7 +323,7 @@ namespace Il2Native.Logic
                     WriteTypeDefinition(codeWriter, type, genericContext);
                 }
 
-                codeWriter.WritePostDeclarations(type);
+                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
 
                 codeWriter.WriteBeforeConstructors();
             }

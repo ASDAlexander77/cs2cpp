@@ -338,14 +338,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasAnyVirtualMethod(this IType thisType)
+        public static bool HasAnyVirtualMethod(this IType thisType, ITypeResolver typeResolver)
         {
-            if (thisType.HasAnyVirtualMethodInCurrentType())
+            if (thisType.HasAnyVirtualMethodInCurrentType(typeResolver))
             {
                 return true;
             }
 
-            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod();
+            return thisType.BaseType != null && thisType.BaseType.HasAnyVirtualMethod(typeResolver);
         }
 
         /// <summary>
@@ -354,9 +354,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType)
+        public static bool HasAnyVirtualMethodInCurrentType(this IType thisType, ITypeResolver typeResolver)
         {
-            if (IlReader.Methods(thisType).Any(m => m.IsVirtual || m.IsAbstract))
+            if (IlReader.Methods(thisType, typeResolver).Any(m => m.IsVirtual || m.IsAbstract))
             {
                 return true;
             }
@@ -697,10 +697,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool IsRootOfVirtualTable(this IType type)
+        public static bool IsRootOfVirtualTable(this IType type, ITypeResolver typeResolver)
         {
-            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType() &&
-                   (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod());
+            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType(typeResolver) &&
+                   (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod(typeResolver));
         }
 
         /// <summary>

@@ -390,7 +390,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine("i32 (...)**");
             }
-            else if (ThisType.IsRootOfVirtualTable())
+            else if (ThisType.IsRootOfVirtualTable(this))
             {
                 this.Output.WriteLine("i32 (...)**");
             }
@@ -753,7 +753,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void WritePostDeclarations(IType type)
+        public void WritePostDeclarationsAndInternalDefinitions(IType type)
         {
             if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
@@ -810,12 +810,7 @@ namespace Il2Native.Logic
                 normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
-            var customGetType = new SynthesizedGetTypeMethod(type, this);
-            if (normalType.BaseType == null ||
-                !IlReader.Methods(normalType).Any(m => m.IsMatchingOverride(customGetType)))
-            {
-                normalType.WriteGetTypeMethod(this);
-            }
+            normalType.WriteInternalGetTypeMethod(this);
         }
 
         /// <summary>
@@ -2450,7 +2445,7 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     opCode.Result = new ConstValue(
-                        opCodeTypePart.Operand.GetTypeSize(),
+                        opCodeTypePart.Operand.GetTypeSize(this),
                         this.GetIntTypeByByteSize(PointerSize));
                     break;
 
@@ -2694,7 +2689,7 @@ namespace Il2Native.Logic
             }
 
             // add shift for virtual table
-            if (type.IsRootOfVirtualTable())
+            if (type.IsRootOfVirtualTable(this))
             {
                 index++;
             }
@@ -6027,7 +6022,7 @@ namespace Il2Native.Logic
             // find index
             var index = 0;
 
-            if (type.IsRootOfVirtualTable())
+            if (type.IsRootOfVirtualTable(this))
             {
                 index++;
             }
@@ -6059,10 +6054,10 @@ namespace Il2Native.Logic
             // write VirtualTable
             if (!type.IsInterface)
             {
-                var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize() : 0;
+                var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
 
                 var index = 0;
-                if (type.HasAnyVirtualMethod())
+                if (type.HasAnyVirtualMethod(this))
                 {
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualTableName());
@@ -6088,13 +6083,13 @@ namespace Il2Native.Logic
                     }
 
                     var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null
-                        ? typeContainingInterface.BaseType.GetTypeSize()
+                        ? typeContainingInterface.BaseType.GetTypeSize(this)
                         : 0;
                     var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
 
                     this.Output.WriteLine(string.Empty);
                     this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
-                    var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface);
+                    var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
                     virtualInterfaceTable.WriteTableOfMethods(
                         this,
                         type,

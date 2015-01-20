@@ -169,9 +169,9 @@
             CollectionMetadata structureType = null)
         {
             var line = 0;
-            var size = field.FieldType.GetTypeSize(true) * 8;
+            var size = field.FieldType.GetTypeSize(writer, true) * 8;
             var align = LlvmWriter.PointerSize * 8;
-            var offset = !field.IsStatic ? field.GetFieldOffset() * 8 : 0;
+            var offset = !field.IsStatic ? field.GetFieldOffset(writer) * 8 : 0;
 
             // static
             var flags = field.IsStatic ? 4096 : 0;
@@ -230,7 +230,7 @@
             int count = 1)
         {
             var line = 0;
-            var size = fieldType.GetTypeSize(true) * 8 * count;
+            var size = fieldType.GetTypeSize(this.writer, true) * 8 * count;
             var align = LlvmWriter.PointerSize * 8;
 
             // static
@@ -625,7 +625,7 @@
                     string.Format(
                         @"0x1\00\00{0}\00{1}\00{2}\00{3}\000\000",
                         line,
-                        count * type.GetTypeSize(true) * 8,
+                        count * type.GetTypeSize(this.writer, true) * 8,
                         LlvmWriter.PointerSize * 8,
                         offset),
                     null,
@@ -719,7 +719,7 @@
                         @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\00{6}",
                         type.FullName,
                         line,
-                        type.GetTypeSize(true) * 8,
+                        type.GetTypeSize(this.writer, true) * 8,
                         LlvmWriter.PointerSize * 8,
                         offset,
                         flags,
@@ -746,7 +746,7 @@
                     @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000",
                     type.Name,
                     line,
-                    type.GetTypeSize(true) * 8,
+                    type.GetTypeSize(this.writer, true) * 8,
                     LlvmWriter.PointerSize * 8,
                     offset,
                     flags),

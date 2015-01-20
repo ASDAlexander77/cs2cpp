@@ -51,9 +51,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetVirtualTableReference(this IType declaringType, IType @interface)
+        public static string GetVirtualTableReference(this IType declaringType, IType @interface, ITypeResolver typeResolver)
         {
-            var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface);
+            var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface, typeResolver);
             return string.Format(
                 "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
                 virtualInterfaceTable.GetVirtualTableSize(),
@@ -103,7 +103,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var size = declaringClassType.GetTypeSize();
+            var size = declaringClassType.GetTypeSize(llvmWriter);
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
@@ -549,11 +549,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="llvmWriter">
         /// </param>
-        public static void WriteGetTypeMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteInternalGetTypeMethod(this IType type, LlvmWriter llvmWriter)
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedGetTypeMethod(type, llvmWriter);
+            var method = new SynthesizedInternalGetTypeMethod(type, llvmWriter);
             writer.WriteLine("; default GetType method");
 
             var systemType = llvmWriter.ResolveType("System.Type");
@@ -681,7 +681,7 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             // Init Object From Here
-            if (declaringType.HasAnyVirtualMethod())
+            if (declaringType.HasAnyVirtualMethod(llvmWriter))
             {
                 var opCodeResult = opCode.Result;
 
@@ -745,7 +745,7 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine(string.Empty);
 
-                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface));
+                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface, llvmWriter));
                 llvmWriter.WriteResult(opCode.Result);
                 writer.WriteLine(string.Empty);
 

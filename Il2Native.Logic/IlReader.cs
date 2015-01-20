@@ -20,6 +20,9 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Reflection.Emit;
     using CodeParts;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
@@ -493,12 +496,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type)
+        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver)
         {
             return Methods(
                 type,
                 BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                BindingFlags.Instance);
+                BindingFlags.Instance,
+                typeResolver);
         }
 
         /// <summary>
@@ -509,11 +513,19 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags)
+        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver)
         {
             foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return method;
+            }
+
+            // append internal methods
+            yield return new SynthesizedInternalGetTypeMethod(type, typeResolver);
+
+            if (type.ToNormal().IsEnum)
+            {
+                yield return new SynthesizedGetHashCodeMethod(type, typeResolver);
             }
 
             // append specialized methods
@@ -523,6 +535,7 @@ namespace Il2Native.Logic
                 yield break;
             }
 
+            // return Generic Method Specializations for a type
             foreach (var method in
                 genMethodSpecializationForType)
             {

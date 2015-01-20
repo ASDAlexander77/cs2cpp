@@ -110,9 +110,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static int CalculateSize(this IType type, out IList<MemberLocationInfo> membersLayout)
+        public static int CalculateSize(this IType type, ITypeResolver typeResolver, out IList<MemberLocationInfo> membersLayout)
         {
-            var fieldSizes = type.GetFieldsSizesRecursive(true).ToList();
+            var fieldSizes = type.GetFieldsSizesRecursive(typeResolver, true).ToList();
             var typeAlign = fieldSizes.Any() ? fieldSizes.Max(m => m.Size) : LlvmWriter.PointerSize;
             if (type.BaseType != null)
             {
@@ -120,7 +120,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             var offset = 0;
-            membersLayout = type.GetTypeSizes().ToList();
+            membersLayout = type.GetTypeSizes(typeResolver).ToList();
             foreach (var member in membersLayout)
             {
                 member.Offset = offset;
@@ -152,12 +152,12 @@ namespace Il2Native.Logic.Gencode
             membersLayoutByType.Clear();
         }
 
-        public static int GetFieldOffset(this IField field)
+        public static int GetFieldOffset(this IField field, ITypeResolver typeResolver)
         {
             IList<MemberLocationInfo> membersLayout;
             while (!membersLayoutByType.TryGetValue(field.DeclaringType.ToString(), out membersLayout))
             {
-                GetTypeSize(field.DeclaringType);
+                GetTypeSize(field.DeclaringType, typeResolver);
             }
 
             var memberLocationInfo =
@@ -201,7 +201,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MemberLocationInfo> GetFieldsSizes(this IType type, bool excludingStructs = false)
+        public static IEnumerable<MemberLocationInfo> GetFieldsSizes(this IType type, ITypeResolver typeResolver, bool excludingStructs = false)
         {
             foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
             {
@@ -217,12 +217,12 @@ namespace Il2Native.Logic.Gencode
                             yield return
                                 new MemberLocationInfo(
                                     field,
-                                    field.FieldType.ToDereferencedType().GetTypeSize(true) * field.FixedSize);
+                                    field.FieldType.ToDereferencedType().GetTypeSize(typeResolver, true) * field.FixedSize);
                         }
                         else
                         {
                             yield return
-                                new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(true));
+                                new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(typeResolver, true));
                         }
                     }
                     else
@@ -232,7 +232,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (!excludingStructs && fieldType.IsStructureType())
                 {
-                    yield return new MemberLocationInfo(field, fieldType.GetTypeSize());
+                    yield return new MemberLocationInfo(field, fieldType.GetTypeSize(typeResolver));
                 }
                 else if (fieldType.Namespace == "System" && SystemTypeSizes.TryGetValue(fieldType.Name, out fieldSize))
                 {
@@ -240,7 +240,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    foreach (var item in fieldType.GetTypeSizes())
+                    foreach (var item in fieldType.GetTypeSizes(typeResolver))
                     {
                         item.SetMainMember(field);
                         yield return item;
@@ -259,17 +259,18 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static IEnumerable<MemberLocationInfo> GetFieldsSizesRecursive(
             this IType type,
+            ITypeResolver typeResolver,
             bool excludingStructs = false)
         {
             if (type.BaseType != null)
             {
-                foreach (var item in type.BaseType.GetFieldsSizes(excludingStructs))
+                foreach (var item in type.BaseType.GetFieldsSizes(typeResolver, excludingStructs))
                 {
                     yield return item;
                 }
             }
 
-            foreach (var item in type.GetFieldsSizes(excludingStructs))
+            foreach (var item in type.GetFieldsSizes(typeResolver, excludingStructs))
             {
                 yield return item;
             }
@@ -283,7 +284,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static int GetTypeSize(this IType type, bool asValueType = false)
+        public static int GetTypeSize(this IType type, ITypeResolver typeResolver, bool asValueType = false)
         {
             if (asValueType && type.IsPrimitiveType())
             {
@@ -295,7 +296,7 @@ namespace Il2Native.Logic.Gencode
             if (!sizeByType.TryGetValue(type.ToString(), out size))
             {
                 IList<MemberLocationInfo> membersLayout;
-                size = type.CalculateSize(out membersLayout);
+                size = type.CalculateSize(typeResolver, out membersLayout);
                 sizeByType[type.ToString()] = size;
                 membersLayoutByType[type.ToString()] = membersLayout;
             }
@@ -309,7 +310,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type)
+        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type, ITypeResolver typeResolver)
         {
             if (type.IsInterface)
             {
@@ -317,7 +318,7 @@ namespace Il2Native.Logic.Gencode
                 foreach (
                     var item in
                         type.GetInterfacesExcludingBaseAllInterfaces()
-                            .SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+                            .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver)))
                 {
                     any = true;
                     yield return item;
@@ -352,14 +353,14 @@ namespace Il2Native.Logic.Gencode
             }
 
             // add shift for virtual table
-            if (type.IsRootOfVirtualTable())
+            if (type.IsRootOfVirtualTable(typeResolver))
             {
                 yield return new MemberLocationInfo(LlvmWriter.PointerSize);
             }
 
             if (type.BaseType != null)
             {
-                foreach (var item in type.BaseType.GetTypeSizes())
+                foreach (var item in type.BaseType.GetTypeSizes(typeResolver))
                 {
                     yield return item;
                 }
@@ -369,12 +370,12 @@ namespace Il2Native.Logic.Gencode
             foreach (
                 var item in
                     type.GetInterfacesExcludingBaseAllInterfaces()
-                        .SelectMany(interfaceItem => interfaceItem.GetTypeSizes()))
+                        .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver)))
             {
                 yield return item;
             }
 
-            foreach (var item in type.GetFieldsSizes())
+            foreach (var item in type.GetFieldsSizes(typeResolver))
             {
                 yield return item;
             }

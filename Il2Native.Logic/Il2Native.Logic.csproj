@@ -78,6 +78,7 @@
     <Compile Include="Gencode\InternalMethods\GetHashCodeGen.cs" />
     <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
     <Compile Include="Gencode\InternalMethods\MemberwiseCloneGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ObjectGetTypeGen.cs" />
     <Compile Include="Gencode\MemberLocationInfo.cs" />
     <Compile Include="Gencode\MemberTypes.cs" />
     <Compile Include="Gencode\MethodBodyBank.cs" />
@@ -88,7 +89,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedBoxMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedDummyMethodBody.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetHashCodeMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SynthesizedInternalGetTypeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedGetTypeStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedInitMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedLocalVariable.cs" />
@@ -103,6 +104,7 @@
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />
+    <Compile Include="ITypeResolver.cs" />
     <Compile Include="Metadata\Model\CollectionMetadata.cs" />
     <Compile Include="Metadata\Model\Metadata.cs" />
     <Compile Include="Metadata\Model\NamedMetadata.cs" />

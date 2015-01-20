@@ -186,7 +186,7 @@ namespace Il2Native.Logic.Gencode
 
             // call Default stub for now - "ret undef";
             // 4
-            tokenResolutions.Add(IlReader.Methods(method.DeclaringType).First(m => m.Name == "Invoke"));
+            tokenResolutions.Add(IlReader.Methods(method.DeclaringType, codeWriter).First(m => m.Name == "Invoke"));
         }
 
         /// <summary>

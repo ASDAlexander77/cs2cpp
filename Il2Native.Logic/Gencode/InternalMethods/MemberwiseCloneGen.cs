@@ -56,29 +56,29 @@
             Code.Ret
         };
 
-        public static void Register(ICodeWriter codeWriter)
+        public static void Register(ITypeResolver typeResolver)
         {
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     "GetType",
-                    codeWriter.ResolveType("System.Object"),
-                    codeWriter.ResolveType("System.Type"),
+                    typeResolver.ResolveType("System.Object"),
+                    typeResolver.ResolveType("System.Type"),
                     true));
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     "get_Size",
-                    codeWriter.ResolveType("System.Type"),
-                    codeWriter.ResolveType("System.Int32"),
+                    typeResolver.ResolveType("System.Type"),
+                    typeResolver.ResolveType("System.Int32"),
                     true));
-            tokenResolutions.Add(codeWriter.ResolveType("System.Byte").ToPointerType());
+            tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
             tokenResolutions.Add(
                 new SynthesizedStaticMethod(
                     string.Empty,
-                    codeWriter.ResolveType("System.Object"),
-                    codeWriter.ResolveType("System.Byte").ToPointerType(),
-                    new[] { codeWriter.ResolveType("System.Int32").ToParameter() },
+                    typeResolver.ResolveType("System.Object"),
+                    typeResolver.ResolveType("System.Byte").ToPointerType(),
+                    new[] { typeResolver.ResolveType("System.Int32").ToParameter() },
                     (llvmWriter, opCode) =>
                     {
                         // write method allocation
@@ -87,13 +87,13 @@
             tokenResolutions.Add(
                 new SynthesizedStaticMethod(
                     string.Empty,
-                    codeWriter.ResolveType("System.Object"),
-                    codeWriter.ResolveType("System.Void"),
+                    typeResolver.ResolveType("System.Object"),
+                    typeResolver.ResolveType("System.Void"),
                     new[]
                     {
-                        codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(),
-                        codeWriter.ResolveType("System.Byte").ToPointerType().ToParameter(),
-                        codeWriter.ResolveType("System.Int32").ToParameter()
+                        typeResolver.ResolveType("System.Byte").ToPointerType().ToParameter(),
+                        typeResolver.ResolveType("System.Byte").ToPointerType().ToParameter(),
+                        typeResolver.ResolveType("System.Int32").ToParameter()
                     },
                     (llvmWriter, opCode) =>
                     {
@@ -103,11 +103,11 @@
                             opCode.OpCodeOperands[1].Result,
                             opCode.OpCodeOperands[2].Result);
                     }));
-            tokenResolutions.Add(codeWriter.ResolveType("System.Object"));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Object"));
 
             var locals = new List<IType>();
-            locals.Add(codeWriter.ResolveType("System.Byte").ToPointerType());
-            locals.Add(codeWriter.ResolveType("System.Int32"));
+            locals.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
+            locals.Add(typeResolver.ResolveType("System.Int32"));
 
             var parameters = new List<IParameter>();
 

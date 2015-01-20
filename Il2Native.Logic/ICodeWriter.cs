@@ -15,7 +15,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public interface ICodeWriter
+    public interface ICodeWriter : ITypeResolver
     {
         /// <summary>
         /// </summary>
@@ -34,10 +34,6 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         bool IsProcessed(IType type);
-
-        /// <summary>
-        /// </summary>
-        IType ResolveType(string fullTypeName);
 
         /// <summary>
         /// </summary>
@@ -155,7 +151,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        void WritePostDeclarations(IType type);
+        void WritePostDeclarationsAndInternalDefinitions(IType type);
 
         /// <summary>
         /// </summary>

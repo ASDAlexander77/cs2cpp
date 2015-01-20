@@ -85,9 +85,13 @@
         private static void RegisterAll(ICodeWriter codeWriter)
         {
 #if !FOR_MSCORLIBTEST
+            // Object
             GetHashCodeGen.Register(codeWriter);
             EqualsGen.Register(codeWriter);
             MemberwiseCloneGen.Register(codeWriter);
+            ObjectGetTypeGen.Register(codeWriter);
+            
+            // Array
             ArrayCopyGen.Register(codeWriter);
             ArrayClearGen.Register(codeWriter);
 #endif

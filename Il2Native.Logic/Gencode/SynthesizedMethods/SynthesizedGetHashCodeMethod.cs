@@ -18,7 +18,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         /// <summary>
         /// </summary>
-        private readonly LlvmWriter writer;
+        private readonly ITypeResolver typeResolver;
 
         /// <summary>
         /// </summary>
@@ -26,10 +26,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedGetHashCodeMethod(IType type, LlvmWriter writer)
+        public SynthesizedGetHashCodeMethod(IType type, ITypeResolver typeResolver)
             : base(type, "GetHashCode")
         {
-            this.writer = writer;
+            this.typeResolver = typeResolver;
         }
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.writer.ResolveType("System.Int32"); }
+            get { return this.typeResolver.ResolveType("System.Int32"); }
         }
     }
 }

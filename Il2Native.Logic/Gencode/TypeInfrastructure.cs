@@ -26,10 +26,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static byte[] GenerateTypeInfoBytes(this IType type)
+        public static byte[] GenerateTypeInfoBytes(this IType type, ITypeResolver typeResolver)
         {
             var bytes = new List<byte>();
-            bytes.AddRange(BitConverter.GetBytes(type.GetTypeSize()));
+            bytes.AddRange(BitConverter.GetBytes(type.GetTypeSize(typeResolver)));
             bytes.AddRange(Encoding.ASCII.GetBytes(type.FullName));
             return bytes.ToArray();
         }
@@ -143,7 +143,7 @@ namespace Il2Native.Logic.Gencode
 
                     var byteType = llvmWriter.ResolveType("System.Byte");
                     var byteArrayType = byteType.ToArrayType(1);
-                    var bytes = type.GenerateTypeInfoBytes();
+                    var bytes = type.GenerateTypeInfoBytes(llvmWriter);
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
                     var firstParameterValue =
                         new FullyDefinedReference(

@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
 
                 // apply fields shift + base item
                 // nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
-                nextFlag += 1024 * (type.BaseType.GetTypeSize() / LlvmWriter.PointerSize);
+                nextFlag += 1024 * (type.BaseType.GetTypeSize(llvmWriter) / LlvmWriter.PointerSize);
             }
 
             foreach (var @interface in type.GetInterfaces())

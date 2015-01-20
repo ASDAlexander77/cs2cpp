@@ -139,7 +139,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public bool IsVirtual { get; protected set; }
+        public virtual bool IsVirtual { get; protected set; }
 
         /// <summary>
         /// </summary>

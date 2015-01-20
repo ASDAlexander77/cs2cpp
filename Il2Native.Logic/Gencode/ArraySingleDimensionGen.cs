@@ -129,7 +129,7 @@ namespace Il2Native.Logic.Gencode
             ////return "i8** " + arrayType.GetVirtualTableReference(llvmWriter) + ", i8** " + arrayType.GetVirtualTableReference(cloneableType) + ", i8** "
             ////       + arrayType.GetVirtualTableReference(listType) + ", i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
             ////       + typeString + "]";
-            return "i8* null, i8* null, i8* null, i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" +
+            return "i8* null, i8* null, i8* null, i32 " + elementType.GetTypeSize(llvmWriter, true) + ", i32 " + storeLength + ", [" +
                    length + " x " + typeString + "]";
         }
 
@@ -201,7 +201,7 @@ namespace Il2Native.Logic.Gencode
             var arrayLength = hasSize
                 ? int.Parse(
                     opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
-                : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(true);
+                : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(llvmWriter, true);
 
             arrayLength = arrayLength.Align(LlvmWriter.PointerSize);
 
@@ -290,7 +290,7 @@ namespace Il2Native.Logic.Gencode
             var arraySystemType = llvmWriter.ResolveType("System.Array");
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var sizeOfElement = declaringType.GetTypeSize(true);
+            var sizeOfElement = declaringType.GetTypeSize(llvmWriter, true);
             llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes);
             writer.WriteLine(", {0}", sizeOfElement);
 
@@ -300,7 +300,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(
                 "add i32 {1}, {0}",
                 resMul,
-                arraySystemType.GetTypeSize() + ArraySupportFields * intType.GetTypeSize(true)); // add header size
+                arraySystemType.GetTypeSize(llvmWriter) + ArraySupportFields * intType.GetTypeSize(llvmWriter, true)); // add header size
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;

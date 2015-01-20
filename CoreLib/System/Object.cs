@@ -56,8 +56,7 @@ namespace System
             throw new NotImplementedException();
         }
 
-        // adjusted to C# Native compiler
-        public virtual extern Type GetType();
+        public extern Type GetType();
 
         ~Object()
         {
