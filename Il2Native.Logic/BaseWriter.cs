@@ -23,7 +23,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class BaseWriter
+    public class BaseWriter : ITypeResolver
     {
         /// <summary>
         /// </summary>
