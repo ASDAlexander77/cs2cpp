@@ -2181,11 +2181,13 @@ namespace Il2Native.Logic
                         ? ResolveType("System.Int32")
                         : ResolveType("System.Void").ToPointerType();
 
+#if !FOR_MSCORLIBTEST
                     var requiredOutgoingType =
                         RequiredIncomingType(
                             opCode.UsedBy.OpCode.Any(Code.Add)
                                 ? opCode.UsedBy.OpCode.UsedBy.OpCode
                                 : opCode.UsedBy.OpCode);
+
                     if (requiredOutgoingType.TypeEquals(ResolveType("System.Char").ToPointerType()) &&
                         opCode.OpCodeOperands[0].Result.Type.TypeEquals(ResolveType("System.String")))
                     {
@@ -2203,6 +2205,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+#endif
                         this.LlvmConvert(
                             opCode,
                             "fptoui",
@@ -2211,7 +2214,9 @@ namespace Il2Native.Logic
                             !intPtrOper,
                             ResolveType("System.IntPtr"),
                             ResolveType("System.UIntPtr"));
+#if !FOR_MSCORLIBTEST
                     }
+#endif
                     break;
 
                 case Code.Conv_I4:
