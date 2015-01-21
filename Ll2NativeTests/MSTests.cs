@@ -572,33 +572,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            ///!!!!!!!!!!!!!!!! BUG IN PHI NODE, in following code PHI node with 0 and 1 must have 3rd node with CEQ value
-            // run in debug node (no roslyn)
-            /*
-using System;
-
-class X {
-
-	public static void Test2(bool exp1, bool exp2, bool exp3)
-	{
-            if (!exp1 && (exp2 || exp3))
-            {
-		Console.WriteLine ("not working");
-                return;
-            }		
-
- 	    Console.WriteLine ("working");
-	}
-
-	public static int Main (string [] args)
-	{
-		Test2(false, false, false);
-		return 0;
-	}
-}
-*/
-
-
             // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
