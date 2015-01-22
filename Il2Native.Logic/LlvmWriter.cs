@@ -2998,7 +2998,7 @@ namespace Il2Native.Logic
             }
 
             var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
-            if (isValueType && isUsedAsClass)
+            if (isValueType && (isUsedAsClass || resultOfOperand0.Type.IsStructureType()))
             {
                 // write first field access
                 this.WriteFieldAccess(writer, opCode, 0);

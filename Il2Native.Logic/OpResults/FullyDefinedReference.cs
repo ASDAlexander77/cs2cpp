@@ -59,7 +59,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected string Name { get; private set; }
+        public string Name { get; private set; }
 
         /// <summary>
         /// </summary>

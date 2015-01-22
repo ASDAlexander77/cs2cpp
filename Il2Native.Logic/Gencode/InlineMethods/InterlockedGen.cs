@@ -9,6 +9,8 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System;
+    using System.Globalization;
     using System.Linq;
     using CodeParts;
     using PEAssemblyReader;
@@ -87,17 +89,20 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; {0} start", oper);
 
-            IType pointerIntSize = null;
+            IType intType = null;
             IType originalType = null;
             var first = opCodeMethodInfo.OpCodeOperands.First();
             var operType = first.Result.Type.ToDereferencedType();
 
-            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer;
+            // TODO: fix issue with to change value for IntPtr/UIntPtr
+
+            bool realExchange = false;
+            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(llvmWriter.ResolveType("System.IntPtr")) || operType.TypeEquals(llvmWriter.ResolveType("System.UIntPtr"));
             if (pointerExchange)
             {
-                pointerIntSize = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);
+                intType = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);
 
-                llvmWriter.WriteBitcast(first, first.Result, pointerIntSize.ToPointerType());
+                llvmWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
@@ -107,14 +112,41 @@ namespace Il2Native.Logic.Gencode
                         originalType = operand.Result.Type;
                     }
 
-                    llvmWriter.WritePtrToInt(operand, operand.Result, pointerIntSize);
+                    llvmWriter.WritePtrToInt(operand, operand.Result, intType);
                     writer.WriteLine(string.Empty);
                 }
             }
+            else if (operType.IsReal())
+            {
+                realExchange = true;
+                intType = llvmWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : LlvmWriter.PointerSize);
 
+                // bitcast float to i32 and double to i64
+                llvmWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
+                writer.WriteLine(string.Empty);
+
+                foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
+                {
+                    if (originalType == null)
+                    {
+                        originalType = operand.Result.Type;
+                    }
+
+                    if (!(operand.Result is ConstValue))
+                    {
+                        llvmWriter.WriteBitcast(operand, operand.Result, intType, false);
+                        writer.WriteLine(string.Empty);
+                    }
+                    else
+                    {
+                        operand.Result = new ConstValue(Convert.ToInt64(operand.Result.Name, 16), intType);
+                    }
+                }
+            } 
+            
             var opResult = llvmWriter.WriteSetResultNumber(
                 opCodeMethodInfo,
-                pointerIntSize ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+                intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
 
             writer.Write(oper);
 
@@ -130,7 +162,7 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteSetResultNumber(
                     opCodeMethodInfo,
-                    pointerIntSize ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+                    intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
                 writer.Write("extractvalue { ");
                 opResult.Type.WriteTypePrefix(writer);
                 writer.Write(", i1 } ");
@@ -142,6 +174,11 @@ namespace Il2Native.Logic.Gencode
             {
                 // cast back
                 llvmWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
+            }
+            else if (realExchange)
+            {
+                // cast back to float/double
+                llvmWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
             }
 
             writer.WriteLine(string.Empty);

@@ -25,7 +25,7 @@ namespace Il2Native.Logic.Gencode
     {
         public static void GetMulticastDelegateInvoke(
             IMethod method,
-            ICodeWriter codeWriter,
+            ITypeResolver typeResolver,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -39,16 +39,35 @@ namespace Il2Native.Logic.Gencode
                 bytesShift++;
             }
 
+#if FOR_MSCORLIBTEST
+            // to compensate Code.Castclass and Code.Ldfld to load value from IntPtr
+            bytesShift += 5 + 1;
+#endif
             var codeList = new List<object>();
+
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldarg_0, 
+                        Code.Ldfld, 
+                        1, 
+                        0, 
+                        0, 
+                        0,
+                    });
+
+#if FOR_MSCORLIBTEST
+            // to load value from IntPtr
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldind_I
+                    });
+#endif
+
             codeList.AddRange(
                 new object[]
                 {
-                    Code.Ldarg_0,
-                    Code.Ldfld,
-                    1,
-                    0,
-                    0,
-                    0,
                     Code.Brtrue_S,
                     5,
                     Code.Call,
@@ -68,6 +87,23 @@ namespace Il2Native.Logic.Gencode
                     0,
                     0,
                     0,
+                });
+
+#if FOR_MSCORLIBTEST
+            codeList.AddRange(
+                new object[]
+                {
+                    Code.Castclass,
+                    5,
+                    0,
+                    0,
+                    0,
+                });
+#endif
+
+            codeList.AddRange(
+                new object[]
+                {
                     Code.Ldloc_0,
                     Code.Ldelem_Ref
                 });
@@ -134,6 +170,20 @@ namespace Il2Native.Logic.Gencode
                     0,
                     0,
                     0,
+                });
+
+#if FOR_MSCORLIBTEST
+            // to load value from IntPtr
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldind_I
+                    });
+#endif
+            
+            codeList.AddRange(
+                new object[]
+                {
                     Code.Blt_S,
                     -(0x1a + bytesShift)
                 });
@@ -156,7 +206,7 @@ namespace Il2Native.Logic.Gencode
             code = codeList.ToArray();
 
             locals = new List<IType>();
-            locals.Add(codeWriter.ResolveType("System.Int32"));
+            locals.Add(typeResolver.ResolveType("System.Int32"));
             if (!method.ReturnType.IsVoid())
             {
                 locals.Add(method.ReturnType);
@@ -173,7 +223,7 @@ namespace Il2Native.Logic.Gencode
                 new SynthesizedStaticMethod(
                     string.Empty,
                     method.DeclaringType,
-                    codeWriter.ResolveType("System.Void"),
+                    typeResolver.ResolveType("System.Void"),
                     new List<IParameter>(),
                     (llvmWriter, opCode) =>
                     {
@@ -186,7 +236,12 @@ namespace Il2Native.Logic.Gencode
 
             // call Default stub for now - "ret undef";
             // 4
-            tokenResolutions.Add(IlReader.Methods(method.DeclaringType, codeWriter).First(m => m.Name == "Invoke"));
+            tokenResolutions.Add(IlReader.Methods(method.DeclaringType, typeResolver).First(m => m.Name == "Invoke"));
+
+#if FOR_MSCORLIBTEST
+            // 5, to case Object to Object[]
+            tokenResolutions.Add(typeResolver.ResolveType("System.Object").ToArrayType(1));
+#endif
         }
 
         /// <summary>
