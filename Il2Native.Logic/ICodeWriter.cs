@@ -145,7 +145,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        void WriteMethodStart(IMethod method, IGenericContext genericContext);
+        void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false);
 
         /// <summary>
         /// </summary>

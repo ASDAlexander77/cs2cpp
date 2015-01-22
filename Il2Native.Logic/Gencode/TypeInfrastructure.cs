@@ -77,8 +77,8 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Get Type Object method");
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteGetTypeStaticObject(opCode, classType, systemType);
+            llvmWriter.WriteMethodStart(method, null, true);
+            llvmWriter.WriteGetOrCreateRuntimeTypeStaticObject(opCode, classType, systemType);
 
             writer.Write("ret ");
             systemType.WriteTypePrefix(writer);
@@ -98,7 +98,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="operandType">
         /// </param>
-        public static void WriteGetTypeStaticObject(
+        public static void WriteGetOrCreateRuntimeTypeStaticObject(
             this LlvmWriter llvmWriter,
             OpCodePart opCode,
             IType type,
@@ -231,7 +231,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(
                 "{0} = {1}global ",
                 type.GetTypeStaticFieldName(),
-                type.IsGenericType ? "linkonce_odr " : string.Empty);
+                "linkonce_odr ");
             llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
             writer.WriteLine(" null");
         }

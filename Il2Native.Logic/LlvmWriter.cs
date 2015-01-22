@@ -138,7 +138,13 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly HashSet<MethodKey> methodDeclRequired = new HashSet<MethodKey>();
 
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<int, IMethod> methodsByToken = new SortedDictionary<int, IMethod>();
+
+        /// <summary>
+        /// </summary>
+        private readonly HashSet<IType> typeTokenRequired = new HashSet<IType>();
 
         /// <summary>
         /// </summary>
@@ -276,6 +282,11 @@ namespace Il2Native.Logic
         public IDictionary<int, IMethod> MethodsByToken
         {
             get { return this.methodsByToken; }
+        }
+
+        public ISet<IType> TypeTokenRequired
+        {
+            get { return this.typeTokenRequired; }
         }
 
         /// <summary>
@@ -600,7 +611,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void WriteMethodStart(IMethod method, IGenericContext genericContext)
+        public void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false)
         {
             this.StartProcess();
 
@@ -677,7 +688,7 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
-                if (ThisType.IsGenericType || method.IsGenericMethod)
+                if (ThisType.IsGenericType || method.IsGenericMethod || linkOnceOdr)
                 {
                     this.Output.Write("linkonce_odr ");
                 }
@@ -786,7 +797,6 @@ namespace Il2Native.Logic
             }
 
             type.WriteInitObjectMethod(this);
-            type.WriteGetTypeStaticMethod(this);
 
             var normalType = type.ToNormal();
 
@@ -1145,9 +1155,15 @@ namespace Il2Native.Logic
                 case Code.Ldtoken:
 
                     // TODO: finish loading Token  
-                    ////var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    //var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     ////var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
                     opCode.Result = new ConstValue("undef", ResolveType("System.Object"));
+
+                    var opCodeTypePart = opCode as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        this.typeTokenRequired.Add(opCodeTypePart.Operand);
+                    }
 
                     break;
                 case Code.Localloc:
@@ -1285,7 +1301,7 @@ namespace Il2Native.Logic
 
                 case Code.Ldobj:
 
-                    var opCodeTypePart = opCode as OpCodeTypePart;
+                    opCodeTypePart = opCode as OpCodeTypePart;
                     var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
                     if (loadValueFromAddress)
                     {
@@ -6535,6 +6551,18 @@ namespace Il2Native.Logic
                 } while (any);
             }
 
+            if (this.typeTokenRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+
+                foreach (var loadToken in this.typeTokenRequired)
+                {
+                    // add type infrastructure
+                    loadToken.WriteTypeStorageStaticField(this);
+                    loadToken.WriteGetTypeStaticMethod(this);
+                }
+            }
+
             if (this.typeDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -6732,9 +6760,6 @@ namespace Il2Native.Logic
                     this.WriteStaticFieldDeclaration(field);
                 }
             }
-
-            // add type infrastructure
-            type.WriteTypeStorageStaticField(this);
         }
 
         /// <summary>

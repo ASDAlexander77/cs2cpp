@@ -569,6 +569,8 @@ namespace Il2Native.Logic.Gencode
 
             var normalType = type.ToNormal();
 
+            llvmWriter.TypeTokenRequired.Add(normalType);
+
             llvmWriter.WriteGetTypeObject(opCode, normalType);
 
             writer.Write("ret ");
