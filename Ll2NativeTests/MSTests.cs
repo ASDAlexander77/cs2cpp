@@ -374,11 +374,11 @@ namespace Ll2NativeTests
             // 295 - System.Reflection
             // 296 - GetElementType (NotImplemented)
             // 297 - System.Reflection
-            // 300 - typeof(C[]) - will be fixed when __Array__<T> applied
-            // 301 - typeof(x*) - type of pointer
-            // 304 - typeof(C[]) - will be fixed when __Array__<T> applied
-            // 305 - typeof(x*) - type of pointer
-            // 308 - typeof(x*) - type of pointer
+            // 300 - GetElementType (NotImplemented)
+            // 301 - GetElementType (NotImplemented)
+            // 304 - GetElementType (NotImplemented)
+            // 305 - GetElementType (NotImplemented)
+            // 308 - missing System.Security
             // 311 - SecurityPermission
             // 313 - typeof(D).GetMethods - NotImplemented
             // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
