@@ -39,7 +39,7 @@ namespace Il2Native.Logic.Gencode
                 bytesShift++;
             }
 
-#if FOR_MSCORLIBTEST
+#if MSCORLIB
             // to compensate Code.Castclass and Code.Ldfld to load value from IntPtr
             bytesShift += 5 + 1;
 #endif
@@ -56,7 +56,7 @@ namespace Il2Native.Logic.Gencode
                         0,
                     });
 
-#if FOR_MSCORLIBTEST
+#if MSCORLIB
             // to load value from IntPtr
             codeList.AddRange(
                 new object[]
@@ -89,7 +89,7 @@ namespace Il2Native.Logic.Gencode
                     0,
                 });
 
-#if FOR_MSCORLIBTEST
+#if MSCORLIB
             codeList.AddRange(
                 new object[]
                 {
@@ -172,7 +172,7 @@ namespace Il2Native.Logic.Gencode
                     0,
                 });
 
-#if FOR_MSCORLIBTEST
+#if MSCORLIB
             // to load value from IntPtr
             codeList.AddRange(
                 new object[]
@@ -180,7 +180,7 @@ namespace Il2Native.Logic.Gencode
                         Code.Ldind_I
                     });
 #endif
-            
+
             codeList.AddRange(
                 new object[]
                 {
@@ -238,7 +238,7 @@ namespace Il2Native.Logic.Gencode
             // 4
             tokenResolutions.Add(IlReader.Methods(method.DeclaringType, typeResolver).First(m => m.Name == "Invoke"));
 
-#if FOR_MSCORLIBTEST
+#if MSCORLIB
             // 5, to case Object to Object[]
             tokenResolutions.Add(typeResolver.ResolveType("System.Object").ToArrayType(1));
 #endif

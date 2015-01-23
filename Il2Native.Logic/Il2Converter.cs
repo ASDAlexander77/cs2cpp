@@ -1062,7 +1062,7 @@ namespace Il2Native.Logic
             var genericMethodSpecializations = new HashSet<IMethod>();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList();
             var allTypes = ilReader.AllTypes().ToList();
-#if !FOR_MSCORLIBTEST_DISABLE_RESORT
+#if !DISABLE_RESORT
             newListOfITypes = ResortITypes(types, genericTypeSpecializations, genericMethodSpecializations);
 #else
             var newListOfITypes = allTypes;

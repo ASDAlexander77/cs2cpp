@@ -616,7 +616,7 @@ namespace Il2Native.Logic
             this.StartProcess();
 
             Debug.Assert(!method.IsGenericMethodDefinition);
-            Debug.Assert(!method.DeclaringType.IsGenericTypeDefinition);
+            Debug.Assert(genericContext == null || !method.DeclaringType.IsGenericTypeDefinition);
 
             if (method.Token.HasValue)
             {
@@ -2197,7 +2197,7 @@ namespace Il2Native.Logic
                         ? ResolveType("System.Int32")
                         : ResolveType("System.Void").ToPointerType();
 
-#if !FOR_MSCORLIBTEST
+#if !MSCORLIB
                     var requiredOutgoingType =
                         RequiredIncomingType(
                             opCode.UsedBy.OpCode.Any(Code.Add)
@@ -2230,7 +2230,7 @@ namespace Il2Native.Logic
                             !intPtrOper,
                             ResolveType("System.IntPtr"),
                             ResolveType("System.UIntPtr"));
-#if !FOR_MSCORLIBTEST
+#if !MSCORLIB
                     }
 #endif
                     break;
@@ -2759,7 +2759,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
+            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName || methodBase.DeclaringType.IsMultiArray)
             {
                 this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
             }
@@ -6755,7 +6755,7 @@ namespace Il2Native.Logic
         {
             if (!type.IsEnum)
             {
-                foreach (var field in IlReader.Fields(type).Where(f => f.IsStatic && !f.IsConst))
+                foreach (var field in IlReader.Fields(type).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
                 {
                     this.WriteStaticFieldDeclaration(field);
                 }
