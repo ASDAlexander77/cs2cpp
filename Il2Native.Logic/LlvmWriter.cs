@@ -4348,6 +4348,7 @@ namespace Il2Native.Logic
                     values[index],
                     values[index],
                     string.Concat("a", opCode.AlternativeValues.Labels[index]),
+                    index + 1 < count ? opCode.AlternativeValues.Labels[index + 1] : opCode.AddressStart,
                     opCode.AlternativeValues.Labels[index]);
             }
 
@@ -5103,14 +5104,41 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode, int stopAddress)
+        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode, int startAddress, int stopAddress)
         {
             if (lastOpCode == null)
             {
                 return null;
             }
 
+            string customLabel = null;
             var current = lastOpCode;
+            if (startAddress > 0)
+            {
+                while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/
+                       current.AddressStart < startAddress)
+                {
+                    if (current.CreatedLabel != null)
+                    {
+                        customLabel = current.CreatedLabel;
+                    }
+
+                    if (current.OpCode.FlowControl == FlowControl.Branch ||
+                        current.OpCode.FlowControl == FlowControl.Cond_Branch)
+                    {
+                        break;
+                    }
+
+                    current = current.Next;
+                }                
+            }
+
+            if (customLabel != null)
+            {
+                return customLabel;
+            }
+
+            current = lastOpCode;
             while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/
                    current.AddressStart >= stopAddress)
             {
@@ -6469,11 +6497,14 @@ namespace Il2Native.Logic
             OpCodePart startOpCode,
             OpCodePart endOpCode,
             string label = "a",
+            int startAddress = 0,
             int stopAddress = 0)
         {
-            var customLabel = this.FindCustomLabel(startOpCode, endOpCode, stopAddress);
+            var customLabel = this.FindCustomLabel(startOpCode, endOpCode, startAddress, stopAddress);
             if (customLabel != null)
             {
+                Debug.Assert(customLabel != "next44");
+
                 writer.Write(" [ {0}, %.{1} ]", result, customLabel);
             }
             else
