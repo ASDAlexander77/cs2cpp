@@ -396,7 +396,7 @@ namespace Il2Native.Logic
                         Debug.Assert(genericMethod != null);
                     }
 
-                    if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
+                    if (!method.IsGenericMethodDefinition && !method.IsGenericMethod && !processGenericMethodsOnly)
                     {
                         genericContext.MethodDefinition = genericMethod;
                         genericContext.MethodSpecialization = genericMethod != null ? method : null;
@@ -415,9 +415,10 @@ namespace Il2Native.Logic
                         // write all specializations of a method
                         if (genericMethodSpecializatons != null)
                         {
+                            var methodDefinition = method.GetMethodDefinition();
                             foreach (var methodSpec in genericMethodSpecializatons)
                             {
-                                if (!methodSpec.IsMatchingGeneric(method.GetMethodDefinition()))
+                                if (!methodSpec.IsMatchingGeneric(methodDefinition))
                                 {
                                     continue;
                                 }
@@ -1033,6 +1034,7 @@ namespace Il2Native.Logic
             ISet<IType> processedAlready)
         {
             var requiredITypesToAdd = new List<IType>();
+            
             ProcessNextRequiredITypes(
                 type,
                 typesAdded,
@@ -1040,6 +1042,7 @@ namespace Il2Native.Logic
                 genericSpecializations,
                 genericMethodSpecializations,
                 processedAlready);
+
             newListOfITypes.AddRange(requiredITypesToAdd);
 
             if (typesAdded.Contains(type))
@@ -1084,7 +1087,7 @@ namespace Il2Native.Logic
         private static void RemoveAllResolvedTypesForType(
             Tuple<IType, List<IType>> type,
             List<IType> newOrder,
-            ISet<IType> allTypes,
+            ISet<IType> newOrderSet,
             ICollection<Tuple<IType, List<IType>>> toRemove,
             object syncObject,
             object syncToRemove)
@@ -1093,11 +1096,8 @@ namespace Il2Native.Logic
 
             lock (syncObject)
             {
-                requiredITypes.RemoveAll(r => newOrder.Any(n => n.TypeEquals(r)));
+                requiredITypes.RemoveAll(newOrderSet.Contains);
             }
-
-            // remove not used types, for example System.Object which maybe not in current assembly
-            requiredITypes.RemoveAll(r => !allTypes.Contains(r));
 
             if (requiredITypes.Count != 0)
             {
@@ -1112,6 +1112,7 @@ namespace Il2Native.Logic
             lock (syncObject)
             {
                 newOrder.Add(type.Item1);
+                newOrderSet.Add(type.Item1);
             }
         }
 
@@ -1120,6 +1121,7 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             List<Tuple<IType, List<IType>>> typesWithRequired,
             List<IType> newOrder,
+            ISet<IType> newOrderSet,
             object syncObject)
         {
             var allTypes = new HashSet<IType>();
@@ -1139,19 +1141,25 @@ namespace Il2Native.Logic
                 var toRemove = new List<Tuple<IType, List<IType>>>();
                 var syncToRemove = new object();
 
+                // remove not used types, for example System.Object which maybe not in current assembly
+                foreach (var requiredITypes in typesWithRequired)
+                {
+                    requiredITypes.Item2.RemoveAll(r => !allTypes.Contains(r));
+                }
+
                 // step 1 find Root;
                 if (concurrent)
                 {
                     Parallel.ForEach(
                         typesWithRequired,
                         type =>
-                            RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject, syncToRemove));
+                            RemoveAllResolvedTypesForType(type, newOrder, newOrderSet, toRemove, syncObject, syncToRemove));
                 }
                 else
                 {
                     foreach (var type in typesWithRequired)
                     {
-                        RemoveAllResolvedTypesForType(type, newOrder, allTypes, toRemove, syncObject, syncToRemove);
+                        RemoveAllResolvedTypesForType(type, newOrder, newOrderSet, toRemove, syncObject, syncToRemove);
                     }
                 }
 
@@ -1200,6 +1208,7 @@ namespace Il2Native.Logic
         {
             var newOrderSyncRoot = new object();
             var newOrder = new List<IType>();
+            var newOrderSet = new HashSet<IType>();
 
             var typesWithRequiredSyncRoot = new object();
             var typesWithRequired = new List<Tuple<IType, List<IType>>>();
@@ -1240,7 +1249,7 @@ namespace Il2Native.Logic
                 typesWithRequiredSyncRoot,
                 processedAlready);
 
-            ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder, newOrderSyncRoot);
+            ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder, newOrderSet, newOrderSyncRoot);
 
             return newOrder;
         }
@@ -1348,138 +1357,6 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
-        }
-
-        /// <summary>
-        /// </summary>
-        private class InheritanceITypeComparer : IComparer<IType>
-        {
-            /// <summary>
-            /// </summary>
-            /// <param name="x">
-            /// </param>
-            /// <param name="y">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public int Compare(IType x, IType y)
-            {
-                var lvlX = InheritanceLevel(x);
-                var lvlY = InheritanceLevel(y);
-
-                var cmp = lvlX.CompareTo(lvlY);
-                if (cmp != 0)
-                {
-                    return cmp;
-                }
-
-                if (DependsOn(x, y) || HasInterface(x, y) || HasAsValueType(x, y))
-                {
-                    return 1;
-                }
-
-                if (DependsOn(y, x) || HasInterface(y, x) || HasAsValueType(y, x))
-                {
-                    return -1;
-                }
-
-                return x.FullName.CompareTo(y.FullName);
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="baseIType">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public static bool DependsOn(IType type, IType baseIType)
-            {
-                if (type.BaseType != null)
-                {
-                    if (type.BaseType.TypeEquals(baseIType) || DependsOn(type.BaseType, baseIType))
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="valueIType">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public static bool HasAsValueType(IType type, IType valueIType)
-            {
-                if (!valueIType.IsValueType)
-                {
-                    return false;
-                }
-
-                var fields =
-                    type.GetFields(
-                        BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                        BindingFlags.Instance);
-                if (fields != null)
-                {
-                    foreach (var field in fields)
-                    {
-                        if (field.FieldType.TypeEquals(valueIType))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <param name="baseInterface">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public static bool HasInterface(IType type, IType baseInterface)
-            {
-                var interfaces = type.GetInterfaces();
-                if (interfaces != null)
-                {
-                    foreach (var @interface in interfaces)
-                    {
-                        if (@interface.TypeEquals(baseInterface) || HasInterface(@interface, baseInterface))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="t">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public static int InheritanceLevel(IType t)
-            {
-                if (t == null || t.BaseType == null)
-                {
-                    return 0;
-                }
-
-                return 1 + InheritanceLevel(t.BaseType);
-            }
         }
     }
 }

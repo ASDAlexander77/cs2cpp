@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
 
 #if MSCORLIB
             // to compensate Code.Castclass and Code.Ldfld to load value from IntPtr
-            bytesShift += 5 + 1;
+            bytesShift += 5;
 #endif
             var codeList = new List<object>();
 
@@ -179,6 +179,8 @@ namespace Il2Native.Logic.Gencode
                     {
                         Code.Ldind_I
                     });
+
+            bytesShift++;
 #endif
 
             codeList.AddRange(

@@ -76,7 +76,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool MultiCore = true;
+        public const bool MultiCore = false;
 
         /// <summary>
         ///     ex. opt 'file'.ll -o 'file'.bc -O2

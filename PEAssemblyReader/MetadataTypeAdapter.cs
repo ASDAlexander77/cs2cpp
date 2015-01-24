@@ -650,7 +650,8 @@ namespace PEAssemblyReader
                 return 1;
             }
 
-            return this.GetDeclaringTypeOriginal().CompareTo(type.GetDeclaringTypeOriginal());
+            cmp = this.GetDeclaringTypeOriginal().CompareTo(type.GetDeclaringTypeOriginal());
+            return cmp;
         }
 
         /// <summary>
