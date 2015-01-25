@@ -744,53 +744,56 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                // detect required types in alternative values
-                var firstOpCode =
-                    opCodePart.AlternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
-                if (firstOpCode == null)
+                foreach (var alternativeValues in opCodePart.AlternativeValues)
                 {
-                    // TODO: find out why it happens here (test-154.cs)
-                    continue;
-                }
-
-                var usedBy = firstOpCode.UsedBy;
-                var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition);
-                if (requiredType != null)
-                {
-                    foreach (var val in opCodePart.AlternativeValues.Values)
+                    // detect required types in alternative values
+                    var firstOpCode =
+                        alternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                    if (firstOpCode == null)
                     {
-                        val.RequiredOutgoingType = requiredType;
+                        // TODO: find out why it happens here (test-154.cs)
+                        continue;
                     }
-                }
-                else
-                {
-                    requiredType = this.RequiredOutgoingType(firstOpCode)
-                                   ??
-                                   opCodePart.AlternativeValues.Values.Select(v => this.RequiredOutgoingType(v))
-                                       .FirstOrDefault(v => v != null)
-                                   ??
-                                   opCodePart.AlternativeValues.Values.Select(v => v.RequiredOutgoingType)
-                                       .FirstOrDefault(v => v != null);
-                    if (requiredType != null &&
-                        opCodePart.AlternativeValues.Values.Any(
-                            v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
-                    {
-                        // find base type, for example if first value is IDictionary and second is Object then required type should be Object
-                        foreach (
-                            var requiredItem in
-                                opCodePart.AlternativeValues.Values.Select(this.RequiredOutgoingType)
-                                    .Where(t => t != null))
-                        {
-                            if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) ||
-                                requiredItem.IsObject)
-                            {
-                                requiredType = requiredItem;
-                            }
-                        }
 
-                        foreach (var val in opCodePart.AlternativeValues.Values)
+                    var usedBy = firstOpCode.UsedBy;
+                    var requiredType = this.RequiredIncomingType(usedBy.OpCode, usedBy.OperandPosition);
+                    if (requiredType != null)
+                    {
+                        foreach (var val in alternativeValues.Values)
                         {
                             val.RequiredOutgoingType = requiredType;
+                        }
+                    }
+                    else
+                    {
+                        requiredType = this.RequiredOutgoingType(firstOpCode)
+                                       ??
+                                       alternativeValues.Values.Select(v => this.RequiredOutgoingType(v))
+                                           .FirstOrDefault(v => v != null)
+                                       ??
+                                       alternativeValues.Values.Select(v => v.RequiredOutgoingType)
+                                           .FirstOrDefault(v => v != null);
+                        if (requiredType != null &&
+                            alternativeValues.Values.Any(
+                                v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
+                        {
+                            // find base type, for example if first value is IDictionary and second is Object then required type should be Object
+                            foreach (
+                                var requiredItem in
+                                    alternativeValues.Values.Select(this.RequiredOutgoingType)
+                                        .Where(t => t != null))
+                            {
+                                if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) ||
+                                    requiredItem.IsObject)
+                                {
+                                    requiredType = requiredItem;
+                                }
+                            }
+
+                            foreach (var val in alternativeValues.Values)
+                            {
+                                val.RequiredOutgoingType = requiredType;
+                            }
                         }
                     }
                 }

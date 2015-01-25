@@ -64,7 +64,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public PhiNodes AlternativeValues { get; set; }
+        public Queue<PhiNodes> AlternativeValues { get; set; }
 
         /// <summary>
         /// </summary>

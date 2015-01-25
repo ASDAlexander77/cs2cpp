@@ -78,7 +78,21 @@
                 return;
             }
 
-            opCodePart.AlternativeValues = alternativeValues;
+            if (opCodePart.AlternativeValues == null)
+            {
+                opCodePart.AlternativeValues = new Queue<PhiNodes>();
+            }
+            opCodePart.AlternativeValues.Enqueue(alternativeValues);
+
+            // remove values from branchstack
+            foreach (
+                var branchStack in
+                    entriesList.Where(
+                        opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
+                        .Select(opCode => opCode.BranchStackValue))
+            {
+                branchStack.Pop();
+            }
 
             if (noMainEntry)
             {
@@ -88,14 +102,6 @@
             while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
             {
                 this.main.Pop();
-                foreach (
-                    var branchStack in
-                        entriesList.Where(
-                            opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
-                            .Select(opCode => opCode.BranchStackValue))
-                {
-                    branchStack.Pop();
-                }
             }
 
             this.main.Push(firstValue);

@@ -124,7 +124,7 @@ namespace Il2Native.Logic
             {
                 var nextAlternateValues = current.Next != null ? current.Next.AlternativeValues : null;
                 if (nextAlternateValues != null &&
-                    nextAlternateValues.Values.Any(v => v.AddressStart == current.AddressStart))
+                    nextAlternateValues.SelectMany(av => av.Values).Any(v => v.AddressStart == current.AddressStart))
                 {
                     return current.Next.AddressStart;
                 }

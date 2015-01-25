@@ -4270,15 +4270,25 @@ namespace Il2Native.Logic
             this.WriteOperandResult(writer, operand, detectAndWriteTypePrefix);
         }
 
+        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            while (opCode.AlternativeValues.Count > 0)
+            {
+                var alternativeValues = opCode.AlternativeValues.Dequeue();
+                WritePhi(writer, opCode, alternativeValues);
+            }
+        }
+
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode, PhiNodes alternativeValues)
         {
-            if (opCode.AlternativeValues.Values.Count != opCode.AlternativeValues.Labels.Count)
+            if (alternativeValues.Values.Count != alternativeValues.Labels.Count)
             {
                 // phi is not full
                 return;
@@ -4287,7 +4297,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
 
             var firstValueWithRequiredType =
-                opCode.AlternativeValues.Values.FirstOrDefault(
+                alternativeValues.Values.FirstOrDefault(
                     v => v.RequiredOutgoingType != null && !(v.ResultAtExit is ConstValue));
 
             var firstValueRequiredType = firstValueWithRequiredType != null
@@ -4298,7 +4308,7 @@ namespace Il2Native.Logic
             if (phiType == null)
             {
                 var firstNonConstValue =
-                    opCode.AlternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
+                    alternativeValues.Values.FirstOrDefault(v => !(v.ResultAtExit is ConstValue));
                 if (firstNonConstValue != null)
                 {
                     phiType = firstNonConstValue.ResultAtExit.Type ?? firstNonConstValue.RequiredOutgoingType;
@@ -4307,7 +4317,7 @@ namespace Il2Native.Logic
 
             if (phiType == null)
             {
-                var firstValue = opCode.AlternativeValues.Values.First();
+                var firstValue = alternativeValues.Values.First();
                 phiType = firstValue.RequiredOutgoingType ?? firstValue.ResultAtExit.Type;
             }
 
@@ -4323,7 +4333,7 @@ namespace Il2Native.Logic
             {
                 foreach (
                     var val in
-                        opCode.AlternativeValues.Values.Where(v => v.ResultAtExit is ConstValue && v.Any(Code.Ldc_I4_0)))
+                        alternativeValues.Values.Where(v => v.ResultAtExit is ConstValue && v.Any(Code.Ldc_I4_0)))
                 {
                     val.ResultAtExit = new ConstValue(null, ResolveType("System.Void").ToPointerType());
                 }
@@ -4333,7 +4343,7 @@ namespace Il2Native.Logic
             var nopeCode = OpCodePart.CreateNop;
             this.ProcessOperator(writer, nopeCode, "phi", phiType, phiType, OperandOptions.GenerateResult);
 
-            var count = opCode.AlternativeValues.Values.Count;
+            var count = alternativeValues.Values.Count;
             for (var index = 0; index < count; index++)
             {
                 if (index > 0)
@@ -4341,22 +4351,22 @@ namespace Il2Native.Logic
                     writer.Write(",");
                 }
 
-                var values = opCode.AlternativeValues.Values;
+                var values = alternativeValues.Values;
                 this.WritePhiNodeLabel(
                     writer,
                     values[index].ResultAtExit,
                     values[index],
                     values[index],
-                    string.Concat("a", opCode.AlternativeValues.Labels[index]),
-                    index + 1 < count ? opCode.AlternativeValues.Labels[index + 1] : opCode.AddressStart,
-                    opCode.AlternativeValues.Labels[index]);
+                    string.Concat("a", alternativeValues.Labels[index]),
+                    index + 1 < count ? alternativeValues.Labels[index + 1] : opCode.AddressStart,
+                    alternativeValues.Labels[index]);
             }
 
             writer.WriteLine(string.Empty);
 
             this.AdjustResultTypeToOutgoingType(nopeCode, RequiredIncomingType(opCode));
 
-            var lastResultValue = opCode.AlternativeValues.Values.Last();
+            var lastResultValue = alternativeValues.Values.Last();
             lastResultValue.Result = structUsed
                 ? nopeCode.Result.ToNormalType()
                 : nopeCode.Result;
