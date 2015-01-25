@@ -88,6 +88,16 @@
                 {
                     opCodePart.AlternativeValues = new Queue<PhiNodes>();
                 }
+                else
+                {
+                    // if labels are different it means that values belong to other PHI Nodes
+                    var firstAlternativeValues = opCodePart.AlternativeValues.First();
+                    if (firstAlternativeValues.Labels.Count != alternativeValues.Labels.Count ||
+                        alternativeValues.Labels.Where((t, i) => t != firstAlternativeValues.Labels[i]).Any())
+                    {
+                        return;
+                    }
+                }
 
                 opCodePart.AlternativeValues.Enqueue(alternativeValues);
 
@@ -153,6 +163,7 @@
                 case Code.Brfalse_S:
                     if (opCode.IsJumpForward() && this.main.Any())
                     {
+                        // to clone whole stack
                         var clonedStack = this.main.ToList();
                         clonedStack.Reverse();
                         opCode.BranchStackValue = new Stack<OpCodePart>(clonedStack);

@@ -4275,7 +4275,11 @@ namespace Il2Native.Logic
             while (opCode.AlternativeValues != null && opCode.AlternativeValues.Count > 0)
             {
                 var alternativeValues = opCode.AlternativeValues.Dequeue();
-                WritePhi(writer, opCode, alternativeValues);
+                if (alternativeValues.Values.Any(av => av.UsedBy != null))
+                {
+                    // if all values are not used it means we do not need to write it
+                    WritePhi(writer, opCode, alternativeValues);
+                }
             }
 
             opCode.AlternativeValues = null;
