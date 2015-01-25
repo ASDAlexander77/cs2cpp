@@ -53,58 +53,64 @@
                 return;
             }
 
-            var values =
-                entriesList.Where(opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0).Select(opCode => opCode.BranchStackValue.Peek());
-            if (!values.Any())
+            // TODO: check if alternative stack has the same values then ignore alternative stack
+            while (true)
             {
-                return;
-            }
-
-            var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
-            if (alternativeValues == null)
-            {
-                return;
-            }
-
-            var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
-            if (alternativeValues.Values.Count() == 1)
-            {
-                // it just one value, we can push it back to stack
-                if (!this.main.Any() || this.main.All(op => op.AddressStart != firstValue.AddressStart))
+                var values =
+                    entriesList.Where(opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
+                        .Select(opCode => opCode.BranchStackValue.Peek());
+                if (!values.Any())
                 {
-                    this.main.Push(firstValue);
+                    return;
                 }
 
-                return;
-            }
+                var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
+                if (alternativeValues == null)
+                {
+                    return;
+                }
 
-            if (opCodePart.AlternativeValues == null)
-            {
-                opCodePart.AlternativeValues = new Queue<PhiNodes>();
-            }
-            opCodePart.AlternativeValues.Enqueue(alternativeValues);
+                var firstValue = alternativeValues.Values.OrderByDescending(v => v.AddressStart).First();
+                if (alternativeValues.Values.Count() == 1)
+                {
+                    // it just one value, we can push it back to stack
+                    if (!this.main.Any() || this.main.All(op => op.AddressStart != firstValue.AddressStart))
+                    {
+                        this.main.Push(firstValue);
+                    }
 
-            // remove values from branchstack
-            foreach (
-                var branchStack in
-                    entriesList.Where(
-                        opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
-                        .Select(opCode => opCode.BranchStackValue))
-            {
-                branchStack.Pop();
-            }
+                    return;
+                }
 
-            if (noMainEntry)
-            {
-                return;
-            }
+                if (opCodePart.AlternativeValues == null)
+                {
+                    opCodePart.AlternativeValues = new Queue<PhiNodes>();
+                }
 
-            while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
-            {
-                this.main.Pop();
-            }
+                opCodePart.AlternativeValues.Enqueue(alternativeValues);
 
-            this.main.Push(firstValue);
+                // remove values from branchstack
+                foreach (
+                    var branchStack in
+                        entriesList.Where(
+                            opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
+                            .Select(opCode => opCode.BranchStackValue))
+                {
+                    branchStack.Pop();
+                }
+
+                if (noMainEntry)
+                {
+                    return;
+                }
+
+                while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                {
+                    this.main.Pop();
+                }
+
+                this.main.Push(firstValue);
+            }
         }
 
         public void Push(OpCodePart opCodePart)

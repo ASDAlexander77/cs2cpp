@@ -4272,7 +4272,7 @@ namespace Il2Native.Logic
 
         public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
-            while (opCode.AlternativeValues.Count > 0)
+            while (opCode.AlternativeValues != null && opCode.AlternativeValues.Count > 0)
             {
                 var alternativeValues = opCode.AlternativeValues.Dequeue();
                 WritePhi(writer, opCode, alternativeValues);
