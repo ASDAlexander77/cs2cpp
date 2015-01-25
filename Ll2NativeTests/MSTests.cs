@@ -610,7 +610,7 @@ namespace Ll2NativeTests
             // 202 - using multiarray
             // 205 - GetType of Generics
             // 207 - (10,18): error CS0117: 'System.Array' does not contain a definition for 'ForEach'
-            // 209 - System.Random.Next not implemented (NEED TO BE FIXED)
+            // 214 - Attribute.GetCustomAttributes
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -660,7 +660,7 @@ namespace Ll2NativeTests
                 202,
                 205,
                 207,
-                209
+                214
             };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {

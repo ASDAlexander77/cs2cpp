@@ -54,7 +54,7 @@
             }
 
             var values =
-                entriesList.Where(opCode => opCode.BranchStackValue != null).Select(opCode => opCode.BranchStackValue);
+                entriesList.Where(opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0).Select(opCode => opCode.BranchStackValue.Peek());
             if (!values.Any())
             {
                 return;
@@ -88,6 +88,14 @@
             while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
             {
                 this.main.Pop();
+                foreach (
+                    var branchStack in
+                        entriesList.Where(
+                            opCode => opCode.BranchStackValue != null && opCode.BranchStackValue.Count > 0)
+                            .Select(opCode => opCode.BranchStackValue))
+                {
+                    branchStack.Pop();
+                }
             }
 
             this.main.Push(firstValue);
@@ -130,7 +138,9 @@
                 case Code.Brfalse_S:
                     if (opCode.IsJumpForward() && this.main.Any())
                     {
-                        opCode.BranchStackValue = this.main.Peek();
+                        var clonedStack = this.main.ToList();
+                        clonedStack.Reverse();
+                        opCode.BranchStackValue = new Stack<OpCodePart>(clonedStack);
                     }
 
                     break;

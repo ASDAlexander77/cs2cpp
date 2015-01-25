@@ -68,7 +68,7 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public OpCodePart BranchStackValue { get; set; }
+        public Stack<OpCodePart> BranchStackValue { get; set; }
 
         /// <summary>
         /// </summary>
