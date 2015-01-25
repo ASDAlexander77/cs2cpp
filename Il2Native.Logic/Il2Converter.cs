@@ -47,9 +47,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public static void Convert(string source, string outputFolder, string[] args = null)
+        public static void Convert(string source, string outputFolder, string[] args = null, string[] filter = null)
         {
-            Convert(new[] { source }, outputFolder, args);
+            Convert(new[] { source }, outputFolder, args, filter);
         }
 
         /// <summary>
@@ -60,7 +60,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public static void Convert(string[] sources, string outputFolder, string[] args = null)
+        public static void Convert(string[] sources, string outputFolder, string[] args = null, string[] filter = null)
         {
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(sources.First());
 
@@ -73,7 +73,8 @@ namespace Il2Native.Logic
                 ilReader.SourceFilePath,
                 ilReader.PdbFilePath,
                 outputFolder,
-                args);
+                args,
+                filter);
         }
 
         /// <summary>
@@ -396,7 +397,7 @@ namespace Il2Native.Logic
                         Debug.Assert(genericMethod != null);
                     }
 
-                    if (!method.IsGenericMethodDefinition && !method.IsGenericMethod && !processGenericMethodsOnly)
+                    if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
                     {
                         genericContext.MethodDefinition = genericMethod;
                         genericContext.MethodSpecialization = genericMethod != null ? method : null;
@@ -410,7 +411,8 @@ namespace Il2Native.Logic
 
                         codeWriter.WriteMethodEnd(method, genericContext);
                     }
-                    else
+
+                    if (method.IsGenericMethodDefinition || method.IsGenericMethod)
                     {
                         // write all specializations of a method
                         if (genericMethodSpecializatons != null)
@@ -644,6 +646,7 @@ namespace Il2Native.Logic
             SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             ReadingTypes(
                 ilReader,
+                filter,
                 out newListOfITypes,
                 out genDefinitionsByMetadataName,
                 out genericMethodSpecializationsSorted);
@@ -1034,7 +1037,7 @@ namespace Il2Native.Logic
             ISet<IType> processedAlready)
         {
             var requiredITypesToAdd = new List<IType>();
-            
+
             ProcessNextRequiredITypes(
                 type,
                 typesAdded,
@@ -1056,6 +1059,7 @@ namespace Il2Native.Logic
 
         private static void ReadingTypes(
             IlReader ilReader,
+            string[] filter,
             out List<IType> newListOfITypes,
             out SortedDictionary<string, IType> genDefinitionsByMetadataName,
             out SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
@@ -1063,10 +1067,15 @@ namespace Il2Native.Logic
             // types in current assembly
             var genericTypeSpecializations = new HashSet<IType>();
             var genericMethodSpecializations = new HashSet<IMethod>();
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition).ToList();
+            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
+            if (filter != null)
+            {
+                types = types.Where(t => filter.Contains(t.FullName));
+            }
+
             var allTypes = ilReader.AllTypes().ToList();
 #if !DISABLE_RESORT
-            newListOfITypes = ResortITypes(types, genericTypeSpecializations, genericMethodSpecializations);
+            newListOfITypes = ResortITypes(types.ToList(), genericTypeSpecializations, genericMethodSpecializations);
 #else
             var newListOfITypes = allTypes;
 #endif
