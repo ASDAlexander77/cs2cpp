@@ -54,6 +54,7 @@
             }
 
             // TODO: check if alternative stack has the same values then ignore alternative stack
+            var valueNumber = 0;
             while (true)
             {
                 var values =
@@ -64,7 +65,8 @@
                     return;
                 }
 
-                var alternativeValues = GetPhiValues(values, !noMainEntry ? this.main.Peek() : null);
+                var currentStackValue = this.main.Skip(valueNumber).First();
+                var alternativeValues = GetPhiValues(values, !noMainEntry ? currentStackValue : null);
                 if (alternativeValues == null)
                 {
                     return;
@@ -104,12 +106,13 @@
                     return;
                 }
 
-                while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                while (!this.main.Any() || firstValue != currentStackValue)
                 {
-                    this.main.Pop();
+                    // this is new value
+                    this.main.Push(firstValue);
                 }
 
-                this.main.Push(firstValue);
+                valueNumber++;
             }
         }
 

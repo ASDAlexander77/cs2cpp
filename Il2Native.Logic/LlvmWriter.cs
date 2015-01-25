@@ -4277,6 +4277,8 @@ namespace Il2Native.Logic
                 var alternativeValues = opCode.AlternativeValues.Dequeue();
                 WritePhi(writer, opCode, alternativeValues);
             }
+
+            opCode.AlternativeValues = null;
         }
 
 
@@ -4371,9 +4373,6 @@ namespace Il2Native.Logic
                 ? nopeCode.Result.ToNormalType()
                 : nopeCode.Result;
             lastResultValue.ResultAtExit = lastResultValue.Result;
-
-            // clear it after processing
-            opCode.AlternativeValues = null;
         }
 
         /// <summary>
