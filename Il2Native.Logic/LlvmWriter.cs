@@ -218,6 +218,7 @@ namespace Il2Native.Logic
             this.IsLlvm35 = args != null && args.Contains("llvm35");
             this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
             this.DebugInfo = args != null && args.Contains("debug");
+            this.Stubs = args != null && args.Contains("stubs");
             if (this.DebugInfo)
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
@@ -278,6 +279,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool IsLlvm35 { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool Stubs { get; private set; }
 
         public IDictionary<int, IMethod> MethodsByToken
         {
@@ -462,7 +467,7 @@ namespace Il2Native.Logic
             ReadMethodInfo(ctor, genericContext);
 
             var isDelegateBodyFunctions = ctor.IsDelegateFunctionBody();
-            if ((ctor.IsAbstract || NoBody) && !isDelegateBodyFunctions)
+            if ((ctor.IsAbstract || (NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
             {
                 this.Output.Write("declare ");
             }
@@ -648,7 +653,7 @@ namespace Il2Native.Logic
             }
 
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
-            if ((method.IsAbstract || NoBody) && !isDelegateBodyFunctions)
+            if ((method.IsAbstract || (NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
             {
                 if (!method.IsUnmanagedMethodReference)
                 {
@@ -6532,6 +6537,12 @@ namespace Il2Native.Logic
         /// </param>
         private void WritePostMethodEnd(IMethod method)
         {
+            var stubFunc = (this.Stubs && NoBody && !method.IsAbstract && !method.IsSkipped() && !method.IsDelegateFunctionBody());
+            if (stubFunc)
+            {
+                this.DefaultStub(method);
+            }
+
             if (!NoBody)
             {
                 this.WriteExceptionEnvironment(method);

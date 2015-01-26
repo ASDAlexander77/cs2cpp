@@ -359,7 +359,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        private static void DefaultStub(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false)
+        public static void DefaultStub(this LlvmWriter llvmWriter, IMethod method, bool disableCurlyBrakets = false)
         {
             var writer = llvmWriter.Output;
 

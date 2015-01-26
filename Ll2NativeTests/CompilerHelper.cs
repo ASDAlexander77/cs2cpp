@@ -102,7 +102,8 @@
             bool gctors = GctorsEnabled,
             bool llvm35Support = Llvm35Support,
             bool llvm34Support = Llvm34Support,
-            bool debugInfo = DebugInfo)
+            bool debugInfo = DebugInfo,
+            bool stubs = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -157,6 +158,11 @@
             if (VerboseOutput)
             {
                 args.Add("verbose");
+            }
+
+            if (stubs)
+            {
+                args.Add("stubs");
             }
 
             return args.ToArray();
