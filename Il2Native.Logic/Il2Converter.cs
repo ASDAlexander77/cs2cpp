@@ -418,13 +418,11 @@ namespace Il2Native.Logic
                         if (genericMethodSpecializatons != null)
                         {
                             var methodDefinition = method.GetMethodDefinition();
-                            foreach (var methodSpec in genericMethodSpecializatons)
+                            foreach (
+                                var methodSpec in
+                                    genericMethodSpecializatons.Where(
+                                        methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && !methodSpec.Equals(method)))
                             {
-                                if (!methodSpec.IsMatchingGeneric(methodDefinition))
-                                {
-                                    continue;
-                                }
-
                                 genericContext.MethodDefinition = method;
                                 genericContext.MethodSpecialization = methodSpec;
 

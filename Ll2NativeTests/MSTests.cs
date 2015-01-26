@@ -691,14 +691,14 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestMscorlibCompile_ReadFromUnderlyingStreamAsync()
+        public void TestMscorlibCompile_TypeTest()
         {
             Il2Converter.Convert(
                 Path.GetFullPath(
                     @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false),
-                new [] { "System.IO.BufferedStream.<ReadFromUnderlyingStreamAsync>d__7" });
+                new[] { "System.Diagnostics.Tracing.EventProvider" });
         }
 
         /// <summary>
