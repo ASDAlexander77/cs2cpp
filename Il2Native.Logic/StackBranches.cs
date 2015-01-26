@@ -65,6 +65,12 @@
                     return;
                 }
 
+                if (this.main.Count >= valueNumber)
+                {
+                    // TODO: is it correct? or value is null?
+                    return;
+                }
+
                 var currentStackValue = this.main.Skip(valueNumber).First();
                 var alternativeValues = GetPhiValues(values, !noMainEntry ? currentStackValue : null);
                 if (alternativeValues == null)

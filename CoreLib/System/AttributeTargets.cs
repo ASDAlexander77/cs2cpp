@@ -24,11 +24,13 @@ namespace System
         Interface = 0x0400,
         Parameter = 0x0800,
         Delegate = 0x1000,
-
         ReturnValue = 0x2000,
+        GenericParameter = 0x4000,
+
 
         All = Assembly | Module | Class | Struct | Enum | Constructor |
-                        Method | Property | Field | Event | Interface | Parameter | Delegate | ReturnValue,
+                        Method | Property | Field | Event | Interface | Parameter |
+                        Delegate | ReturnValue | GenericParameter,
     }
 }
 
