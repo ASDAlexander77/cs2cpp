@@ -60,7 +60,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool UsingRoslyn = false;
+        public const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>
@@ -72,16 +72,16 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = true;
+        public const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>
-        public const bool MultiCore = false;
+        public const bool MultiCore = true;
 
         /// <summary>
         ///     ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        public const bool CompileWithOptimization = false;
+        public const bool CompileWithOptimization = true;
 
         /// <summary>
         /// </summary>

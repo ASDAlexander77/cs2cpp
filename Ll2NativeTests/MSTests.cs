@@ -614,6 +614,7 @@ namespace Ll2NativeTests
             // 219 - GetMethod
             // 223 - GetMethod
             // 226 - GetField
+            // 232 - "lib"
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -666,7 +667,8 @@ namespace Ll2NativeTests
                 214,
                 219,
                 223,
-                226
+                226,
+                232
             };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
@@ -679,7 +681,18 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscorlibCompile()
         {
-            //Debug.Listeners.Clear();
+            Il2Converter.Convert(
+                Path.GetFullPath(
+                    @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false));
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile_ReadFromUnderlyingStreamAsync()
+        {
             Il2Converter.Convert(
                 Path.GetFullPath(
                     @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
