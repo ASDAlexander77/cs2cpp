@@ -116,10 +116,26 @@
                     return;
                 }
 
-                while (!this.main.Any() || firstValue != currentStackValue)
+                // we remove all previously added values at line this.main.Push(firstValue); to reinsert it after removing alternative values from cache which is not at top level
+                var top = new Stack<OpCodePart>();
+                for (var i = 0; i < valueNumber; i++)
                 {
-                    // this is new value
-                    this.main.Push(firstValue);
+                    top.Push(this.main.Pop());
+                }
+
+                // we remove all alternative values from cache, they not needed anymore
+                while (this.main.Any() && alternativeValues.Values.Contains(this.main.Peek()))
+                {
+                    this.main.Pop();
+                }
+
+                // this is new value
+                this.main.Push(firstValue);
+
+                // we insert top back
+                for (var i = 0; i < valueNumber; i++)
+                {
+                    this.main.Push(top.Pop());
                 }
 
                 valueNumber++;
