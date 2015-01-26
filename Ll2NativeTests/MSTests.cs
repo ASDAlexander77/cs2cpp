@@ -681,6 +681,19 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscorlibCompile()
         {
+            // Do not forget to set MSCORLIB variable
+
+            // you need to compile it with optimization, otherwise it will not be compiled as being to big
+            /*
+                IF NOT EXIST mscorlib.obj opt mscorlib.ll -o mscorlib.bc -O2
+                IF NOT EXIST mscorlib.obj llc -filetype=obj -mtriple=i686-w64-mingw32 mscorlib.bc
+                opt test-1.ll -o test-1.bc -O3 
+                llc -filetype=obj -mtriple=i686-w64-mingw32 test-1.bc
+                g++.exe -o test-1.exe mscorlib.obj test-1.obj -lstdc++ -lgc-lib -march=i686 -L .
+                del test-1.obj
+                del test-1.bc
+             */
+
             Il2Converter.Convert(
                 Path.GetFullPath(
                     @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
@@ -693,12 +706,31 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscorlibCompile_TypeTest()
         {
+            // Do not forget to set MSCORLIB variable
+
             Il2Converter.Convert(
                 Path.GetFullPath(
                     @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false),
                 new[] { "System.Diagnostics.Tracing.EventProvider" });
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile_SmallBuild()
+        {
+            // Do not forget to set MSCORLIB variable
+
+            Il2Converter.Convert(
+                Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false),
+                new[]
+                    {
+                        "System.Object"
+                    });
         }
 
         /// <summary>
