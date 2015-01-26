@@ -4372,7 +4372,7 @@ namespace Il2Native.Logic
 
             this.AdjustResultTypeToOutgoingType(nopeCode, RequiredIncomingType(opCode));
 
-            var connectedValue = alternativeValues.Values.First(v => v.UsedBy != null);
+            var connectedValue = alternativeValues.Values.Last(v => v.UsedBy != null);
             connectedValue.Result = structUsed
                 ? nopeCode.Result.ToNormalType()
                 : nopeCode.Result;
