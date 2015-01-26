@@ -2754,7 +2754,7 @@ namespace Il2Native.Logic
             IMethod methodBase,
             IType ownerOfExplicitInterface = null)
         {
-            if (methodBase.Name.StartsWith("%"))
+            if (methodBase.Name.StartsWith("%") || string.IsNullOrEmpty(methodBase.Name))
             {
                 return;
             }
