@@ -65,7 +65,7 @@
                     return;
                 }
 
-                if (this.main.Count >= valueNumber)
+                if (valueNumber >= this.main.Count)
                 {
                     // TODO: is it correct? or value is null?
                     return;
