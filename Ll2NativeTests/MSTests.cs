@@ -694,6 +694,19 @@ namespace Ll2NativeTests
                 del test-1.bc
              */
 
+            // alternative way to compile
+            /*
+                llvm-link -o=test-1.bc test-1.ll mscorlib.ll
+                llc -filetype=obj -mtriple=i686-w64-mingw32 test-1.bc
+                g++.exe -o test-1.exe test-1.obj -lstdc++ -lgc-lib -march=i686 -L .
+                del test-1.o
+             */
+
+            // WHAT TODO here
+            // remove static dependancy on count of interfaces
+            // adjust creating string as MSCORLIB does
+            // adjust creating RuntimeType as MSCORLIB does
+
             Il2Converter.Convert(
                 Path.GetFullPath(
                     @"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),

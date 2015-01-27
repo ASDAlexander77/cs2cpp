@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MSCORLIB_</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;MSCORLIB</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -112,6 +112,7 @@
     <Compile Include="Metadata\Model\PlainTextMetadata.cs" />
     <Compile Include="MethodKey.cs" />
     <Compile Include="MethodsWalker.cs" />
+    <Compile Include="NamespaceContainer.cs" />
     <Compile Include="OpResults\ConstValue.cs" />
     <Compile Include="Exceptions\CatchOfFinallyClause.cs" />
     <Compile Include="Exceptions\TryClause.cs" />

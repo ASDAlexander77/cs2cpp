@@ -639,9 +639,9 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
-            List<IType> newListOfITypes;
-            SortedDictionary<string, IType> genDefinitionsByMetadataName;
-            SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
+            NamespaceContainer<IType> newListOfITypes;
+            IDictionary<string, IType> genDefinitionsByMetadataName;
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             ReadingTypes(
                 ilReader,
                 filter,
@@ -1058,9 +1058,9 @@ namespace Il2Native.Logic
         private static void ReadingTypes(
             IlReader ilReader,
             string[] filter,
-            out List<IType> newListOfITypes,
-            out SortedDictionary<string, IType> genDefinitionsByMetadataName,
-            out SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+            out NamespaceContainer<IType> newListOfITypes,
+            out IDictionary<string, IType> genDefinitionsByMetadataName,
+            out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // types in current assembly
             var genericTypeSpecializations = new HashSet<IType>();
@@ -1072,11 +1072,7 @@ namespace Il2Native.Logic
             }
 
             var allTypes = ilReader.AllTypes().ToList();
-#if !DISABLE_RESORT
             newListOfITypes = ResortITypes(types.ToList(), genericTypeSpecializations, genericMethodSpecializations);
-#else
-            var newListOfITypes = allTypes;
-#endif
             // build quick access array for Generic Definitions
             genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))
@@ -1093,18 +1089,13 @@ namespace Il2Native.Logic
 
         private static void RemoveAllResolvedTypesForType(
             Tuple<IType, List<IType>> type,
-            List<IType> newOrder,
-            ISet<IType> newOrderSet,
+            NamespaceContainer<IType> newOrder,
             ICollection<Tuple<IType, List<IType>>> toRemove,
-            object syncObject,
             object syncToRemove)
         {
             var requiredITypes = type.Item2;
 
-            lock (syncObject)
-            {
-                requiredITypes.RemoveAll(newOrderSet.Contains);
-            }
+            requiredITypes.RemoveAll(newOrder.Contains);
 
             if (requiredITypes.Count != 0)
             {
@@ -1116,20 +1107,14 @@ namespace Il2Native.Logic
                 toRemove.Add(type);
             }
 
-            lock (syncObject)
-            {
-                newOrder.Add(type.Item1);
-                newOrderSet.Add(type.Item1);
-            }
+            newOrder.Add(type.Item1);
         }
 
         private static void ReorderTypeByUsage(
             List<IType> types,
             ISet<IType> genericTypeSpecializations,
             List<Tuple<IType, List<IType>>> typesWithRequired,
-            List<IType> newOrder,
-            ISet<IType> newOrderSet,
-            object syncObject)
+            NamespaceContainer<IType> newOrder)
         {
             var allTypes = new HashSet<IType>();
             foreach (var type in types)
@@ -1160,13 +1145,13 @@ namespace Il2Native.Logic
                     Parallel.ForEach(
                         typesWithRequired,
                         type =>
-                            RemoveAllResolvedTypesForType(type, newOrder, newOrderSet, toRemove, syncObject, syncToRemove));
+                            RemoveAllResolvedTypesForType(type, newOrder, toRemove, syncToRemove));
                 }
                 else
                 {
                     foreach (var type in typesWithRequired)
                     {
-                        RemoveAllResolvedTypesForType(type, newOrder, newOrderSet, toRemove, syncObject, syncToRemove);
+                        RemoveAllResolvedTypesForType(type, newOrder, toRemove, syncToRemove);
                     }
                 }
 
@@ -1208,14 +1193,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static List<IType> ResortITypes(
+        private static NamespaceContainer<IType> ResortITypes(
             List<IType> types,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations)
         {
-            var newOrderSyncRoot = new object();
-            var newOrder = new List<IType>();
-            var newOrderSet = new HashSet<IType>();
+            var newOrder = new NamespaceContainer<IType>();
 
             var typesWithRequiredSyncRoot = new object();
             var typesWithRequired = new List<Tuple<IType, List<IType>>>();
@@ -1256,7 +1239,7 @@ namespace Il2Native.Logic
                 typesWithRequiredSyncRoot,
                 processedAlready);
 
-            ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder, newOrderSet, newOrderSyncRoot);
+            ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder);
 
             return newOrder;
         }
@@ -1321,7 +1304,7 @@ namespace Il2Native.Logic
             ICodeWriter codeWriter,
             IList<IType> newListOfITypes,
             IDictionary<string, IType> genDefinitionsByMetadataName,
-            SortedDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // writing
             codeWriter.WriteStart(
