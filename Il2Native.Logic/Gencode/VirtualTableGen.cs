@@ -383,7 +383,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            writer.WriteLine(" = linkonce_odr unnamed_addr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
+            writer.WriteLine(" = linkonce_odr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
             writer.Indent++;
             writer.WriteLine(

@@ -70,7 +70,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("@\"{0}\" = linkonce_odr unnamed_addr constant ", type.GetRttiPointerInfoName());
+            writer.Write("@\"{0}\" = linkonce_odr constant ", type.GetRttiPointerInfoName());
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(' ');
             type.WriteRttiPointerClassInfoDefinition(writer);

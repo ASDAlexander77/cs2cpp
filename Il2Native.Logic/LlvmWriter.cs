@@ -7,6 +7,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+#define INLINE_RTTI_INFO
+
 namespace Il2Native.Logic
 {
     using System;
@@ -6575,10 +6577,22 @@ namespace Il2Native.Logic
                     var rttiPointerDecl in
                         this.typeRttiPointerDeclRequired.Where(rdp => !this.processedRttiPointerTypes.Contains(rdp)))
                 {
-                    ////rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
+#if !INLINE_RTTI_INFO
+                    if (!rttiPointerDecl.IsArray && !rttiPointerDecl.IsGenericType && !rttiPointerDecl.IsGenericTypeDefinition)
+                    {
+                        rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
+                    }
+                    else
+                    {
+                        rttiPointerDecl.WriteRttiPointerClassName(this.Output);
+                        rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
+                        this.AddRequiredRttiDeclaration(rttiPointerDecl);
+                    }
+#else
                     rttiPointerDecl.WriteRttiPointerClassName(this.Output);
                     rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
                     this.AddRequiredRttiDeclaration(rttiPointerDecl);
+#endif
                     this.Output.WriteLine(string.Empty);
                 }
             }
@@ -6595,9 +6609,20 @@ namespace Il2Native.Logic
                         var rttiDecl in
                             this.typeRttiDeclRequired.ToList().Where(rd => !this.processedRttiTypes.Contains(rd)))
                     {
-                        ////rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
+#if !INLINE_RTTI_INFO
+                        if (!rttiDecl.IsArray && !rttiDecl.IsGenericType && !rttiDecl.IsGenericTypeDefinition)
+                        {
+                            rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
+                        }
+                        else
+                        {
+                            rttiDecl.WriteRttiClassName(this.Output);
+                            rttiDecl.WriteRttiClassInfo(this);
+                        }
+#else
                         rttiDecl.WriteRttiClassName(this.Output);
                         rttiDecl.WriteRttiClassInfo(this);
+#endif
                         this.Output.WriteLine(string.Empty);
 
                         this.processedRttiTypes.Add(rttiDecl);

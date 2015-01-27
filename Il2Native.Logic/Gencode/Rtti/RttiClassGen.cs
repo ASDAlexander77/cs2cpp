@@ -92,7 +92,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            writer.Write("@\"{0}\" = linkonce_odr unnamed_addr constant ", type.GetRttiInfoName());
+            writer.Write("@\"{0}\" = linkonce_odr constant ", type.GetRttiInfoName());
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(' ');
             type.WriteRttiClassInfoDefinition(llvmWriter);
