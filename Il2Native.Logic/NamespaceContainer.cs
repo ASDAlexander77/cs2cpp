@@ -146,7 +146,7 @@
 
         public bool Remove(T item)
         {
-            throw new NotImplementedException();
+            return _root.Remove(item);
         }
 
         public void RemoveAt(int index)
@@ -219,6 +219,11 @@
                 return this.Contains(obj.Namespace, obj);
             }
 
+            public bool Remove(T obj)
+            {
+                return this.Remove(obj.Namespace, obj);
+            }
+
             private bool Add(string subNamespace, T obj)
             {
                 string tail;
@@ -253,6 +258,24 @@
                 }
 
                 return container.Contains(tail, obj);
+            }
+
+            private bool Remove(string subNamespace, T obj)
+            {
+                string tail;
+                var name = this.GetNamechain(subNamespace, out tail);
+                var container = this.GetContainer(name);
+                if (container == null)
+                {
+                    return false;
+                }
+
+                if (tail == null)
+                {
+                    return this.Basket.Remove(obj);
+                }
+
+                return container.Remove(tail, obj);
             }
 
             private SubContainer GetOrCreateContainer(string name)
