@@ -938,13 +938,13 @@ namespace Il2Native.Logic
             this.processedTypes.Add(type);
 
             // get all required types for type definition
-            var requiredTypes = new List<IType>();
-            ISet<IType> processedAlready = new HashSet<IType>();
+            var requiredTypes = new NamespaceContainer<IType>();
+            ISet<IType> processedAlready = new NamespaceContainer<IType>();
             Il2Converter.ProcessRequiredITypesForITypes(
                 new[] { type },
-                new HashSet<IType>(),
+                new NamespaceContainer<IType>(),
                 requiredTypes,
-                null,
+                null, 
                 null,
                 processedAlready);
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))

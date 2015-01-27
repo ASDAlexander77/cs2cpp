@@ -5,8 +5,14 @@
     using System.Collections.Generic;
     using System.Diagnostics;
 
+    public interface INamespaceContainer<T> : ISet<T>, IList<T>
+    {
+        void AddRange(IEnumerable<T> range);
+        void RemoveAll(Func<T, bool> criteria);
+    }
+
     [DebuggerDisplay("Count: {Count}")]
-    public class NamespaceContainer<T> : ISet<T>, IList<T> where T : PEAssemblyReader.IName
+    public class NamespaceContainer<T> : INamespaceContainer<T> where T : PEAssemblyReader.IName
     {
         private SubContainer _root = new SubContainer();
 
@@ -52,6 +58,25 @@
             }
 
             return false;
+        }
+
+        public void AddRange(IEnumerable<T> range)
+        {
+            foreach (var item in range)
+            {
+                Add(item);
+            }
+        }
+
+        public void RemoveAll(Func<T, bool> criteria)
+        {
+            foreach (var item in _list)
+            {
+                if (criteria == null || criteria(item))
+                {
+                    Remove(item);
+                }
+            }
         }
 
         public void Clear()

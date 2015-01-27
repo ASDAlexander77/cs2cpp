@@ -119,7 +119,7 @@ namespace Il2Native.Logic
         public static void ProcessRequiredITypesForITypes(
             IEnumerable<IType> types,
             ISet<IType> typesAdded,
-            List<IType> newListOfITypes,
+            INamespaceContainer<IType> newListOfITypes,
             ISet<IType> genericSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> processedAlready)
@@ -199,7 +199,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="typesAdded">
         /// </param>
-        private static void AddRequiredIType(IType type, List<IType> requiredITypesToAdd, ISet<IType> typesAdded)
+        private static void AddRequiredIType(IType type, IList<IType> requiredITypesToAdd, ISet<IType> typesAdded)
         {
             var effectiveIType = type;
             while (effectiveIType.HasElementType)
@@ -639,7 +639,7 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
-            NamespaceContainer<IType> newListOfITypes;
+            IList<IType> newListOfITypes;
             IDictionary<string, IType> genDefinitionsByMetadataName;
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             ReadingTypes(
@@ -810,7 +810,7 @@ namespace Il2Native.Logic
                 // TODO: too many calls, fix it
                 ////Debug.Assert(method.ExplicitName != "List<B>.BinarySearch");
 
-                var usedStructTypes = new HashSet<IType>();
+                var usedStructTypes = new NamespaceContainer<IType>();
                 method.DiscoverRequiredTypesAndMethodsInMethodBody(
                     genericTypeSpecializations,
                     genericMethodSpecializations,
@@ -874,12 +874,12 @@ namespace Il2Native.Logic
         private static void ProcessGenericTypeToFindRequiredTypes(
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
-            ICollection<Tuple<IType, List<IType>>> requiredTypes,
+            ICollection<Tuple<IType, INamespaceContainer<IType>>> requiredTypes,
             object requiredTypesSyncRoot,
             ISet<IType> processedAlready,
             bool applyConccurent = false)
         {
-            var subSetGenericTypeSpecializations = new HashSet<IType>();
+            var subSetGenericTypeSpecializations = new NamespaceContainer<IType>();
 
             // the same for generic specialized types
             if (concurrent && applyConccurent)
@@ -938,7 +938,7 @@ namespace Il2Native.Logic
         }
 
         private static void ProcessGenericTypeToFindRequiredTypesForType(
-            ICollection<Tuple<IType, List<IType>>> requiredTypes,
+            ICollection<Tuple<IType, INamespaceContainer<IType>>> requiredTypes,
             object requiredTypesSyncRoot,
             IType type,
             ISet<IType> subSetGenericTypeSpecializations,
@@ -951,17 +951,17 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("Analyzing generic type: {0}", type));
             }
 
-            var requiredITypesToAdd = new List<IType>();
+            var requiredITypesToAdd = new NamespaceContainer<IType>();
             ProcessNextRequiredITypes(
                 type,
-                new HashSet<IType>(),
+                new NamespaceContainer<IType>(),
                 requiredITypesToAdd,
                 subSetGenericTypeSpecializations,
                 subSetGenericMethodSpecializations,
                 processedAlready);
             lock (requiredTypesSyncRoot)
             {
-                requiredTypes.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
+                requiredTypes.Add(new Tuple<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
             }
         }
 
@@ -980,7 +980,7 @@ namespace Il2Native.Logic
         private static void ProcessNextRequiredITypes(
             IType type,
             ISet<IType> typesAdded,
-            List<IType> requiredITypesToAdd,
+            IList<IType> requiredITypesToAdd,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> processedAlready)
@@ -1003,7 +1003,7 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             IType type,
-            List<Tuple<IType, List<IType>>> typesWithRequired,
+            List<Tuple<IType, INamespaceContainer<IType>>> typesWithRequired,
             object typesWithRequiredSyncRoot,
             ISet<IType> processedAlready)
         {
@@ -1012,29 +1012,29 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("Reading info about type: {0}", type));
             }
 
-            var requiredITypesToAdd = new List<IType>();
+            var requiredITypesToAdd = new NamespaceContainer<IType>();
             ProcessNextRequiredITypes(
                 type,
-                new HashSet<IType>(),
+                new NamespaceContainer<IType>(),
                 requiredITypesToAdd,
                 genericTypeSpecializations,
                 genericMethodSpecializations,
                 processedAlready);
             lock (typesWithRequiredSyncRoot)
             {
-                typesWithRequired.Add(new Tuple<IType, List<IType>>(type, requiredITypesToAdd));
+                typesWithRequired.Add(new Tuple<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
             }
         }
 
         private static void ProcessRequiredITypesForType(
             ISet<IType> typesAdded,
-            List<IType> newListOfITypes,
+            INamespaceContainer<IType> newListOfITypes,
             ISet<IType> genericSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             IType type,
             ISet<IType> processedAlready)
         {
-            var requiredITypesToAdd = new List<IType>();
+            var requiredITypesToAdd = new NamespaceContainer<IType>();
 
             ProcessNextRequiredITypes(
                 type,
@@ -1058,12 +1058,12 @@ namespace Il2Native.Logic
         private static void ReadingTypes(
             IlReader ilReader,
             string[] filter,
-            out NamespaceContainer<IType> newListOfITypes,
+            out IList<IType> newListOfITypes,
             out IDictionary<string, IType> genDefinitionsByMetadataName,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // types in current assembly
-            var genericTypeSpecializations = new HashSet<IType>();
+            var genericTypeSpecializations = new NamespaceContainer<IType>();
             var genericMethodSpecializations = new HashSet<IMethod>();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
@@ -1072,6 +1072,9 @@ namespace Il2Native.Logic
             }
 
             var allTypes = ilReader.AllTypes().ToList();
+
+
+
             newListOfITypes = ResortITypes(types.ToList(), genericTypeSpecializations, genericMethodSpecializations);
             // build quick access array for Generic Definitions
             genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
@@ -1088,9 +1091,9 @@ namespace Il2Native.Logic
         }
 
         private static void RemoveAllResolvedTypesForType(
-            Tuple<IType, List<IType>> type,
-            NamespaceContainer<IType> newOrder,
-            ICollection<Tuple<IType, List<IType>>> toRemove,
+            Tuple<IType, INamespaceContainer<IType>> type,
+            IList<IType> newOrder,
+            ICollection<Tuple<IType, INamespaceContainer<IType>>> toRemove,
             object syncToRemove)
         {
             var requiredITypes = type.Item2;
@@ -1111,12 +1114,12 @@ namespace Il2Native.Logic
         }
 
         private static void ReorderTypeByUsage(
-            List<IType> types,
+            IList<IType> types,
             ISet<IType> genericTypeSpecializations,
-            List<Tuple<IType, List<IType>>> typesWithRequired,
-            NamespaceContainer<IType> newOrder)
+            List<Tuple<IType, INamespaceContainer<IType>>> typesWithRequired,
+            IList<IType> newOrder)
         {
-            var allTypes = new HashSet<IType>();
+            var allTypes = new NamespaceContainer<IType>();
             foreach (var type in types)
             {
                 allTypes.Add(type);
@@ -1130,7 +1133,7 @@ namespace Il2Native.Logic
             while (typesWithRequired.Count > 0)
             {
                 var before = typesWithRequired.Count;
-                var toRemove = new List<Tuple<IType, List<IType>>>();
+                var toRemove = new List<Tuple<IType, INamespaceContainer<IType>>>();
                 var syncToRemove = new object();
 
                 // remove not used types, for example System.Object which maybe not in current assembly
@@ -1193,17 +1196,17 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static NamespaceContainer<IType> ResortITypes(
-            List<IType> types,
+        private static IList<IType> ResortITypes(
+            IList<IType> types,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations)
         {
             var newOrder = new NamespaceContainer<IType>();
 
             var typesWithRequiredSyncRoot = new object();
-            var typesWithRequired = new List<Tuple<IType, List<IType>>>();
+            var typesWithRequired = new List<Tuple<IType, INamespaceContainer<IType>>>();
 
-            var processedAlready = new HashSet<IType>();
+            var processedAlready = new NamespaceContainer<IType>();
 
             if (concurrent)
             {
