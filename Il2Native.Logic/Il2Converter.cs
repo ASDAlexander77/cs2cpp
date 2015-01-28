@@ -243,10 +243,13 @@ namespace Il2Native.Logic
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            var i = 0;
             foreach (var type in newListOfITypes)
             {
-                i++;
+                Debug.Assert(type != null);
+                if (type == null)
+                {
+                    continue;
+                }
 
                 if (filter != null && !filter.Contains(type.FullName))
                 {
@@ -1249,7 +1252,8 @@ namespace Il2Native.Logic
                 genericMethodSpecializations,
                 typesWithRequired,
                 typesWithRequiredSyncRoot,
-                processedAlready);
+                processedAlready,
+                true);
 
             ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder);
 
@@ -1299,7 +1303,8 @@ namespace Il2Native.Logic
             for (var index = 0; index < newListOfITypes.Count; index++)
             {
                 var type = newListOfITypes[index];
-                if (type.IsGenericTypeDefinition)
+                Debug.Assert(type != null);
+                if (type == null || type.IsGenericTypeDefinition)
                 {
                     continue;
                 }

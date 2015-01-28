@@ -45,6 +45,7 @@
         {
             if (_root.Add(item))
             {
+                Debug.Assert(item != null);
                 _list.Add(item);
             }
         }
@@ -53,6 +54,7 @@
         {
             if (_root.Add(item))
             {
+                Debug.Assert(item != null);
                 _list.Add(item);
                 return true;
             }
