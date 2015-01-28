@@ -207,12 +207,11 @@ namespace Il2Native.Logic
                 effectiveIType = effectiveIType.GetElementType();
             }
 
-            if (typesAdded.Contains(effectiveIType))
+            if (!typesAdded.Add(effectiveIType))
             {
                 return;
             }
 
-            typesAdded.Add(effectiveIType);
             requiredITypesToAdd.Add(effectiveIType);
         }
 
@@ -483,21 +482,14 @@ namespace Il2Native.Logic
             }
 
             var bareType = type.ToBareType().ToNormal();
-            if (type.IsGenericType && !type.IsGenericTypeDefinition && !genericSpecializations.Contains(bareType) &&
-                !TypeHasGenericParameter(type)
-                && !TypeHasGenericParameterInGenericArguments(type))
+            if (type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type) && !TypeHasGenericParameterInGenericArguments(type))
             {
-                genericSpecializations.Add(bareType);
-
-                // todo the same for base class and interfaces
-                foreach (
-                    var item in
-                        GetAllRequiredITypesForIType(
-                            type,
-                            genericSpecializations,
-                            genericMethodSpecializations,
-                            processedAlready))
+                if (genericSpecializations == null || genericSpecializations.Add(bareType))
                 {
+                    // todo the same for base class and interfaces
+                    foreach (var item in GetAllRequiredITypesForIType(type, genericSpecializations, genericMethodSpecializations, processedAlready))
+                    {
+                    }
                 }
             }
         }
@@ -678,12 +670,10 @@ namespace Il2Native.Logic
 
             var type = typeSource.ToBareType().ToNormal();
 
-            if (processedAlready.Contains(type))
+            if (!processedAlready.Add(type))
             {
                 yield break;
             }
-
-            processedAlready.Add(type);
 
             if (type.BaseType != null)
             {
@@ -717,6 +707,10 @@ namespace Il2Native.Logic
             {
                 foreach (var field in fields)
                 {
+                    ////#if DEBUG
+                    ////                    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
+                    ////#endif
+
                     DicoverGenericSpecializedIType(
                         field.FieldType,
                         genericTypeSpecializations,
@@ -874,7 +868,7 @@ namespace Il2Native.Logic
         private static void ProcessGenericTypeToFindRequiredTypes(
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
-            ICollection<Tuple<IType, INamespaceContainer<IType>>> requiredTypes,
+            IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
             object requiredTypesSyncRoot,
             ISet<IType> processedAlready,
             bool applyConccurent = false)
@@ -916,7 +910,7 @@ namespace Il2Native.Logic
 
             if (subSetGenericTypeSpecializations.Count > 0)
             {
-                foreach (var discoveredType in requiredTypes.Select(t => t.Item1))
+                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
                 {
                     subSetGenericTypeSpecializations.Remove(discoveredType);
                 }
@@ -938,7 +932,7 @@ namespace Il2Native.Logic
         }
 
         private static void ProcessGenericTypeToFindRequiredTypesForType(
-            ICollection<Tuple<IType, INamespaceContainer<IType>>> requiredTypes,
+            IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
             object requiredTypesSyncRoot,
             IType type,
             ISet<IType> subSetGenericTypeSpecializations,
@@ -961,7 +955,7 @@ namespace Il2Native.Logic
                 processedAlready);
             lock (requiredTypesSyncRoot)
             {
-                requiredTypes.Add(new Tuple<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
+                requiredTypes.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
             }
         }
 
@@ -1003,7 +997,7 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             IType type,
-            List<Tuple<IType, INamespaceContainer<IType>>> typesWithRequired,
+            NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
             object typesWithRequiredSyncRoot,
             ISet<IType> processedAlready)
         {
@@ -1022,7 +1016,7 @@ namespace Il2Native.Logic
                 processedAlready);
             lock (typesWithRequiredSyncRoot)
             {
-                typesWithRequired.Add(new Tuple<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
+                typesWithRequired.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
             }
         }
 
@@ -1046,12 +1040,11 @@ namespace Il2Native.Logic
 
             newListOfITypes.AddRange(requiredITypesToAdd);
 
-            if (typesAdded.Contains(type))
+            if (!typesAdded.Add(type))
             {
                 return;
             }
 
-            typesAdded.Add(type);
             newListOfITypes.Add(type);
         }
 
@@ -1068,12 +1061,10 @@ namespace Il2Native.Logic
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
             {
-                types = types.Where(t => filter.Contains(t.FullName));
+                types = types.Where(t => CheckFilter(filter, t));
             }
 
             var allTypes = ilReader.AllTypes().ToList();
-
-
 
             newListOfITypes = ResortITypes(types.ToList(), genericTypeSpecializations, genericMethodSpecializations);
             // build quick access array for Generic Definitions
@@ -1090,13 +1081,31 @@ namespace Il2Native.Logic
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
         }
 
+        private static bool CheckFilter(string[] filters, IType type)
+        {
+            foreach (var filter in filters)
+            {
+                if (filter.EndsWith("*") && type.Namespace == filter.Substring(0, filter.Length - 1))
+                {
+                    return true;
+                }
+
+                if (string.CompareOrdinal(type.FullName, 0, filter, 0, filter.Length) == 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private static void RemoveAllResolvedTypesForType(
-            Tuple<IType, INamespaceContainer<IType>> type,
+            IAssoc<IType, INamespaceContainer<IType>> type,
             IList<IType> newOrder,
-            ICollection<Tuple<IType, INamespaceContainer<IType>>> toRemove,
+            IList<IAssoc<IType, INamespaceContainer<IType>>> toRemove,
             object syncToRemove)
         {
-            var requiredITypes = type.Item2;
+            var requiredITypes = type.Value;
 
             requiredITypes.RemoveAll(newOrder.Contains);
 
@@ -1110,13 +1119,13 @@ namespace Il2Native.Logic
                 toRemove.Add(type);
             }
 
-            newOrder.Add(type.Item1);
+            newOrder.Add(type.Key);
         }
 
         private static void ReorderTypeByUsage(
             IList<IType> types,
             ISet<IType> genericTypeSpecializations,
-            List<Tuple<IType, INamespaceContainer<IType>>> typesWithRequired,
+            NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
             IList<IType> newOrder)
         {
             var allTypes = new NamespaceContainer<IType>();
@@ -1133,13 +1142,13 @@ namespace Il2Native.Logic
             while (typesWithRequired.Count > 0)
             {
                 var before = typesWithRequired.Count;
-                var toRemove = new List<Tuple<IType, INamespaceContainer<IType>>>();
+                var toRemove = new NamespaceContainer<IType, INamespaceContainer<IType>>();
                 var syncToRemove = new object();
 
                 // remove not used types, for example System.Object which maybe not in current assembly
                 foreach (var requiredITypes in typesWithRequired)
                 {
-                    requiredITypes.Item2.RemoveAll(r => !allTypes.Contains(r));
+                    requiredITypes.Value.RemoveAll(r => !allTypes.Contains(r));
                 }
 
                 // step 1 find Root;
@@ -1178,7 +1187,7 @@ namespace Il2Native.Logic
                     // throw new Exception("Can't resolve any types anymore");
                     foreach (var typeItems in typesWithRequired)
                     {
-                        newOrder.Add(typeItems.Item1);
+                        newOrder.Add(typeItems.Key);
                     }
 
                     break;
@@ -1204,7 +1213,7 @@ namespace Il2Native.Logic
             var newOrder = new NamespaceContainer<IType>();
 
             var typesWithRequiredSyncRoot = new object();
-            var typesWithRequired = new List<Tuple<IType, INamespaceContainer<IType>>>();
+            var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
 
             var processedAlready = new NamespaceContainer<IType>();
 
@@ -1272,12 +1281,10 @@ namespace Il2Native.Logic
         private static bool TypeHasGenericParameterInGenericArguments(IType type)
         {
             return type.IsGenericParameter
-                   || type.GenericTypeArguments
-                       .Any(
-                           t =>
-                               t.IsGenericParameter ||
-                               t.ContainsGenericParameters && TypeHasGenericParameterInGenericArguments(t)
-                               || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
+                   || type.GenericTypeArguments.Any(
+                       t =>
+                       t.IsGenericParameter || t.ContainsGenericParameters && TypeHasGenericParameterInGenericArguments(t)
+                       || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
         }
 
         /// <summary>

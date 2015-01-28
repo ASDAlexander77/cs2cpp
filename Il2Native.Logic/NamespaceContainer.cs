@@ -179,6 +179,9 @@
         private class SubContainer
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+            private object _containerLocker = new object();
+
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private IDictionary<string, SubContainer> _containers;
 
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -188,12 +191,15 @@
             {
                 get
                 {
-                    if (_containers == null)
+                    lock (_containerLocker)
                     {
-                        _containers = new SortedDictionary<string, SubContainer>();
-                    }
+                        if (_containers == null)
+                        {
+                            _containers = new SortedDictionary<string, SubContainer>();
+                        }
 
-                    return _containers;
+                        return _containers;
+                    }
                 }
             }
 
@@ -201,12 +207,15 @@
             {
                 get
                 {
-                    if (_basket == null)
+                    lock (_containerLocker)
                     {
-                        _basket = new HashSet<T>();
-                    }
+                        if (_basket == null)
+                        {
+                            _basket = new HashSet<T>();
+                        }
 
-                    return _basket;
+                        return _basket;
+                    }
                 }
             }
 
@@ -247,30 +256,36 @@
             {
                 if (string.IsNullOrEmpty(subNamespace))
                 {
-                    return this.Basket.Add(obj);
+                    lock (_containerLocker)
+                    {
+                        return this.Basket.Add(obj);
+                    }
                 }
 
                 string tail;
                 var name = this.GetNamechain(subNamespace, out tail);
                 var container = this.GetOrCreateContainer(name);
-                if (tail == null)
-                {
-                    return container.Basket.Add(obj);
-                }
-
                 return container.Add(tail, obj);
             }
 
             private bool Contains(string subNamespace, T obj)
             {
+                if (string.IsNullOrEmpty(subNamespace))
+                {
+                    if (_basket == null)
+                    {
+                        return false;
+                    }
+
+                    lock (_containerLocker)
+                    {
+                        return this.Basket.Contains(obj);
+                    }
+                }
+
                 if (_containers == null)
                 {
                     return false;
-                }
-
-                if (string.IsNullOrEmpty(subNamespace))
-                {
-                    return this.Basket.Contains(obj);
                 }
 
                 string tail;
@@ -279,11 +294,6 @@
                 if (container == null)
                 {
                     return false;
-                }
-
-                if (tail == null)
-                {
-                    return container.Basket.Contains(obj);
                 }
 
                 return container.Contains(tail, obj);
@@ -293,7 +303,10 @@
             {
                 if (string.IsNullOrEmpty(subNamespace))
                 {
-                    return this.Basket.Remove(obj);
+                    lock (_containerLocker)
+                    {
+                        return this.Basket.Remove(obj);
+                    }
                 }
 
                 string tail;
@@ -304,28 +317,31 @@
                     return false;
                 }
 
-                if (tail == null)
-                {
-                    return container.Basket.Remove(obj);
-                }
-
                 return container.Remove(tail, obj);
             }
 
             private SubContainer GetOrCreateContainer(string name)
             {
-                SubContainer container;
-                if (!this.Containers.TryGetValue(name, out container))
+                lock (_containerLocker)
                 {
-                    container = new SubContainer();
-                    this.Containers.Add(name, container);
-                }
+                    SubContainer container;
+                    if (!this.Containers.TryGetValue(name, out container))
+                    {
+                        container = new SubContainer();
+                        this.Containers.Add(name, container);
+                    }
 
-                return container;
+                    return container;
+                }
             }
 
             private SubContainer GetContainer(string name)
             {
+                if (_containers == null)
+                {
+                    return null;
+                }
+
                 SubContainer container;
                 if (!this.Containers.TryGetValue(name, out container))
                 {
@@ -354,5 +370,9 @@
                 return subNamespace;
             }
         }
+    }
+
+    public class NamespaceContainer<K, V> : NamespaceContainer<IAssoc<K, V>> where K : PEAssemblyReader.IName
+    {
     }
 }

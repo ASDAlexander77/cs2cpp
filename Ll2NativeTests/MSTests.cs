@@ -14,8 +14,13 @@ namespace Ll2NativeTests
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
+
     using Il2Native.Logic;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+    using PEAssemblyReader;
+
     using PdbReader;
 
     /// <summary>
@@ -742,7 +747,8 @@ namespace Ll2NativeTests
                 CompilerHelper.GetConverterArgs(false),
                 new[]
                     {
-                        "System.Object"
+                        "*",
+                        "System*"
                     });
         }
 
