@@ -79,33 +79,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="outputFolder">
-        /// </param>
-        /// <param name="args">
-        /// </param>
-        public static void Convert(Type type, string outputFolder, string[] args = null)
-        {
-            var name = type.Module.Name.Replace(".dll", string.Empty);
-            var filePath = Path.GetDirectoryName(name);
-            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(name);
-            var pdbFileName = Path.Combine(filePath, string.Concat(fileNameWithoutExtension, ".pdb"));
-
-            var ilReader = new IlReader();
-            ilReader.Load(type);
-            GenerateLlvm(
-                ilReader,
-                fileNameWithoutExtension,
-                null,
-                pdbFileName,
-                outputFolder,
-                args,
-                new[] { type.FullName });
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="types">
         /// </param>
         /// <param name="typesAdded">

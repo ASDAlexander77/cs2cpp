@@ -4,6 +4,7 @@
     using System.Collections;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
 
     public interface INamespaceContainer<T> : ISet<T>, IList<T>
     {
@@ -16,13 +17,13 @@
     {
         private SubContainer _root = new SubContainer();
 
-        private IList<T> _list = new List<T>();
+        private T[] array = null;
 
         public int Count
         {
             get
             {
-                return _list.Count;
+                return _root.Count;
             }
         }
 
@@ -32,7 +33,21 @@
         {
             get
             {
-                return _list[index];
+                if (array == null)
+                {
+                    var tmpArray = new T[_root.Count];
+
+                    var i = 0;
+                    foreach (var item in _root)
+                    {
+                        tmpArray[i++] = item;
+                    }
+
+                    array = tmpArray;
+                    return tmpArray[index];
+                }
+
+                return array[index];
             }
 
             set
@@ -43,23 +58,14 @@
 
         public void Add(T item)
         {
-            if (_root.Add(item))
-            {
-                Debug.Assert(item != null);
-                _list.Add(item);
-            }
+            this.array = null;
+            _root.Add(item);
         }
 
         bool ISet<T>.Add(T item)
         {
-            if (_root.Add(item))
-            {
-                Debug.Assert(item != null);
-                _list.Add(item);
-                return true;
-            }
-
-            return false;
+            this.array = null;
+            return _root.Add(item);
         }
 
         public void AddRange(IEnumerable<T> range)
@@ -72,7 +78,7 @@
 
         public void RemoveAll(Func<T, bool> criteria)
         {
-            foreach (var item in _list)
+            foreach (var item in this)
             {
                 if (criteria == null || criteria(item))
                 {
@@ -84,7 +90,6 @@
         public void Clear()
         {
             _root.Clear();
-            _list.Clear();
         }
 
         public bool Contains(T item)
@@ -94,7 +99,7 @@
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            _list.CopyTo(array, arrayIndex);
+            throw new NotImplementedException();
         }
 
         public void ExceptWith(IEnumerable<T> other)
@@ -104,7 +109,10 @@
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _list.GetEnumerator();
+            foreach (var item in _root)
+            {
+                yield return item;
+            }
         }
 
         public int IndexOf(T item)
@@ -178,7 +186,7 @@
         }
 
         [DebuggerDisplay("Count: {Containers.Count}, Objects: {Basket.Count}")]
-        private class SubContainer
+        private class SubContainer : IEnumerable<T>
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private object _containerLocker = new object();
@@ -188,6 +196,29 @@
 
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private ISet<T> _basket;
+
+            public int Count
+            {
+                get
+                {
+                    lock (_containerLocker)
+                    {
+                        var count = 0;
+
+                        if (_basket != null)
+                        {
+                            count += _basket.Count;
+                        }
+
+                        if (_containers != null)
+                        {
+                            count += this._containers.Values.Sum(subContainer => subContainer.Count);
+                        }
+
+                        return count;
+                    }
+                }
+            }
 
             public IDictionary<string, SubContainer> Containers
             {
@@ -370,6 +401,30 @@
                 }
 
                 return subNamespace;
+            }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                if (_basket != null)
+                {
+                    foreach (var item in _basket)
+                    {
+                        yield return item;
+                    }
+                }
+
+                if (_containers != null)
+                {
+                    foreach (var subItem in this._containers.Values.SelectMany(item => item))
+                    {
+                        yield return subItem;
+                    }                    
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this.GetEnumerator();
             }
         }
     }
