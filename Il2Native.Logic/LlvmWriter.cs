@@ -114,11 +114,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly HashSet<IType> typeRttiDeclRequired = new HashSet<IType>();
+        public readonly ISet<IType> typeRttiDeclRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        public readonly HashSet<IType> typeRttiPointerDeclRequired = new HashSet<IType>();
+        public readonly ISet<IType> typeRttiPointerDeclRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -138,7 +138,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<MethodKey> methodDeclRequired = new HashSet<MethodKey>();
+        private readonly ISet<MethodKey> methodDeclRequired = new HashSet<MethodKey>();
 
         /// <summary>
         /// </summary>
@@ -146,7 +146,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> typeTokenRequired = new HashSet<IType>();
+        private readonly ISet<IType> typeTokenRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -154,23 +154,23 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> postDeclarationsProcessedTypes = new HashSet<IType>();
+        private readonly ISet<IType> postDeclarationsProcessedTypes = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<MethodKey> processedMethods = new HashSet<MethodKey>();
+        private readonly ISet<MethodKey> processedMethods = new NamespaceContainer<MethodKey>();
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> processedRttiPointerTypes = new HashSet<IType>();
+        private readonly ISet<IType> processedRttiPointerTypes = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> processedRttiTypes = new HashSet<IType>();
+        private readonly ISet<IType> processedRttiTypes = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> processedTypes = new HashSet<IType>();
+        private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -182,7 +182,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IField> staticFieldExtrenalDeclRequired = new HashSet<IField>();
+        private readonly ISet<IField> staticFieldExtrenalDeclRequired = new NamespaceContainer<IField>();
 
         /// <summary>
         /// </summary>
@@ -198,7 +198,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly HashSet<IType> typeDeclRequired = new HashSet<IType>();
+        private readonly ISet<IType> typeDeclRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>

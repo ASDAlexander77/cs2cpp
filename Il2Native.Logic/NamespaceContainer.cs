@@ -81,7 +81,8 @@
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            _root.Clear();
+            _list.Clear();
         }
 
         public bool Contains(T item)
@@ -91,7 +92,7 @@
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            _list.CopyTo(array, arrayIndex);
         }
 
         public void ExceptWith(IEnumerable<T> other)
@@ -278,6 +279,24 @@
                 return container.Remove(tail, obj);
             }
 
+            public void Clear()
+            {
+                if (_containers != null)
+                {
+                    foreach (var subContainer in _containers)
+                    {
+                        subContainer.Value.Clear();
+                    }
+
+                    _containers.Clear();
+                }
+
+                if (_basket != null)
+                {
+                    _basket.Clear();
+                }
+            }
+
             private SubContainer GetOrCreateContainer(string name)
             {
                 SubContainer container;
@@ -305,12 +324,18 @@
             {
                 tail = null;
 
+                if (subNamespace == null)
+                {
+                    return string.Empty;
+                }
+
                 var pos = subNamespace.IndexOf('.');
                 if (pos >= 0)
                 {
                     tail = subNamespace.Substring(pos + 1);
                     return subNamespace.Substring(0, pos);
                 }
+
                 return subNamespace;
             }
         }

@@ -27,7 +27,7 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        protected readonly ISet<IType> RequiredTypesForBody = new HashSet<IType>();
+        protected readonly ISet<IType> RequiredTypesForBody = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
