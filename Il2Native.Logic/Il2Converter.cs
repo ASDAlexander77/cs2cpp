@@ -1064,7 +1064,7 @@ namespace Il2Native.Logic
         {
             // types in current assembly
             var genericTypeSpecializations = new NamespaceContainer<IType>();
-            var genericMethodSpecializations = new HashSet<IMethod>();
+            var genericMethodSpecializations = new NamespaceContainer<IMethod>();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
             {

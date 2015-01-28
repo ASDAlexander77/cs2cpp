@@ -33,14 +33,14 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        public HashSet<IType> DiscoverAllStaticFieldsDependencies()
+        public ISet<IType> DiscoverAllStaticFieldsDependencies()
         {
-            var calledMethods = new HashSet<IMethod>();
-            var readStaticFields = new HashSet<IField>();
+            var calledMethods = new NamespaceContainer<IMethod>();
+            var readStaticFields = new NamespaceContainer<IField>();
 
             this.WalkMethod(this.startMethod, calledMethods, readStaticFields);
 
-            var typesWithStaticFields = new HashSet<IType>();
+            var typesWithStaticFields = new NamespaceContainer<IType>();
             foreach (var staticField in readStaticFields)
             {
                 if (staticField.DeclaringType.TypeEquals(this.startMethod.DeclaringType))
@@ -62,9 +62,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="allReadStaticFields">
         /// </param>
-        private void WalkMethod(IMethod method, HashSet<IMethod> allCalledMethods, HashSet<IField> allReadStaticFields)
+        private void WalkMethod(IMethod method, ISet<IMethod> allCalledMethods, ISet<IField> allReadStaticFields)
         {
-            var calledMethods = new HashSet<IMethod>();
+            var calledMethods = new NamespaceContainer<IMethod>();
             method.DiscoverMethod(null, calledMethods, allReadStaticFields);
 
             foreach (var nextMethod in calledMethods)

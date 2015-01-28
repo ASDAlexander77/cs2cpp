@@ -225,60 +225,6 @@
                 return this.Remove(obj.Namespace, obj);
             }
 
-            private bool Add(string subNamespace, T obj)
-            {
-                string tail;
-                var name = this.GetNamechain(subNamespace, out tail);
-                var container = this.GetOrCreateContainer(name);
-                if (tail == null)
-                {
-                    return this.Basket.Add(obj);
-                }
-
-                return container.Add(tail, obj);
-            }
-
-            private bool Contains(string subNamespace, T obj)
-            {
-                if (_containers == null)
-                {
-                    return false;
-                }
-
-                string tail;
-                var name = this.GetNamechain(subNamespace, out tail);
-                var container = this.GetContainer(name);
-                if (container == null)
-                {
-                    return false;
-                }
-
-                if (tail == null)
-                {
-                    return this.Basket.Contains(obj);
-                }
-
-                return container.Contains(tail, obj);
-            }
-
-            private bool Remove(string subNamespace, T obj)
-            {
-                string tail;
-                var name = this.GetNamechain(subNamespace, out tail);
-                var container = this.GetContainer(name);
-                if (container == null)
-                {
-                    return false;
-                }
-
-                if (tail == null)
-                {
-                    return this.Basket.Remove(obj);
-                }
-
-                return container.Remove(tail, obj);
-            }
-
             public void Clear()
             {
                 if (_containers != null)
@@ -295,6 +241,75 @@
                 {
                     _basket.Clear();
                 }
+            }
+
+            private bool Add(string subNamespace, T obj)
+            {
+                if (string.IsNullOrEmpty(subNamespace))
+                {
+                    return this.Basket.Add(obj);
+                }
+
+                string tail;
+                var name = this.GetNamechain(subNamespace, out tail);
+                var container = this.GetOrCreateContainer(name);
+                if (tail == null)
+                {
+                    return container.Basket.Add(obj);
+                }
+
+                return container.Add(tail, obj);
+            }
+
+            private bool Contains(string subNamespace, T obj)
+            {
+                if (_containers == null)
+                {
+                    return false;
+                }
+
+                if (string.IsNullOrEmpty(subNamespace))
+                {
+                    return this.Basket.Contains(obj);
+                }
+
+                string tail;
+                var name = this.GetNamechain(subNamespace, out tail);
+                var container = this.GetContainer(name);
+                if (container == null)
+                {
+                    return false;
+                }
+
+                if (tail == null)
+                {
+                    return container.Basket.Contains(obj);
+                }
+
+                return container.Contains(tail, obj);
+            }
+
+            private bool Remove(string subNamespace, T obj)
+            {
+                if (string.IsNullOrEmpty(subNamespace))
+                {
+                    return this.Basket.Remove(obj);
+                }
+
+                string tail;
+                var name = this.GetNamechain(subNamespace, out tail);
+                var container = this.GetContainer(name);
+                if (container == null)
+                {
+                    return false;
+                }
+
+                if (tail == null)
+                {
+                    return container.Basket.Remove(obj);
+                }
+
+                return container.Remove(tail, obj);
             }
 
             private SubContainer GetOrCreateContainer(string name)

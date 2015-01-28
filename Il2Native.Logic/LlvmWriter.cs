@@ -98,7 +98,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly HashSet<IMethod> methodsHaveDefinition = new HashSet<IMethod>();
+        public readonly ISet<IMethod> methodsHaveDefinition = new NamespaceContainer<IMethod>();
 
         /// <summary>
         /// </summary>
@@ -138,7 +138,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<MethodKey> methodDeclRequired = new HashSet<MethodKey>();
+        private readonly ISet<MethodKey> methodDeclRequired = new NamespaceContainer<MethodKey>();
 
         /// <summary>
         /// </summary>
@@ -5624,7 +5624,7 @@ namespace Il2Native.Logic
         /// </summary>
         private void SortStaticConstructorsByUsage()
         {
-            var staticConstructors = new Dictionary<IConstructor, HashSet<IType>>();
+            var staticConstructors = new Dictionary<IConstructor, ISet<IType>>();
             foreach (var staticCtor in StaticConstructors)
             {
                 var methodWalker = new MethodsWalker(staticCtor);
@@ -5639,18 +5639,14 @@ namespace Il2Native.Logic
             do
             {
                 countBefore = staticConstructors.Count;
-                foreach (var staticConstructorPair in staticConstructors.ToList())
+                foreach (var staticConstructorPair in staticConstructors.Where(staticConstructorPair => !staticConstructorPair.Value.Any(
+                    v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v)))).ToList())
                 {
-                    if (staticConstructorPair.Value.Any(
-                        v => staticConstructors.Keys.Any(k => k.DeclaringType.TypeEquals(v))))
-                    {
-                        continue;
-                    }
-
                     staticConstructors.Remove(staticConstructorPair.Key);
                     newStaticConstructors.Add(staticConstructorPair.Key);
                 }
-            } while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
+            }
+            while (staticConstructors.Count > 0 && countBefore != staticConstructors.Count);
 
             Debug.Assert(staticConstructors.Keys.Count == 0, "Not All static constructors were resolved");
 
