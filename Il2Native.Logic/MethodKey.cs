@@ -6,11 +6,11 @@
     [DebuggerDisplay("{key}")]
     public class MethodKey : IName
     {
-        private readonly string key;
+        private readonly string _key;
 
         public MethodKey(IMethod method, IType ownerOfExplicitInterface)
         {
-            this.key = method.ToString(ownerOfExplicitInterface).Replace('.', '_');
+            this._key = method.ToString(ownerOfExplicitInterface);
             this.Method = method;
             this.OwnerOfExplicitInterface = ownerOfExplicitInterface;
         }
@@ -24,15 +24,15 @@
             var other = obj as MethodKey;
             if (other != null)
             {
-                return this.key.Equals(other.key);
+                return this._key.Equals(other._key);
             }
 
-            return this.key.Equals(other);
+            return this._key.Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return this.key.GetHashCode();
+            return this._key.GetHashCode();
         }
 
         public int CompareTo(object obj)
@@ -92,7 +92,7 @@
         {
             get
             {
-                return key;
+                return this._key;
             }
         }
     }
