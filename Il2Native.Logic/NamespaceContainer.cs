@@ -78,12 +78,10 @@
 
         public void RemoveAll(Func<T, bool> criteria)
         {
-            foreach (var item in this)
+            var itemsToDelete = this.Where(item => criteria == null || criteria(item)).ToList();
+            foreach (var item in itemsToDelete)
             {
-                if (criteria == null || criteria(item))
-                {
-                    Remove(item);
-                }
+                Remove(item);
             }
         }
 
