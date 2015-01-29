@@ -112,7 +112,7 @@
             this.WriteValueTo(output, suppressMetadataKeyword);
         }
 
-        public void WriteValueTo(TextWriter output, bool suppressMetadataKeyword = false)
+        public virtual void WriteValueTo(TextWriter output, bool suppressMetadataKeyword = false)
         {
             var objects = Value as IList<object>;
             if (objects == null)

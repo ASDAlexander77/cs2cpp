@@ -20,7 +20,6 @@
         private readonly IDictionary<int, string> nameBySlot = new SortedDictionary<int, string>();
         private readonly IList<NamedMetadata> namedMetadata = new List<NamedMetadata>(3);
         private readonly string pdbFileName;
-        private readonly bool structuresByName = true;
         private readonly IDictionary<int, object> subrangeTypeCache = new SortedDictionary<int, object>();
         private readonly IDictionary<string, CollectionMetadata> typeMembersByOffsetMetadataCache =
             new SortedDictionary<string, CollectionMetadata>();
@@ -37,6 +36,7 @@
         private CollectionMetadata globalVariables;
         private IMethod methodDefinition;
         private CollectionMetadata retainedTypes;
+        private bool structuresByName = true;
         private CollectionMetadata tagExpression;
         private LlvmWriter writer;
 
@@ -496,7 +496,9 @@
 
         public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
         {
-            var dbgLine = new CollectionMetadata(this.indexedMetadata).Add(lineBegin, colBegin, function, null);
+            var dbgLine = writer.IsLlvm36
+                ? new MDLocation(lineBegin, colBegin, function, this.indexedMetadata)
+                : new CollectionMetadata(this.indexedMetadata).Add(lineBegin, colBegin, function, null);
             if (dbgLine.Index.HasValue)
             {
                 this.indexByOffset[offset] = dbgLine.Index.Value;
@@ -509,6 +511,8 @@
             {
                 return false;
             }
+
+            this.structuresByName = !writer.IsLlvm36;
 
             this.writer = writer;
             this.PdbConverter = Converter.GetConverter(
@@ -540,7 +544,7 @@
                         indexedMetadataItem => !indexedMetadataItem.NullIfEmpty || !indexedMetadataItem.IsEmpty))
             {
                 output.Write("!{0} = ", indexedMetadataItem.Index);
-                indexedMetadataItem.WriteValueTo(output);
+                indexedMetadataItem.WriteValueTo(output, writer.IsLlvm36);
                 output.WriteLine(string.Empty);
             }
         }

@@ -217,8 +217,11 @@ namespace Il2Native.Logic
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = args == null || !args.Contains("gctors-");
-            this.IsLlvm35 = args != null && args.Contains("llvm35");
+            this.IsLlvm37 = args != null && args.Contains("llvm37");
+            //this.IsLlvm36 = !this.IsLlvm37 && args != null && args.Contains("llvm36");
+            this.IsLlvm35 = !this.IsLlvm36 && args != null && args.Contains("llvm35");
             this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
+            this.IsLlvm36 = !this.IsLlvm37 && !this.IsLlvm35 && !this.IsLlvm34OrLower;
             this.DebugInfo = args != null && args.Contains("debug");
             this.Stubs = args != null && args.Contains("stubs");
             if (this.DebugInfo)
@@ -281,6 +284,14 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool IsLlvm35 { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool IsLlvm36 { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public bool IsLlvm37 { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -5920,9 +5931,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.Output.Write("call void @llvm.dbg.declare(metadata !{");
+            this.Output.Write("call void @llvm.dbg.declare(metadata {0}", !this.IsLlvm36 ? "!{" : string.Empty);
             type.WriteTypePrefix(this.Output);
-            this.Output.Write(string.Concat("* ", variableOrArgumentName, "}, "));
+            this.Output.Write(string.Concat("* ", variableOrArgumentName, "{0}, "), !this.IsLlvm36 ? "}" : string.Empty);
             this.debugInfoGenerator.DefineVariable(name, type, debugVariableType, index).WriteTo(this.Output);
             this.Output.Write(", ");
             this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);

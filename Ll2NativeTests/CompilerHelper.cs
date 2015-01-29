@@ -72,7 +72,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = false;
+        public const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
@@ -81,7 +81,7 @@
         /// <summary>
         ///     ex. opt 'file'.ll -o 'file'.bc -O2
         /// </summary>
-        public const bool CompileWithOptimization = true;
+        public const bool CompileWithOptimization = false;
 
         /// <summary>
         /// </summary>

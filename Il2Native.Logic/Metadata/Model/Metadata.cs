@@ -48,6 +48,10 @@
                 output.Write("i1 ");
                 output.Write(value.ToString().ToLowerInvariant());
             }
+            else
+            {
+                output.Write(value.ToString());
+            }
         }
 
         public virtual void WriteTo(TextWriter output, bool suppressMetadataKeyword = false)

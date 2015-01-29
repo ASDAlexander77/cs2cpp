@@ -66,6 +66,7 @@
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
     <Compile Include="DebugInfo\DebugVariableType.cs" />
+    <Compile Include="Metadata\Model\MDLocation.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
     <Compile Include="Gencode\InlineMethods\ArrayGen.cs" />
