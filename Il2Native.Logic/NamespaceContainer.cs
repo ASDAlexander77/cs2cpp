@@ -35,15 +35,7 @@
             {
                 if (array == null)
                 {
-                    var tmpArray = new T[_root.Count];
-
-                    var i = 0;
-                    foreach (var item in _root)
-                    {
-                        tmpArray[i++] = item;
-                    }
-
-                    array = tmpArray;
+                    var tmpArray = this.EnsureArrayCreated();
                     return tmpArray[index];
                 }
 
@@ -97,7 +89,8 @@
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotImplementedException();
+            var tmpArray = this.EnsureArrayCreated();
+            Array.Copy(tmpArray, 0, array, arrayIndex, tmpArray.Length);
         }
 
         public void ExceptWith(IEnumerable<T> other)
@@ -183,6 +176,19 @@
             return this.GetEnumerator();
         }
 
+        private T[] EnsureArrayCreated()
+        {
+            var tmpArray = new T[this._root.Count];
+
+            var i = 0;
+            foreach (var item in this._root)
+            {
+                tmpArray[i++] = item;
+            }
+
+            return this.array = tmpArray;
+        }
+
         [DebuggerDisplay("Count: {Containers.Count}, Objects: {Basket.Count}")]
         private class SubContainer : IEnumerable<T>
         {
@@ -248,6 +254,30 @@
                         return _basket;
                     }
                 }
+            }
+
+            public IEnumerator<T> GetEnumerator()
+            {
+                if (_basket != null)
+                {
+                    foreach (var item in _basket)
+                    {
+                        yield return item;
+                    }
+                }
+
+                if (_containers != null)
+                {
+                    foreach (var subItem in this._containers.Values.SelectMany(item => item))
+                    {
+                        yield return subItem;
+                    }
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return this.GetEnumerator();
             }
 
             public bool Add(T obj)
@@ -399,30 +429,6 @@
                 }
 
                 return subNamespace;
-            }
-
-            public IEnumerator<T> GetEnumerator()
-            {
-                if (_basket != null)
-                {
-                    foreach (var item in _basket)
-                    {
-                        yield return item;
-                    }
-                }
-
-                if (_containers != null)
-                {
-                    foreach (var subItem in this._containers.Values.SelectMany(item => item))
-                    {
-                        yield return subItem;
-                    }                    
-                }
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return this.GetEnumerator();
             }
         }
     }

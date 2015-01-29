@@ -4771,6 +4771,7 @@ namespace Il2Native.Logic
 
             if (index == list.Count)
             {
+                Debug.Assert(false);
                 throw new KeyNotFoundException();
             }
 
