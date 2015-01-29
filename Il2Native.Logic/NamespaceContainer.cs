@@ -9,6 +9,7 @@
     public interface INamespaceContainer<T> : ISet<T>, IList<T>
     {
         void AddRange(IEnumerable<T> range);
+
         void RemoveAll(Func<T, bool> criteria);
     }
 

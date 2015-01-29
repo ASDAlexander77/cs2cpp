@@ -23,6 +23,9 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
+        private static bool concurrent;
+        private static bool verboseOutput;
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -35,9 +38,6 @@ namespace Il2Native.Logic
             /// </summary>
             Definition
         }
-
-        private static bool concurrent;
-        private static bool verboseOutput;
 
         /// <summary>
         /// </summary>

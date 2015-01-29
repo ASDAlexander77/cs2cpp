@@ -62,11 +62,15 @@
     <Compile Include="DummySymbolWriter\DummySourceFileEntry.cs" />
     <Compile Include="DummySymbolWriter\DummySourceMethodBuilder.cs" />
     <Compile Include="DummySymbolWriter\DummySymbolWriter.cs" />
-    <Compile Include="MonoLibTests.cs" />
+    <Compile Include="MonoLibTests.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="MSTests.cs" />
     <Compile Include="NamespaceContainerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SscliLibTests.cs" />
+    <Compile Include="SscliLibTests.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CoreSource\CodeAnalysis.csproj">

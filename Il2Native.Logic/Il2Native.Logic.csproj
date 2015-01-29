@@ -79,6 +79,7 @@
     <Compile Include="Gencode\InternalMethods\IMethodBodyCustomAction.cs" />
     <Compile Include="Gencode\InternalMethods\MemberwiseCloneGen.cs" />
     <Compile Include="Gencode\InternalMethods\ObjectGetTypeGen.cs" />
+    <Compile Include="Gencode\InternalMethods\UnsafeCastToStackPointerGen.cs" />
     <Compile Include="Gencode\MemberLocationInfo.cs" />
     <Compile Include="Gencode\MemberTypes.cs" />
     <Compile Include="Gencode\MethodBodyBank.cs" />

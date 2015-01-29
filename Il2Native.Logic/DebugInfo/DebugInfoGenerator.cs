@@ -69,7 +69,9 @@
         }
 
         public CollectionMetadata Flags { get; private set; }
+
         public CollectionMetadata Identity { get; private set; }
+
         public IConverter PdbConverter { get; set; }
 
         public void DefineCompilationUnit(
@@ -297,21 +299,21 @@
                         method.LineNumber,
                         flag,
                         scopeLine),
-                    // Source directory (including trailing slash) & file pair
+                // Source directory (including trailing slash) & file pair
                     file,
-                    // Reference to context descriptor
+                // Reference to context descriptor
                     this.fileType,
-                    // Subroutine types
+                // Subroutine types
                     subroutineTypes = new CollectionMetadata(this.indexedMetadata),
-                    // indicates which base type contains the vtable pointer for the derived class
+                // indicates which base type contains the vtable pointer for the derived class
                     null,
-                    // function method reference ex. "i32 ()* @main"                
+                // function method reference ex. "i32 ()* @main"                
                     new PlainTextMetadata(string.Concat(methodReferenceType, " ", methodDefinitionName)),
-                    // Lists function template parameters
+                // Lists function template parameters
                     null,
-                    // Function declaration descriptor
+                // Function declaration descriptor
                     null,
-                    // List of function variables
+                // List of function variables
                     functionVariables = new CollectionMetadata(this.indexedMetadata));
 
             // add subrouting type

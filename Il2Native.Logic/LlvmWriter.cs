@@ -36,48 +36,6 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        [Flags]
-        public enum OperandOptions
-        {
-            /// <summary>
-            /// </summary>
-            None = 0,
-
-            /// <summary>
-            /// </summary>
-            GenerateResult = 1,
-
-            /// <summary>
-            /// </summary>
-            Template = 8,
-
-            /// <summary>
-            /// </summary>
-            TypeIsInOperator = 16,
-
-            /// <summary>
-            /// </summary>
-            AppendPointer = 64,
-
-            /// <summary>
-            /// </summary>
-            IgnoreOperand = 128,
-
-            /// <summary>
-            /// </summary>
-            DetectAndWriteTypeInSecondOperand = 256,
-
-            /// <summary>
-            /// </summary>
-            CastPointersToBytePointer = 512,
-
-            /// <summary>
-            /// </summary>
-            AdjustIntTypes = 1024
-        }
-
-        /// <summary>
-        /// </summary>
         public static int PointerSize = 4;
 
         /// <summary>
@@ -199,6 +157,48 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> typeDeclRequired = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        [Flags]
+        public enum OperandOptions
+        {
+            /// <summary>
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            /// </summary>
+            GenerateResult = 1,
+
+            /// <summary>
+            /// </summary>
+            Template = 8,
+
+            /// <summary>
+            /// </summary>
+            TypeIsInOperator = 16,
+
+            /// <summary>
+            /// </summary>
+            AppendPointer = 64,
+
+            /// <summary>
+            /// </summary>
+            IgnoreOperand = 128,
+
+            /// <summary>
+            /// </summary>
+            DetectAndWriteTypeInSecondOperand = 256,
+
+            /// <summary>
+            /// </summary>
+            CastPointersToBytePointer = 512,
+
+            /// <summary>
+            /// </summary>
+            AdjustIntTypes = 1024
+        }
 
         /// <summary>
         /// </summary>
@@ -2575,7 +2575,7 @@ namespace Il2Native.Logic
 
             // pointer to int, int to pointerf
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef &&
-                opCode.Result.Type.IsPointer)
+                (opCode.Result.Type.IsPointer || opCode.Result.Type.IsByRef))
             {
                 this.LlvmIntConvert(opCode, "ptrtoint", destType);
                 writer.WriteLine(string.Empty);
@@ -2583,9 +2583,16 @@ namespace Il2Native.Logic
             }
 
             if (opCode.Result.Type.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) &&
-                !opCode.Result.Type.IsPointer)
+                !opCode.Result.Type.IsPointer && !opCode.Result.Type.IsByRef)
             {
                 this.LlvmIntConvert(opCode, "inttoptr", destType);
+                writer.WriteLine(string.Empty);
+                return true;
+            }
+
+            if ((opCode.Result.Type.IsPointer || opCode.Result.Type.IsByRef) && (destType.IsPointer || destType.IsByRef))
+            {
+                this.WriteBitcast(opCode, destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }

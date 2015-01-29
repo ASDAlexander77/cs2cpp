@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using InternalMethods;
     using PEAssemblyReader;
@@ -9,18 +10,18 @@
 
     public static class MethodBodyBank
     {
-        private static readonly IDictionary<string, Func<IMethod, IMethod>> methodsByFullName =
+        private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
             new SortedDictionary<string, Func<IMethod, IMethod>>();
 
-        public static IMethod GetMethodBodyOrDefault(IMethod method, ICodeWriter codeWriter)
+        public static IMethod GetMethodBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
-            if (methodsByFullName.Count == 0)
+            if (MethodsByFullName.Count == 0)
             {
-                RegisterAll(codeWriter);
+                RegisterAll(typeResolver);
             }
 
             Func<IMethod, IMethod> methodFactory;
-            if (methodsByFullName.TryGetValue(method.ToString(), out methodFactory))
+            if (MethodsByFullName.TryGetValue(method.ToString(), out methodFactory))
             {
                 var newMethod = methodFactory.Invoke(method);
                 if (newMethod != null)
@@ -40,7 +41,7 @@
                 IList<IParameter> parameters;
                 DelegateGen.GetMulticastDelegateInvoke(
                     method,
-                    codeWriter,
+                    typeResolver,
                     out code,
                     out tokenResolutions,
                     out locals,
@@ -77,20 +78,24 @@
 
         private static void Register(string methodFullName, Func<IMethod, IMethod> func)
         {
-            methodsByFullName[methodFullName] = func;
+            MethodsByFullName[methodFullName] = func;
         }
 
-        private static void RegisterAll(ICodeWriter codeWriter)
+        private static void RegisterAll(ITypeResolver typeResolver)
         {
             // Object
-            GetHashCodeGen.Register(codeWriter);
-            EqualsGen.Register(codeWriter);
-            MemberwiseCloneGen.Register(codeWriter);
-            ObjectGetTypeGen.Register(codeWriter);
+            GetHashCodeGen.Register(typeResolver);
+            EqualsGen.Register(typeResolver);
+            MemberwiseCloneGen.Register(typeResolver);
+            ObjectGetTypeGen.Register(typeResolver);
             
             // Array
-            ArrayCopyGen.Register(codeWriter);
-            ArrayClearGen.Register(codeWriter);
+            ArrayCopyGen.Register(typeResolver);
+            ArrayClearGen.Register(typeResolver);
+
+#if MSCORLIB
+            UnsafeCastToStackPointerGen.Register(typeResolver);
+#endif
         }
 
         private static IEnumerable<byte> Transform(IEnumerable<object> code)

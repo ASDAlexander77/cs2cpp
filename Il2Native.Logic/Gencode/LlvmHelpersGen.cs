@@ -305,7 +305,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.UnaryOper(
                         writer,
                         opCode,
-                        resultOf.Type.IsValueType() ? "inttoptr" : "bitcast",
+                        resultOf.Type.IsValueType() && !resultOf.Type.IsPointer && !resultOf.Type.IsByRef ? "inttoptr" : "bitcast",
                         resultType: toType,
                         options: LlvmWriter.OperandOptions.GenerateResult);
                 }
@@ -856,6 +856,8 @@ namespace Il2Native.Logic.Gencode
             IType toType)
         {
             var writer = llvmWriter.Output;
+
+            Debug.Assert(!source.Type.IsPointer && !source.Type.IsByRef);
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("inttoptr ");

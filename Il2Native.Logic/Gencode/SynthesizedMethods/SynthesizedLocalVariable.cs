@@ -12,6 +12,7 @@
         }
 
         public int LocalIndex { get; private set; }
+
         public IType LocalType { get; set; }
 
         public string Name

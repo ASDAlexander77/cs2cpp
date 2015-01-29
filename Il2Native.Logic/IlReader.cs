@@ -401,6 +401,7 @@ namespace Il2Native.Logic
         }
 
         public string PdbFilePath { get; private set; }
+
         public string SourceFilePath { get; private set; }
 
         /// <summary>

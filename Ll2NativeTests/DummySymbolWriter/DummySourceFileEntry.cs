@@ -5,6 +5,7 @@
     public class DummySourceFileEntry : ISourceFileEntry
     {
         public string Directory { get; private set; }
+
         public string FileName { get; private set; }
 
         public ICompileUnitEntry DefineCompilationUnit()

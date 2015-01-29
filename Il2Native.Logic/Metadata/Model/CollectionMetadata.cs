@@ -34,6 +34,8 @@
             }
         }
 
+        public bool NullIfEmpty { get; set; }
+
         public object this[int index]
         {
             get
@@ -59,8 +61,6 @@
                 throw new NotSupportedException();
             }
         }
-
-        public bool NullIfEmpty { get; set; }
 
         public CollectionMetadata Add(object value)
         {
