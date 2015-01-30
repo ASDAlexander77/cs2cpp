@@ -553,7 +553,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedInternalGetTypeMethod(type, llvmWriter);
+            var method = new SynthesizedGetTypeMethod(type, llvmWriter);
 
             var systemType = llvmWriter.ResolveType("System.Type");
 
@@ -594,7 +594,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedInternalGetSizeMethod(type, llvmWriter);
+            var method = new SynthesizedGetSizeMethod(type, llvmWriter);
 
             llvmWriter.WriteMethodStart(method, null);
 

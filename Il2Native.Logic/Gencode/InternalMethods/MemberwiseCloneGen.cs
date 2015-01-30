@@ -57,7 +57,7 @@
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
-                    SynthesizedInternalGetSizeMethod.Name,
+                    SynthesizedGetSizeMethod.Name,
                     typeResolver.ResolveType("System.Object"),
                     typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize),
                     true));

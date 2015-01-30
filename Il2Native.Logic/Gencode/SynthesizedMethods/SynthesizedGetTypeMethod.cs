@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SynthesizedInternalGetSizeMethod.cs" company="">
+// <copyright file="SynthesizedGetTypeMethod.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -15,9 +15,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedInternalGetSizeMethod : SynthesizedMethodTypeBase
+    public class SynthesizedGetTypeMethod : SynthesizedMethodTypeBase
     {
-        public const string Name = ".internalGetSize";
+        public const string Name = ".gettype";
 
         /// <summary>
         /// </summary>
@@ -29,7 +29,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="typeResolver">
         /// </param>
-        public SynthesizedInternalGetSizeMethod(IType type, ITypeResolver typeResolver)
+        public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
             : base(type, Name)
         {
             this.typeResolver = typeResolver;
@@ -59,7 +59,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize); }
+            get { return this.typeResolver.ResolveType("System.Type"); }
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="llvmWriter">
         /// </param>
         public SynthesizedGetTypeStaticMethod(IType type, LlvmWriter llvmWriter)
-            : base(type, ".getType")
+            : base(type, ".sgettype")
         {
             this.systemType = llvmWriter.ResolveType("System.Type");
         }

@@ -556,10 +556,10 @@ namespace Il2Native.Logic
             }
 
             // append C# native compiler infrastructure methods
-            yield return new SynthesizedInternalGetSizeMethod(type, typeResolver);
+            yield return new SynthesizedGetSizeMethod(type, typeResolver);
 
             // append internal methods
-            yield return new SynthesizedInternalGetTypeMethod(type, typeResolver);
+            yield return new SynthesizedGetTypeMethod(type, typeResolver);
 
             if (type.ToNormal().IsEnum)
             {

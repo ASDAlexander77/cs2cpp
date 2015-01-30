@@ -26,7 +26,7 @@
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
-                    SynthesizedInternalGetTypeMethod.Name,
+                    SynthesizedGetTypeMethod.Name,
                     typeResolver.ResolveType("System.Object"),
                     typeResolver.ResolveType("System.Type"),
                     true));
