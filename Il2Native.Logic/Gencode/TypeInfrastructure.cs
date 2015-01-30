@@ -81,7 +81,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteGetOrCreateRuntimeTypeStaticObject(opCode, classType, systemType);
 
             writer.Write("ret ");
-            systemType.WriteTypePrefix(writer);
+            systemType.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(opCode.Result);
 
@@ -135,7 +135,7 @@ namespace Il2Native.Logic.Gencode
                     {
                         opCode.Result = new ConstValue(null, llvmWriter.ResolveType("System.Type"));
                         writer.Write("ret ");
-                        llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
+                        llvmWriter.ResolveType("System.Type").WriteTypePrefix(llvmWriter);
                         writer.WriteLine(" null");
                         return;
                     }
@@ -190,7 +190,7 @@ namespace Il2Native.Logic.Gencode
                     writer.WriteLine(string.Empty);
 
                     writer.Write("ret ");
-                    opCode.Result.Type.WriteTypePrefix(writer);
+                    opCode.Result.Type.WriteTypePrefix(llvmWriter);
                     writer.Write(" ");
                     llvmWriter.WriteResult(opCode.Result);
                     writer.WriteLine(string.Empty);
@@ -232,7 +232,7 @@ namespace Il2Native.Logic.Gencode
                 "{0} = {1}global ",
                 type.GetTypeStaticFieldName(),
                 "linkonce_odr ");
-            llvmWriter.ResolveType("System.Type").WriteTypePrefix(writer);
+            llvmWriter.ResolveType("System.Type").WriteTypePrefix(llvmWriter);
             writer.WriteLine(" null");
         }
     }

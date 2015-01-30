@@ -73,7 +73,7 @@ namespace Il2Native.Logic.Gencode
                 opCodePart,
                 llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
-            size.Type.WriteTypePrefix(writer);
+            size.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(size);
             writer.WriteLine(")");
@@ -168,7 +168,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteBoxObject(opCode, classType, newObjectResult, true);
 
             writer.Write("ret ");
-            classType.WriteTypePrefix(writer);
+            classType.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(opCode.Result);
 
@@ -574,7 +574,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteGetTypeObject(opCode, normalType);
 
             writer.Write("ret ");
-            systemType.WriteTypePrefix(writer);
+            systemType.WriteTypePrefix(llvmWriter);
 
             writer.Write(" ");
             llvmWriter.WriteResult(opCode.Result);
@@ -596,10 +596,10 @@ namespace Il2Native.Logic.Gencode
 
             var method = new SynthesizedGetSizeMethod(type, llvmWriter);
 
-            llvmWriter.WriteMethodStart(method, null);
+            llvmWriter.WriteMethodStart(method, null, noLocalVars:true);
 
             writer.Write("ret ");
-            llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize).WriteTypePrefix(writer);
+            llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize).WriteTypePrefix(llvmWriter);
             writer.WriteLine(" {0}", type.GetTypeSize(llvmWriter));
 
             llvmWriter.WriteMethodEnd(method, null);
@@ -884,7 +884,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteNewMethodBody(opCode, type);
             writer.WriteLine(string.Empty);
             writer.Write("ret ");
-            type.WriteTypePrefix(writer);
+            type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);
@@ -929,11 +929,11 @@ namespace Il2Native.Logic.Gencode
             {
                 if (normalType.IsEnum)
                 {
-                    normalType.GetEnumUnderlyingType().WriteTypePrefix(writer);
+                    normalType.GetEnumUnderlyingType().WriteTypePrefix(llvmWriter);
                 }
                 else
                 {
-                    normalType.WriteTypePrefix(writer);
+                    normalType.WriteTypePrefix(llvmWriter);
                 }
 
                 writer.Write(" ");

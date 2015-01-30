@@ -346,7 +346,7 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 writer.Write(" to ");
-                toType.WriteTypePrefix(writer);
+                toType.WriteTypePrefix(llvmWriter);
             }
             else
             {
@@ -389,7 +389,7 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteOperandResult(writer, opCode);
 
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer);
+            toType.WriteTypePrefix(llvmWriter);
 
             opCode.Result = returnResult;
         }
@@ -485,7 +485,7 @@ namespace Il2Native.Logic.Gencode
 
             // for value types
             writer.Write("alloca ");
-            type.WriteTypePrefix(writer);
+            type.WriteTypePrefix(llvmWriter);
             writer.Write(", align " + LlvmWriter.PointerSize);
         }
 
@@ -505,11 +505,11 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(writer, true);
+            result.Type.WriteTypePrefix(llvmWriter, true);
             writer.Write(" ");
             llvmWriter.WriteResult(result);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
+            toType.WriteTypePrefix(llvmWriter, true);
         }
 
         /// <summary>
@@ -533,11 +533,11 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            source.Type.WriteTypePrefix(writer, asReference);
+            source.Type.WriteTypePrefix(llvmWriter, asReference);
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, asReference);
+            toType.WriteTypePrefix(llvmWriter, asReference);
         }
 
         /// <summary>
@@ -554,7 +554,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(writer, true);
+            result.Type.WriteTypePrefix(llvmWriter, true);
             writer.Write(" ");
             llvmWriter.WriteResult(result);
             writer.Write(" to i8*");
@@ -583,7 +583,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, null);
             writer.Write("bitcast ");
-            fromType.WriteTypePrefix(writer, true);
+            fromType.WriteTypePrefix(llvmWriter, true);
             writer.Write(' ');
             llvmWriter.WriteResult(result);
             writer.Write(" to ");
@@ -769,11 +769,11 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(writer, true);
+                fromResult.Type.WriteTypePrefix(llvmWriter, true);
                 writer.Write(' ');
                 llvmWriter.WriteResult(fromResult);
                 writer.Write(" to ");
-                toType.WriteTypePrefix(writer, true);
+                toType.WriteTypePrefix(llvmWriter, true);
             }
             else
             {
@@ -825,11 +825,11 @@ namespace Il2Native.Logic.Gencode
             }
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            fromType.WriteTypePrefix(writer, true);
+            fromType.WriteTypePrefix(llvmWriter, true);
             writer.Write(' ');
             writer.Write(custromName);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
+            toType.WriteTypePrefix(llvmWriter, true);
             if (appendReference)
             {
                 // result should be array
@@ -861,11 +861,11 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("inttoptr ");
-            source.Type.WriteTypePrefix(writer);
+            source.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer, true);
+            toType.WriteTypePrefix(llvmWriter, true);
         }
 
         /// <summary>
@@ -959,7 +959,7 @@ namespace Il2Native.Logic.Gencode
 
                 // last part
                 writer.Write("load ");
-                typeToLoad.WriteTypePrefix(writer, structAsRef);
+                typeToLoad.WriteTypePrefix(llvmWriter, structAsRef);
                 if (appendReference)
                 {
                     // add reference to type
@@ -1019,7 +1019,7 @@ namespace Il2Native.Logic.Gencode
 
             var localType = llvmWriter.LocalInfo[index].LocalType;
 
-            localType.WriteTypePrefix(writer, false);
+            localType.WriteTypePrefix(llvmWriter, false);
             if (asReference)
             {
                 writer.Write('*');
@@ -1063,7 +1063,7 @@ namespace Il2Native.Logic.Gencode
                 operand2: -1);
             llvmWriter.WriteOperandResult(writer, opCode, operandIndex);
             writer.Write(", ");
-            typeToSave.WriteTypePrefix(writer);
+            typeToSave.WriteTypePrefix(llvmWriter);
             writer.Write("* ");
             writer.Write(destination);
         }
@@ -1174,7 +1174,7 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             writer.Write("call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, ", op1);
-            size.Type.WriteTypePrefix(writer);
+            size.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(size);
             writer.Write(", i32 {0}, i1 false)", align > 0 ? align : LlvmWriter.PointerSize /*Align*/);
@@ -1202,11 +1202,11 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("ptrtoint ");
-            source.Type.WriteTypePrefix(writer, true);
+            source.Type.WriteTypePrefix(llvmWriter, true);
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
-            toType.WriteTypePrefix(writer);
+            toType.WriteTypePrefix(llvmWriter);
         }
     }
 }

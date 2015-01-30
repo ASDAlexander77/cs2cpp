@@ -128,7 +128,7 @@ namespace Il2Native.Logic.Gencode
             // allocate space for structure if return type is structure
             if (returnIsStruct)
             {
-                returnType.WriteTypePrefix(writer, returnType.IsStructureType());
+                returnType.WriteTypePrefix(llvmWriter, returnType.IsStructureType());
                 writer.Write(' ');
                 if (resultNumberForReturn != null)
                 {
@@ -145,7 +145,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(", ");
                 }
 
-                thisType.ToClass().WriteTypePrefix(writer);
+                thisType.ToClass().WriteTypePrefix(llvmWriter);
                 writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
@@ -486,7 +486,7 @@ namespace Il2Native.Logic.Gencode
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
-                methodInfo.ReturnType.WriteTypePrefix(writer, false);
+                methodInfo.ReturnType.WriteTypePrefix(llvmWriter, false);
 
                 llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
             }
@@ -576,7 +576,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
-            parameter.ParameterType.WriteTypePrefix(writer, parameter.ParameterType.IsStructureType());
+            parameter.ParameterType.WriteTypePrefix(llvmWriter, parameter.ParameterType.IsStructureType());
             if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
             {
                 writer.Write(" byval align " + llvmWriter.ByValAlign);
@@ -592,7 +592,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(type);
 
-            type.WriteTypePrefix(writer, type.IsStructureType());
+            type.WriteTypePrefix(llvmWriter, type.IsStructureType());
             if (type.IsStructureType())
             {
                 writer.Write(" byval align " + llvmWriter.ByValAlign);

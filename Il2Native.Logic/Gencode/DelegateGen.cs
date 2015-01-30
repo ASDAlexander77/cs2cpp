@@ -377,7 +377,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                method.ReturnType.WriteTypePrefix(writer);
+                method.ReturnType.WriteTypePrefix(llvmWriter);
                 writer.WriteLine(" undef");
             }
 
@@ -566,7 +566,7 @@ namespace Il2Native.Logic.Gencode
                 // switch code if method is static
                 var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
                 writer.Write("icmp ne ");
-                objectResultNumber.Type.WriteTypePrefix(writer);
+                objectResultNumber.Type.WriteTypePrefix(llvmWriter);
                 writer.Write(" ");
                 writer.Write(objectResultNumber);
                 writer.WriteLine(", null");

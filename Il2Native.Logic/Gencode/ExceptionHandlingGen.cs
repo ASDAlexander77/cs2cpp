@@ -68,7 +68,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.UnaryOper(writer, opCode, "store");
             writer.Write(", ");
-            opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(writer);
+            opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(llvmWriter);
             writer.Write("* ");
             llvmWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);

@@ -564,9 +564,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, LlvmIndentedTextWriter writer, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, LlvmWriter llvmWriter, bool asReference = false)
         {
-            type.WriteTypeWithoutModifiers(writer);
+            LlvmIndentedTextWriter writer = llvmWriter.Output;
+
+            type.WriteTypeWithoutModifiers(llvmWriter);
             type.WriteTypeModifiers(writer, asReference);
         }
 
@@ -578,14 +580,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypeWithoutModifiers(
             this IType type,
-            LlvmIndentedTextWriter writer,
+            LlvmWriter llvmWriter,
             bool isPointer = false)
         {
+            LlvmIndentedTextWriter writer = llvmWriter.Output;
+
             var effectiveType = type;
 
             if (effectiveType.IsPointer)
             {
-                effectiveType.GetElementType().WriteTypeWithoutModifiers(writer, type.IsPointer);
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(llvmWriter, type.IsPointer);
                 return;
             }
 
@@ -602,7 +606,7 @@ namespace Il2Native.Logic.Gencode
             }
             else if (!type.IsMultiArray)
             {
-                writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetArrayPrefixDataType());
+                writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetSingleDimArrayPrefixDataType(llvmWriter));
 
                 effectiveType = type;
 
@@ -611,13 +615,13 @@ namespace Il2Native.Logic.Gencode
                     effectiveType = effectiveType.GetElementType();
                 }
 
-                effectiveType.GetElementType().WriteTypePrefix(writer);
+                effectiveType.GetElementType().WriteTypePrefix(llvmWriter);
 
                 writer.Write(" ] }");
             }
             else
             {
-                type.BaseType.WriteTypeWithoutModifiers(writer);
+                type.BaseType.WriteTypeWithoutModifiers(llvmWriter);
             }
         }
     }

@@ -53,13 +53,13 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(", ");
                 }
 
-                operand.Result.Type.WriteTypePrefix(writer);
+                operand.Result.Type.WriteTypePrefix(llvmWriter);
                 writer.Write(' ');
                 llvmWriter.WriteResult(operand.Result);
             }
 
             writer.Write(", ");
-            resultType.WriteTypePrefix(writer);
+            resultType.WriteTypePrefix(llvmWriter);
             writer.Write(" 1");
 
             writer.WriteLine(attribs);
@@ -164,7 +164,7 @@ namespace Il2Native.Logic.Gencode
                     opCodeMethodInfo,
                     intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
                 writer.Write("extractvalue { ");
-                opResult.Type.WriteTypePrefix(writer);
+                opResult.Type.WriteTypePrefix(llvmWriter);
                 writer.Write(", i1 } ");
                 llvmWriter.WriteResult(opResult);
                 writer.WriteLine(", 0");
@@ -266,7 +266,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(", ");
             }
 
-            operand.Result.Type.WriteTypePrefix(writer);
+            operand.Result.Type.WriteTypePrefix(llvmWriter);
             writer.Write(' ');
             llvmWriter.WriteResult(operand.Result);
             return index;
