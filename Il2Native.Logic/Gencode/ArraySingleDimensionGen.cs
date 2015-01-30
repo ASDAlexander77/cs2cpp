@@ -12,6 +12,9 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.Diagnostics;
     using CodeParts;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -269,29 +272,88 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="llvmWriter">
+        /// </param>
+        public static void WriteNewArrayMethod(this LlvmWriter llvmWriter, IType elementType)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedNewArrayMethod(elementType, llvmWriter);
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; New Array method");
+
+            var opCode = OpCodePart.CreateNop;
+            llvmWriter.WriteMethodStart(method, null);
+
+            // load first parameter
+            var arraySizeType = llvmWriter.ResolveType("System.Int32");
+            var destinationName = llvmWriter.GetArgVarName("value", 0);
+            var fullyDefinedReference = new FullyDefinedReference(destinationName, arraySizeType);
+            llvmWriter.WriteLlvmLoad(opCode, arraySizeType, fullyDefinedReference);
+
+            var opCodeOperand1 = OpCodePart.CreateNop;
+            opCodeOperand1.Result = opCode.Result;
+            opCode.OpCodeOperands = new [] { opCodeOperand1 };
+
+            llvmWriter.WriteNewArrayMethodBody(opCode, elementType, opCode.Result);
+            writer.WriteLine(string.Empty);
+            writer.Write("ret ");
+            elementType.ToArrayType(1).WriteTypePrefix(writer);
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
+            writer.WriteLine(string.Empty);
+            llvmWriter.WriteMethodEnd(method, null);
+        }
+
+        public static void WriteCallNewArrayMethod(this LlvmWriter llvmWriter, OpCodePart opCode, IType elementType, OpCodePart length)
+        {
+            var writer = llvmWriter.Output;
+
+            var method = new SynthesizedNewArrayMethod(elementType, llvmWriter);
+            writer.WriteLine(string.Empty);
+            writer.WriteLine("; call New Array method");
+            var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.UsedBy = new UsedByInfo(opCode);
+            opCodeNope.OpCodeOperands = new [] { length };
+            llvmWriter.WriteCall(
+                opCodeNope,
+                method,
+                false,
+                false,
+                false,
+                opCode.Result,
+                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+            opCode.Result = opCodeNope.Result;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="declaringType">
+        /// <param name="elementType">
         /// </param>
         /// <param name="length">
         /// </param>
-        public static void WriteNewArray(
+        public static void WriteNewArrayMethodBody(
             this LlvmWriter llvmWriter,
             OpCodePart opCode,
-            IType declaringType,
-            OpCodePart length)
+            IType elementType,
+            FullyDefinedReference lengthResult)
         {
             var writer = llvmWriter.Output;
 
+            writer.WriteLine(string.Empty);
             writer.WriteLine("; New array");
 
             var arraySystemType = llvmWriter.ResolveType("System.Array");
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var sizeOfElement = declaringType.GetTypeSize(llvmWriter, true);
-            llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes);
+            var sizeOfElement = elementType.GetTypeSize(llvmWriter, true);
+            llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes | LlvmWriter.OperandOptions.GenerateResult);
             writer.WriteLine(", {0}", sizeOfElement);
 
             var resMul = opCode.Result;
@@ -307,7 +369,7 @@ namespace Il2Native.Logic.Gencode
 
             var alignForType = Math.Max(
                 LlvmWriter.PointerSize,
-                !declaringType.IsStructureType() ? sizeOfElement : LlvmWriter.PointerSize);
+                !elementType.IsStructureType() ? sizeOfElement : LlvmWriter.PointerSize);
 
             // align size
             llvmWriter.WriteSetResultNumber(opCode, intType);
@@ -361,7 +423,7 @@ namespace Il2Native.Logic.Gencode
             arraySystemType.WriteCallInitObjectMethod(llvmWriter, opCode);
             writer.WriteLine(string.Empty);
 
-            var arrayType = declaringType.ToArrayType(1);
+            var arrayType = elementType.ToArrayType(1);
             llvmWriter.WriteBitcast(opCode, resAlloc, arrayType);
             writer.WriteLine(string.Empty);
 
@@ -394,9 +456,9 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             writer.Write("store ");
-            length.Result.Type.WriteTypePrefix(writer);
+            lengthResult.Type.WriteTypePrefix(writer);
             writer.Write(" ");
-            llvmWriter.WriteResult(length.Result);
+            llvmWriter.WriteResult(lengthResult);
             writer.Write(", ");
             opCode.Result.Type.WriteTypePrefix(writer, true);
             writer.Write(" ");

@@ -812,6 +812,7 @@ namespace Il2Native.Logic
             if (!type.IsVoid())
             {
                 type.WriteNewObjectMethod(this);
+                this.WriteNewArrayMethod(type);
             }
 
             type.WriteInitObjectMethod(this);
@@ -2376,9 +2377,9 @@ namespace Il2Native.Logic
                 case Code.Newarr:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.WriteNewArray(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
-
-                    this.WriteDbgLine(opCode);
+                    //this.WriteNewArrayMethodBody(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
+                    //this.WriteDbgLine(opCode);
+                    this.WriteCallNewArrayMethod(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
 
                     break;
 

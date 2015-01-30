@@ -17,18 +17,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     {
         /// <summary>
         /// </summary>
-        private readonly LlvmWriter writer;
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedNewMethod(IType type, LlvmWriter writer)
+        public SynthesizedNewMethod(IType type)
             : base(type, ".new")
         {
-            this.writer = writer;
             Type = type.ToClass();
         }
     }

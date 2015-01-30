@@ -24,10 +24,6 @@ namespace Il2Native.Logic.CodeParts
     {
         /// <summary>
         /// </summary>
-        private FullyDefinedReference result;
-
-        /// <summary>
-        /// </summary>
         /// <param name="opcode">
         /// </param>
         /// <param name="addressStart">

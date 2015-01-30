@@ -401,7 +401,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedNewMethod(type, llvmWriter);
+            var method = new SynthesizedNewMethod(type);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call New Object method");
             var opCodeNope = OpCodePart.CreateNop;
@@ -876,7 +876,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedNewMethod(type, llvmWriter);
+            var method = new SynthesizedNewMethod(type);
             writer.WriteLine("; New Object method");
 
             var opCode = OpCodePart.CreateNop;
