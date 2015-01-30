@@ -6539,8 +6539,6 @@ namespace Il2Native.Logic
             var customLabel = this.FindCustomLabel(startOpCode, endOpCode, startAddress, stopAddress);
             if (customLabel != null)
             {
-                Debug.Assert(customLabel != "next44");
-
                 writer.Write(" [ {0}, %.{1} ]", result, customLabel);
             }
             else
