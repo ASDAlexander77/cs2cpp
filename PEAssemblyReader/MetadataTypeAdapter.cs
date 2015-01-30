@@ -57,6 +57,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<MetadataModuleAdapter> lazyModule;
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new Dictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
 
         /// <summary>
@@ -94,6 +98,7 @@ namespace PEAssemblyReader
             this.lazyBaseType = new Lazy<IType>(this.CalculateBaseType);
             this.lazyAssemblyQualifiedName = new Lazy<string>(this.CalculateAssemblyQualifiedName);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
+            this.lazyModule = new Lazy<MetadataModuleAdapter>(this.CalculateModule);
         }
 
         /// <summary>
@@ -529,7 +534,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return new MetadataModuleAdapter(this.typeDef.ContainingModule);
+                return this.lazyModule.Value;
             }
         }
 
@@ -1217,6 +1222,37 @@ namespace PEAssemblyReader
         private string CalculateNamespace()
         {
             return this.typeDef.CalculateNamespace();
+        }
+
+        private MetadataModuleAdapter CalculateModule()
+        {
+            var module = this.typeDef.ContainingModule;
+            if (module != null)
+            {
+                return new MetadataModuleAdapter(module);
+            }
+
+            var currentTypeDef = this.typeDef;
+            while (currentTypeDef != null)
+            {
+                var arrayTypeSymbol = currentTypeDef as ArrayTypeSymbol;
+                if (arrayTypeSymbol != null)
+                {
+                    currentTypeDef = arrayTypeSymbol.ElementType;
+                    continue;
+                }
+
+                var pointerTypeSymbol = currentTypeDef as PointerTypeSymbol;
+                if (pointerTypeSymbol != null)
+                {
+                    currentTypeDef = pointerTypeSymbol.PointedAtType;
+                    continue;
+                }
+
+                return new MetadataModuleAdapter(currentTypeDef.ContainingModule);
+            }
+
+            return null;
         }
 
         /// <summary>

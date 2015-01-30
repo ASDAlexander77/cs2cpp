@@ -285,7 +285,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; New Array method");
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
+            llvmWriter.WriteMethodStart(method, null, true);
 
             // load first parameter
             var arraySizeType = llvmWriter.ResolveType("System.Int32");

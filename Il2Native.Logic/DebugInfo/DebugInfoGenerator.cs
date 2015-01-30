@@ -512,7 +512,7 @@
                 return false;
             }
 
-            this.structuresByName = !writer.IsLlvm36;
+            this.structuresByName = true;// !writer.IsLlvm36;
 
             this.writer = writer;
             this.PdbConverter = Converter.GetConverter(

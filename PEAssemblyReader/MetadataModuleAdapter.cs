@@ -10,6 +10,7 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Reflection.Metadata;
     using System.Reflection.Metadata.Ecma335;
 
@@ -27,6 +28,7 @@ namespace PEAssemblyReader
         /// </param>
         internal MetadataModuleAdapter(ModuleSymbol moduleDef)
         {
+            Debug.Assert(moduleDef != null);
             this.moduleDef = moduleDef;
         }
 

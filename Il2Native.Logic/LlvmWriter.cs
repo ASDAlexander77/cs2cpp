@@ -100,6 +100,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly ISet<IType> arrayMethodRequired = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<int, IMethod> methodsByToken = new SortedDictionary<int, IMethod>();
 
         /// <summary>
@@ -629,7 +633,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false)
+        public void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false, bool noLocalVars = false)
         {
             this.StartProcess();
 
@@ -760,8 +764,12 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
-                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-                this.WriteArgumentCopyDeclarations(method, this.HasMethodThis);
+
+                if (!noLocalVars)
+                {
+                    this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
+                    this.WriteArgumentCopyDeclarations(method, this.HasMethodThis);
+                }
 
                 this.Output.StartMethodBody();
             }
@@ -812,7 +820,6 @@ namespace Il2Native.Logic
             if (!type.IsVoid())
             {
                 type.WriteNewObjectMethod(this);
-                this.WriteNewArrayMethod(type);
             }
 
             type.WriteInitObjectMethod(this);
@@ -2379,7 +2386,10 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     //this.WriteNewArrayMethodBody(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
                     //this.WriteDbgLine(opCode);
+                    
                     this.WriteCallNewArrayMethod(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
+
+                    this.arrayMethodRequired.Add(opCodeTypePart.Operand);
 
                     break;
 
@@ -2785,7 +2795,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName || methodBase.DeclaringType.IsMultiArray)
+            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
             }
@@ -6578,6 +6588,24 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteRequiredDeclarations()
         {
+            // write required declarations for Arrays (Single and Multi dimentionals)
+            if (this.arrayMethodRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (var arrayType in this.arrayMethodRequired)
+                {
+                    if (!arrayType.IsMultiArray)
+                    {
+                        this.WriteNewArrayMethod(arrayType);
+                    }
+                    else
+                    {
+                        // TODO: finish generating functions for multiarray
+                    }
+                }
+            }
+
+
             if (MainMethod != null && !this.Gctors)
             {
                 this.Output.WriteLine(string.Empty);
