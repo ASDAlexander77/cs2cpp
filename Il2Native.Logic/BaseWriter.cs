@@ -51,7 +51,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string AssemblyQualifiedName { get; protected set; }
+        public string AssemblyQualifiedName 
+        {
+            get
+            {
+                return this.IlReader.AssemblyQualifiedName;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -84,6 +90,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public IType ThisType { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        protected IIlReader IlReader { get; set; }
 
         /// <summary>
         /// </summary>

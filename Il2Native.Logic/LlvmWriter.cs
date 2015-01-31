@@ -80,14 +80,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private int blockJumpAddressIncremental;
-
-        /// <summary>
-        /// </summary>
-        private int bytesIndexIncremental;
-
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<int, byte[]> bytesStorage = new SortedDictionary<int, byte[]>();
 
         /// <summary>
@@ -133,6 +125,14 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        private int blockJumpAddressIncremental;
+
+        /// <summary>
+        /// </summary>
+        private int bytesIndexIncremental;
 
         /// <summary>
         /// </summary>
@@ -259,7 +259,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public IEnumerable<string> AllReference { get; private set; }
+        public IEnumerable<string> AllReferences
+        {
+            get
+            {
+                return IlReader.AllReferences();
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -279,7 +285,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool IsCoreLib { get; private set; }
+        public bool IsCoreLib
+        {
+            get
+            {
+                return IlReader.IsCoreLib;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -885,11 +897,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="allReference">
         /// </param>
-        public void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference)
+        public void WriteStart(IIlReader ilReader)
         {
-            this.AssemblyQualifiedName = assemblyName;
-            this.IsCoreLib = isCoreLib;
-            this.AllReference = allReference;
+            this.IlReader = ilReader;
 
             this.Output.WriteLine("target datalayout = \"{0}\"", this.DataLayout);
             this.Output.WriteLine("target triple = \"{0}\"", this.Target);
@@ -956,26 +966,7 @@ namespace Il2Native.Logic
         {
             this.processedTypes.Add(type);
 
-            // get all required types for type definition
-            var requiredTypes = new NamespaceContainer<IType>();
-            ISet<IType> processedAlready = new NamespaceContainer<IType>();
-            Il2Converter.ProcessRequiredITypesForITypes(
-                new[] { type },
-                new NamespaceContainer<IType>(),
-                requiredTypes,
-                null, 
-                null,
-                processedAlready);
-            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))
-            {
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            }
-
-            var interfacesList = type.GetInterfaces();
-            foreach (var @interface in interfacesList)
-            {
-                this.WriteTypeDefinitionIfNotWrittenYet(@interface);
-            }
+            this.WriteTypeRequiredDefinitions(type);
 
             ReadTypeInfo(type);
 
@@ -4195,7 +4186,7 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
 
             // find constructor
-            var constructorInfo = IlReader.Constructors(typeToCreate).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(typeToCreate).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
 
@@ -4226,7 +4217,7 @@ namespace Il2Native.Logic
         {
             // find constructor
             var constructorInfo =
-                IlReader.Constructors(type)
+                Logic.IlReader.Constructors(type)
                     .FirstOrDefault(
                         c =>
                             c.GetParameters().Count() == 1 &&
@@ -4593,7 +4584,7 @@ namespace Il2Native.Logic
             var invalidCastExceptionType = ResolveType(exceptionName);
 
             // find constructor
-            var constructorInfo = IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
             opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
@@ -4790,7 +4781,7 @@ namespace Il2Native.Logic
 
         private int CalculateFieldIndex(IType type, string fieldName)
         {
-            var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            var list = Logic.IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
 
             while (index < list.Count && !list[index].Name.Equals(fieldName))
@@ -4824,7 +4815,7 @@ namespace Il2Native.Logic
         /// </exception>
         private int CalculateFieldPosition(IType type, IField fieldInfo)
         {
-            var list = IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            var list = Logic.IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
             var index = 0;
 
             while (index < list.Count && list[index].NameNotEquals(fieldInfo))
@@ -5753,7 +5744,7 @@ namespace Il2Native.Logic
         private void WriteCallGctors()
         {
             // get all references
-            foreach (var reference in this.AllReference.Reverse().Distinct())
+            foreach (var reference in this.AllReferences.Reverse().Distinct())
             {
                 this.Output.WriteLine("call void " + this.GetGlobalConstructorsFunctionName(reference) + "();");
             }
@@ -5764,7 +5755,7 @@ namespace Il2Native.Logic
         private void WriteCallGctorsDeclarations()
         {
             // get all references
-            foreach (var reference in this.AllReference.Skip(1).Reverse().Distinct())
+            foreach (var reference in this.AllReferences.Skip(1).Reverse().Distinct())
             {
                 this.Output.WriteLine("declare void " + this.GetGlobalConstructorsFunctionName(reference) + "();");
             }
@@ -6592,20 +6583,8 @@ namespace Il2Native.Logic
             // write required declarations for Arrays (Single and Multi dimentionals)
             if (this.arrayMethodRequired.Count > 0)
             {
-                this.Output.WriteLine(string.Empty);
-                foreach (var arrayType in this.arrayMethodRequired)
-                {
-                    if (!arrayType.IsMultiArray)
-                    {
-                        this.WriteNewArrayMethod(arrayType);
-                    }
-                    else
-                    {
-                        // TODO: finish generating functions for multiarray
-                    }
-                }
+                this.WriteArrayFunctions();
             }
-
 
             if (MainMethod != null && !this.Gctors)
             {
@@ -6752,6 +6731,16 @@ namespace Il2Native.Logic
             }
         }
 
+        private void WriteArrayFunctions()
+        {
+            this.Output.WriteLine(string.Empty);
+            foreach (var arrayType in this.arrayMethodRequired)
+            {
+                Debug.Assert(!arrayType.IsMultiArray);
+                this.WriteNewArrayMethod(arrayType);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -6878,7 +6867,7 @@ namespace Il2Native.Logic
         {
             if (!type.IsEnum)
             {
-                foreach (var field in IlReader.Fields(type).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+                foreach (var field in Logic.IlReader.Fields(type).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
                 {
                     this.WriteStaticFieldDeclaration(field);
                 }
@@ -6941,6 +6930,29 @@ namespace Il2Native.Logic
             type.WriteTypeName(this.Output, false);
 
             this.Output.Write(" = type ");
+        }
+
+        private void WriteTypeRequiredDefinitions(IType type)
+        {
+            // get all required types for type definition
+            var requiredTypes = new NamespaceContainer<IType>();
+            ISet<IType> processedAlready = new NamespaceContainer<IType>();
+            Il2Converter.ProcessRequiredITypesForITypes(
+                new[] { type },
+                requiredTypes,
+                null,
+                null,
+                processedAlready);
+            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))
+            {
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+
+            var interfacesList = type.GetInterfaces();
+            foreach (var @interface in interfacesList)
+            {
+                this.WriteTypeDefinitionIfNotWrittenYet(@interface);
+            }
         }
 
         /// <summary>

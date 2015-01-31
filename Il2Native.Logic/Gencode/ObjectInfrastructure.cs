@@ -694,15 +694,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteInitObject(this LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteInitObject(this LlvmWriter llvmWriter, IType declaringType, OpCodePart opCode)
         {
-            var declaringType = opCode.Result.Type;
             if (declaringType.IsInterface)
             {
                 return;
             }
 
             var writer = llvmWriter.Output;
+
+            var thisType = opCode.Result.Type;
 
             // Init Object From Here
             if (declaringType.HasAnyVirtualMethod(llvmWriter))
@@ -723,7 +724,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     llvmWriter.WriteCast(
                         opCode,
-                        declaringType.ToClass(),
+                        thisType.ToClass(),
                         llvmWriter.GetThisName(),
                         llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(),
                         true);
@@ -748,7 +749,7 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine("; set virtual interface table");
 
-                llvmWriter.WriteInterfaceAccess(writer, opCode, declaringType, @interface);
+                llvmWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
 
                 if (opCode.HasResult)
                 {
@@ -789,6 +790,11 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var classType = typeIn.ToClass();
+            var interfcaesSource = classType;
+            if (classType.IsArray)
+            {
+                classType = classType.BaseType;
+            }
 
             var method = new SynthesizedInitMethod(classType, llvmWriter);
             writer.WriteLine("; Init Object method");
@@ -798,11 +804,11 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteLlvmLoad(
                 opCode,
                 classType,
-                new FullyDefinedReference(llvmWriter.GetThisName(), llvmWriter.ThisType),
+                new FullyDefinedReference(llvmWriter.GetThisName(), classType),
                 true,
                 true);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(opCode);
+            llvmWriter.WriteInitObject(interfcaesSource, opCode);
             writer.WriteLine("ret void");
             llvmWriter.WriteMethodEnd(method, null);
         }

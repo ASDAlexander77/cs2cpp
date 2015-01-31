@@ -29,9 +29,37 @@ namespace Il2Native.Logic
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
+    public interface IIlReader
+    {
+        /// <summary>
+        /// </summary>
+        string AssemblyQualifiedName { get; }
+
+        /// <summary>
+        /// </summary>
+        bool IsCoreLib { get; }
+
+        /// <summary>
+        /// </summary>
+        string ModuleName { get; }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IEnumerable<string> AllReferences();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        IEnumerable<IType> CompileSourceWithRoslyn(params string[] source);
+    }
+
     /// <summary>
     /// </summary>
-    public class IlReader
+    public class IlReader : IIlReader
     {
         /// <summary>
         /// </summary>
@@ -619,10 +647,16 @@ namespace Il2Native.Logic
             return this.lazyAllTypes.Value;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns></returns>
         public IEnumerable<IType> CompileSourceWithRoslyn(params string[] source)
         {
+            // TODO: ASD FIX: you need to change Roslyn source code to allow compiling with System.Array inheritence (file SourceNamedTypeSymbol_Bases.cs)
             var baseName = Path.GetRandomFileName();
-            var nameDll = baseName + ".dll";
+            var nameDll = "__unrestricted__.dll";
 
             var syntaxTrees =
                 source.Select(s => CSharpSyntaxTree.ParseText(new StreamReader(s).ReadToEnd(), new CSharpParseOptions(LanguageVersion.Experimental)));
@@ -1304,9 +1338,10 @@ namespace Il2Native.Logic
         /// </returns>
         private AssemblyMetadata CompileWithRoslyn(string[] source)
         {
-            var baseName = Path.GetRandomFileName();
-            var nameDll = baseName + ".dll";
-            var namePdb = baseName + ".pdb";
+            var srcFileName = Path.GetFileNameWithoutExtension(FirstSource);
+            var baseName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+            var nameDll = srcFileName + "_" + baseName + ".dll";
+            var namePdb = srcFileName + "_" + baseName + ".pdb";
             var outDll = Path.Combine(Path.GetTempPath(), nameDll);
             var outPdb = Path.Combine(Path.GetTempPath(), namePdb);
 

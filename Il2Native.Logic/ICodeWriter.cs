@@ -168,7 +168,7 @@ namespace Il2Native.Logic
         /// <param name="allReference">
         /// </param>
         /// ///
-        void WriteStart(string moduleName, string assemblyName, bool isCoreLib, IEnumerable<string> allReference);
+        void WriteStart(IIlReader ilReader);
 
         /// <summary>
         /// </summary>

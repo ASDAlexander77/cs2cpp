@@ -91,7 +91,6 @@ namespace Il2Native.Logic
         /// </param>
         public static void ProcessRequiredITypesForITypes(
             IEnumerable<IType> types,
-            ISet<IType> typesAdded,
             INamespaceContainer<IType> newListOfITypes,
             ISet<IType> genericSpecializations,
             ISet<IMethod> genericMethodSpecializations,
@@ -102,25 +101,15 @@ namespace Il2Native.Logic
                 Parallel.ForEach(
                     types,
                     type =>
-                        ProcessRequiredITypesForType(
-                            typesAdded,
-                            newListOfITypes,
-                            genericSpecializations,
-                            genericMethodSpecializations,
-                            type,
-                            processedAlready));
+                        ProcessRequiredITypesForType(type,
+                            newListOfITypes, genericSpecializations, genericMethodSpecializations, processedAlready));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    ProcessRequiredITypesForType(
-                        typesAdded,
-                        newListOfITypes,
-                        genericSpecializations,
-                        genericMethodSpecializations,
-                        type,
-                        processedAlready);
+                    ProcessRequiredITypesForType(type,
+                        newListOfITypes, genericSpecializations, genericMethodSpecializations, processedAlready);
                 }
             }
         }
@@ -172,17 +161,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="typesAdded">
         /// </param>
-        private static void AddRequiredIType(IType type, IList<IType> requiredITypesToAdd, ISet<IType> typesAdded)
+        private static void AddRequiredIType(IType type, IList<IType> requiredITypesToAdd)
         {
             var effectiveIType = type;
             while (effectiveIType.HasElementType)
             {
                 effectiveIType = effectiveIType.GetElementType();
-            }
-
-            if (!typesAdded.Add(effectiveIType))
-            {
-                return;
             }
 
             requiredITypesToAdd.Add(effectiveIType);
@@ -845,7 +829,6 @@ namespace Il2Native.Logic
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
-            object requiredTypesSyncRoot,
             ISet<IType> processedAlready,
             bool applyConccurent = false)
         {
@@ -856,13 +839,10 @@ namespace Il2Native.Logic
             {
                 Parallel.ForEach(
                     genericTypeSpecializations,
-                    type => ProcessGenericTypeToFindRequiredTypesForType(
+                    type => ProcessGenericTypeToFindRequiredTypesForType(type,
                         requiredTypes,
-                        requiredTypesSyncRoot,
-                        type,
                         subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        processedAlready));
+                        genericMethodSpecializations, processedAlready));
             }
             else
             {
@@ -874,13 +854,10 @@ namespace Il2Native.Logic
                         continue;
                     }
 
-                    ProcessGenericTypeToFindRequiredTypesForType(
+                    ProcessGenericTypeToFindRequiredTypesForType(type,
                         requiredTypes,
-                        requiredTypesSyncRoot,
-                        type,
                         subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        processedAlready);
+                        genericMethodSpecializations, processedAlready);
                 }
             }
 
@@ -895,7 +872,6 @@ namespace Il2Native.Logic
                     subSetGenericTypeSpecializations,
                     genericMethodSpecializations,
                     requiredTypes,
-                    requiredTypesSyncRoot,
                     processedAlready);
 
                 // join types
@@ -907,13 +883,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private static void ProcessGenericTypeToFindRequiredTypesForType(
-            IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
-            object requiredTypesSyncRoot,
-            IType type,
-            ISet<IType> subSetGenericTypeSpecializations,
-            ISet<IMethod> subSetGenericMethodSpecializations,
-            ISet<IType> processedAlready)
+        private static void ProcessGenericTypeToFindRequiredTypesForType(IType type, IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes, ISet<IType> subSetGenericTypeSpecializations, ISet<IMethod> subSetGenericMethodSpecializations, ISet<IType> processedAlready)
         {
             Debug.Assert(type != null);
             if (verboseOutput)
@@ -924,15 +894,12 @@ namespace Il2Native.Logic
             var requiredITypesToAdd = new NamespaceContainer<IType>();
             ProcessNextRequiredITypes(
                 type,
-                new NamespaceContainer<IType>(),
                 requiredITypesToAdd,
                 subSetGenericTypeSpecializations,
                 subSetGenericMethodSpecializations,
                 processedAlready);
-            lock (requiredTypesSyncRoot)
-            {
-                requiredTypes.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
-            }
+
+            requiredTypes.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
         }
 
         /// <summary>
@@ -949,7 +916,6 @@ namespace Il2Native.Logic
         /// </param>
         private static void ProcessNextRequiredITypes(
             IType type,
-            ISet<IType> typesAdded,
             IList<IType> requiredITypesToAdd,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
@@ -965,17 +931,11 @@ namespace Il2Native.Logic
                 .Where(type.TypeNotEquals);
             foreach (var requiredIType in requiredITypes)
             {
-                AddRequiredIType(requiredIType, requiredITypesToAdd, typesAdded);
+                AddRequiredIType(requiredIType, requiredITypesToAdd);
             }
         }
 
-        private static void ProcessNextRequiredTypesForType(
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            IType type,
-            NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
-            object typesWithRequiredSyncRoot,
-            ISet<IType> processedAlready)
+        private static void ProcessNextRequiredTypesForType(IType type, NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> processedAlready)
         {
             if (verboseOutput)
             {
@@ -985,43 +945,23 @@ namespace Il2Native.Logic
             var requiredITypesToAdd = new NamespaceContainer<IType>();
             ProcessNextRequiredITypes(
                 type,
-                new NamespaceContainer<IType>(),
                 requiredITypesToAdd,
                 genericTypeSpecializations,
                 genericMethodSpecializations,
                 processedAlready);
-            lock (typesWithRequiredSyncRoot)
-            {
-                typesWithRequired.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
-            }
+
+            typesWithRequired.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
         }
 
-        private static void ProcessRequiredITypesForType(
-            ISet<IType> typesAdded,
-            INamespaceContainer<IType> newListOfITypes,
-            ISet<IType> genericSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            IType type,
-            ISet<IType> processedAlready)
+        private static void ProcessRequiredITypesForType(IType type, INamespaceContainer<IType> newListOfITypes, ISet<IType> genericSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> processedAlready)
         {
-            var requiredITypesToAdd = new NamespaceContainer<IType>();
-
+            newListOfITypes.Add(type);
             ProcessNextRequiredITypes(
                 type,
-                typesAdded,
-                requiredITypesToAdd,
+                newListOfITypes,
                 genericSpecializations,
                 genericMethodSpecializations,
                 processedAlready);
-
-            newListOfITypes.AddRange(requiredITypesToAdd);
-
-            if (!typesAdded.Add(type))
-            {
-                return;
-            }
-
-            newListOfITypes.Add(type);
         }
 
         private static void ReadingTypes(
@@ -1188,7 +1128,6 @@ namespace Il2Native.Logic
         {
             var newOrder = new NamespaceContainer<IType>();
 
-            var typesWithRequiredSyncRoot = new object();
             var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
 
             var processedAlready = new NamespaceContainer<IType>();
@@ -1198,25 +1137,17 @@ namespace Il2Native.Logic
                 Parallel.ForEach(
                     types,
                     type =>
-                        ProcessNextRequiredTypesForType(
-                            genericTypeSpecializations,
-                            genericMethodSpecializations,
-                            type,
+                        ProcessNextRequiredTypesForType(type,
                             typesWithRequired,
-                            typesWithRequiredSyncRoot,
-                            processedAlready));
+                            genericTypeSpecializations, genericMethodSpecializations, processedAlready));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    ProcessNextRequiredTypesForType(
-                        genericTypeSpecializations,
-                        genericMethodSpecializations,
-                        type,
+                    ProcessNextRequiredTypesForType(type,
                         typesWithRequired,
-                        typesWithRequiredSyncRoot,
-                        processedAlready);
+                        genericTypeSpecializations, genericMethodSpecializations, processedAlready);
                 }
             }
 
@@ -1224,7 +1155,6 @@ namespace Il2Native.Logic
                 genericTypeSpecializations,
                 genericMethodSpecializations,
                 typesWithRequired,
-                typesWithRequiredSyncRoot,
                 processedAlready,
                 true);
 
@@ -1295,11 +1225,7 @@ namespace Il2Native.Logic
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // writing
-            codeWriter.WriteStart(
-                ilReader.ModuleName,
-                ilReader.AssemblyQualifiedName,
-                ilReader.IsCoreLib,
-                ilReader.AllReferences());
+            codeWriter.WriteStart(ilReader);
 
             WriteForwardDeclarations(codeWriter, newListOfITypes);
 
