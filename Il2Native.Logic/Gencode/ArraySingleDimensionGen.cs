@@ -78,7 +78,7 @@ namespace Il2Native.Logic.Gencode
         {
             if (_arrayHeaderDataStartsWith != -1)
             {
-                return _arrayDataStartsWith;
+                return _arrayHeaderDataStartsWith;
             }
 
             var arraySystemType = typeResolver.ResolveType("System.Array");
@@ -126,9 +126,9 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetSingleDimArrayPrefixNullConstData(ITypeResolver typeResolver)
         {
-            if (_singleDimArrayPrefixDataType != null)
+            if (_singleDimArrayPrefixNullConstData != null)
             {
-                return _singleDimArrayPrefixDataType;
+                return _singleDimArrayPrefixNullConstData;
             }
 
             var arraySystemType = typeResolver.ResolveType("System.Array");
@@ -147,8 +147,8 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            _singleDimArrayPrefixDataType = sb.ToString();
-            return _singleDimArrayPrefixDataType;
+            _singleDimArrayPrefixNullConstData = sb.ToString();
+            return _singleDimArrayPrefixNullConstData;
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace Il2Native.Logic.Gencode
                     elementType.WriteTypePrefix(llvmWriter);
                 });
 
-            return GetSingleDimArrayPrefixNullConstData(llvmWriter) + "i16 0, i16 " + elementType.GetTypeCode() +
+            return GetSingleDimArrayPrefixNullConstData(llvmWriter) + ", i16 0, i16 " + elementType.GetTypeCode() +
                    ", i32 " + elementType.GetTypeSize(llvmWriter, true) + ", i32 " + storeLength + ", [" +
                    length + " x " + typeString + "]";
         }
@@ -536,7 +536,7 @@ namespace Il2Native.Logic.Gencode
 
             var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
             // save element typecode
-            llvmWriter.WriteSetResultNumber(opCode, intType);
+            llvmWriter.WriteSetResultNumber(opCode, shortType);
             writer.Write("getelementptr inbounds ");
             arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");

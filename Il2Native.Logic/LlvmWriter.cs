@@ -5401,7 +5401,7 @@ namespace Il2Native.Logic
                 "getelementptr inbounds",
                 OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
                 type,
-                opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
+                opCode.OpCodeOperands[0].Result.Type.IsArray ? string.Format("i32 0, i32 {0},", ArraySingleDimensionGen.GetArrayDataStartsWith(this)) : null);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -5496,7 +5496,7 @@ namespace Il2Native.Logic
                 "getelementptr inbounds",
                 OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
                 type,
-                opCode.OpCodeOperands[0].Result.Type.IsArray ? "i32 0, i32 5," : null);
+                opCode.OpCodeOperands[0].Result.Type.IsArray ? string.Format("i32 0, i32 {0},", ArraySingleDimensionGen.GetArrayDataStartsWith(this)) : null);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -6372,8 +6372,9 @@ namespace Il2Native.Logic
             // create locals and args
             if (hasParameters)
             {
-                this.Output.WriteLine(
-                    "%local0 = alloca { i8*, i8*, i8*, i32, i32, [ 0 x %\"System.String\"* ] }*, align 4");
+                this.Output.Write("%local0 = alloca ");
+                ResolveType("System.String").ToArrayType(1).WriteTypePrefix(this);
+                this.Output.WriteLine(", align 4");
                 this.Output.WriteLine("%local1 = alloca i32, align 4");
                 this.Output.WriteLine("%\"0.value\" = alloca i32, align 4");
                 this.Output.WriteLine("store i32 %\"arg.0.value\", i32* %\"0.value\", align 4");
