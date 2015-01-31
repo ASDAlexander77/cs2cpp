@@ -54,7 +54,7 @@ namespace System.Runtime.CompilerServices
             get
             {   
                 // return offset of first element
-                return sizeof(int) * 2 + IntPtr.Size * 3;
+                return sizeof(short) * 2 + sizeof(int) * 2 + IntPtr.Size * 3;
             }
         }
     }

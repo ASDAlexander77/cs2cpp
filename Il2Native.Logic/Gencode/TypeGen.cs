@@ -304,6 +304,56 @@ namespace Il2Native.Logic.Gencode
             return size;
         }
 
+        public static short GetTypeCode(this IType type)
+        {
+            switch (type.FullName)
+            {
+                case "System.Object":
+                    return (short)TypeCode.Object;
+                case "System.DBNull":
+                    return (short)TypeCode.DBNull;
+                case "System.Boolean":
+                    return (short)TypeCode.Boolean;
+                case "Syste(short) m.Char":
+                    return (short)TypeCode.Char;
+                case "System.SByte":
+                    return (short)TypeCode.SByte;
+                case "System.Byte":
+                    return (short)TypeCode.Byte;
+                case "System.Int16":
+                    return (short)TypeCode.Int16;
+                case "System.UInt16":
+                    return (short)TypeCode.UInt16;
+                case "System.Int32":
+                    return (short)TypeCode.Int32;
+                case "System.UInt32":
+                    return (short)TypeCode.UInt32;
+                case "System.Int64":
+                    return (short)TypeCode.Int64;
+                case "System.UInt64":
+                    return (short)TypeCode.UInt64;
+                case "System.Single":
+                    return (short)TypeCode.Single;
+                case "System.Double":
+                    return (short)TypeCode.Double;
+                case "System.Decimal":
+                    return (short)TypeCode.Decimal;
+                case "System.DateTime":
+                    return (short)TypeCode.DateTime;
+                case "System.String":
+                    return (short)TypeCode.String;
+                default:
+                    if (type.IsStructureType())
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        return (short)TypeCode.Object;
+                    }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

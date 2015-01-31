@@ -11,6 +11,7 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Text;
     using CodeParts;
 
@@ -24,19 +25,34 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        public const int ArrayDataElementSize = 3;
+        public const int ArrayDataElementRank = 0;
 
         /// <summary>
         /// </summary>
-        public const int ArrayDataLength = 4;
+        public const int ArrayDataElementTypeCode = 1;
 
         /// <summary>
         /// </summary>
-        public const int ArrayDataStartsWith = 5;
+        public const int ArrayDataElementSize = 2;
 
         /// <summary>
         /// </summary>
-        public const int ArraySupportFields = 2;
+        public const int ArrayDataLength = 3;
+
+        /// <summary>
+        /// count of array header data fields
+        /// </summary>
+        public static int ArraySupportFields = 4;
+
+        /// <summary>
+        /// shift for first field after System.Array
+        /// </summary>
+        public static int _arrayHeaderDataStartsWith = -1;
+
+        /// <summary>
+        /// shift for first element of an array
+        /// </summary>
+        public static int _arrayDataStartsWith = -1;
 
         /// <summary>
         /// </summary>
@@ -45,6 +61,30 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         private static string _singleDimArrayPrefixNullConstData;
+
+        public static int GetArrayDataStartsWith(ITypeResolver typeResolver)
+        {
+            if (_arrayDataStartsWith != -1)
+            {
+                return _arrayDataStartsWith;
+            }
+
+            var count = GetArrayHeaderDataStartsWith(typeResolver);
+            _arrayDataStartsWith = count + ArraySupportFields;
+            return _arrayDataStartsWith;
+        }
+
+        public static int GetArrayHeaderDataStartsWith(ITypeResolver typeResolver)
+        {
+            if (_arrayHeaderDataStartsWith != -1)
+            {
+                return _arrayDataStartsWith;
+            }
+
+            var arraySystemType = typeResolver.ResolveType("System.Array");
+            _arrayHeaderDataStartsWith = arraySystemType.GetTypeSizes(typeResolver).Count();
+            return _arrayHeaderDataStartsWith;
+        }
 
         /// <summary>
         /// </summary>
@@ -74,7 +114,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            sb.Append(", i32, i32");
+            sb.Append(", i16, i16, i32, i32");
 
             _singleDimArrayPrefixDataType = sb.ToString();
             return _singleDimArrayPrefixDataType;
@@ -86,7 +126,6 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetSingleDimArrayPrefixNullConstData(ITypeResolver typeResolver)
         {
-            //return "i8*, i8*, i8*, i32, i32";
             if (_singleDimArrayPrefixDataType != null)
             {
                 return _singleDimArrayPrefixDataType;
@@ -192,13 +231,8 @@ namespace Il2Native.Logic.Gencode
                     elementType.WriteTypePrefix(llvmWriter);
                 });
 
-            ////var arrayType = llvmWriter.ResolveType("System.Array");
-            ////var cloneableType = llvmWriter.ResolveType("System.ICloneable");
-            ////var listType = llvmWriter.ResolveType("System.Collections.IList");
-            ////return "i8** " + arrayType.GetVirtualTableReference(llvmWriter) + ", i8** " + arrayType.GetVirtualTableReference(cloneableType) + ", i8** "
-            ////       + arrayType.GetVirtualTableReference(listType) + ", i32 " + elementType.GetTypeSize(true) + ", i32 " + storeLength + ", [" + length + " x "
-            ////       + typeString + "]";
-            return GetSingleDimArrayPrefixNullConstData(llvmWriter) + ", i32 " + elementType.GetTypeSize(llvmWriter, true) + ", i32 " + storeLength + ", [" +
+            return GetSingleDimArrayPrefixNullConstData(llvmWriter) + "i16 0, i16 " + elementType.GetTypeCode() +
+                   ", i32 " + elementType.GetTypeSize(llvmWriter, true) + ", i32 " + storeLength + ", [" +
                    length + " x " + typeString + "]";
         }
 
@@ -222,7 +256,8 @@ namespace Il2Native.Logic.Gencode
         {
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var elementSizeResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, ArrayDataElementSize);
+            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
+            var elementSizeResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, arrayDataHeaderShift + ArrayDataElementSize);
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, intType, elementSizeResult);
@@ -238,7 +273,8 @@ namespace Il2Native.Logic.Gencode
         {
             var intType = llvmWriter.ResolveType("System.Int32");
 
-            var lengthResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, ArrayDataLength);
+            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
+            var lengthResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, arrayDataHeaderShift + ArrayDataLength);
 
             opCode.Result = null;
             llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
@@ -295,7 +331,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter,
                     opCode,
                     storedResult.Type.GetElementType(),
-                    ArrayDataStartsWith,
+                    GetArrayDataStartsWith(llvmWriter),
                     0);
                 llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
                 var firstBytes = opCodeConvert.Result;
@@ -311,7 +347,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter,
                     opCodeDataHolder,
                     byteType,
-                    ArrayDataStartsWith,
+                    GetArrayDataStartsWith(llvmWriter),
                     0);
                 llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
                 var secondBytes = opCodeConvert.Result;
@@ -417,6 +453,7 @@ namespace Il2Native.Logic.Gencode
 
             var arraySystemType = llvmWriter.ResolveType("System.Array");
             var intType = llvmWriter.ResolveType("System.Int32");
+            var shortType = llvmWriter.ResolveType("System.Int16");
 
             var sizeOfElement = elementType.GetTypeSize(llvmWriter, true);
             llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes | LlvmWriter.OperandOptions.GenerateResult);
@@ -428,7 +465,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(
                 "add i32 {1}, {0}",
                 resMul,
-                arraySystemType.GetTypeSize(llvmWriter) + ArraySupportFields * intType.GetTypeSize(llvmWriter, true)); // add header size
+                arraySystemType.GetTypeSize(llvmWriter) + GetSingleDimArraySupportedFieldsSize(llvmWriter, intType, shortType)); // add header size
             writer.WriteLine(string.Empty);
 
             var resAdd = opCode.Result;
@@ -495,13 +532,33 @@ namespace Il2Native.Logic.Gencode
 
             var arrayInstanceResult = opCode.Result;
 
+            var elementTypeCode = elementType.GetTypeCode();
+
+            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
+            // save element typecode
+            llvmWriter.WriteSetResultNumber(opCode, intType);
+            writer.Write("getelementptr inbounds ");
+            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
+            writer.Write(" ");
+            llvmWriter.WriteResult(arrayInstanceResult);
+            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataElementTypeCode);
+            writer.WriteLine(string.Empty);
+
+            writer.Write("store ");
+            opCode.Result.Type.WriteTypePrefix(llvmWriter);
+            writer.Write(" {0}, ", elementTypeCode);
+            opCode.Result.Type.WriteTypePrefix(llvmWriter, true);
+            writer.Write(" ");
+            llvmWriter.WriteResult(opCode.Result);
+            writer.WriteLine(string.Empty);
+
             // save element size
             llvmWriter.WriteSetResultNumber(opCode, intType);
             writer.Write("getelementptr inbounds ");
             arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 3");
+            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataElementSize);
             writer.WriteLine(string.Empty);
 
             writer.Write("store ");
@@ -518,7 +575,7 @@ namespace Il2Native.Logic.Gencode
             arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 4");
+            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataLength);
             writer.WriteLine(string.Empty);
 
             writer.Write("store ");
@@ -534,6 +591,11 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; end of new array");
 
             opCode.Result = arrayInstanceResult;
+        }
+
+        private static int GetSingleDimArraySupportedFieldsSize(LlvmWriter llvmWriter, IType intType, IType shortType)
+        {
+            return (ArraySupportFields - 2) * intType.GetTypeSize(llvmWriter, true) + 2 * shortType.GetTypeSize(llvmWriter, true);
         }
 
         /// <summary>
