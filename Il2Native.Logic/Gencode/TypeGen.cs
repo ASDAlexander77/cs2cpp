@@ -128,7 +128,7 @@ namespace Il2Native.Logic.Gencode
                 var effectiveSize = Math.Min(typeAlign, size);
 
                 offset += size;
-                while (offset % effectiveSize != 0)
+                while (effectiveSize > 0 && offset % effectiveSize != 0)
                 {
                     offset++;
                 }
@@ -207,7 +207,7 @@ namespace Il2Native.Logic.Gencode
             {
                 var fieldSize = 0;
                 var fieldType = field.FieldType;
-                if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate)
+                if (fieldType.IsClass || fieldType.IsArray || fieldType.IsPointer || fieldType.IsDelegate || field.IsFixed)
                 {
                     // pointer size
                     if (field.IsFixed)

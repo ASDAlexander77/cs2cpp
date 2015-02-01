@@ -586,7 +586,18 @@ namespace Il2Native.Logic
             // append methods or MultiArray
             if (type.IsMultiArray)
             {
+                var shortType = typeResolver.ResolveType("System.Int16");
+                var intType = typeResolver.ResolveType("System.Int32");
+
                 // additionally return all fields for array
+                yield return shortType.ToField("rank");
+                yield return shortType.ToField("typeCode");
+                yield return intType.ToField("elementSize");
+                yield return intType.ToField("length");
+                yield return intType.ToArrayType(1).ToField("lowerBounds");
+                yield return intType.ToArrayType(1).ToField("bounds");
+                //yield return type.GetElementType().ToArrayType(1).ToField("data");
+                yield return type.GetElementType().ToField("data", isFixed:true);
             }
         }
 

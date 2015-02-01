@@ -12,7 +12,11 @@
     {
         /// <summary>
         /// </summary>
-        private readonly ITypeResolver typeResolver;
+        private readonly ITypeResolver _typeResolver;
+
+        private readonly IMethodBody _methodBody;
+
+        private readonly IList<IParameter> _parameters;
 
         /// <summary>
         /// </summary>
@@ -23,7 +27,20 @@
         public SynthesizedMultiDimArrayCtorMethod(IType type, ITypeResolver typeResolver)
             : base(type, ".ctor")
         {
-            this.typeResolver = typeResolver;
+            this._typeResolver = typeResolver;
+
+            object[] code;
+            IList<object> tokenResolutions;
+            IList<IType> locals;
+            IList<IParameter> parameters;
+            ArrayMultiDimensionGen.GetMultiDimensionArrayCtor(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+
+            this._methodBody = new SynthesizedMethodBodyDecorator(
+                null,
+                locals,
+                MethodBodyBank.Transform(code).ToArray());
+
+            this._parameters = parameters;
         }
 
         /// <summary>
@@ -37,21 +54,17 @@
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.typeResolver.ResolveType("System.Void"); }
+            get { return this._typeResolver.ResolveType("System.Void"); }
         }
 
         public override IEnumerable<IParameter> GetParameters()
         {
-            var intType = typeResolver.ResolveType("System.Int32");
-            return Enumerable.Range(0, Type.ArrayRank).Select(n => intType.ToParameter());
+            return this._parameters;
         }
 
         public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
-            return new SynthesizedMethodBodyDecorator(
-                null,
-                new IType[0],
-                MethodBodyBank.Transform(new [] { (object)Code.Ret }).ToArray());
+            return this._methodBody;
         }
     }
 }
