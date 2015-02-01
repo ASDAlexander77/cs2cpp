@@ -503,7 +503,7 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
-                if (ThisType.IsGenericType)
+                if (ThisType.IsGenericType || ThisType.IsMultiArray)
                 {
                     this.Output.Write("linkonce_odr ");
                 }
