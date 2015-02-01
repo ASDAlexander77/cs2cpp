@@ -590,14 +590,14 @@ namespace Il2Native.Logic
                 var intType = typeResolver.ResolveType("System.Int32");
 
                 // additionally return all fields for array
-                yield return shortType.ToField("rank");
-                yield return shortType.ToField("typeCode");
-                yield return intType.ToField("elementSize");
-                yield return intType.ToField("length");
-                yield return intType.ToArrayType(1).ToField("lowerBounds");
-                yield return intType.ToArrayType(1).ToField("bounds");
+                yield return shortType.ToField(type, "rank");
+                yield return shortType.ToField(type, "typeCode");
+                yield return intType.ToField(type, "elementSize");
+                yield return intType.ToField(type, "length");
+                yield return intType.ToArrayType(1).ToField(type, "lowerBounds");
+                yield return intType.ToArrayType(1).ToField(type, "bounds");
                 //yield return type.GetElementType().ToArrayType(1).ToField("data");
-                yield return type.GetElementType().ToField("data", isFixed:true);
+                yield return type.GetElementType().ToField(type, "data", isFixed: true);
             }
         }
 
@@ -1384,7 +1384,7 @@ namespace Il2Native.Logic
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions =
                 string.Concat(
-                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty), 
+                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty),
                     string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 

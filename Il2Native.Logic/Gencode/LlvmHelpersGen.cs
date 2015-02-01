@@ -746,7 +746,7 @@ namespace Il2Native.Logic.Gencode
 
             var bareType = !fromResult.Type.IsArray
                 ? fromResult.Type.ToBareType()
-                : llvmWriter.ResolveType("System.Array");
+                : !fromResult.Type.IsMultiArray ? llvmWriter.ResolveType("System.Array") : fromResult.Type;
             if (toType.IsInterface && !(fromResult is ConstValue))
             {
                 if (bareType.GetAllInterfaces().Contains(toType))

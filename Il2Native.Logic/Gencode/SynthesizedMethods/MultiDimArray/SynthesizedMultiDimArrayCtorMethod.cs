@@ -18,6 +18,8 @@
 
         private readonly IList<IParameter> _parameters;
 
+        private readonly IList<object> _tokenResolutions;
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -41,6 +43,7 @@
                 MethodBodyBank.Transform(code).ToArray());
 
             this._parameters = parameters;
+            this._tokenResolutions = tokenResolutions;
         }
 
         /// <summary>
@@ -65,6 +68,11 @@
         public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
             return this._methodBody;
+        }
+
+        public IModule Module
+        {
+            get { return new SynthesizedModuleResolver(null, this._tokenResolutions); }
         }
     }
 }

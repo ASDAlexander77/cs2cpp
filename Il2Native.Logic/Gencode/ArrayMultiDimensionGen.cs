@@ -35,9 +35,46 @@
         {
             var codeList = new List<object>();
 
+            var rank = BitConverter.GetBytes((int)type.ArrayRank);
+            var typeCode = BitConverter.GetBytes((int)type.GetTypeCode());
+            var elementSize = BitConverter.GetBytes((int)type.GetTypeSize(typeResolver, true));
+
             codeList.AddRange(
                 new object[]
                     {
+                        Code.Ldarg_0,
+                        Code.Dup,
+                        Code.Dup,
+                        Code.Ldc_I4,
+                        (byte)rank[0],
+                        (byte)rank[1],
+                        (byte)rank[2],
+                        (byte)rank[3],
+                        Code.Stfld,
+                        1,
+                        0,
+                        0,
+                        0,
+                        Code.Ldc_I4,
+                        (byte)typeCode[0],
+                        (byte)typeCode[1],
+                        (byte)typeCode[2],
+                        (byte)typeCode[3],
+                        Code.Stfld,
+                        2,
+                        0,
+                        0,
+                        0,
+                        Code.Ldc_I4,
+                        (byte)elementSize[0],
+                        (byte)elementSize[1],
+                        (byte)elementSize[2],
+                        (byte)elementSize[3],
+                        Code.Stfld,
+                        3,
+                        0,
+                        0,
+                        0,
                         Code.Ret
                     });
 
@@ -46,6 +83,9 @@
 
             // tokens
             tokenResolutions = new List<object>();
+            tokenResolutions.Add(type.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(type.GetFieldByName("typeCode", typeResolver));
+            tokenResolutions.Add(type.GetFieldByName("elementSize", typeResolver));
 
             // code
             code = codeList.ToArray();

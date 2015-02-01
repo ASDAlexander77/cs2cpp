@@ -29,6 +29,8 @@ namespace PEAssemblyReader
 
         private readonly bool? _isFixed;
 
+        private readonly TypeSymbol _contaningType;
+
         /// <summary>
         /// </summary>
         /// <param name="fieldDef">
@@ -57,6 +59,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="fieldDef">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IGenericContext genericContext, bool isFixed = false)
+            : this(fieldDef, genericContext, isFixed)
+        {
+            this._contaningType = contaningType;
+        }
+
+        /// <summary>
+        /// </summary>
         /// <exception cref="NotImplementedException">
         /// </exception>
         public string AssemblyQualifiedName
@@ -73,6 +87,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (_contaningType != null)
+                {
+                    return _contaningType.ResolveGeneric(this.GenericContext);
+                }
+
                 return this.fieldDef.ContainingType.ResolveGeneric(this.GenericContext);
             }
         }
@@ -255,6 +274,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.fieldDef.ContainingNamespace == null)
+                {
+                    return string.Empty;
+                }
+
                 return this.fieldDef.ContainingNamespace.Name;
             }
         }

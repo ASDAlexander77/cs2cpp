@@ -789,7 +789,7 @@ namespace Il2Native.Logic.Gencode
 
             var classType = typeIn.ToClass();
             var mainArrayType = classType;
-            if (classType.IsArray)
+            if (classType.IsArray && !classType.IsMultiArray)
             {
                 classType = classType.BaseType;
             }

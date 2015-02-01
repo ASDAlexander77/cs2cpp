@@ -1050,11 +1050,19 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IField ToField(string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
+        public IField ToField(IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
         {
+            TypeSymbol containingTypeSymbol = null;
+            var metadataTypeAdapter = containingType as MetadataTypeAdapter;
+            if (metadataTypeAdapter != null)
+            {
+                containingTypeSymbol = metadataTypeAdapter.TypeDef;
+            }
+
             return
                 new MetadataFieldAdapter(
-                    new SynthesizedFieldSymbol(null, this.typeDef, name, isPublic, isReadOnly, isStatic),
+                    new SynthesizedFieldSymbol(containingTypeSymbol as NamedTypeSymbol, this.typeDef, name, isPublic, isReadOnly, isStatic),
+                    containingTypeSymbol,
                     this.GenericContext,
                     isFixed);
         }

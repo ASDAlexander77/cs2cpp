@@ -261,6 +261,6 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IField ToField(string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false);
+        IField ToField(IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false);
     }
 }

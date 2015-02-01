@@ -489,7 +489,7 @@ namespace Il2Native.Logic.Gencode
 
             var effectiveType = type;
 
-            if (type.IsArray)
+            if (type.IsArray && !type.IsMultiArray)
             {
                 effectiveType = type.GetElementType();
             }
@@ -650,7 +650,7 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (!type.IsArray)
+            if (!type.IsArray || type.IsMultiArray)
             {
                 if (type.UseAsClass ||
                     !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
@@ -675,10 +675,6 @@ namespace Il2Native.Logic.Gencode
                 effectiveType.GetElementType().WriteTypePrefix(llvmWriter);
 
                 writer.Write(" ] }");
-            }
-            else
-            {
-                type.BaseType.WriteTypeWithoutModifiers(llvmWriter);
             }
         }
     }
