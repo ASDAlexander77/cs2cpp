@@ -2515,14 +2515,13 @@ namespace Il2Native.Logic
 
                     var _targetFieldIndex = this.GetFieldIndex(typedRefType, "Value");
                     this.WriteFieldAccess(
-                        writer,
                         opCode,
                         typedRefType,
                         typedRefType,
                         _targetFieldIndex,
                         opCode.OpCodeOperands[0].Result);
                     writer.WriteLine(string.Empty);
-                    this.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                    this.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
                     writer.WriteLine(string.Empty);
                     this.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
                     writer.WriteLine(string.Empty);
@@ -3412,7 +3411,6 @@ namespace Il2Native.Logic
                 declaringType.FullName != "System.Decimal")
             {
                 this.WriteFieldAccess(
-                    writer,
                     opCode,
                     declaringType.ToClass(),
                     declaringType.ToClass(),
@@ -3672,7 +3670,7 @@ namespace Il2Native.Logic
             var classType = operand.Type.ToClass();
 
             var opts = OperandOptions.GenerateResult;
-            var fieldType = classType.GetFieldTypeByFieldNumber(index);
+            var fieldType = classType.GetFieldTypeByFieldNumber(index, this);
 
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, opts);
 
@@ -3698,14 +3696,15 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         public bool WriteFieldAccess(
-            LlvmIndentedTextWriter writer,
             OpCodePart opCodePart,
             IType classType,
             IType fieldContainerType,
             int index,
             FullyDefinedReference valueReference)
         {
-            var fieldType = fieldContainerType.GetFieldTypeByFieldNumber(index);
+            var writer = this.Output;
+
+                var fieldType = fieldContainerType.GetFieldTypeByFieldNumber(index, this);
             if (fieldType == null)
             {
                 return false;
@@ -4788,7 +4787,7 @@ namespace Il2Native.Logic
 
         private int CalculateFieldIndex(IType type, string fieldName)
         {
-            var list = Logic.IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
             var index = 0;
 
             while (index < list.Count && !list[index].Name.Equals(fieldName))
@@ -4822,7 +4821,7 @@ namespace Il2Native.Logic
         /// </exception>
         private int CalculateFieldPosition(IType type, IField fieldInfo)
         {
-            var list = Logic.IlReader.Fields(type).Where(t => !t.IsStatic).ToList();
+            var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
             var index = 0;
 
             while (index < list.Count && list[index].NameNotEquals(fieldInfo))
@@ -6874,7 +6873,7 @@ namespace Il2Native.Logic
         {
             if (!type.IsEnum)
             {
-                foreach (var field in Logic.IlReader.Fields(type).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+                foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
                 {
                     this.WriteStaticFieldDeclaration(field);
                 }

@@ -135,7 +135,7 @@ namespace Il2Native.Logic
         /// </param>
         public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
-            var fields = IlReader.Fields(type);
+            var fields = IlReader.Fields(type, codeWriter);
             var count = fields.Count();
             var number = 1;
 

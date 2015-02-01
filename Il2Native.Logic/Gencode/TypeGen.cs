@@ -91,12 +91,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static int CalculateFieldsShift(this IType type)
+        public static int CalculateFieldsShift(this IType type, ITypeResolver typeResolver)
         {
-            var fieldsShift = IlReader.Fields(type).Count(t => !t.IsStatic);
+            var fieldsShift = IlReader.Fields(type, typeResolver).Count(t => !t.IsStatic);
             if (type.BaseType != null)
             {
-                fieldsShift += type.BaseType.GetFieldsShift();
+                fieldsShift += type.BaseType.GetFieldsShift(typeResolver);
             }
 
             fieldsShiftByType[type.FullName] = fieldsShift;
@@ -120,7 +120,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             var offset = 0;
-            membersLayout = type.GetTypeSizes(typeResolver).ToList();
+            membersLayout = type.GetTypeSizes(typeResolver, true).ToList();
             foreach (var member in membersLayout)
             {
                 member.Offset = offset;
@@ -181,13 +181,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static int GetFieldsShift(this IType type)
+        public static int GetFieldsShift(this IType type, ITypeResolver typeResolver)
         {
             // find index
             int fieldsShift;
             if (!fieldsShiftByType.TryGetValue(type.FullName, out fieldsShift))
             {
-                fieldsShift = type.CalculateFieldsShift();
+                fieldsShift = type.CalculateFieldsShift(typeResolver);
             }
 
             return fieldsShift;
@@ -203,7 +203,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static IEnumerable<MemberLocationInfo> GetFieldsSizes(this IType type, ITypeResolver typeResolver, bool excludingStructs = false)
         {
-            foreach (var field in IlReader.Fields(type).Where(t => !t.IsStatic).ToList())
+            foreach (var field in IlReader.Fields(type, typeResolver).Where(t => !t.IsStatic).ToList())
             {
                 var fieldSize = 0;
                 var fieldType = field.FieldType;
@@ -360,7 +360,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type, ITypeResolver typeResolver)
+        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type, ITypeResolver typeResolver, bool firstLevel = false)
         {
             if (type.IsInterface)
             {
@@ -382,7 +382,14 @@ namespace Il2Native.Logic.Gencode
                 yield break;
             }
 
-            if (type.IsArray || type.IsPointer)
+            if (type.IsPointer)
+            {
+                // type*
+                yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                yield break;
+            }
+
+            if (!firstLevel && type.IsArray)
             {
                 // type*
                 yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);

@@ -27,13 +27,20 @@ namespace PEAssemblyReader
         /// </summary>
         private readonly FieldSymbol fieldDef;
 
+        private readonly bool? _isFixed;
+
         /// <summary>
         /// </summary>
         /// <param name="fieldDef">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false)
         {
             this.fieldDef = fieldDef;
+
+            if (isFixed)
+            {
+                _isFixed = true;
+            }
         }
 
         /// <summary>
@@ -42,8 +49,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, IGenericContext genericContext)
-            : this(fieldDef)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, IGenericContext genericContext, bool isFixed = false)
+            : this(fieldDef, isFixed)
         {
             this.GenericContext = genericContext;
         }
@@ -153,6 +160,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (_isFixed.HasValue)
+                {
+                    return _isFixed.Value;
+                }
+
                 return this.fieldDef.IsFixed;
             }
         }

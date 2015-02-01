@@ -217,7 +217,7 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions = new List<object>();
 
             // 1
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount"));
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount", typeResolver));
 
             // call Delegate.Invoke
             // 2
@@ -234,7 +234,7 @@ namespace Il2Native.Logic.Gencode
                     }));
 
             // 3
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList"));
+            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList", typeResolver));
 
             // call Default stub for now - "ret undef";
             // 4
@@ -426,7 +426,6 @@ namespace Il2Native.Logic.Gencode
             {
                 var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
                 llvmWriter.WriteFieldAccess(
-                    writer,
                     opCode,
                     method.DeclaringType,
                     delegateType,
@@ -446,7 +445,6 @@ namespace Il2Native.Logic.Gencode
                 // write access to a field 2
                 var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
                 llvmWriter.WriteFieldAccess(
-                    writer,
                     opCode,
                     method.DeclaringType,
                     delegateType,
@@ -521,7 +519,6 @@ namespace Il2Native.Logic.Gencode
             {
                 var _targetFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_target");
                 llvmWriter.WriteFieldAccess(
-                    writer,
                     opCode,
                     method.DeclaringType,
                     delegateType,
@@ -541,7 +538,6 @@ namespace Il2Native.Logic.Gencode
                 // write access to a field 2
                 var _methodPtrFieldIndex = llvmWriter.GetFieldIndex(delegateType, "_methodPtr");
                 llvmWriter.WriteFieldAccess(
-                    writer,
                     opCode,
                     method.DeclaringType,
                     delegateType,
@@ -550,7 +546,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
 
                 // additional step to extract value from IntPtr structure
-                llvmWriter.WriteFieldAccess(writer, opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                llvmWriter.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
                 writer.WriteLine(string.Empty);
 
                 // load value 2

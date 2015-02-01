@@ -199,10 +199,10 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
-        public static IField GetFieldByName(this IType classType, string fieldName)
+        public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();
-            var field = IlReader.Fields(normalType).FirstOrDefault(f => f.Name == fieldName);
+            var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
             return field;
         }
 
@@ -214,7 +214,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IType GetFieldTypeByFieldNumber(this IType classType, int number)
+        public static IType GetFieldTypeByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();
 
@@ -223,7 +223,7 @@ namespace Il2Native.Logic
                 return normalType.GetEnumUnderlyingType();
             }
 
-            var field = IlReader.Fields(normalType).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
+            var field = IlReader.Fields(normalType, typeResolver).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
             if (field == null)
             {
                 return null;

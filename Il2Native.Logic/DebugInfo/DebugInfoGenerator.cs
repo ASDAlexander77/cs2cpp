@@ -653,7 +653,7 @@
         private CollectionMetadata DefineMembers(IType type, CollectionMetadata structureType)
         {
             var members = new CollectionMetadata(this.indexedMetadata);
-            foreach (var field in IlReader.Fields(type))
+            foreach (var field in IlReader.Fields(type, writer))
             {
                 members.Add(this.DefineMember(field, true, structureType));
             }

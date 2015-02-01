@@ -1050,6 +1050,19 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IField ToField(string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
+        {
+            return
+                new MetadataFieldAdapter(
+                    new SynthesizedFieldSymbol(null, this.typeDef, name, isPublic, isReadOnly, isStatic),
+                    this.GenericContext,
+                    isFixed);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public override string ToString()
         {
             return this.lazyToString.Value;

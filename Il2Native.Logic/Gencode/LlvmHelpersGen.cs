@@ -987,7 +987,6 @@ namespace Il2Native.Logic.Gencode
 
             // write access to a field
             if (!llvmWriter.WriteFieldAccess(
-                writer,
                 opCode,
                 source.Type.ToClass(),
                 source.Type.ToClass(),
@@ -1080,7 +1079,6 @@ namespace Il2Native.Logic.Gencode
 
             // write access to a field
             if (!llvmWriter.WriteFieldAccess(
-                writer,
                 opCode,
                 destination.Type.ToClass(),
                 destination.Type.ToClass(),

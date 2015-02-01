@@ -551,9 +551,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IField> Fields(IType type)
+        public static IEnumerable<IField> Fields(IType type, ITypeResolver typeResolver)
         {
-            return type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            return Fields(type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, typeResolver);
         }
 
         /// <summary>
@@ -576,12 +576,35 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        public static IEnumerable<IField> Fields(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        {
+            foreach (var field in type.GetFields(flags))
+            {
+                yield return field;
+            }
+
+            // append methods or MultiArray
+            if (type.IsMultiArray)
+            {
+                // additionally return all fields for array
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="flags">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
         {
             foreach (var constructor in type.GetConstructors(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return constructor;
             }
+
             // append methods or MultiArray
             if (type.IsMultiArray)
             {
