@@ -221,10 +221,10 @@
             tokenResolutions.Add(type.GetFieldByName("typeCode", typeResolver));
             tokenResolutions.Add(type.GetFieldByName("elementSize", typeResolver));
             // lowerBounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
             tokenResolutions.Add(type.GetFieldByName("lowerBounds", typeResolver));
             // bounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
             tokenResolutions.Add(type.GetFieldByName("lengths", typeResolver));
 
             // code
