@@ -804,7 +804,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WritePostDeclarationsAndInternalDefinitions(IType type)
         {
-            if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
+            if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName && !type.IsMultiArray)
             {
                 return;
             }
@@ -1156,7 +1156,7 @@ namespace Il2Native.Logic
                                 opCodeString.Operand.Length + 1),
                             charArrayType);
 
-                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
+                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue, this);
 
                     break;
                 case Code.Ldnull:
@@ -1858,7 +1858,7 @@ namespace Il2Native.Logic
                         });
                     var value = new FullyDefinedReference(convertString, ResolveType("System.Byte").ToPointerType());
 
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value, this);
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -1924,7 +1924,7 @@ namespace Il2Native.Logic
 
                     intPtrType = ResolveType("System.IntPtr");
                     voidPtrType = ResolveType("System.Void").ToPointerType();
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber, this);
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -3337,7 +3337,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
+        /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
@@ -3350,13 +3350,15 @@ namespace Il2Native.Logic
         /// <param name="labelSuffix">
         /// </param>
         public void WriteBranchSwitchToThrowOrPass(
-            LlvmIndentedTextWriter writer,
+            LlvmWriter llvmWriter,
             OpCodePart opCodePart,
             FullyDefinedReference testValueResultNumber,
             string exceptionName,
             string labelPrefix,
             string labelSuffix)
         {
+            var writer = llvmWriter.Output;
+
             this.WriteBranchSwitchToExecute(
                 writer,
                 opCodePart,
@@ -3364,7 +3366,7 @@ namespace Il2Native.Logic
                 exceptionName,
                 labelPrefix,
                 labelSuffix,
-                () => this.WriteThrowException(writer, exceptionName));
+                () => this.WriteThrowException(llvmWriter, exceptionName));
         }
 
         /// <summary>
@@ -4164,10 +4166,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference WriteNewCallingDefaultConstructor(LlvmIndentedTextWriter writer, string typeName)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(LlvmWriter llvmWriter, string typeName)
         {
             var typeToCreate = ResolveType(typeName);
-            return this.WriteNewCallingDefaultConstructor(writer, typeToCreate);
+            return this.WriteNewCallingDefaultConstructor(llvmWriter, typeToCreate);
         }
 
         /// <summary>
@@ -4179,14 +4181,16 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         public FullyDefinedReference WriteNewCallingDefaultConstructor(
-            LlvmIndentedTextWriter writer,
+            LlvmWriter llvmWriter,
             IType typeToCreate)
         {
+            LlvmIndentedTextWriter writer = llvmWriter.Output;
+
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(typeToCreate).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(typeToCreate, llvmWriter).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
 
@@ -4213,11 +4217,12 @@ namespace Il2Native.Logic
             OpCodePart opCode,
             IType type,
             IType firstParameterType,
-            FullyDefinedReference firstParameterValue)
+            FullyDefinedReference firstParameterValue,
+            ITypeResolver typeResolver)
         {
             // find constructor
             var constructorInfo =
-                Logic.IlReader.Constructors(type)
+                Logic.IlReader.Constructors(type, typeResolver)
                     .FirstOrDefault(
                         c =>
                             c.GetParameters().Count() == 1 &&
@@ -4560,7 +4565,7 @@ namespace Il2Native.Logic
         {
             var testNullResultNumber = this.WriteTestNull(writer, opCodePart, resultToTest);
             this.WriteBranchSwitchToThrowOrPass(
-                writer,
+                this,
                 opCodePart,
                 testNullResultNumber,
                 exceptionName,
@@ -4574,8 +4579,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="exceptionName">
         /// </param>
-        public void WriteThrowException(LlvmIndentedTextWriter writer, string exceptionName)
+        public void WriteThrowException(LlvmWriter llvmWriter, string exceptionName)
         {
+            var writer = llvmWriter.Output;
+
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
 
@@ -4584,7 +4591,7 @@ namespace Il2Native.Logic
             var invalidCastExceptionType = ResolveType(exceptionName);
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType, llvmWriter).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
             opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
@@ -6507,7 +6514,7 @@ namespace Il2Native.Logic
 
             // throw exception
             this.WriteBranchSwitchToThrowOrPass(
-                writer,
+                this,
                 opCode,
                 testResult,
                 "System.OverflowException",
@@ -6923,7 +6930,7 @@ namespace Il2Native.Logic
         private void WriteTypeDeclarationStart(IType type)
         {
             Debug.Assert(!type.IsGenericTypeDefinition);
-            Debug.Assert(!type.IsArray);
+            Debug.Assert(!type.IsArray || type.IsMultiArray);
 
             this.Output.Write("%");
 
@@ -6937,13 +6944,15 @@ namespace Il2Native.Logic
             // get all required types for type definition
             var requiredTypes = new NamespaceContainer<IType>();
             ISet<IType> processedAlready = new NamespaceContainer<IType>();
+            ISet<IType> additionalTypesToProcess = new NamespaceContainer<IType>();
             Il2Converter.ProcessRequiredITypesForITypes(
                 new[] { type },
                 requiredTypes,
                 null,
                 null,
+                additionalTypesToProcess,
                 processedAlready);
-            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition))
+            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsMultiArray))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }

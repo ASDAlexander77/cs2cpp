@@ -98,7 +98,7 @@
 #endif
         }
 
-        private static IEnumerable<byte> Transform(IEnumerable<object> code)
+        public static IEnumerable<byte> Transform(IEnumerable<object> code)
         {
             foreach (var codeItem in code)
             {

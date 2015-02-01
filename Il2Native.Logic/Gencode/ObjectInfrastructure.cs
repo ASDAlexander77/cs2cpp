@@ -790,13 +790,13 @@ namespace Il2Native.Logic.Gencode
             var writer = llvmWriter.Output;
 
             var classType = typeIn.ToClass();
-            var interfcaesSource = classType;
+            var mainArrayType = classType;
             if (classType.IsArray)
             {
                 classType = classType.BaseType;
             }
 
-            var method = new SynthesizedInitMethod(classType, llvmWriter);
+            var method = new SynthesizedInitMethod(mainArrayType, llvmWriter);
             writer.WriteLine("; Init Object method");
 
             var opCode = OpCodePart.CreateNop;
@@ -808,7 +808,7 @@ namespace Il2Native.Logic.Gencode
                 true,
                 true);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(interfcaesSource, opCode);
+            llvmWriter.WriteInitObject(mainArrayType, opCode);
             writer.WriteLine("ret void");
             llvmWriter.WriteMethodEnd(method, null);
         }

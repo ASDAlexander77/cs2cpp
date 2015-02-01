@@ -16,7 +16,7 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-
+    using Gencode.SynthesizedMethods.MultiDimArray;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
@@ -109,7 +109,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> usedStructTypes;
+        private ISet<IType> _usedStructTypesOrMultiDimArrays;
 
         /// <summary>
         /// </summary>
@@ -492,16 +492,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedStructTypes
+        public ISet<IType> UsedStructTypesOrMultiDimArrays
         {
             get
             {
-                return this.usedStructTypes;
+                return this._usedStructTypesOrMultiDimArrays;
             }
 
             set
             {
-                this.usedStructTypes = value;
+                this._usedStructTypesOrMultiDimArrays = value;
             }
         }
 
@@ -540,9 +540,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IConstructor> Constructors(IType type)
+        public static IEnumerable<IConstructor> Constructors(IType type, ITypeResolver typeResolver)
         {
-            return type.GetConstructors(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+            return Constructors(type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, typeResolver);
         }
 
         /// <summary>
@@ -576,6 +576,27 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        {
+            foreach (var constructor in type.GetConstructors(flags).Where(m => !m.IsGenericMethodDefinition))
+            {
+                yield return constructor;
+            }
+            // append methods or MultiArray
+            if (type.IsMultiArray)
+            {
+                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="flags">
+        /// </param>
+        /// <returns>
+        /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver)
         {
             foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
@@ -592,6 +613,12 @@ namespace Il2Native.Logic
             if (type.ToNormal().IsEnum)
             {
                 yield return new SynthesizedGetHashCodeMethod(type, typeResolver);
+            }
+
+            // append methods or MultiArray
+            if (type.IsMultiArray)
+            {
+                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
             }
 
             // append specialized methods
@@ -887,6 +914,7 @@ namespace Il2Native.Logic
 
                         this.AddUsedType(constructor.DeclaringType);
                         this.AddCalledMethod(constructor);
+                        this.AddMultiArrayType(constructor.DeclaringType);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
@@ -1225,12 +1253,26 @@ namespace Il2Native.Logic
         /// </param>
         private void AddStructType(IType type)
         {
-            if (this.usedStructTypes == null || type == null || !type.IsStructureType())
+            if (this._usedStructTypesOrMultiDimArrays == null || type == null || !type.IsStructureType())
             {
                 return;
             }
 
-            this.usedStructTypes.Add(type);
+            this._usedStructTypesOrMultiDimArrays.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddMultiArrayType(IType type)
+        {
+            if (this._usedStructTypesOrMultiDimArrays == null || type == null || !type.IsMultiArray)
+            {
+                return;
+            }
+
+            this._usedStructTypesOrMultiDimArrays.Add(type);
         }
 
         /// <summary>

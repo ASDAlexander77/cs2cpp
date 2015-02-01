@@ -27,7 +27,7 @@
             // Registering UnsafeCastToStackPointerGen
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(
-                IlReader.Constructors(typeResolver.ResolveType("System.IntPtr"))
+                IlReader.Constructors(typeResolver.ResolveType("System.IntPtr"), typeResolver)
                         .First(
                             c =>
                             c.GetParameters().Count() == 1

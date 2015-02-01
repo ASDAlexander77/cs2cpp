@@ -38,7 +38,15 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
         {
-            get { return this.methodBody.ExceptionHandlingClauses; }
+            get
+            {
+                if (this.methodBody == null)
+                {
+                    return new IExceptionHandlingClause[0];
+                }
+
+                return this.methodBody.ExceptionHandlingClauses;
+            }
         }
 
         /// <summary>

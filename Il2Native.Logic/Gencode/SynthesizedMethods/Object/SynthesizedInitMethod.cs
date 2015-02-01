@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SynthesizedGetTypeStaticMethod.cs" company="">
+// <copyright file="SynthesizedInitMethod.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -9,33 +9,41 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using System.Reflection;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetTypeStaticMethod : SynthesizedMethodTypeBase
+    public class SynthesizedInitMethod : SynthesizedMethodTypeBase
     {
         /// <summary>
         /// </summary>
-        private readonly IType systemType;
+        private readonly ITypeResolver typeResolver;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="typeResolver">
         /// </param>
-        public SynthesizedGetTypeStaticMethod(IType type, LlvmWriter llvmWriter)
-            : base(type, ".sgettype")
+        public SynthesizedInitMethod(IType type, ITypeResolver typeResolver)
+            : base(type, ".init")
         {
-            this.systemType = llvmWriter.ResolveType("System.Type");
+            this.typeResolver = typeResolver;
+        }
+
+        /// <summary>
+        /// </summary>
+        public override CallingConventions CallingConvention
+        {
+            get { return CallingConventions.HasThis; }
         }
 
         /// <summary>
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.systemType; }
+            get { return this.typeResolver.ResolveType("System.Void"); }
         }
     }
 }
