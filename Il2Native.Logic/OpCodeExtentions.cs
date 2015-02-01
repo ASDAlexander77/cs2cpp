@@ -203,6 +203,7 @@ namespace Il2Native.Logic
         {
             var normalType = classType.ToNormal();
             var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
+            Debug.Assert(field != null, string.Format("Field {0} could not be found", fieldName));
             return field;
         }
 

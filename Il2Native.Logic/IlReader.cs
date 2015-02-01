@@ -595,7 +595,7 @@ namespace Il2Native.Logic
                 yield return intType.ToField(type, "elementSize");
                 yield return intType.ToField(type, "length");
                 yield return intType.ToArrayType(1).ToField(type, "lowerBounds");
-                yield return intType.ToArrayType(1).ToField(type, "bounds");
+                yield return intType.ToArrayType(1).ToField(type, "lengths");
                 //yield return type.GetElementType().ToArrayType(1).ToField("data");
                 yield return type.GetElementType().ToField(type, "data", isFixed: true);
             }
@@ -996,7 +996,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var field = module.ResolveField(token, genericContext);
-
+                        Debug.Assert(field != null);
                         this.AddGenericSpecializedType(field.FieldType);
                         this.AddGenericSpecializedType(field.DeclaringType);
                         this.AddUsedType(field.DeclaringType);

@@ -75,17 +75,157 @@
                         0,
                         0,
                         0,
-                        Code.Ret
                     });
+
+            // init lowerBounds
+            // set all 0
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ldc_I4,
+                        (byte)rank[0],
+                        (byte)rank[1],
+                        (byte)rank[2],
+                        (byte)rank[3],
+                        Code.Newarr,
+                        4,
+                        0,
+                        0,
+                        0,
+                        Code.Stloc_0,
+                });
+
+            // init each item in lowerBounds
+            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            {
+                var index = BitConverter.GetBytes((int)i);
+                codeList.AddRange(
+                    new object[]
+                {
+                        Code.Ldloc_0,
+                        Code.Ldc_I4,
+                        (byte)index[0],
+                        (byte)index[1],
+                        (byte)index[2],
+                        (byte)index[3],
+                        Code.Ldc_I4_0,
+                        Code.Stelem_I4
+                });
+            }
+
+            // save new array into field lowerBounds
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ldarg_0,
+                        Code.Ldloc_0,
+                        Code.Stfld,
+                        5,
+                        0,
+                        0,
+                        0,
+                });
+
+            // init Bounds
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ldc_I4,
+                        (byte)rank[0],
+                        (byte)rank[1],
+                        (byte)rank[2],
+                        (byte)rank[3],
+                        Code.Newarr,
+                        6,
+                        0,
+                        0,
+                        0,
+                        Code.Stloc_1,
+                });
+
+            // init each item in lowerBounds
+            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            {
+                var index = BitConverter.GetBytes((int)i);
+                codeList.AddRange(
+                    new object[]
+                    {
+                        Code.Ldloc_1,
+                        Code.Ldc_I4,
+                        (byte)index[0],
+                        (byte)index[1],
+                        (byte)index[2],
+                        (byte)index[3],
+                    });
+
+                switch (i)
+                {
+                    case 0:
+                        codeList.Add(Code.Ldarg_1);
+                        break;
+                    case 1:
+                        codeList.Add(Code.Ldarg_2);
+                        break;
+                    case 2:
+                        codeList.Add(Code.Ldarg_3);
+                        break;
+                    default:
+                        var argIndex = BitConverter.GetBytes((int)i + 1);
+                        codeList.AddRange(
+                            new object[]
+                            {
+                                Code.Ldarg,
+                                (byte)argIndex[0],
+                                (byte)argIndex[1],
+                                (byte)argIndex[2],
+                                (byte)argIndex[3],
+                            });
+                        break;
+                }
+
+                codeList.AddRange(
+                    new object[]
+                    {
+                        Code.Stelem_I4
+                    });
+            }
+
+            // save new array into field lowerBounds
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ldarg_0,
+                        Code.Ldloc_1,
+                        Code.Stfld,
+                        7,
+                        0,
+                        0,
+                        0,
+                });
+
+            // return
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ret
+                });
 
             // locals
             locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
 
             // tokens
             tokenResolutions = new List<object>();
             tokenResolutions.Add(type.GetFieldByName("rank", typeResolver));
             tokenResolutions.Add(type.GetFieldByName("typeCode", typeResolver));
             tokenResolutions.Add(type.GetFieldByName("elementSize", typeResolver));
+            // lowerBounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            tokenResolutions.Add(type.GetFieldByName("lowerBounds", typeResolver));
+            // bounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            tokenResolutions.Add(type.GetFieldByName("lengths", typeResolver));
 
             // code
             code = codeList.ToArray();
