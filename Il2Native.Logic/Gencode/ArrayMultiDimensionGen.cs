@@ -257,11 +257,12 @@
             var writer = llvmWriter.Output;
 
             writer.WriteLine("; Calculate MultiDim allocation size");
+            opCode.Result = WriteCalculationPartOfMultiDimArrayAllocationSize(llvmWriter, arrayType, null);
         }
 
         public static FullyDefinedReference WriteCalculationPartOfMultiDimArrayAllocationSize(
             this LlvmWriter llvmWriter,
-            IMethod currentMethod,
+            IType type,
             IGenericContext currentGenericContext)
         {
             object[] code;
@@ -270,6 +271,7 @@
             IList<IParameter> parameters;
             GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
                 llvmWriter,
+                type,
                 out code,
                 out tokenResolutions,
                 out locals,
@@ -278,13 +280,64 @@
             var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
 
             // actual write
-            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
-            return opCodes.First(op => op.Any(Code.Newarr)).Result;
+            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, currentGenericContext);
+            return opCodes.Last(op => op.Any(Code.Mul)).Result;
         }
 
-        private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(LlvmWriter llvmWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
+            LlvmWriter llvmWriter,
+            IType type,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
         {
-            throw new NotImplementedException();
+            var codeList = new List<object>();
+
+            // init each item in lowerBounds
+            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            {
+                switch (i)
+                {
+                    case 0:
+                        codeList.Add(Code.Ldarg_1);
+                        break;
+                    case 1:
+                        codeList.Add(Code.Ldarg_2);
+                        break;
+                    case 2:
+                        codeList.Add(Code.Ldarg_3);
+                        break;
+                    default:
+                        var argIndex = BitConverter.GetBytes((int)i + 1);
+                        codeList.AddRange(
+                            new object[]
+                            {
+                                Code.Ldarg,
+                                (byte)argIndex[0],
+                                (byte)argIndex[1],
+                                (byte)argIndex[2],
+                                (byte)argIndex[3],
+                            });
+                        break;
+                }
+
+                if (i > 0)
+                {
+                    codeList.Add(Code.Mul);
+                }
+            }
+
+            // locals
+            locals = new List<IType>();
+
+            // tokens
+            tokenResolutions = new List<object>();
+
+            // parameters
+            parameters = GetParameters(type, llvmWriter);
+
+            code = codeList.ToArray();
         }
     }
 }

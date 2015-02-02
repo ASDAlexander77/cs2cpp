@@ -61,11 +61,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public bool HasMethodThis { get; private set; }
+        public bool HasMethodThis { get; set; }
 
         /// <summary>
         /// </summary>
-        public ILocalVariable[] LocalInfo { get; private set; }
+        public ILocalVariable[] LocalInfo { get; set; }
 
         /// <summary>
         /// </summary>
@@ -85,11 +85,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public IParameter[] Parameters { get; private set; }
+        public IParameter[] Parameters { get; set; }
 
         /// <summary>
         /// </summary>
-        public IType ThisType { get; private set; }
+        public IType ThisType { get; set; }
 
         /// <summary>
         /// </summary>

@@ -61,7 +61,7 @@
         {
             return new SynthesizedMethodDecorator(
                 m,
-                new SynthesizedMethodBodyDecorator(m.GetMethodBody(), locals, Transform(code).ToArray()),
+                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, Transform(code).ToArray()),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }

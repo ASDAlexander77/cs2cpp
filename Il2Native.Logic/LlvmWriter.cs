@@ -5898,18 +5898,31 @@ namespace Il2Native.Logic
 
         public IEnumerable<OpCodePart> WriteCustomMethodPart(
             SynthesizedMethodDecorator constructedMethod,
-            IMethod currentMethod,
-            IGenericContext currentGenericContext)
+            IGenericContext genericContext)
         {
-            Debug.Assert(currentMethod != null, "Please provide current method to restore method context");
+            // save important vars
+            var parameters = Parameters;
+            var localInfo = LocalInfo;
+            var hasMethodThis = HasMethodThis;
+            var thisType = ThisType;
 
-            ReadMethodInfo(constructedMethod, currentGenericContext);
-
+            // write custom part
             var ilReader = new IlReader();
             var baseWriter = new BaseWriter();
-            baseWriter.ReadMethodInfo(constructedMethod, currentGenericContext);
+            baseWriter.Parameters = constructedMethod.GetParameters().ToArray();
+            baseWriter.LocalInfo = constructedMethod.GetMethodBody().LocalVariables.ToArray();
+            baseWriter.HasMethodThis =  constructedMethod.CallingConvention.HasFlag(CallingConventions.HasThis);
+            baseWriter.ThisType = ThisType;
+
+            // sync important vars
+            Parameters = baseWriter.Parameters;
+            LocalInfo = baseWriter.LocalInfo;
+            HasMethodThis = baseWriter.HasMethodThis;
+            ThisType = baseWriter.ThisType;
+
+            // start writing process
             baseWriter.StartProcess();
-            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, currentGenericContext, null))
+            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, genericContext, null))
             {
                 baseWriter.AddOpCode(opCodePart);
             }
@@ -5921,8 +5934,11 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            // restore context
-            ReadMethodInfo(currentMethod, currentGenericContext);
+            // restor important vars
+            Parameters = parameters;
+            LocalInfo = localInfo;
+            HasMethodThis = hasMethodThis;
+            ThisType = thisType;
 
             return rest;
         }
@@ -6314,7 +6330,7 @@ namespace Il2Native.Logic
                 parameters);
 
             // actual write
-            var opCodes = this.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
+            var opCodes = this.WriteCustomMethodPart(constructedMethod, currentGenericContext);
             return opCodes.First(op => op.Any(Code.Newarr)).Result;
         }
 
