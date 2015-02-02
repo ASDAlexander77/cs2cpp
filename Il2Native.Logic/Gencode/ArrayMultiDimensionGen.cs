@@ -2,16 +2,15 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using System.Text;
     using CodeParts;
 
+    using Il2Native.Logic.Gencode.InlineMethods;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
 
-    public class ArrayMultiDimensionGen
+    public static class ArrayMultiDimensionGen
     {
         /*
         public ArrayMultiDimensionGen_Ctor()
@@ -231,8 +230,61 @@
             code = codeList.ToArray();
 
             // parameters
+            parameters = GetParameters(type, typeResolver);
+        }
+
+        public static List<IParameter> GetParameters(IType type, ITypeResolver typeResolver)
+        {
             var intType = typeResolver.ResolveType("System.Int32");
-            parameters = Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter()).ToList();
+            return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter()).ToList();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        public static void WriteMultiDimArrayAllocationSize(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType arrayType)
+        {
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Calculate MultiDim allocation size");
+        }
+
+        public static FullyDefinedReference WriteCalculationPartOfMultiDimArrayAllocationSize(
+            this LlvmWriter llvmWriter,
+            IMethod currentMethod,
+            IGenericContext currentGenericContext)
+        {
+            object[] code;
+            IList<object> tokenResolutions;
+            IList<IType> locals;
+            IList<IParameter> parameters;
+            GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
+                llvmWriter,
+                out code,
+                out tokenResolutions,
+                out locals,
+                out parameters);
+
+            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
+
+            // actual write
+            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, currentMethod, currentGenericContext);
+            return opCodes.First(op => op.Any(Code.Newarr)).Result;
+        }
+
+        private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(LlvmWriter llvmWriter, out object[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            throw new NotImplementedException();
         }
     }
 }

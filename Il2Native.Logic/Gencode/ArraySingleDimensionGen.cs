@@ -494,9 +494,10 @@ namespace Il2Native.Logic.Gencode
             var resSize = opCode.Result;
 
             // new alloc
+            var bytePointerType = llvmWriter.ResolveType("System.Byte").ToPointerType();
             var resAlloc = llvmWriter.WriteSetResultNumber(
                 opCode,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                bytePointerType);
             writer.Write("call i8* @{1}(i32 {0})", resSize, llvmWriter.GetAllocator());
 
             writer.WriteLine(string.Empty);
@@ -511,11 +512,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!llvmWriter.Gc)
             {
-                writer.WriteLine(
-                    "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                    resAlloc,
-                    resSize,
-                    LlvmWriter.PointerSize /*Align*/);
+                llvmWriter.WriteMemSet(resAlloc, resSize, LlvmWriter.PointerSize /*Align*/);
             }
 
             var opCodeTemp = OpCodePart.CreateNop;

@@ -105,6 +105,11 @@ namespace Il2Native.Logic.Gencode
 
             var size = declaringClassType.GetTypeSize(llvmWriter);
 
+            if (declaringClassType.IsMultiArray)
+            {
+                llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+            }
+
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
                 llvmWriter.ResolveType("System.Byte").ToPointerType());
@@ -400,11 +405,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedNewMethod(type);
+            var method = new SynthesizedNewMethod(type, llvmWriter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call New Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
+            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             llvmWriter.WriteCall(
                 opCodeNope,
                 method,
@@ -880,7 +886,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            var method = new SynthesizedNewMethod(type);
+            var method = new SynthesizedNewMethod(type, llvmWriter);
             writer.WriteLine("; New Object method");
 
             var opCode = OpCodePart.CreateNop;

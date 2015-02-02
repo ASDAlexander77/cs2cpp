@@ -5896,7 +5896,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private IEnumerable<OpCodePart> WriteCustomMethodPart(
+        public IEnumerable<OpCodePart> WriteCustomMethodPart(
             SynthesizedMethodDecorator constructedMethod,
             IMethod currentMethod,
             IGenericContext currentGenericContext)
@@ -6305,6 +6305,7 @@ namespace Il2Native.Logic
                 MainMethod.DeclaringType,
                 MainMethod.ReturnType,
                 MainMethod.GetParameters());
+
             var constructedMethod = MethodBodyBank.GetMethodDecorator(
                 mainEntry,
                 code,
