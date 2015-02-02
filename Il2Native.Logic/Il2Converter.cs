@@ -180,7 +180,7 @@ namespace Il2Native.Logic
                 effectiveIType = effectiveIType.GetElementType();
             }
 
-            if (!effectiveIType.IsValueType())
+            if (!effectiveIType.IsValueType() || effectiveIType.IsStructureType())
             {
                 addedRequiredTypes.Add(effectiveIType);
             }
@@ -434,10 +434,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        private static void DicoverGenericSpecializedIType(
+        private static void DicoverGenericSpecializedTypesAndAdditionalTypes(
             IType type,
             ISet<IType> genericSpecializations,
             ISet<IMethod> genericMethodSpecializations,
+            ISet<IType> additionalTypesToProcess,
             ISet<IType> processedAlready)
         {
             if (type == null || (genericSpecializations == null && genericMethodSpecializations == null))
@@ -445,12 +446,18 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (additionalTypesToProcess != null && type.IsMultiArray)
+            {
+                additionalTypesToProcess.Add(type);
+            }
+
             if (type.HasElementType)
             {
-                DicoverGenericSpecializedIType(
+                DicoverGenericSpecializedTypesAndAdditionalTypes(
                     type.GetElementType(),
                     genericSpecializations,
                     genericMethodSpecializations,
+                    additionalTypesToProcess,
                     processedAlready);
                 return;
             }
@@ -461,7 +468,7 @@ namespace Il2Native.Logic
                 if (genericSpecializations == null || genericSpecializations.Add(bareType))
                 {
                     // todo the same for base class and interfaces
-                    foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, processedAlready))
+                    foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, additionalTypesToProcess, processedAlready))
                     {
                     }
                 }
@@ -638,16 +645,18 @@ namespace Il2Native.Logic
             IType typeSource,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
+            ISet<IType> additionalTypesToProcess,
             ISet<IType> processedAlready)
         {
             Debug.Assert(typeSource != null);
 
             if (typeSource.IsMultiArray)
             {
-                DicoverGenericSpecializedIType(
+                DicoverGenericSpecializedTypesAndAdditionalTypes(
                     typeSource.BaseType,
                     genericTypeSpecializations,
                     genericMethodSpecializations,
+                    additionalTypesToProcess,
                     processedAlready);
                 yield return typeSource.BaseType;
             }
@@ -660,10 +669,11 @@ namespace Il2Native.Logic
 
             if (type.BaseType != null)
             {
-                DicoverGenericSpecializedIType(
+                DicoverGenericSpecializedTypesAndAdditionalTypes(
                     type.BaseType,
                     genericTypeSpecializations,
                     genericMethodSpecializations,
+                    additionalTypesToProcess,
                     processedAlready);
                 yield return type.BaseType;
             }
@@ -673,10 +683,11 @@ namespace Il2Native.Logic
             {
                 foreach (var @interface in interfaces)
                 {
-                    DicoverGenericSpecializedIType(
+                    DicoverGenericSpecializedTypesAndAdditionalTypes(
                         @interface,
                         genericTypeSpecializations,
                         genericMethodSpecializations,
+                        additionalTypesToProcess,
                         processedAlready);
                     yield return @interface;
                 }
@@ -694,10 +705,11 @@ namespace Il2Native.Logic
                     ////                    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
                     ////#endif
 
-                    DicoverGenericSpecializedIType(
+                    DicoverGenericSpecializedTypesAndAdditionalTypes(
                         field.FieldType,
                         genericTypeSpecializations,
                         genericMethodSpecializations,
+                        additionalTypesToProcess,
                         processedAlready);
                     if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
                     {
@@ -715,10 +727,11 @@ namespace Il2Native.Logic
                 {
                     foreach (
                         var requiredType in
-                            GetAllRequiredITypesForMethod(
+                            GetAllRequiredTypesForMethod(
                                 @ctor,
                                 genericTypeSpecializations,
                                 genericMethodSpecializations,
+                                additionalTypesToProcess,
                                 processedAlready))
                     {
                         yield return requiredType;
@@ -735,10 +748,11 @@ namespace Il2Native.Logic
                 {
                     foreach (
                         var requiredType in
-                            GetAllRequiredITypesForMethod(
+                            GetAllRequiredTypesForMethod(
                                 method,
                                 genericTypeSpecializations,
                                 genericMethodSpecializations,
+                                additionalTypesToProcess,
                                 processedAlready))
                     {
                         yield return requiredType;
@@ -747,24 +761,27 @@ namespace Il2Native.Logic
             }
         }
 
-        private static IEnumerable<IType> GetAllRequiredITypesForMethod(
+        private static IEnumerable<IType> GetAllRequiredTypesForMethod(
             IMethod method,
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
+            ISet<IType> additionalTypesToProcess,
             ISet<IType> processedAlready)
         {
-            DicoverGenericSpecializedIType(
+            DicoverGenericSpecializedTypesAndAdditionalTypes(
                 method.ReturnType,
                 genericTypeSpecializations,
                 genericMethodSpecializations,
+                additionalTypesToProcess,
                 processedAlready);
 
             foreach (var param in method.GetParameters())
             {
-                DicoverGenericSpecializedIType(
+                DicoverGenericSpecializedTypesAndAdditionalTypes(
                     param.ParameterType,
                     genericTypeSpecializations,
                     genericMethodSpecializations,
+                    additionalTypesToProcess,
                     processedAlready);
             }
 
@@ -773,12 +790,13 @@ namespace Il2Native.Logic
             {
                 foreach (var localVar in methodBody.LocalVariables)
                 {
-                    DicoverGenericSpecializedIType(
+                    DicoverGenericSpecializedTypesAndAdditionalTypes(
                         localVar.LocalType,
                         genericTypeSpecializations,
                         genericMethodSpecializations,
+                        additionalTypesToProcess,
                         processedAlready);
-                    if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer)
+                    if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer && !localVar.LocalType.IsByRef)
                     {
                         yield return localVar.LocalType;
                     }
@@ -956,20 +974,16 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null);
 
-            var requiredTypes = GetAllRequiredTypesForType(
+             var requiredTypes = GetAllRequiredTypesForType(
                 type,
                 genericTypeSpecializations,
                 genericMethodSpecializations,
+                additionalTypesToProcess,
                 processedAlready)
                 .Where(type.TypeNotEquals);
             foreach (var requiredType in requiredTypes)
             {
                 AddBareTypeToRequiredTypes(requiredType, addedRequiredTypes);
-                if (requiredType.IsMultiArray)
-                {
-                    // add required type of multiarray to support multiarrays
-                    additionalTypesToProcess.Add(requiredType);
-                }
             }
         }
 

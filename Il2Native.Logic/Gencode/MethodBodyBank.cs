@@ -117,7 +117,7 @@
                 }
                 else
                 {
-                    yield return Convert.ToByte(codeItem);
+                    yield return (byte)Convert.ToSByte(codeItem);
                 }
             }
         }
