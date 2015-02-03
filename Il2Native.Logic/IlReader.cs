@@ -562,10 +562,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver)
+        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false)
         {
             return Methods(
-                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, typeResolver);
+                type,
+                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance,
+                typeResolver,
+                excludeSpecializations);
         }
 
         /// <summary>
@@ -631,28 +634,39 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false)
         {
             foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return method;
             }
 
-            // append C# native compiler infrastructure methods
-            yield return new SynthesizedGetSizeMethod(type, typeResolver);
-
-            // append internal methods
-            yield return new SynthesizedGetTypeMethod(type, typeResolver);
-
-            if (type.ToNormal().IsEnum)
+            if (!excludeSpecializations)
             {
-                yield return new SynthesizedGetHashCodeMethod(type, typeResolver);
+                // TODO: remove if and write code to get info from following synth methods
+                // append C# native compiler infrastructure methods
+                yield return new SynthesizedGetSizeMethod(type, typeResolver);
+
+                // append internal methods
+                yield return new SynthesizedGetTypeMethod(type, typeResolver);
+
+                if (type.ToNormal().IsEnum)
+                {
+                    yield return new SynthesizedGetHashCodeMethod(type, typeResolver);
+                }
             }
 
             // append methods or MultiArray
             if (type.IsMultiArray)
             {
-                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
+                yield return new SynthesizedMultiDimArrayGetMethod(type, typeResolver);
+                yield return new SynthesizedMultiDimArraySetMethod(type, typeResolver);
+                yield return new SynthesizedMultiDimArrayAddressMethod(type, typeResolver);
+            }
+
+            if (excludeSpecializations)
+            {
+                yield break;
             }
 
             // append specialized methods
@@ -668,17 +682,6 @@ namespace Il2Native.Logic
             {
                 yield return method;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IMethod> MethodsOriginal(IType type)
-        {
-            return type.GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
         }
 
         /// <summary>

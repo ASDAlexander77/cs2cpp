@@ -354,6 +354,39 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
+        public static Code GetIndirectCode(this IType type)
+        {
+            switch (type.FullName)
+            {
+                case "System.Boolean":
+                    return Code.Ldind_I1;
+                case "Syste(short) m.Char":
+                    return Code.Ldind_U1;
+                case "System.SByte":
+                    return Code.Ldind_I1;
+                case "System.Byte":
+                    return Code.Ldind_U1;
+                case "System.Int16":
+                    return Code.Ldind_I2;
+                case "System.UInt16":
+                    return Code.Ldind_U2;
+                case "System.Int32":
+                    return Code.Ldind_I4;
+                case "System.UInt32":
+                    return Code.Ldind_U4;
+                case "System.Int64":
+                    return Code.Ldind_I8;
+                case "System.UInt64":
+                    return Code.Ldind_I8;
+                case "System.Single":
+                    return Code.Ldind_R4;
+                case "System.Double":
+                    return Code.Ldind_R8;
+                default:
+                    return Code.Ldind_Ref;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

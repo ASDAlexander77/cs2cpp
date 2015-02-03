@@ -354,20 +354,18 @@ namespace Il2Native.Logic
                 // pre process step to get all used undefined structures
                 foreach (
                     var method in
-                        IlReader.MethodsOriginal(type).Select(m => MethodBodyBank.GetMethodBodyOrDefault(m, codeWriter)))
+                        IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodBodyOrDefault(m, codeWriter)))
                 {
                     IMethod genericMethod = null;
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
                     {
                         // find the same method in generic class
                         genericMethod =
-                            IlReader.MethodsOriginal(genericDefinition)
-                                .FirstOrDefault(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)))
-                            ??
-                            IlReader.MethodsOriginal(genericDefinition)
-                                .FirstOrDefault(gm => method.IsMatchingGeneric(gm));
+                            IlReader.Methods(genericDefinition, codeWriter, true)
+                                    .FirstOrDefault(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)))
+                            ?? IlReader.Methods(genericDefinition, codeWriter, true).FirstOrDefault(gm => method.IsMatchingGeneric(gm));
 
-                        Debug.Assert(genericMethod != null);
+                        Debug.Assert(genericMethod != null, "generic method is null");
                     }
 
                     if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)

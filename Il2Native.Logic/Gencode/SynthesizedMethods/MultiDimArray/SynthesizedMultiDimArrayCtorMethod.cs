@@ -7,12 +7,11 @@
 
     /// <summary>
     /// </summary>
-    // TODO: create object using new(..., ...) instead of ctor
     public class SynthesizedMultiDimArrayCtorMethod : SynthesizedMethodTypeBase, IConstructor
     {
         /// <summary>
         /// </summary>
-        private readonly ITypeResolver _typeResolver;
+        private readonly ITypeResolver typeResolver;
 
         private readonly IMethodBody _methodBody;
 
@@ -29,7 +28,7 @@
         public SynthesizedMultiDimArrayCtorMethod(IType type, ITypeResolver typeResolver)
             : base(type, ".ctor")
         {
-            this._typeResolver = typeResolver;
+            this.typeResolver = typeResolver;
 
             object[] code;
             IList<object> tokenResolutions;
@@ -57,7 +56,7 @@
         /// </summary>
         public override IType ReturnType
         {
-            get { return this._typeResolver.ResolveType("System.Void"); }
+            get { return this.typeResolver.ResolveType("System.Void"); }
         }
 
         public override IEnumerable<IParameter> GetParameters()
@@ -65,7 +64,7 @@
             return this._parameters;
         }
 
-        public IMethodBody GetMethodBody(IGenericContext genericContext = null)
+        public override IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
             return this._methodBody;
         }

@@ -25,8 +25,6 @@ namespace PEAssemblyReader
     /// </summary>
     public class MetadataMethodBodyAdapter : IMethodBody
     {
-        private static object moduleFileLocker = new object();
-
         /// <summary>
         /// </summary>
         private readonly Lazy<MethodBodyBlock> lazyMethodBodyBlock;
@@ -155,7 +153,7 @@ namespace PEAssemblyReader
             if (peMethodSymbol != null)
             {
                 Debug.Assert(peModule.HasIL);
-                lock (moduleFileLocker)
+                lock (peModuleSymbol)
                 {
                     return peModule.GetMethodBodyOrThrow(peMethodSymbol.Handle);
                 }

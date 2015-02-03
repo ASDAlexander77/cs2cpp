@@ -1588,7 +1588,8 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldfld, Code.Ldsfld))
             {
-                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                retType = operand.FieldType;
                 return retType;
             }
 

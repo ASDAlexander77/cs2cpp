@@ -26,18 +26,20 @@
          */
 
         public static void GetMultiDimensionArrayCtor(
-            IType type,
+            IType arrayType,
             ITypeResolver typeResolver,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
             out IList<IParameter> parameters)
         {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
             var codeList = new List<object>();
 
-            var rank = BitConverter.GetBytes((int)type.ArrayRank);
-            var typeCode = BitConverter.GetBytes((int)type.GetTypeCode());
-            var elementSize = BitConverter.GetBytes((int)type.GetTypeSize(typeResolver, true));
+            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
+            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
+            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
 
             codeList.AddRange(
                 new object[]
@@ -96,7 +98,7 @@
                 });
 
             // init each item in lowerBounds
-            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
                 var index = BitConverter.GetBytes((int)i);
                 codeList.AddRange(
@@ -144,7 +146,7 @@
                 });
 
             // init each item in lowerBounds
-            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
                 var index = BitConverter.GetBytes((int)i);
                 codeList.AddRange(
@@ -209,21 +211,178 @@
 
             // tokens
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(type.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(type.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(type.GetFieldByName("elementSize", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             // lowerBounds
             tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(type.GetFieldByName("lowerBounds", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
             // bounds
             tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(type.GetFieldByName("lengths", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
 
             // code
             code = codeList.ToArray();
 
             // parameters
-            parameters = GetParameters(type, typeResolver);
+            parameters = GetParameters(arrayType, typeResolver);
+        }
+
+        public static void GetMultiDimensionArrayGet(
+            IType arrayType,
+            ITypeResolver typeResolver,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
+            var codeList = new List<object>();
+
+            // this
+            codeList.Add(Code.Ldarg_0);
+
+            // field data
+            codeList.AppendInt(Code.Ldflda, 3);
+
+            // element index
+            codeList.AddRange(GetIndexPartMethodBody(arrayType));
+
+            // load element by type
+            codeList.Add(arrayType.GetIndirectCode());
+
+            // return
+            codeList.Add(Code.Ret);
+
+            // locals
+            locals = new List<IType>();
+
+            // tokens
+            tokenResolutions = new List<object>();
+            // lowerBounds
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
+            // bounds
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+            // data
+            tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
+            // element type
+            tokenResolutions.Add(arrayType);
+
+            // code
+            code = codeList.ToArray();
+
+            // parameters
+            parameters = GetParameters(arrayType, typeResolver);
+        }
+
+        public static void GetMultiDimensionArraySet(
+            IType arrayType,
+            ITypeResolver typeResolver,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
+            var codeList = new List<object>();
+
+            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
+            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
+            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
+
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldarg_0,
+                    });
+
+            // return
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ret
+                });
+
+            // locals
+            locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+
+            // tokens
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
+            // lowerBounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
+            // bounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+
+            // code
+            code = codeList.ToArray();
+
+            // parameters
+            var parametersLocal = new List<IParameter>();
+            parametersLocal.Add(arrayType.GetElementType().ToParameter());
+            parametersLocal.AddRange(GetParameters(arrayType, typeResolver));
+            parameters = parametersLocal;
+        }
+
+        public static void GetMultiDimensionArrayAddress(
+            IType arrayType,
+            ITypeResolver typeResolver,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
+            var codeList = new List<object>();
+
+            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
+            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
+            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
+
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldarg_0,
+                    });
+
+            // return
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ret
+                });
+
+            // locals
+            locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+
+            // tokens
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
+            // lowerBounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
+            // bounds
+            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+
+            // code
+            code = codeList.ToArray();
+
+            // parameters
+            parameters = GetParameters(arrayType, typeResolver);
         }
 
         public static List<IParameter> GetParameters(IType type, ITypeResolver typeResolver)
@@ -344,6 +503,85 @@
             parameters = GetParameters(arrayType, llvmWriter);
 
             code = codeList.ToArray();
+        }
+
+        private static List<object> GetIndexPartMethodBody(
+            IType arrayType,
+            bool set = false)
+        {
+            var codeList = new List<object>();
+
+            // load index, load lowerBound value, calculate shift
+            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
+            {
+                var effectiveIndex = set ? i + 1 : i;
+
+                // load index
+                switch (effectiveIndex)
+                {
+                    case 0:
+                        codeList.Add(Code.Ldarg_1);
+                        break;
+                    case 1:
+                        codeList.Add(Code.Ldarg_2);
+                        break;
+                    case 2:
+                        codeList.Add(Code.Ldarg_3);
+                        break;
+                    default:
+                        var argIndex = effectiveIndex + 1;
+                        codeList.AppendInt(Code.Ldarg, argIndex);
+                        break;
+                }
+
+                // - lowerBounds[index]
+                // load lowerBound value by index
+                codeList.Add(Code.Ldarg_0);
+                // load field 1 = lowerBounds
+                codeList.AppendInt(Code.Ldfld, 1);
+                // lower bound index
+                codeList.AppendInt(i);
+                // load element
+                if (LlvmWriter.PointerSize == 8)
+                {
+                    codeList.Add(Code.Ldelem_I8);
+                }
+                else
+                {
+                    codeList.Add(Code.Ldelem_I4);
+                }
+
+                // calculate diff.
+                codeList.Add(Code.Sub);
+
+                if (i > 0)
+                {
+                    // * bounds[index - 1]
+                    // load lowerBound value by index
+                    codeList.Add(Code.Ldarg_0);
+                    // load field 2 = bounds
+                    codeList.AppendInt(Code.Ldfld, 2);
+                    // lower bound index
+                    codeList.AppendInt(i - 1);
+                    // load element
+                    if (LlvmWriter.PointerSize == 8)
+                    {
+                        codeList.Add(Code.Ldelem_I8);
+                    }
+                    else
+                    {
+                        codeList.Add(Code.Ldelem_I4);
+                    }
+
+                    // calculate diff.
+                    codeList.Add(Code.Mul);
+
+                    // + sum
+                    codeList.Add(Code.Add);
+                }
+            }
+
+            return codeList;
         }
 
         public static void AppendInt(this List<object> codeList, int value)

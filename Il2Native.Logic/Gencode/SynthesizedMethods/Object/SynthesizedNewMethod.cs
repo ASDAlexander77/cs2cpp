@@ -15,7 +15,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedNewMethod : SynthesizedMethodTypeBase
     {
-        private ITypeResolver _typeResolver;
+        private ITypeResolver typeResolver;
 
         /// <summary>
         /// </summary>
@@ -27,14 +27,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             : base(type, ".new")
         {
             Type = type.ToClass();
-            _typeResolver = typeResolver;
+            this.typeResolver = typeResolver;
         }
 
         public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
         {
             if (Type.IsMultiArray)
             {
-                return ArrayMultiDimensionGen.GetParameters(Type, _typeResolver);
+                return ArrayMultiDimensionGen.GetParameters(Type, this.typeResolver);
             }
 
             return base.GetParameters();

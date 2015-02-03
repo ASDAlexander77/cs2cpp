@@ -161,7 +161,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public IModule Module { get; private set; }
+        public virtual IModule Module { get; private set; }
 
         /// <summary>
         /// </summary>
