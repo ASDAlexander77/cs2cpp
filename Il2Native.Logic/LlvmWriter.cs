@@ -3757,6 +3757,12 @@ namespace Il2Native.Logic
 
             writer.Write(", i32 ");
             writer.Write(index);
+
+            // if we loading fixed data we need to convert [ 0 x Ty ]* into Ty*
+            if (fieldInfo.IsFixed)
+            {
+                writer.Write(", i32 0");
+            }
         }
 
         /// <summary>

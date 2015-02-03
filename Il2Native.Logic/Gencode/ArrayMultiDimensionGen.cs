@@ -242,21 +242,7 @@
 
             // index for expr: *(data + index)
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType));
-
-            // data for expr: *(data + index)
-            // this
-            codeList.Add(Code.Ldarg_0);
-
-            // field data
-            codeList.AppendInt(Code.Ldflda, 3);
-
-            // load element size
-            codeList.AppendInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
-
-            codeList.Add(Code.Mul);
-
-            codeList.Add(Code.Add);
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
 
             // load element by type
             codeList.Add(arrayType.GetLoadIndirectCode());
@@ -266,17 +252,6 @@
 
             // locals
             locals = new List<IType>();
-
-            // tokens
-            tokenResolutions = new List<object>();
-            // lowerBounds
-            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
-            // bounds
-            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
-            // data
-            tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
-            // element type
-            tokenResolutions.Add(arrayType);
 
             // code
             code = codeList.ToArray();
@@ -516,6 +491,8 @@
 
         private static List<object> GetIndexPartMethodBody(
             IType arrayType,
+            ITypeResolver typeResolver,
+            out IList<object> tokenResolutions,
             bool set = false)
         {
             var codeList = new List<object>();
@@ -547,7 +524,7 @@
                 // load lowerBound value by index
                 codeList.Add(Code.Ldarg_0);
                 // load field 1 = lowerBounds
-                codeList.AppendInt(Code.Ldfld, 1);
+                codeList.AppendInt(Code.Ldfld, 2);
                 // lower bound index
                 codeList.AppendInt(i);
                 // load element
@@ -569,7 +546,7 @@
                     // load lowerBound value by index
                     codeList.Add(Code.Ldarg_0);
                     // load field 2 = bounds
-                    codeList.AppendInt(Code.Ldfld, 2);
+                    codeList.AppendInt(Code.Ldfld, 3);
                     // lower bound index
                     codeList.AppendInt(i - 1);
                     // load element
@@ -589,6 +566,34 @@
                     codeList.Add(Code.Add);
                 }
             }
+
+            // add address of 'data' field and multiply index by element size
+
+            // load element size
+            codeList.AppendInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
+
+            codeList.Add(Code.Mul);
+
+            // data for expr: *(data + index)
+            // this
+            codeList.Add(Code.Ldarg_0);
+
+            // field 'data'
+            codeList.AppendInt(Code.Ldflda, 1);
+
+            codeList.Add(Code.Add);
+
+            // End of Code
+            // tokens
+            tokenResolutions = new List<object>();
+            // data
+            tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
+            // lowerBounds
+            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
+            // bounds
+            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
+            // element type
+            tokenResolutions.Add(arrayType);
 
             return codeList;
         }
