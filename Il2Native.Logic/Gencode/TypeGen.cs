@@ -314,7 +314,7 @@ namespace Il2Native.Logic.Gencode
                     return (short)TypeCode.DBNull;
                 case "System.Boolean":
                     return (short)TypeCode.Boolean;
-                case "Syste(short) m.Char":
+                case "System.Char":
                     return (short)TypeCode.Char;
                 case "System.SByte":
                     return (short)TypeCode.SByte;
@@ -360,7 +360,7 @@ namespace Il2Native.Logic.Gencode
             {
                 case "System.Boolean":
                     return Code.Ldind_I1;
-                case "Syste(short) m.Char":
+                case "System.Char":
                     return Code.Ldind_U1;
                 case "System.SByte":
                     return Code.Ldind_I1;
@@ -384,6 +384,34 @@ namespace Il2Native.Logic.Gencode
                     return Code.Ldind_R8;
                 default:
                     return Code.Ldind_Ref;
+            }
+        }
+
+        public static Code GetSaveIndirectCode(this IType type)
+        {
+            switch (type.FullName)
+            {
+                case "System.Boolean":
+                case "System.Char":
+                case "System.SByte":
+                case "System.Byte":
+                    return Code.Stind_I1;
+                case "System.Int16":
+                case "System.UInt16":
+                    return Code.Stind_I2;
+                case "System.Int32":
+                case "System.UInt32":
+                    return Code.Stind_I4;
+                case "System.Int64":
+                    return Code.Stind_I8;
+                case "System.UInt64":
+                    return Code.Stind_I8;
+                case "System.Single":
+                    return Code.Stind_R4;
+                case "System.Double":
+                    return Code.Stind_R8;
+                default:
+                    return Code.Stind_Ref;
             }
         }
 

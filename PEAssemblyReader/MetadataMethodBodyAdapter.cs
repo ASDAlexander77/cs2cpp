@@ -7,6 +7,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+#define USE_BODY_CACHE
+
 namespace PEAssemblyReader
 {
     using System;
@@ -133,7 +135,21 @@ namespace PEAssemblyReader
 
             if (peMethodSymbol != null)
             {
-                return this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+                MethodBodyBlock methodBodyBlock;
+#if USE_BODY_CACHE
+                if (MethodBodyCache.TryGet(peModuleSymbol.ContainingAssembly.ToString(), peMethodSymbol.Handle, out methodBodyBlock))
+                {
+                    return methodBodyBlock;
+                }
+#endif
+
+                methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
+
+#if USE_BODY_CACHE
+                MethodBodyCache.Register(peModuleSymbol.ContainingAssembly.ToString(), peMethodSymbol.Handle, methodBodyBlock);
+#endif
+
+                return methodBodyBlock;
             }
 
             return null;

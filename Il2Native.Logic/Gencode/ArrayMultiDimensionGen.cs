@@ -37,9 +37,9 @@
 
             var codeList = new List<object>();
 
-            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
-            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
-            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
+            var arrayRank = arrayType.ArrayRank;
+            var typeCode = arrayType.GetTypeCode();
+            var elementSize = arrayType.GetTypeSize(typeResolver, true);
 
             codeList.AddRange(
                 new object[]
@@ -47,69 +47,29 @@
                         Code.Ldarg_0,
                         Code.Dup,
                         Code.Dup,
-                        Code.Ldc_I4,
-                        (byte)rank[0],
-                        (byte)rank[1],
-                        (byte)rank[2],
-                        (byte)rank[3],
-                        Code.Stfld,
-                        1,
-                        0,
-                        0,
-                        0,
-                        Code.Ldc_I4,
-                        (byte)typeCode[0],
-                        (byte)typeCode[1],
-                        (byte)typeCode[2],
-                        (byte)typeCode[3],
-                        Code.Stfld,
-                        2,
-                        0,
-                        0,
-                        0,
-                        Code.Ldc_I4,
-                        (byte)elementSize[0],
-                        (byte)elementSize[1],
-                        (byte)elementSize[2],
-                        (byte)elementSize[3],
-                        Code.Stfld,
-                        3,
-                        0,
-                        0,
-                        0,
                     });
+
+            codeList.AppendLoadInt(arrayRank);
+            codeList.AppendInt(Code.Stfld, 1);
+            codeList.AppendLoadInt(typeCode);
+            codeList.AppendInt(Code.Stfld, 2);
+            codeList.AppendLoadInt(elementSize);
+            codeList.AppendInt(Code.Stfld, 3);
 
             // init lowerBounds
             // set all 0
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ldc_I4,
-                        (byte)rank[0],
-                        (byte)rank[1],
-                        (byte)rank[2],
-                        (byte)rank[3],
-                        Code.Newarr,
-                        4,
-                        0,
-                        0,
-                        0,
-                        Code.Stloc_0,
-                });
+            codeList.AppendLoadInt(arrayRank);
+            codeList.AppendInt(Code.Newarr, 4);
+            codeList.Add(Code.Stloc_0);
 
             // init each item in lowerBounds
-            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
+            foreach (var i in Enumerable.Range(0, arrayRank))
             {
-                var index = BitConverter.GetBytes((int)i);
+                codeList.Add(Code.Ldloc_0);
+                codeList.AppendLoadInt(i);
                 codeList.AddRange(
                     new object[]
-                {
-                        Code.Ldloc_0,
-                        Code.Ldc_I4,
-                        (byte)index[0],
-                        (byte)index[1],
-                        (byte)index[2],
-                        (byte)index[3],
+                    {
                         Code.Ldc_I4_0,
                         Code.Stelem_I4
                 });
@@ -121,62 +81,20 @@
                 {
                         Code.Ldarg_0,
                         Code.Ldloc_0,
-                        Code.Stfld,
-                        5,
-                        0,
-                        0,
-                        0,
                 });
+            codeList.AppendInt(Code.Stfld, 5);
 
             // init Bounds
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ldc_I4,
-                        (byte)rank[0],
-                        (byte)rank[1],
-                        (byte)rank[2],
-                        (byte)rank[3],
-                        Code.Newarr,
-                        6,
-                        0,
-                        0,
-                        0,
-                        Code.Stloc_1,
-                });
+            codeList.AppendLoadInt(arrayRank);
+            codeList.AppendInt(Code.Newarr, 6);
+            codeList.Add(Code.Stloc_1);
 
             // init each item in lowerBounds
-            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
+            foreach (var i in Enumerable.Range(0, arrayRank))
             {
-                var index = BitConverter.GetBytes((int)i);
-                codeList.AddRange(
-                    new object[]
-                    {
-                        Code.Ldloc_1,
-                        Code.Ldc_I4,
-                        (byte)index[0],
-                        (byte)index[1],
-                        (byte)index[2],
-                        (byte)index[3],
-                    });
-
-                switch (i)
-                {
-                    case 0:
-                        codeList.Add(Code.Ldarg_1);
-                        break;
-                    case 1:
-                        codeList.Add(Code.Ldarg_2);
-                        break;
-                    case 2:
-                        codeList.Add(Code.Ldarg_3);
-                        break;
-                    default:
-                        var argIndex = i + 1;
-                        codeList.AppendInt(Code.Ldarg, argIndex);
-                        break;
-                }
-
+                codeList.Add(Code.Ldloc_1);
+                codeList.AppendLoadInt(i);
+                codeList.AppendLoadArg(i + 1);
                 codeList.AddRange(
                     new object[]
                     {
@@ -190,12 +108,8 @@
                 {
                         Code.Ldarg_0,
                         Code.Ldloc_1,
-                        Code.Stfld,
-                        7,
-                        0,
-                        0,
-                        0,
                 });
+            codeList.AppendInt(Code.Stfld, 7);
 
             // return
             codeList.AddRange(
@@ -245,8 +159,8 @@
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
 
             // load element by type
-            codeList.Add(arrayType.GetLoadIndirectCode());
-            
+            codeList.Add(arrayType.GetElementType().GetLoadIndirectCode());
+
             // return
             codeList.Add(Code.Ret);
 
@@ -272,48 +186,29 @@
 
             var codeList = new List<object>();
 
-            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
-            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
-            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
+            // index for expr: *(data + index)
+            // element index 
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, true));
 
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0,
-                    });
+            // put value on stack
+            codeList.Add(Code.Ldarg_1);
+
+            // save element by type
+            codeList.Add(arrayType.GetElementType().GetSaveIndirectCode());
 
             // return
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ret
-                });
+            codeList.Add(Code.Ret);
 
             // locals
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-
-            // tokens
-            tokenResolutions = new List<object>();
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
-            // lowerBounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
-            // bounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
 
             // code
             code = codeList.ToArray();
 
             // parameters
-            var parametersLocal = new List<IParameter>();
-            parametersLocal.Add(arrayType.GetElementType().ToParameter());
-            parametersLocal.AddRange(GetParameters(arrayType, typeResolver));
-            parameters = parametersLocal;
+            var list = GetParameters(arrayType, typeResolver);
+            list.Insert(0, arrayType.GetElementType().ToParameter());
+            parameters = list;
         }
 
         public static void GetMultiDimensionArrayAddress(
@@ -328,39 +223,15 @@
 
             var codeList = new List<object>();
 
-            var rank = BitConverter.GetBytes((int)arrayType.ArrayRank);
-            var typeCode = BitConverter.GetBytes((int)arrayType.GetTypeCode());
-            var elementSize = BitConverter.GetBytes((int)arrayType.GetTypeSize(typeResolver, true));
-
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0,
-                    });
+            // index for expr: *(data + index)
+            // element index 
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
 
             // return
-            codeList.AddRange(
-                new object[]
-                {
-                        Code.Ret
-                });
+            codeList.Add(Code.Ret);
 
             // locals
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-
-            // tokens
-            tokenResolutions = new List<object>();
-            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
-            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
-            // lowerBounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
-            // bounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
 
             // code
             code = codeList.ToArray();
@@ -435,46 +306,30 @@
             // add element size
             var elementType = arrayType.GetElementType();
             var elementSize = elementType.GetTypeSize(llvmWriter, true);
-            codeList.AppendInt(elementSize);
+            codeList.AppendLoadInt(elementSize);
 
             // init each item in lowerBounds
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
-                switch (i)
-                {
-                    case 0:
-                        codeList.Add(Code.Ldarg_0);
-                        break;
-                    case 1:
-                        codeList.Add(Code.Ldarg_1);
-                        break;
-                    case 2:
-                        codeList.Add(Code.Ldarg_2);
-                        break;
-                    default:
-                        var argIndex = i;
-                        codeList.AppendInt(Code.Ldarg, argIndex);
-                        break;
-                }
-
+                codeList.AppendLoadArg(i);
                 codeList.Add(Code.Mul);
             }
 
             // add element size
             var multiArrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
-            codeList.AppendInt(multiArrayTypeSizeWithoutArrayData);
+            codeList.AppendLoadInt(multiArrayTypeSizeWithoutArrayData);
             codeList.Add(Code.Add);
 
             // calculate alignment
             codeList.Add(Code.Dup);
 
             var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
-            codeList.AppendInt(alignForType);
+            codeList.AppendLoadInt(alignForType);
             codeList.Add(Code.Rem);
 
             codeList.Add(Code.Add);
 
-            codeList.AppendInt(alignForType);
+            codeList.AppendLoadInt(alignForType);
             codeList.Add(Code.Sub);
 
             // locals
@@ -526,7 +381,7 @@
                 // load field 1 = lowerBounds
                 codeList.AppendInt(Code.Ldfld, 2);
                 // lower bound index
-                codeList.AppendInt(i);
+                codeList.AppendLoadInt(i);
                 // load element
                 if (LlvmWriter.PointerSize == 8)
                 {
@@ -548,7 +403,7 @@
                     // load field 2 = bounds
                     codeList.AppendInt(Code.Ldfld, 3);
                     // lower bound index
-                    codeList.AppendInt(i - 1);
+                    codeList.AppendLoadInt(i - 1);
                     // load element
                     if (LlvmWriter.PointerSize == 8)
                     {
@@ -570,7 +425,7 @@
             // add address of 'data' field and multiply index by element size
 
             // load element size
-            codeList.AppendInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
+            codeList.AppendLoadInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
 
             codeList.Add(Code.Mul);
 
@@ -598,7 +453,29 @@
             return codeList;
         }
 
-        public static void AppendInt(this List<object> codeList, int value)
+        public static void AppendLoadArg(this List<object> codeList, int argIndex)
+        {
+            switch (argIndex)
+            {
+                case 0:
+                    codeList.Add(Code.Ldarg_0);
+                    break;
+                case 1:
+                    codeList.Add(Code.Ldarg_1);
+                    break;
+                case 2:
+                    codeList.Add(Code.Ldarg_2);
+                    break;
+                case 3:
+                    codeList.Add(Code.Ldarg_3);
+                    break;
+                default:
+                    codeList.AppendInt(Code.Ldarg, argIndex);
+                    break;
+            }
+        }
+
+        public static void AppendLoadInt(this List<object> codeList, int value)
         {
             codeList.AppendInt(Code.Ldc_I4, value);
         }
