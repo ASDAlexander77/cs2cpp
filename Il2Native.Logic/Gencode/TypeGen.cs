@@ -354,7 +354,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static Code GetIndirectCode(this IType type)
+        public static Code GetLoadIndirectCode(this IType type)
         {
             switch (type.FullName)
             {

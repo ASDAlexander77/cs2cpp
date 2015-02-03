@@ -240,18 +240,27 @@
 
             var codeList = new List<object>();
 
+            // index for expr: *(data + index)
+            // element index 
+            codeList.AddRange(GetIndexPartMethodBody(arrayType));
+
+            // data for expr: *(data + index)
             // this
             codeList.Add(Code.Ldarg_0);
 
             // field data
             codeList.AppendInt(Code.Ldflda, 3);
 
-            // element index
-            codeList.AddRange(GetIndexPartMethodBody(arrayType));
+            // load element size
+            codeList.AppendInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
+
+            codeList.Add(Code.Mul);
+
+            codeList.Add(Code.Add);
 
             // load element by type
-            codeList.Add(arrayType.GetIndirectCode());
-
+            codeList.Add(arrayType.GetLoadIndirectCode());
+            
             // return
             codeList.Add(Code.Ret);
 
