@@ -365,6 +365,8 @@ namespace Il2Native.Logic.Gencode
                 // TODO: multiarray
                 writer.WriteLine(
                     "; MultiArray init.  Call <ARRAY>::Address(int, int) to get an address of the first element");
+
+                Debug.Assert(false, "to be finished");
             }
 
             opCode.OpCodeOperands[0].Result = storedResult;
@@ -476,7 +478,7 @@ namespace Il2Native.Logic.Gencode
 
             // align size
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("srem i32 {1}, {0}", resAdd, alignForType); // add header size
+            writer.Write("srem i32 {0}, {1}", resAdd, alignForType); // add header size
             writer.WriteLine(string.Empty);
 
             var resSRem = opCode.Result;

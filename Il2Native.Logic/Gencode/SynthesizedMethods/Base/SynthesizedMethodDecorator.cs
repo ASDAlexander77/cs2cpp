@@ -112,7 +112,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public CallingConventions CallingConvention
         {
-            get { return this.method != null ? this.method.CallingConvention : CallingConventions.HasThis; }
+            get { return this.method != null ? this.method.CallingConvention : CallingConventions.Standard; }
         }
 
         public DllImportData DllImportData

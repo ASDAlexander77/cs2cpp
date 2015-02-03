@@ -105,15 +105,17 @@ namespace Il2Native.Logic.Gencode
 
             var size = declaringClassType.GetTypeSize(llvmWriter);
 
-            if (declaringClassType.IsMultiArray)
-            {
-                llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
-            }
+            FullyDefinedReference allocResult = !declaringClassType.IsMultiArray
+                                                    ? new ConstValue(size, llvmWriter.ResolveType("System.Int32"))
+                                                    : llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
                 llvmWriter.ResolveType("System.Byte").ToPointerType());
-            writer.WriteLine("call i8* @{1}(i32 {0})", size, llvmWriter.GetAllocator());
+            writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
+            allocResult.Type.WriteTypePrefix(llvmWriter);
+            writer.Write(" {0}", allocResult);
+            writer.WriteLine(")");
 
             if (!doNotTestNullValue)
             {

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using CodeParts;
 
@@ -169,16 +170,8 @@
                         codeList.Add(Code.Ldarg_3);
                         break;
                     default:
-                        var argIndex = BitConverter.GetBytes((int)i + 1);
-                        codeList.AddRange(
-                            new object[]
-                            {
-                                Code.Ldarg,
-                                (byte)argIndex[0],
-                                (byte)argIndex[1],
-                                (byte)argIndex[2],
-                                (byte)argIndex[3],
-                            });
+                        var argIndex = i + 1;
+                        codeList.AppendInt(Code.Ldarg, argIndex);
                         break;
                 }
 
@@ -249,15 +242,17 @@
         /// </param>
         /// <param name="length">
         /// </param>
-        public static void WriteMultiDimArrayAllocationSize(
+        public static FullyDefinedReference WriteMultiDimArrayAllocationSize(
             this LlvmWriter llvmWriter,
             OpCodePart opCode,
             IType arrayType)
         {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
             var writer = llvmWriter.Output;
 
             writer.WriteLine("; Calculate MultiDim allocation size");
-            opCode.Result = WriteCalculationPartOfMultiDimArrayAllocationSize(llvmWriter, arrayType, null);
+            return WriteCalculationPartOfMultiDimArrayAllocationSize(llvmWriter, arrayType, null);
         }
 
         public static FullyDefinedReference WriteCalculationPartOfMultiDimArrayAllocationSize(
@@ -281,12 +276,12 @@
 
             // actual write
             var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, currentGenericContext);
-            return opCodes.Last(op => op.Any(Code.Mul)).Result;
+            return opCodes.Last().Result;
         }
 
         private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
             LlvmWriter llvmWriter,
-            IType type,
+            IType arrayType,
             out object[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
@@ -294,39 +289,50 @@
         {
             var codeList = new List<object>();
 
+            // add element size
+            var elementType = arrayType.GetElementType();
+            var elementSize = elementType.GetTypeSize(llvmWriter, true);
+            codeList.AppendInt(elementSize);
+
             // init each item in lowerBounds
-            foreach (var i in Enumerable.Range(0, type.ArrayRank))
+            foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
                 switch (i)
                 {
                     case 0:
-                        codeList.Add(Code.Ldarg_1);
+                        codeList.Add(Code.Ldarg_0);
                         break;
                     case 1:
-                        codeList.Add(Code.Ldarg_2);
+                        codeList.Add(Code.Ldarg_1);
                         break;
                     case 2:
-                        codeList.Add(Code.Ldarg_3);
+                        codeList.Add(Code.Ldarg_2);
                         break;
                     default:
-                        var argIndex = BitConverter.GetBytes((int)i + 1);
-                        codeList.AddRange(
-                            new object[]
-                            {
-                                Code.Ldarg,
-                                (byte)argIndex[0],
-                                (byte)argIndex[1],
-                                (byte)argIndex[2],
-                                (byte)argIndex[3],
-                            });
+                        var argIndex = i;
+                        codeList.AppendInt(Code.Ldarg, argIndex);
                         break;
                 }
 
-                if (i > 0)
-                {
-                    codeList.Add(Code.Mul);
-                }
+                codeList.Add(Code.Mul);
             }
+
+            // add element size
+            var multiArrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
+            codeList.AppendInt(multiArrayTypeSizeWithoutArrayData);
+            codeList.Add(Code.Add);
+
+            // calculate alignment
+            codeList.Add(Code.Dup);
+
+            var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            codeList.AppendInt(alignForType);
+            codeList.Add(Code.Rem);
+
+            codeList.Add(Code.Add);
+
+            codeList.AppendInt(alignForType);
+            codeList.Add(Code.Sub);
 
             // locals
             locals = new List<IType>();
@@ -335,9 +341,24 @@
             tokenResolutions = new List<object>();
 
             // parameters
-            parameters = GetParameters(type, llvmWriter);
+            parameters = GetParameters(arrayType, llvmWriter);
 
             code = codeList.ToArray();
+        }
+
+        public static void AppendInt(this List<object> codeList, int value)
+        {
+            codeList.AppendInt(Code.Ldc_I4, value);
+        }
+
+        public static void AppendInt(this List<object> codeList, Code op, int valueInt)
+        {
+            var value = BitConverter.GetBytes(valueInt);
+            codeList.AddRange(
+                new object[]
+                    {
+                        op, (byte)value[0], (byte)value[1], (byte)value[2], (byte)value[3],
+                    });
         }
     }
 }
