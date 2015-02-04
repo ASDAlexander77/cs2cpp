@@ -135,20 +135,7 @@ namespace PEAssemblyReader
 
             if (peMethodSymbol != null)
             {
-                MethodBodyBlock methodBodyBlock;
-#if USE_BODY_CACHE
-                if (MethodBodyCache.TryGet(peModuleSymbol.ContainingAssembly.ToString(), peMethodSymbol.Handle, out methodBodyBlock))
-                {
-                    return methodBodyBlock;
-                }
-#endif
-
-                methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
-
-#if USE_BODY_CACHE
-                MethodBodyCache.Register(peModuleSymbol.ContainingAssembly.ToString(), peMethodSymbol.Handle, methodBodyBlock);
-#endif
-
+                var methodBodyBlock = this.GetMethodBodyBlock(peModuleSymbol, peMethodSymbol);
                 return methodBodyBlock;
             }
 

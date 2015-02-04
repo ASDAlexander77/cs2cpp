@@ -301,12 +301,9 @@ namespace Ll2NativeTests
 
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
-            // 32 - multi array
             // 36 - bug in execution (NotImplemented)
-            // 37 - multi array
             // 39 - using Attributes
             // 40 - enum to string (NotImplemented)
-            // 43 - multi array
             // 50 - missing
             // 67 - missing
             // 68 - using enum
@@ -354,7 +351,6 @@ namespace Ll2NativeTests
             // 253 - System.Reflection
             // 254 - System.Reflection 
             // 263 - string with sbyte*
-            // 266 - IConvertable 
             // 269 - ArgIterator
             // 273 - GetCustomAttributes
             // 276 - GetType.GetEvents(); (NotImplemented)
@@ -383,10 +379,8 @@ namespace Ll2NativeTests
             // 361 - missing Attribute
             // 362 - cycling Catch/Throw bug (NEED TO BE FIXED!!!)
             // 367 - GetFields not implemented
-            // 382 - "const" Decimal is not supported, (you can use static only)
             // -----------
             // 32, 55, 74 - missing class
-            // 37, 42, 43, 44, 45, 66 - multiarray
             // 77 - enum to string
 
             // -----------------
@@ -398,19 +392,12 @@ namespace Ll2NativeTests
                         9,
                         10,
                         19,
-                        32,
                         36,
-                        37,
                         39,
                         40,
-                        42,
-                        43,
-                        44,
-                        45,
                         50,
                         53,
                         55,
-                        66,
                         67,
                         68,
                         74,
@@ -458,7 +445,6 @@ namespace Ll2NativeTests
                         253,
                         254,
                         263,
-                        266,
                         269,
                         273,
                         276,
@@ -486,8 +472,7 @@ namespace Ll2NativeTests
                         358,
                         361,
                         362,
-                        367,
-                        382
+                        367
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -573,14 +558,12 @@ namespace Ll2NativeTests
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
-            // 145 - using multiarray
             // 156 - can't compile (seems it is lib)
             // 161 - can't compile (seems it is lib)
             // 162 - GetType. findMember
             // 165 - cant be compiled (library)
             // 166 - cant be compiled (library)
             // 167 - Attribute.GetCustomAttributes
-            // 171 - multiarray
             // 172 - cant be compiled (library)
             // 174 - cant be compiled (library)
             // 177 - cast IEnumerable<T> from Array
@@ -591,7 +574,6 @@ namespace Ll2NativeTests
             // 189 - object casted to IFoo and IFoo using Object functions (IFoo is not inherited from Object)
             // 196 - (19,10): error CS1061: 'System.Type' does not contain a definition for 'IsGenericType' and no extension method 'IsGenericType' accepting a first argument of type 'System.Type' could be found
             // 197 - (11,106): error CS1061: 'System.Type' does not contain a definition for 'MakeGenericType' and no extension method 'MakeGenericType' accepting a first argument of type 'System.Type' could be found
-            // 202 - using multiarray
             // 205 - GetType of Generics
             // 207 - (10,18): error CS0117: 'System.Array' does not contain a definition for 'ForEach'
             // 214 - Attribute.GetCustomAttributes
@@ -626,14 +608,12 @@ namespace Ll2NativeTests
                 128,
                 143,
                 144,
-                145,
                 156,
                 161,
                 162,
                 165,
                 166,
                 167,
-                171,
                 172,
                 174,
                 177,
@@ -644,7 +624,6 @@ namespace Ll2NativeTests
                 189,
                 196,
                 197,
-                202,
                 205,
                 207,
                 214,
