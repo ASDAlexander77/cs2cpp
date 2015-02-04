@@ -5598,17 +5598,19 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            this.UnaryOper(
-                writer,
-                opCode,
-                1,
-                "store",
-                type,
-                options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
-            writer.Write(", ");
+            if (!type.IsStructureType())
+            {
+                this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
+                writer.Write(", ");
 
-            destinationType.WriteTypePrefix(this, true);
-            this.WriteOperandResult(writer, opCode, 0);
+                destinationType.WriteTypePrefix(this, true);
+                this.WriteOperandResult(writer, opCode, 0);
+            }
+            else
+            {
+                opCode.Result = resultOfOperand0;
+                this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[1].Result);
+            }
         }
 
         /// <summary>

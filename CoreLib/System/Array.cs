@@ -41,6 +41,12 @@ namespace System
             throw new NotImplementedException();
         }
 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern int GetUpperBound(int dimension);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern int GetLowerBound(int dimension);
+
         public extern int Length
         {
             [MethodImpl(MethodImplOptions.InternalCall)]

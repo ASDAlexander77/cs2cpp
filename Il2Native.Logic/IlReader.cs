@@ -902,6 +902,7 @@ namespace Il2Native.Logic
                     case Code.Ldloc:
                     case Code.Stloc:
                     case Code.Leave:
+                    case Code.Ldarg:
                     case Code.Starg:
 
                         // read token, next 

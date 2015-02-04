@@ -764,8 +764,13 @@ namespace Il2Native.Logic.Gencode
             {
                 LlvmConvert(llvmWriter, opCode, string.Empty, string.Empty, toType, true);
             }
-            else if (fromResult.Type.IsArray || toType.IsArray || toType.IsPointer || toType.IsByRef ||
-                     bareType.IsDerivedFrom(toType) || (fromResult is ConstValue))
+            else if (fromResult.Type.IsArray
+                     || (fromResult.Type.IsPointer && bareType.TypeEquals(llvmWriter.ResolveType("System.Void")))
+                     || toType.IsArray 
+                     || toType.IsPointer 
+                     || toType.IsByRef 
+                     || bareType.IsDerivedFrom(toType) 
+                     || (fromResult is ConstValue))
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");

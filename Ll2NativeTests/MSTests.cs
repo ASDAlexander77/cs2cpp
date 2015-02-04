@@ -304,6 +304,7 @@ namespace Ll2NativeTests
             // 36 - bug in execution (NotImplemented)
             // 39 - using Attributes
             // 40 - enum to string (NotImplemented)
+            // 43, 44, 45 - TODO: NEED TO FINISH System.Array functions!!!
             // 50 - missing
             // 67 - missing
             // 68 - using enum
@@ -396,6 +397,9 @@ namespace Ll2NativeTests
                         36,
                         39,
                         40,
+                        43,
+                        44,
+                        45,
                         50,
                         53,
                         55,
