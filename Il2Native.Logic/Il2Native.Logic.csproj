@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;MSCORLIB_</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;MSCORLIB</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -72,6 +72,7 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedNewArrayMethod.cs" />
+    <Compile Include="IIlReader.cs" />
     <Compile Include="Metadata\Model\MDLocation.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />

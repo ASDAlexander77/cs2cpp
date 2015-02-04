@@ -1232,16 +1232,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        writer = this.Output;
-                        this.WriteSetResultNumber(
-                            opCodeFieldInfoPart,
-                            opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
-                        writer.Write("bitcast ");
-                        this.WriteFieldType((opCodeFieldInfoPart.OpCodeOperands[0] as OpCodeFieldInfoPart).Operand);
-                        writer.Write("* ");
-                        this.WriteResult(opCodeFieldInfoPart.OpCodeOperands[0].Result);
-                        writer.Write(" to ");
-                        opCodeFieldInfoPart.Operand.FieldType.ToPointerType().WriteTypePrefix(this, true);
+                        opCodeFieldInfoPart.Result = opCodeFieldInfoPart.OpCodeOperands[0].Result.ToType(opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
                     }
 
                     break;

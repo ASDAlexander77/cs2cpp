@@ -10,6 +10,10 @@ namespace System
     [Serializable]
     public abstract class Array : ICloneable, IList
     {
+        public extern int Rank
+        {
+            get;
+        }
         
         public static Array CreateInstance(Type elementType, int length)
         {

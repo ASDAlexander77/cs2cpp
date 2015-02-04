@@ -25,6 +25,22 @@
         }
          */
 
+        public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
+        {
+            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+
+            var shortType = typeResolver.ResolveType("System.Int16");
+            var intType = typeResolver.ResolveType("System.Int32");
+
+            yield return shortType.ToField(arrayType, "rank");
+            yield return shortType.ToField(arrayType, "typeCode");
+            yield return intType.ToField(arrayType, "elementSize");
+            yield return intType.ToField(arrayType, "length");
+            yield return intType.ToArrayType(1).ToField(arrayType, "lowerBounds");
+            yield return intType.ToArrayType(1).ToField(arrayType, "lengths");
+            yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
+        }
+
         public static void GetMultiDimensionArrayCtor(
             IType arrayType,
             ITypeResolver typeResolver,

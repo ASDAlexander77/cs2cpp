@@ -18,6 +18,7 @@ namespace Il2Native.Logic
     using System.Reflection.Emit;
     using Gencode.SynthesizedMethods.MultiDimArray;
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using Microsoft.CodeAnalysis;
@@ -29,41 +30,13 @@ namespace Il2Native.Logic
 
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
-    public interface IIlReader
-    {
-        /// <summary>
-        /// </summary>
-        string AssemblyQualifiedName { get; }
-
-        /// <summary>
-        /// </summary>
-        bool IsCoreLib { get; }
-
-        /// <summary>
-        /// </summary>
-        string ModuleName { get; }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        IEnumerable<string> AllReferences();
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        IEnumerable<IType> CompileSourceWithRoslyn(params string[] source);
-    }
-
     /// <summary>
     /// </summary>
     public class IlReader : IIlReader
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<Code, OpCode> OpCodesMap = new SortedDictionary<Code, OpCode>();
+        private static readonly OpCode[] OpCodesMap = new OpCode[256];
 
         /// <summary>
         /// </summary>
@@ -119,226 +92,226 @@ namespace Il2Native.Logic
         /// </summary>
         static IlReader()
         {
-            OpCodesMap[Code.Nop] = OpCodesEmit.Nop;
-            OpCodesMap[Code.Break] = OpCodesEmit.Break;
-            OpCodesMap[Code.Ldarg_0] = OpCodesEmit.Ldarg_0;
-            OpCodesMap[Code.Ldarg_1] = OpCodesEmit.Ldarg_1;
-            OpCodesMap[Code.Ldarg_2] = OpCodesEmit.Ldarg_2;
-            OpCodesMap[Code.Ldarg_3] = OpCodesEmit.Ldarg_3;
-            OpCodesMap[Code.Ldloc_0] = OpCodesEmit.Ldloc_0;
-            OpCodesMap[Code.Ldloc_1] = OpCodesEmit.Ldloc_1;
-            OpCodesMap[Code.Ldloc_2] = OpCodesEmit.Ldloc_2;
-            OpCodesMap[Code.Ldloc_3] = OpCodesEmit.Ldloc_3;
-            OpCodesMap[Code.Stloc_0] = OpCodesEmit.Stloc_0;
-            OpCodesMap[Code.Stloc_1] = OpCodesEmit.Stloc_1;
-            OpCodesMap[Code.Stloc_2] = OpCodesEmit.Stloc_2;
-            OpCodesMap[Code.Stloc_3] = OpCodesEmit.Stloc_3;
-            OpCodesMap[Code.Ldarg_S] = OpCodesEmit.Ldarg_S;
-            OpCodesMap[Code.Ldarga_S] = OpCodesEmit.Ldarga_S;
-            OpCodesMap[Code.Starg_S] = OpCodesEmit.Starg_S;
-            OpCodesMap[Code.Ldloc_S] = OpCodesEmit.Ldloc_S;
-            OpCodesMap[Code.Ldloca_S] = OpCodesEmit.Ldloca_S;
-            OpCodesMap[Code.Stloc_S] = OpCodesEmit.Stloc_S;
-            OpCodesMap[Code.Ldnull] = OpCodesEmit.Ldnull;
-            OpCodesMap[Code.Ldc_I4_M1] = OpCodesEmit.Ldc_I4_M1;
-            OpCodesMap[Code.Ldc_I4_0] = OpCodesEmit.Ldc_I4_0;
-            OpCodesMap[Code.Ldc_I4_1] = OpCodesEmit.Ldc_I4_1;
-            OpCodesMap[Code.Ldc_I4_2] = OpCodesEmit.Ldc_I4_2;
-            OpCodesMap[Code.Ldc_I4_3] = OpCodesEmit.Ldc_I4_3;
-            OpCodesMap[Code.Ldc_I4_4] = OpCodesEmit.Ldc_I4_4;
-            OpCodesMap[Code.Ldc_I4_5] = OpCodesEmit.Ldc_I4_5;
-            OpCodesMap[Code.Ldc_I4_6] = OpCodesEmit.Ldc_I4_6;
-            OpCodesMap[Code.Ldc_I4_7] = OpCodesEmit.Ldc_I4_7;
-            OpCodesMap[Code.Ldc_I4_8] = OpCodesEmit.Ldc_I4_8;
-            OpCodesMap[Code.Ldc_I4_S] = OpCodesEmit.Ldc_I4_S;
-            OpCodesMap[Code.Ldc_I4] = OpCodesEmit.Ldc_I4;
-            OpCodesMap[Code.Ldc_I8] = OpCodesEmit.Ldc_I8;
-            OpCodesMap[Code.Ldc_R4] = OpCodesEmit.Ldc_R4;
-            OpCodesMap[Code.Ldc_R8] = OpCodesEmit.Ldc_R8;
-            OpCodesMap[Code.Dup] = OpCodesEmit.Dup;
-            OpCodesMap[Code.Pop] = OpCodesEmit.Pop;
-            OpCodesMap[Code.Jmp] = OpCodesEmit.Jmp;
-            OpCodesMap[Code.Call] = OpCodesEmit.Call;
-            OpCodesMap[Code.Calli] = OpCodesEmit.Calli;
-            OpCodesMap[Code.Ret] = OpCodesEmit.Ret;
-            OpCodesMap[Code.Br_S] = OpCodesEmit.Br_S;
-            OpCodesMap[Code.Brfalse_S] = OpCodesEmit.Brfalse_S;
-            OpCodesMap[Code.Brtrue_S] = OpCodesEmit.Brtrue_S;
-            OpCodesMap[Code.Beq_S] = OpCodesEmit.Beq_S;
-            OpCodesMap[Code.Bge_S] = OpCodesEmit.Bge_S;
-            OpCodesMap[Code.Bgt_S] = OpCodesEmit.Bgt_S;
-            OpCodesMap[Code.Ble_S] = OpCodesEmit.Ble_S;
-            OpCodesMap[Code.Blt_S] = OpCodesEmit.Blt_S;
-            OpCodesMap[Code.Bne_Un_S] = OpCodesEmit.Bne_Un_S;
-            OpCodesMap[Code.Bge_Un_S] = OpCodesEmit.Bge_Un_S;
-            OpCodesMap[Code.Bgt_Un_S] = OpCodesEmit.Bgt_Un_S;
-            OpCodesMap[Code.Ble_Un_S] = OpCodesEmit.Ble_Un_S;
-            OpCodesMap[Code.Blt_Un_S] = OpCodesEmit.Blt_Un_S;
-            OpCodesMap[Code.Br] = OpCodesEmit.Br;
-            OpCodesMap[Code.Brfalse] = OpCodesEmit.Brfalse;
-            OpCodesMap[Code.Brtrue] = OpCodesEmit.Brtrue;
-            OpCodesMap[Code.Beq] = OpCodesEmit.Beq;
-            OpCodesMap[Code.Bge] = OpCodesEmit.Bge;
-            OpCodesMap[Code.Bgt] = OpCodesEmit.Bgt;
-            OpCodesMap[Code.Ble] = OpCodesEmit.Ble;
-            OpCodesMap[Code.Blt] = OpCodesEmit.Blt;
-            OpCodesMap[Code.Bne_Un] = OpCodesEmit.Bne_Un;
-            OpCodesMap[Code.Bge_Un] = OpCodesEmit.Bge_Un;
-            OpCodesMap[Code.Bgt_Un] = OpCodesEmit.Bgt_Un;
-            OpCodesMap[Code.Ble_Un] = OpCodesEmit.Ble_Un;
-            OpCodesMap[Code.Blt_Un] = OpCodesEmit.Blt_Un;
-            OpCodesMap[Code.Switch] = OpCodesEmit.Switch;
-            OpCodesMap[Code.Ldind_I1] = OpCodesEmit.Ldind_I1;
-            OpCodesMap[Code.Ldind_U1] = OpCodesEmit.Ldind_U1;
-            OpCodesMap[Code.Ldind_I2] = OpCodesEmit.Ldind_I2;
-            OpCodesMap[Code.Ldind_U2] = OpCodesEmit.Ldind_U2;
-            OpCodesMap[Code.Ldind_I4] = OpCodesEmit.Ldind_I4;
-            OpCodesMap[Code.Ldind_U4] = OpCodesEmit.Ldind_U4;
-            OpCodesMap[Code.Ldind_I8] = OpCodesEmit.Ldind_I8;
-            OpCodesMap[Code.Ldind_I] = OpCodesEmit.Ldind_I;
-            OpCodesMap[Code.Ldind_R4] = OpCodesEmit.Ldind_R4;
-            OpCodesMap[Code.Ldind_R8] = OpCodesEmit.Ldind_R8;
-            OpCodesMap[Code.Ldind_Ref] = OpCodesEmit.Ldind_Ref;
-            OpCodesMap[Code.Stind_Ref] = OpCodesEmit.Stind_Ref;
-            OpCodesMap[Code.Stind_I1] = OpCodesEmit.Stind_I1;
-            OpCodesMap[Code.Stind_I2] = OpCodesEmit.Stind_I2;
-            OpCodesMap[Code.Stind_I4] = OpCodesEmit.Stind_I4;
-            OpCodesMap[Code.Stind_I8] = OpCodesEmit.Stind_I8;
-            OpCodesMap[Code.Stind_R4] = OpCodesEmit.Stind_R4;
-            OpCodesMap[Code.Stind_R8] = OpCodesEmit.Stind_R8;
-            OpCodesMap[Code.Add] = OpCodesEmit.Add;
-            OpCodesMap[Code.Sub] = OpCodesEmit.Sub;
-            OpCodesMap[Code.Mul] = OpCodesEmit.Mul;
-            OpCodesMap[Code.Div] = OpCodesEmit.Div;
-            OpCodesMap[Code.Div_Un] = OpCodesEmit.Div_Un;
-            OpCodesMap[Code.Rem] = OpCodesEmit.Rem;
-            OpCodesMap[Code.Rem_Un] = OpCodesEmit.Rem_Un;
-            OpCodesMap[Code.And] = OpCodesEmit.And;
-            OpCodesMap[Code.Or] = OpCodesEmit.Or;
-            OpCodesMap[Code.Xor] = OpCodesEmit.Xor;
-            OpCodesMap[Code.Shl] = OpCodesEmit.Shl;
-            OpCodesMap[Code.Shr] = OpCodesEmit.Shr;
-            OpCodesMap[Code.Shr_Un] = OpCodesEmit.Shr_Un;
-            OpCodesMap[Code.Neg] = OpCodesEmit.Neg;
-            OpCodesMap[Code.Not] = OpCodesEmit.Not;
-            OpCodesMap[Code.Conv_I1] = OpCodesEmit.Conv_I1;
-            OpCodesMap[Code.Conv_I2] = OpCodesEmit.Conv_I2;
-            OpCodesMap[Code.Conv_I4] = OpCodesEmit.Conv_I4;
-            OpCodesMap[Code.Conv_I8] = OpCodesEmit.Conv_I8;
-            OpCodesMap[Code.Conv_R4] = OpCodesEmit.Conv_R4;
-            OpCodesMap[Code.Conv_R8] = OpCodesEmit.Conv_R8;
-            OpCodesMap[Code.Conv_U4] = OpCodesEmit.Conv_U4;
-            OpCodesMap[Code.Conv_U8] = OpCodesEmit.Conv_U8;
-            OpCodesMap[Code.Callvirt] = OpCodesEmit.Callvirt;
-            OpCodesMap[Code.Cpobj] = OpCodesEmit.Cpobj;
-            OpCodesMap[Code.Ldobj] = OpCodesEmit.Ldobj;
-            OpCodesMap[Code.Ldstr] = OpCodesEmit.Ldstr;
-            OpCodesMap[Code.Newobj] = OpCodesEmit.Newobj;
-            OpCodesMap[Code.Castclass] = OpCodesEmit.Castclass;
-            OpCodesMap[Code.Isinst] = OpCodesEmit.Isinst;
-            OpCodesMap[Code.Conv_R_Un] = OpCodesEmit.Conv_R_Un;
-            OpCodesMap[Code.Unbox] = OpCodesEmit.Unbox;
-            OpCodesMap[Code.Throw] = OpCodesEmit.Throw;
-            OpCodesMap[Code.Ldfld] = OpCodesEmit.Ldfld;
-            OpCodesMap[Code.Ldflda] = OpCodesEmit.Ldflda;
-            OpCodesMap[Code.Stfld] = OpCodesEmit.Stfld;
-            OpCodesMap[Code.Ldsfld] = OpCodesEmit.Ldsfld;
-            OpCodesMap[Code.Ldsflda] = OpCodesEmit.Ldsflda;
-            OpCodesMap[Code.Stsfld] = OpCodesEmit.Stsfld;
-            OpCodesMap[Code.Stobj] = OpCodesEmit.Stobj;
-            OpCodesMap[Code.Conv_Ovf_I1_Un] = OpCodesEmit.Conv_Ovf_I1_Un;
-            OpCodesMap[Code.Conv_Ovf_I2_Un] = OpCodesEmit.Conv_Ovf_I2_Un;
-            OpCodesMap[Code.Conv_Ovf_I4_Un] = OpCodesEmit.Conv_Ovf_I4_Un;
-            OpCodesMap[Code.Conv_Ovf_I8_Un] = OpCodesEmit.Conv_Ovf_I8_Un;
-            OpCodesMap[Code.Conv_Ovf_U1_Un] = OpCodesEmit.Conv_Ovf_U1_Un;
-            OpCodesMap[Code.Conv_Ovf_U2_Un] = OpCodesEmit.Conv_Ovf_U2_Un;
-            OpCodesMap[Code.Conv_Ovf_U4_Un] = OpCodesEmit.Conv_Ovf_U4_Un;
-            OpCodesMap[Code.Conv_Ovf_U8_Un] = OpCodesEmit.Conv_Ovf_U8_Un;
-            OpCodesMap[Code.Conv_Ovf_I_Un] = OpCodesEmit.Conv_Ovf_I_Un;
-            OpCodesMap[Code.Conv_Ovf_U_Un] = OpCodesEmit.Conv_Ovf_U_Un;
-            OpCodesMap[Code.Box] = OpCodesEmit.Box;
-            OpCodesMap[Code.Newarr] = OpCodesEmit.Newarr;
-            OpCodesMap[Code.Ldlen] = OpCodesEmit.Ldlen;
-            OpCodesMap[Code.Ldelema] = OpCodesEmit.Ldelema;
-            OpCodesMap[Code.Ldelem_I1] = OpCodesEmit.Ldelem_I1;
-            OpCodesMap[Code.Ldelem_U1] = OpCodesEmit.Ldelem_U1;
-            OpCodesMap[Code.Ldelem_I2] = OpCodesEmit.Ldelem_I2;
-            OpCodesMap[Code.Ldelem_U2] = OpCodesEmit.Ldelem_U2;
-            OpCodesMap[Code.Ldelem_I4] = OpCodesEmit.Ldelem_I4;
-            OpCodesMap[Code.Ldelem_U4] = OpCodesEmit.Ldelem_U4;
-            OpCodesMap[Code.Ldelem_I8] = OpCodesEmit.Ldelem_I8;
-            OpCodesMap[Code.Ldelem_I] = OpCodesEmit.Ldelem_I;
-            OpCodesMap[Code.Ldelem_R4] = OpCodesEmit.Ldelem_R4;
-            OpCodesMap[Code.Ldelem_R8] = OpCodesEmit.Ldelem_R8;
-            OpCodesMap[Code.Ldelem_Ref] = OpCodesEmit.Ldelem_Ref;
-            OpCodesMap[Code.Stelem_I] = OpCodesEmit.Stelem_I;
-            OpCodesMap[Code.Stelem_I1] = OpCodesEmit.Stelem_I1;
-            OpCodesMap[Code.Stelem_I2] = OpCodesEmit.Stelem_I2;
-            OpCodesMap[Code.Stelem_I4] = OpCodesEmit.Stelem_I4;
-            OpCodesMap[Code.Stelem_I8] = OpCodesEmit.Stelem_I8;
-            OpCodesMap[Code.Stelem_R4] = OpCodesEmit.Stelem_R4;
-            OpCodesMap[Code.Stelem_R8] = OpCodesEmit.Stelem_R8;
-            OpCodesMap[Code.Stelem_Ref] = OpCodesEmit.Stelem_Ref;
-            OpCodesMap[Code.Ldelem] = OpCodesEmit.Ldelem;
-            OpCodesMap[Code.Stelem] = OpCodesEmit.Stelem;
-            OpCodesMap[Code.Unbox_Any] = OpCodesEmit.Unbox_Any;
-            OpCodesMap[Code.Conv_Ovf_I1] = OpCodesEmit.Conv_Ovf_I1;
-            OpCodesMap[Code.Conv_Ovf_U1] = OpCodesEmit.Conv_Ovf_U1;
-            OpCodesMap[Code.Conv_Ovf_I2] = OpCodesEmit.Conv_Ovf_I2;
-            OpCodesMap[Code.Conv_Ovf_U2] = OpCodesEmit.Conv_Ovf_U2;
-            OpCodesMap[Code.Conv_Ovf_I4] = OpCodesEmit.Conv_Ovf_I4;
-            OpCodesMap[Code.Conv_Ovf_U4] = OpCodesEmit.Conv_Ovf_U4;
-            OpCodesMap[Code.Conv_Ovf_I8] = OpCodesEmit.Conv_Ovf_I8;
-            OpCodesMap[Code.Conv_Ovf_U8] = OpCodesEmit.Conv_Ovf_U8;
-            OpCodesMap[Code.Refanyval] = OpCodesEmit.Refanyval;
-            OpCodesMap[Code.Ckfinite] = OpCodesEmit.Ckfinite;
-            OpCodesMap[Code.Mkrefany] = OpCodesEmit.Mkrefany;
-            OpCodesMap[Code.Ldtoken] = OpCodesEmit.Ldtoken;
-            OpCodesMap[Code.Conv_U2] = OpCodesEmit.Conv_U2;
-            OpCodesMap[Code.Conv_U1] = OpCodesEmit.Conv_U1;
-            OpCodesMap[Code.Conv_I] = OpCodesEmit.Conv_I;
-            OpCodesMap[Code.Conv_Ovf_I] = OpCodesEmit.Conv_Ovf_I;
-            OpCodesMap[Code.Conv_Ovf_U] = OpCodesEmit.Conv_Ovf_U;
-            OpCodesMap[Code.Add_Ovf] = OpCodesEmit.Add_Ovf;
-            OpCodesMap[Code.Add_Ovf_Un] = OpCodesEmit.Add_Ovf_Un;
-            OpCodesMap[Code.Mul_Ovf] = OpCodesEmit.Mul_Ovf;
-            OpCodesMap[Code.Mul_Ovf_Un] = OpCodesEmit.Mul_Ovf_Un;
-            OpCodesMap[Code.Sub_Ovf] = OpCodesEmit.Sub_Ovf;
-            OpCodesMap[Code.Sub_Ovf_Un] = OpCodesEmit.Sub_Ovf_Un;
-            OpCodesMap[Code.Endfinally] = OpCodesEmit.Endfinally;
-            OpCodesMap[Code.Leave] = OpCodesEmit.Leave;
-            OpCodesMap[Code.Leave_S] = OpCodesEmit.Leave_S;
-            OpCodesMap[Code.Stind_I] = OpCodesEmit.Stind_I;
-            OpCodesMap[Code.Conv_U] = OpCodesEmit.Conv_U;
-            OpCodesMap[Code.Arglist] = OpCodesEmit.Arglist;
-            OpCodesMap[Code.Ceq] = OpCodesEmit.Ceq;
-            OpCodesMap[Code.Cgt] = OpCodesEmit.Cgt;
-            OpCodesMap[Code.Cgt_Un] = OpCodesEmit.Cgt_Un;
-            OpCodesMap[Code.Clt] = OpCodesEmit.Clt;
-            OpCodesMap[Code.Clt_Un] = OpCodesEmit.Clt_Un;
-            OpCodesMap[Code.Ldftn] = OpCodesEmit.Ldftn;
-            OpCodesMap[Code.Ldvirtftn] = OpCodesEmit.Ldvirtftn;
-            OpCodesMap[Code.Ldarg] = OpCodesEmit.Ldarg;
-            OpCodesMap[Code.Ldarga] = OpCodesEmit.Ldarga;
-            OpCodesMap[Code.Starg] = OpCodesEmit.Starg;
-            OpCodesMap[Code.Ldloc] = OpCodesEmit.Ldloc;
-            OpCodesMap[Code.Ldloca] = OpCodesEmit.Ldloca;
-            OpCodesMap[Code.Stloc] = OpCodesEmit.Stloc;
-            OpCodesMap[Code.Localloc] = OpCodesEmit.Localloc;
-            OpCodesMap[Code.Endfilter] = OpCodesEmit.Endfilter;
-            OpCodesMap[Code.Unaligned] = OpCodesEmit.Unaligned;
-            OpCodesMap[Code.Volatile] = OpCodesEmit.Volatile;
-            OpCodesMap[Code.Tail] = OpCodesEmit.Tailcall;
-            OpCodesMap[Code.Initobj] = OpCodesEmit.Initobj;
-            OpCodesMap[Code.Constrained] = OpCodesEmit.Constrained;
-            OpCodesMap[Code.Cpblk] = OpCodesEmit.Cpblk;
-            OpCodesMap[Code.Initblk] = OpCodesEmit.Initblk;
+            OpCodesMap[(int)Code.Nop] = OpCodesEmit.Nop;
+            OpCodesMap[(int)Code.Break] = OpCodesEmit.Break;
+            OpCodesMap[(int)Code.Ldarg_0] = OpCodesEmit.Ldarg_0;
+            OpCodesMap[(int)Code.Ldarg_1] = OpCodesEmit.Ldarg_1;
+            OpCodesMap[(int)Code.Ldarg_2] = OpCodesEmit.Ldarg_2;
+            OpCodesMap[(int)Code.Ldarg_3] = OpCodesEmit.Ldarg_3;
+            OpCodesMap[(int)Code.Ldloc_0] = OpCodesEmit.Ldloc_0;
+            OpCodesMap[(int)Code.Ldloc_1] = OpCodesEmit.Ldloc_1;
+            OpCodesMap[(int)Code.Ldloc_2] = OpCodesEmit.Ldloc_2;
+            OpCodesMap[(int)Code.Ldloc_3] = OpCodesEmit.Ldloc_3;
+            OpCodesMap[(int)Code.Stloc_0] = OpCodesEmit.Stloc_0;
+            OpCodesMap[(int)Code.Stloc_1] = OpCodesEmit.Stloc_1;
+            OpCodesMap[(int)Code.Stloc_2] = OpCodesEmit.Stloc_2;
+            OpCodesMap[(int)Code.Stloc_3] = OpCodesEmit.Stloc_3;
+            OpCodesMap[(int)Code.Ldarg_S] = OpCodesEmit.Ldarg_S;
+            OpCodesMap[(int)Code.Ldarga_S] = OpCodesEmit.Ldarga_S;
+            OpCodesMap[(int)Code.Starg_S] = OpCodesEmit.Starg_S;
+            OpCodesMap[(int)Code.Ldloc_S] = OpCodesEmit.Ldloc_S;
+            OpCodesMap[(int)Code.Ldloca_S] = OpCodesEmit.Ldloca_S;
+            OpCodesMap[(int)Code.Stloc_S] = OpCodesEmit.Stloc_S;
+            OpCodesMap[(int)Code.Ldnull] = OpCodesEmit.Ldnull;
+            OpCodesMap[(int)Code.Ldc_I4_M1] = OpCodesEmit.Ldc_I4_M1;
+            OpCodesMap[(int)Code.Ldc_I4_0] = OpCodesEmit.Ldc_I4_0;
+            OpCodesMap[(int)Code.Ldc_I4_1] = OpCodesEmit.Ldc_I4_1;
+            OpCodesMap[(int)Code.Ldc_I4_2] = OpCodesEmit.Ldc_I4_2;
+            OpCodesMap[(int)Code.Ldc_I4_3] = OpCodesEmit.Ldc_I4_3;
+            OpCodesMap[(int)Code.Ldc_I4_4] = OpCodesEmit.Ldc_I4_4;
+            OpCodesMap[(int)Code.Ldc_I4_5] = OpCodesEmit.Ldc_I4_5;
+            OpCodesMap[(int)Code.Ldc_I4_6] = OpCodesEmit.Ldc_I4_6;
+            OpCodesMap[(int)Code.Ldc_I4_7] = OpCodesEmit.Ldc_I4_7;
+            OpCodesMap[(int)Code.Ldc_I4_8] = OpCodesEmit.Ldc_I4_8;
+            OpCodesMap[(int)Code.Ldc_I4_S] = OpCodesEmit.Ldc_I4_S;
+            OpCodesMap[(int)Code.Ldc_I4] = OpCodesEmit.Ldc_I4;
+            OpCodesMap[(int)Code.Ldc_I8] = OpCodesEmit.Ldc_I8;
+            OpCodesMap[(int)Code.Ldc_R4] = OpCodesEmit.Ldc_R4;
+            OpCodesMap[(int)Code.Ldc_R8] = OpCodesEmit.Ldc_R8;
+            OpCodesMap[(int)Code.Dup] = OpCodesEmit.Dup;
+            OpCodesMap[(int)Code.Pop] = OpCodesEmit.Pop;
+            OpCodesMap[(int)Code.Jmp] = OpCodesEmit.Jmp;
+            OpCodesMap[(int)Code.Call] = OpCodesEmit.Call;
+            OpCodesMap[(int)Code.Calli] = OpCodesEmit.Calli;
+            OpCodesMap[(int)Code.Ret] = OpCodesEmit.Ret;
+            OpCodesMap[(int)Code.Br_S] = OpCodesEmit.Br_S;
+            OpCodesMap[(int)Code.Brfalse_S] = OpCodesEmit.Brfalse_S;
+            OpCodesMap[(int)Code.Brtrue_S] = OpCodesEmit.Brtrue_S;
+            OpCodesMap[(int)Code.Beq_S] = OpCodesEmit.Beq_S;
+            OpCodesMap[(int)Code.Bge_S] = OpCodesEmit.Bge_S;
+            OpCodesMap[(int)Code.Bgt_S] = OpCodesEmit.Bgt_S;
+            OpCodesMap[(int)Code.Ble_S] = OpCodesEmit.Ble_S;
+            OpCodesMap[(int)Code.Blt_S] = OpCodesEmit.Blt_S;
+            OpCodesMap[(int)Code.Bne_Un_S] = OpCodesEmit.Bne_Un_S;
+            OpCodesMap[(int)Code.Bge_Un_S] = OpCodesEmit.Bge_Un_S;
+            OpCodesMap[(int)Code.Bgt_Un_S] = OpCodesEmit.Bgt_Un_S;
+            OpCodesMap[(int)Code.Ble_Un_S] = OpCodesEmit.Ble_Un_S;
+            OpCodesMap[(int)Code.Blt_Un_S] = OpCodesEmit.Blt_Un_S;
+            OpCodesMap[(int)Code.Br] = OpCodesEmit.Br;
+            OpCodesMap[(int)Code.Brfalse] = OpCodesEmit.Brfalse;
+            OpCodesMap[(int)Code.Brtrue] = OpCodesEmit.Brtrue;
+            OpCodesMap[(int)Code.Beq] = OpCodesEmit.Beq;
+            OpCodesMap[(int)Code.Bge] = OpCodesEmit.Bge;
+            OpCodesMap[(int)Code.Bgt] = OpCodesEmit.Bgt;
+            OpCodesMap[(int)Code.Ble] = OpCodesEmit.Ble;
+            OpCodesMap[(int)Code.Blt] = OpCodesEmit.Blt;
+            OpCodesMap[(int)Code.Bne_Un] = OpCodesEmit.Bne_Un;
+            OpCodesMap[(int)Code.Bge_Un] = OpCodesEmit.Bge_Un;
+            OpCodesMap[(int)Code.Bgt_Un] = OpCodesEmit.Bgt_Un;
+            OpCodesMap[(int)Code.Ble_Un] = OpCodesEmit.Ble_Un;
+            OpCodesMap[(int)Code.Blt_Un] = OpCodesEmit.Blt_Un;
+            OpCodesMap[(int)Code.Switch] = OpCodesEmit.Switch;
+            OpCodesMap[(int)Code.Ldind_I1] = OpCodesEmit.Ldind_I1;
+            OpCodesMap[(int)Code.Ldind_U1] = OpCodesEmit.Ldind_U1;
+            OpCodesMap[(int)Code.Ldind_I2] = OpCodesEmit.Ldind_I2;
+            OpCodesMap[(int)Code.Ldind_U2] = OpCodesEmit.Ldind_U2;
+            OpCodesMap[(int)Code.Ldind_I4] = OpCodesEmit.Ldind_I4;
+            OpCodesMap[(int)Code.Ldind_U4] = OpCodesEmit.Ldind_U4;
+            OpCodesMap[(int)Code.Ldind_I8] = OpCodesEmit.Ldind_I8;
+            OpCodesMap[(int)Code.Ldind_I] = OpCodesEmit.Ldind_I;
+            OpCodesMap[(int)Code.Ldind_R4] = OpCodesEmit.Ldind_R4;
+            OpCodesMap[(int)Code.Ldind_R8] = OpCodesEmit.Ldind_R8;
+            OpCodesMap[(int)Code.Ldind_Ref] = OpCodesEmit.Ldind_Ref;
+            OpCodesMap[(int)Code.Stind_Ref] = OpCodesEmit.Stind_Ref;
+            OpCodesMap[(int)Code.Stind_I1] = OpCodesEmit.Stind_I1;
+            OpCodesMap[(int)Code.Stind_I2] = OpCodesEmit.Stind_I2;
+            OpCodesMap[(int)Code.Stind_I4] = OpCodesEmit.Stind_I4;
+            OpCodesMap[(int)Code.Stind_I8] = OpCodesEmit.Stind_I8;
+            OpCodesMap[(int)Code.Stind_R4] = OpCodesEmit.Stind_R4;
+            OpCodesMap[(int)Code.Stind_R8] = OpCodesEmit.Stind_R8;
+            OpCodesMap[(int)Code.Add] = OpCodesEmit.Add;
+            OpCodesMap[(int)Code.Sub] = OpCodesEmit.Sub;
+            OpCodesMap[(int)Code.Mul] = OpCodesEmit.Mul;
+            OpCodesMap[(int)Code.Div] = OpCodesEmit.Div;
+            OpCodesMap[(int)Code.Div_Un] = OpCodesEmit.Div_Un;
+            OpCodesMap[(int)Code.Rem] = OpCodesEmit.Rem;
+            OpCodesMap[(int)Code.Rem_Un] = OpCodesEmit.Rem_Un;
+            OpCodesMap[(int)Code.And] = OpCodesEmit.And;
+            OpCodesMap[(int)Code.Or] = OpCodesEmit.Or;
+            OpCodesMap[(int)Code.Xor] = OpCodesEmit.Xor;
+            OpCodesMap[(int)Code.Shl] = OpCodesEmit.Shl;
+            OpCodesMap[(int)Code.Shr] = OpCodesEmit.Shr;
+            OpCodesMap[(int)Code.Shr_Un] = OpCodesEmit.Shr_Un;
+            OpCodesMap[(int)Code.Neg] = OpCodesEmit.Neg;
+            OpCodesMap[(int)Code.Not] = OpCodesEmit.Not;
+            OpCodesMap[(int)Code.Conv_I1] = OpCodesEmit.Conv_I1;
+            OpCodesMap[(int)Code.Conv_I2] = OpCodesEmit.Conv_I2;
+            OpCodesMap[(int)Code.Conv_I4] = OpCodesEmit.Conv_I4;
+            OpCodesMap[(int)Code.Conv_I8] = OpCodesEmit.Conv_I8;
+            OpCodesMap[(int)Code.Conv_R4] = OpCodesEmit.Conv_R4;
+            OpCodesMap[(int)Code.Conv_R8] = OpCodesEmit.Conv_R8;
+            OpCodesMap[(int)Code.Conv_U4] = OpCodesEmit.Conv_U4;
+            OpCodesMap[(int)Code.Conv_U8] = OpCodesEmit.Conv_U8;
+            OpCodesMap[(int)Code.Callvirt] = OpCodesEmit.Callvirt;
+            OpCodesMap[(int)Code.Cpobj] = OpCodesEmit.Cpobj;
+            OpCodesMap[(int)Code.Ldobj] = OpCodesEmit.Ldobj;
+            OpCodesMap[(int)Code.Ldstr] = OpCodesEmit.Ldstr;
+            OpCodesMap[(int)Code.Newobj] = OpCodesEmit.Newobj;
+            OpCodesMap[(int)Code.Castclass] = OpCodesEmit.Castclass;
+            OpCodesMap[(int)Code.Isinst] = OpCodesEmit.Isinst;
+            OpCodesMap[(int)Code.Conv_R_Un] = OpCodesEmit.Conv_R_Un;
+            OpCodesMap[(int)Code.Unbox] = OpCodesEmit.Unbox;
+            OpCodesMap[(int)Code.Throw] = OpCodesEmit.Throw;
+            OpCodesMap[(int)Code.Ldfld] = OpCodesEmit.Ldfld;
+            OpCodesMap[(int)Code.Ldflda] = OpCodesEmit.Ldflda;
+            OpCodesMap[(int)Code.Stfld] = OpCodesEmit.Stfld;
+            OpCodesMap[(int)Code.Ldsfld] = OpCodesEmit.Ldsfld;
+            OpCodesMap[(int)Code.Ldsflda] = OpCodesEmit.Ldsflda;
+            OpCodesMap[(int)Code.Stsfld] = OpCodesEmit.Stsfld;
+            OpCodesMap[(int)Code.Stobj] = OpCodesEmit.Stobj;
+            OpCodesMap[(int)Code.Conv_Ovf_I1_Un] = OpCodesEmit.Conv_Ovf_I1_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_I2_Un] = OpCodesEmit.Conv_Ovf_I2_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_I4_Un] = OpCodesEmit.Conv_Ovf_I4_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_I8_Un] = OpCodesEmit.Conv_Ovf_I8_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_U1_Un] = OpCodesEmit.Conv_Ovf_U1_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_U2_Un] = OpCodesEmit.Conv_Ovf_U2_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_U4_Un] = OpCodesEmit.Conv_Ovf_U4_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_U8_Un] = OpCodesEmit.Conv_Ovf_U8_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_I_Un] = OpCodesEmit.Conv_Ovf_I_Un;
+            OpCodesMap[(int)Code.Conv_Ovf_U_Un] = OpCodesEmit.Conv_Ovf_U_Un;
+            OpCodesMap[(int)Code.Box] = OpCodesEmit.Box;
+            OpCodesMap[(int)Code.Newarr] = OpCodesEmit.Newarr;
+            OpCodesMap[(int)Code.Ldlen] = OpCodesEmit.Ldlen;
+            OpCodesMap[(int)Code.Ldelema] = OpCodesEmit.Ldelema;
+            OpCodesMap[(int)Code.Ldelem_I1] = OpCodesEmit.Ldelem_I1;
+            OpCodesMap[(int)Code.Ldelem_U1] = OpCodesEmit.Ldelem_U1;
+            OpCodesMap[(int)Code.Ldelem_I2] = OpCodesEmit.Ldelem_I2;
+            OpCodesMap[(int)Code.Ldelem_U2] = OpCodesEmit.Ldelem_U2;
+            OpCodesMap[(int)Code.Ldelem_I4] = OpCodesEmit.Ldelem_I4;
+            OpCodesMap[(int)Code.Ldelem_U4] = OpCodesEmit.Ldelem_U4;
+            OpCodesMap[(int)Code.Ldelem_I8] = OpCodesEmit.Ldelem_I8;
+            OpCodesMap[(int)Code.Ldelem_I] = OpCodesEmit.Ldelem_I;
+            OpCodesMap[(int)Code.Ldelem_R4] = OpCodesEmit.Ldelem_R4;
+            OpCodesMap[(int)Code.Ldelem_R8] = OpCodesEmit.Ldelem_R8;
+            OpCodesMap[(int)Code.Ldelem_Ref] = OpCodesEmit.Ldelem_Ref;
+            OpCodesMap[(int)Code.Stelem_I] = OpCodesEmit.Stelem_I;
+            OpCodesMap[(int)Code.Stelem_I1] = OpCodesEmit.Stelem_I1;
+            OpCodesMap[(int)Code.Stelem_I2] = OpCodesEmit.Stelem_I2;
+            OpCodesMap[(int)Code.Stelem_I4] = OpCodesEmit.Stelem_I4;
+            OpCodesMap[(int)Code.Stelem_I8] = OpCodesEmit.Stelem_I8;
+            OpCodesMap[(int)Code.Stelem_R4] = OpCodesEmit.Stelem_R4;
+            OpCodesMap[(int)Code.Stelem_R8] = OpCodesEmit.Stelem_R8;
+            OpCodesMap[(int)Code.Stelem_Ref] = OpCodesEmit.Stelem_Ref;
+            OpCodesMap[(int)Code.Ldelem] = OpCodesEmit.Ldelem;
+            OpCodesMap[(int)Code.Stelem] = OpCodesEmit.Stelem;
+            OpCodesMap[(int)Code.Unbox_Any] = OpCodesEmit.Unbox_Any;
+            OpCodesMap[(int)Code.Conv_Ovf_I1] = OpCodesEmit.Conv_Ovf_I1;
+            OpCodesMap[(int)Code.Conv_Ovf_U1] = OpCodesEmit.Conv_Ovf_U1;
+            OpCodesMap[(int)Code.Conv_Ovf_I2] = OpCodesEmit.Conv_Ovf_I2;
+            OpCodesMap[(int)Code.Conv_Ovf_U2] = OpCodesEmit.Conv_Ovf_U2;
+            OpCodesMap[(int)Code.Conv_Ovf_I4] = OpCodesEmit.Conv_Ovf_I4;
+            OpCodesMap[(int)Code.Conv_Ovf_U4] = OpCodesEmit.Conv_Ovf_U4;
+            OpCodesMap[(int)Code.Conv_Ovf_I8] = OpCodesEmit.Conv_Ovf_I8;
+            OpCodesMap[(int)Code.Conv_Ovf_U8] = OpCodesEmit.Conv_Ovf_U8;
+            OpCodesMap[(int)Code.Refanyval] = OpCodesEmit.Refanyval;
+            OpCodesMap[(int)Code.Ckfinite] = OpCodesEmit.Ckfinite;
+            OpCodesMap[(int)Code.Mkrefany] = OpCodesEmit.Mkrefany;
+            OpCodesMap[(int)Code.Ldtoken] = OpCodesEmit.Ldtoken;
+            OpCodesMap[(int)Code.Conv_U2] = OpCodesEmit.Conv_U2;
+            OpCodesMap[(int)Code.Conv_U1] = OpCodesEmit.Conv_U1;
+            OpCodesMap[(int)Code.Conv_I] = OpCodesEmit.Conv_I;
+            OpCodesMap[(int)Code.Conv_Ovf_I] = OpCodesEmit.Conv_Ovf_I;
+            OpCodesMap[(int)Code.Conv_Ovf_U] = OpCodesEmit.Conv_Ovf_U;
+            OpCodesMap[(int)Code.Add_Ovf] = OpCodesEmit.Add_Ovf;
+            OpCodesMap[(int)Code.Add_Ovf_Un] = OpCodesEmit.Add_Ovf_Un;
+            OpCodesMap[(int)Code.Mul_Ovf] = OpCodesEmit.Mul_Ovf;
+            OpCodesMap[(int)Code.Mul_Ovf_Un] = OpCodesEmit.Mul_Ovf_Un;
+            OpCodesMap[(int)Code.Sub_Ovf] = OpCodesEmit.Sub_Ovf;
+            OpCodesMap[(int)Code.Sub_Ovf_Un] = OpCodesEmit.Sub_Ovf_Un;
+            OpCodesMap[(int)Code.Endfinally] = OpCodesEmit.Endfinally;
+            OpCodesMap[(int)Code.Leave] = OpCodesEmit.Leave;
+            OpCodesMap[(int)Code.Leave_S] = OpCodesEmit.Leave_S;
+            OpCodesMap[(int)Code.Stind_I] = OpCodesEmit.Stind_I;
+            OpCodesMap[(int)Code.Conv_U] = OpCodesEmit.Conv_U;
+            OpCodesMap[(int)Code.Arglist] = OpCodesEmit.Arglist;
+            OpCodesMap[(int)Code.Ceq] = OpCodesEmit.Ceq;
+            OpCodesMap[(int)Code.Cgt] = OpCodesEmit.Cgt;
+            OpCodesMap[(int)Code.Cgt_Un] = OpCodesEmit.Cgt_Un;
+            OpCodesMap[(int)Code.Clt] = OpCodesEmit.Clt;
+            OpCodesMap[(int)Code.Clt_Un] = OpCodesEmit.Clt_Un;
+            OpCodesMap[(int)Code.Ldftn] = OpCodesEmit.Ldftn;
+            OpCodesMap[(int)Code.Ldvirtftn] = OpCodesEmit.Ldvirtftn;
+            OpCodesMap[(int)Code.Ldarg] = OpCodesEmit.Ldarg;
+            OpCodesMap[(int)Code.Ldarga] = OpCodesEmit.Ldarga;
+            OpCodesMap[(int)Code.Starg] = OpCodesEmit.Starg;
+            OpCodesMap[(int)Code.Ldloc] = OpCodesEmit.Ldloc;
+            OpCodesMap[(int)Code.Ldloca] = OpCodesEmit.Ldloca;
+            OpCodesMap[(int)Code.Stloc] = OpCodesEmit.Stloc;
+            OpCodesMap[(int)Code.Localloc] = OpCodesEmit.Localloc;
+            OpCodesMap[(int)Code.Endfilter] = OpCodesEmit.Endfilter;
+            OpCodesMap[(int)Code.Unaligned] = OpCodesEmit.Unaligned;
+            OpCodesMap[(int)Code.Volatile] = OpCodesEmit.Volatile;
+            OpCodesMap[(int)Code.Tail] = OpCodesEmit.Tailcall;
+            OpCodesMap[(int)Code.Initobj] = OpCodesEmit.Initobj;
+            OpCodesMap[(int)Code.Constrained] = OpCodesEmit.Constrained;
+            OpCodesMap[(int)Code.Cpblk] = OpCodesEmit.Cpblk;
+            OpCodesMap[(int)Code.Initblk] = OpCodesEmit.Initblk;
 
-            // OpCodesMap[Code.No] = OpCodesEmit.No;
-            OpCodesMap[Code.Rethrow] = OpCodesEmit.Rethrow;
-            OpCodesMap[Code.Sizeof] = OpCodesEmit.Sizeof;
-            OpCodesMap[Code.Refanytype] = OpCodesEmit.Refanytype;
-            OpCodesMap[Code.Readonly] = OpCodesEmit.Readonly;
+            // OpCodesMap[(int)Code.No] = OpCodesEmit.No;
+            OpCodesMap[(int)Code.Rethrow] = OpCodesEmit.Rethrow;
+            OpCodesMap[(int)Code.Sizeof] = OpCodesEmit.Sizeof;
+            OpCodesMap[(int)Code.Refanytype] = OpCodesEmit.Refanytype;
+            OpCodesMap[(int)Code.Readonly] = OpCodesEmit.Readonly;
         }
 
         /// <summary>
@@ -589,18 +562,7 @@ namespace Il2Native.Logic
             // append methods or MultiArray
             if (type.IsMultiArray)
             {
-                var shortType = typeResolver.ResolveType("System.Int16");
-                var intType = typeResolver.ResolveType("System.Int32");
-
-                // additionally return all fields for array
-                yield return shortType.ToField(type, "rank");
-                yield return shortType.ToField(type, "typeCode");
-                yield return intType.ToField(type, "elementSize");
-                yield return intType.ToField(type, "length");
-                yield return intType.ToArrayType(1).ToField(type, "lowerBounds");
-                yield return intType.ToArrayType(1).ToField(type, "lengths");
-                //yield return type.GetElementType().ToArrayType(1).ToField("data");
-                yield return type.GetElementType().ToField(type, "data", isFixed: true);
+                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver)) yield return field;
             }
         }
 
@@ -861,7 +823,7 @@ namespace Il2Native.Logic
                 var code = (Code)(extended ? (@byte + 0xE1) : @byte);
                 extended = false;
 
-                var opCode = OpCodesMap[code];
+                var opCode = OpCodesMap[(int)code];
 
                 startAddress = currentAddress;
                 currentAddress += opCode.Size;
