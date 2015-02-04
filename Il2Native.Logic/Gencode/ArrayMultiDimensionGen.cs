@@ -154,20 +154,14 @@
 
             var codeList = new List<object>();
 
-            // index for expr: *(data + index)
+            codeList.Add(Code.Ldarg_0);
+
+            codeList.AppendInt(Code.Ldflda, 1);
+
             // element index 
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
 
-            // load element by type
-            var loadIndirectCode = arrayType.GetElementType().GetLoadIndirectCode();
-            codeList.Add(loadIndirectCode);
-
-            if (loadIndirectCode == Code.Ldind_Ref)
-            {
-                // cast to type
-                codeList.Add(Code.Conv_I);
-                codeList.AppendInt(Code.Castclass, 4);
-            }
+            codeList.AppendInt(Code.Ldelem, 4);
 
             // return
             codeList.Add(Code.Ret);
@@ -194,21 +188,17 @@
 
             var codeList = new List<object>();
 
-            var saveIndirectCode = arrayType.GetElementType().GetSaveIndirectCode();
+            codeList.Add(Code.Ldarg_0);
 
-            // index for expr: *(data + index)
-            // element index 
+            codeList.AppendInt(Code.Ldflda, 1);
+
+            // element index
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
-            if (saveIndirectCode == Code.Stind_Ref)
-            {
-                codeList.AppendInt(Code.Castclass, 5);
-            }
 
             // put value on stack (+ 'this' as first)
             codeList.AppendLoadArg(arrayType.ArrayRank + 1);
 
-            // save element by type
-            codeList.Add(saveIndirectCode);
+            codeList.AppendInt(Code.Stelem, 4);
 
             // return
             codeList.Add(Code.Ret);
@@ -237,10 +227,14 @@
 
             var codeList = new List<object>();
 
-            // index for expr: *(data + index)
+            codeList.Add(Code.Ldarg_0);
+
+            codeList.AppendInt(Code.Ldflda, 1);
+
             // element index 
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
-            codeList.AppendInt(Code.Castclass, 5);
+
+            codeList.AppendInt(Code.Ldelema, 4);
 
             // return
             codeList.Add(Code.Ret);
@@ -418,22 +412,6 @@
                     codeList.Add(Code.Add);
                 }
             }
-
-            // add address of 'data' field and multiply index by element size
-
-            // load element size
-            codeList.AppendLoadInt(arrayType.GetElementType().GetTypeSize(typeResolver, true));
-
-            codeList.Add(Code.Mul);
-
-            // data for expr: *(data + index)
-            // this
-            codeList.Add(Code.Ldarg_0);
-
-            // field 'data'
-            codeList.AppendInt(Code.Ldflda, 1);
-
-            codeList.Add(Code.Add);
 
             // End of Code
             // tokens
