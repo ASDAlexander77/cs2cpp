@@ -243,6 +243,18 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        IType ToPinned();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToByRefTypeAndPinned();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         IType ToNormal();
 
         /// <summary>

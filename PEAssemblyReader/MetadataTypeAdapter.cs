@@ -1025,6 +1025,29 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IType ToPinned()
+        {
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext, false, true).Clone();
+            Debug.Assert(newType.IsPinned);
+            return newType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToByRefTypeAndPinned()
+        {
+            var newType = this.typeDef.ResolveGeneric(this.GenericContext, true, true).Clone();
+            Debug.Assert(newType.IsByRef);
+            Debug.Assert(newType.IsPinned);
+            return newType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IType ToNormal()
         {
             return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, false);

@@ -193,6 +193,21 @@ namespace PEAssemblyReader
             IType resolved = null;
             if (this.Map.TryGetValue(typeParameter, out resolved))
             {
+                if (typeParameter.IsByRef && typeParameter.IsPinned)
+                {
+                    return resolved.ToByRefTypeAndPinned();
+                }
+
+                if (typeParameter.IsByRef)
+                {
+                    return resolved.ToByRefType();
+                }
+
+                if (typeParameter.IsPinned)
+                {
+                    return resolved.ToPinned();
+                }
+
                 return resolved;
             }
 
