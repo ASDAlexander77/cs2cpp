@@ -392,6 +392,7 @@ namespace Ll2NativeTests
                         9,
                         10,
                         19,
+                        32,
                         36,
                         39,
                         40,

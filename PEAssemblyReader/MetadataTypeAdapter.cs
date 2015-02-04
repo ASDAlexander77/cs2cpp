@@ -580,9 +580,9 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        public IType Clone(bool setUseAsClass = false, bool value = false, bool isByRef = false, bool isPinned = false)
+        public IType Clone(bool setUseAsClass = false, bool value = false)
         {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext, isByRef, isPinned);
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.GenericContext, this.IsByRef, this.IsPinned);
             if (setUseAsClass)
             {
                 typeAdapter.UseAsClass = value;
@@ -1005,6 +1005,7 @@ namespace PEAssemblyReader
         public IType ToByRefType()
         {
             var newType = this.typeDef.ResolveGeneric(this.GenericContext, true).Clone();
+            Debug.Assert(newType.IsByRef);
             return newType;
         }
 

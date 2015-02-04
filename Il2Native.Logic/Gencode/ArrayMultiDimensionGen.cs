@@ -240,6 +240,7 @@
             // index for expr: *(data + index)
             // element index 
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
+            codeList.AppendInt(Code.Castclass, 5);
 
             // return
             codeList.Add(Code.Ret);

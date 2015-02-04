@@ -20,6 +20,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedMethodBase : IMethod
     {
+        private Lazy<string> lazyToString;
+
+        public SynthesizedMethodBase()
+        {
+            this.lazyToString = new Lazy<string>(CalculateToString);
+        }
+
         /// <summary>
         /// </summary>
         public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
@@ -329,6 +336,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <returns>
         /// </returns>
         public override string ToString()
+        {
+            return this.lazyToString.Value;
+        }
+
+        private string CalculateToString()
         {
             var result = new StringBuilder();
 

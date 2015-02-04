@@ -22,7 +22,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedMultiDimArrayAddressMethod(IType type, ITypeResolver typeResolver)
-            : base("Address", type, type.GetElementType().ToPointerType())
+            : base("Address", type, type.GetElementType().ToByRefType())
         {
             object[] code;
             IList<object> tokenResolutions;

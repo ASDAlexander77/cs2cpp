@@ -188,16 +188,11 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        public IType ResolveTypeParameter(IType typeParameter, bool isByRef = false, bool isPinned = false)
+        public IType ResolveTypeParameter(IType typeParameter)
         {
             IType resolved = null;
             if (this.Map.TryGetValue(typeParameter, out resolved))
             {
-                if (isByRef || isPinned)
-                {
-                    return resolved.Clone(false, false, isByRef, isPinned);
-                }
-
                 return resolved;
             }
 

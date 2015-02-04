@@ -131,7 +131,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IType Clone(bool setUseAsClass = false, bool value = false, bool isByRef = false, bool isPinned = false);
+        IType Clone(bool setUseAsClass = false, bool value = false);
 
         /// <summary>
         /// </summary>

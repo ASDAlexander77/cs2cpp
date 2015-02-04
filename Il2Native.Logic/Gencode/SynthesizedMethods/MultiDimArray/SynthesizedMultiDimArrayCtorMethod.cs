@@ -25,8 +25,8 @@
         /// </param>
         /// <param name="typeResolver">
         /// </param>
-        public SynthesizedMultiDimArrayCtorMethod(IType type, ITypeResolver typeResolver)
-            : base(type, ".ctor")
+        public SynthesizedMultiDimArrayCtorMethod(IType arrayType, ITypeResolver typeResolver)
+            : base(arrayType, ".ctor")
         {
             this.typeResolver = typeResolver;
 
@@ -34,7 +34,7 @@
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            ArrayMultiDimensionGen.GetMultiDimensionArrayCtor(type, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            ArrayMultiDimensionGen.GetMultiDimensionArrayCtor(arrayType, typeResolver, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

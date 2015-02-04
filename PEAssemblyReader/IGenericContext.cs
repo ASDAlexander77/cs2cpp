@@ -44,6 +44,6 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        IType ResolveTypeParameter(IType typeParameter, bool isByRef = false, bool isPinned = false);
+        IType ResolveTypeParameter(IType typeParameter);
     }
 }
