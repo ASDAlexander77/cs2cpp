@@ -352,6 +352,7 @@ namespace Ll2NativeTests
             // 253 - System.Reflection
             // 254 - System.Reflection 
             // 263 - string with sbyte*
+            // 266 - IConvertible in Enum
             // 269 - ArgIterator
             // 273 - GetCustomAttributes
             // 276 - GetType.GetEvents(); (NotImplemented)
@@ -450,6 +451,7 @@ namespace Ll2NativeTests
                         253,
                         254,
                         263,
+                        266,
                         269,
                         273,
                         276,

@@ -922,6 +922,18 @@ namespace PEAssemblyReader
         /// </returns>
         public IType GetTypeDefinition()
         {
+            if (this.typeDef.IsArray())
+            {
+                var elementType = GetBareTypeSymbol(this.typeDef, false);
+                return new MetadataTypeAdapter(elementType).GetTypeDefinition().ToArrayType((this.typeDef as ArrayTypeSymbol).Rank);
+            }
+
+            if (this.typeDef.IsPointerType())
+            {
+                var elementType = GetBareTypeSymbol(this.typeDef, false);
+                return new MetadataTypeAdapter(elementType).GetTypeDefinition().ToPointerType();
+            }
+
             return new MetadataTypeAdapter((this.typeDef as NamedTypeSymbol).ConstructedFrom);
         }
 
@@ -1077,6 +1089,37 @@ namespace PEAssemblyReader
             return this.lazyToString.Value;
         }
 
+        private static TypeSymbol GetBareTypeSymbol(TypeSymbol typeDef, bool recursive = true)
+        {
+            var currentTypeDef = typeDef;
+            while (currentTypeDef != null)
+            {
+                var arrayTypeSymbol = currentTypeDef as ArrayTypeSymbol;
+                if (arrayTypeSymbol != null)
+                {
+                    currentTypeDef = arrayTypeSymbol.ElementType;
+                    if (recursive)
+                    {
+                        continue;
+                    }
+                }
+
+                var pointerTypeSymbol = currentTypeDef as PointerTypeSymbol;
+                if (pointerTypeSymbol != null)
+                {
+                    currentTypeDef = pointerTypeSymbol.PointedAtType;
+                    if (recursive)
+                    {
+                        continue;
+                    }
+                }
+
+                return currentTypeDef;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// </summary>
         /// <returns>
@@ -1197,7 +1240,7 @@ namespace PEAssemblyReader
 
             if (!this.IsGenericParameter)
             {
-                if (this.IsGenericType || this.IsGenericTypeDefinition)
+                if ((this.IsGenericType || this.IsGenericTypeDefinition) && this.typeDef.GetArity() > 0)
                 {
                     sb.Append('<');
 
@@ -1254,27 +1297,7 @@ namespace PEAssemblyReader
                 return new MetadataModuleAdapter(module);
             }
 
-            var currentTypeDef = this.typeDef;
-            while (currentTypeDef != null)
-            {
-                var arrayTypeSymbol = currentTypeDef as ArrayTypeSymbol;
-                if (arrayTypeSymbol != null)
-                {
-                    currentTypeDef = arrayTypeSymbol.ElementType;
-                    continue;
-                }
-
-                var pointerTypeSymbol = currentTypeDef as PointerTypeSymbol;
-                if (pointerTypeSymbol != null)
-                {
-                    currentTypeDef = pointerTypeSymbol.PointedAtType;
-                    continue;
-                }
-
-                return new MetadataModuleAdapter(currentTypeDef.ContainingModule);
-            }
-
-            return null;
+            return new MetadataModuleAdapter(GetBareTypeSymbol(this.typeDef).ContainingModule);
         }
 
         /// <summary>

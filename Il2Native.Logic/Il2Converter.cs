@@ -312,7 +312,7 @@ namespace Il2Native.Logic
                     foreach (var ctor in IlReader.Constructors(type, codeWriter))
                     {
                         IConstructor genericCtor = null;
-                        if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
+                        if (type.IsGenericType && !type.IsInterface && !type.IsDelegate && !type.IsArray)
                         {
                             // find the same constructor in generic class
                             Debug.Assert(genericDefinition != null);
@@ -357,7 +357,7 @@ namespace Il2Native.Logic
                         IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodBodyOrDefault(m, codeWriter)))
                 {
                     IMethod genericMethod = null;
-                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate)
+                    if (type.IsGenericType && !type.IsInterface && !type.IsDelegate && !type.IsArray)
                     {
                         // find the same method in generic class
                         genericMethod =

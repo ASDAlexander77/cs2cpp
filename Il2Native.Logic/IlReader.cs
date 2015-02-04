@@ -636,9 +636,19 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false)
         {
-            foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+            if (!excludeSpecializations)
             {
-                yield return method;
+                foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
+                {
+                    yield return method;
+                }
+            }
+            else
+            {
+                foreach (var method in type.GetMethods(flags))
+                {
+                    yield return method;
+                }
             }
 
             if (!excludeSpecializations)
