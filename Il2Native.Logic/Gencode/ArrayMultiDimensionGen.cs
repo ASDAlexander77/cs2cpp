@@ -159,7 +159,15 @@
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
 
             // load element by type
-            codeList.Add(arrayType.GetElementType().GetLoadIndirectCode());
+            var loadIndirectCode = arrayType.GetElementType().GetLoadIndirectCode();
+            codeList.Add(loadIndirectCode);
+
+            if (loadIndirectCode == Code.Ldind_Ref)
+            {
+                // cast to type
+                codeList.Add(Code.Conv_I);
+                codeList.AppendInt(Code.Castclass, 4);
+            }
 
             // return
             codeList.Add(Code.Ret);
@@ -186,15 +194,21 @@
 
             var codeList = new List<object>();
 
+            var saveIndirectCode = arrayType.GetElementType().GetSaveIndirectCode();
+
             // index for expr: *(data + index)
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, true));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
+            if (saveIndirectCode == Code.Stind_Ref)
+            {
+                codeList.AppendInt(Code.Castclass, 5);
+            }
 
-            // put value on stack
-            codeList.Add(Code.Ldarg_1);
+            // put value on stack (+ 'this' as first)
+            codeList.AppendLoadArg(arrayType.ArrayRank + 1);
 
             // save element by type
-            codeList.Add(arrayType.GetElementType().GetSaveIndirectCode());
+            codeList.Add(saveIndirectCode);
 
             // return
             codeList.Add(Code.Ret);
@@ -207,7 +221,7 @@
 
             // parameters
             var list = GetParameters(arrayType, typeResolver);
-            list.Insert(0, arrayType.GetElementType().ToParameter());
+            list.Add(arrayType.GetElementType().ToParameter());
             parameters = list;
         }
 
@@ -347,33 +361,15 @@
         private static List<object> GetIndexPartMethodBody(
             IType arrayType,
             ITypeResolver typeResolver,
-            out IList<object> tokenResolutions,
-            bool set = false)
+            out IList<object> tokenResolutions)
         {
             var codeList = new List<object>();
 
             // load index, load lowerBound value, calculate shift
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
-                var effectiveIndex = set ? i + 1 : i;
-
-                // load index
-                switch (effectiveIndex)
-                {
-                    case 0:
-                        codeList.Add(Code.Ldarg_1);
-                        break;
-                    case 1:
-                        codeList.Add(Code.Ldarg_2);
-                        break;
-                    case 2:
-                        codeList.Add(Code.Ldarg_3);
-                        break;
-                    default:
-                        var argIndex = effectiveIndex + 1;
-                        codeList.AppendInt(Code.Ldarg, argIndex);
-                        break;
-                }
+                // load index (first is 'this')
+                codeList.AppendLoadArg(i + 1);
 
                 // - lowerBounds[index]
                 // load lowerBound value by index
@@ -448,7 +444,9 @@
             // bounds
             tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
             // element type
-            tokenResolutions.Add(arrayType);
+            tokenResolutions.Add(arrayType.GetElementType());
+            // element type as pointer
+            tokenResolutions.Add(arrayType.GetElementType().ToPointerType());
 
             return codeList;
         }

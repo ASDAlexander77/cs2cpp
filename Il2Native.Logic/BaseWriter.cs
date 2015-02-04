@@ -1386,7 +1386,11 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Stind_Ref))
             {
                 retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                if (retType.IsByRef)
+                if (retType == null)
+                {
+                    retType = this.ResolveType("System.Void").ToPointerType();
+                }
+                else if (retType.IsByRef)
                 {
                     retType = retType.ToNormal();
                 }
