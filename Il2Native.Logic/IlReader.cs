@@ -559,6 +559,19 @@ namespace Il2Native.Logic
                 yield return field;
             }
 
+            var normal = type.ToNormal();
+            if (normal.IsPrimitiveTypeOrEnum())
+            {
+                if (normal.IsEnum)
+                {
+                    yield return normal.GetEnumUnderlyingType().ToField(type, "Value");
+                }
+                else
+                {
+                    yield return normal.ToField(type, "Value");
+                }
+            }
+
             // append methods or MultiArray
             if (type.IsMultiArray)
             {

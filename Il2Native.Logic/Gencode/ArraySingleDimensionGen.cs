@@ -459,6 +459,7 @@ namespace Il2Native.Logic.Gencode
 
             var sizeOfElement = elementType.GetTypeSize(llvmWriter, true);
             llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes | LlvmWriter.OperandOptions.GenerateResult);
+
             writer.WriteLine(", {0}", sizeOfElement);
 
             var resMul = opCode.Result;

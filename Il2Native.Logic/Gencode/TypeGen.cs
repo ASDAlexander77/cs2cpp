@@ -12,6 +12,7 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.CodeDom.Compiler;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using CodeParts;
     using PEAssemblyReader;
@@ -164,11 +165,6 @@ namespace Il2Native.Logic.Gencode
                 membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
             if (memberLocationInfo == null)
             {
-                if (field.Name == "Value" && field.DeclaringType.ToNormal().IsPrimitiveTypeOrEnum())
-                {
-                    return LlvmWriter.PointerSize;
-                }
-
                 throw new MissingMemberException(field.FullName);
             }
 
