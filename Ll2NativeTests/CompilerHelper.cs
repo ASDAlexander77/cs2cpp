@@ -363,10 +363,6 @@
                 {
                     if (!ConvertAll(fileName, source))
                     {
-                        if (!ignoreBadFiles)
-                        {
-                            Assert.Inconclusive("File not found");
-                        }
                         return;
                     }
                 }
