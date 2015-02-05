@@ -361,7 +361,14 @@
             {
                 if (includeAll)
                 {
-                    ConvertAll(fileName, source);
+                    if (!ConvertAll(fileName, source))
+                    {
+                        if (!ignoreBadFiles)
+                        {
+                            Assert.Inconclusive("File not found");
+                        }
+                        return;
+                    }
                 }
                 else
                 {
@@ -418,7 +425,7 @@
                 GetConverterArgs(true));
         }
 
-        public static void ConvertAll(string fileName, string source = SourcePath)
+        public static bool ConvertAll(string fileName, string source = SourcePath)
         {
             Trace.WriteLine(string.Empty);
             Trace.WriteLine("==========================================================================");
@@ -435,13 +442,15 @@
                 Trace.WriteLine("MISSING! " + fileName);
                 Trace.WriteLine("==========================================================================");
                 Trace.WriteLine(string.Empty);
-                throw new FileNotFoundException();
+                return false;
             }
 
             Il2Converter.Convert(
                 sources,
                 OutputPath,
                 GetConverterArgs(true));
+
+            return true;
         }
 
         public static void AssertUiEnabled(bool enable)
