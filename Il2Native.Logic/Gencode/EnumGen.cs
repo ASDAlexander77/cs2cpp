@@ -66,12 +66,22 @@
             codeList.Add(Code.Ldarg_0);
             codeList.AppendInt(Code.Ldfld, 1);
 
+            var sizeOfEnum = enumType.GetEnumUnderlyingType().IntTypeBitSize() / 8;
+
             // build cmp/jmp cases
             var stringValues = 1;
             foreach (var enumConstValue in IlReader.Fields(enumType, typeResolver).Where(f => f.IsConst))
             {
                 codeList.Add(Code.Dup);
-                codeList.AppendInt(Code.Ldc_I4, Convert.ToInt32(enumConstValue.ConstantValue));
+                if (sizeOfEnum == 8)
+                {
+                    codeList.AppendLong(Code.Ldc_I8, Convert.ToInt64(enumConstValue.ConstantValue));
+                }
+                else
+                {
+                    codeList.AppendInt(Code.Ldc_I4, Convert.ToInt32(enumConstValue.ConstantValue));
+                }
+
                 codeList.Add(Code.Bne_Un_S);
                 codeList.Add(6);
                 codeList.AppendInt(Code.Ldstr, ++stringValues);
