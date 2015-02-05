@@ -264,6 +264,11 @@
 
             if (!justCompile)
             {
+                if (!File.Exists(Path.Combine(OutputPath, "libgc-lib.a")))
+                {
+                    throw new FileNotFoundException("libgc-lib.a could not be found");
+                }
+
                 // file exe
                 ExecCmd(
                     "g++",
@@ -429,7 +434,12 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-            var sources = Directory.GetFiles(source, string.Format("{0}*.cs", fileName)).Reverse().ToArray();
+            var sources = Directory.GetFiles(source, string.Format("{0}-*.cs", fileName)).ToList();
+            var filePath = Path.Combine(source, string.Format("{0}.cs", fileName));
+            if (File.Exists(filePath))
+            {
+                sources.Insert(0, filePath);
+            }
 
             if (!sources.Any())
             {
@@ -442,7 +452,7 @@
             }
 
             Il2Converter.Convert(
-                sources,
+                sources.ToArray(),
                 OutputPath,
                 GetConverterArgs(true));
 
