@@ -127,7 +127,7 @@ namespace Ll2NativeTests
                     @"var file = Path.Combine(CompilerHelper.SourcePath, @""" + subfolders + @""", """ + fileName +
                     @""");");
                 Debug.WriteLine(
-                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, true);");
                 Debug.WriteLine(@"}");
                 Debug.WriteLine(@"");
             }
@@ -206,7 +206,7 @@ namespace Ll2NativeTests
                     @"var file = Path.Combine(CompilerHelper.SscliSourcePath, @""" + subfolders + @""", """ +
                     Path.GetFileName(file) + @""");");
                 Debug.WriteLine(
-                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false);");
+                    @"CompilerHelper.CompileAndRun(Path.GetFileNameWithoutExtension(file), Path.GetDirectoryName(file) + ""\\"", false, false);");
                 Debug.WriteLine(@"}");
                 Debug.WriteLine(@"");
             }
@@ -304,8 +304,6 @@ namespace Ll2NativeTests
             // 36 - bug in execution (NotImplemented)
             // 39 - using Attributes
             // 43, 44, 45 - TODO: NEED TO FINISH System.Array functions!!!
-            // 50 - missing
-            // 67 - missing
             // 74 - using StreamReader
             // 85 - using UnmanagedType
             // 91 - using Reflection
@@ -394,10 +392,8 @@ namespace Ll2NativeTests
                         43,
                         44,
                         45,
-                        50,
                         53,
                         55,
-                        67,
                         74,
                         85,
                         91,
@@ -514,7 +510,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCustomConvert()
         {
-            CompilerHelper.Convert("test-1", CompilerHelper.SourcePathCustom);
+            CompilerHelper.ConvertAll("test-1", CompilerHelper.SourcePathCustom);
         }
 
         /// <summary>
@@ -544,24 +540,15 @@ namespace Ll2NativeTests
             // 56 - bug in execution (NotImplemented)
             // 65 - can't be compiled yet, Debug Trace: (39,22): error CS0311: The type 'string' cannot be used as type parameter 'T' in the generic type or method 'ComparablePair<T, U>'. There is no implicit reference conversion from 'string' to 'System.IComparable<string>'.
             // 72 - not implemented (DateTime to string)
-            // 77 - file not found
             // 78 - not implemented
-            // 99 - file not found
             // 102 - can't be compiled, Debug Trace: (18,5): error CS0315: The type 'int' cannot be used as type parameter 'T' in the generic type or method 'A<T>'. There is no boxing conversion from 'int' to 'System.IComparable'.
             // 109 - can't be compiled, Debug Trace: error CS0117: 'System.Array' does not contain a definition for 'Resize'
             // 117 - "xxx is int[]" treated as "xxx is int": NEED TO BE FIXED (when __Array__<T> is used)
-            // 119 - typeof pointer
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
-            // 156 - can't compile (seems it is lib)
-            // 161 - can't compile (seems it is lib)
             // 162 - GetType. findMember
-            // 165 - cant be compiled (library)
-            // 166 - cant be compiled (library)
             // 167 - Attribute.GetCustomAttributes
-            // 172 - cant be compiled (library)
-            // 174 - cant be compiled (library)
             // 177 - cast IEnumerable<T> from Array
             // 180 - Attributes
             // 184 - Array.FindAll not implemented
@@ -576,43 +563,27 @@ namespace Ll2NativeTests
             // 219 - GetMethod
             // 223 - GetMethod
             // 226 - GetField
-            // 232 - "lib"
-            // 233 - "lib"
 
-            // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[]
             {
-                13,
-                17,
-                31,
                 40,
-                47,
                 51,
                 53,
                 56,
                 65,
                 72,
-                77,
                 78,
-                98,
-                99,
                 102,
                 109,
                 117,
-                119,
                 128,
                 143,
                 144,
                 156,
                 161,
                 162,
-                165,
-                166,
-                167,
-                172,
-                174,
                 177,
                 180,
                 184,
@@ -627,8 +598,6 @@ namespace Ll2NativeTests
                 219,
                 223,
                 226,
-                232,
-                233
             };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {

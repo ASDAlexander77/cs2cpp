@@ -355,11 +355,18 @@
         /// </summary>
         /// <param name="index">
         /// </param>
-        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false)
+        public static void CompileAndRun(string fileName, string source = SourcePath, bool ignoreBadFiles = false, bool includeAll = true)
         {
             try
             {
-                Convert(fileName, source);
+                if (includeAll)
+                {
+                    ConvertAll(fileName, source);
+                }
+                else
+                {
+                    Convert(fileName, source);
+                }
             }
             catch (BadImageFormatException ex)
             {
@@ -407,6 +414,20 @@
 
             Il2Converter.Convert(
                 string.Concat(source, string.Format("{0}.cs", fileName)),
+                OutputPath,
+                GetConverterArgs(true));
+        }
+
+        public static void ConvertAll(string fileName, string source = SourcePath)
+        {
+            Trace.WriteLine(string.Empty);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("==========================================================================");
+            Trace.WriteLine(string.Empty);
+
+            Il2Converter.Convert(
+                Directory.GetFiles(source, string.Format("{0}*.cs", fileName)).Reverse().ToArray(),
                 OutputPath,
                 GetConverterArgs(true));
         }
