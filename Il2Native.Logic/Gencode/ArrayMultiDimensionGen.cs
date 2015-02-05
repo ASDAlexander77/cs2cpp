@@ -6,9 +6,6 @@
     using System.Linq;
     using CodeParts;
 
-    using Il2Native.Logic.Gencode.InlineMethods;
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
-
     using PEAssemblyReader;
 
     public static class ArrayMultiDimensionGen
@@ -444,43 +441,6 @@
             tokenResolutions.Add(arrayType.GetElementType().ToPointerType());
 
             return codeList;
-        }
-
-        public static void AppendLoadArg(this List<object> codeList, int argIndex)
-        {
-            switch (argIndex)
-            {
-                case 0:
-                    codeList.Add(Code.Ldarg_0);
-                    break;
-                case 1:
-                    codeList.Add(Code.Ldarg_1);
-                    break;
-                case 2:
-                    codeList.Add(Code.Ldarg_2);
-                    break;
-                case 3:
-                    codeList.Add(Code.Ldarg_3);
-                    break;
-                default:
-                    codeList.AppendInt(Code.Ldarg, argIndex);
-                    break;
-            }
-        }
-
-        public static void AppendLoadInt(this List<object> codeList, int value)
-        {
-            codeList.AppendInt(Code.Ldc_I4, value);
-        }
-
-        public static void AppendInt(this List<object> codeList, Code op, int valueInt)
-        {
-            var value = BitConverter.GetBytes(valueInt);
-            codeList.AddRange(
-                new object[]
-                    {
-                        op, (byte)value[0], (byte)value[1], (byte)value[2], (byte)value[3],
-                    });
         }
     }
 }

@@ -46,6 +46,11 @@
 
         public string ResolveString(int token)
         {
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
+            {
+                return this.tokenResolutions[token - 1] as string;
+            }
+
             return this.method.Module.ResolveString(token);
         }
 

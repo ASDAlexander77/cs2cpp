@@ -15,13 +15,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetTypeMethod : SynthesizedMethodTypeBase
+    public class SynthesizedGetTypeMethod : SynthesizedThisMethod
     {
         public const string Name = ".gettype";
-
-        /// <summary>
-        /// </summary>
-        private readonly ITypeResolver typeResolver;
 
         /// <summary>
         /// </summary>
@@ -30,36 +26,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
-            : base(type, Name)
+            : base(Name, type, typeResolver.ResolveType("System.Type"))
         {
-            this.typeResolver = typeResolver;
-        }
-
-        public override bool IsVirtual
-        {
-            get
+            if (type.IsObject)
             {
-                return true;
+                IsVirtual = true;
             }
-
-            protected set
+            else
             {
-                throw new NotSupportedException();
+                IsOverride = true;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        public override CallingConventions CallingConvention
-        {
-            get { return CallingConventions.HasThis; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public override IType ReturnType
-        {
-            get { return this.typeResolver.ResolveType("System.Type"); }
         }
     }
 }

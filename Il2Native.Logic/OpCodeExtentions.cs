@@ -1,21 +1,21 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OpCodeExtentions.cs" company="">
-//   
 // </copyright>
 // <summary>
-//   
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
-
 namespace Il2Native.Logic
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
     using System.Text;
-    using CodeParts;
-    using Gencode;
+
+    using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -46,6 +46,39 @@ namespace Il2Native.Logic
             return codes.Any(item => item == code);
         }
 
+        public static void AppendInt(this List<object> codeList, Code op, int valueInt)
+        {
+            var value = BitConverter.GetBytes(valueInt);
+            codeList.AddRange(new object[] { op, value[0], value[1], value[2], value[3], });
+        }
+
+        public static void AppendLoadArg(this List<object> codeList, int argIndex)
+        {
+            switch (argIndex)
+            {
+                case 0:
+                    codeList.Add(Code.Ldarg_0);
+                    break;
+                case 1:
+                    codeList.Add(Code.Ldarg_1);
+                    break;
+                case 2:
+                    codeList.Add(Code.Ldarg_2);
+                    break;
+                case 3:
+                    codeList.Add(Code.Ldarg_3);
+                    break;
+                default:
+                    codeList.AppendInt(Code.Ldarg, argIndex);
+                    break;
+            }
+        }
+
+        public static void AppendLoadInt(this List<object> codeList, int value)
+        {
+            codeList.AppendInt(Code.Ldc_I4, value);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="method">
@@ -56,11 +89,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="readStaticFields">
         /// </param>
-        public static void DiscoverMethod(
-            this IMethod method,
-            ISet<IType> usedTypes,
-            ISet<IMethod> calledMethods,
-            ISet<IField> readStaticFields)
+        public static void DiscoverMethod(this IMethod method, ISet<IType> usedTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
@@ -88,10 +117,10 @@ namespace Il2Native.Logic
         /// <param name="stackCall">
         /// </param>
         public static void DiscoverRequiredTypesAndMethodsInMethodBody(
-            this IMethod method,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> requiredTypes,
+            this IMethod method, 
+            ISet<IType> genericTypeSpecializations, 
+            ISet<IMethod> genericMethodSpecializations, 
+            ISet<IType> requiredTypes, 
             Queue<IMethod> stackCall)
         {
             // read method body to extract all types
@@ -123,8 +152,7 @@ namespace Il2Native.Logic
             if (current != null && JumpOrLabelPoint(current, out jumpOrLabel))
             {
                 var nextAlternateValues = current.Next != null ? current.Next.AlternativeValues : null;
-                if (nextAlternateValues != null &&
-                    nextAlternateValues.SelectMany(av => av.Values).Any(v => v.AddressStart == current.AddressStart))
+                if (nextAlternateValues != null && nextAlternateValues.SelectMany(av => av.Values).Any(v => v.AddressStart == current.AddressStart))
                 {
                     return current.Next.AddressStart;
                 }
@@ -245,9 +273,7 @@ namespace Il2Native.Logic
         {
             if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
             {
-                return string.Concat(
-                    '@',
-                    methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
+                return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
             }
 
             if (methodBase.ToString().StartsWith("%"))
@@ -357,7 +383,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool HasAnyVirtualMethodInCurrentType(this IType thisType, ITypeResolver typeResolver)
         {
-            if (IlReader.Methods(thisType, typeResolver).Any(m => m.IsVirtual || m.IsAbstract))
+            if (IlReader.Methods(thisType, typeResolver).Any(m => m.IsVirtual || m.IsOverride || m.IsAbstract))
             {
                 return true;
             }
@@ -387,8 +413,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsAnyBranch(this OpCodePart opCodePart)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch ||
-                   opCodePart.OpCode.FlowControl == FlowControl.Branch;
+            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch || opCodePart.OpCode.FlowControl == FlowControl.Branch;
         }
 
         /// <summary>
@@ -410,8 +435,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsCondBranch(this OpCodePart opCodePart)
         {
-            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() != Code.Switch &&
-                   opCodePart.ToCode() != Code.Leave
+            return opCodePart.OpCode.FlowControl == FlowControl.Cond_Branch && opCodePart.ToCode() != Code.Switch && opCodePart.ToCode() != Code.Leave
                    && opCodePart.ToCode() != Code.Leave_S;
         }
 
@@ -582,8 +606,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsMatchingGeneric(this IMethod method, IMethod genericMethod)
         {
-            if (method.MetadataName == genericMethod.MetadataName &&
-                method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
+            if (method.MetadataName == genericMethod.MetadataName && method.DeclaringType.TypeEquals(genericMethod.DeclaringType))
             {
                 return method.IsMatchingGenericParamsAndReturnType(genericMethod);
             }
@@ -700,8 +723,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsRootOfVirtualTable(this IType type, ITypeResolver typeResolver)
         {
-            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType(typeResolver) &&
-                   (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod(typeResolver));
+            return !type.IsInterface && type.HasAnyVirtualMethodInCurrentType(typeResolver)
+                   && (type.BaseType == null || !type.BaseType.HasAnyVirtualMethod(typeResolver));
         }
 
         /// <summary>
@@ -740,9 +763,8 @@ namespace Il2Native.Logic
 
         public static bool IsSkipped(this IMethod method)
         {
-            return method.IsUnmanaged && !method.IsUnmanagedMethodReference &&
-                   (method.Name == "llvm_memcpy_p0i8_p0i8_i32"
-                    || method.Name == "llvm_memset_p0i8_i32");
+            return method.IsUnmanaged && !method.IsUnmanagedMethodReference
+                   && (method.Name == "llvm_memcpy_p0i8_p0i8_i32" || method.Name == "llvm_memset_p0i8_i32");
         }
 
         /// <summary>
@@ -756,10 +778,8 @@ namespace Il2Native.Logic
         public static bool IsStructureType(this IType type, bool recurse = false)
         {
             return type != null
-                   &&
-                   (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer &&
-                    !type.IsByRef
-                    || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
+                   && (type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsVoid() && !type.IsPointer && !type.IsByRef
+                       || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
         /// <summary>
@@ -1118,8 +1138,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) &&
-                genType.MetadataFullName.Equals(type.MetadataFullName))
+            if ((genType.IsGenericTypeDefinition || type.IsGenericTypeDefinition) && genType.MetadataFullName.Equals(type.MetadataFullName))
             {
                 return true;
             }

@@ -24,6 +24,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        object ConstantValue { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsFixed { get; }
 
         /// <summary>

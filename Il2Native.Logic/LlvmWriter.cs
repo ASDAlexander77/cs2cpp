@@ -817,7 +817,7 @@ namespace Il2Native.Logic
             this.postDeclarationsProcessedTypes.Add(type);
 
             this.WriteStaticFieldDeclarations(type);
-            this.WriteInterfaceVirtaulTables(type);
+            this.WriteInterfaceVirtualTables(type);
 
             this.Output.WriteLine(string.Empty);
 
@@ -851,11 +851,6 @@ namespace Il2Native.Logic
             if (canBeUnboxed && !excluded)
             {
                 normalType.WriteUnboxMethod(this);
-            }
-
-            if (isEnum)
-            {
-                normalType.WriteGetHashCodeMethodForEnum(this);
             }
 
             normalType.WriteInternalGetTypeMethod(this);
@@ -6159,7 +6154,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteInterfaceVirtaulTables(IType type)
+        private void WriteInterfaceVirtualTables(IType type)
         {
             // write VirtualTable
             if (!type.IsInterface)

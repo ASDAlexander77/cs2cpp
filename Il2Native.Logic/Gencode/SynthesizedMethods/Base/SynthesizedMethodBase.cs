@@ -123,11 +123,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public bool IsOverride { get; private set; }
+        public bool IsOverride { get; protected set; }
 
         /// <summary>
         /// </summary>
-        public virtual bool IsStatic { get; private set; }
+        public bool IsStatic { get; protected set; }
 
         /// <summary>
         ///     custom field
@@ -146,7 +146,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
-        public virtual bool IsVirtual { get; protected set; }
+        public bool IsVirtual { get; protected set; }
 
         /// <summary>
         /// </summary>

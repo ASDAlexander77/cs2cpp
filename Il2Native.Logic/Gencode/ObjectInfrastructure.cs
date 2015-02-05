@@ -451,43 +451,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="llvmWriter">
-        /// </param>
-        public static void WriteGetHashCodeMethodForEnum(this IType type, LlvmWriter llvmWriter)
-        {
-            var writer = llvmWriter.Output;
-
-            var method = new SynthesizedGetHashCodeMethod(type, llvmWriter);
-            writer.WriteLine("; default GetHashCode method");
-
-            var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteLlvmLoad(
-                opCode,
-                type.ToClass(),
-                new FullyDefinedReference(llvmWriter.GetThisName(), llvmWriter.ThisType),
-                true,
-                true);
-            writer.WriteLine(string.Empty);
-
-            var normalType = type.ToNormal();
-
-            llvmWriter.WriteGetHashCodeObjectForEnum(opCode, normalType);
-
-            writer.Write("ret i32");
-
-            writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
-
-            llvmWriter.WriteMethodEnd(method, null);
-
-            llvmWriter.methodsHaveDefinition.Add(method);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="llvmWriter">
         /// </param>
         /// <param name="opCode">

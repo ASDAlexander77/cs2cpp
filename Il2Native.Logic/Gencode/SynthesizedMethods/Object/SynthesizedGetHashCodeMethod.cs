@@ -14,12 +14,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetHashCodeMethod : SynthesizedMethodTypeBase
+    public class SynthesizedGetHashCodeMethod : SynthesizedThisMethod
     {
-        /// <summary>
-        /// </summary>
-        private readonly ITypeResolver typeResolver;
-
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -27,23 +23,16 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedGetHashCodeMethod(IType type, ITypeResolver typeResolver)
-            : base(type, "GetHashCode")
+            : base("GetHashCode", type, typeResolver.ResolveType("System.Int32"))
         {
-            this.typeResolver = typeResolver;
-        }
-
-        /// <summary>
-        /// </summary>
-        public override CallingConventions CallingConvention
-        {
-            get { return CallingConventions.HasThis; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public override IType ReturnType
-        {
-            get { return this.typeResolver.ResolveType("System.Int32"); }
+            if (type.IsObject)
+            {
+                IsVirtual = true;
+            }
+            else
+            {
+                IsOverride = true;
+            }
         }
     }
 }

@@ -24,11 +24,12 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedThisMethod(string name, IType declaringType, IType returnType, bool isVirtual = false)
+        public SynthesizedThisMethod(string name, IType declaringType, IType returnType, bool isVirtual = false, bool isOverride = false)
             : base(declaringType, name)
         {
             this.returnType = returnType;
             IsVirtual = isVirtual;
+            IsOverride = isOverride;
         }
 
         /// <summary>

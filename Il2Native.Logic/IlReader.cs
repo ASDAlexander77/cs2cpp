@@ -20,6 +20,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Enum;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -559,23 +560,29 @@ namespace Il2Native.Logic
                 yield return field;
             }
 
+            // extra fields
             var normal = type.ToNormal();
             if (normal.IsPrimitiveTypeOrEnum())
             {
                 if (normal.IsEnum)
                 {
-                    yield return normal.GetEnumUnderlyingType().ToField(type, "Value");
+                    foreach (var field in EnumGen.GetFields(normal, typeResolver))
+                    {
+                        yield return field;
+                    }                    
                 }
                 else
                 {
                     yield return normal.ToField(type, "Value");
                 }
-            }
-
-            // append methods or MultiArray
-            if (type.IsMultiArray)
+            } 
+            else if (type.IsMultiArray)
             {
-                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver)) yield return field;
+                // append methods or MultiArray
+                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver)) 
+                {
+                    yield return field;
+                }
             }
         }
 
@@ -634,11 +641,13 @@ namespace Il2Native.Logic
 
                 // append internal methods
                 yield return new SynthesizedGetTypeMethod(type, typeResolver);
+            }
 
-                if (type.ToNormal().IsEnum)
-                {
-                    yield return new SynthesizedGetHashCodeMethod(type, typeResolver);
-                }
+            var normal = type.ToNormal();
+            if (normal.IsEnum)
+            {
+                yield return new SynthesizedEnumGetHashCodeMethod(type, typeResolver);
+                yield return new SynthesizedEnumToStringMethod(type, typeResolver);
             }
 
             // append methods or MultiArray
@@ -703,8 +712,6 @@ namespace Il2Native.Logic
         /// <returns></returns>
         public IEnumerable<IType> CompileSourceWithRoslyn(params string[] source)
         {
-            // TODO: ASD FIX: you need to change Roslyn source code to allow compiling with System.Array inheritence (file SourceNamedTypeSymbol_Bases.cs)
-            var baseName = Path.GetRandomFileName();
             var nameDll = "__unrestricted__.dll";
 
             var syntaxTrees =

@@ -145,6 +145,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public object ConstantValue
+        {
+            get
+            {
+                return this.fieldDef.ConstantValue;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsOverride
         {
             get
