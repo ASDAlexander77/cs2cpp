@@ -426,8 +426,20 @@
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
+            var sources = Directory.GetFiles(source, string.Format("{0}*.cs", fileName)).Reverse().ToArray();
+
+            if (!sources.Any())
+            {
+                Trace.WriteLine(string.Empty);
+                Trace.WriteLine("==========================================================================");
+                Trace.WriteLine("MISSING! " + fileName);
+                Trace.WriteLine("==========================================================================");
+                Trace.WriteLine(string.Empty);
+                throw new FileNotFoundException();
+            }
+
             Il2Converter.Convert(
-                Directory.GetFiles(source, string.Format("{0}*.cs", fileName)).Reverse().ToArray(),
+                sources,
                 OutputPath,
                 GetConverterArgs(true));
         }
