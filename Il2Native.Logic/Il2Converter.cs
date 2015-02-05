@@ -219,7 +219,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.IsGenericTypeDefinition || type.Name == "<Module>")
+                if (type.IsGenericTypeDefinition)
                 {
                     continue;
                 }
@@ -875,7 +875,7 @@ namespace Il2Native.Logic
                         type,
                         requiredTypes,
                         subSetGenericTypeSpecializations,
-                        genericMethodSpecializations, 
+                        genericMethodSpecializations,
                         additionalTypesToProcess,
                         processedAlready));
             }
@@ -893,7 +893,7 @@ namespace Il2Native.Logic
                         type,
                         requiredTypes,
                         subSetGenericTypeSpecializations,
-                        genericMethodSpecializations, 
+                        genericMethodSpecializations,
                         additionalTypesToProcess,
                         processedAlready);
                 }
@@ -964,13 +964,13 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null);
 
-             var requiredTypes = GetAllRequiredTypesForType(
-                type,
-                genericTypeSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess,
-                processedAlready)
-                .Where(type.TypeNotEquals);
+            var requiredTypes = GetAllRequiredTypesForType(
+               type,
+               genericTypeSpecializations,
+               genericMethodSpecializations,
+               additionalTypesToProcess,
+               processedAlready)
+               .Where(type.TypeNotEquals);
             foreach (var requiredType in requiredTypes)
             {
                 AddBareTypeToRequiredTypes(requiredType, addedRequiredTypes);
@@ -1008,6 +1008,12 @@ namespace Il2Native.Logic
                 processedAlready);
         }
 
+        private static bool SpecialTypesToFilter(IType t)
+        {
+            return (t.DeclaringType != null && t.DeclaringType.Name == "<PrivateImplementationDetails>" && t.Name.StartsWith("__StaticArrayInitTypeSize=")) ||
+                   t.Name == "<Module>";
+        }
+
         private static void ReadingTypes(
             IlReader ilReader,
             string[] filter,
@@ -1019,7 +1025,7 @@ namespace Il2Native.Logic
             var genericTypeSpecializations = new NamespaceContainer<IType>();
             var genericMethodSpecializations = new NamespaceContainer<IMethod>();
             var additionalTypesToProcess = new NamespaceContainer<IType>();
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
+            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && !SpecialTypesToFilter(t));
             if (filter != null)
             {
                 types = types.Where(t => CheckFilter(filter, t));
@@ -1190,7 +1196,7 @@ namespace Il2Native.Logic
                         AppendTypeWithRequiredTypePair(
                             type,
                             typesWithRequired,
-                            genericTypeSpecializations, 
+                            genericTypeSpecializations,
                             genericMethodSpecializations,
                             additionalTypesToProcess,
                             processedAlready));
@@ -1202,8 +1208,8 @@ namespace Il2Native.Logic
                     AppendTypeWithRequiredTypePair(
                         type,
                         typesWithRequired,
-                        genericTypeSpecializations, 
-                        genericMethodSpecializations, 
+                        genericTypeSpecializations,
+                        genericMethodSpecializations,
                         additionalTypesToProcess,
                         processedAlready);
                 }

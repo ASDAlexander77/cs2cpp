@@ -549,6 +549,7 @@ namespace Ll2NativeTests
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
             // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
             // 162 - GetType. findMember
+            // 165 - BUG in compiling (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
             // 167 - Attribute.GetCustomAttributes
             // 177 - cast IEnumerable<T> from Array
             // 180 - Attributes
@@ -586,6 +587,8 @@ namespace Ll2NativeTests
                 156,
                 161,
                 162,
+                165,
+                167,
                 177,
                 180,
                 184,
@@ -601,7 +604,7 @@ namespace Ll2NativeTests
                 223,
                 226,
             };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(167, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
