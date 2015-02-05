@@ -145,20 +145,12 @@ namespace Il2Native.Logic
             codeWriter.WriteTypeStart(type, genericContext);
             codeWriter.WriteBeforeFields(count);
 
-            if (!type.ToNormal().IsEnum)
+            foreach (var field in fields)
             {
-                foreach (var field in fields)
-                {
-                    codeWriter.WriteFieldStart(field, number, count);
-                    codeWriter.WriteFieldEnd(field, number, count);
+                codeWriter.WriteFieldStart(field, number, count);
+                codeWriter.WriteFieldEnd(field, number, count);
 
-                    number++;
-                }
-            }
-            else
-            {
-                codeWriter.Write("," + Environment.NewLine);
-                codeWriter.WriteFieldType(type.GetEnumUnderlyingType());
+                number++;
             }
 
             codeWriter.WriteAfterFields(count);

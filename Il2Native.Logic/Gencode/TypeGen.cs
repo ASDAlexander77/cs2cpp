@@ -453,7 +453,7 @@ namespace Il2Native.Logic.Gencode
                 yield break;
             }
 
-            if (type.IsEnum)
+            if (!firstLevel && type.IsEnum)
             {
                 var enumUnderlyingType = type.GetEnumUnderlyingType();
                 int enumUnderlyingTypeFieldSize;
