@@ -303,13 +303,10 @@ namespace Ll2NativeTests
             // 19 - using Thread class, Reflection
             // 36 - bug in execution (NotImplemented)
             // 39 - using Attributes
-            // 40 - enum to string (NotImplemented)
             // 43, 44, 45 - TODO: NEED TO FINISH System.Array functions!!!
             // 50 - missing
             // 67 - missing
-            // 68 - using enum
             // 74 - using StreamReader
-            // 77 - using enum
             // 85 - using UnmanagedType
             // 91 - using Reflection
             // 99 - using GetType
@@ -336,7 +333,6 @@ namespace Ll2NativeTests
             // 181 - using Reflection
             // 183 - using BeginInvoke
             // 187 - using Specialized Collections
-            // 203 - enum to string (NotImplemented)
             // 219 - can't be compiled (22,26): error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes' and no extension method 'GetCustomAttributes' accepting a first argument of type 'System.Type' could be found (are you missing a using directive or an assembly reference?)
             // 220 - can't be compiled (8,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
             // 229 - can't be compiled (3,26): error CS0234: The type or namespace name 'Specialized' does not exist in the namespace 'System.Collections' (are you missing an assembly reference?)
@@ -373,7 +369,6 @@ namespace Ll2NativeTests
             // 318 - EventHandlerList error CS0246: The type or namespace name 'EventHandlerList' could not be found (are you missing a using directive or an assembly reference?)
             // 319 - missing DecimalConstantAttribute
             // 329 - GetCustromAttributes
-            // 330 - int to IFormattable
             // 349 - TypeAttributes
             // 352 - MarshalAs
             // 353 - no Main()
@@ -383,7 +378,6 @@ namespace Ll2NativeTests
             // 367 - GetFields not implemented
             // -----------
             // 32, 55, 74 - missing class
-            // 77 - enum to string
 
             // -----------------
             // 9 - decimal
@@ -397,7 +391,6 @@ namespace Ll2NativeTests
                         32,
                         36,
                         39,
-                        40,
                         43,
                         44,
                         45,
@@ -405,9 +398,7 @@ namespace Ll2NativeTests
                         53,
                         55,
                         67,
-                        68,
                         74,
-                        77,
                         85,
                         91,
                         99,
@@ -435,7 +426,6 @@ namespace Ll2NativeTests
                         181,
                         183,
                         187,
-                        203,
                         219,
                         220,
                         229,
@@ -472,7 +462,6 @@ namespace Ll2NativeTests
                         318,
                         319,
                         329,
-                        330,
                         349,
                         352,
                         353,
@@ -588,6 +577,7 @@ namespace Ll2NativeTests
             // 223 - GetMethod
             // 226 - GetField
             // 232 - "lib"
+            // 233 - "lib"
 
             // 13, 17, 31, 47, 98 - with Libs
             // 53 - ValueType.ToString() not implemented
@@ -637,7 +627,8 @@ namespace Ll2NativeTests
                 219,
                 223,
                 226,
-                232
+                232,
+                233
             };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {

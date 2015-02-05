@@ -75,11 +75,11 @@
                 codeList.Add(Code.Dup);
                 if (sizeOfEnum == 8)
                 {
-                    codeList.AppendLong(Code.Ldc_I8, Convert.ToInt64(enumConstValue.ConstantValue));
+                    codeList.AppendULong(Code.Ldc_I8, Convert.ToUInt64(enumConstValue.ConstantValue));
                 }
                 else
                 {
-                    codeList.AppendInt(Code.Ldc_I4, Convert.ToInt32(enumConstValue.ConstantValue));
+                    codeList.AppendUInt(Code.Ldc_I4, unchecked((uint)Convert.ToInt64(enumConstValue.ConstantValue)));
                 }
 
                 codeList.Add(Code.Bne_Un_S);

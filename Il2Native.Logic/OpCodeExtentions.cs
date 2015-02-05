@@ -50,24 +50,28 @@ namespace Il2Native.Logic
         {
             var value = BitConverter.GetBytes(valueInt);
             codeList.Add(op);
-            codeList.Add(value[0]);
-            codeList.Add(value[1]);
-            codeList.Add(value[2]);
-            codeList.Add(value[3]);
+            codeList.AddRange(value.Cast<object>());
+        }
+
+        public static void AppendUInt(this List<object> codeList, Code op, uint valueInt)
+        {
+            var value = BitConverter.GetBytes(valueInt);
+            codeList.Add(op);
+            codeList.AddRange(value.Cast<object>());
         }
 
         public static void AppendLong(this List<object> codeList, Code op, long valueLong)
         {
             var value = BitConverter.GetBytes(valueLong);
             codeList.Add(op);
-            codeList.Add(value[0]);
-            codeList.Add(value[1]);
-            codeList.Add(value[2]);
-            codeList.Add(value[3]);
-            codeList.Add(value[4]);
-            codeList.Add(value[5]);
-            codeList.Add(value[6]);
-            codeList.Add(value[7]);
+            codeList.AddRange(value.Cast<object>());
+        }
+
+        public static void AppendULong(this List<object> codeList, Code op, ulong valueLong)
+        {
+            var value = BitConverter.GetBytes(valueLong);
+            codeList.Add(op);
+            codeList.AddRange(value.Cast<object>());
         }
 
         public static void AppendLoadArg(this List<object> codeList, int argIndex)

@@ -117,7 +117,15 @@
                 }
                 else
                 {
-                    yield return (byte)Convert.ToSByte(codeItem);
+                    var @int = Convert.ToInt32(codeItem);
+                    if (@int > 0)
+                    {
+                        yield return (byte)@int;
+                    }
+                    else
+                    {
+                        yield return (byte)(sbyte)@int;
+                    }
                 }
             }
         }
