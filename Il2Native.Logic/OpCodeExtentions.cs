@@ -154,7 +154,7 @@ namespace Il2Native.Logic
             // read method body to extract all types
             var reader = new IlReader();
 
-            reader.UsedStructTypesOrMultiDimArrays = requiredTypes;
+            reader.UsedStructTypesOrArrays = requiredTypes;
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
 

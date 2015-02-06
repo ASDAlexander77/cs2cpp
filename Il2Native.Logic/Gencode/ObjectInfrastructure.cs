@@ -760,10 +760,6 @@ namespace Il2Native.Logic.Gencode
 
             var classType = typeIn.ToClass();
             var mainArrayType = classType;
-            if (classType.IsArray && !classType.IsMultiArray)
-            {
-                classType = classType.BaseType;
-            }
 
             var method = new SynthesizedInitMethod(mainArrayType, llvmWriter);
             writer.WriteLine("; Init Object method");

@@ -83,7 +83,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> _usedStructTypesOrMultiDimArrays;
+        private ISet<IType> _usedStructTypesOrArrays;
 
         /// <summary>
         /// </summary>
@@ -466,16 +466,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedStructTypesOrMultiDimArrays
+        public ISet<IType> UsedStructTypesOrArrays
         {
             get
             {
-                return this._usedStructTypesOrMultiDimArrays;
+                return this._usedStructTypesOrArrays;
             }
 
             set
             {
-                this._usedStructTypesOrMultiDimArrays = value;
+                this._usedStructTypesOrArrays = value;
             }
         }
 
@@ -580,6 +580,14 @@ namespace Il2Native.Logic
             {
                 // append methods or MultiArray
                 foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver)) 
+                {
+                    yield return field;
+                }
+            }
+            else if (type.IsArray)
+            {
+                // append methods or MultiArray
+                foreach (var field in ArraySingleDimensionGen.GetFields(type, typeResolver))
                 {
                     yield return field;
                 }
@@ -944,7 +952,7 @@ namespace Il2Native.Logic
 
                         this.AddUsedType(constructor.DeclaringType);
                         this.AddCalledMethod(constructor);
-                        this.AddMultiArrayType(constructor.DeclaringType);
+                        this.AddArrayType(constructor.DeclaringType);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
@@ -1066,6 +1074,11 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(type);
+
+                        if (code == Code.Newarr)
+                        {
+                            this.AddArrayType(type.ToArrayType(1));
+                        }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
@@ -1283,26 +1296,26 @@ namespace Il2Native.Logic
         /// </param>
         private void AddStructType(IType type)
         {
-            if (this._usedStructTypesOrMultiDimArrays == null || type == null || !type.IsStructureType())
+            if (this._usedStructTypesOrArrays == null || type == null || !type.IsStructureType())
             {
                 return;
             }
 
-            this._usedStructTypesOrMultiDimArrays.Add(type);
+            this._usedStructTypesOrArrays.Add(type);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void AddMultiArrayType(IType type)
+        private void AddArrayType(IType type)
         {
-            if (this._usedStructTypesOrMultiDimArrays == null || type == null || !type.IsMultiArray)
+            if (this._usedStructTypesOrArrays == null || type == null || !type.IsArray)
             {
                 return;
             }
 
-            this._usedStructTypesOrMultiDimArrays.Add(type);
+            this._usedStructTypesOrArrays.Add(type);
         }
 
         /// <summary>

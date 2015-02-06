@@ -546,11 +546,6 @@ namespace Il2Native.Logic.Gencode
 
             var effectiveType = type;
 
-            if (type.IsArray && !type.IsMultiArray)
-            {
-                effectiveType = type.GetElementType();
-            }
-
             if (!type.UseAsClass)
             {
                 if (effectiveType.Namespace == "System")
@@ -609,35 +604,23 @@ namespace Il2Native.Logic.Gencode
             var refChar = '*';
             var effectiveType = type;
 
-            if (type.IsArray)
-            {
-                writer.Write(refChar);
-
-                if (type.IsByRef)
-                {
-                    writer.Write(refChar);
-                }
-
-                return;
-            }
-
             var level = 0;
             do
             {
                 var isReference = !effectiveType.IsValueType;
                 if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) &&
                     !effectiveType.IsGenericParameter
-                    && !effectiveType.IsArray && !effectiveType.IsByRef)
+                    && !effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
 
-                if (effectiveType.IsByRef || effectiveType.IsArray)
+                if (effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
 
-                if (effectiveType.HasElementType && !effectiveType.IsArray)
+                if (effectiveType.HasElementType)
                 {
                     effectiveType = effectiveType.GetElementType();
                     level++;
@@ -674,7 +657,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="writer">
+        /// <param name="llvmWriter">
         /// </param>
         /// <param name="asReference">
         /// </param>
@@ -707,32 +690,14 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (!type.IsArray || type.IsMultiArray)
+            if (type.UseAsClass ||
+                !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
             {
-                if (type.UseAsClass ||
-                    !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
-                {
-                    writer.Write('%');
-                }
-
-                // write base name
-                effectiveType.WriteTypeName(writer, isPointer);
+                writer.Write('%');
             }
-            else if (!type.IsMultiArray)
-            {
-                writer.Write("{1} {2}, [ {0} x ", 0, "{", ArraySingleDimensionGen.GetSingleDimArrayPrefixDataType(llvmWriter));
 
-                effectiveType = type;
-
-                if (effectiveType.IsByRef)
-                {
-                    effectiveType = effectiveType.GetElementType();
-                }
-
-                effectiveType.GetElementType().WriteTypePrefix(llvmWriter);
-
-                writer.Write(" ] }");
-            }
+            // write base name
+            effectiveType.WriteTypeName(writer, isPointer);
         }
     }
 }

@@ -10,6 +10,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
@@ -61,6 +62,30 @@ namespace Il2Native.Logic.Gencode
         /// <summary>
         /// </summary>
         private static string _singleDimArrayPrefixNullConstData;
+
+        /*
+        public ArraySingleDimensionGen_Ctor()
+        {
+            this.rank = 0; //?
+            this.typeCode = type.GetElementType().TypeCode;
+            this.elementSize = type.GetSize();
+            this.length = dim1;
+        }
+         */
+
+        public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
+        {
+            Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for multi arrays only");
+
+            var shortType = typeResolver.ResolveType("System.Int16");
+            var intType = typeResolver.ResolveType("System.Int32");
+
+            yield return shortType.ToField(arrayType, "rank");
+            yield return shortType.ToField(arrayType, "typeCode");
+            yield return intType.ToField(arrayType, "elementSize");
+            yield return intType.ToField(arrayType, "length");
+            yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
+        }
 
         public static int GetArrayDataStartsWith(ITypeResolver typeResolver)
         {

@@ -141,7 +141,6 @@ namespace Il2Native.Logic
             var number = 1;
 
             Debug.Assert(!type.IsGenericTypeDefinition);
-            Debug.Assert(!type.IsArray || type.IsMultiArray);
 
             codeWriter.WriteTypeStart(type, genericContext);
             codeWriter.WriteBeforeFields(count);
@@ -444,7 +443,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (additionalTypesToProcess != null && type.IsMultiArray)
+            if (additionalTypesToProcess != null && type.IsArray)
             {
                 additionalTypesToProcess.Add(type);
             }
@@ -648,7 +647,7 @@ namespace Il2Native.Logic
         {
             Debug.Assert(typeSource != null);
 
-            if (typeSource.IsMultiArray)
+            if (typeSource.IsArray)
             {
                 DicoverGenericSpecializedTypesAndAdditionalTypes(
                     typeSource.BaseType,
@@ -808,7 +807,7 @@ namespace Il2Native.Logic
                     new Queue<IMethod>());
                 foreach (var usedStructType in usedStructTypes)
                 {
-                    if (additionalTypesToProcess != null && usedStructType.IsMultiArray)
+                    if (additionalTypesToProcess != null && usedStructType.IsArray)
                     {
                         additionalTypesToProcess.Add(usedStructType);
                     }

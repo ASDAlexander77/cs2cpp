@@ -92,10 +92,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> arrayMethodRequired = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<int, IMethod> methodsByToken = new SortedDictionary<int, IMethod>();
 
         /// <summary>
@@ -503,7 +499,7 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
-                if (ThisType.IsGenericType || ThisType.IsMultiArray)
+                if (ThisType.IsGenericType || ThisType.IsArray)
                 {
                     this.Output.Write("linkonce_odr ");
                 }
@@ -722,7 +718,7 @@ namespace Il2Native.Logic
             else
             {
                 this.Output.Write("define ");
-                if (ThisType.IsGenericType || method.IsGenericMethod || ThisType.IsMultiArray || linkOnceOdr)
+                if (ThisType.IsGenericType || method.IsGenericMethod || ThisType.IsArray || linkOnceOdr)
                 {
                     this.Output.Write("linkonce_odr ");
                 }
@@ -804,7 +800,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WritePostDeclarationsAndInternalDefinitions(IType type, bool staticOnly = false)
         {
-            if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName && !type.IsMultiArray)
+            if (!(type.IsGenericType || type.IsArray) && this.AssemblyQualifiedName != type.AssemblyQualifiedName)
             {
                 return;
             }
@@ -2372,8 +2368,6 @@ namespace Il2Native.Logic
                     
                     this.WriteCallNewArrayMethod(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
 
-                    this.arrayMethodRequired.Add(opCodeTypePart.Operand);
-
                     break;
 
                 case Code.Initobj:
@@ -2751,7 +2745,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (type.IsMultiArray)
+            if (type.IsArray)
             {
                 this.typeDeclRequired.Add(ResolveType("System.Array"));
             }
@@ -6603,12 +6597,6 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteRequiredDeclarations()
         {
-            // write required declarations for Arrays (Single and Multi dimentionals)
-            if (this.arrayMethodRequired.Count > 0)
-            {
-                this.WriteArrayFunctions();
-            }
-
             if (MainMethod != null && !this.Gctors)
             {
                 this.Output.WriteLine(string.Empty);
@@ -6751,16 +6739,6 @@ namespace Il2Native.Logic
                 {
                     this.WriteStaticFieldDeclaration(staticFieldExtrenalDecl, true);
                 }
-            }
-        }
-
-        private void WriteArrayFunctions()
-        {
-            this.Output.WriteLine(string.Empty);
-            foreach (var arrayType in this.arrayMethodRequired)
-            {
-                Debug.Assert(!arrayType.IsMultiArray);
-                this.WriteNewArrayMethod(arrayType);
             }
         }
 
@@ -6952,7 +6930,6 @@ namespace Il2Native.Logic
         private void WriteTypeDeclarationStart(IType type)
         {
             Debug.Assert(!type.IsGenericTypeDefinition);
-            Debug.Assert(!type.IsArray || type.IsMultiArray);
 
             this.Output.Write("%");
 
@@ -6974,7 +6951,7 @@ namespace Il2Native.Logic
                 null,
                 additionalTypesToProcess,
                 processedAlready);
-            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsMultiArray))
+            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
