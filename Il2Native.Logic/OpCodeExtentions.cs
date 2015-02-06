@@ -146,6 +146,11 @@ namespace Il2Native.Logic
             ISet<IType> requiredTypes, 
             Queue<IMethod> stackCall)
         {
+            if (Il2Converter.VerboseOutput)
+            {
+                Debug.WriteLine("Scanning method for types: {0}", method);
+            }
+
             // read method body to extract all types
             var reader = new IlReader();
 

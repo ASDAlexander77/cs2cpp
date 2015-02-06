@@ -24,7 +24,6 @@ namespace Il2Native.Logic
     public class Il2Converter
     {
         private static bool concurrent;
-        private static bool verboseOutput;
 
         /// <summary>
         /// </summary>
@@ -38,6 +37,8 @@ namespace Il2Native.Logic
             /// </summary>
             Definition
         }
+
+        public static bool VerboseOutput { get; set; }
 
         /// <summary>
         /// </summary>
@@ -269,7 +270,7 @@ namespace Il2Native.Logic
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            if (verboseOutput)
+            if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Converting {0}, Mode: {1}", type, mode));
             }
@@ -587,7 +588,7 @@ namespace Il2Native.Logic
             string[] filter = null)
         {
             concurrent = args != null && args.Any(a => a == "multi");
-            verboseOutput = args != null && args.Any(a => a == "verbose");
+            VerboseOutput = args != null && args.Any(a => a == "verbose");
             var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
             GenerateSource(ilReader, filter, codeWriter);
         }
@@ -792,9 +793,6 @@ namespace Il2Native.Logic
                     }
                 }
 
-                // TODO: too many calls, fix it
-                ////Debug.Assert(method.ExplicitName != "List<B>.BinarySearch");
-
                 var usedStructTypes = new NamespaceContainer<IType>();
                 method.DiscoverRequiredTypesAndMethodsInMethodBody(
                     genericTypeSpecializations,
@@ -803,6 +801,11 @@ namespace Il2Native.Logic
                     new Queue<IMethod>());
                 foreach (var usedStructType in usedStructTypes)
                 {
+                    if (additionalTypesToProcess != null && usedStructType.IsMultiArray)
+                    {
+                        additionalTypesToProcess.Add(usedStructType);
+                    }
+
                     yield return usedStructType;
                 }
             }
@@ -925,7 +928,7 @@ namespace Il2Native.Logic
         private static void ProcessGenericTypeToFindRequiredTypesForType(IType type, IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes, ISet<IType> subSetGenericTypeSpecializations, ISet<IMethod> subSetGenericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
         {
             Debug.Assert(type != null);
-            if (verboseOutput)
+            if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Analyzing generic type: {0}", type));
             }
@@ -979,7 +982,7 @@ namespace Il2Native.Logic
 
         private static void AppendTypeWithRequiredTypePair(IType type, NamespaceContainer<IType, INamespaceContainer<IType>> requiredTypesByType, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
         {
-            if (verboseOutput)
+            if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Reading info about type: {0}", type));
             }

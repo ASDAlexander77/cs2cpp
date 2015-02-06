@@ -85,7 +85,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool VerboseOutput = false;
+        public const bool VerboseOutput = true;
 
         /// <summary>
         /// </summary>
