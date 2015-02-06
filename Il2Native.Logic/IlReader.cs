@@ -17,6 +17,7 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Reflection.Emit;
     using Gencode.SynthesizedMethods.MultiDimArray;
+    using Gencode.SynthesizedMethods.SingleDimArray;
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
@@ -613,6 +614,10 @@ namespace Il2Native.Logic
             if (type.IsMultiArray)
             {
                 yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
+            }
+            else if (type.IsArray)
+            {
+                yield return new SynthesizedSingleDimArrayCtorMethod(type, typeResolver);
             }
         }
 

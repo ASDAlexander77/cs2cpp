@@ -87,6 +87,155 @@ namespace Il2Native.Logic.Gencode
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        public static FullyDefinedReference WriteSingleDimArrayAllocationSize(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType arrayType)
+        {
+            Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
+
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Calculate SingleDim allocation size");
+
+            object[] code;
+            IList<object> tokenResolutions;
+            IList<IType> locals;
+            IList<IParameter> parameters;
+            GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
+                llvmWriter,
+                arrayType,
+                out code,
+                out tokenResolutions,
+                out locals,
+                out parameters);
+
+            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
+
+            // actual write
+            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
+            return opCodes.Last().Result;
+        }
+
+        private static void GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
+            LlvmWriter llvmWriter,
+            IType arrayType,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            var codeList = new List<object>();
+
+            // add element size
+            var arrayRank = arrayType.ArrayRank;
+            var elementType = arrayType.GetElementType();
+            var typeCode = elementType.GetTypeCode();
+            var elementSize = elementType.GetTypeSize(llvmWriter, true);
+            codeList.AppendLoadInt(elementSize);
+
+            // load length
+            codeList.AppendLoadArgument(0);
+            codeList.Add(Code.Mul);
+
+            // add element size
+            var arrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
+            codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
+            codeList.Add(Code.Add);
+
+            // calculate alignment
+            codeList.Add(Code.Dup);
+
+            var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            codeList.AppendLoadInt(alignForType - 1);
+            codeList.Add(Code.Add);
+
+            codeList.AppendLoadInt(~(alignForType - 1));
+            codeList.Add(Code.And);
+
+            // locals
+            locals = new List<IType>();
+
+            // tokens
+            tokenResolutions = new List<object>();
+
+            // parameters
+            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, llvmWriter);
+
+            code = codeList.ToArray();
+        }
+
+        public static void GetSingleDimensionArrayCtor(
+            IType arrayType,
+            ITypeResolver typeResolver,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
+
+            var codeList = new List<object>();
+
+            var arrayRank = arrayType.ArrayRank;
+            var elementType = arrayType.GetElementType();
+            var typeCode = elementType.GetTypeCode();
+            var elementSize = elementType.GetTypeSize(typeResolver, true);
+
+            codeList.AddRange(
+                new object[]
+                    {
+                        Code.Ldarg_0,
+                        Code.Dup,
+                        Code.Dup,
+                        Code.Dup,
+                    });
+
+            codeList.AppendLoadInt(arrayRank);
+            codeList.AppendInt(Code.Stfld, 1);
+            codeList.AppendLoadInt(typeCode);
+            codeList.AppendInt(Code.Stfld, 2);
+            codeList.AppendLoadInt(elementSize);
+            codeList.AppendInt(Code.Stfld, 3);
+            codeList.AppendLoadArgument(1);
+            codeList.AppendInt(Code.Stfld, 4);
+
+            // return
+            codeList.AddRange(
+                new object[]
+                {
+                        Code.Ret
+                });
+
+            // locals
+            locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+
+            // tokens
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
+            tokenResolutions.Add(arrayType.GetFieldByName("length", typeResolver));
+
+            // code
+            code = codeList.ToArray();
+
+            // parameters
+            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
+        }
+
         public static int GetArrayDataStartsWith(ITypeResolver typeResolver)
         {
             if (_arrayDataStartsWith != -1)
@@ -392,224 +541,6 @@ namespace Il2Native.Logic.Gencode
             opCode.OpCodeOperands[0].Result = storedResult;
 
             writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="llvmWriter">
-        /// </param>
-        public static void WriteNewArrayMethod(this LlvmWriter llvmWriter, IType elementType)
-        {
-            var writer = llvmWriter.Output;
-
-            var method = new SynthesizedNewArrayMethod(elementType, llvmWriter);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; New Array method");
-
-            var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null, true);
-
-            // load first parameter
-            var arraySizeType = llvmWriter.ResolveType("System.Int32");
-            var destinationName = llvmWriter.GetArgVarName("value", 0);
-            var fullyDefinedReference = new FullyDefinedReference(destinationName, arraySizeType);
-            llvmWriter.WriteLlvmLoad(opCode, arraySizeType, fullyDefinedReference);
-
-            var opCodeOperand1 = OpCodePart.CreateNop;
-            opCodeOperand1.Result = opCode.Result;
-            opCode.OpCodeOperands = new[] { opCodeOperand1 };
-
-            llvmWriter.WriteNewArrayMethodBody(opCode, elementType, opCode.Result);
-            writer.WriteLine(string.Empty);
-            writer.Write("ret ");
-            elementType.ToArrayType(1).WriteTypePrefix(llvmWriter);
-            writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-            llvmWriter.WriteMethodEnd(method, null);
-        }
-
-        public static void WriteCallNewArrayMethod(this LlvmWriter llvmWriter, OpCodePart opCode, IType elementType, OpCodePart length)
-        {
-            var writer = llvmWriter.Output;
-
-            var method = new SynthesizedNewArrayMethod(elementType, llvmWriter);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; call New Array method");
-            var opCodeNope = OpCodePart.CreateNop;
-            opCodeNope.UsedBy = new UsedByInfo(opCode);
-            opCodeNope.OpCodeOperands = new[] { length };
-            llvmWriter.WriteCall(
-                opCodeNope,
-                method,
-                false,
-                false,
-                false,
-                opCode.Result,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
-            opCode.Result = opCodeNope.Result;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        public static void WriteNewArrayMethodBody(
-            this LlvmWriter llvmWriter,
-            OpCodePart opCode,
-            IType elementType,
-            FullyDefinedReference lengthResult)
-        {
-            var writer = llvmWriter.Output;
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; New array");
-
-            var arraySystemType = llvmWriter.ResolveType("System.Array");
-            var intType = llvmWriter.ResolveType("System.Int32");
-            var shortType = llvmWriter.ResolveType("System.Int16");
-
-            var sizeOfElement = elementType.GetTypeSize(llvmWriter, true);
-            llvmWriter.UnaryOper(writer, opCode, "mul", intType, options: LlvmWriter.OperandOptions.AdjustIntTypes | LlvmWriter.OperandOptions.GenerateResult);
-
-            writer.WriteLine(", {0}", sizeOfElement);
-
-            var resMul = opCode.Result;
-
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write(
-                "add i32 {1}, {0}",
-                resMul,
-                arraySystemType.GetTypeSize(llvmWriter) + GetSingleDimArraySupportedFieldsSize(llvmWriter, intType, shortType)); // add header size
-            writer.WriteLine(string.Empty);
-
-            var resAdd = opCode.Result;
-
-            var alignForType = Math.Max(
-                LlvmWriter.PointerSize,
-                !elementType.IsStructureType() ? sizeOfElement : LlvmWriter.PointerSize);
-
-            // align size
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("add i32 {0}, {1}", resAdd, alignForType - 1); // add header size
-            writer.WriteLine(string.Empty);
-
-            var resAddedAlignMinuesOne = opCode.Result;
-
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("and i32 {1}, {0}", resAddedAlignMinuesOne, ~(alignForType - 1)); // add header size
-            writer.WriteLine(string.Empty);
-
-            var resSize = opCode.Result;
-
-            // new alloc
-            var bytePointerType = llvmWriter.ResolveType("System.Byte").ToPointerType();
-            var resAlloc = llvmWriter.WriteSetResultNumber(
-                opCode,
-                bytePointerType);
-            writer.Write("call i8* @{1}(i32 {0})", resSize, llvmWriter.GetAllocator());
-
-            writer.WriteLine(string.Empty);
-            llvmWriter.WriteTestNullValueAndThrowException(
-                writer,
-                opCode,
-                resAlloc,
-                "System.OutOfMemoryException",
-                "new_arr");
-
-            writer.WriteLine(string.Empty);
-
-            if (!llvmWriter.Gc)
-            {
-                llvmWriter.WriteMemSet(resAlloc, resSize, LlvmWriter.PointerSize /*Align*/);
-            }
-
-            var opCodeTemp = OpCodePart.CreateNop;
-            opCodeTemp.OpCodeOperands = opCode.OpCodeOperands;
-
-            // init System.Array
-            llvmWriter.WriteBitcast(opCode, resAlloc, arraySystemType);
-            arraySystemType.WriteCallInitObjectMethod(llvmWriter, opCode);
-            writer.WriteLine(string.Empty);
-
-            var arrayType = elementType.ToArrayType(1);
-            llvmWriter.WriteBitcast(opCode, resAlloc, arrayType);
-            writer.WriteLine(string.Empty);
-
-            var arrayInstanceResult = opCode.Result;
-
-            var elementTypeCode = elementType.GetTypeCode();
-
-            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
-            // save element typecode
-            llvmWriter.WriteSetResultNumber(opCode, shortType);
-            writer.Write("getelementptr inbounds ");
-            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" ");
-            llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataElementTypeCode);
-            writer.WriteLine(string.Empty);
-
-            writer.Write("store ");
-            opCode.Result.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" {0}, ", elementTypeCode);
-            opCode.Result.Type.WriteTypePrefix(llvmWriter, true);
-            writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-
-            // save element size
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("getelementptr inbounds ");
-            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" ");
-            llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataElementSize);
-            writer.WriteLine(string.Empty);
-
-            writer.Write("store ");
-            opCode.Result.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" {0}, ", sizeOfElement);
-            opCode.Result.Type.WriteTypePrefix(llvmWriter, true);
-            writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-
-            // save array size
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("getelementptr inbounds ");
-            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" ");
-            llvmWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 {0}", arrayDataHeaderShift + ArrayDataLength);
-            writer.WriteLine(string.Empty);
-
-            writer.Write("store ");
-            lengthResult.Type.WriteTypePrefix(llvmWriter);
-            writer.Write(" ");
-            llvmWriter.WriteResult(lengthResult);
-            writer.Write(", ");
-            opCode.Result.Type.WriteTypePrefix(llvmWriter, true);
-            writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-
-            writer.WriteLine("; end of new array");
-
-            opCode.Result = arrayInstanceResult;
-        }
-
-        private static int GetSingleDimArraySupportedFieldsSize(LlvmWriter llvmWriter, IType intType, IType shortType)
-        {
-            return (ArraySupportFields - 2) * intType.GetTypeSize(llvmWriter, true) + 2 * shortType.GetTypeSize(llvmWriter, true);
         }
 
         /// <summary>

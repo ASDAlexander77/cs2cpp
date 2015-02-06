@@ -32,7 +32,6 @@
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
             yield return intType.ToField(arrayType, "elementSize");
-            yield return intType.ToField(arrayType, "length");
             yield return intType.ToArrayType(1).ToField(arrayType, "lowerBounds");
             yield return intType.ToArrayType(1).ToField(arrayType, "lengths");
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
@@ -56,8 +55,9 @@
             var codeList = new List<object>();
 
             var arrayRank = arrayType.ArrayRank;
-            var typeCode = arrayType.GetTypeCode();
-            var elementSize = arrayType.GetTypeSize(typeResolver, true);
+            var elementType = arrayType.GetElementType();
+            var typeCode = elementType.GetTypeCode();
+            var elementSize = elementType.GetTypeSize(typeResolver, true);
 
             codeList.AddRange(
                 new object[]
@@ -112,8 +112,8 @@
             {
                 codeList.Add(Code.Ldloc_1);
                 codeList.AppendLoadInt(i);
-                //codeList.AppendLoadArg(i + 1);
-                codeList.AppendLoadArg(arrayRank - i);
+                //codeList.AppendLoadArgument(i + 1);
+                codeList.AppendLoadArgument(arrayRank - i);
                 codeList.AddRange(
                     new object[]
                     {
@@ -212,7 +212,7 @@
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
 
             // put value on stack (+ 'this' as first)
-            codeList.AppendLoadArg(arrayType.ArrayRank + 1);
+            codeList.AppendLoadArgument(arrayType.ArrayRank + 1);
 
             codeList.AppendInt(Code.Stelem, 4);
 
@@ -285,21 +285,14 @@
             var writer = llvmWriter.Output;
 
             writer.WriteLine("; Calculate MultiDim allocation size");
-            return WriteCalculationPartOfMultiDimArrayAllocationSize(llvmWriter, arrayType, null);
-        }
 
-        public static FullyDefinedReference WriteCalculationPartOfMultiDimArrayAllocationSize(
-            this LlvmWriter llvmWriter,
-            IType type,
-            IGenericContext currentGenericContext)
-        {
             object[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
             GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
                 llvmWriter,
-                type,
+                arrayType,
                 out code,
                 out tokenResolutions,
                 out locals,
@@ -308,7 +301,7 @@
             var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
 
             // actual write
-            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, currentGenericContext);
+            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
             return opCodes.Last().Result;
         }
 
@@ -330,7 +323,7 @@
             // init each item in lowerBounds
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
-                codeList.AppendLoadArg(i);
+                codeList.AppendLoadArgument(i);
                 codeList.Add(Code.Mul);
             }
 
@@ -377,8 +370,8 @@
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
                 // load index (first is 'this')
-                //codeList.AppendLoadArg(i + 1);
-                codeList.AppendLoadArg(arrayType.ArrayRank - i);
+                //codeList.AppendLoadArgument(i + 1);
+                codeList.AppendLoadArgument(arrayType.ArrayRank - i);
 
                 // - lowerBounds[index]
                 // load lowerBound value by index

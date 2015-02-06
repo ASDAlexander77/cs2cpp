@@ -157,8 +157,7 @@ namespace Il2Native.Logic.Gencode
                         opCode,
                         runtimeType,
                         byteArrayType,
-                        firstParameterValue,
-                        llvmWriter);
+                        firstParameterValue);
                     writer.WriteLine(string.Empty);
 
                     // call cmp exchnage

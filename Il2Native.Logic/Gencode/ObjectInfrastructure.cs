@@ -105,9 +105,11 @@ namespace Il2Native.Logic.Gencode
 
             var size = declaringClassType.GetTypeSize(llvmWriter);
 
-            FullyDefinedReference allocResult = !declaringClassType.IsMultiArray
-                                                    ? new ConstValue(size, llvmWriter.ResolveType("System.Int32"))
-                                                    : llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+            FullyDefinedReference allocResult = !declaringClassType.IsArray
+                ? new ConstValue(size, llvmWriter.ResolveType("System.Int32"))
+                : !declaringClassType.IsMultiArray
+                    ? llvmWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType)
+                    : llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,

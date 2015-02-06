@@ -32,7 +32,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
         {
-            if (Type.IsMultiArray)
+            if (Type.IsArray)
             {
                 return ArrayMultiDimensionGen.GetParameters(Type, this.typeResolver);
             }

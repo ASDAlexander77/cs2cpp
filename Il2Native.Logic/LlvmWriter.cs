@@ -1153,7 +1153,7 @@ namespace Il2Native.Logic
                                 opCodeString.Operand.Length + 1),
                             charArrayType);
 
-                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue, this);
+                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
 
                     break;
                 case Code.Ldnull:
@@ -1846,7 +1846,7 @@ namespace Il2Native.Logic
                         });
                     var value = new FullyDefinedReference(convertString, ResolveType("System.Byte").ToPointerType());
 
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value, this);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -1912,7 +1912,7 @@ namespace Il2Native.Logic
 
                     intPtrType = ResolveType("System.IntPtr");
                     voidPtrType = ResolveType("System.Void").ToPointerType();
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber, this);
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
@@ -2363,10 +2363,11 @@ namespace Il2Native.Logic
                 case Code.Newarr:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    //this.WriteNewArrayMethodBody(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
-                    //this.WriteDbgLine(opCode);
-                    
-                    this.WriteCallNewArrayMethod(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0]);
+                    WriteNewWithCallingConstructor(
+                        opCodeTypePart,
+                        opCodeTypePart.Operand,
+                        ResolveType("System.Int32"),
+                        opCodeTypePart.OpCodeOperands[0].Result);
 
                     break;
 
@@ -4208,12 +4209,11 @@ namespace Il2Native.Logic
             OpCodePart opCode,
             IType type,
             IType firstParameterType,
-            FullyDefinedReference firstParameterValue,
-            ITypeResolver typeResolver)
+            FullyDefinedReference firstParameterValue)
         {
             // find constructor
             var constructorInfo =
-                Logic.IlReader.Constructors(type, typeResolver)
+                Logic.IlReader.Constructors(type, this)
                     .FirstOrDefault(
                         c =>
                             c.GetParameters().Count() == 1 &&

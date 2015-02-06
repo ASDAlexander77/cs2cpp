@@ -75,7 +75,7 @@ namespace Il2Native.Logic
             codeList.AddRange(value.Cast<object>());
         }
 
-        public static void AppendLoadArg(this List<object> codeList, int argIndex)
+        public static void AppendLoadArgument(this List<object> codeList, int argIndex)
         {
             switch (argIndex)
             {

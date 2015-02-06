@@ -74,7 +74,7 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedNewArrayMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayCtorMethod.cs" />
     <Compile Include="IIlReader.cs" />
     <Compile Include="Metadata\Model\MDLocation.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
