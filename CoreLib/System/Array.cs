@@ -9,12 +9,7 @@ namespace System
 
     [Serializable]
     public abstract class Array : ICloneable, IList
-    {
-        public extern int Rank
-        {
-            get;
-        }
-        
+    {       
         public static Array CreateInstance(Type elementType, int length)
         {
             throw new NotImplementedException();
@@ -50,6 +45,12 @@ namespace System
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern int GetLowerBound(int dimension);
+
+        public extern int Rank
+        {
+            [MethodImpl(MethodImplOptions.InternalCall)]
+            get;
+        }
 
         public extern int Length
         {
