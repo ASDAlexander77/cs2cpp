@@ -178,15 +178,12 @@
             codeList.AppendInt(Code.Ldflda, 1);
 
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
 
             codeList.AppendInt(Code.Ldelem, 4);
 
             // return
             codeList.Add(Code.Ret);
-
-            // locals
-            locals = new List<IType>();
 
             // code
             code = codeList.ToArray();
@@ -212,7 +209,7 @@
             codeList.AppendInt(Code.Ldflda, 1);
 
             // element index
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
 
             // put value on stack (+ 'this' as first)
             codeList.AppendLoadArg(arrayType.ArrayRank + 1);
@@ -221,9 +218,6 @@
 
             // return
             codeList.Add(Code.Ret);
-
-            // locals
-            locals = new List<IType>();
 
             // code
             code = codeList.ToArray();
@@ -251,15 +245,12 @@
             codeList.AppendInt(Code.Ldflda, 1);
 
             // element index 
-            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions));
+            codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
 
             codeList.AppendInt(Code.Ldelema, 4);
 
             // return
             codeList.Add(Code.Ret);
-
-            // locals
-            locals = new List<IType>();
 
             // code
             code = codeList.ToArray();
@@ -373,9 +364,14 @@
         private static List<object> GetIndexPartMethodBody(
             IType arrayType,
             ITypeResolver typeResolver,
-            out IList<object> tokenResolutions)
+            out IList<object> tokenResolutions,
+            out IList<IType> locals)
         {
             var codeList = new List<object>();
+
+            // init multiplier
+            codeList.Add(Code.Ldc_I4_1);
+            codeList.Add(Code.Stloc_0);
 
             // load index, load lowerBound value, calculate shift
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
@@ -392,14 +388,7 @@
                 // lower bound index
                 codeList.AppendLoadInt(i);
                 // load element
-                if (LlvmWriter.PointerSize == 8)
-                {
-                    codeList.Add(Code.Ldelem_I8);
-                }
-                else
-                {
-                    codeList.Add(Code.Ldelem_I4);
-                }
+                codeList.Add(Code.Ldelem_I4);
 
                 // calculate diff.
                 codeList.Add(Code.Sub);
@@ -407,23 +396,22 @@
                 if (i > 0)
                 {
                     // * bounds[index - 1]
-                    // load lowerBound value by index
+                    // load bound value by index
                     codeList.Add(Code.Ldarg_0);
                     // load field 2 = bounds
                     codeList.AppendInt(Code.Ldfld, 3);
                     // lower bound index
                     codeList.AppendLoadInt(i - 1);
                     // load element
-                    if (LlvmWriter.PointerSize == 8)
-                    {
-                        codeList.Add(Code.Ldelem_I8);
-                    }
-                    else
-                    {
-                        codeList.Add(Code.Ldelem_I4);
-                    }
+                    codeList.Add(Code.Ldelem_I4);
 
-                    // calculate diff.
+                    // calculate multiplier
+                    codeList.Add(Code.Ldloc_0);
+                    codeList.Add(Code.Mul);
+                    codeList.Add(Code.Dup);
+                    codeList.Add(Code.Stloc_0);
+
+                    // multiply index.
                     codeList.Add(Code.Mul);
 
                     // + sum
@@ -444,6 +432,9 @@
             tokenResolutions.Add(arrayType.GetElementType());
             // element type as pointer
             tokenResolutions.Add(arrayType.GetElementType().ToPointerType());
+
+            locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32"));
 
             return codeList;
         }
