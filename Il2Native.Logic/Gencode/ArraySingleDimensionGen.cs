@@ -324,50 +324,45 @@ namespace Il2Native.Logic.Gencode
 
             var opCodeConvert = OpCodePart.CreateNop;
 
+            IncrementalResult firstElementResult;
             if (!storedResult.Type.IsMultiArray)
             {
                 // first array to i8*
-                var firstElementResult = GetArrayDataAddressHelper(
-                    llvmWriter,
-                    opCode,
-                    storedResult.Type.GetElementType(),
-                    GetArrayDataStartsWith(llvmWriter),
-                    0);
-                llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
-                var firstBytes = opCodeConvert.Result;
-                writer.WriteLine(string.Empty);
-
-                // second array to i8*
-                var opCodeDataHolder = OpCodePart.CreateNop;
-                opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(
-                    arrayData,
-                    byteType.ToArrayType(1));
-                var secondFirstElementResult = GetArrayDataAddressHelper(
-                    llvmWriter,
-                    opCodeDataHolder,
-                    byteType,
-                    GetArrayDataStartsWith(llvmWriter),
-                    0);
-                llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
-                var secondBytes = opCodeConvert.Result;
-                writer.WriteLine(string.Empty);
-
-                writer.WriteLine(
-                    "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                    firstBytes,
-                    secondBytes,
-                    arrayLength,
-                    LlvmWriter.PointerSize /*Align*/);
+                firstElementResult = GetArrayDataAddressHelper(llvmWriter, opCode, storedResult.Type.GetElementType(), GetArrayDataStartsWith(llvmWriter), 0);
             }
             else
             {
-                // TODO: multiarray
-                writer.WriteLine(
-                    "; MultiArray init.  Call <ARRAY>::Address(int, int) to get an address of the first element");
-
-                Debug.Assert(false, "to be finished");
+                // first array to i8*
+                firstElementResult = GetArrayDataAddressHelper(
+                    llvmWriter, opCode, storedResult.Type.GetElementType(), ArrayMultiDimensionGen.GetDataFieldIndex(storedResult.Type, llvmWriter), 0);
             }
+
+            llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
+            var firstBytes = opCodeConvert.Result;
+            writer.WriteLine(string.Empty);
+
+            // second array to i8*
+            var opCodeDataHolder = OpCodePart.CreateNop;
+            opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
+            opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(
+                arrayData,
+                byteType.ToArrayType(1));
+            var secondFirstElementResult = GetArrayDataAddressHelper(
+                llvmWriter,
+                opCodeDataHolder,
+                byteType,
+                GetArrayDataStartsWith(llvmWriter),
+                0);
+            llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
+            var secondBytes = opCodeConvert.Result;
+            writer.WriteLine(string.Empty);
+
+            writer.WriteLine(
+                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                firstBytes,
+                secondBytes,
+                arrayLength,
+                LlvmWriter.PointerSize /*Align*/);
 
             opCode.OpCodeOperands[0].Result = storedResult;
 
@@ -399,7 +394,7 @@ namespace Il2Native.Logic.Gencode
 
             var opCodeOperand1 = OpCodePart.CreateNop;
             opCodeOperand1.Result = opCode.Result;
-            opCode.OpCodeOperands = new [] { opCodeOperand1 };
+            opCode.OpCodeOperands = new[] { opCodeOperand1 };
 
             llvmWriter.WriteNewArrayMethodBody(opCode, elementType, opCode.Result);
             writer.WriteLine(string.Empty);
@@ -420,7 +415,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; call New Array method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
-            opCodeNope.OpCodeOperands = new [] { length };
+            opCodeNope.OpCodeOperands = new[] { length };
             llvmWriter.WriteCall(
                 opCodeNope,
                 method,
@@ -479,19 +474,13 @@ namespace Il2Native.Logic.Gencode
 
             // align size
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("srem i32 {0}, {1}", resAdd, alignForType); // add header size
+            writer.Write("add i32 {0}, {1}", resAdd, alignForType - 1); // add header size
             writer.WriteLine(string.Empty);
 
-            var resSRem = opCode.Result;
+            var resAddedAlignMinuesOne = opCode.Result;
 
             llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("sub i32 {1}, {0}", resSRem, alignForType); // add header size
-            writer.WriteLine(string.Empty);
-
-            var resSub = opCode.Result;
-
-            llvmWriter.WriteSetResultNumber(opCode, intType);
-            writer.Write("add i32 {1}, {0}", resAdd, resSub); // add header size
+            writer.Write("and i32 {1}, {0}", resAddedAlignMinuesOne, ~(alignForType - 1)); // add header size
             writer.WriteLine(string.Empty);
 
             var resSize = opCode.Result;

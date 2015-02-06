@@ -22,22 +22,8 @@ namespace Il2Native.Logic
     /// </summary>
     public static class OpCodeExtensions
     {
-        /*
-            * (32 + 3) & ~3
-            32
-            (33 + 3) & ~3
-            36
-            (34 + 3) & ~3
-            36
-            (30 + 3) & ~3
-            32
-            (32 + 3) & ~3
-            32
-
-         */
         public static int Align(this int unalign, int alignSize)
         {
-            Debug.Assert(false, "fix align function and multi array and ");
             var alignMinusOne = alignSize - 1;
             return (unalign + alignMinusOne) & ~alignMinusOne;
         }

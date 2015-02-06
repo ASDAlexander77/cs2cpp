@@ -1010,7 +1010,7 @@ namespace Il2Native.Logic
 
         private static bool SpecialTypesToFilter(IType t)
         {
-            return (t.DeclaringType != null && t.DeclaringType.Name == "<PrivateImplementationDetails>" && t.Name.StartsWith("__StaticArrayInitTypeSize=")) ||
+            return //(t.DeclaringType != null && t.DeclaringType.Name == "<PrivateImplementationDetails>" && t.Name.StartsWith("__StaticArrayInitTypeSize=")) ||
                    t.Name == "<Module>";
         }
 

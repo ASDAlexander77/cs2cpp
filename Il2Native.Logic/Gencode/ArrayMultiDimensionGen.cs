@@ -38,6 +38,11 @@
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
         }
 
+        public static int GetDataFieldIndex(IType arrayType, LlvmWriter llvmWriter)
+        {
+            return llvmWriter.GetFieldPosition(arrayType, arrayType.GetFieldByName("data", llvmWriter));
+        }
+
         public static void GetMultiDimensionArrayCtor(
             IType arrayType,
             ITypeResolver typeResolver,
@@ -107,7 +112,8 @@
             {
                 codeList.Add(Code.Ldloc_1);
                 codeList.AppendLoadInt(i);
-                codeList.AppendLoadArg(i + 1);
+                //codeList.AppendLoadArg(i + 1);
+                codeList.AppendLoadArg(arrayRank - i);
                 codeList.AddRange(
                     new object[]
                     {
@@ -346,13 +352,11 @@
             codeList.Add(Code.Dup);
 
             var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
-            codeList.AppendLoadInt(alignForType);
-            codeList.Add(Code.Rem);
-
+            codeList.AppendLoadInt(alignForType - 1);
             codeList.Add(Code.Add);
 
-            codeList.AppendLoadInt(alignForType);
-            codeList.Add(Code.Sub);
+            codeList.AppendLoadInt(~(alignForType - 1));
+            codeList.Add(Code.And);
 
             // locals
             locals = new List<IType>();
@@ -377,7 +381,8 @@
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
                 // load index (first is 'this')
-                codeList.AppendLoadArg(i + 1);
+                //codeList.AppendLoadArg(i + 1);
+                codeList.AppendLoadArg(arrayType.ArrayRank - i);
 
                 // - lowerBounds[index]
                 // load lowerBound value by index
