@@ -151,7 +151,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        void WritePostDeclarationsAndInternalDefinitions(IType type);
+        void WritePostDeclarationsAndInternalDefinitions(IType type, bool staticOnly = false);
 
         /// <summary>
         /// </summary>

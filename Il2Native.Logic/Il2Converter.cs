@@ -285,12 +285,19 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Declaration)
             {
-                if (!codeWriter.IsProcessed(type))
+                if (!TypesToStripDownDeclarationOnly(type))
                 {
-                    WriteTypeDefinition(codeWriter, type, genericContext);
-                }
+                    if (!codeWriter.IsProcessed(type))
+                    {
+                        WriteTypeDefinition(codeWriter, type, genericContext);
+                    }
 
-                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+                    codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+                }
+                else
+                {
+                    codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true);        
+                }
 
                 codeWriter.WriteBeforeConstructors();
             }
@@ -299,7 +306,7 @@ namespace Il2Native.Logic
             {
                 codeWriter.DisableWrite(true);
 
-                if (!processGenericMethodsOnly)
+                if (!processGenericMethodsOnly && !TypesToStripDownDeclarationOnly(type))
                 {
                     // pre process step to get all used undefined structures
                     foreach (var ctor in IlReader.Constructors(type, codeWriter))
@@ -1011,10 +1018,15 @@ namespace Il2Native.Logic
                 processedAlready);
         }
 
-        private static bool SpecialTypesToFilter(IType t)
+        private static bool TypesToStripDown(IType t)
         {
-            return //(t.DeclaringType != null && t.DeclaringType.Name == "<PrivateImplementationDetails>" && t.Name.StartsWith("__StaticArrayInitTypeSize=")) ||
-                   t.Name == "<Module>";
+            return t.Name == "<Module>";
+        }
+
+        private static bool TypesToStripDownDeclarationOnly(IType t)
+        {
+            return t.Name.StartsWith("<PrivateImplementationDetails>")
+                   || (t.DeclaringType != null && t.DeclaringType.Name.StartsWith("<PrivateImplementationDetails>"));
         }
 
         private static void ReadingTypes(
@@ -1028,7 +1040,7 @@ namespace Il2Native.Logic
             var genericTypeSpecializations = new NamespaceContainer<IType>();
             var genericMethodSpecializations = new NamespaceContainer<IMethod>();
             var additionalTypesToProcess = new NamespaceContainer<IType>();
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && !SpecialTypesToFilter(t));
+            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && !TypesToStripDown(t));
             if (filter != null)
             {
                 types = types.Where(t => CheckFilter(filter, t));

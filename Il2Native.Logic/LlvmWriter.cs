@@ -802,7 +802,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void WritePostDeclarationsAndInternalDefinitions(IType type)
+        public void WritePostDeclarationsAndInternalDefinitions(IType type, bool staticOnly = false)
         {
             if (!type.IsGenericType && this.AssemblyQualifiedName != type.AssemblyQualifiedName && !type.IsMultiArray)
             {
@@ -817,6 +817,12 @@ namespace Il2Native.Logic
             this.postDeclarationsProcessedTypes.Add(type);
 
             this.WriteStaticFieldDeclarations(type);
+
+            if (staticOnly)
+            {
+                return;
+            }
+
             this.WriteInterfaceVirtualTables(type);
 
             this.Output.WriteLine(string.Empty);
@@ -6882,12 +6888,18 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDeclarations(IType type)
         {
-            if (!type.IsEnum)
+            if (type.IsEnum)
             {
-                foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
-                {
-                    this.WriteStaticFieldDeclaration(field);
-                }
+                return;
+            }
+
+            foreach (
+                var field in
+                    Logic.IlReader.Fields(type, this)
+                         .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()))
+                         .Where(field => !field.FieldType.Name.StartsWith("__StaticArrayInitTypeSize")))
+            {
+                this.WriteStaticFieldDeclaration(field);
             }
         }
 
