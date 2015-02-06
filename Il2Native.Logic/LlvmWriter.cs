@@ -2365,7 +2365,7 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
                     WriteNewWithCallingConstructor(
                         opCodeTypePart,
-                        opCodeTypePart.Operand,
+                        opCodeTypePart.Operand.ToArrayType(1),
                         ResolveType("System.Int32"),
                         opCodeTypePart.OpCodeOperands[0].Result);
 
