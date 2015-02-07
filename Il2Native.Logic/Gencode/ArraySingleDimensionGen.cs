@@ -433,15 +433,28 @@ namespace Il2Native.Logic.Gencode
             return false;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        public static void WriteArrayGetRank(this LlvmWriter llvmWriter, OpCodePart opCode)
+        {
+            var writer = llvmWriter.Output;
+            llvmWriter.LoadElement(writer, opCode, "rank");
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
         public static void WriteArrayGetElementSize(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
-            var intType = llvmWriter.ResolveType("System.Int32");
-
-            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
-            var elementSizeResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, arrayDataHeaderShift + ArrayDataElementSize);
-
-            opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, intType, elementSizeResult);
+            var writer = llvmWriter.Output;
+            llvmWriter.LoadElement(writer, opCode, "elementSize");
         }
 
         /// <summary>
@@ -452,13 +465,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
-            var intType = llvmWriter.ResolveType("System.Int32");
-
-            var arrayDataHeaderShift = GetArrayHeaderDataStartsWith(llvmWriter);
-            var lengthResult = GetArrayDataAddressHelper(llvmWriter, opCode, intType, arrayDataHeaderShift + ArrayDataLength);
-
-            opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, intType, lengthResult);
+            var writer = llvmWriter.Output;
+            llvmWriter.LoadElement(writer, opCode, "length");
         }
 
         /// <summary>

@@ -12,6 +12,7 @@
 namespace Il2Native.Logic
 {
     using System;
+    using System.CodeDom;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
@@ -3652,7 +3653,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index, FullyDefinedReference fixedArrayElementIndex = null)
         {
-            writer.WriteLine("; Access to '#{0}' field", index);
             var operand = ResultOf(opCodePart.OpCodeOperands[0]);
 
             var classType = operand.Type.ToClass();
@@ -3660,6 +3660,8 @@ namespace Il2Native.Logic
             var opts = OperandOptions.GenerateResult;
             var field = classType.GetFieldByFieldNumber(index, this);
             var fieldType = field.FieldType;
+
+            writer.WriteLine("; Access to '#{0}' field({1})", index, field.Name);
 
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, !field.IsFixed ? fieldType : fieldType.ToPointerType(), opts);
 
@@ -4807,9 +4809,9 @@ namespace Il2Native.Logic
                 index++;
             }
 
+            Debug.Assert(index != list.Count, "Could not find field {0} in type {1}", fieldName, type);
             if (index == list.Count)
             {
-                Debug.Assert(false);
                 throw new KeyNotFoundException();
             }
 
@@ -5404,7 +5406,16 @@ namespace Il2Native.Logic
                 this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[1], this.GetIntTypeByByteSize(PointerSize));
             }
 
-            this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, "data"), opCode.OpCodeOperands[1].Result);
+            this.LoadElement(writer, opCode, "data", type, opCode.OpCodeOperands[1].Result, actualLoad);
+        }
+
+        public void LoadElement(LlvmIndentedTextWriter writer, OpCodePart opCode, string field, IType type = null, FullyDefinedReference fixedArrayIndex = null, bool actualLoad = true)
+        {
+            this.WriteFieldAccess(
+                writer,
+                opCode,
+                this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, field),
+                fixedArrayIndex);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -5415,9 +5426,10 @@ namespace Il2Native.Logic
                 var accessIndexResultNumber = opCode.Result;
                 opCode.Result = null;
 
-                if (!type.IsStructureType())
+                var effectiveType = type ?? accessIndexResultNumber.Type;
+                if (!effectiveType.IsStructureType())
                 {
-                    this.WriteLlvmLoad(opCode, type, accessIndexResultNumber);
+                    this.WriteLlvmLoad(opCode, effectiveType, accessIndexResultNumber);
                 }
                 else
                 {
