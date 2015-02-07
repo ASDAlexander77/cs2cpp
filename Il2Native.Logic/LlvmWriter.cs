@@ -765,7 +765,7 @@ namespace Il2Native.Logic
                 if (this.DebugInfo && method.Token.HasValue)
                 {
                     this.debugInfoGenerator.GenerateFunction(method.Token.Value);
-                    
+
                     // to find first debug line of method
                     this.ReadDbgLine(OpCodePart.CreateNop);
                 }
@@ -2227,14 +2227,14 @@ namespace Il2Native.Logic
                     else
                     {
 #endif
-                        this.LlvmConvert(
-                            opCode,
-                            "fptoui",
-                            "ptrtoint",
-                            nativeIntType,
-                            !intPtrOper,
-                            ResolveType("System.IntPtr"),
-                            ResolveType("System.UIntPtr"));
+                    this.LlvmConvert(
+                        opCode,
+                        "fptoui",
+                        "ptrtoint",
+                        nativeIntType,
+                        !intPtrOper,
+                        ResolveType("System.IntPtr"),
+                        ResolveType("System.UIntPtr"));
 #if !MSCORLIB
                     }
 #endif
@@ -3657,13 +3657,14 @@ namespace Il2Native.Logic
             var classType = operand.Type.ToClass();
 
             var opts = OperandOptions.GenerateResult;
-            var fieldType = classType.GetFieldTypeByFieldNumber(index, this);
+            var field = classType.GetFieldByFieldNumber(index, this);
+            var fieldType = field.FieldType;
 
             this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, opts);
 
             this.CheckIfTypeIsRequiredForBody(classType);
 
-            this.WriteFieldIndex(writer, classType, classType, index);
+            this.WriteFieldIndex(writer, classType, classType, field, index);
         }
 
         /// <summary>
@@ -3691,12 +3692,13 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-                var fieldType = fieldContainerType.GetFieldTypeByFieldNumber(index, this);
-            if (fieldType == null)
+            var field = fieldContainerType.GetFieldByFieldNumber(index, this);
+            if (field == null)
             {
                 return false;
             }
 
+            var fieldType = field.FieldType;
             this.WriteSetResultNumber(opCodePart, fieldType);
 
             writer.Write("getelementptr inbounds ");
@@ -3706,7 +3708,7 @@ namespace Il2Native.Logic
 
             this.CheckIfTypeIsRequiredForBody(valueReference.Type);
 
-            this.WriteFieldIndex(writer, classType, fieldContainerType, index);
+            this.WriteFieldIndex(writer, classType, fieldContainerType, field, index);
 
             return true;
         }
@@ -3766,6 +3768,7 @@ namespace Il2Native.Logic
             LlvmIndentedTextWriter writer,
             IType classType,
             IType fieldContainerType,
+            IField field,
             int fieldIndex)
         {
             var targetType = fieldContainerType;
@@ -3789,6 +3792,12 @@ namespace Il2Native.Logic
             // find index
             writer.Write(", i32 ");
             writer.Write(fieldIndex + this.CalculateFirstFieldPositionInType(fieldContainerType));
+
+            // if we loading fixed data we need to convert [ 0 x Ty ]* into Ty*
+            if (field.IsFixed)
+            {
+                writer.Write(", i32 0");
+            }
         }
 
         public void WriteFieldType(IField field)
@@ -5169,7 +5178,7 @@ namespace Il2Native.Logic
                     }
 
                     current = current.Next;
-                }                
+                }
             }
 
             if (customLabel != null)
@@ -5905,7 +5914,7 @@ namespace Il2Native.Logic
             var baseWriter = new BaseWriter();
             baseWriter.Parameters = constructedMethod.GetParameters().ToArray();
             baseWriter.LocalInfo = constructedMethod.GetMethodBody().LocalVariables.ToArray();
-            baseWriter.HasMethodThis =  constructedMethod.CallingConvention.HasFlag(CallingConventions.HasThis);
+            baseWriter.HasMethodThis = constructedMethod.CallingConvention.HasFlag(CallingConventions.HasThis);
             baseWriter.ThisType = ThisType;
 
             // sync important vars

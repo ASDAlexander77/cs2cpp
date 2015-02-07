@@ -263,30 +263,17 @@ namespace Il2Native.Logic
             return field;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="classType">
-        /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IType GetFieldTypeByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
+        public static IField GetFieldByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();
-
-            if (normalType.IsEnum)
-            {
-                return normalType.GetEnumUnderlyingType();
-            }
-
             var field = IlReader.Fields(normalType, typeResolver).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
+            Debug.Assert(field != null);
             if (field == null)
             {
                 return null;
             }
 
-            return field.FieldType;
+            return field;
         }
 
         /// <summary>
