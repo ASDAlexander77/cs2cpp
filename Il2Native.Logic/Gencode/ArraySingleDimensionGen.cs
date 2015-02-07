@@ -241,6 +241,7 @@ namespace Il2Native.Logic.Gencode
             parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
         }
 
+        [Obsolete]
         public static int GetArrayDataStartsWith(ITypeResolver typeResolver)
         {
             // TODO: is obsolete
@@ -365,7 +366,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetLlvmArrayTypeReference(
+        public static string GetArrayTypeReference(
             this LlvmWriter llvmWriter,
             string name,
             IType elementType,
@@ -375,7 +376,12 @@ namespace Il2Native.Logic.Gencode
                 () =>
                 {
                     var writer = llvmWriter.Output;
-                    writer.Write("{1}* {0}", name, llvmWriter.GetArrayTypeHeader(elementType, length));
+
+                    var array = elementType.ToArrayType(1);
+                    writer.Write("bitcast (");
+                    writer.Write("{1}* {0} to ", name, llvmWriter.GetArrayTypeHeader(elementType, length));
+                    array.WriteTypePrefix(llvmWriter);
+                    writer.Write(")");
                 });
 
             return convertString;
@@ -490,7 +496,7 @@ namespace Il2Native.Logic.Gencode
 
             var bytesIndex = llvmWriter.GetBytesIndex(subData);
             var byteType = llvmWriter.ResolveType("System.Byte");
-            var arrayData = llvmWriter.GetLlvmArrayTypeReference(
+            var arrayData = llvmWriter.GetArrayTypeReference(
                 string.Concat("@.bytes", bytesIndex),
                 byteType,
                 arrayLength);
@@ -518,8 +524,9 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter,
                 opCodeDataHolder,
                 byteType,
-                GetArrayDataStartsWith(llvmWriter),
+                GetDataFieldIndex(storedResult.Type, llvmWriter) + llvmWriter.CalculateFirstFieldPositionInType(storedResult.Type),
                 0);
+
             llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
             var secondBytes = opCodeConvert.Result;
             writer.WriteLine(string.Empty);
@@ -577,8 +584,8 @@ namespace Il2Native.Logic.Gencode
             var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
             arrayInstanceResult.Type.WriteTypePrefix(llvmWriter, true);
-
             writer.Write(" ");
+
             llvmWriter.WriteResult(arrayInstanceResult);
             writer.Write(", i32 0, i32 {0}", dataIndex);
             if (secondIndex != -1)

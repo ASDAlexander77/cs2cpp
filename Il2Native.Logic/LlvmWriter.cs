@@ -1147,7 +1147,7 @@ namespace Il2Native.Logic
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
                     var firstParameterValue =
                         new FullyDefinedReference(
-                            this.GetLlvmArrayTypeReference(
+                            this.GetArrayTypeReference(
                                 string.Format("@.s{0}", stringIndex),
                                 charType,
                                 opCodeString.Operand.Length + 1),
@@ -2748,7 +2748,8 @@ namespace Il2Native.Logic
 
             if (type.IsArray)
             {
-                this.typeDeclRequired.Add(ResolveType("System.Array"));
+                //this.typeDeclRequired.Add(ResolveType("System.Array"));
+                this.typeDeclRequired.Add(type);
             }
 
             if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
@@ -3649,7 +3650,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="index">
         /// </param>
-        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index)
+        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index, FullyDefinedReference fixedArrayElementIndex = null)
         {
             writer.WriteLine("; Access to '#{0}' field", index);
             var operand = ResultOf(opCodePart.OpCodeOperands[0]);
@@ -3664,7 +3665,7 @@ namespace Il2Native.Logic
 
             this.CheckIfTypeIsRequiredForBody(classType);
 
-            this.WriteFieldIndex(writer, classType, classType, field, index);
+            this.WriteFieldIndex(writer, classType, classType, field, index, fixedArrayElementIndex);
         }
 
         /// <summary>
@@ -3769,7 +3770,8 @@ namespace Il2Native.Logic
             IType classType,
             IType fieldContainerType,
             IField field,
-            int fieldIndex)
+            int fieldIndex,
+            FullyDefinedReference fixedArrayElementIndex = null)
         {
             var targetType = fieldContainerType;
             var type = classType;
@@ -3796,7 +3798,16 @@ namespace Il2Native.Logic
             // if we loading fixed data we need to convert [ 0 x Ty ]* into Ty*
             if (field.IsFixed)
             {
-                writer.Write(", i32 0");
+                if (fixedArrayElementIndex != null)
+                {
+                    writer.Write(", ");
+                    fixedArrayElementIndex.Type.WriteTypePrefix(this);
+                    writer.Write(" {0}", fixedArrayElementIndex);
+                }
+                else
+                {
+                    writer.Write(", i32 0");
+                }
             }
         }
 
@@ -5393,13 +5404,7 @@ namespace Il2Native.Logic
                 this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[1], this.GetIntTypeByByteSize(PointerSize));
             }
 
-            this.BinaryOper(
-                writer,
-                opCode,
-                "getelementptr inbounds",
-                OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
-                type,
-                opCode.OpCodeOperands[0].Result.Type.IsArray ? string.Format("i32 0, i32 {0},", ArraySingleDimensionGen.GetArrayDataStartsWith(this)) : null);
+            this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, "data"), opCode.OpCodeOperands[1].Result);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -5488,13 +5493,7 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
-            this.BinaryOper(
-                writer,
-                opCode,
-                "getelementptr inbounds",
-                OperandOptions.GenerateResult | OperandOptions.DetectAndWriteTypeInSecondOperand,
-                type,
-                opCode.OpCodeOperands[0].Result.Type.IsArray ? string.Format("i32 0, i32 {0},", ArraySingleDimensionGen.GetArrayDataStartsWith(this)) : null);
+            this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, "data"), opCode.OpCodeOperands[1].Result);
 
             this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
@@ -6690,7 +6689,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
                 foreach (
                     var opaqueType in
-                        this.typeDeclRequired.Where(ot => !this.processedTypes.Contains(ot) && !ot.IsArray))
+                        this.typeDeclRequired.Where(ot => !this.processedTypes.Contains(ot)))
                 {
                     this.WriteTypeDeclarationStart(opaqueType.ToClass());
                     this.Output.WriteLine("opaque");
@@ -6963,6 +6962,11 @@ namespace Il2Native.Logic
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+
+            foreach (var additionalType in additionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
+            {
+                CheckIfExternalDeclarationIsRequired(additionalType);
             }
 
             var interfacesList = type.GetInterfaces();

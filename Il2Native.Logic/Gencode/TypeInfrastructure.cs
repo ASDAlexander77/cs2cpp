@@ -146,7 +146,7 @@ namespace Il2Native.Logic.Gencode
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
                     var firstParameterValue =
                         new FullyDefinedReference(
-                            llvmWriter.GetLlvmArrayTypeReference(
+                            llvmWriter.GetArrayTypeReference(
                                 string.Format("@.bytes{0}", bytesIndex),
                                 byteType,
                                 bytes.Length),

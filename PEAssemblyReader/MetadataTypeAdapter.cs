@@ -57,6 +57,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IType> lazyDeclaringTypeOriginal;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IType> lazyDeclaringType;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<MetadataModuleAdapter> lazyModule;
 
         /// <summary>
@@ -99,6 +107,8 @@ namespace PEAssemblyReader
             this.lazyAssemblyQualifiedName = new Lazy<string>(this.CalculateAssemblyQualifiedName);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
             this.lazyModule = new Lazy<MetadataModuleAdapter>(this.CalculateModule);
+            this.lazyDeclaringTypeOriginal = new Lazy<IType>(this.CalculateDeclaringTypeOriginal);
+            this.lazyDeclaringType = new Lazy<IType>(this.CalculateDeclaringType);
         }
 
         /// <summary>
@@ -153,15 +163,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IType DeclaringType
         {
-            get
-            {
-                if (!this.HasDeclaringType)
-                {
-                    return null;
-                }
-
-                return this.typeDef.ContainingType.ResolveGeneric(this.GenericContext);
-            }
+            get { return this.lazyDeclaringType.Value; }
         }
 
         /// <summary>
@@ -206,10 +208,7 @@ namespace PEAssemblyReader
         /// </summary>
         public bool HasDeclaringType
         {
-            get
-            {
-                return this.typeDef.ContainingType != null;
-            }
+            get { return this.DeclaringType != null; }
         }
 
         /// <summary>
@@ -706,7 +705,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType GetDeclaringTypeOriginal()
         {
-            return new MetadataTypeAdapter(this.typeDef.ContainingType);
+            return this.lazyDeclaringTypeOriginal.Value;
         }
 
         /// <summary>
@@ -1309,7 +1308,7 @@ namespace PEAssemblyReader
         /// </returns>
         private string CalculateNamespace()
         {
-            return this.typeDef.CalculateNamespace();
+            return GetBareTypeSymbol(this.typeDef).CalculateNamespace();
         }
 
         private MetadataModuleAdapter CalculateModule()
@@ -1321,6 +1320,22 @@ namespace PEAssemblyReader
             }
 
             return new MetadataModuleAdapter(GetBareTypeSymbol(this.typeDef).ContainingModule);
+        }
+
+        private IType CalculateDeclaringTypeOriginal()
+        {
+            return new MetadataTypeAdapter(this.typeDef.ContainingType);
+        }
+
+        private IType CalculateDeclaringType()
+        {
+            var containingType = this.typeDef.ContainingType;
+            if (containingType == null)
+            {
+                return null;
+            }
+
+            return containingType.ResolveGeneric(this.GenericContext);            
         }
 
         /// <summary>

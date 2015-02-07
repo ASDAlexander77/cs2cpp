@@ -620,7 +620,7 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(refChar);
                 }
 
-                if (effectiveType.HasElementType)
+                if (effectiveType.IsPointer)
                 {
                     effectiveType = effectiveType.GetElementType();
                     level++;

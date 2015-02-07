@@ -439,14 +439,19 @@ namespace Il2Native.Logic
             ISet<IType> additionalTypesToProcess,
             ISet<IType> processedAlready)
         {
-            if (type == null || (genericSpecializations == null && genericMethodSpecializations == null))
+            if (type == null)
             {
                 return;
             }
 
-            if (additionalTypesToProcess != null && type.IsArray)
+            if (additionalTypesToProcess != null && !type.IsGenericTypeDefinition && type.IsArray)
             {
                 additionalTypesToProcess.Add(type);
+            }
+
+            if (genericSpecializations == null && genericMethodSpecializations == null)
+            {
+                return;
             }
 
             if (type.HasElementType)
@@ -1067,6 +1072,9 @@ namespace Il2Native.Logic
             {
                 sortedListOfTypes.Add(additionalType);
             }
+
+            // append default type for type tokens and init arrays.
+            sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
         }
 
         private static bool CheckFilter(string[] filters, IType type)

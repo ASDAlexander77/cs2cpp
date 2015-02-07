@@ -1080,7 +1080,7 @@ namespace Il2Native.Logic
 
                         this.AddUsedType(type);
 
-                        if (code == Code.Newarr)
+                        if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
                         {
                             this.AddArrayType(type.ToArrayType(1));
                         }
