@@ -3661,7 +3661,7 @@ namespace Il2Native.Logic
             var field = classType.GetFieldByFieldNumber(index, this);
             var fieldType = field.FieldType;
 
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, opts);
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, !field.IsFixed ? fieldType : fieldType.ToPointerType(), opts);
 
             this.CheckIfTypeIsRequiredForBody(classType);
 
