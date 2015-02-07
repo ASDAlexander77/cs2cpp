@@ -136,13 +136,14 @@ namespace Il2Native.Logic
         /// </param>
         public static void WriteTypeDefinition(ICodeWriter codeWriter, IType type, IGenericContext genericContext)
         {
+            codeWriter.WriteTypeStart(type, genericContext);
+
             var fields = IlReader.Fields(type, codeWriter);
             var count = fields.Count();
             var number = 1;
 
             Debug.Assert(!type.IsGenericTypeDefinition);
 
-            codeWriter.WriteTypeStart(type, genericContext);
             codeWriter.WriteBeforeFields(count);
 
             foreach (var field in fields)

@@ -37,11 +37,6 @@
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
         }
 
-        public static int GetDataFieldIndex(IType arrayType, LlvmWriter llvmWriter)
-        {
-            return llvmWriter.GetFieldPosition(arrayType, arrayType.GetFieldByName("data", llvmWriter));
-        }
-
         public static void GetMultiDimensionArrayCtor(
             IType arrayType,
             ITypeResolver typeResolver,

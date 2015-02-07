@@ -1147,7 +1147,7 @@ namespace Il2Native.Logic
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
                     var firstParameterValue =
                         new FullyDefinedReference(
-                            this.GetArrayTypeReference(
+                            this.GetLlvmArrayTypeReference(
                                 string.Format("@.s{0}", stringIndex),
                                 charType,
                                 opCodeString.Operand.Length + 1),
