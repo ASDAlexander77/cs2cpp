@@ -7,7 +7,7 @@
 
     public static class ArrayGetLengthGen
     {
-        public static readonly string Name = "Int32 System.Array.get_Length(System.Array)";
+        public static readonly string Name = "Int32 System.Array.get_Length()";
 
         public static void Register(ITypeResolver typeResolver)
         {
@@ -33,7 +33,6 @@
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Array").ToParameter());
 
             MethodBodyBank.Register(Name, codeList.ToArray(), tokenResolutions, locals, parameters);
         }
