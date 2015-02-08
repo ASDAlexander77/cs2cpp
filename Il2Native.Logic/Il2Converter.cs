@@ -1070,7 +1070,7 @@ namespace Il2Native.Logic
             // append additional required types
             foreach (var additionalType in additionalTypesToProcess)
             {
-                sortedListOfTypes.Add(additionalType);
+                sortedListOfTypes.Add(additionalType.IsByRef ? additionalType.GetElementType() : additionalType);
             }
 
             // append default type for type tokens and init arrays.

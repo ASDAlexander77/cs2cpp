@@ -2750,7 +2750,7 @@ namespace Il2Native.Logic
             if (type.IsArray)
             {
                 //this.typeDeclRequired.Add(ResolveType("System.Array"));
-                this.typeDeclRequired.Add(type);
+                this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
             }
 
             if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
