@@ -768,11 +768,11 @@ namespace Il2Native.Logic.Gencode
             {
                 llvmWriter.WriteSetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(llvmWriter, true);
+                fromResult.Type.WriteTypePrefix(llvmWriter);
                 writer.Write(' ');
                 llvmWriter.WriteResult(fromResult);
                 writer.Write(" to ");
-                toType.WriteTypePrefix(llvmWriter, true);
+                toType.WriteTypePrefix(llvmWriter);
             }
             else
             {

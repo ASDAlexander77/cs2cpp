@@ -512,16 +512,17 @@ namespace Il2Native.Logic.Gencode
         {
             dynamicCastRequired = false;
 
-            var other = opCodePart.Result.Type.ToDereferencedType();
+            var resultType = opCodePart.Result.Type;
+            var other = resultType.ToDereferencedType();
             var constValue = opCodePart.Result as ConstValue;
             if (constValue != null && constValue.IsNull)
             {
                 return false;
             }
 
-            if (opCodePart.Result.Type.IsClass && requiredType.IsByRef && requiredType.GetElementType().TypeEquals(other))
+            if ((resultType.IsClass || resultType.IsPointer || resultType.IsByRef) && requiredType.IsByRef)
             {
-                return false;
+                return requiredType.GetElementType().TypeNotEquals(other);
             }
 
             if (requiredType.TypeNotEquals(other))
