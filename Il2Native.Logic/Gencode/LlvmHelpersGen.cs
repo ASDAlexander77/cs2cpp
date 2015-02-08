@@ -548,7 +548,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(llvmWriter, true);
+            result.Type.WriteTypePrefix(llvmWriter, !result.Type.IsByRef && result.Type.IsValueType());
             writer.Write(" ");
             llvmWriter.WriteResult(result);
             writer.Write(" to i8*");
@@ -954,7 +954,7 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result;
                 }
 
-                llvmWriter.WriteSetResultNumber(opCode, typeToLoad.IsByRef ? typeToLoad.GetElementType() : typeToLoad);
+                llvmWriter.WriteSetResultNumber(opCode, typeToLoad);
 
                 // last part
                 writer.Write("load ");

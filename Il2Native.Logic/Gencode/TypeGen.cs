@@ -519,6 +519,11 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
+            if (opCodePart.Result.Type.IsClass && requiredType.IsByRef && requiredType.GetElementType().TypeEquals(other))
+            {
+                return false;
+            }
+
             if (requiredType.TypeNotEquals(other))
             {
                 if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")

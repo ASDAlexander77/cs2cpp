@@ -1764,7 +1764,6 @@ namespace Il2Native.Logic
                         if (!parameter.ParameterType.IsStructureType())
                         {
                             this.WriteLlvmLoad(opCode, parameter.ParameterType, fullyDefinedReference);
-
                             this.WriteDbgLine(opCode);
                         }
                         else
@@ -4908,6 +4907,12 @@ namespace Il2Native.Logic
 
             if ((sourceType.IsByRef && requiredType.IsPointer || requiredType.IsByRef && sourceType.IsPointer)
                 && sourceType.GetElementType().Equals(requiredType.GetElementType()))
+            {
+                return;
+            }
+
+            if ((sourceType.IsByRef && requiredType.IsPointer || requiredType.IsByRef && sourceType.IsClass)
+                && sourceType.ToNormal().Equals(requiredType.GetElementType()))
             {
                 return;
             }
