@@ -5609,7 +5609,7 @@ namespace Il2Native.Logic
                 this.UnaryOper(writer, opCode, 1, "store", type, options: OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes);
                 writer.Write(", ");
 
-                destinationType.WriteTypePrefix(this, true);
+                destinationType.WriteTypePrefix(this);
                 this.WriteOperandResult(writer, opCode, 0);
             }
             else

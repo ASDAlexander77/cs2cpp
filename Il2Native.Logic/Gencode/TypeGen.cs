@@ -604,16 +604,16 @@ namespace Il2Native.Logic.Gencode
             var refChar = '*';
             var effectiveType = type;
 
+            if (effectiveType.IsByRef)
+            {
+                effectiveType = effectiveType.GetElementType();
+            }
+
             var level = 0;
             do
             {
                 var isReference = !effectiveType.IsValueType;
                 if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter)
-                {
-                    writer.Write(refChar);
-                }
-
-                if (effectiveType.IsByRef)
                 {
                     writer.Write(refChar);
                 }
@@ -628,6 +628,11 @@ namespace Il2Native.Logic.Gencode
                     break;
                 }
             } while (effectiveType != null);
+
+            if (type.IsByRef)
+            {
+                writer.Write(refChar);
+            }
         }
 
         /// <summary>

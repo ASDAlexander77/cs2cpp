@@ -922,7 +922,7 @@ namespace Il2Native.Logic.Gencode
             bool structAsRef = false,
             bool indirect = false)
         {
-            // TODO: improve it, by checking if Source is Reference or Pointer
+            // TODO: review the whole proc.
             var writer = llvmWriter.Output;
 
             var isStruct = typeToLoad.ToNormal().IsStructureType();
@@ -954,7 +954,7 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result;
                 }
 
-                llvmWriter.WriteSetResultNumber(opCode, typeToLoad);
+                llvmWriter.WriteSetResultNumber(opCode, typeToLoad.IsByRef ? typeToLoad.GetElementType() : typeToLoad);
 
                 // last part
                 writer.Write("load ");

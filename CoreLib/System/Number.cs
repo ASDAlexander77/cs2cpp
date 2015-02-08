@@ -2764,10 +2764,8 @@ namespace System
         }
 
 
-        internal unsafe static Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
-        {
-
-            
+        internal static Boolean TryParseDecimal(String value, NumberStyles options, NumberFormatInfo numfmt, out Decimal result)
+        {          
             NUMBER number = new NUMBER();
             result = 0;
 
