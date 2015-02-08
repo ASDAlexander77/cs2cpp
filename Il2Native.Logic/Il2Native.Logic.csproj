@@ -68,6 +68,8 @@
     <Compile Include="DebugInfo\DebugVariableType.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGetLengthGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGetRankGen.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayAddressMethod.cs" />
@@ -79,7 +81,6 @@
     <Compile Include="Metadata\Model\MDLocation.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
-    <Compile Include="Gencode\InlineMethods\ArrayGen.cs" />
     <Compile Include="Gencode\InlineMethods\InterlockedGen.cs" />
     <Compile Include="Gencode\InlineMethods\MainGen.cs" />
     <Compile Include="Gencode\InlineMethods\ThreadGen.cs" />

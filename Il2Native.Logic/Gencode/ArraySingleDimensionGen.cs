@@ -439,30 +439,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteArrayGetRank(this LlvmWriter llvmWriter, OpCodePart opCode)
-        {
-            var writer = llvmWriter.Output;
-            llvmWriter.LoadElement(writer, opCode, "rank");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        public static void WriteArrayGetElementSize(this LlvmWriter llvmWriter, OpCodePart opCode)
-        {
-            var writer = llvmWriter.Output;
-            llvmWriter.LoadElement(writer, opCode, "elementSize");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="llvmWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
         {
             var writer = llvmWriter.Output;

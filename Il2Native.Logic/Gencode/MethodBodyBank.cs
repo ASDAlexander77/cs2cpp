@@ -92,6 +92,8 @@
             // Array
             ArrayCopyGen.Register(typeResolver);
             ArrayClearGen.Register(typeResolver);
+            ArrayGetLengthGen.Register(typeResolver);
+            ArrayGetRankGen.Register(typeResolver);
 
 #if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);

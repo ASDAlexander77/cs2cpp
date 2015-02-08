@@ -428,12 +428,6 @@ namespace Il2Native.Logic.Gencode
                 return true;
             }
 
-            if (methodInfo.IsArrayFunction())
-            {
-                methodInfo.WriteArrayFunction(opCodeMethodInfo, llvmWriter);
-                return true;
-            }
-
             if (methodInfo.IsInterlockedFunction())
             {
                 methodInfo.WriteInterlockedFunction(opCodeMethodInfo, llvmWriter);

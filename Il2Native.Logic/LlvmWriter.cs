@@ -4809,7 +4809,7 @@ namespace Il2Native.Logic
                 index++;
             }
 
-            Debug.Assert(index != list.Count, "Could not find field {0} in type {1}", fieldName, type);
+            Debug.Assert(index != list.Count, string.Format("Could not find field {0} in type {1}", fieldName, type));
             if (index == list.Count)
             {
                 throw new KeyNotFoundException();

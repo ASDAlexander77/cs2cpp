@@ -12,7 +12,12 @@
         public static readonly object[] ByteCode =
         {
             Code.Ldarg_0,
-            Code.Call,
+            Code.Castclass,
+            5,
+            0,
+            0,
+            0,
+            Code.Ldfld,
             2,
             0,
             0,
@@ -60,20 +65,12 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
+            var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
-            tokenResolutions.Add(
-                new SynthesizedStaticMethod(
-                    string.Empty,
-                    typeResolver.ResolveType("System.Array"),
-                    typeResolver.ResolveType("System.Int32"),
-                    new[] { typeResolver.ResolveType("System.Array").ToParameter() },
-                    (llvmWriter, opCode) =>
-                    {
-                        // get element size
-                        llvmWriter.WriteArrayGetElementSize(opCode);
-                    }));
+            tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             tokenResolutions.Add(
                 new SynthesizedStaticMethod(
                     string.Empty,
@@ -94,7 +91,7 @@
                         llvmWriter.WriteMemCopy(firstByteOfSourceArray, firstByteOfDestArray, len);
                     }));
             tokenResolutions.Add(typeResolver.ResolveType("System.Byte"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToArrayType(1));
+            tokenResolutions.Add(arrayType);
 
             var locals = new List<IType>();
             locals.Add(typeResolver.ResolveType("System.Int32"));
