@@ -579,6 +579,7 @@
             return sb.ToString();
         }
 
+        // TODO: make it flexible
         private CollectionMetadata DefineArrayMembers(IType type, CollectionMetadata structureType)
         {
             Debug.Assert(type != null && type.IsArray);
@@ -586,8 +587,8 @@
             var members = new CollectionMetadata(this.indexedMetadata);
 
             var elementsCount = 10;
-            var countOffset = 16; // 3 * pointerSize + sizeof(int)
-            var dataOffset = 20; // + pointer size
+            var countOffset = 20; // 3 * pointerSize + 2 * sizeof(int) + 2 * sizeof(short)
+            var dataOffset = 24; // + pointer size
 
             var countMember = this.DefineMember(
                 "count",

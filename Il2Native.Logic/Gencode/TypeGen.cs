@@ -121,7 +121,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             var offset = 0;
-            membersLayout = type.GetTypeSizes(typeResolver, true).ToList();
+            membersLayout = type.GetTypeSizes(typeResolver).ToList();
             foreach (var member in membersLayout)
             {
                 member.Offset = offset;
@@ -417,7 +417,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type, ITypeResolver typeResolver, bool firstLevel = false)
+        public static IEnumerable<MemberLocationInfo> GetTypeSizes(this IType type, ITypeResolver typeResolver, bool firstLevel = true)
         {
             if (type.IsInterface)
             {
@@ -425,7 +425,7 @@ namespace Il2Native.Logic.Gencode
                 foreach (
                     var item in
                         type.GetInterfacesExcludingBaseAllInterfaces()
-                            .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver)))
+                            .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver, false)))
                 {
                     any = true;
                     yield return item;
@@ -474,7 +474,7 @@ namespace Il2Native.Logic.Gencode
 
             if (type.BaseType != null)
             {
-                foreach (var item in type.BaseType.GetTypeSizes(typeResolver))
+                foreach (var item in type.BaseType.GetTypeSizes(typeResolver, false))
                 {
                     yield return item;
                 }
@@ -484,7 +484,7 @@ namespace Il2Native.Logic.Gencode
             foreach (
                 var item in
                     type.GetInterfacesExcludingBaseAllInterfaces()
-                        .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver)))
+                        .SelectMany(interfaceItem => interfaceItem.GetTypeSizes(typeResolver, false)))
             {
                 yield return item;
             }

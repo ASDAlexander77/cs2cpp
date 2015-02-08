@@ -279,11 +279,16 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixDataType;
             }
 
-            var arraySystemType = typeResolver.ResolveType("System.Array");
+            var arraySystemType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
 
             var sb = new StringBuilder();
             foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
             {
+                if (memberLocationInfo.Size == 0)
+                {
+                    break;
+                }
+
                 if (sb.Length > 0)
                 {
                     sb.Append(", ");
@@ -293,9 +298,16 @@ namespace Il2Native.Logic.Gencode
                 {
                     sb.Append("i8*");
                 }
-            }
+                else
+                {
+                    if (memberLocationInfo.Size == 0)
+                    {
+                        break;
+                    }
 
-            sb.Append(", i16, i16, i32, i32");
+                    sb.Append("i" + (memberLocationInfo.Size * 8));
+                }
+            }
 
             _singleDimArrayPrefixDataType = sb.ToString();
             return _singleDimArrayPrefixDataType;
@@ -312,19 +324,23 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixNullConstData;
             }
 
-            var arraySystemType = typeResolver.ResolveType("System.Array");
+            var arraySystemType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
 
             var sb = new StringBuilder();
             foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
             {
-                if (sb.Length > 0)
-                {
-                    sb.Append(", ");
-                }
-
                 if (memberLocationInfo.MemberType == MemberTypes.Root || memberLocationInfo.MemberType == MemberTypes.Interface)
                 {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append(", ");
+                    }
+
                     sb.Append("i8* null");
+                }
+                else
+                {
+                    break;
                 }
             }
 
