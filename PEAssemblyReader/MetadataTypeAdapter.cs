@@ -1256,6 +1256,11 @@ namespace PEAssemblyReader
         /// </returns>
         private string CalculateName()
         {
+            if (this.IsByRef)
+            {
+                return this.GetElementType().Name;
+            }
+
             var sb = new StringBuilder();
 
             sb.Append(this.typeDef.Name);
@@ -1335,7 +1340,7 @@ namespace PEAssemblyReader
                 return null;
             }
 
-            return containingType.ResolveGeneric(this.GenericContext);            
+            return containingType.ResolveGeneric(this.GenericContext);
         }
 
         /// <summary>
