@@ -957,7 +957,6 @@ namespace Il2Native.Logic
 
                         this.AddUsedType(constructor.DeclaringType);
                         this.AddCalledMethod(constructor);
-                        this.AddArrayType(constructor.DeclaringType);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
                         continue;
@@ -1008,6 +1007,7 @@ namespace Il2Native.Logic
                         Debug.Assert(field != null);
                         this.AddGenericSpecializedType(field.FieldType);
                         this.AddGenericSpecializedType(field.DeclaringType);
+                        this.AddUsedType(field.FieldType);
                         this.AddUsedType(field.DeclaringType);
 
                         if (code == Code.Ldsfld || code == Code.Ldsflda)
@@ -1073,19 +1073,16 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
                         this.AddGenericSpecializedType(type);
+                        this.AddUsedType(type);
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
                         }
 
-                        this.AddUsedType(type);
-
                         if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
                         {
                             this.AddArrayType(type.ToArrayType(1));
                         }
-
-                        this.AddArrayType(type);
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
@@ -1345,6 +1342,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddUsedType(IType type)
         {
+            this.AddArrayType(type);
             if (this.usedTypes == null || type == null)
             {
                 return;
