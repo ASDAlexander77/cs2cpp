@@ -605,7 +605,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer, bool asReference)
+        public static void WriteTypeModifiers(this IType type, IndentedTextWriter writer)
         {
             var refChar = '*';
             var effectiveType = type;
@@ -619,7 +619,7 @@ namespace Il2Native.Logic.Gencode
             do
             {
                 var isReference = !effectiveType.IsValueType;
-                if ((isReference || (!isReference && asReference && level == 0) || effectiveType.IsPointer) && !effectiveType.IsGenericParameter)
+                if ((isReference || effectiveType.IsPointer) && !effectiveType.IsGenericParameter)
                 {
                     writer.Write(refChar);
                 }
@@ -670,12 +670,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, LlvmWriter llvmWriter, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, LlvmWriter llvmWriter)
         {
             LlvmIndentedTextWriter writer = llvmWriter.Output;
 
             type.WriteTypeWithoutModifiers(llvmWriter);
-            type.WriteTypeModifiers(writer, asReference);
+            type.WriteTypeModifiers(writer);
         }
 
         /// <summary>

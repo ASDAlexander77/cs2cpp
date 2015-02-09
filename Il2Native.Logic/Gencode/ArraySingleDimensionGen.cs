@@ -526,7 +526,7 @@ namespace Il2Native.Logic.Gencode
 
             var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
-            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter, true);
+            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
 
             llvmWriter.WriteResult(arrayInstanceResult);

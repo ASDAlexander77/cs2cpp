@@ -499,11 +499,11 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(llvmWriter, true);
+            result.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(result);
             writer.Write(" to ");
-            toType.WriteTypePrefix(llvmWriter, true);
+            toType.WriteTypePrefix(llvmWriter);
         }
 
         /// <summary>
@@ -520,18 +520,17 @@ namespace Il2Native.Logic.Gencode
             this LlvmWriter llvmWriter,
             OpCodePart opCode,
             FullyDefinedReference source,
-            IType toType,
-            bool asReference = true)
+            IType toType)
         {
             var writer = llvmWriter.Output;
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            source.Type.WriteTypePrefix(llvmWriter, asReference);
+            source.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
-            toType.WriteTypePrefix(llvmWriter, asReference);
+            toType.WriteTypePrefix(llvmWriter);
         }
 
         /// <summary>
@@ -548,7 +547,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
             writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(llvmWriter, !result.Type.IsByRef && result.Type.IsValueType());
+            result.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(result);
             writer.Write(" to i8*");
@@ -577,7 +576,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, null);
             writer.Write("bitcast ");
-            fromType.WriteTypePrefix(llvmWriter, true);
+            fromType.WriteTypePrefix(llvmWriter);
             writer.Write(' ');
             llvmWriter.WriteResult(result);
             writer.Write(" to ");
@@ -809,7 +808,6 @@ namespace Il2Native.Logic.Gencode
             IType fromType,
             string custromName,
             IType toType,
-            bool appendReference = false,
             bool doNotConvert = false)
         {
             // TODO: remove this one. use anather one
@@ -824,16 +822,11 @@ namespace Il2Native.Logic.Gencode
             }
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("bitcast ");
-            fromType.WriteTypePrefix(llvmWriter, true);
+            fromType.WriteTypePrefix(llvmWriter);
             writer.Write(' ');
             writer.Write(custromName);
             writer.Write(" to ");
-            toType.WriteTypePrefix(llvmWriter, true);
-            if (appendReference)
-            {
-                // result should be array
-                writer.Write('*');
-            }
+            toType.WriteTypePrefix(llvmWriter);
 
             writer.WriteLine(string.Empty);
         }
@@ -864,7 +857,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
-            toType.WriteTypePrefix(llvmWriter, true);
+            toType.WriteTypePrefix(llvmWriter);
         }
 
         /// <summary>
@@ -958,7 +951,7 @@ namespace Il2Native.Logic.Gencode
 
                 // last part
                 writer.Write("load ");
-                typeToLoad.WriteTypePrefix(llvmWriter, structAsRef);
+                typeToLoad.WriteTypePrefix(llvmWriter);
                 if (appendReference)
                 {
                     // add reference to type
@@ -1017,7 +1010,7 @@ namespace Il2Native.Logic.Gencode
 
             var localType = llvmWriter.LocalInfo[index].LocalType;
 
-            localType.WriteTypePrefix(llvmWriter, false);
+            localType.WriteTypePrefix(llvmWriter);
             if (asReference)
             {
                 writer.Write('*');
@@ -1199,7 +1192,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.WriteSetResultNumber(opCode, toType);
             writer.Write("ptrtoint ");
-            source.Type.WriteTypePrefix(llvmWriter, true);
+            source.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
             llvmWriter.WriteResult(source);
             writer.Write(" to ");
