@@ -26,37 +26,6 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        public const int ArrayDataElementRank = 0;
-
-        /// <summary>
-        /// </summary>
-        public const int ArrayDataElementTypeCode = 1;
-
-        /// <summary>
-        /// </summary>
-        public const int ArrayDataElementSize = 2;
-
-        /// <summary>
-        /// </summary>
-        public const int ArrayDataLength = 3;
-
-        /// <summary>
-        /// count of array header data fields
-        /// </summary>
-        public static int ArraySupportFields = 4;
-
-        /// <summary>
-        /// shift for first field after System.Array
-        /// </summary>
-        public static int _arrayHeaderDataStartsWith = -1;
-
-        /// <summary>
-        /// shift for first element of an array
-        /// </summary>
-        public static int _arrayDataStartsWith = -1;
-
-        /// <summary>
-        /// </summary>
         private static string _singleDimArrayPrefixDataType;
 
         /// <summary>
@@ -239,32 +208,6 @@ namespace Il2Native.Logic.Gencode
 
             // parameters
             parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
-        }
-
-        [Obsolete]
-        public static int GetArrayDataStartsWith(ITypeResolver typeResolver)
-        {
-            // TODO: is obsolete
-            if (_arrayDataStartsWith != -1)
-            {
-                return _arrayDataStartsWith;
-            }
-
-            var count = GetArrayHeaderDataStartsWith(typeResolver);
-            _arrayDataStartsWith = count + ArraySupportFields;
-            return _arrayDataStartsWith;
-        }
-
-        public static int GetArrayHeaderDataStartsWith(ITypeResolver typeResolver)
-        {
-            if (_arrayHeaderDataStartsWith != -1)
-            {
-                return _arrayHeaderDataStartsWith;
-            }
-
-            var arraySystemType = typeResolver.ResolveType("System.Array");
-            _arrayHeaderDataStartsWith = arraySystemType.GetTypeSizes(typeResolver).Count();
-            return _arrayHeaderDataStartsWith;
         }
 
         /// <summary>

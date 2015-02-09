@@ -70,6 +70,7 @@
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetLengthGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetRankGen.cs" />
+    <Compile Include="Gencode\InternalMethods\OffsetToStringData.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayAddressMethod.cs" />

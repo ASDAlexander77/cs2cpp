@@ -52,9 +52,8 @@ namespace System.Runtime.CompilerServices
         public static int OffsetToStringData
         {
             get
-            {   
-                // return offset of first element
-                return sizeof(short) * 2 + sizeof(int) * 2 + IntPtr.Size * 3;
+            {
+                throw new NotImplementedException();
             }
         }
     }

@@ -98,6 +98,9 @@
 #if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);
 #endif
+
+            // Runtime helpers
+            OffsetToStringData.Register(typeResolver);
         }
 
         public static IEnumerable<byte> Transform(IEnumerable<object> code)
