@@ -170,8 +170,6 @@
 
             codeList.Add(Code.Ldarg_0);
 
-            codeList.AppendInt(Code.Ldflda, 1);
-
             // element index 
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
 
@@ -200,8 +198,6 @@
             var codeList = new List<object>();
 
             codeList.Add(Code.Ldarg_0);
-
-            codeList.AppendInt(Code.Ldflda, 1);
 
             // element index
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
@@ -236,8 +232,6 @@
             var codeList = new List<object>();
 
             codeList.Add(Code.Ldarg_0);
-
-            codeList.AppendInt(Code.Ldflda, 1);
 
             // element index 
             codeList.AddRange(GetIndexPartMethodBody(arrayType, typeResolver, out tokenResolutions, out locals));
