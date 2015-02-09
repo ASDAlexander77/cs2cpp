@@ -25,6 +25,8 @@ namespace Il2Native.Logic
     {
         private static bool concurrent;
 
+        private static ICodeWriter _codeWriter;
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -354,7 +356,7 @@ namespace Il2Native.Logic
                 // pre process step to get all used undefined structures
                 foreach (
                     var method in
-                        IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodBodyOrDefault(m, codeWriter)))
+                        IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                 {
                     IMethod genericMethod = null;
                     if (type.IsGenericType && !type.IsInterface && !type.IsDelegate && !type.IsArray)
@@ -615,6 +617,8 @@ namespace Il2Native.Logic
         /// </param>
         private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
         {
+            _codeWriter = codeWriter;
+
             IList<IType> sortedListOfTypes;
             IDictionary<string, IType> genDefinitionsByMetadataName;
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
@@ -788,7 +792,7 @@ namespace Il2Native.Logic
                     processedAlready);
             }
 
-            var methodBody = method.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
+            var methodBody = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter).GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
             if (methodBody != null)
             {
                 foreach (var localVar in methodBody.LocalVariables)
@@ -984,12 +988,13 @@ namespace Il2Native.Logic
                genericTypeSpecializations,
                genericMethodSpecializations,
                additionalTypesToProcess,
-               processedAlready)
-               .Where(type.TypeNotEquals);
+               processedAlready);
             foreach (var requiredType in requiredTypes)
             {
                 AddBareTypeToRequiredTypes(requiredType, addedRequiredTypes);
             }
+
+            addedRequiredTypes.Remove(type);
         }
 
         private static void AppendTypeWithRequiredTypePair(IType type, NamespaceContainer<IType, INamespaceContainer<IType>> requiredTypesByType, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
@@ -1053,7 +1058,12 @@ namespace Il2Native.Logic
 
             var allTypes = ilReader.AllTypes().ToList();
 
-            sortedListOfTypes = SortTypesByUsage(types.ToList(), genericTypeSpecializations, genericMethodSpecializations, additionalTypesToProcess);
+            sortedListOfTypes = SortTypesByUsage(
+                types.ToList(), 
+                genericTypeSpecializations, 
+                genericMethodSpecializations, 
+                additionalTypesToProcess);
+
             // build quick access array for Generic Definitions
             genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
             foreach (var genDef in allTypes.Where(t => t.IsGenericTypeDefinition))

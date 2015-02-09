@@ -13,7 +13,7 @@
         private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
             new SortedDictionary<string, Func<IMethod, IMethod>>();
 
-        public static IMethod GetMethodBodyOrDefault(IMethod method, ITypeResolver typeResolver)
+        public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
             if (MethodsByFullName.Count == 0)
             {

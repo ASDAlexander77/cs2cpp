@@ -90,15 +90,7 @@ namespace Il2Native.Logic.Gencode
                 });
 
 #if MSCORLIB
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Castclass,
-                    5,
-                    0,
-                    0,
-                    0,
-                });
+            codeList.AppendInt(Code.Castclass, 5);
 #endif
 
             codeList.AddRange(
@@ -110,48 +102,16 @@ namespace Il2Native.Logic.Gencode
 
             var index = 1;
             foreach (var parameter in parameters)
-            {
-                if (index > 3)
-                {
-                    codeList.Add(Code.Ldarg_S);
-                    codeList.Add(index);
-                }
-                else
-                {
-                    switch (index)
-                    {
-                        case 1:
-                            codeList.Add(Code.Ldarg_1);
-                            break;
-                        case 2:
-                            codeList.Add(Code.Ldarg_2);
-                            break;
-                        case 3:
-                            codeList.Add(Code.Ldarg_3);
-                            break;
-                    }
-                }
-
+            {   
+                codeList.AppendLoadArgument(index);
                 index++;
             }
 
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Callvirt,
-                    4,
-                    0,
-                    0,
-                    0
-                });
+            codeList.AppendInt(Code.Callvirt, 4);
 
             if (!method.ReturnType.IsVoid())
             {
-                codeList.AddRange(
-                    new object[]
-                    {
-                        Code.Stloc_1
-                    });
+                codeList.Add(Code.Stloc_1);
             }
 
             codeList.AddRange(
@@ -174,11 +134,7 @@ namespace Il2Native.Logic.Gencode
 
 #if MSCORLIB
             // to load value from IntPtr
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldind_I
-                    });
+            codeList.Add(Code.Ldind_I);
 
             bytesShift++;
 #endif
@@ -192,18 +148,10 @@ namespace Il2Native.Logic.Gencode
 
             if (!method.ReturnType.IsVoid())
             {
-                codeList.AddRange(
-                    new object[]
-                    {
-                        Code.Ldloc_1
-                    });
+                codeList.Add(Code.Ldloc_1);
             }
 
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Ret
-                });
+            codeList.Add(Code.Ret);
 
             code = codeList.ToArray();
 
