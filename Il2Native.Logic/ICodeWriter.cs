@@ -19,6 +19,10 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
+        void Initialize(IType type);
+
+        /// <summary>
+        /// </summary>
         void Close();
 
         /// <summary>

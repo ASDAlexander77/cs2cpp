@@ -885,6 +885,11 @@ namespace Il2Native.Logic
             RequiredTypesForBody.Clear();
         }
 
+        public void Initialize(IType type)
+        {
+            ReadTypeInfo(type);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="moduleName">

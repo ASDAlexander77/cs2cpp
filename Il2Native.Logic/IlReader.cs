@@ -1085,6 +1085,8 @@ namespace Il2Native.Logic
                             this.AddArrayType(type.ToArrayType(1));
                         }
 
+                        this.AddArrayType(type);
+
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
                         continue;
                     case Code.Switch:

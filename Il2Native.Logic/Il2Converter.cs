@@ -792,7 +792,8 @@ namespace Il2Native.Logic
                     processedAlready);
             }
 
-            var methodBody = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter).GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
+            var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
+            var methodBody = methodWithCustomBodyOrDefault.GetMethodBody(MetadataGenericContext.DiscoverFrom(method));
             if (methodBody != null)
             {
                 foreach (var localVar in methodBody.LocalVariables)
@@ -810,7 +811,7 @@ namespace Il2Native.Logic
                 }
 
                 var usedStructTypes = new NamespaceContainer<IType>();
-                method.DiscoverRequiredTypesAndMethodsInMethodBody(
+                methodWithCustomBodyOrDefault.DiscoverRequiredTypesAndMethodsInMethodBody(
                     genericTypeSpecializations,
                     genericMethodSpecializations,
                     usedStructTypes,
@@ -1057,6 +1058,9 @@ namespace Il2Native.Logic
             }
 
             var allTypes = ilReader.AllTypes().ToList();
+
+            // TODO: temp hack to initialize ThisType for TypeResolver
+            _codeWriter.Initialize(allTypes.First());
 
             sortedListOfTypes = SortTypesByUsage(
                 types.ToList(), 
