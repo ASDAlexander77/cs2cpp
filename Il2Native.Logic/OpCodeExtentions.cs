@@ -47,6 +47,7 @@ namespace Il2Native.Logic
             return codes.Any(item => item == code);
         }
 
+        [Obsolete]
         public static int BranchShort(this List<object> codeList, Code op)
         {
             codeList.Add(op);
@@ -54,24 +55,30 @@ namespace Il2Native.Logic
             return codeList.Count() - 1;
         }
 
+        [Obsolete]
         public static void BranchShort(this List<object> codeList, Code op, int label)
         {
+            Debug.Assert((codeList.Count() - label) < SByte.MaxValue);
+
             // +2, op code + address code, as backward jump start from first byte of the end of branch command with address
             var address = (byte) -(codeList.Count() - label + 2);
             codeList.Add(op);
             codeList.Add(address);
         }
 
+        [Obsolete]
         public static int MarkLabel(this List<object> codeList)
         {
             return codeList.Count();
         }
 
+        [Obsolete]
         public static void SetBranchShortLabel(this List<object> codeList, int jumpFrom)
         {
             codeList[jumpFrom] = codeList.Count() - 1 - jumpFrom;
         }
 
+        [Obsolete]
         public static void AppendInt(this List<object> codeList, Code op, int valueInt)
         {
             var value = BitConverter.GetBytes(valueInt);
@@ -79,6 +86,7 @@ namespace Il2Native.Logic
             codeList.AddRange(value.Cast<object>());
         }
 
+        [Obsolete]
         public static void AppendUInt(this List<object> codeList, Code op, uint valueInt)
         {
             var value = BitConverter.GetBytes(valueInt);
@@ -86,6 +94,7 @@ namespace Il2Native.Logic
             codeList.AddRange(value.Cast<object>());
         }
 
+        [Obsolete]
         public static void AppendLong(this List<object> codeList, Code op, long valueLong)
         {
             var value = BitConverter.GetBytes(valueLong);
@@ -93,6 +102,7 @@ namespace Il2Native.Logic
             codeList.AddRange(value.Cast<object>());
         }
 
+        [Obsolete]
         public static void AppendULong(this List<object> codeList, Code op, ulong valueLong)
         {
             var value = BitConverter.GetBytes(valueLong);
@@ -100,6 +110,7 @@ namespace Il2Native.Logic
             codeList.AddRange(value.Cast<object>());
         }
 
+        [Obsolete]
         public static void AppendLoadArgument(this List<object> codeList, int argIndex)
         {
             switch (argIndex)
@@ -122,6 +133,7 @@ namespace Il2Native.Logic
             }
         }
 
+        [Obsolete]
         public static void AppendLoadInt(this List<object> codeList, int value)
         {
             codeList.AppendInt(Code.Ldc_I4, value);
