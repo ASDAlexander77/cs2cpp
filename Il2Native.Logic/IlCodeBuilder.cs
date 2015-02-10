@@ -62,6 +62,8 @@
 
         public void Branch(Code code, Code codeShort, Label label)
         {
+            var branch = new BranchNode(code, codeShort, label);
+            this.Add(branch);
         }
 
         public Label CreateLabel()
@@ -71,39 +73,39 @@
 
         public byte[] GetCode()
         {
-            var bytes = new List<byte>();
-
-            foreach (var @byte in this.IterateBytes())
-            {
-                bytes.Add(@byte);
-            }
-
-            return bytes.ToArray();
+            return this.IterateBytes().ToArray();
         }
 
         public void LoadArgument(int number)
         {
+            throw new NotImplementedException();
         }
 
         // helpers
         public void LoadConstant(int @const)
         {
+            throw new NotImplementedException();
         }
 
         public void LoadLocal(int number)
         {
+            throw new NotImplementedException();
         }
 
         public void SaveArgument(int number)
         {
+            throw new NotImplementedException();
         }
 
         public void SaveLocal(int number)
         {
+            throw new NotImplementedException();
         }
 
         private IEnumerable<byte> IterateBytes()
         {
+            var address = 0;
+
             foreach (var codeItem in this.parts)
             {
                 if (codeItem is Code)
@@ -112,21 +114,39 @@
                     if (@byte >= 0xE1)
                     {
                         yield return 0xFE;
+                        address++;
                         yield return (byte)(@byte - 0xE1);
+                        address++;
                     }
                     else
                     {
                         yield return @byte;
+                        address++;
                     }
+
+                    continue;
                 }
-                else if (codeItem is Label)
+
+                var label = codeItem as Label;
+                if (label != null)
                 {
-                    
+                    label.Address = address;
+                    continue;
                 }
-                else
+
+                var branch = codeItem as BranchNode;
+                if (branch != null)
                 {
-                    yield return (byte)codeItem;
+                    foreach (var branchByte in branch.GetBytes())
+                    {
+                        yield return branchByte;
+                    }
+
+                    continue;
                 }
+
+                yield return (byte)codeItem;
+                address++;
             }
         }
 
@@ -134,22 +154,95 @@
         {
             private Code opCode;
             private Code opCodeShort;
+            private int _address;
 
             public BranchNode(Code opCode, Code opCodeShort)
             {
                 this.opCode = opCode;
                 this.opCodeShort = opCodeShort;
-                this.Label = new Label();
+                this.Label = new Label(this);
             }
 
+            public BranchNode(Code opCode, Code opCodeShort, Label label)
+            {
+                this.opCode = opCode;
+                this.opCodeShort = opCodeShort;
+                this.Label = label;
+                this.Label.BranchNode = this;
+            }
+
+            public int Address
+            {
+                get { return this._address; }
+                set
+                {
+                    this._address = value;
+                    this.AddressSet = true;
+                }
+            }
+
+            public bool AddressSet { get; private set; }
+
             public Label Label { get; private set; }
+
+            public bool IsLong 
+            {
+                get
+                {
+                    if (!this.AddressSet || this.Label == null || !this.Label.AddressSet)
+                    {
+                        return true;
+                    }
+
+                    var diff = this.Label.Address - this.Address;
+                    return diff < SByte.MinValue || diff > SByte.MaxValue;
+                }
+            }
+
+            public IEnumerable<byte> GetBytes()
+            {
+                // default size if 5 bytes (OpCode + 4 bytes address)
+                if (this.Label == null || !this.Label.AddressSet || this.IsLong)
+                {
+                    yield return (byte)this.opCode;
+                    foreach (var addressByte in BitConverter.GetBytes(this.Address))
+                    {
+                        yield return addressByte;
+                    }
+                    yield break;
+                }
+
+                yield return (byte)this.opCodeShort;
+                yield return (byte)(this.Label.Address - this.Address);
+            }
         }
 
         public class Label
         {
+            private int _address;
+
             public Label()
             {
             }
+
+            public Label(BranchNode branchNode)
+            {
+                this.BranchNode = branchNode;
+            }
+
+            public BranchNode BranchNode { get; set; }
+
+            public int Address
+            {
+                get { return this._address; }
+                set
+                {
+                    this._address = value;
+                    this.AddressSet = true;
+                }
+            }
+
+            public bool AddressSet { get; private set; }
         }
     }
 }
