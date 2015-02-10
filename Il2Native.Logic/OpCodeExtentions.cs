@@ -56,13 +56,15 @@ namespace Il2Native.Logic
 
         public static void BranchShort(this List<object> codeList, Code op, int label)
         {
+            // +2, op code + address code, as backward jump start from first byte of the end of branch command with address
+            var address = (byte) -(codeList.Count() - label + 2);
             codeList.Add(op);
-            codeList.Add((sbyte)(label - codeList.Count()));
+            codeList.Add(address);
         }
 
         public static int MarkLabel(this List<object> codeList)
         {
-            return codeList.Count() - 1;
+            return codeList.Count();
         }
 
         public static void SetBranchShortLabel(this List<object> codeList, int jumpFrom)
