@@ -33,61 +33,33 @@ namespace Il2Native.Logic.Gencode
         {
             parameters = method.GetParameters().ToList();
 
-            var bytesShift = parameters.Count > (4 - 1) ? (parameters.Count - (4 - 1)) * 2 + (4 - 1) : parameters.Count;
-            if (!method.ReturnType.IsVoid())
-            {
-                bytesShift++;
-            }
-
-#if MSCORLIB
-            // to compensate Code.Castclass and Code.Ldfld to load value from IntPtr
-            bytesShift += 5;
-#endif
             var codeList = new List<object>();
 
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0, 
-                        Code.Ldfld, 
-                        1, 
-                        0, 
-                        0, 
-                        0,
-                    });
+            codeList.Add(Code.Ldarg_0);
+            codeList.AppendInt(Code.Ldfld, 1);
 
 #if MSCORLIB
             // to load value from IntPtr
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldind_I
-                    });
+            codeList.Add(Code.Ldind_I);
 #endif
+
+            var jumpForBrtrue_S = codeList.BranchShort(Code.Brtrue_S);
+            codeList.AppendInt(Code.Call, 2);
+            codeList.SetBranchShortLabel(jumpForBrtrue_S);
 
             codeList.AddRange(
                 new object[]
                 {
-                    Code.Brtrue_S,
-                    5,
-                    Code.Call,
-                    2,
-                    0,
-                    0,
-                    0,
-
                     // multicast
                     Code.Ldc_I4_0,
                     Code.Stloc_0,
-                    Code.Br_S,
-                    0x11 + bytesShift,
-                    Code.Ldarg_0,
-                    Code.Ldfld,
-                    3,
-                    0,
-                    0,
-                    0,
                 });
+
+            var branchForBr_S = codeList.BranchShort(Code.Br_S);
+            var labelForBlt_S = codeList.MarkLabel();
+            codeList.Add(Code.Ldarg_0);
+            codeList.AppendInt(Code.Ldfld, 3);
+
 
 #if MSCORLIB
             codeList.AppendInt(Code.Castclass, 5);
@@ -121,30 +93,21 @@ namespace Il2Native.Logic.Gencode
                     Code.Ldc_I4_1,
                     Code.Add,
                     Code.Stloc_0,
-
-                    // for test
-                    Code.Ldloc_0,
-                    Code.Ldarg_0,
-                    Code.Ldfld,
-                    1,
-                    0,
-                    0,
-                    0,
                 });
+
+            codeList.SetBranchShortLabel(branchForBr_S);
+
+            // for test
+            codeList.Add(Code.Ldloc_0);
+            codeList.Add(Code.Ldarg_0);
+            codeList.AppendInt(Code.Ldfld, 1);
 
 #if MSCORLIB
             // to load value from IntPtr
             codeList.Add(Code.Ldind_I);
-
-            bytesShift++;
 #endif
 
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Blt_S,
-                    -(0x1a + bytesShift)
-                });
+            codeList.BranchShort(Code.Blt_S, labelForBlt_S);
 
             if (!method.ReturnType.IsVoid())
             {

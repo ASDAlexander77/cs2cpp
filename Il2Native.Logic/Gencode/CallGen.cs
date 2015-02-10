@@ -128,7 +128,7 @@ namespace Il2Native.Logic.Gencode
             // allocate space for structure if return type is structure
             if (returnIsStruct)
             {
-                returnType.WriteTypePrefix(llvmWriter);
+                returnType.WriteTypePrefix(llvmWriter, returnType.IsStructureType());
                 writer.Write(' ');
                 if (resultNumberForReturn != null)
                 {
@@ -486,7 +486,7 @@ namespace Il2Native.Logic.Gencode
 
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
-                methodInfo.ReturnType.WriteTypePrefix(llvmWriter);
+                methodInfo.ReturnType.WriteTypePrefix(llvmWriter, false);
 
                 llvmWriter.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
             }
@@ -576,7 +576,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
 
-            parameter.ParameterType.WriteTypePrefix(llvmWriter);
+            parameter.ParameterType.WriteTypePrefix(llvmWriter, parameter.ParameterType.IsStructureType());
             if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
             {
                 writer.Write(" byval align " + llvmWriter.ByValAlign);
@@ -592,7 +592,7 @@ namespace Il2Native.Logic.Gencode
 
             llvmWriter.CheckIfExternalDeclarationIsRequired(type);
 
-            type.WriteTypePrefix(llvmWriter);
+            type.WriteTypePrefix(llvmWriter, type.IsStructureType());
             if (type.IsStructureType())
             {
                 writer.Write(" byval align " + llvmWriter.ByValAlign);

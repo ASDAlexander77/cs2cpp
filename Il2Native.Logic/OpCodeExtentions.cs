@@ -47,6 +47,29 @@ namespace Il2Native.Logic
             return codes.Any(item => item == code);
         }
 
+        public static int BranchShort(this List<object> codeList, Code op)
+        {
+            codeList.Add(op);
+            codeList.Add((sbyte)0);
+            return codeList.Count() - 1;
+        }
+
+        public static void BranchShort(this List<object> codeList, Code op, int label)
+        {
+            codeList.Add(op);
+            codeList.Add((sbyte)(label - codeList.Count()));
+        }
+
+        public static int MarkLabel(this List<object> codeList)
+        {
+            return codeList.Count() - 1;
+        }
+
+        public static void SetBranchShortLabel(this List<object> codeList, int jumpFrom)
+        {
+            codeList[jumpFrom] = codeList.Count() - 1 - jumpFrom;
+        }
+
         public static void AppendInt(this List<object> codeList, Code op, int valueInt)
         {
             var value = BitConverter.GetBytes(valueInt);
