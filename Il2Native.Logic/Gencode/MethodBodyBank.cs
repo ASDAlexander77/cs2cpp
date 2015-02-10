@@ -35,7 +35,7 @@
                 && (method.Name == "Invoke")
                 && (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate"))
             {
-                object[] code;
+                byte[] code;
                 IList<object> tokenResolutions;
                 IList<IType> locals;
                 IList<IParameter> parameters;
@@ -62,6 +62,20 @@
             return new SynthesizedMethodDecorator(
                 m,
                 new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, Transform(code).ToArray()),
+                parameters,
+                new SynthesizedModuleResolver(m, tokenResolutions));
+        }
+
+        public static SynthesizedMethodDecorator GetMethodDecorator(
+            IMethod m,
+            byte[] code,
+            IList<object> tokenResolutions,
+            IList<IType> locals,
+            IList<IParameter> parameters)
+        {
+            return new SynthesizedMethodDecorator(
+                m,
+                new SynthesizedMethodBodyDecorator(m != null ? m.GetMethodBody() : null, locals, code),
                 parameters,
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }

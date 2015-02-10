@@ -26,88 +26,75 @@ namespace Il2Native.Logic.Gencode
         public static void GetMulticastDelegateInvoke(
             IMethod method,
             ITypeResolver typeResolver,
-            out object[] code,
+            out byte[] code,
             out IList<object> tokenResolutions,
             out IList<IType> locals,
             out IList<IParameter> parameters)
         {
             parameters = method.GetParameters().ToList();
 
-            var codeList = new List<object>();
+            var codeList = new IlCodeBuilder();
 
             codeList.Add(Code.Ldarg_0);
-            codeList.AppendInt(Code.Ldfld, 1);
+            codeList.Add(Code.Ldfld, 1);
 
 #if MSCORLIB
             // to load value from IntPtr
             codeList.Add(Code.Ldind_I);
 #endif
 
-            var jumpForBrtrue_S = codeList.BranchShort(Code.Brtrue_S);
-            codeList.AppendInt(Code.Call, 2);
-            codeList.SetBranchShortLabel(jumpForBrtrue_S);
+            var jumpForBrtrue_S = codeList.Branch(Code.Brtrue, Code.Brtrue_S);
+            codeList.Add(Code.Call, 2);
+            codeList.Add(jumpForBrtrue_S);
 
-            codeList.AddRange(
-                new object[]
-                {
-                    // multicast
-                    Code.Ldc_I4_0,
-                    Code.Stloc_0,
-                });
+            codeList.Add(Code.Ldc_I4_0);
+            codeList.Add(Code.Stloc_0);
 
-            var branchForBr_S = codeList.BranchShort(Code.Br_S);
-            var labelForBlt_S = codeList.MarkLabel();
+            var branchForBr_S = codeList.Branch(Code.Br, Code.Br_S);
+            var labelForBlt_S = codeList.CreateLabel();
             codeList.Add(Code.Ldarg_0);
-            codeList.AppendInt(Code.Ldfld, 3);
-
+            codeList.Add(Code.Ldfld, 3);
 
 #if MSCORLIB
             codeList.AppendInt(Code.Castclass, 5);
 #endif
 
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Ldloc_0,
-                    Code.Ldelem_Ref
-                });
+            codeList.Add(Code.Ldloc_0);
+            codeList.Add(Code.Ldelem_Ref);
 
             var index = 1;
             foreach (var parameter in parameters)
             {   
-                codeList.AppendLoadArgument(index);
+                codeList.LoadArgument(index);
                 index++;
             }
 
-            codeList.AppendInt(Code.Callvirt, 4);
+            codeList.Add(Code.Callvirt, 4);
 
             if (!method.ReturnType.IsVoid())
             {
                 codeList.Add(Code.Stloc_1);
             }
 
-            codeList.AddRange(
-                new object[]
-                {
-                    Code.Ldloc_0,
-                    Code.Ldc_I4_1,
-                    Code.Add,
-                    Code.Stloc_0,
-                });
+            codeList.LoadLocal(0);
+            codeList.LoadConstant(1);
+            codeList.Add(Code.Add);
+            codeList.SaveLocal(0);
 
-            codeList.SetBranchShortLabel(branchForBr_S);
+            // label
+            codeList.Add(branchForBr_S);
 
             // for test
-            codeList.Add(Code.Ldloc_0);
-            codeList.Add(Code.Ldarg_0);
-            codeList.AppendInt(Code.Ldfld, 1);
+            codeList.LoadLocal(0);
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Ldfld, 1);
 
 #if MSCORLIB
             // to load value from IntPtr
             codeList.Add(Code.Ldind_I);
 #endif
 
-            codeList.BranchShort(Code.Blt_S, labelForBlt_S);
+            codeList.Branch(Code.Blt, Code.Blt_S, labelForBlt_S);
 
             if (!method.ReturnType.IsVoid())
             {
@@ -116,7 +103,7 @@ namespace Il2Native.Logic.Gencode
 
             codeList.Add(Code.Ret);
 
-            code = codeList.ToArray();
+            code = codeList.GetCode();
 
             locals = new List<IType>();
             locals.Add(typeResolver.ResolveType("System.Int32"));
