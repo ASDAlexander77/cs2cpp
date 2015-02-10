@@ -134,7 +134,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (!(operand.Result is ConstValue))
                     {
-                        llvmWriter.WriteBitcast(operand, operand.Result, intType, false);
+                        llvmWriter.WriteBitcast(operand, operand.Result, intType);
                         writer.WriteLine(string.Empty);
                     }
                     else
@@ -178,7 +178,7 @@ namespace Il2Native.Logic.Gencode
             else if (realExchange)
             {
                 // cast back to float/double
-                llvmWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
+                llvmWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
             }
 
             writer.WriteLine(string.Empty);

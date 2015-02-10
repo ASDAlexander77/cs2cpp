@@ -708,6 +708,10 @@ namespace Il2Native.Logic
                     if (jumpOp != null)
                     {
                         var nextAddress = opCodePart.JumpAddress();
+
+                        // TODO: remove it
+                        Debug.Assert(this.OpsByAddressStart.ContainsKey(nextAddress));
+
                         var target = this.OpsByAddressStart[nextAddress];
                         if (target.JumpDestination == null)
                         {
