@@ -194,7 +194,7 @@
                         return true;
                     }
 
-                    var diff = this.Label.Address - this.Address;
+                    var diff = this.Label.Address - this.Address + 2;
                     return diff < SByte.MinValue || diff > SByte.MaxValue;
                 }
             }
