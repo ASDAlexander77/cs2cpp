@@ -79,7 +79,7 @@
 
         public byte[] GetCode()
         {
-            var maxCount = 5;
+            var maxCount = 10;
             while (this.SetLabelAddresses() && maxCount-- >= 0)
             {
             }
@@ -261,6 +261,12 @@
                     continue;
                 }
 
+                var label = codeItem as Label;
+                if (label != null)
+                {
+                    continue;
+                }
+
                 yield return (byte)codeItem;
             }
         }
@@ -301,6 +307,7 @@
                 var branch = codeItem as BranchNode;
                 if (branch != null)
                 {
+                    branch.Address = address;
                     address += branch.GetBytes().Count();
                     continue;
                 }
