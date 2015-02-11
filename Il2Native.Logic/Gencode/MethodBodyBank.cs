@@ -13,11 +13,20 @@
         private static readonly IDictionary<string, Func<IMethod, IMethod>> MethodsByFullName =
             new SortedDictionary<string, Func<IMethod, IMethod>>();
 
+        private static object locker = new object();
+
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
             if (MethodsByFullName.Count == 0)
             {
-                RegisterAll(typeResolver);
+                lock (locker)
+                {
+                    // we double check to filter threads waiting on 'lock'
+                    if (MethodsByFullName.Count == 0)
+                    {
+                        RegisterAll(typeResolver);
+                    }
+                }
             }
 
             Func<IMethod, IMethod> methodFactory;
