@@ -1329,12 +1329,12 @@ namespace PEAssemblyReader
 
         private IType CalculateDeclaringTypeOriginal()
         {
-            return new MetadataTypeAdapter(this.typeDef.ContainingType);
+            return new MetadataTypeAdapter(GetBareTypeSymbol(this.typeDef).ContainingType);
         }
 
         private IType CalculateDeclaringType()
         {
-            var containingType = this.typeDef.ContainingType;
+            var containingType = GetBareTypeSymbol(this.typeDef).ContainingType;
             if (containingType == null)
             {
                 return null;
