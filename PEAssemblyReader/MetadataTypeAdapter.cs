@@ -331,7 +331,7 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                if (current.HasElementType && current.GetElementType().IsGenericTypeLocal)
+                if (current.HasElementType && current.GetElementType().IsGenericType)
                 {
                     return true;
                 }

@@ -458,16 +458,18 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine(string.Empty);
 
             // second array to i8*
+            var byteArrayType = byteType.ToArrayType(1);
+
             var opCodeDataHolder = OpCodePart.CreateNop;
             opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
             opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(
                 arrayData,
-                byteType.ToArrayType(1));
+                byteArrayType);
             var secondFirstElementResult = GetArrayDataAddressHelper(
                 llvmWriter,
                 opCodeDataHolder,
                 byteType,
-                GetDataFieldIndex(storedResult.Type, llvmWriter) + llvmWriter.CalculateFirstFieldPositionInType(storedResult.Type),
+                GetDataFieldIndex(byteArrayType, llvmWriter) + llvmWriter.CalculateFirstFieldPositionInType(byteArrayType),
                 0);
 
             llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
