@@ -10,6 +10,8 @@
 namespace Il2Native
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using Logic;
@@ -36,6 +38,7 @@ namespace Il2Native
                 Console.WriteLine("  .dll                    MSIL dll file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Options:");
+                Console.WriteLine("  /exe                    Output file");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
                 Console.WriteLine(
@@ -61,13 +64,10 @@ namespace Il2Native
             var processedArgs =
                 args.Select(arg => (arg.StartsWith("/") || arg.StartsWith("-")) ? arg.Substring(1) : arg).ToArray();
             var sources = args.Where(arg => (!arg.StartsWith("/") && !arg.StartsWith("-"))).ToArray();
+            var isCompilingTargetExe = processedArgs.Any(s => s == "exe");
 
             var fileExtension = Path.GetExtension(sources.First());
-            if (
-                !sources.All(
-                    f =>
-                        Path.GetExtension(f)
-                            .Equals(fileExtension, StringComparison.InvariantCultureIgnoreCase)))
+            if (!sources.All(f => Path.GetExtension(f).Equals(fileExtension, StringComparison.InvariantCultureIgnoreCase)))
             {
                 Console.WriteLine("WARNING!");
                 Console.WriteLine("You can use only one type of files at a time.");
@@ -82,8 +82,123 @@ namespace Il2Native
                 return 1;
             }
 
+            // if version is not provided, detect it your self
+            if (isCompilingTargetExe && !processedArgs.Any(p => p.StartsWith("llvm")))
+            {
+                processedArgs = AppendLlvmVersionToParams(processedArgs);
+            }
+
+            Console.Write("Generating LLVM IR file...");
             Il2Converter.Convert(sources, Environment.CurrentDirectory, processedArgs);
+            Console.WriteLine("Done.");
+
+            if (isCompilingTargetExe)
+            {
+                CompileExeTarget(sources, processedArgs);
+            }
+
             return 0;
+        }
+
+        private static string ExecCmd(
+            string fileName,
+            string arguments = "",
+            string workingDir = "",
+            bool readOutput = false)
+        {
+            var processStartInfo = new ProcessStartInfo();
+            processStartInfo.WorkingDirectory = string.IsNullOrWhiteSpace(workingDir) ? Environment.CurrentDirectory : workingDir;
+            processStartInfo.FileName = readOutput ? Path.Combine(workingDir, fileName) : fileName;
+            processStartInfo.Arguments = arguments;
+            processStartInfo.CreateNoWindow = true;
+            processStartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            processStartInfo.RedirectStandardOutput = readOutput;
+            processStartInfo.UseShellExecute = false;
+
+            var processCoreLibObj = Process.Start(processStartInfo);
+            var output = string.Empty;
+            if (readOutput)
+            {
+                output = processCoreLibObj.StandardOutput.ReadToEnd();
+            }
+
+            processCoreLibObj.WaitForExit();
+
+            return output;
+        }
+
+        private static string[] AppendLlvmVersionToParams(string[] processedArgs)
+        {
+            // append llvm version
+            var version = GetLlvmVersion();
+            var newProcessedArgs = new List<string>(processedArgs);
+            newProcessedArgs.Add(string.Concat("llvm", version));
+            processedArgs = newProcessedArgs.ToArray();
+            return processedArgs;
+        }
+
+        private static string GetLlvmVersion()
+        {
+            var output = ExecCmd("llc", "--version", readOutput:true);
+            if (output.Contains("LLVM version 3.6"))
+            {
+                return "36";
+            }
+
+            if (output.Contains("LLVM version 3.5"))
+            {
+                return "35";
+            }
+
+            if (output.Contains("LLVM version 3.4"))
+            {
+                return "34";
+            }
+
+            // default;
+            return "36";
+        }
+
+        private static void CompileExeTarget(string[] sources, string[] processedArgs)
+        {
+            var corelibSwitch = "corelib:";
+            var findCoreLibSwitch = processedArgs.FirstOrDefault(arg => arg.StartsWith(corelibSwitch));
+            if (findCoreLibSwitch == null)
+            {
+                Console.WriteLine("It is needed to provide CoreLib using /corelib:<file.dll> switch");
+                return;
+            }
+
+            Console.Write("Generating LLVM IR file for CoreLib...");
+            var coreLib = findCoreLibSwitch.Substring(corelibSwitch.Length);
+            Il2Converter.Convert(
+                new[] { coreLib },
+                Environment.CurrentDirectory,
+                processedArgs.Where(p => !p.StartsWith(corelibSwitch)).ToArray());
+            Console.WriteLine("Done.");
+
+            // you need to get target
+            var llvmDummyWriter = new LlvmWriter(string.Empty, string.Empty, string.Empty, processedArgs);
+            var target = llvmDummyWriter.Target;
+
+            // next step compile CoreLib
+            var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
+            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", coreLibNameNoExt, target));
+            
+            // compile generated dll
+            var targetFileNameNoExt = Path.GetFileNameWithoutExtension(sources.First());
+            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", targetFileNameNoExt, target));
+
+            // detect OBJ extention
+            var objExt = "obj";
+            var targetObjFile = Directory.GetFiles(Environment.CurrentDirectory, targetFileNameNoExt + ".o*").FirstOrDefault();
+            if (targetObjFile != null)
+            {
+                objExt = Path.GetExtension(targetObjFile);
+            }
+
+            // finally generate EXE output
+            ExecCmd("g++", string.Format("-o {0}.exe {0}.{2} {1}.{2} -lstdc++ -lgc-lib -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt));
         }
     }
 }

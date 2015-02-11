@@ -209,49 +209,7 @@ namespace Il2Native.Logic
         /// </param>
         public LlvmWriter(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
-            var extension = Path.GetExtension(fileName);
-            var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
-            this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
-
-            // custom settings
-            var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
-            this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
-            this.Gc = args == null || !args.Contains("gc-");
-            this.Gctors = args == null || !args.Contains("gctors-");
-            this.IsLlvm37 = args != null && args.Contains("llvm37");
-            //this.IsLlvm36 = !this.IsLlvm37 && args != null && args.Contains("llvm36");
-            this.IsLlvm35 = !this.IsLlvm36 && args != null && args.Contains("llvm35");
-            this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
-            this.IsLlvm36 = !this.IsLlvm37 && !this.IsLlvm35 && !this.IsLlvm34OrLower;
-            this.DebugInfo = args != null && args.Contains("debug");
-            this.Stubs = args != null && args.Contains("stubs");
-            if (this.DebugInfo)
-            {
-                this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
-            }
-
-            // prefefined settings
-            if (args != null && args.Contains("android"))
-            {
-                this.Target = this.Target ?? "armv7-none-linux-androideabi";
-                this.Gctors = false;
-                this.ByValAlign = Math.Max(PointerSize, 8);
-                ////this.IsLlvm35 = false;
-                ////this.IsLlvm34OrLower = false;
-            }
-            else if (args != null && args.Contains("emscripten"))
-            {
-                this.Target = this.Target ?? "asmjs-unknown-emscripten";
-                this.Gc = false;
-                this.IsLlvm35 = false;
-                this.IsLlvm34OrLower = true;
-
-                this.DataLayout = @"e-p:32:32-i64:64-v128:32:128-n32-S128";
-            }
-
-            this.DataLayout = this.DataLayout ??
-                              @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
-            this.Target = this.Target ?? "i686-w64-mingw32";
+            this.SetSettings(fileName, sourceFilePath, pdbFilePath, args);
         }
 
         /// <summary>
@@ -3175,6 +3133,45 @@ namespace Il2Native.Logic
             this.needToWriteUnreachable = false;
         }
 
+        public void ReadParameters(string[] args)
+        {
+            // custom settings
+            var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
+            this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
+            this.Gc = args == null || !args.Contains("gc-");
+            this.Gctors = args == null || !args.Contains("gctors-");
+            this.IsLlvm37 = args != null && args.Contains("llvm37");
+            //this.IsLlvm36 = !this.IsLlvm37 && args != null && args.Contains("llvm36");
+            this.IsLlvm35 = !this.IsLlvm36 && args != null && args.Contains("llvm35");
+            this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
+            this.IsLlvm36 = !this.IsLlvm37 && !this.IsLlvm35 && !this.IsLlvm34OrLower;
+            this.DebugInfo = args != null && args.Contains("debug");
+            this.Stubs = args != null && args.Contains("stubs");
+
+            // prefefined settings
+            if (args != null && args.Contains("android"))
+            {
+                this.Target = this.Target ?? "armv7-none-linux-androideabi";
+                this.Gctors = false;
+                this.ByValAlign = Math.Max(PointerSize, 8);
+                ////this.IsLlvm35 = false;
+                ////this.IsLlvm34OrLower = false;
+            }
+            else if (args != null && args.Contains("emscripten"))
+            {
+                this.Target = this.Target ?? "asmjs-unknown-emscripten";
+                this.Gc = false;
+                this.IsLlvm35 = false;
+                this.IsLlvm34OrLower = true;
+
+                this.DataLayout = @"e-p:32:32-i64:64-v128:32:128-n32-S128";
+            }
+
+            this.DataLayout = this.DataLayout
+                              ?? @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
+            this.Target = this.Target ?? "i686-w64-mingw32";
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -5447,6 +5444,20 @@ namespace Il2Native.Logic
                 {
                     opCode.Result = accessIndexResultNumber;
                 }
+            }
+        }
+
+        private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
+        {
+            var extension = Path.GetExtension(fileName);
+            var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
+            this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
+
+            this.ReadParameters(args);
+
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
         }
 
