@@ -59,7 +59,7 @@ namespace Il2Native.Logic.Gencode
             codeList.Add(Code.Ldfld, 3);
 
 #if MSCORLIB
-            codeList.AppendInt(Code.Castclass, 5);
+            codeList.Add(Code.Castclass, 5);
 #endif
 
             codeList.Add(Code.Ldloc_0);

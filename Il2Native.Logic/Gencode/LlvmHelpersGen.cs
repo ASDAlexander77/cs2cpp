@@ -772,7 +772,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(' ');
                 llvmWriter.WriteResult(fromResult);
                 writer.Write(" to ");
-                toType.WriteTypePrefix(llvmWriter);
+                toType.WriteTypePrefix(llvmWriter, toType.IsStructureType());
             }
             else
             {
