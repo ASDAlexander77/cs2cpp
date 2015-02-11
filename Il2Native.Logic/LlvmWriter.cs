@@ -1230,8 +1230,8 @@ namespace Il2Native.Logic
                         this.WriteFieldAccess(writer, opCodeFieldInfoPart);
                         var fieldLoadResult = opCodeFieldInfoPart.Result;
 
-                        // convert return type of field to pointer of a field type
-                        opCodeFieldInfoPart.Result = fieldLoadResult.ToPointerType();
+                        // convert return type of the field to pointer of a field type (unless it is fixed data field)
+                        opCodeFieldInfoPart.Result = !opCodeFieldInfoPart.Operand.IsFixed ? fieldLoadResult.ToPointerType() : fieldLoadResult;
                     }
                     else
                     {
@@ -2558,19 +2558,20 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (!destType.IsPointer && !opCode.Result.Type.IsPointer &&
-                destType.IsIntValueTypeExtCastRequired(opCode.Result.Type))
+            var sourceType = opCode.Result.Type;
+            if (!destType.IsPointer && !sourceType.IsPointer &&
+                destType.IsIntValueTypeExtCastRequired(sourceType))
             {
                 this.LlvmIntConvert(
                     opCode,
-                    opCode.Result.Type.IsSignedType() && destType.IsSignedType() ? "sext" : "zext",
+                    sourceType.IsSignedType() && destType.IsSignedType() ? "sext" : "zext",
                     destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
-            if (!destType.IsPointer && !opCode.Result.Type.IsPointer &&
-                destType.IsIntValueTypeTruncCastRequired(opCode.Result.Type))
+            if (!destType.IsPointer && !sourceType.IsPointer &&
+                destType.IsIntValueTypeTruncCastRequired(sourceType))
             {
                 this.LlvmIntConvert(opCode, "trunc", destType);
                 writer.WriteLine(string.Empty);
@@ -2579,22 +2580,23 @@ namespace Il2Native.Logic
 
             // pointer to int, int to pointerf
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef &&
-                (opCode.Result.Type.IsPointer || opCode.Result.Type.IsByRef))
+                (sourceType.IsPointer || sourceType.IsByRef))
             {
                 this.LlvmIntConvert(opCode, "ptrtoint", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
-            if (opCode.Result.Type.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) &&
-                !opCode.Result.Type.IsPointer && !opCode.Result.Type.IsByRef)
+            if (sourceType.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) &&
+                !sourceType.IsPointer && !sourceType.IsByRef)
             {
                 this.LlvmIntConvert(opCode, "inttoptr", destType);
                 writer.WriteLine(string.Empty);
                 return true;
             }
 
-            if ((opCode.Result.Type.IsPointer || opCode.Result.Type.IsByRef) && (destType.IsPointer || destType.IsByRef))
+            if ((sourceType.IsPointer || sourceType.IsByRef) && (destType.IsPointer || destType.IsByRef)
+                && sourceType.GetElementType().TypeNotEquals(destType.GetElementType()))
             {
                 this.WriteBitcast(opCode, destType);
                 writer.WriteLine(string.Empty);
@@ -3667,7 +3669,7 @@ namespace Il2Native.Logic
 
             writer.WriteLine("; Access to '#{0}' field({1})", index, field.Name);
 
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, !field.IsFixed ? fieldType : fieldType.ToPointerType(), opts);
+            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType, fieldType, opts);
 
             this.CheckIfTypeIsRequiredForBody(classType);
 
@@ -3823,7 +3825,7 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("[ {0}", field.FixedSize);
                 this.Output.Write(" x ");
-                this.WriteFieldType(field.FieldType.ToDereferencedType());
+                this.WriteFieldType(field.FieldType.GetElementType());
                 this.Output.Write(" ]");
             }
             else

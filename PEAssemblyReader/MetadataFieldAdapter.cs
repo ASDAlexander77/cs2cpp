@@ -37,6 +37,8 @@ namespace PEAssemblyReader
         /// </param>
         internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false)
         {
+            Debug.Assert(!isFixed || fieldDef.Type.IsPointerType());
+
             this.fieldDef = fieldDef;
 
             if (isFixed)
