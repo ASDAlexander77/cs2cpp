@@ -50,8 +50,11 @@ namespace Il2Native.Logic.Gencode
             codeList.Add(Code.Ldc_I4_0);
             codeList.Add(Code.Stloc_0);
 
-            var branchForBr_S = codeList.Branch(Code.Br, Code.Br_S);
-            var labelForBlt_S = codeList.CreateLabel();
+            var labelForFirstJump = codeList.Branch(Code.Br, Code.Br_S);
+
+            // label
+            var labelForConditionLoop = codeList.CreateLabel();
+
             codeList.Add(Code.Ldarg_0);
             codeList.Add(Code.Ldfld, 3);
 
@@ -82,7 +85,7 @@ namespace Il2Native.Logic.Gencode
             codeList.SaveLocal(0);
 
             // label
-            codeList.Add(branchForBr_S);
+            codeList.Add(labelForFirstJump);
 
             // for test
             codeList.LoadLocal(0);
@@ -94,7 +97,7 @@ namespace Il2Native.Logic.Gencode
             codeList.Add(Code.Ldind_I);
 #endif
 
-            codeList.Branch(Code.Blt, Code.Blt_S, labelForBlt_S);
+            codeList.Branch(Code.Blt, Code.Blt_S, labelForConditionLoop);
 
             if (!method.ReturnType.IsVoid())
             {

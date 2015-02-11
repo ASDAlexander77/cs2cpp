@@ -74,7 +74,9 @@
 
         public Label CreateLabel()
         {
-            return new Label();
+            var label = new Label();
+            this.Add(label);
+            return label;
         }
 
         public byte[] GetCode()
@@ -374,7 +376,7 @@
                 if (this.Label == null || !this.Label.AddressSet || this.IsLong)
                 {
                     yield return (byte)this.opCode;
-                    foreach (var addressByte in BitConverter.GetBytes(this.Address))
+                    foreach (var addressByte in BitConverter.GetBytes(this.Label.Address))
                     {
                         yield return addressByte;
                     }
