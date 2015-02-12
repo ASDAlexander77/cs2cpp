@@ -38,7 +38,7 @@
         private CollectionMetadata retainedTypes;
         private bool structuresByName = true;
         private CollectionMetadata tagExpression;
-        private LlvmWriter writer;
+        private LlvmWriter llvmWriter;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -139,7 +139,7 @@
                 throw new NullReferenceException("globalVariables");
             }
 
-            var globalType = this.writer.WriteToString(() => field.FieldType.WriteTypePrefix(this.writer)) + "* ";
+            var globalType = this.llvmWriter.WriteToString(() => field.FieldType.WriteTypePrefix(this.llvmWriter)) + "* ";
             var globalName = string.Format("@\"{0}\"", field.GetFullName());
 
             var line = 0;
@@ -171,9 +171,9 @@
             CollectionMetadata structureType = null)
         {
             var line = 0;
-            var size = field.FieldType.GetTypeSize(writer, true) * 8;
+            var size = field.FieldType.GetTypeSize(this.llvmWriter, true) * 8;
             var align = LlvmWriter.PointerSize * 8;
-            var offset = !field.IsStatic ? field.GetFieldOffset(writer) * 8 : 0;
+            var offset = !field.IsStatic ? field.GetFieldOffset(this.llvmWriter) * 8 : 0;
 
             // static
             var flags = field.IsStatic ? 4096 : 0;
@@ -232,7 +232,7 @@
             int count = 1)
         {
             var line = 0;
-            var size = fieldType.GetTypeSize(this.writer, true) * 8 * count;
+            var size = fieldType.GetTypeSize(this.llvmWriter, true) * 8 * count;
             var align = LlvmWriter.PointerSize * 8;
 
             // static
@@ -276,14 +276,14 @@
             var scopeLine = method.LineNumber;
 
             // find method definition
-            this.methodDefinition = this.writer.MethodsByToken[method.Token];
+            this.methodDefinition = this.llvmWriter.MethodsByToken[method.Token];
 
             var methodReferenceType =
-                this.writer.WriteToString(
-                    () => this.writer.WriteMethodPointerType(this.writer.Output, this.methodDefinition));
+                this.llvmWriter.WriteToString(
+                    () => this.llvmWriter.WriteMethodPointerType(this.llvmWriter.Output, this.methodDefinition));
             var methodDefinitionName =
-                this.writer.WriteToString(
-                    () => this.writer.WriteMethodDefinitionName(this.writer.Output, this.methodDefinition));
+                this.llvmWriter.WriteToString(
+                    () => this.llvmWriter.WriteMethodDefinitionName(this.llvmWriter.Output, this.methodDefinition));
 
             CollectionMetadata subroutineTypes;
             CollectionMetadata parametersTypes;
@@ -496,7 +496,7 @@
 
         public void SequencePoint(int offset, int lineBegin, int colBegin, CollectionMetadata function)
         {
-            var dbgLine = writer.IsLlvm36
+            var dbgLine = this.llvmWriter.IsLlvm36
                 ? new MDLocation(lineBegin, colBegin, function, this.indexedMetadata)
                 : new CollectionMetadata(this.indexedMetadata).Add(lineBegin, colBegin, function, null);
             if (dbgLine.Index.HasValue)
@@ -512,9 +512,9 @@
                 return false;
             }
 
-            this.structuresByName = true;// !writer.IsLlvm36;
+            this.structuresByName = true;// !llvmWriter.IsLlvm36;
 
-            this.writer = writer;
+            this.llvmWriter = writer;
             this.PdbConverter = Converter.GetConverter(
                 this.pdbFileName,
                 new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
@@ -544,7 +544,7 @@
                         indexedMetadataItem => !indexedMetadataItem.NullIfEmpty || !indexedMetadataItem.IsEmpty))
             {
                 output.Write("!{0} = ", indexedMetadataItem.Index);
-                indexedMetadataItem.WriteValueTo(output, writer.IsLlvm36);
+                indexedMetadataItem.WriteValueTo(output, this.llvmWriter.IsLlvm36);
                 output.WriteLine(string.Empty);
             }
         }
@@ -587,20 +587,25 @@
             var members = new CollectionMetadata(this.indexedMetadata);
 
             var elementsCount = 10;
-            var countOffset = 20; // 3 * pointerSize + 2 * sizeof(int) + 2 * sizeof(short)
-            var dataOffset = 24; // + pointer size
 
-            var countMember = this.DefineMember(
-                "count",
-                this.writer.ResolveType("System.Int32"),
-                countOffset * 8,
-                type,
-                true,
-                structureType);
-            members.Add(countMember);
+            CollectionMetadata countMember = null;
+            if (!type.IsMultiArray)
+            {
+                var countOffset = type.GetFieldByName("length", this.llvmWriter).GetFieldOffset(this.llvmWriter);
+                countMember = this.DefineMember(
+                    "length",
+                    this.llvmWriter.ResolveType("System.Int32"),
+                    countOffset * 8,
+                    type,
+                    true,
+                    structureType);
+                members.Add(countMember);
+            }
+
+            var dataOffset = type.GetFieldByName("data", this.llvmWriter).GetFieldOffset(this.llvmWriter);
             members.Add(
                 this.DefineMember(
-                    "array",
+                    "data",
                     type,
                     dataOffset * 8,
                     type,
@@ -632,7 +637,7 @@
                     string.Format(
                         @"0x1\00\00{0}\00{1}\00{2}\00{3}\000\000",
                         line,
-                        count * type.GetTypeSize(this.writer, true) * 8,
+                        count * type.GetTypeSize(this.llvmWriter, true) * 8,
                         LlvmWriter.PointerSize * 8,
                         offset),
                     null,
@@ -654,7 +659,7 @@
         private CollectionMetadata DefineMembers(IType type, CollectionMetadata structureType)
         {
             var members = new CollectionMetadata(this.indexedMetadata);
-            foreach (var field in IlReader.Fields(type, writer))
+            foreach (var field in IlReader.Fields(type, this.llvmWriter))
             {
                 members.Add(this.DefineMember(field, true, structureType));
             }
@@ -726,7 +731,7 @@
                         @"0x24\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\00{6}",
                         type.FullName,
                         line,
-                        type.GetTypeSize(this.writer, true) * 8,
+                        type.GetTypeSize(this.llvmWriter, true) * 8,
                         LlvmWriter.PointerSize * 8,
                         offset,
                         flags,
@@ -753,7 +758,7 @@
                     @"0x13\00{0}\00{1}\00{2}\00{3}\00{4}\00{5}\000",
                     type.Name,
                     line,
-                    type.GetTypeSize(this.writer, true) * 8,
+                    type.GetTypeSize(this.llvmWriter, true) * 8,
                     LlvmWriter.PointerSize * 8,
                     offset,
                     flags),

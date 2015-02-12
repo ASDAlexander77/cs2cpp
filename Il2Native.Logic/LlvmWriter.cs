@@ -6917,8 +6917,7 @@ namespace Il2Native.Logic
             foreach (
                 var field in
                     Logic.IlReader.Fields(type, this)
-                         .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType()))
-                         .Where(field => !field.FieldType.Name.StartsWith("__StaticArrayInitTypeSize")))
+                         .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
             {
                 this.WriteStaticFieldDeclaration(field);
             }
