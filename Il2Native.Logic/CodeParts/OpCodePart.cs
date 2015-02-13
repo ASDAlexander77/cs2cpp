@@ -198,5 +198,9 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public UsedByInfo UsedBy { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public PhiNodes UsedByAlternativeValues { get; set; }
     }
 }

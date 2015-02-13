@@ -139,6 +139,12 @@
                 }
 
                 valueNumber++;
+
+                // set UsedByAlternativeValues
+                foreach (var value in alternativeValues.Values)
+                {
+                    value.UsedByAlternativeValues = alternativeValues;
+                }
             }
         }
 

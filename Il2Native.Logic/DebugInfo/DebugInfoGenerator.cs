@@ -139,6 +139,11 @@
                 throw new NullReferenceException("globalVariables");
             }
 
+            if (field.FullName.StartsWith("<PrivateImplementationDetails>"))
+            {
+                return;
+            }
+
             var globalType = this.llvmWriter.WriteToString(() => field.FieldType.WriteTypePrefix(this.llvmWriter)) + "* ";
             var globalName = string.Format("@\"{0}\"", field.GetFullName());
 

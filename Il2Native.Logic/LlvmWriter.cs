@@ -2190,14 +2190,14 @@ namespace Il2Native.Logic
                     else
                     {
 #endif
-                    this.LlvmConvert(
-                        opCode,
-                        "fptoui",
-                        "ptrtoint",
-                        nativeIntType,
-                        !intPtrOper,
-                        ResolveType("System.IntPtr"),
-                        ResolveType("System.UIntPtr"));
+                        this.LlvmConvert(
+                            opCode,
+                            "fptoui",
+                            "ptrtoint",
+                            nativeIntType,
+                            !intPtrOper,
+                            ResolveType("System.IntPtr"),
+                            ResolveType("System.UIntPtr"));
 #if !MSCORLIB
                     }
 #endif
@@ -4323,11 +4323,7 @@ namespace Il2Native.Logic
             while (opCode.AlternativeValues != null && opCode.AlternativeValues.Count > 0)
             {
                 var alternativeValues = opCode.AlternativeValues.Dequeue();
-                if (alternativeValues.Values.Any(av => av.UsedBy != null))
-                {
-                    // if all values are not used it means we do not need to write it
-                    WritePhi(writer, opCode, alternativeValues);
-                }
+                WritePhi(writer, opCode, alternativeValues);
             }
 
             opCode.AlternativeValues = null;
@@ -4420,7 +4416,12 @@ namespace Il2Native.Logic
 
             this.AdjustResultTypeToOutgoingType(nopeCode, RequiredIncomingType(opCode));
 
-            var connectedValue = alternativeValues.Values.Last(v => v.UsedBy != null);
+            var connectedValue = alternativeValues.Values.LastOrDefault(v => v.UsedBy != null);
+            if (connectedValue == null)
+            {
+                connectedValue = alternativeValues.Values.Last(v => v.UsedByAlternativeValues != alternativeValues);
+            }
+
             connectedValue.Result = structUsed
                 ? nopeCode.Result.ToNormalType()
                 : nopeCode.Result;
