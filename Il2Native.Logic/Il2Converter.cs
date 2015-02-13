@@ -227,6 +227,11 @@ namespace Il2Native.Logic
                     continue;
                 }
 
+                if (type.FullName == "<Module>")
+                {
+                    continue;
+                }
+
                 IType genDef = null;
                 if (type.IsGenericType)
                 {

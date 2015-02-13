@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -463,7 +464,7 @@ namespace Il2Native.Logic.Gencode
                 .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
                 .ToList();
 
-////        Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+            ////        Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
 
             virtualTable.AddRange(list);
         }
