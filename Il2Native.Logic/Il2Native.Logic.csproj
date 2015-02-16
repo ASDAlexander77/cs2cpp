@@ -69,7 +69,9 @@
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetLengthGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGetLowerBoundGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetRankGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGetUpperBoundGen.cs" />
     <Compile Include="Gencode\InternalMethods\OffsetToStringData.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />

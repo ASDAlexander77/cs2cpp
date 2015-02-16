@@ -61,6 +61,7 @@
             return method;
         }
 
+        [Obsolete]
         public static SynthesizedMethodDecorator GetMethodDecorator(
             IMethod m,
             IEnumerable<object> code,
@@ -89,9 +90,20 @@
                 new SynthesizedModuleResolver(m, tokenResolutions));
         }
 
+        [Obsolete]
         public static void Register(
             string methodFullName,
             object[] code,
+            IList<object> tokenResolutions,
+            IList<IType> locals,
+            IList<IParameter> parameters)
+        {
+            Register(methodFullName, m => GetMethodDecorator(m, code, tokenResolutions, locals, parameters));
+        }
+
+        public static void Register(
+            string methodFullName,
+            byte[] code,
             IList<object> tokenResolutions,
             IList<IType> locals,
             IList<IParameter> parameters)
@@ -117,6 +129,8 @@
             ArrayClearGen.Register(typeResolver);
             ArrayGetLengthGen.Register(typeResolver);
             ArrayGetRankGen.Register(typeResolver);
+            ArrayGetLowerBoundGen.Register(typeResolver);
+            ArrayGetUpperBoundGen.Register(typeResolver);
 
 #if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);

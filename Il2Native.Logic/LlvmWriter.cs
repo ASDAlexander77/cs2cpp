@@ -2695,7 +2695,9 @@ namespace Il2Native.Logic
             }
 
             // add shift for interfaces
-            index += type.GetInterfacesExcludingBaseAllInterfaces().Count();
+            var interfacesCount = type.GetInterfacesExcludingBaseAllInterfaces().Count();
+
+            index += interfacesCount;
 
             return index;
         }

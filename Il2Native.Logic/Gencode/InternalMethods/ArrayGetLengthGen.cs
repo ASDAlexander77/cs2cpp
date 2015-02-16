@@ -13,12 +13,7 @@
         {
             var codeList = new List<object>();
 
-            codeList.AddRange(
-                new object[]
-                    {
-                        Code.Ldarg_0,
-                    });
-
+            codeList.Add(Code.Ldarg_0);
             codeList.AppendInt(Code.Castclass, 1);
             codeList.AppendInt(Code.Ldfld, 2);
             codeList.Add(Code.Ret);

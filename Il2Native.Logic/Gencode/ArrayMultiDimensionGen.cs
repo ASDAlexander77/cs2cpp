@@ -10,24 +10,19 @@
 
     public static class ArrayMultiDimensionGen
     {
-        /*
-        public ArrayMultiDimensionGen_Ctor()
-        {
-            this.rank = 2;
-            this.typeCode = type.GetElementType().TypeCode;
-            this.elementSize = type.GetSize();
-            this.length = dim1 * dim2;
-            this.lowerBounds = new int[2] { 0, 0 };
-            this.bounds = new int[2] { dim1, dim2 };
-        }
-         */
-
         public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
 
             var shortType = typeResolver.ResolveType("System.Int16");
             var intType = typeResolver.ResolveType("System.Int32");
+            var pointerType = typeResolver.ResolveType("System.Byte").ToPointerType();
+
+            // return dummy fields to compensate interfaces for SingleDim array
+            foreach (var dummyField in arrayType.GetElementType().ToArrayType(1).GetInterfaces())
+            {
+                yield return pointerType.ToField(arrayType, dummyField.Name);
+            }
 
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
