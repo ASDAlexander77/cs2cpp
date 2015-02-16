@@ -68,6 +68,7 @@
     <Compile Include="DebugInfo\DebugVariableType.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
+    <Compile Include="Gencode\InternalMethods\ArrayGetLengthDimGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetLengthGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetLowerBoundGen.cs" />
     <Compile Include="Gencode\InternalMethods\ArrayGetRankGen.cs" />

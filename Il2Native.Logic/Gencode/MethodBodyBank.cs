@@ -131,6 +131,7 @@
             ArrayGetRankGen.Register(typeResolver);
             ArrayGetLowerBoundGen.Register(typeResolver);
             ArrayGetUpperBoundGen.Register(typeResolver);
+            ArrayGetLengthDimGen.Register(typeResolver);
 
 #if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);
