@@ -46,6 +46,9 @@ namespace System
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern int GetLowerBound(int dimension);
 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public extern int GetLength(int dimension);
+
         public extern int Rank
         {
             [MethodImpl(MethodImplOptions.InternalCall)]
