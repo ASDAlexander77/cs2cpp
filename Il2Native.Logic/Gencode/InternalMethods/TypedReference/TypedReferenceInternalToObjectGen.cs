@@ -19,6 +19,7 @@
             codeList.Add(Code.Ldflda, 1);
             codeList.Add(Code.Ldfld, 3);
             codeList.Add(Code.Castclass, 4);
+            codeList.Add(Code.Ldind_Ref);
 
             codeList.Add(Code.Ret);
 
@@ -29,6 +30,7 @@
             tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
             tokenResolutions.Add(typedReferenceType.GetFieldByName("Type", typeResolver));
             tokenResolutions.Add(intPtrType.GetFieldByName("m_value", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Object").ToPointerType());
             tokenResolutions.Add(typeResolver.ResolveType("System.Object"));
 
             var locals = new List<IType>();
