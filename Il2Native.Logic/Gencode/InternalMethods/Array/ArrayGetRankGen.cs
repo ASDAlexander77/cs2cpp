@@ -25,7 +25,6 @@
 
             var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
 
-            // Registering GetHashCode
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(arrayType);
             tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));

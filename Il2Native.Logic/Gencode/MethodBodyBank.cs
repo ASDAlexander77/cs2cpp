@@ -132,6 +132,11 @@
             ArrayGetLowerBoundGen.Register(typeResolver);
             ArrayGetUpperBoundGen.Register(typeResolver);
             ArrayGetLengthDimGen.Register(typeResolver);
+            ArrayInternalGetReferenceGen.Register(typeResolver);
+            ArrayInternalSetValueGen.Register(typeResolver);
+
+            // TypedReference
+            TypedReferenceInternalToObjectGen.Register(typeResolver);
 
 #if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);

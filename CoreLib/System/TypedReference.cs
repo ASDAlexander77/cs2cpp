@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////namespace System
 namespace System
 {
+    using System.Runtime.CompilerServices;
 
     [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Never)]
     public struct TypedReference 
@@ -10,8 +11,10 @@ namespace System
         private IntPtr Type;
 
         private IntPtr Value;
-    }
 
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        internal unsafe extern static Object InternalToObject(void* value);
+    }
 }
 
 

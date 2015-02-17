@@ -30,15 +30,218 @@ namespace System
             throw new NotImplementedException();
         }
 
-        public Object GetValue(int index)
+        public unsafe Object GetValue(params int[] indices)
         {
-            throw new NotImplementedException();
+            if (indices == null)
+                throw new ArgumentNullException("indices");
+            if (Rank != indices.Length)
+                throw new ArgumentException(Environment.GetResourceString("Arg_RankIndices"));
+
+            TypedReference elemref = new TypedReference();
+            fixed (int* pIndices = indices)
+                InternalGetReference(&elemref, indices.Length, pIndices);
+            return TypedReference.InternalToObject(&elemref);
         }
 
-        public void SetValue(Object value, int index)
+        public unsafe Object GetValue(int index)
         {
-            throw new NotImplementedException();
+            if (Rank != 1)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need1DArray"));
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 1, &index);
+            return TypedReference.InternalToObject(&elemref);
         }
+
+        public unsafe Object GetValue(int index1, int index2)
+        {
+            if (Rank != 2)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need2DArray"));
+
+            int* pIndices = stackalloc int[2];
+            pIndices[0] = index1;
+            pIndices[1] = index2;
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 2, pIndices);
+            return TypedReference.InternalToObject(&elemref);
+        }
+
+        public unsafe Object GetValue(int index1, int index2, int index3)
+        {
+            if (Rank != 3)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need3DArray"));
+
+            int* pIndices = stackalloc int[3];
+            pIndices[0] = index1;
+            pIndices[1] = index2;
+            pIndices[2] = index3;
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 3, pIndices);
+            return TypedReference.InternalToObject(&elemref);
+        }
+
+        public Object GetValue(long index)
+        {
+            if (index > Int32.MaxValue || index < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            return this.GetValue((int)index);
+        }
+
+        public Object GetValue(long index1, long index2)
+        {
+            if (index1 > Int32.MaxValue || index1 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index1", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index2 > Int32.MaxValue || index2 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index2", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            return this.GetValue((int)index1, (int)index2);
+        }
+
+        public Object GetValue(long index1, long index2, long index3)
+        {
+            if (index1 > Int32.MaxValue || index1 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index1", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index2 > Int32.MaxValue || index2 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index2", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index3 > Int32.MaxValue || index3 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index3", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            return this.GetValue((int)index1, (int)index2, (int)index3);
+        }
+
+        public Object GetValue(params long[] indices)
+        {
+            if (indices == null)
+                throw new ArgumentNullException("indices");
+            if (Rank != indices.Length)
+                throw new ArgumentException(Environment.GetResourceString("Arg_RankIndices"));
+
+            int[] intIndices = new int[indices.Length];
+
+            for (int i = 0; i < indices.Length; ++i)
+            {
+                long index = indices[i];
+                if (index > Int32.MaxValue || index < Int32.MinValue)
+                    throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+                intIndices[i] = (int)index;
+            }
+
+            return this.GetValue(intIndices);
+        }
+
+        public unsafe void SetValue(Object value, int index)
+        {
+            if (Rank != 1)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need1DArray"));
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 1, &index);
+            InternalSetValue(&elemref, value);
+        }
+
+        public unsafe void SetValue(Object value, int index1, int index2)
+        {
+            if (Rank != 2)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need2DArray"));
+
+            int* pIndices = stackalloc int[2];
+            pIndices[0] = index1;
+            pIndices[1] = index2;
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 2, pIndices);
+            InternalSetValue(&elemref, value);
+        }
+
+        public unsafe void SetValue(Object value, int index1, int index2, int index3)
+        {
+            if (Rank != 3)
+                throw new ArgumentException(Environment.GetResourceString("Arg_Need3DArray"));
+
+            int* pIndices = stackalloc int[3];
+            pIndices[0] = index1;
+            pIndices[1] = index2;
+            pIndices[2] = index3;
+
+            TypedReference elemref = new TypedReference();
+            InternalGetReference(&elemref, 3, pIndices);
+            InternalSetValue(&elemref, value);
+        }
+
+        public unsafe void SetValue(Object value, params int[] indices)
+        {
+            if (indices == null)
+                throw new ArgumentNullException("indices");
+            if (Rank != indices.Length)
+                throw new ArgumentException(Environment.GetResourceString("Arg_RankIndices"));
+
+            TypedReference elemref = new TypedReference();
+            fixed (int* pIndices = indices)
+                InternalGetReference(&elemref, indices.Length, pIndices);
+            InternalSetValue(&elemref, value);
+        }
+
+        public void SetValue(Object value, long index)
+        {
+            if (index > Int32.MaxValue || index < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            this.SetValue(value, (int)index);
+        }
+
+        public void SetValue(Object value, long index1, long index2)
+        {
+            if (index1 > Int32.MaxValue || index1 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index1", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index2 > Int32.MaxValue || index2 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index2", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            this.SetValue(value, (int)index1, (int)index2);
+        }
+
+        public void SetValue(Object value, long index1, long index2, long index3)
+        {
+            if (index1 > Int32.MaxValue || index1 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index1", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index2 > Int32.MaxValue || index2 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index2", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+            if (index3 > Int32.MaxValue || index3 < Int32.MinValue)
+                throw new ArgumentOutOfRangeException("index3", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+
+            this.SetValue(value, (int)index1, (int)index2, (int)index3);
+        }
+
+        public void SetValue(Object value, params long[] indices)
+        {
+            if (indices == null)
+                throw new ArgumentNullException("indices");
+            if (Rank != indices.Length)
+                throw new ArgumentException(Environment.GetResourceString("Arg_RankIndices"));
+
+            int[] intIndices = new int[indices.Length];
+
+            for (int i = 0; i < indices.Length; ++i)
+            {
+                long index = indices[i];
+                if (index > Int32.MaxValue || index < Int32.MinValue)
+                    throw new ArgumentOutOfRangeException("index", Environment.GetResourceString("ArgumentOutOfRange_HugeArrayNotSupported"));
+                intIndices[i] = (int)index;
+            }
+
+            this.SetValue(value, intIndices);
+        }
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        // reference to TypedReference is banned, so have to pass result as pointer
+        private unsafe extern void InternalGetReference(void* elemRef, int rank, int* pIndices);
+
+        // Ideally, we would like to use TypedReference.SetValue instead. Unfortunately, TypedReference.SetValue
+        // always throws not-supported exception
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        private unsafe extern static void InternalSetValue(void* target, Object value);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public extern int GetUpperBound(int dimension);
