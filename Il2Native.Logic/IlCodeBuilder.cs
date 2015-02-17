@@ -106,8 +106,27 @@
                     this.Add(Code.Ldarg_3);
                     break;
                 default:
-                    this.Add(Code.Ldarg, argIndex);
+                    if (argIndex <= byte.MaxValue)
+                    {
+                        this.Add(Code.Ldarg_S, checked((byte)argIndex));
+                    }
+                    else
+                    {
+                        this.Add(Code.Ldarg, argIndex);
+                    }
                     break;
+            }
+        }
+
+        public void LoadArgumentAddress(int argIndex)
+        {
+            if (argIndex <= byte.MaxValue)
+            {
+                this.Add(Code.Ldarga_S, checked((byte)argIndex));
+            }
+            else
+            {
+                this.Add(Code.Ldarga, argIndex);
             }
         }
 

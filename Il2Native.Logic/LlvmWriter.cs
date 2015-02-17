@@ -3606,7 +3606,7 @@ namespace Il2Native.Logic
             var operand = opCodeFieldInfoPart.OpCodeOperands[0];
             var operandResultCalc = ResultOf(operand);
             var operandType = operandResultCalc.Type;
-            var effectiveType = operandType.IsPointer ? operandType.GetElementType() : operandType;
+            var effectiveType = operandType;
             var asPointer = false;
             if (effectiveType.IsValueType)
             {

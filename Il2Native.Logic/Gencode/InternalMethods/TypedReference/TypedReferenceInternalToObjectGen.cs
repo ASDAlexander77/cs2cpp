@@ -14,11 +14,22 @@
         {
             var codeList = new IlCodeBuilder();
 
-            codeList.Add(Code.Newobj, 1);
+            // get Value of TypedReference
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Ldflda, 1);
+            codeList.Add(Code.Ldfld, 3);
+            codeList.Add(Code.Castclass, 4);
+
             codeList.Add(Code.Ret);
 
+            var typedReferenceType = typeResolver.ResolveType("System.TypedReference");
+            var intPtrType = typeResolver.ResolveType("System.IntPtr");
+
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(IlReader.Constructors(typeResolver.ResolveType("System.Object"), typeResolver).First(c => !c.GetParameters().Any()));
+            tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
+            tokenResolutions.Add(typedReferenceType.GetFieldByName("Type", typeResolver));
+            tokenResolutions.Add(intPtrType.GetFieldByName("m_value", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Object"));
 
             var locals = new List<IType>();
 
