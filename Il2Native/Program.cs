@@ -182,23 +182,29 @@ namespace Il2Native
             var target = llvmDummyWriter.Target;
 
             // next step compile CoreLib
+            Console.Write("Compiling LLVM IR file for CoreLib...");
             var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
             ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", coreLibNameNoExt, target));
+            Console.WriteLine("Done.");
             
             // compile generated dll
+            Console.Write("Compiling LLVM IR file...");
             var targetFileNameNoExt = Path.GetFileNameWithoutExtension(sources.First());
             ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", targetFileNameNoExt, target));
+            Console.WriteLine("Done.");
 
             // detect OBJ extention
-            var objExt = "obj";
+            var objExt = ".obj";
             var targetObjFile = Directory.GetFiles(Environment.CurrentDirectory, targetFileNameNoExt + ".o*").FirstOrDefault();
             if (targetObjFile != null)
             {
                 objExt = Path.GetExtension(targetObjFile);
             }
 
+            Console.Write("Compiling target exe. file...");
             // finally generate EXE output
-            ExecCmd("g++", string.Format("-o {0}.exe {0}.{2} {1}.{2} -lstdc++ -lgc-lib -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt));
+            ExecCmd("g++", string.Format("-o {0}.exe {0}{2} {1}{2} -lstdc++ -lgc-lib -march=i686 -L .", targetFileNameNoExt, coreLibNameNoExt, objExt));
+            Console.WriteLine("Done.");
         }
     }
 }

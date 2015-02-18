@@ -49,6 +49,8 @@ namespace Il2Native.Logic
         /// </summary>
         public Stack<CatchOfFinallyClause> catchScopes = new Stack<CatchOfFinallyClause>();
 
+        /// <summary>
+        /// </summary>
         public DebugInfoGenerator debugInfoGenerator;
 
         /// <summary>
@@ -158,6 +160,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> typeDeclRequired = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        private string outputFile;
 
         /// <summary>
         /// </summary>
@@ -523,6 +529,8 @@ namespace Il2Native.Logic
             {
                 this.debugInfoGenerator.WriteTo(this.Output);
             }
+
+            this.Output.Close();
         }
 
         /// <summary>
@@ -860,6 +868,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteStart(IIlReader ilReader)
         {
+            this.Output = new LlvmIndentedTextWriter(new StreamWriter(this.outputFile));
+
             this.IlReader = ilReader;
 
             this.Output.WriteLine("target datalayout = \"{0}\"", this.DataLayout);
@@ -5453,8 +5463,7 @@ namespace Il2Native.Logic
         private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
             var extension = Path.GetExtension(fileName);
-            var outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
-            this.Output = new LlvmIndentedTextWriter(new StreamWriter(outputFile));
+            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
 
             this.ReadParameters(args);
 
