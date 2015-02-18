@@ -79,14 +79,20 @@
             // Save address into TypedReference Value
             codeList.Add(Code.Conv_I);
             codeList.Add(Code.Stfld, 3);
+            codeList.Add(Code.Ret);
 
+            // for multiarray
             codeList.Add(labelGotoMultiDimArray);
+
+
+
             codeList.Add(Code.Ret);
 
             var typedReferenceType = typeResolver.ResolveType("System.TypedReference");
             var intPtrType = typeResolver.ResolveType("System.IntPtr");
             var byteType = typeResolver.ResolveType("System.Byte");
             var arrayType = byteType.ToArrayType(1);
+            var multiArrayType = byteType.ToArrayType(2);
 
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
@@ -96,8 +102,12 @@
             tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
             tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             tokenResolutions.Add(byteType);
+            tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
+            tokenResolutions.Add(multiArrayType);
 
             var locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.ResolveType("System.Int32"));
             locals.Add(typeResolver.ResolveType("System.Int32"));
 
             var parameters = new List<IParameter>();
