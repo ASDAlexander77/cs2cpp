@@ -429,7 +429,8 @@
                 if (this.Label == null || !this.Label.AddressSet || this.IsLong)
                 {
                     yield return (byte)this.opCode;
-                    foreach (var addressByte in BitConverter.GetBytes(this.Label.Address))
+                    var address = this.Label.Address - (this.Address + 1 + 4);
+                    foreach (var addressByte in BitConverter.GetBytes(address))
                     {
                         yield return addressByte;
                     }
@@ -438,7 +439,7 @@
                 }
 
                 yield return (byte)this.opCodeShort;
-                yield return (byte)(this.Label.Address - (this.Address + 2));
+                yield return (byte)(this.Label.Address - (this.Address + 1 + 1));
             }
         }
 
