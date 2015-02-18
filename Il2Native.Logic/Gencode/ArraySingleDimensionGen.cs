@@ -112,9 +112,7 @@ namespace Il2Native.Logic.Gencode
             var codeList = new List<object>();
 
             // add element size
-            var arrayRank = arrayType.ArrayRank;
             var elementType = arrayType.GetElementType();
-            var typeCode = elementType.GetTypeCode();
             var elementSize = elementType.GetTypeSize(llvmWriter, true);
             codeList.AppendLoadInt(elementSize);
 
@@ -122,7 +120,6 @@ namespace Il2Native.Logic.Gencode
             codeList.AppendLoadArgument(0);
             codeList.Add(Code.Mul);
 
-            // add element size
             var arrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
             codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
             codeList.Add(Code.Add);

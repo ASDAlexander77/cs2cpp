@@ -46,6 +46,8 @@
             codeList.LoadArgument(0);
             codeList.Add(Code.Castclass, 4);
             codeList.Add(Code.Ldfld, 6);
+            codeList.Add(Code.Dup);
+            codeList.SaveLocal(0);
 
             // Load index
             codeList.LoadArgument(3);
@@ -56,6 +58,23 @@
 
             // load address of an element
             codeList.Add(Code.Ldelema, 7);
+
+            // align index
+            codeList.LoadLocal(0);
+            // elementSize - 1
+            codeList.LoadConstant(1);
+            codeList.Add(Code.Sub);
+            codeList.Add(Code.Dup);
+            codeList.SaveLocal(0);
+
+            // size + align - 1
+            codeList.Add(Code.Add);
+
+            // size &= ~(align - 1)
+            codeList.LoadLocal(0);
+            codeList.LoadConstant(-1);
+            codeList.Add(Code.Xor);
+            codeList.Add(Code.And);
 
             // Save address into TypedReference Value
             codeList.Add(Code.Conv_I);
@@ -79,6 +98,7 @@
             tokenResolutions.Add(byteType);
 
             var locals = new List<IType>();
+            locals.Add(typeResolver.ResolveType("System.Int32"));
 
             var parameters = new List<IParameter>();
             parameters.Add(typeResolver.ResolveType("System.Void").ToPointerType().ToParameter());

@@ -282,9 +282,19 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static int GetTypeSize(this IType type, ITypeResolver typeResolver, bool asValueType = false)
         {
-            if (asValueType && type.IsPrimitiveType())
+            if (asValueType)
             {
-                return SystemTypeSizes[type.Name];
+                // TODO: do I need to return plain size of structure?
+
+                if (type.IsPrimitiveType())
+                {
+                    return SystemTypeSizes[type.Name];
+                }
+
+                if (!type.IsStructureType() && !type.IsEnum)
+                {
+                    return LlvmWriter.PointerSize;
+                }
             }
 
             // find index

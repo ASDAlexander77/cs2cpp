@@ -25,7 +25,12 @@
             var @switch = codeList.Switch();
 
             // goto default case
-            var defaultCaseLabel1 = codeList.Branch(Code.Br, Code.Br_S);
+            //var defaultCaseLabel1 = codeList.Branch(Code.Br, Code.Br_S);
+
+            // TODO: do not support Structs for now
+            var defaultCaseLabel1 = codeList.CreateLabel();
+            codeList.Add(Code.Newobj, 20);
+            codeList.Add(Code.Throw);
 
             // case 0(TypeCode.Empty) -> Default
             @switch.Labels.Add(defaultCaseLabel1);
@@ -188,7 +193,13 @@
             codeList.Add(Code.Box, 19);
             codeList.Add(Code.Ret);
 
-            // case 17(TypeCode.String) -> Default
+            // case 17 -> Default
+            @switch.Labels.Add(codeList.CreateLabel());
+            // throw NotSupportedException
+            codeList.Add(Code.Newobj, 20);
+            codeList.Add(Code.Throw);
+
+            // case 18(TypeCode.String) -> Default
             @switch.Labels.Add(defaultCaseLabel1);
 
             // default:
@@ -227,6 +238,8 @@
             tokenResolutions.Add(typeResolver.ResolveType("System.Double"));
             tokenResolutions.Add(typeResolver.ResolveType("System.Decimal"));
             tokenResolutions.Add(typeResolver.ResolveType("System.DateTime"));
+            tokenResolutions.Add(
+                IlReader.Constructors(typeResolver.ResolveType("System.NotSupportedException"), typeResolver).First(c => !c.GetParameters().Any()));
 
             var locals = new List<IType>();
 
