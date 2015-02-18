@@ -9,12 +9,14 @@
 
 namespace Il2Native.Logic.CodeParts
 {
+    using System.Diagnostics;
     using System.Reflection.Emit;
 
     /// <summary>
     /// </summary>
     /// <typeparam name="T">
     /// </typeparam>
+    [DebuggerDisplay("{OpCode.Name}, {OpCode.FlowControl}, {OpCode.StackBehaviourPop}, {OpCode.StackBehaviourPush}")]
     public class OpCodeParamPart<T> : OpCodePart
     {
         /// <summary>

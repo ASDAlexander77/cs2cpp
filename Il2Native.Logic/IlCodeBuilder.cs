@@ -54,6 +54,11 @@
             this.parts.Add(branchNode);
         }
 
+        public void Add(SwitchNode switchNode)
+        {
+            this.parts.Add(switchNode);
+        }
+
         public void Add(Label label)
         {
             this.parts.Add(label);
@@ -70,6 +75,13 @@
         {
             var branch = new BranchNode(code, codeShort, label);
             this.Add(branch);
+        }
+
+        public SwitchNode Switch()
+        {
+            var @switch = new SwitchNode();
+            this.Add(@switch);
+            return @switch;
         }
 
         public Label CreateLabel()
@@ -271,6 +283,12 @@
                     continue;
                 }
 
+                var label = codeItem as Label;
+                if (label != null)
+                {
+                    continue;
+                }
+
                 var branch = codeItem as BranchNode;
                 if (branch != null)
                 {
@@ -282,9 +300,14 @@
                     continue;
                 }
 
-                var label = codeItem as Label;
-                if (label != null)
+                var @switch = codeItem as SwitchNode;
+                if (@switch != null)
                 {
+                    foreach (var switchByte in @switch.GetBytes())
+                    {
+                        yield return switchByte;
+                    }
+
                     continue;
                 }
 
@@ -333,6 +356,14 @@
                     continue;
                 }
 
+                var @switch = codeItem as SwitchNode;
+                if (@switch != null)
+                {
+                    @switch.Address = address;
+                    address += @switch.GetBytes().Count();
+                    continue;
+                }
+
                 address++;
             }
 
@@ -349,7 +380,7 @@
             {
                 this.opCode = opCode;
                 this.opCodeShort = opCodeShort;
-                this.Label = new Label(this);
+                this.Label = new Label();
             }
 
             public BranchNode(Code opCode, Code opCodeShort, Label label)
@@ -357,12 +388,15 @@
                 this.opCode = opCode;
                 this.opCodeShort = opCodeShort;
                 this.Label = label;
-                this.Label.BranchNode = this;
             }
 
             public int Address
             {
-                get { return this._address; }
+                get
+                {
+                    return this._address;
+                }
+
                 set
                 {
                     this._address = value;
@@ -408,6 +442,55 @@
             }
         }
 
+        public class SwitchNode
+        {
+            private int _address;
+
+            public SwitchNode()
+            {
+                this.Labels = new List<Label>();
+            }
+
+            public int Address
+            {
+                get
+                {
+                    return this._address;
+                }
+
+                set
+                {
+                    this._address = value;
+                    this.AddressSet = true;
+                }
+            }
+
+            public bool AddressSet { get; private set; }
+
+            public Label Label { get; private set; }
+
+            public IList<Label> Labels { get; private set; }
+
+            public IEnumerable<byte> GetBytes()
+            {
+                yield return (byte)Code.Switch;
+
+                foreach (var countByte in BitConverter.GetBytes(this.Labels.Count))
+                {
+                    yield return countByte;
+                }
+
+                foreach (var label in this.Labels)
+                {
+                    var value = label.Address - (this.Address + 1 + 4 + this.Labels.Count * 4);
+                    foreach (var addressByte in BitConverter.GetBytes(value))
+                    {
+                        yield return addressByte;
+                    }
+                }
+            }
+        }
+
         public class Label
         {
             private int _address;
@@ -415,13 +498,6 @@
             public Label()
             {
             }
-
-            public Label(BranchNode branchNode)
-            {
-                this.BranchNode = branchNode;
-            }
-
-            public BranchNode BranchNode { get; set; }
 
             public int Address
             {
