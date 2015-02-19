@@ -1076,8 +1076,8 @@ namespace Il2Native.Logic
 
             // append default type for type tokens and init arrays and multiarrays
             // TODO: review it
-            sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
-            sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Int32").ToArrayType(1));
+            ////sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
+            ////sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Int32").ToArrayType(1));
         }
 
         private static bool CheckFilter(string[] filters, IType type)
