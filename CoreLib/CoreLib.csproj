@@ -53,6 +53,7 @@
     <Compile Include="System\ArgumentOutOfRangeException.cs" />
     <Compile Include="System\ArithmeticException.cs" />
     <Compile Include="System\Array.cs" />
+    <Compile Include="System\ArraySegment.cs" />
     <Compile Include="System\AssemblyInfo2.cs" />
     <Compile Include="System\AsyncCallback.cs" />
     <Compile Include="System\Attribute.cs" />
@@ -74,6 +75,8 @@
     <Compile Include="System\Collections\Generic\IEnumerable.cs" />
     <Compile Include="System\Collections\Generic\IEnumerator.cs" />
     <Compile Include="System\Collections\Generic\IList.cs" />
+    <Compile Include="System\Collections\Generic\IReadOnlyCollection.cs" />
+    <Compile Include="System\Collections\Generic\IReadOnlyList.cs" />
     <Compile Include="System\Collections\Generic\KeyNotFoundException.cs" />
     <Compile Include="System\Collections\Generic\KeyValuePair.cs" />
     <Compile Include="System\Collections\Generic\List.cs" />

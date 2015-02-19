@@ -324,6 +324,8 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
         {
+            Debug.Assert(!typeSymbol.IsErrorType());
+
             if (genericContext != null && !genericContext.IsEmpty)
             {
                 if (typeSymbol.IsTypeParameter())
@@ -340,11 +342,7 @@ namespace PEAssemblyReader
                 var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
-                    var metadataType = new MetadataTypeAdapter(namedTypeSymbol, isByRef, isPinned);
-                    if (metadataType.IsGenericTypeDefinition && !genericContext.IsEmpty)
-                    {
-                        return new MetadataTypeAdapter(namedTypeSymbol, genericContext, isByRef, isPinned);
-                    }
+                    return new MetadataTypeAdapter(namedTypeSymbol, genericContext, isByRef, isPinned);
                 }
             }
 

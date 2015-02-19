@@ -84,6 +84,10 @@
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArraySetMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayCtorMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetCountMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetEnumeratorMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetItemMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListSetItemMethod.cs" />
     <Compile Include="IIlReader.cs" />
     <Compile Include="IlCodeBuilder.cs" />
     <Compile Include="Metadata\Model\MDLocation.cs" />

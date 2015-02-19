@@ -692,6 +692,14 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
+            }
+
             return
                 this.typeDef.GetMembers()
                     .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
@@ -772,6 +780,14 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is FieldSymbol)
+                        .Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
+            }
+
             return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
         }
 
@@ -877,12 +893,25 @@ namespace PEAssemblyReader
 
         private IEnumerable<IMethod> IterateMethods(BindingFlags bindingFlags)
         {
-            foreach (var method in
-                this.typeDef.GetMembers()
-                    .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataMethodAdapter(f as MethodSymbol, this.GenericContext)))
+            if (this.typeDef.IsUnboundGenericType())
             {
-                yield return method;
+                foreach (var method in
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol, this.GenericContext)))
+                {
+                    yield return method;
+                }
+            }
+            else
+            {
+                foreach (var method in
+                    this.typeDef.GetMembers()
+                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol, this.GenericContext)))
+                {
+                    yield return method;
+                }
             }
 
             if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))

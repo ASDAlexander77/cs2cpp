@@ -455,16 +455,19 @@ namespace Il2Native.Logic.Gencode
             }
 
             // get all virtual methods in current type and replace or append
-            var list = IlReader.Methods(@interface, typeResolver)
-                .Select(
+#if DEBUG
+            var interfaceMethods = IlReader.Methods(@interface, typeResolver).ToList();
+#else
+            var interfaceMethods = IlReader.Methods(@interface, typeResolver);
+#endif
+            var list =
+                interfaceMethods.Select(
                     interfaceMember =>
-                        allPublic.Where(interfaceMember.IsMatchingInterfaceOverride)
-                            .OrderByDescending(x => x.IsExplicitInterfaceImplementation)
-                            .FirstOrDefault())
-                .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
-                .ToList();
+                    allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).FirstOrDefault())
+                                .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
+                                .ToList();
 
-            ////        Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
+            ////Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
 
             virtualTable.AddRange(list);
         }

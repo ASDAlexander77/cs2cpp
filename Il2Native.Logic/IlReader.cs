@@ -556,6 +556,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IField> Fields(IType type, BindingFlags flags, ITypeResolver typeResolver)
         {
+            Debug.Assert(type != null);
+
             foreach (var field in type.GetFields(flags))
             {
                 yield return field;
@@ -605,6 +607,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
         {
+            Debug.Assert(type != null);
+
             foreach (var constructor in type.GetConstructors(flags).Where(m => !m.IsGenericMethodDefinition))
             {
                 yield return constructor;
@@ -631,6 +635,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IMethod> Methods(IType type, BindingFlags flags, ITypeResolver typeResolver, bool excludeSpecializations = false)
         {
+            Debug.Assert(type != null);
+
             if (!excludeSpecializations)
             {
                 foreach (var method in type.GetMethods(flags).Where(m => !m.IsGenericMethodDefinition))
@@ -669,6 +675,13 @@ namespace Il2Native.Logic
                 yield return new SynthesizedMultiDimArrayGetMethod(type, typeResolver);
                 yield return new SynthesizedMultiDimArraySetMethod(type, typeResolver);
                 yield return new SynthesizedMultiDimArrayAddressMethod(type, typeResolver);
+            }
+            else if (type.IsArray)
+            {
+                yield return new SynthesizedSingleDimArrayIListGetEnumeratorMethod(type, typeResolver);
+                yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
+                yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
+                yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
             }
 
             if (excludeSpecializations)

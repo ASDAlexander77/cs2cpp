@@ -10,6 +10,9 @@ namespace PEAssemblyReader
 {
     using System.Collections.Generic;
 
+    using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
+
     /// <summary>
     /// </summary>
     public class MetadataGenericContext : IGenericContext
@@ -36,6 +39,22 @@ namespace PEAssemblyReader
         public MetadataGenericContext(IDictionary<IType, IType> map)
         {
             this.Map = map;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="map">
+        /// </param>
+        public MetadataGenericContext(IType container, params object[] map)
+        {
+            this.Map = new Dictionary<IType, IType>();
+            for (var index = 0; index < map.Length - 1; index++)
+            {
+                var t =
+                    new MetadataTypeAdapter(
+                        new AnonymousTypeManager.AnonymousTypeParameterSymbol(((MetadataTypeAdapter)container).TypeDef, 1, map[index].ToString()));
+                this.Map[t] = (IType)map[index + 1];
+            }
         }
 
         /// <summary>

@@ -303,7 +303,6 @@ namespace Ll2NativeTests
             // 19 - using Thread class, Reflection
             // 36 - bug in execution (NotImplemented)
             // 39 - using Attributes
-            // 43, 44, 45 - TODO: NEED TO FINISH System.Array functions!!!
             // 74 - using StreamReader
             // 85 - using UnmanagedType
             // 91 - using Reflection
@@ -374,6 +373,8 @@ namespace Ll2NativeTests
             // 361 - missing Attribute
             // 362 - cycling Catch/Throw bug (NEED TO BE FIXED!!!)
             // 367 - GetFields not implemented
+            // 377 - lib with .IL file
+            // 382 - using GetField
             // -----------
             // 32, 55, 74 - missing class
 
@@ -389,9 +390,6 @@ namespace Ll2NativeTests
                         32,
                         36,
                         39,
-                        43,
-                        44,
-                        45,
                         53,
                         55,
                         74,
@@ -464,7 +462,9 @@ namespace Ll2NativeTests
                         358,
                         361,
                         362,
-                        367
+                        367,
+                        377,
+                        382
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -547,7 +547,6 @@ namespace Ll2NativeTests
             // 119 - typeof(x).Name (NotImplemeneted)
             // 128 - Reflection
             // 143 - BIG BUG with using "++" on structures due to using struct references instead of using copied object in stack
-            // 144 - cast string[] to IEnumerable<string> (not yet supported. NEED TO BE FIXED (when __Array__<T> is used)
             // 162 - GetType. findMember
             // 165 - BUG in compiling (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
             // 167 - Attribute.GetCustomAttributes
@@ -565,6 +564,7 @@ namespace Ll2NativeTests
             // 219 - GetMethod
             // 223 - GetMethod
             // 226 - GetField
+            // 233 - ListChangedEventArgs not implemented
 
             // 53 - ValueType.ToString() not implemented
 
@@ -583,7 +583,6 @@ namespace Ll2NativeTests
                 119,
                 128,
                 143,
-                144,
                 156,
                 161,
                 162,
@@ -603,8 +602,9 @@ namespace Ll2NativeTests
                 219,
                 223,
                 226,
+                233,
             };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(233, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

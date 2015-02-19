@@ -242,15 +242,20 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public IType ResolveType(string fullTypeName)
+        public IType ResolveType(string fullTypeName, IGenericContext genericContext = null)
         {
+            if (genericContext != null && !genericContext.IsEmpty)
+            {
+                return this.ThisType.Module.ResolveType(fullTypeName, genericContext);
+            }
+
             IType result;
             if (this.ResolvedTypes.TryGetValue(fullTypeName, out result))
             {
                 return result;
             }
 
-            result = this.ThisType.Module.ResolveType(fullTypeName, null);
+            result = this.ThisType.Module.ResolveType(fullTypeName, genericContext);
             this.ResolvedTypes[result.FullName] = result;
             return result;
         }
