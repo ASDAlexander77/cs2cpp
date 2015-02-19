@@ -45,15 +45,12 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="map">
         /// </param>
-        public MetadataGenericContext(IType container, params object[] map)
+        public MetadataGenericContext(params object[] map)
         {
-            this.Map = new Dictionary<IType, IType>();
+            this.CustomMap = new Dictionary<string, IType>();
             for (var index = 0; index < map.Length - 1; index++)
             {
-                var t =
-                    new MetadataTypeAdapter(
-                        new AnonymousTypeManager.AnonymousTypeParameterSymbol(((MetadataTypeAdapter)container).TypeDef, 1, map[index].ToString()));
-                this.Map[t] = (IType)map[index + 1];
+                this.CustomMap[map[index].ToString()] = (IType)map[index + 1];
             }
         }
 
@@ -95,14 +92,18 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.Map.Count == 0 && this.TypeDefinition == null && this.TypeSpecialization == null && this.MethodDefinition == null
-                       && this.MethodSpecialization == null;
+                return (this.Map == null || this.Map.Count == 0) && this.TypeDefinition == null && this.TypeSpecialization == null
+                       && this.MethodDefinition == null && this.MethodSpecialization == null && (this.CustomMap == null || this.CustomMap.Count == 0);
             }
         }
 
         /// <summary>
         /// </summary>
         public IDictionary<IType, IType> Map { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public IDictionary<string, IType> CustomMap { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -210,7 +211,8 @@ namespace PEAssemblyReader
         public IType ResolveTypeParameter(IType typeParameter)
         {
             IType resolved = null;
-            if (this.Map.TryGetValue(typeParameter, out resolved))
+            if ((this.CustomMap != null && this.CustomMap.TryGetValue(typeParameter.ToString(), out resolved))
+                || this.Map.TryGetValue(typeParameter, out resolved))
             {
                 if (typeParameter.IsByRef && typeParameter.IsPinned)
                 {
