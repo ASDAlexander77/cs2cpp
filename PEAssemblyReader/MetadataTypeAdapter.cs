@@ -81,7 +81,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false, bool doNotValidate = false)
         {
             Debug.Assert(typeDef != null);
 
@@ -96,7 +96,7 @@ namespace PEAssemblyReader
                 this.IsByRef = true;
             }
 
-            Debug.Assert(this.typeDef.TypeKind != TypeKind.Error);
+            Debug.Assert(doNotValidate || this.typeDef.TypeKind != TypeKind.Error);
 
             this.lazyName = new Lazy<string>(this.CalculateName);
             this.lazyFullName = new Lazy<string>(this.CalculateFullName);
@@ -119,8 +119,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
-            : this(typeDef, isByRef, isPinned)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false, bool isPinned = false, bool doNotValidate = false)
+            : this(typeDef, isByRef, isPinned, doNotValidate)
         {
             this.GenericContext = genericContext;
         }

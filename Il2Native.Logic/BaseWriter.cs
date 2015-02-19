@@ -255,7 +255,7 @@ namespace Il2Native.Logic
                 return result;
             }
 
-            result = this.ThisType.Module.ResolveType(fullTypeName, genericContext);
+            result = this.ThisType.Module.ResolveType(fullTypeName, null);
             this.ResolvedTypes[result.FullName] = result;
             return result;
         }

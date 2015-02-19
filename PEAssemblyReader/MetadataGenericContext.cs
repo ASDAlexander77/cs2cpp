@@ -97,6 +97,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsCustom
+        {
+            get
+            {
+                return !(this.CustomMap == null || this.CustomMap.Count == 0);
+            }
+        }
+
         /// <summary>
         /// </summary>
         public IDictionary<IType, IType> Map { get; private set; }
