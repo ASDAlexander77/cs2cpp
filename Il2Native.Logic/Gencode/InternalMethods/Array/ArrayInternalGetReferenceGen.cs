@@ -84,7 +84,122 @@
             // for multiarray
             codeList.Add(labelGotoMultiDimArray);
 
+            // *indeces += count;
+            codeList.LoadArgument(3);
+            codeList.LoadArgument(2);
+            codeList.Add(Code.Conv_I);
+            codeList.LoadConstant(4);
+            codeList.Add(Code.Mul);
+            codeList.Add(Code.Add);
+            codeList.SaveArgument(3);
 
+            // init multiplier
+            // Load elementSize
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 4);
+            codeList.Add(Code.Ldfld, 6);
+            codeList.SaveLocal(0);
+
+            // calculate first index
+            codeList.LoadArgument(3);
+            codeList.LoadConstant(4);
+            codeList.Add(Code.Sub);
+            codeList.Add(Code.Dup);
+            codeList.SaveArgument(3);
+            codeList.Add(Code.Ldind_I4);
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 9);
+            codeList.Add(Code.Ldfld, 10);
+            codeList.LoadConstant(0);
+            codeList.Add(Code.Ldelem_I4);
+            codeList.Add(Code.Sub);
+            codeList.LoadLocal(0);
+            codeList.Add(Code.Mul);
+            codeList.SaveLocal(1);           
+            
+            // init 'i' (index)
+            codeList.LoadConstant(1);
+            codeList.SaveLocal(2);
+
+            var labelLoopStart = codeList.Branch(Code.Br, Code.Br_S);
+            // loop start
+
+            var labelLoopBack = codeList.CreateLabel();
+
+            codeList.LoadLocal(0);
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 9);
+            codeList.Add(Code.Ldfld, 11);
+            codeList.LoadLocal(2);
+            codeList.LoadConstant(1);
+            codeList.Add(Code.Sub);
+            codeList.Add(Code.Ldelem_I4);
+            codeList.Add(Code.Mul);
+            codeList.SaveLocal(0);
+            codeList.LoadLocal(1);
+            codeList.LoadArgument(3);
+            codeList.LoadConstant(4);
+            codeList.Add(Code.Sub);
+            codeList.Add(Code.Dup);
+            codeList.SaveArgument(3);
+            codeList.Add(Code.Ldind_I4);
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 9);
+            codeList.Add(Code.Ldfld, 10);
+            codeList.LoadLocal(2);
+            codeList.Add(Code.Ldelem_I4);
+            codeList.Add(Code.Sub);
+            codeList.LoadLocal(0);
+            codeList.Add(Code.Mul);
+            codeList.Add(Code.Add);
+            codeList.SaveLocal(1);
+            codeList.LoadLocal(2);
+            codeList.LoadConstant(1);
+            codeList.Add(Code.Add);
+            codeList.SaveLocal(2);
+
+            codeList.Add(labelLoopStart);
+
+            codeList.LoadLocal(2);
+            codeList.LoadArgument(2);
+
+            codeList.Branch(Code.Blt, Code.Blt_S, labelLoopBack);
+
+            // set Value of TypedReference
+            codeList.LoadArgument(1);
+            codeList.Add(Code.Ldflda, 1);
+
+            // align index (array offset) (Local.0) and save it to TypedReferenece
+            // Load reference to an array (do not load reference to field data)
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 9);
+            codeList.LoadLocal(1);
+            // load address of an element
+            codeList.Add(Code.Ldelema, 7);
+
+            // elementSize 
+            codeList.LoadArgument(0);
+            codeList.Add(Code.Castclass, 4);
+            codeList.Add(Code.Ldfld, 6);
+
+            // elementSize - 1
+            codeList.LoadConstant(1);
+            codeList.Add(Code.Sub);
+            codeList.Add(Code.Dup);
+            codeList.SaveLocal(2);
+
+            // size + align - 1
+            codeList.Add(Code.Add);
+
+            // size &= ~(align - 1)
+            codeList.LoadLocal(2);
+            codeList.LoadConstant(-1);
+            codeList.Add(Code.Xor);
+            codeList.Add(Code.And);
+
+            // Save address into TypedReference Value
+            codeList.Add(Code.Conv_I);
+            codeList.Add(Code.Stfld, 3);
 
             codeList.Add(Code.Ret);
 
@@ -104,6 +219,8 @@
             tokenResolutions.Add(byteType);
             tokenResolutions.Add(arrayType.GetFieldByName("rank", typeResolver));
             tokenResolutions.Add(multiArrayType);
+            tokenResolutions.Add(multiArrayType.GetFieldByName("lowerBounds", typeResolver));
+            tokenResolutions.Add(multiArrayType.GetFieldByName("lengths", typeResolver));
 
             var locals = new List<IType>();
             locals.Add(typeResolver.ResolveType("System.Int32"));
