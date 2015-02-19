@@ -465,9 +465,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var bareType = type.ToBareType().ToNormal();
             if (type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type) && !TypeHasGenericParameterInGenericArguments(type))
             {
+                var bareType = type.ToBareType().ToNormal();
                 if (genericSpecializations == null || genericSpecializations.Add(bareType))
                 {
                     // todo the same for base class and interfaces
@@ -655,18 +655,12 @@ namespace Il2Native.Logic
         {
             Debug.Assert(typeSource != null);
 
-            if (typeSource.IsArray)
+            var type = typeSource;
+            while (type.IsPointer || type.IsClass || type.IsByRef)
             {
-                DicoverGenericSpecializedTypesAndAdditionalTypes(
-                    typeSource.BaseType,
-                    genericTypeSpecializations,
-                    genericMethodSpecializations,
-                    additionalTypesToProcess,
-                    processedAlready);
-                yield return typeSource.BaseType;
+                type = type.IsClass ? type.ToNormal() : type.GetElementType();
             }
 
-            var type = typeSource.ToBareType().ToNormal();
             if (!processedAlready.Add(type))
             {
                 yield break;
