@@ -827,7 +827,7 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            foreach (var opCode in this.OpCodes(method.GetMethodBody(), method.Module, genericContext, stackCall))
+            foreach (var opCode in this.OpCodes(method.GetMethodBody(genericContext), method.Module, genericContext, stackCall))
             {
                 yield return opCode;
             }

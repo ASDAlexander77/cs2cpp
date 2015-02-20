@@ -483,6 +483,8 @@ namespace Il2Native.Logic.Gencode
             opCode.OpCodeOperands[0].Result = storedResult;
 
             writer.WriteLine(string.Empty);
+
+            llvmWriter.CheckIfTypeIsRequiredForBody(llvmWriter.ResolveType("System.Byte").ToArrayType(1));
         }
 
         /// <summary>

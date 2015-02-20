@@ -1074,6 +1074,17 @@ namespace Il2Native.Logic
             return current;
         }
 
+        public static IType NormalizeType(this IType typeSource)
+        {
+            var type = typeSource;
+            while (type.IsPointer || type.UseAsClass || type.IsByRef)
+            {
+                type = type.IsClass ? type.ToNormal() : type.GetElementType();
+            }
+
+            return type;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">

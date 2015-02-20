@@ -166,7 +166,7 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfTypeIsRequiredForBody(IType type)
         {
-            var item = type.ToBareType();
+            var item = type.IsArray ? type.NormalizeType() : type.ToBareType();
             if (!item.IsPrimitiveType())
             {
                 this.RequiredTypesForBody.Add(item);

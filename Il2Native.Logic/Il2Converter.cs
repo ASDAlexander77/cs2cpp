@@ -433,16 +433,18 @@ namespace Il2Native.Logic
         /// <param name="genericMethodSpecializations">
         /// </param>
         private static void DicoverGenericSpecializedTypesAndAdditionalTypes(
-            IType type,
+            IType typeSource,
             ISet<IType> genericSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> additionalTypesToProcess,
             ISet<IType> processedAlready)
         {
-            if (type == null)
+            if (typeSource == null)
             {
                 return;
             }
+
+            var type = typeSource.NormalizeType();
 
             if (additionalTypesToProcess != null && !type.IsGenericTypeDefinition && type.IsArray)
             {
@@ -662,12 +664,7 @@ namespace Il2Native.Logic
         {
             Debug.Assert(typeSource != null);
 
-            var type = typeSource;
-            while (type.IsPointer || type.UseAsClass || type.IsByRef)
-            {
-                type = type.IsClass ? type.ToNormal() : type.GetElementType();
-            }
-
+            var type = typeSource.NormalizeType();
             if (!processedAlready.Add(type))
             {
                 yield break;
@@ -1083,16 +1080,7 @@ namespace Il2Native.Logic
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
 
-            // append additional required types
-            foreach (var additionalType in additionalTypesToProcess)
-            {
-                sortedListOfTypes.Add(additionalType.IsByRef ? additionalType.GetElementType() : additionalType);
-            }
-
-            // append default type for type tokens and init arrays and multiarrays
-            // TODO: review it
-            sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
-            ////sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Int32").ToArrayType(1));
+            Debug.Assert(sortedListOfTypes.All(t => !t.IsByRef));
         }
 
         private static bool CheckFilter(string[] filters, IType type)
@@ -1139,6 +1127,7 @@ namespace Il2Native.Logic
         private static void ReorderTypeByUsage(
             IList<IType> types,
             ISet<IType> genericTypeSpecializations,
+            ISet<IType> additionalTypes,
             NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
             IList<IType> newOrder)
         {
@@ -1147,7 +1136,13 @@ namespace Il2Native.Logic
             {
                 allTypes.Add(type);
             }
+
             foreach (var type in genericTypeSpecializations)
+            {
+                allTypes.Add(type);
+            }
+
+            foreach (var type in additionalTypes)
             {
                 allTypes.Add(type);
             }
@@ -1264,7 +1259,7 @@ namespace Il2Native.Logic
                 processedAlready,
                 true);
 
-            ReorderTypeByUsage(types, genericTypeSpecializations, typesWithRequired, newOrder);
+            ReorderTypeByUsage(types, genericTypeSpecializations, additionalTypesToProcess, typesWithRequired, newOrder);
 
             return newOrder;
         }
