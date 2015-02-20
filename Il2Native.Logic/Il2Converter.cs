@@ -862,7 +862,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredTypes">
         /// </param>
-        private static void ProcessGenericTypeToFindRequiredTypes(
+        private static void ProcessGenericTypesToFindRequiredTypes(
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> additionalTypesToProcess,
@@ -877,6 +877,16 @@ namespace Il2Native.Logic
             {
                 Parallel.ForEach(
                     genericTypeSpecializations,
+                    type => ProcessGenericTypeToFindRequiredTypesForType(
+                        type,
+                        requiredTypes,
+                        subSetGenericTypeSpecializations,
+                        genericMethodSpecializations,
+                        additionalTypesToProcess,
+                        processedAlready));
+
+                Parallel.ForEach(
+                    additionalTypesToProcess.ToList(),
                     type => ProcessGenericTypeToFindRequiredTypesForType(
                         type,
                         requiredTypes,
@@ -903,6 +913,23 @@ namespace Il2Native.Logic
                         additionalTypesToProcess,
                         processedAlready);
                 }
+
+                foreach (var type in additionalTypesToProcess.ToList())
+                {
+                    Debug.Assert(type != null);
+                    if (type == null)
+                    {
+                        continue;
+                    }
+
+                    ProcessGenericTypeToFindRequiredTypesForType(
+                        type,
+                        requiredTypes,
+                        subSetGenericTypeSpecializations,
+                        genericMethodSpecializations,
+                        additionalTypesToProcess,
+                        processedAlready);
+                }
             }
 
             if (subSetGenericTypeSpecializations.Count > 0)
@@ -912,7 +939,7 @@ namespace Il2Native.Logic
                     subSetGenericTypeSpecializations.Remove(discoveredType);
                 }
 
-                ProcessGenericTypeToFindRequiredTypes(
+                ProcessGenericTypesToFindRequiredTypes(
                     subSetGenericTypeSpecializations,
                     genericMethodSpecializations,
                     additionalTypesToProcess,
@@ -1064,7 +1091,7 @@ namespace Il2Native.Logic
 
             // append default type for type tokens and init arrays and multiarrays
             // TODO: review it
-            ////sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
+            sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Byte").ToArrayType(1));
             ////sortedListOfTypes.Add(allTypes.First(t => t.FullName == "System.Int32").ToArrayType(1));
         }
 
@@ -1229,7 +1256,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            ProcessGenericTypeToFindRequiredTypes(
+            ProcessGenericTypesToFindRequiredTypes(
                 genericTypeSpecializations,
                 genericMethodSpecializations,
                 additionalTypesToProcess,

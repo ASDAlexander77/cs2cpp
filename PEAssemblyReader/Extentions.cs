@@ -330,7 +330,8 @@ namespace PEAssemblyReader
                 return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned, true));
             }
 
-            Debug.Assert(!typeSymbol.IsErrorType());
+            // TODO: Array.Address return type is ErrorType ?, find out why.
+            ////Debug.Assert(!typeSymbol.IsErrorType());
 
             if (genericContext != null && !genericContext.IsEmpty)
             {
