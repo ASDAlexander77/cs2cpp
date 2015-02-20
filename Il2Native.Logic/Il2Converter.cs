@@ -462,10 +462,10 @@ namespace Il2Native.Logic
                     genericMethodSpecializations,
                     additionalTypesToProcess,
                     processedAlready);
-                return;
             }
 
-            if (type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type) && !TypeHasGenericParameterInGenericArguments(type))
+            var isGenericToDiscover = type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type) && !TypeHasGenericParameterInGenericArguments(type);
+            if (isGenericToDiscover)
             {
                 var bareType = type.ToBareType().ToNormal();
                 if (genericSpecializations == null || genericSpecializations.Add(bareType))
@@ -475,6 +475,13 @@ namespace Il2Native.Logic
                     {
                     }
                 }
+            }
+
+            if (type.IsArray)
+            {
+                foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, additionalTypesToProcess, processedAlready))
+                {
+                }                
             }
         }
 
@@ -656,7 +663,7 @@ namespace Il2Native.Logic
             Debug.Assert(typeSource != null);
 
             var type = typeSource;
-            while (type.IsPointer || type.IsClass || type.IsByRef)
+            while (type.IsPointer || type.UseAsClass || type.IsByRef)
             {
                 type = type.IsClass ? type.ToNormal() : type.GetElementType();
             }
@@ -692,70 +699,57 @@ namespace Il2Native.Logic
                 }
             }
 
-            var fields =
-                type.GetFields(
-                    BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                    BindingFlags.Instance);
-            if (fields != null)
+            var fields = IlReader.Fields(
+                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+            foreach (var field in fields)
             {
-                foreach (var field in fields)
-                {
-                    ////#if DEBUG
-                    ////                    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
-                    ////#endif
+                ////#if DEBUG
+                ////                    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
+                ////#endif
 
-                    DicoverGenericSpecializedTypesAndAdditionalTypes(
-                        field.FieldType,
-                        genericTypeSpecializations,
-                        genericMethodSpecializations,
-                        additionalTypesToProcess,
-                        processedAlready);
-                    if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
-                    {
-                        yield return field.FieldType;
-                    }
+                DicoverGenericSpecializedTypesAndAdditionalTypes(
+                    field.FieldType,
+                    genericTypeSpecializations,
+                    genericMethodSpecializations,
+                    additionalTypesToProcess,
+                    processedAlready);
+                if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
+                {
+                    yield return field.FieldType;
                 }
             }
 
-            var ctors = type.GetConstructors(
-                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                BindingFlags.Instance);
-            if (ctors != null)
+            var ctors = IlReader.Constructors(
+                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+            foreach (var @ctor in ctors)
             {
-                foreach (var @ctor in ctors)
+                foreach (
+                    var requiredType in
+                        GetAllRequiredTypesForMethod(
+                            @ctor,
+                            genericTypeSpecializations,
+                            genericMethodSpecializations,
+                            additionalTypesToProcess,
+                            processedAlready))
                 {
-                    foreach (
-                        var requiredType in
-                            GetAllRequiredTypesForMethod(
-                                @ctor,
-                                genericTypeSpecializations,
-                                genericMethodSpecializations,
-                                additionalTypesToProcess,
-                                processedAlready))
-                    {
-                        yield return requiredType;
-                    }
+                    yield return requiredType;
                 }
             }
 
-            var methods = type.GetMethods(
-                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
-                BindingFlags.Instance);
-            if (methods != null)
+            var methods = IlReader.Methods(
+                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+            foreach (var method in methods)
             {
-                foreach (var method in methods)
+                foreach (
+                    var requiredType in
+                        GetAllRequiredTypesForMethod(
+                            method,
+                            genericTypeSpecializations,
+                            genericMethodSpecializations,
+                            additionalTypesToProcess,
+                            processedAlready))
                 {
-                    foreach (
-                        var requiredType in
-                            GetAllRequiredTypesForMethod(
-                                method,
-                                genericTypeSpecializations,
-                                genericMethodSpecializations,
-                                additionalTypesToProcess,
-                                processedAlready))
-                    {
-                        yield return requiredType;
-                    }
+                    yield return requiredType;
                 }
             }
         }
@@ -1044,9 +1038,9 @@ namespace Il2Native.Logic
             _codeWriter.Initialize(allTypes.First());
 
             sortedListOfTypes = SortTypesByUsage(
-                types.ToList(), 
-                genericTypeSpecializations, 
-                genericMethodSpecializations, 
+                types.ToList(),
+                genericTypeSpecializations,
+                genericMethodSpecializations,
                 additionalTypesToProcess);
 
             // build quick access array for Generic Definitions

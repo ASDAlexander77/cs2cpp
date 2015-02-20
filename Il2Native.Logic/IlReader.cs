@@ -691,7 +691,7 @@ namespace Il2Native.Logic
 
             // append specialized methods
             IEnumerable<IMethod> genMethodSpecializationForType = null;
-            if (!genMethodSpec.TryGetValue(type, out genMethodSpecializationForType))
+            if (genMethodSpec == null || !genMethodSpec.TryGetValue(type, out genMethodSpecializationForType))
             {
                 yield break;
             }

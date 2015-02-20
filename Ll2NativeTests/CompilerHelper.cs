@@ -76,7 +76,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool MultiCore = true;
+        public const bool MultiCore = false;
 
         /// <summary>
         ///     ex. opt 'file'.ll -o 'file'.bc -O2
@@ -85,7 +85,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool VerboseOutput = false;
+        public const bool VerboseOutput = true;
 
         /// <summary>
         /// </summary>
