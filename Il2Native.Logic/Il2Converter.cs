@@ -859,7 +859,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredTypes">
         /// </param>
-        private static void ProcessGenericTypesToFindRequiredTypes(
+        private static void ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
             ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> additionalTypesToProcess,
@@ -868,6 +868,7 @@ namespace Il2Native.Logic
             bool applyConccurent = false)
         {
             var subSetGenericTypeSpecializations = new NamespaceContainer<IType>();
+            var subSetAdditionalTypesToProcess = new NamespaceContainer<IType>();
 
             // the same for generic specialized types
             if (concurrent && applyConccurent)
@@ -879,7 +880,7 @@ namespace Il2Native.Logic
                         requiredTypes,
                         subSetGenericTypeSpecializations,
                         genericMethodSpecializations,
-                        additionalTypesToProcess,
+                        subSetAdditionalTypesToProcess,
                         processedAlready));
 
                 Parallel.ForEach(
@@ -889,7 +890,7 @@ namespace Il2Native.Logic
                         requiredTypes,
                         subSetGenericTypeSpecializations,
                         genericMethodSpecializations,
-                        additionalTypesToProcess,
+                        subSetAdditionalTypesToProcess,
                         processedAlready));
             }
             else
@@ -907,7 +908,7 @@ namespace Il2Native.Logic
                         requiredTypes,
                         subSetGenericTypeSpecializations,
                         genericMethodSpecializations,
-                        additionalTypesToProcess,
+                        subSetAdditionalTypesToProcess,
                         processedAlready);
                 }
 
@@ -924,7 +925,7 @@ namespace Il2Native.Logic
                         requiredTypes,
                         subSetGenericTypeSpecializations,
                         genericMethodSpecializations,
-                        additionalTypesToProcess,
+                        subSetAdditionalTypesToProcess,
                         processedAlready);
                 }
             }
@@ -936,10 +937,10 @@ namespace Il2Native.Logic
                     subSetGenericTypeSpecializations.Remove(discoveredType);
                 }
 
-                ProcessGenericTypesToFindRequiredTypes(
+                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
                     subSetGenericTypeSpecializations,
                     genericMethodSpecializations,
-                    additionalTypesToProcess,
+                    subSetAdditionalTypesToProcess,
                     requiredTypes,
                     processedAlready);
 
@@ -948,6 +949,28 @@ namespace Il2Native.Logic
                 {
                     Debug.Assert(discoveredType != null);
                     genericTypeSpecializations.Add(discoveredType);
+                }
+            }
+
+            if (subSetAdditionalTypesToProcess.Count > 0)
+            {
+                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
+                {
+                    subSetAdditionalTypesToProcess.Remove(discoveredType);
+                }
+
+                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
+                    subSetGenericTypeSpecializations,
+                    genericMethodSpecializations,
+                    subSetAdditionalTypesToProcess,
+                    requiredTypes,
+                    processedAlready);
+
+                // join types
+                foreach (var discoveredType in subSetAdditionalTypesToProcess)
+                {
+                    Debug.Assert(discoveredType != null);
+                    additionalTypesToProcess.Add(discoveredType);
                 }
             }
         }
@@ -1251,7 +1274,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            ProcessGenericTypesToFindRequiredTypes(
+            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
                 genericTypeSpecializations,
                 genericMethodSpecializations,
                 additionalTypesToProcess,

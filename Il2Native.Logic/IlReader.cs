@@ -1506,7 +1506,7 @@ namespace Il2Native.Logic
             this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, stackCall);
+            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, this._usedStructTypesOrArrays, stackCall);
 
             stackCall.Dequeue();
         }

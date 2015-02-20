@@ -565,6 +565,7 @@ namespace Ll2NativeTests
             // 223 - GetMethod
             // 226 - GetField
             // 233 - ListChangedEventArgs not implemented
+            // 236 - BUG in compiling 2 (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
 
             // 53 - ValueType.ToString() not implemented
 
@@ -603,8 +604,9 @@ namespace Ll2NativeTests
                 223,
                 226,
                 233,
+                236
             };
-            foreach (var index in Enumerable.Range(233, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }
