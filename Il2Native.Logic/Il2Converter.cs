@@ -1069,6 +1069,9 @@ namespace Il2Native.Logic
             out IDictionary<string, IType> genDefinitionsByMetadataName,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
+            // clean it as you are using IlReader
+            IlReader.GenericMethodSpecializations = null;
+
             // types in current assembly
             var genericTypeSpecializations = new NamespaceContainer<IType>();
             var genericMethodSpecializations = new NamespaceContainer<IMethod>();

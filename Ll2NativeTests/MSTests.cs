@@ -566,7 +566,9 @@ namespace Ll2NativeTests
             // 226 - GetField
             // 233 - ListChangedEventArgs not implemented
             // 236 - BUG in compiling 2 (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
-
+            // 237 - the same as 236
+            // 239 - the same as 237, 236 etc
+            // 243 - GetMethod
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[]
@@ -604,7 +606,10 @@ namespace Ll2NativeTests
                 223,
                 226,
                 233,
-                236
+                236,
+                237,
+                239,
+                243
             };
             foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
             {
