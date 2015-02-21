@@ -1678,6 +1678,11 @@ namespace Il2Native.Logic
                 var moduleReferences = this.LoadReferences(this.Assembly);
                 foreach (var moduleAssemblySymbol in moduleReferences.Symbols)
                 {
+                    if (moduleAssemblySymbol is MissingAssemblySymbol)
+                    {
+                        throw new Exception(string.Format("Assembly '{0}' is missing", moduleAssemblySymbol));
+                    }
+
                     foreach (var metadataTypeAdapter in this.EnumAllTypes(moduleAssemblySymbol as PEAssemblySymbol))
                     {
                         yield return metadataTypeAdapter;

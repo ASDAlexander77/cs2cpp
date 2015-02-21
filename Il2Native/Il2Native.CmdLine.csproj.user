@@ -5,6 +5,7 @@
     <StartWorkingDirectory>C:\Dev\Codeplex\csnative_bin\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <StartArguments>C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll</StartArguments>
+    <StartArguments>D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll /corelib:D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\CoreLib.dll</StartArguments>
+    <StartWorkingDirectory>M:\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

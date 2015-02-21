@@ -253,7 +253,7 @@ namespace PEAssemblyReader
                 Debug.Assert(!typeParameter.IsByRef);
                 Debug.Assert(!typeArgument.IsByRef);
                 
-                map[typeParameter] = typeArgument.ToDereferencedType();
+                map[typeParameter] = typeArgument;
             }
 
             return map;
