@@ -213,10 +213,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GenericTypeArguments
         {
-            get
-            {
-                return this.CalculateGenericArguments();
-            }
+            get { return this.CalculateGenericArguments(); }
         }
 
         /// <summary>
@@ -225,10 +222,7 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GenericTypeParameters
         {
-            get
-            {
-                return this.CalculateGenericParameters();
-            }
+            get { return this.CalculateGenericParameters(); }
         }
 
         /// <summary>
