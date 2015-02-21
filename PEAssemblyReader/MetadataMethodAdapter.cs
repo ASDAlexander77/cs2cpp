@@ -457,7 +457,18 @@ namespace PEAssemblyReader
         /// </returns>
         public override bool Equals(object obj)
         {
-            return this.ToString().CompareTo(obj.ToString()) == 0;
+            var method = obj as IMethod;
+            if (method != null)
+            {
+                if (this.Token.HasValue && method.Token.HasValue && this.Token.Value != method.Token.Value)
+                {
+                    return false;
+                }
+
+                return String.Compare(this.ToString(), obj.ToString(), StringComparison.Ordinal) == 0;
+            }
+
+            return base.Equals(obj);
         }
 
         /// <summary>
@@ -500,12 +511,13 @@ namespace PEAssemblyReader
 
         private bool CalculateIsVirtual()
         {
-            if (this.FullName == "System.Object.Finalize"
-                || this.FullName == "System.Object.GetType")
+            // TODO: review it again
+            /*
+            if (this.FullName == "System.Object.Finalize")
             {
                 return true;
             }
-
+            */
             return methodDef.IsVirtual;
         }
 
@@ -593,7 +605,7 @@ namespace PEAssemblyReader
         /// </returns>
         public override string ToString()
         {
-            return CalculateToString();
+            return this.lazyToString.Value;
         }
 
         private string CalculateToString()

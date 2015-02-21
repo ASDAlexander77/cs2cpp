@@ -13,10 +13,12 @@ namespace PEAssemblyReader
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
+    using System.Reflection.Metadata.Ecma335;
     using System.Text;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
+    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
     /// <summary>
     /// </summary>
@@ -73,7 +75,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new Dictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IField>>> lazyFields = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IField>>>();
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>> lazyConstructors = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>>();
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
 
         /// <summary>
         /// </summary>
@@ -128,6 +138,18 @@ namespace PEAssemblyReader
             : this(typeDef, isByRef, isPinned, doNotValidate)
         {
             this.GenericContext = genericContext;
+
+            var peTypeSymbol = typeDef as PENamedTypeSymbol;
+            if (peTypeSymbol != null)
+            {
+                this.Token = MetadataTokens.GetToken(peTypeSymbol.Handle);
+            }
+        }
+
+        public int? Token
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -674,6 +696,11 @@ namespace PEAssemblyReader
             var type = obj as IType;
             if (type != null)
             {
+                if (this.Token.HasValue && type.Token.HasValue && this.Token.Value != type.Token.Value)
+                {
+                    return false;
+                }
+
                 return this.CompareTo(type) == 0;
             }
 
@@ -697,18 +724,14 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IConstructor> GetConstructors(BindingFlags bindingFlags)
         {
-            if (this.typeDef.IsUnboundGenericType())
+            Lazy<IEnumerable<IConstructor>> lazyConstructorsByFlags;
+            if (!this.lazyConstructors.TryGetValue(bindingFlags, out lazyConstructorsByFlags))
             {
-                return
-                    this.typeDef.OriginalDefinition.GetMembers()
-                        .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                        .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
+                lazyConstructorsByFlags = new Lazy<IEnumerable<IConstructor>>(() => this.CalculateConstructors(bindingFlags));
+                this.lazyConstructors[bindingFlags] = lazyConstructorsByFlags;
             }
 
-            return
-                this.typeDef.GetMembers()
-                    .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
+            return lazyConstructorsByFlags.Value;
         }
 
         /// <summary>
@@ -779,15 +802,14 @@ namespace PEAssemblyReader
         /// </returns>
         public IEnumerable<IField> GetFields(BindingFlags bindingFlags)
         {
-            if (this.typeDef.IsUnboundGenericType())
+            Lazy<IEnumerable<IField>> lazyFieldsByFlags;
+            if (!this.lazyFields.TryGetValue(bindingFlags, out lazyFieldsByFlags))
             {
-                return
-                    this.typeDef.OriginalDefinition.GetMembers()
-                        .Where(m => m is FieldSymbol)
-                        .Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
+                lazyFieldsByFlags = new Lazy<IEnumerable<IField>>(() => this.CalculateFields(bindingFlags));
+                this.lazyFields[bindingFlags] = lazyFieldsByFlags;
             }
 
-            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
+            return lazyFieldsByFlags.Value;
         }
 
         private IEnumerable<IType> CalculateGenericArguments()
@@ -883,6 +905,45 @@ namespace PEAssemblyReader
             }
 
             return lazyMethodsByFlags.Value;
+        }
+
+        public IEnumerable<IField> CalculateFields(BindingFlags bindingFlags)
+        {
+            return this.IterateFields(bindingFlags).ToList();
+        }
+
+        private IEnumerable<IField> IterateFields(BindingFlags bindingFlags)
+        {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is FieldSymbol)
+                        .Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
+            }
+
+            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol, this.GenericContext));
+        }
+
+        public IEnumerable<IConstructor> CalculateConstructors(BindingFlags bindingFlags)
+        {
+            return this.IterateConstructors(bindingFlags).ToList();
+        }
+
+        private IEnumerable<IConstructor> IterateConstructors(BindingFlags bindingFlags)
+        {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
+            }
+
+            return
+                this.typeDef.GetMembers()
+                    .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol, this.GenericContext));
         }
 
         public IEnumerable<IMethod> CalculateMethods(BindingFlags bindingFlags)

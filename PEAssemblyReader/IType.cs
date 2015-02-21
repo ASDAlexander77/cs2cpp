@@ -17,6 +17,10 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
+        int? Token { get; }
+
+        /// <summary>
+        /// </summary>
         IType BaseType { get; }
 
         /// <summary>
