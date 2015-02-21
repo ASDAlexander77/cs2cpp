@@ -61,6 +61,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IType> lazyGetElementType;
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<IType> lazyDeclaringType;
 
         /// <summary>
@@ -109,6 +113,7 @@ namespace PEAssemblyReader
             this.lazyModule = new Lazy<MetadataModuleAdapter>(this.CalculateModule);
             this.lazyDeclaringTypeOriginal = new Lazy<IType>(this.CalculateDeclaringTypeOriginal);
             this.lazyDeclaringType = new Lazy<IType>(this.CalculateDeclaringType);
+            this.lazyGetElementType = new Lazy<IType>(this.CalculateGetElementType);
         }
 
         /// <summary>
@@ -722,13 +727,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType GetElementType()
         {
-            var typeSymbol = this.GetElementTypeSymbol();
-            if (typeSymbol != null)
-            {
-                return typeSymbol.ResolveGeneric(this.GenericContext);
-            }
-
-            return null;
+            return this.lazyGetElementType.Value;
         }
 
         internal TypeSymbol GetElementTypeSymbol()
@@ -1026,6 +1025,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToClass()
         {
+            if (this.UseAsClass)
+            {
+                return this;
+            }
+
             return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, true);
         }
 
@@ -1035,7 +1039,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToDereferencedType()
         {
-            return this.IsPointer ? this.GetElementType() : this.typeDef.ResolveGeneric(this.GenericContext);
+            return this.IsPointer ? this.GetElementType() : this;
         }
 
         /// <summary>
@@ -1078,6 +1082,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
+            if (!this.UseAsClass)
+            {
+                return this;
+            }
+
             return this.typeDef.ResolveGeneric(this.GenericContext).Clone(true, false);
         }
 
@@ -1343,6 +1352,17 @@ namespace PEAssemblyReader
         private string CalculateNamespace()
         {
             return GetBareTypeSymbol(this.typeDef).CalculateNamespace();
+        }
+
+        private IType CalculateGetElementType()
+        {
+            var typeSymbol = this.GetElementTypeSymbol();
+            if (typeSymbol != null)
+            {
+                return typeSymbol.ResolveGeneric(this.GenericContext);
+            }
+
+            return null;
         }
 
         private MetadataModuleAdapter CalculateModule()

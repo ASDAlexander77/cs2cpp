@@ -152,7 +152,9 @@
     <Compile Include="Gencode\TypeGen.cs" />
     <Compile Include="Gencode\VirtualTableGen.cs" />
     <Compile Include="ICodeWriter.cs" />
-    <Compile Include="Il2Converter.cs" />
+    <Compile Include="Il2Converter.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="IlReader.cs" />
     <Compile Include="LlvmIndentedTextWriter.cs" />
     <Compile Include="OpResults\IncrementalResult.cs" />

@@ -84,7 +84,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> _usedStructTypesOrArrays;
+        private ISet<IType> _usedStructTypes;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IType> _usedArrayTypes;
 
         /// <summary>
         /// </summary>
@@ -467,16 +471,31 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedStructTypesOrArrays
+        public ISet<IType> UsedStructTypes
         {
             get
             {
-                return this._usedStructTypesOrArrays;
+                return this._usedStructTypes;
             }
 
             set
             {
-                this._usedStructTypesOrArrays = value;
+                this._usedStructTypes = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedArrayTypes
+        {
+            get
+            {
+                return this._usedArrayTypes;
+            }
+
+            set
+            {
+                this._usedArrayTypes = value;
             }
         }
 
@@ -1313,12 +1332,12 @@ namespace Il2Native.Logic
         /// </param>
         private void AddStructType(IType type)
         {
-            if (this._usedStructTypesOrArrays == null || type == null || !type.IsStructureType())
+            if (this._usedStructTypes == null || type == null || !type.IsStructureType())
             {
                 return;
             }
 
-            this._usedStructTypesOrArrays.Add(type);
+            this._usedStructTypes.Add(type);
         }
 
         /// <summary>
@@ -1327,12 +1346,12 @@ namespace Il2Native.Logic
         /// </param>
         private void AddArrayType(IType type)
         {
-            if (this._usedStructTypesOrArrays == null || type == null || !type.IsArray)
+            if (this._usedArrayTypes == null || type == null || !type.IsArray)
             {
                 return;
             }
 
-            this._usedStructTypesOrArrays.Add(type);
+            this._usedArrayTypes.Add(type);
         }
 
         /// <summary>
@@ -1506,7 +1525,12 @@ namespace Il2Native.Logic
             this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethodsInMethodBody(this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, this._usedStructTypesOrArrays, stackCall);
+            method.DiscoverRequiredTypesAndMethodsInMethodBody(
+                this.usedGenericSpecialiazedTypes,
+                this.usedGenericSpecialiazedMethods,
+                null,
+                this._usedArrayTypes,
+                stackCall);
 
             stackCall.Dequeue();
         }

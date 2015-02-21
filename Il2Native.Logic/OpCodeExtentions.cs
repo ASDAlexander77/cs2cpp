@@ -143,18 +143,18 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        /// <param name="usedTypes">
+        /// <param name="structTypes">
         /// </param>
         /// <param name="calledMethods">
         /// </param>
         /// <param name="readStaticFields">
         /// </param>
-        public static void DiscoverMethod(this IMethod method, ISet<IType> usedTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
+        public static void DiscoverMethod(this IMethod method, ISet<IType> structTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();
 
-            reader.UsedTypes = usedTypes;
+            reader.UsedTypes = structTypes;
             reader.CalledMethods = calledMethods;
             reader.UsedStaticFieldsToRead = readStaticFields;
 
@@ -172,7 +172,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericMethodSpecializations">
         /// </param>
-        /// <param name="requiredTypes">
+        /// <param name="structTypes">
         /// </param>
         /// <param name="stackCall">
         /// </param>
@@ -180,7 +180,8 @@ namespace Il2Native.Logic
             this IMethod method, 
             ISet<IType> genericTypeSpecializations, 
             ISet<IMethod> genericMethodSpecializations, 
-            ISet<IType> requiredTypes, 
+            ISet<IType> structTypes,
+            ISet<IType> arrayTypes, 
             Queue<IMethod> stackCall)
         {
             if (Il2Converter.VerboseOutput)
@@ -191,7 +192,8 @@ namespace Il2Native.Logic
             // read method body to extract all types
             var reader = new IlReader();
 
-            reader.UsedStructTypesOrArrays = requiredTypes;
+            reader.UsedStructTypes = structTypes;
+            reader.UsedArrayTypes = arrayTypes;
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
 
@@ -1079,7 +1081,7 @@ namespace Il2Native.Logic
             var type = typeSource;
             while (type.IsPointer || type.UseAsClass || type.IsByRef)
             {
-                type = type.IsClass ? type.ToNormal() : type.GetElementType();
+                type = type.UseAsClass ? type.ToNormal() : type.GetElementType();
             }
 
             return type;

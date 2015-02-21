@@ -483,7 +483,7 @@ namespace Il2Native.Logic
             {
                 foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, additionalTypesToProcess, processedAlready))
                 {
-                }                
+                }
             }
         }
 
@@ -798,14 +798,10 @@ namespace Il2Native.Logic
                     genericTypeSpecializations,
                     genericMethodSpecializations,
                     usedStructTypes,
+                    additionalTypesToProcess,
                     new Queue<IMethod>());
                 foreach (var usedStructType in usedStructTypes)
                 {
-                    if (additionalTypesToProcess != null && usedStructType.IsArray)
-                    {
-                        additionalTypesToProcess.Add(usedStructType);
-                    }
-
                     yield return usedStructType;
                 }
             }

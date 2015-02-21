@@ -523,7 +523,7 @@ namespace Il2Native.Logic.Gencode
             dynamicCastRequired = false;
 
             var resultType = opCodePart.Result.Type;
-            var other = resultType.ToDereferencedType();
+            var other = resultType.IsPointer || resultType.IsByRef ? resultType.GetElementType() : resultType;
             var constValue = opCodePart.Result as ConstValue;
             if (constValue != null && constValue.IsNull)
             {
