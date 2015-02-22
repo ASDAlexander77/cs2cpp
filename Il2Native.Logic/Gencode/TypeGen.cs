@@ -162,7 +162,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             var memberLocationInfo =
-                membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Equals((IField)m.Member));
+                membersLayout.FirstOrDefault(m => m.MemberType == MemberTypes.Field && field.Name == ((IField)m.Member).Name);
             if (memberLocationInfo == null)
             {
                 throw new MissingMemberException(field.FullName);
