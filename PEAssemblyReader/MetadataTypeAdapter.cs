@@ -95,7 +95,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false, bool doNotValidate = false)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false)
         {
             Debug.Assert(typeDef != null);
 
@@ -110,7 +110,7 @@ namespace PEAssemblyReader
                 this.IsByRef = true;
             }
 
-            Debug.Assert(doNotValidate || this.typeDef.TypeKind != TypeKind.Error);
+            Debug.Assert(this.typeDef.TypeKind != TypeKind.Error || this.typeDef is UnboundArgumentErrorTypeSymbol);
 
             this.lazyName = new Lazy<string>(this.CalculateName);
             this.lazyFullName = new Lazy<string>(this.CalculateFullName);
@@ -134,8 +134,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="isByRef">
         /// </param>
-        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false, bool isPinned = false, bool doNotValidate = false)
-            : this(typeDef, isByRef, isPinned, doNotValidate)
+        internal MetadataTypeAdapter(TypeSymbol typeDef, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
+            : this(typeDef, isByRef, isPinned)
         {
             this.GenericContext = genericContext;
             var peTypeSymbol = typeDef as PENamedTypeSymbol;
@@ -327,7 +327,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.typeDef.IsTypeParameter();
+                return this.typeDef.IsTypeParameter() || this.typeDef is UnboundArgumentErrorTypeSymbol;
             }
         }
 

@@ -200,8 +200,8 @@ namespace PEAssemblyReader
             var currentType = type.DeclaringType;
             while (currentType != null)
             {
-                map = currentType.DeclaringType.GenericMap(map);
-                currentType = type.DeclaringType;
+                map = currentType.GenericMap(map);
+                currentType = currentType.DeclaringType;
             }
 
             return map;
@@ -326,10 +326,9 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
         {
-            if (genericContext != null && genericContext.IsCustom && typeSymbol.IsErrorType())
+            if (genericContext != null && genericContext.IsCustom && typeSymbol is UnboundArgumentErrorTypeSymbol)
             {
-                // allow to resolve it
-                return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned, true));
+                return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
             }
 
             // TODO: Array.Address return type is ErrorType ?, find out why.
