@@ -6996,21 +6996,16 @@ namespace Il2Native.Logic
         {
             // get all required types for type definition
             var requiredTypes = new NamespaceContainer<IType>();
-            ISet<IType> processedAlready = new NamespaceContainer<IType>();
-            ISet<IType> additionalTypesToProcess = new NamespaceContainer<IType>();
-            Il2Converter.ProcessRequiredITypesForITypes(
-                new[] { type },
-                requiredTypes,
-                null,
-                null,
-                additionalTypesToProcess,
-                processedAlready);
+            var readingTypesContext = new ReadingTypesContext();
+            readingTypesContext.GenericTypeSpecializations = null;
+            readingTypesContext.GenericMethodSpecializations = null;
+            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, requiredTypes, readingTypesContext);
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
 
-            foreach (var additionalType in additionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
+            foreach (var additionalType in readingTypesContext.AdditionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
             {
                 CheckIfExternalDeclarationIsRequired(additionalType);
             }

@@ -95,35 +95,17 @@ namespace Il2Native.Logic
         public static void ProcessRequiredITypesForITypes(
             IEnumerable<IType> types,
             INamespaceContainer<IType> newListOfITypes,
-            ISet<IType> genericSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
-            ISet<IType> processedAlready)
+            ReadingTypesContext readingTypesContext)
         {
             if (concurrent)
             {
-                Parallel.ForEach(
-                    types,
-                    type =>
-                        ProcessRequiredITypesForType(
-                            type,
-                            newListOfITypes,
-                            genericSpecializations,
-                            genericMethodSpecializations,
-                            additionalTypesToProcess,
-                            processedAlready));
+                Parallel.ForEach(types, type => AppendRequiredTypesForType(type, newListOfITypes, readingTypesContext));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    ProcessRequiredITypesForType(
-                        type,
-                        newListOfITypes,
-                        genericSpecializations,
-                        genericMethodSpecializations,
-                        additionalTypesToProcess,
-                        processedAlready);
+                    AppendRequiredTypesForType(type, newListOfITypes, readingTypesContext);
                 }
             }
         }
@@ -157,28 +139,6 @@ namespace Il2Native.Logic
             }
 
             codeWriter.WriteAfterFields(count);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="addedRequiredTypes">
-        /// </param>
-        /// <param name="typesAdded">
-        /// </param>
-        private static void AddBareTypeToRequiredTypes(IType type, IList<IType> addedRequiredTypes)
-        {
-            var effectiveIType = type;
-            while (effectiveIType.HasElementType)
-            {
-                effectiveIType = effectiveIType.GetElementType();
-            }
-
-            if (!effectiveIType.IsValueType() || effectiveIType.IsStructureType())
-            {
-                addedRequiredTypes.Add(effectiveIType);
-            }
         }
 
         /// <summary>
@@ -434,15 +394,17 @@ namespace Il2Native.Logic
         /// </param>
         private static void DicoverGenericSpecializedTypesAndAdditionalTypes(
             IType typeSource,
-            ISet<IType> genericSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
-            ISet<IType> processedAlready)
+            ReadingTypesContext readingTypesContext)
         {
+            Debug.Assert(typeSource != null, "Type is null");
             if (typeSource == null)
             {
                 return;
             }
+
+            var additionalTypesToProcess = readingTypesContext.AdditionalTypesToProcess;
+            var genericSpecializations = readingTypesContext.GenericTypeSpecializations;
+            var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
 
             var type = typeSource.NormalizeType();
 
@@ -458,12 +420,7 @@ namespace Il2Native.Logic
 
             if (type.HasElementType)
             {
-                DicoverGenericSpecializedTypesAndAdditionalTypes(
-                    type.GetElementType(),
-                    genericSpecializations,
-                    genericMethodSpecializations,
-                    additionalTypesToProcess,
-                    processedAlready);
+                DicoverGenericSpecializedTypesAndAdditionalTypes(type.GetElementType(), readingTypesContext);
             }
 
             var isGenericToDiscover = type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type) && !TypeHasGenericParameterInGenericArguments(type);
@@ -473,7 +430,7 @@ namespace Il2Native.Logic
                 if (genericSpecializations == null || genericSpecializations.Add(bareType))
                 {
                     // todo the same for base class and interfaces
-                    foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, additionalTypesToProcess, processedAlready))
+                    foreach (var item in GetAllRequiredTypesForType(type, readingTypesContext))
                     {
                     }
                 }
@@ -481,7 +438,7 @@ namespace Il2Native.Logic
 
             if (type.IsArray)
             {
-                foreach (var item in GetAllRequiredTypesForType(type, genericSpecializations, genericMethodSpecializations, additionalTypesToProcess, processedAlready))
+                foreach (var item in GetAllRequiredTypesForType(type, readingTypesContext))
                 {
                 }
             }
@@ -657,27 +614,19 @@ namespace Il2Native.Logic
         /// </returns>
         private static IEnumerable<IType> GetAllRequiredTypesForType(
             IType typeSource,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
-            ISet<IType> processedAlready)
+            ReadingTypesContext readingTypesContext)
         {
-            Debug.Assert(typeSource != null);
+            Debug.Assert(typeSource != null, "Type is null");
 
             var type = typeSource.NormalizeType();
-            if (!processedAlready.Add(type))
+            if (!readingTypesContext.ProcessedTypes.Add(type))
             {
                 yield break;
             }
 
             if (type.BaseType != null)
             {
-                DicoverGenericSpecializedTypesAndAdditionalTypes(
-                    type.BaseType,
-                    genericTypeSpecializations,
-                    genericMethodSpecializations,
-                    additionalTypesToProcess,
-                    processedAlready);
+                DicoverGenericSpecializedTypesAndAdditionalTypes(type.BaseType, readingTypesContext);
                 yield return type.BaseType;
             }
 
@@ -686,48 +635,32 @@ namespace Il2Native.Logic
             {
                 foreach (var @interface in interfaces)
                 {
-                    DicoverGenericSpecializedTypesAndAdditionalTypes(
-                        @interface,
-                        genericTypeSpecializations,
-                        genericMethodSpecializations,
-                        additionalTypesToProcess,
-                        processedAlready);
+                    DicoverGenericSpecializedTypesAndAdditionalTypes(@interface, readingTypesContext);
                     yield return @interface;
                 }
             }
 
-            var fields = IlReader.Fields(
-                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
-            foreach (var field in fields)
+            if (!type.IsInterface)
             {
-                ////#if DEBUG
-                ////                    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
-                ////#endif
-
-                DicoverGenericSpecializedTypesAndAdditionalTypes(
-                    field.FieldType,
-                    genericTypeSpecializations,
-                    genericMethodSpecializations,
-                    additionalTypesToProcess,
-                    processedAlready);
-                if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
+                var fields = IlReader.Fields(
+                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                foreach (var field in fields)
                 {
-                    yield return field.FieldType;
-                }
-            }
+                    ////#if DEBUG
+                    ////    Debug.WriteLine("Processing field: {0}, Type: {1}", field.FullName, field.FieldType);
+                    ////#endif
 
-            var ctors = IlReader.Constructors(
-                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
-            foreach (var @ctor in ctors)
-            {
-                foreach (
-                    var requiredType in
-                        GetAllRequiredTypesForMethod(
-                            @ctor,
-                            genericTypeSpecializations,
-                            genericMethodSpecializations,
-                            additionalTypesToProcess,
-                            processedAlready))
+                    DicoverGenericSpecializedTypesAndAdditionalTypes(field.FieldType, readingTypesContext);
+                    if (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)
+                    {
+                        yield return field.FieldType;
+                    }
+                }
+
+                var ctors = IlReader.Constructors(
+                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                foreach (var requiredType in ctors.SelectMany(ctor => GetAllRequiredTypesForMethod(
+                                ctor, readingTypesContext)))
                 {
                     yield return requiredType;
                 }
@@ -735,44 +668,31 @@ namespace Il2Native.Logic
 
             var methods = IlReader.Methods(
                 type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
-            foreach (var method in methods)
+            foreach (var requiredType in methods.SelectMany(method => GetAllRequiredTypesForMethod(
+                            method, readingTypesContext)))
             {
-                foreach (
-                    var requiredType in
-                        GetAllRequiredTypesForMethod(
-                            method,
-                            genericTypeSpecializations,
-                            genericMethodSpecializations,
-                            additionalTypesToProcess,
-                            processedAlready))
-                {
-                    yield return requiredType;
-                }
+                yield return requiredType;
             }
         }
 
         private static IEnumerable<IType> GetAllRequiredTypesForMethod(
             IMethod method,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
-            ISet<IType> processedAlready)
+            ReadingTypesContext readingTypesContext)
         {
             DicoverGenericSpecializedTypesAndAdditionalTypes(
                 method.ReturnType,
-                genericTypeSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess,
-                processedAlready);
+                readingTypesContext);
 
             foreach (var param in method.GetParameters())
             {
                 DicoverGenericSpecializedTypesAndAdditionalTypes(
                     param.ParameterType,
-                    genericTypeSpecializations,
-                    genericMethodSpecializations,
-                    additionalTypesToProcess,
-                    processedAlready);
+                    readingTypesContext);
+            }
+
+            if (method.DeclaringType.IsInterface)
+            {
+                yield break;
             }
 
             var methodWithCustomBodyOrDefault = MethodBodyBank.GetMethodWithCustomBodyOrDefault(method, _codeWriter);
@@ -783,10 +703,7 @@ namespace Il2Native.Logic
                 {
                     DicoverGenericSpecializedTypesAndAdditionalTypes(
                         localVar.LocalType,
-                        genericTypeSpecializations,
-                        genericMethodSpecializations,
-                        additionalTypesToProcess,
-                        processedAlready);
+                        readingTypesContext);
                     if (localVar.LocalType.IsStructureType() && !localVar.LocalType.IsPointer && !localVar.LocalType.IsByRef)
                     {
                         yield return localVar.LocalType;
@@ -795,10 +712,10 @@ namespace Il2Native.Logic
 
                 var usedStructTypes = new NamespaceContainer<IType>();
                 methodWithCustomBodyOrDefault.DiscoverRequiredTypesAndMethodsInMethodBody(
-                    genericTypeSpecializations,
-                    genericMethodSpecializations,
+                    readingTypesContext.GenericTypeSpecializations,
+                    readingTypesContext.GenericMethodSpecializations,
                     usedStructTypes,
-                    additionalTypesToProcess,
+                    readingTypesContext.AdditionalTypesToProcess,
                     new Queue<IMethod>());
                 foreach (var usedStructType in usedStructTypes)
                 {
@@ -856,42 +773,33 @@ namespace Il2Native.Logic
         /// <param name="requiredTypes">
         /// </param>
         private static void ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
             IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
-            ISet<IType> processedAlready,
+            ReadingTypesContext readingTypesContext,
             bool applyConccurent = false)
         {
             var subSetGenericTypeSpecializations = new NamespaceContainer<IType>();
             var subSetAdditionalTypesToProcess = new NamespaceContainer<IType>();
 
+            var subSetReadingContext = new ReadingTypesContext();
+            subSetReadingContext.GenericTypeSpecializations = subSetGenericTypeSpecializations;
+            subSetReadingContext.GenericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
+            subSetReadingContext.AdditionalTypesToProcess = subSetAdditionalTypesToProcess;
+            subSetReadingContext.ProcessedTypes = readingTypesContext.ProcessedTypes;
+
             // the same for generic specialized types
             if (concurrent && applyConccurent)
             {
                 Parallel.ForEach(
-                    genericTypeSpecializations,
-                    type => ProcessGenericTypeToFindRequiredTypesForType(
-                        type,
-                        requiredTypes,
-                        subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        subSetAdditionalTypesToProcess,
-                        processedAlready));
+                    readingTypesContext.GenericTypeSpecializations,
+                    type => AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext));
 
                 Parallel.ForEach(
-                    additionalTypesToProcess.ToList(),
-                    type => ProcessGenericTypeToFindRequiredTypesForType(
-                        type,
-                        requiredTypes,
-                        subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        subSetAdditionalTypesToProcess,
-                        processedAlready));
+                    readingTypesContext.AdditionalTypesToProcess,
+                    type => AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext));
             }
             else
             {
-                foreach (var type in genericTypeSpecializations)
+                foreach (var type in readingTypesContext.GenericTypeSpecializations)
                 {
                     Debug.Assert(type != null);
                     if (type == null)
@@ -899,16 +807,10 @@ namespace Il2Native.Logic
                         continue;
                     }
 
-                    ProcessGenericTypeToFindRequiredTypesForType(
-                        type,
-                        requiredTypes,
-                        subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        subSetAdditionalTypesToProcess,
-                        processedAlready);
+                    AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext);
                 }
 
-                foreach (var type in additionalTypesToProcess.ToList())
+                foreach (var type in readingTypesContext.AdditionalTypesToProcess)
                 {
                     Debug.Assert(type != null);
                     if (type == null)
@@ -916,13 +818,7 @@ namespace Il2Native.Logic
                         continue;
                     }
 
-                    ProcessGenericTypeToFindRequiredTypesForType(
-                        type,
-                        requiredTypes,
-                        subSetGenericTypeSpecializations,
-                        genericMethodSpecializations,
-                        subSetAdditionalTypesToProcess,
-                        processedAlready);
+                    AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext);
                 }
             }
 
@@ -933,18 +829,13 @@ namespace Il2Native.Logic
                     subSetGenericTypeSpecializations.Remove(discoveredType);
                 }
 
-                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-                    subSetGenericTypeSpecializations,
-                    genericMethodSpecializations,
-                    subSetAdditionalTypesToProcess,
-                    requiredTypes,
-                    processedAlready);
+                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(requiredTypes, subSetReadingContext);
 
                 // join types
                 foreach (var discoveredType in subSetGenericTypeSpecializations)
                 {
                     Debug.Assert(discoveredType != null);
-                    genericTypeSpecializations.Add(discoveredType);
+                    readingTypesContext.GenericTypeSpecializations.Add(discoveredType);
                 }
             }
 
@@ -952,43 +843,19 @@ namespace Il2Native.Logic
             {
                 foreach (var discoveredType in requiredTypes.Select(t => t.Key))
                 {
+                    Debug.Assert(discoveredType != null);
                     subSetAdditionalTypesToProcess.Remove(discoveredType);
                 }
 
-                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-                    subSetGenericTypeSpecializations,
-                    genericMethodSpecializations,
-                    subSetAdditionalTypesToProcess,
-                    requiredTypes,
-                    processedAlready);
+                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(requiredTypes, subSetReadingContext);
 
                 // join types
                 foreach (var discoveredType in subSetAdditionalTypesToProcess)
                 {
                     Debug.Assert(discoveredType != null);
-                    additionalTypesToProcess.Add(discoveredType);
+                    readingTypesContext.AdditionalTypesToProcess.Add(discoveredType);
                 }
             }
-        }
-
-        private static void ProcessGenericTypeToFindRequiredTypesForType(IType type, IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes, ISet<IType> subSetGenericTypeSpecializations, ISet<IMethod> subSetGenericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
-        {
-            Debug.Assert(type != null);
-            if (VerboseOutput)
-            {
-                Trace.WriteLine(string.Format("Analyzing generic type: {0}", type));
-            }
-
-            var requiredITypesToAdd = new NamespaceContainer<IType>();
-            AppendRequiredTypesForType(
-                type,
-                requiredITypesToAdd,
-                subSetGenericTypeSpecializations,
-                subSetGenericMethodSpecializations,
-                additionalTypesToProcess,
-                processedAlready);
-
-            requiredTypes.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
         }
 
         /// <summary>
@@ -1006,28 +873,20 @@ namespace Il2Native.Logic
         private static void AppendRequiredTypesForType(
             IType type,
             IList<IType> addedRequiredTypes,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess,
-            ISet<IType> processedAlready)
+            ReadingTypesContext readingTypesContext)
         {
-            Debug.Assert(type != null);
+            Debug.Assert(type != null, "Type is null");
 
-            var requiredTypes = GetAllRequiredTypesForType(
-               type,
-               genericTypeSpecializations,
-               genericMethodSpecializations,
-               additionalTypesToProcess,
-               processedAlready);
-            foreach (var requiredType in requiredTypes)
+            var requiredTypes = GetAllRequiredTypesForType(type, readingTypesContext);
+            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsValueType() || requiredType.IsStructureType()))
             {
-                AddBareTypeToRequiredTypes(requiredType, addedRequiredTypes);
+                addedRequiredTypes.Add(requiredType);
             }
 
             addedRequiredTypes.Remove(type);
         }
 
-        private static void AppendTypeWithRequiredTypePair(IType type, NamespaceContainer<IType, INamespaceContainer<IType>> requiredTypesByType, ISet<IType> genericTypeSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
+        private static void AppendTypeWithRequiredTypePair(IType type, IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypesByType, ReadingTypesContext readingTypesContext)
         {
             if (VerboseOutput)
             {
@@ -1035,27 +894,9 @@ namespace Il2Native.Logic
             }
 
             var requiredITypesToAdd = new NamespaceContainer<IType>();
-            AppendRequiredTypesForType(
-                type,
-                requiredITypesToAdd,
-                genericTypeSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess,
-                processedAlready);
+            AppendRequiredTypesForType(type, requiredITypesToAdd, readingTypesContext);
 
             requiredTypesByType.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
-        }
-
-        private static void ProcessRequiredITypesForType(IType type, INamespaceContainer<IType> newListOfITypes, ISet<IType> genericSpecializations, ISet<IMethod> genericMethodSpecializations, ISet<IType> additionalTypesToProcess, ISet<IType> processedAlready)
-        {
-            newListOfITypes.Add(type);
-            AppendRequiredTypesForType(
-                type,
-                newListOfITypes,
-                genericSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess,
-                processedAlready);
         }
 
         private static void ReadingTypes(
@@ -1069,9 +910,7 @@ namespace Il2Native.Logic
             IlReader.GenericMethodSpecializations = null;
 
             // types in current assembly
-            var genericTypeSpecializations = new NamespaceContainer<IType>();
-            var genericMethodSpecializations = new NamespaceContainer<IMethod>();
-            var additionalTypesToProcess = new NamespaceContainer<IType>();
+            var readingTypesContext = ReadingTypesContext.New();
             var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
             if (filter != null)
             {
@@ -1083,11 +922,7 @@ namespace Il2Native.Logic
             // TODO: temp hack to initialize ThisType for TypeResolver
             _codeWriter.Initialize(allTypes.First());
 
-            sortedListOfTypes = SortTypesByUsage(
-                types.ToList(),
-                genericTypeSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess);
+            sortedListOfTypes = SortTypesByUsage(types.ToList(), readingTypesContext);
 
             // build quick access array for Generic Definitions
             genDefinitionsByMetadataName = new SortedDictionary<string, IType>();
@@ -1096,16 +931,16 @@ namespace Il2Native.Logic
                 genDefinitionsByMetadataName[genDef.MetadataFullName] = genDef;
             }
 
-            DiscoverAllGenericVirtualMethods(allTypes, genericMethodSpecializations);
+            DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext.GenericMethodSpecializations);
 
-            DiscoverAllGenericMethodsOfInterfaces(allTypes, genericMethodSpecializations);
+            DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext.GenericMethodSpecializations);
 
-            genericMethodSpecializationsSorted = GroupGenericMethodsByType(genericMethodSpecializations);
+            genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
-            Debug.Assert(sortedListOfTypes.All(t => !t.IsByRef));
+            Debug.Assert(sortedListOfTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
         }
 
-        private static bool CheckFilter(string[] filters, IType type)
+        private static bool CheckFilter(IEnumerable<string> filters, IType type)
         {
             foreach (var filter in filters)
             {
@@ -1236,15 +1071,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> SortTypesByUsage(
-            IList<IType> types,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IMethod> genericMethodSpecializations,
-            ISet<IType> additionalTypesToProcess)
+        private static IList<IType> SortTypesByUsage(IList<IType> types, ReadingTypesContext readingTypesContext)
         {
             var newOrder = new NamespaceContainer<IType>();
             var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
-            var processedAlready = new NamespaceContainer<IType>();
 
             if (concurrent)
             {
@@ -1254,10 +1084,7 @@ namespace Il2Native.Logic
                         AppendTypeWithRequiredTypePair(
                             type,
                             typesWithRequired,
-                            genericTypeSpecializations,
-                            genericMethodSpecializations,
-                            additionalTypesToProcess,
-                            processedAlready));
+                            readingTypesContext));
             }
             else
             {
@@ -1266,22 +1093,16 @@ namespace Il2Native.Logic
                     AppendTypeWithRequiredTypePair(
                         type,
                         typesWithRequired,
-                        genericTypeSpecializations,
-                        genericMethodSpecializations,
-                        additionalTypesToProcess,
-                        processedAlready);
+                        readingTypesContext);
                 }
             }
 
             ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-                genericTypeSpecializations,
-                genericMethodSpecializations,
-                additionalTypesToProcess,
                 typesWithRequired,
-                processedAlready,
+                readingTypesContext,
                 true);
 
-            ReorderTypeByUsage(types, genericTypeSpecializations, additionalTypesToProcess, typesWithRequired, newOrder);
+            ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
 
             return newOrder;
         }
@@ -1384,6 +1205,35 @@ namespace Il2Native.Logic
             codeWriter.WriteEnd();
 
             codeWriter.Close();
+        }
+    }
+
+    public class ReadingTypesContext
+    {
+        public ReadingTypesContext()
+        {
+            this.GenericTypeSpecializations = new NamespaceContainer<IType>();
+            this.GenericMethodSpecializations = new NamespaceContainer<IMethod>();
+            this.AdditionalTypesToProcess = new NamespaceContainer<IType>();
+            this.ProcessedTypes = new NamespaceContainer<IType>();
+        }
+
+        public ISet<IType> GenericTypeSpecializations { get; set; }
+
+        public ISet<IMethod> GenericMethodSpecializations { get; set; }
+
+        public ISet<IType> AdditionalTypesToProcess { get; set; }
+
+        public ISet<IType> ProcessedTypes { get; set; }
+
+        public static ReadingTypesContext New()
+        {
+            var context = new ReadingTypesContext();
+            context.GenericTypeSpecializations = new NamespaceContainer<IType>();
+            context.GenericMethodSpecializations = new NamespaceContainer<IMethod>();
+            context.AdditionalTypesToProcess = new NamespaceContainer<IType>();
+            context.ProcessedTypes = new NamespaceContainer<IType>();
+            return context;
         }
     }
 }

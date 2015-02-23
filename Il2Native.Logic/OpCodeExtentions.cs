@@ -177,9 +177,9 @@ namespace Il2Native.Logic
         /// <param name="stackCall">
         /// </param>
         public static void DiscoverRequiredTypesAndMethodsInMethodBody(
-            this IMethod method, 
+            this IMethod method,
             ISet<IType> genericTypeSpecializations, 
-            ISet<IMethod> genericMethodSpecializations, 
+            ISet<IMethod> genericMethodSpecializations,
             ISet<IType> structTypes,
             ISet<IType> arrayTypes, 
             Queue<IMethod> stackCall)
