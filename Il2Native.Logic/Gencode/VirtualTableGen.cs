@@ -149,9 +149,8 @@ namespace Il2Native.Logic.Gencode
         {
             List<LlvmWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
 
-            if (virtualInterfaceTableByType.TryGetValue(
-                string.Concat(thisType.FullName, '+', @interface.FullName),
-                out virtualInterfaceTable))
+            var key = string.Concat(thisType.FullName, '+', @interface.FullName);
+            if (virtualInterfaceTableByType.TryGetValue(key, out virtualInterfaceTable))
             {
                 return virtualInterfaceTable;
             }
@@ -159,7 +158,7 @@ namespace Il2Native.Logic.Gencode
             virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
             virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface, typeResolver);
 
-            virtualInterfaceTableByType[thisType.FullName] = virtualInterfaceTable;
+            virtualInterfaceTableByType[key] = virtualInterfaceTable;
 
             return virtualInterfaceTable;
         }
@@ -174,10 +173,8 @@ namespace Il2Native.Logic.Gencode
         {
             List<IMethod> virtualInterfaceTableLayout;
 
-            if (
-                virtualInterfaceTableLayoutByType.TryGetValue(
-                    string.Concat(@interface.FullName, '+', @interface.FullName),
-                    out virtualInterfaceTableLayout))
+            var key = string.Concat(@interface.FullName, '+', @interface.FullName);
+            if (virtualInterfaceTableLayoutByType.TryGetValue(key, out virtualInterfaceTableLayout))
             {
                 return virtualInterfaceTableLayout;
             }
@@ -185,7 +182,7 @@ namespace Il2Native.Logic.Gencode
             virtualInterfaceTableLayout = new List<IMethod>();
             virtualInterfaceTableLayout.BuildVirtualInterfaceTableLayout(@interface, typeResolver);
 
-            virtualInterfaceTableLayoutByType[@interface.FullName] = virtualInterfaceTableLayout;
+            virtualInterfaceTableLayoutByType[key] = virtualInterfaceTableLayout;
 
             return virtualInterfaceTableLayout;
         }

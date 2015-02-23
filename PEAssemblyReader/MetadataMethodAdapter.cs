@@ -64,7 +64,7 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         private bool? isVirtual;
-        
+
         /// <summary>
         /// </summary>
         /// <param name="methodDef">
@@ -511,13 +511,11 @@ namespace PEAssemblyReader
 
         private bool CalculateIsVirtual()
         {
-            // TODO: review it again
-            /*
             if (this.FullName == "System.Object.Finalize")
             {
                 return true;
             }
-            */
+
             return methodDef.IsVirtual;
         }
 
@@ -809,25 +807,6 @@ namespace PEAssemblyReader
         private string CalculateNamespace()
         {
             return this.methodDef.CalculateNamespace();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        private MetadataGenericContext GetDefaultGenericMetadataContext()
-        {
-            if (this.IsGenericMethodDefinition)
-            {
-                return new MetadataGenericContext(this);
-            }
-
-            if (this.DeclaringType.IsGenericType)
-            {
-                return new MetadataGenericContext(this.DeclaringType);
-            }
-
-            return null;
         }
     }
 }

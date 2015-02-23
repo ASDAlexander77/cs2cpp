@@ -244,17 +244,15 @@ namespace Il2Native.Logic
 
             var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
 
-            var genericContext = new MetadataGenericContext();
-            genericContext.TypeDefinition = genericDefinition;
-            genericContext.TypeSpecialization = typeSpecialization;
-            genericContext.MethodDefinition = null;
-            genericContext.MethodSpecialization = null;
+            var genericTypeContext = genericDefinition != null || typeSpecialization != null
+                                         ? MetadataGenericContext.Create(genericDefinition, typeSpecialization)
+                                         : null;
 
             if (mode == ConvertingMode.Declaration)
             {
                 if (!codeWriter.IsProcessed(type))
                 {
-                    WriteTypeDefinition(codeWriter, type, genericContext);
+                    WriteTypeDefinition(codeWriter, type, genericTypeContext);
                 }
 
                 codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
@@ -280,17 +278,18 @@ namespace Il2Native.Logic
                                 IlReader.Constructors(genericDefinition, codeWriter).First(gm => ctor.IsMatchingGeneric(gm));
                         }
 
-                        genericContext.MethodDefinition = genericCtor;
-                        genericContext.MethodSpecialization = null;
+                        var genericCtorContext = genericCtor != null
+                                                     ? MetadataGenericContext.Create(genericDefinition, typeSpecialization, genericCtor, null)
+                                                     : genericTypeContext;
 
-                        codeWriter.WriteConstructorStart(ctor, genericContext);
+                        codeWriter.WriteConstructorStart(ctor, genericCtorContext);
 
-                        foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericContext))
+                        foreach (var ilCode in ilReader.OpCodes(genericCtor ?? ctor, genericCtorContext))
                         {
                             codeWriter.Write(ilCode);
                         }
 
-                        codeWriter.WriteConstructorEnd(ctor, genericContext);
+                        codeWriter.WriteConstructorEnd(ctor, genericCtorContext);
                     }
                 }
 
@@ -322,7 +321,7 @@ namespace Il2Native.Logic
                         // find the same method in generic class
                         genericMethod =
                             IlReader.Methods(genericDefinition, codeWriter, true)
-                                    .FirstOrDefault(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericContext)))
+                                    .FirstOrDefault(gm => method.IsMatchingGeneric(gm.ToSpecialization(genericTypeContext)))
                             ?? IlReader.Methods(genericDefinition, codeWriter, true).FirstOrDefault(gm => method.IsMatchingGeneric(gm));
 
                         Debug.Assert(genericMethod != null, "generic method is null");
@@ -330,17 +329,19 @@ namespace Il2Native.Logic
 
                     if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
                     {
-                        genericContext.MethodDefinition = genericMethod;
-                        genericContext.MethodSpecialization = genericMethod != null ? method : null;
+                        var genericMethodContext = genericMethod != null || method.IsGenericMethod
+                                                       ? MetadataGenericContext.Create(
+                                                           genericDefinition, typeSpecialization, genericMethod, genericMethod != null ? method : null)
+                                                       : genericTypeContext;
 
-                        codeWriter.WriteMethodStart(method, genericContext);
+                        codeWriter.WriteMethodStart(method, genericMethodContext);
 
-                        foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
+                        foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericMethodContext))
                         {
                             codeWriter.Write(ilCode);
                         }
 
-                        codeWriter.WriteMethodEnd(method, genericContext);
+                        codeWriter.WriteMethodEnd(method, genericMethodContext);
                     }
 
                     if (method.IsGenericMethodDefinition || method.IsGenericMethod)
@@ -354,17 +355,16 @@ namespace Il2Native.Logic
                                     genericMethodSpecializatons.Where(
                                         methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
                             {
-                                genericContext.MethodDefinition = method;
-                                genericContext.MethodSpecialization = methodSpec;
+                                var genericMethodContext = MetadataGenericContext.Create(genericDefinition, typeSpecialization, method, methodSpec);
 
-                                codeWriter.WriteMethodStart(methodSpec, genericContext);
+                                codeWriter.WriteMethodStart(methodSpec, genericMethodContext);
 
-                                foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericContext))
+                                foreach (var ilCode in ilReader.OpCodes(genericMethod ?? method, genericMethodContext))
                                 {
                                     codeWriter.Write(ilCode);
                                 }
 
-                                codeWriter.WriteMethodEnd(methodSpec, genericContext);
+                                codeWriter.WriteMethodEnd(methodSpec, genericMethodContext);
                             }
                         }
                     }

@@ -138,7 +138,6 @@ namespace PEAssemblyReader
             : this(typeDef, isByRef, isPinned, doNotValidate)
         {
             this.GenericContext = genericContext;
-
             var peTypeSymbol = typeDef as PENamedTypeSymbol;
             if (peTypeSymbol != null)
             {

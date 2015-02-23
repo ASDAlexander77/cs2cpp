@@ -22,7 +22,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedSingleDimArrayIListGetEnumeratorMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("GetEnumerator", arrayType, typeResolver.ResolveType("System.Collections.Generic.IEnumerator`1", new MetadataGenericContext("T", arrayType.GetElementType())))
+            : base("GetEnumerator", arrayType, typeResolver.ResolveType("System.Collections.Generic.IEnumerator`1", MetadataGenericContext.Create("T", arrayType.GetElementType())))
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);
@@ -42,7 +42,7 @@
 
             this._tokenResolutions = new List<object>();
 
-            var customGenericContext = new MetadataGenericContext("T", arrayType.GetElementType());
+            var customGenericContext = MetadataGenericContext.Create("T", arrayType.GetElementType());
             var arraySegmentType = typeResolver.ResolveType("System.ArraySegment`1", customGenericContext);
             this._tokenResolutions.Add(
                 IlReader.Constructors(arraySegmentType, typeResolver).First(c => c.GetParameters().Count() == 1));

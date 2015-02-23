@@ -1281,31 +1281,34 @@ namespace Il2Native.Logic
                 case Code.Ldobj:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
+                    var resultOfOp0 = opCode.OpCodeOperands[0].Result;
                     var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
                     if (loadValueFromAddress)
                     {
-                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, opCode.OpCodeOperands[0].Result);
+                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
 
                         this.WriteDbgLine(opCode);
                     }
                     else
                     {
-                        if (opCode.OpCodeOperands[0].Result.Type.IntTypeBitSize() == PointerSize * 8)
+                        if (resultOfOp0.Type.IntTypeBitSize() == PointerSize * 8)
                         {
                             // using int as intptr
                             this.AdjustIntConvertableTypes(
                                 writer,
                                 opCode.OpCodeOperands[0],
                                 opCodeTypePart.Operand.ToPointerType());
-                            opCode.Result = opCode.OpCodeOperands[0].Result;
+                            opCode.Result = resultOfOp0;
                         }
                         else
                         {
-                            opCode.Result = opCode.OpCodeOperands[0].Result.ToDereferencedType();
+                            // should be address, so Pointer or IsByRef is accepted
+                            Debug.Assert(resultOfOp0.Type.IsPointer || resultOfOp0.Type.IsByRef || resultOfOp0.Type.UseAsClass);
+                            opCode.Result = resultOfOp0.ToType(resultOfOp0.Type.UseAsClass ? resultOfOp0.Type : resultOfOp0.Type.GetElementType());
                             if (opCode.Result.Type.IsVoid())
                             {
                                 // in case we receive void* to load struct
-                                opCode.Result = opCode.OpCodeOperands[0].Result;
+                                opCode.Result = resultOfOp0;
                             }
 
                             Debug.Assert(!opCode.Result.Type.IsVoid());

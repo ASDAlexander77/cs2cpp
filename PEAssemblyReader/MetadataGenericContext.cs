@@ -27,7 +27,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public MetadataGenericContext()
+        protected MetadataGenericContext()
             : this(new SortedList<IType, IType>())
         {
         }
@@ -36,7 +36,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="map">
         /// </param>
-        public MetadataGenericContext(IDictionary<IType, IType> map)
+        protected MetadataGenericContext(IDictionary<IType, IType> map)
         {
             this.Map = map;
         }
@@ -45,7 +45,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <param name="map">
         /// </param>
-        public MetadataGenericContext(params object[] map)
+        protected MetadataGenericContext(object[] map)
         {
             this.CustomMap = new Dictionary<string, IType>();
             for (var index = 0; index < map.Length - 1; index++)
@@ -60,7 +60,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="allowToUseDefinitionAsSpecialization">
         /// </param>
-        public MetadataGenericContext(IType type, bool allowToUseDefinitionAsSpecialization = false)
+        protected MetadataGenericContext(IType type, bool allowToUseDefinitionAsSpecialization = false)
             : this()
         {
             this.Init(type, allowToUseDefinitionAsSpecialization);
@@ -76,7 +76,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="allowToUseDefinitionAsSpecialization">
         /// </param>
-        public MetadataGenericContext(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
+        protected MetadataGenericContext(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
             : this(method.DeclaringType, allowToUseDefinitionAsSpecialization)
         {
             this.Init(method, allowToUseDefinitionAsSpecialization);
@@ -115,7 +115,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IMethod MethodDefinition { get; set; }
+        public IMethod MethodDefinition { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -126,7 +126,7 @@ namespace PEAssemblyReader
                 return this.methodSpecialization;
             }
 
-            set
+            private set
             {
                 this.methodSpecialization = value;
                 if (this.MethodSpecialization != null)
@@ -149,7 +149,7 @@ namespace PEAssemblyReader
                 return this.typeSpecialization;
             }
 
-            set
+            private set
             {
                 this.typeSpecialization = value;
                 if (this.TypeSpecialization != null)
@@ -173,6 +173,27 @@ namespace PEAssemblyReader
             context.Map.GenericMap(definitionMethod.GetGenericParameters(), specializationMethod.GetGenericArguments());
             context.Map.GenericMap(definitionMethod.DeclaringType.GenericTypeParameters, specializationMethod.DeclaringType.GenericTypeArguments);
             return context;
+        }
+
+        public static IGenericContext Create(IType typeDefinition, IType typeSpecialization)
+        {
+            var context = new MetadataGenericContext(typeDefinition);
+            context.TypeSpecialization = typeSpecialization;
+            return context;
+        }
+
+        public static IGenericContext Create(IType typeDefinition, IType typeSpecialization, IMethod methodDefinition, IMethod methodSpecialization)
+        {
+            var context = new MetadataGenericContext(typeDefinition);
+            context.TypeSpecialization = typeSpecialization;
+            context.MethodDefinition = methodDefinition;
+            context.MethodSpecialization = methodSpecialization;
+            return context;
+        }
+
+        public static IGenericContext Create(params object[] map)
+        {
+            return new MetadataGenericContext(map);
         }
 
         /// <summary>
