@@ -9,6 +9,7 @@
 namespace PEAssemblyReader
 {
     using System.Collections.Generic;
+    using System.Linq;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
@@ -159,6 +160,32 @@ namespace PEAssemblyReader
             }
         }
 
+        public IGenericContext Clone()
+        {
+            return (IGenericContext)this.MemberwiseClone();
+        }
+
+        public void AppendMap(IGenericContext genericContext)
+        {
+            foreach (var pair in this.Map.ToList())
+            {
+                this.Map[pair.Key] = genericContext.ResolveTypeParameter(pair.Value);
+            }
+
+            if (genericContext.Map != null)
+            {
+                foreach (var pair in genericContext.Map)
+                {
+                    this.Map[pair.Key] = pair.Value;
+                }
+            }
+
+            if (genericContext.IsCustom)
+            {
+                this.CustomMap = genericContext.CustomMap;
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="definitionMethod">
@@ -211,7 +238,11 @@ namespace PEAssemblyReader
                 return new MetadataGenericContext(method, allowToUseDefinitionAsSpecialization);
             }
 
-            var declType = method.DeclaringType;
+            return DiscoverFrom(method.DeclaringType, allowToUseDefinitionAsSpecialization);
+        }
+
+        public static IGenericContext DiscoverFrom(IType declType, bool allowToUseDefinitionAsSpecialization = false)
+        {
             while (declType != null)
             {
                 if (declType.IsGenericType || declType.IsGenericTypeDefinition)
@@ -239,6 +270,11 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ResolveTypeParameter(IType typeParameter)
         {
+            if (!typeParameter.IsGenericParameter)
+            {
+                return typeParameter;
+            }
+
             IType resolved = null;
             if ((this.CustomMap != null && this.CustomMap.TryGetValue(typeParameter.ToString(), out resolved))
                 || this.Map.TryGetValue(typeParameter, out resolved))

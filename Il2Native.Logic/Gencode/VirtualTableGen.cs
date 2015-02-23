@@ -62,17 +62,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        /// <param name="interface">
-        /// </param>
-        public static void BuildVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface, ITypeResolver typeResolver)
-        {
-            virtualTable.AddMethodsToVirtualInterfaceTableLayout(@interface, typeResolver);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="virtualTable">
-        /// </param>
         /// <param name="thisType">
         /// </param>
         /// <param name="llvmWriter">
@@ -180,7 +169,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualInterfaceTableLayout = new List<IMethod>();
-            virtualInterfaceTableLayout.BuildVirtualInterfaceTableLayout(@interface, typeResolver);
+            virtualInterfaceTableLayout.AddMethodsToVirtualInterfaceTableLayout(@interface, typeResolver);
 
             virtualInterfaceTableLayoutByType[key] = virtualInterfaceTableLayout;
 

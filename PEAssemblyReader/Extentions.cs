@@ -197,9 +197,11 @@ namespace PEAssemblyReader
             }
 
             map.GenericMap(type.GenericTypeParameters, type.GenericTypeArguments);
-            if (type.DeclaringType != null)
+            var currentType = type.DeclaringType;
+            while (currentType != null)
             {
-                map = type.DeclaringType.GenericMap(map);
+                map = currentType.DeclaringType.GenericMap(map);
+                currentType = type.DeclaringType;
             }
 
             return map;
@@ -346,6 +348,14 @@ namespace PEAssemblyReader
                     return arrayType.ElementType.ResolveGeneric(genericContext, isByRef, isPinned).ToArrayType(arrayType.Rank);
                 }
 
+                var constructedNamedTypeSymbol = typeSymbol as ConstructedNamedTypeSymbol;
+                if (constructedNamedTypeSymbol != null)
+                {
+                    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataTypeAdapter(constructedNamedTypeSymbol, genericContext), true);
+                    newContext.AppendMap(genericContext);
+                    return new MetadataTypeAdapter(constructedNamedTypeSymbol, newContext, isByRef, isPinned);
+                }
+
                 var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
                 {
@@ -366,6 +376,14 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IMethod ResolveGeneric(this MethodSymbol methodSymbol, IGenericContext genericContext)
         {
+            var constructedMethodSymbol = methodSymbol as ConstructedMethodSymbol;
+            if (constructedMethodSymbol != null)
+            {
+                var newContext = MetadataGenericContext.DiscoverFrom(new MetadataMethodAdapter(constructedMethodSymbol, genericContext), true);
+                newContext.AppendMap(genericContext);
+                return new MetadataMethodAdapter(constructedMethodSymbol, newContext);
+            }
+
             return new MetadataMethodAdapter(methodSymbol, genericContext);
         }
 

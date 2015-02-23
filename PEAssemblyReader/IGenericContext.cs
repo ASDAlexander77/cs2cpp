@@ -28,6 +28,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        IDictionary<string, IType> CustomMap { get; }
+
+        /// <summary>
+        /// </summary>
         IMethod MethodDefinition { get; }
 
         /// <summary>
@@ -49,5 +53,13 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ResolveTypeParameter(IType typeParameter);
+
+        /// <summary>
+        /// </summary>
+        IGenericContext Clone();
+
+        /// <summary>
+        /// </summary>
+        void AppendMap(IGenericContext genericContext);
     }
 }
