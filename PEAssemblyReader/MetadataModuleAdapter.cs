@@ -1195,7 +1195,13 @@ namespace PEAssemblyReader
 
         private static MethodSymbol SubstitutedMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
         {
-            if (genericContext == null || genericContext.TypeSpecialization == null)
+            if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
+            {
+                return methodSymbol;
+            }
+
+            var method = new MetadataMethodAdapter(methodSymbol);
+            if (!method.IsGenericMethodDefinition && !method.DeclaringType.IsGenericTypeDefinition)
             {
                 return methodSymbol;
             }
