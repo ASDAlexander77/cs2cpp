@@ -10,6 +10,7 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
@@ -1151,6 +1152,13 @@ namespace PEAssemblyReader
         public IType ToPointerType()
         {
             return new PointerTypeSymbol(this.typeDef).ResolveGeneric(this.GenericContext);
+        }
+
+        public IType Construct(params IType[] types)
+        {
+            var builder = ImmutableArray.CreateBuilder<TypeSymbol>();
+            builder.AddRange(types.Select(t => ((MetadataTypeAdapter)t).TypeDef));
+            return new ConstructedNamedTypeSymbol(this.typeDef as NamedTypeSymbol, builder.ToImmutable()).ResolveGeneric(this.GenericContext);
         }
 
         /// <summary>

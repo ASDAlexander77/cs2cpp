@@ -55,7 +55,7 @@ namespace PEAssemblyReader
             var fieldSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(fieldHandle) as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(fieldSymbol, genericContext);
+                return new MetadataFieldAdapter(SubstitutedFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
             }
 
             return null;
@@ -1210,6 +1210,23 @@ namespace PEAssemblyReader
             return new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
         }
 
+        private static FieldSymbol SubstitutedFieldSymbolIfNeeded(FieldSymbol fieldSymbol, IGenericContext genericContext)
+        {
+            if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
+            {
+                return fieldSymbol;
+            }
+
+            var field = new MetadataFieldAdapter(fieldSymbol);
+            if (!field.DeclaringType.IsGenericTypeDefinition)
+            {
+                return fieldSymbol;
+            }
+
+            var substitutedNamedTypeSymbol = (genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as SubstitutedNamedTypeSymbol;
+            return new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fieldSymbol.OriginalDefinition);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="token">
@@ -1321,6 +1338,11 @@ namespace PEAssemblyReader
 
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
+                if (genericContext == null)
+                {
+                    return typeSymbol.OriginalDefinition.ResolveGeneric(genericContext);
+                }
+
                 return typeSymbol.ResolveGeneric(genericContext);
             }
 
