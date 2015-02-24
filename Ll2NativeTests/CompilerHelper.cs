@@ -60,7 +60,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool UsingRoslyn = true;
+        public const bool UsingRoslyn = false;
 
         /// <summary>
         /// </summary>

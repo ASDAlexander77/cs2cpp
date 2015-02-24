@@ -1298,7 +1298,7 @@ namespace Il2Native.Logic
                                 writer,
                                 opCode.OpCodeOperands[0],
                                 opCodeTypePart.Operand.ToPointerType());
-                            opCode.Result = resultOfOp0;
+                            opCode.Result = opCode.OpCodeOperands[0].Result;
                         }
                         else
                         {
