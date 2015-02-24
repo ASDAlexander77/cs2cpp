@@ -1398,7 +1398,7 @@ namespace Il2Native.Logic
                 }
                 else if (retType.IsByRef)
                 {
-                    retType = retType.ToNormal();
+                    retType = retType.GetElementType();
                 }
 
                 return retType;
