@@ -2728,7 +2728,7 @@ namespace Il2Native.Logic
 
             if (type.IsArray)
             {
-                //this.typeDeclRequired.Add(ResolveType("System.Array"));
+                Debug.Assert(!type.IsGenericTypeDefinition, "you can't use generic type definition");
                 this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
             }
 
@@ -2737,7 +2737,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.typeDeclRequired.Add(type.ToBareType());
+            var bareType = type.ToBareType();
+            Debug.Assert(!bareType.IsGenericTypeDefinition, "you can't use generic type definition");
+            this.typeDeclRequired.Add(bareType);
         }
 
         /// <summary>

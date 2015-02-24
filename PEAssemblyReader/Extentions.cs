@@ -326,17 +326,12 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
         {
-            if (genericContext != null && genericContext.IsCustom && typeSymbol is UnboundArgumentErrorTypeSymbol)
-            {
-                return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
-            }
-
             // TODO: Array.Address return type is ErrorType ?, find out why.
             ////Debug.Assert(!typeSymbol.IsErrorType());
 
             if (genericContext != null && !genericContext.IsEmpty)
             {
-                if (typeSymbol.IsTypeParameter())
+                if (typeSymbol.IsTypeParameter() || typeSymbol is UnboundArgumentErrorTypeSymbol)
                 {
                     return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
                 }
@@ -347,13 +342,14 @@ namespace PEAssemblyReader
                     return arrayType.ElementType.ResolveGeneric(genericContext, isByRef, isPinned).ToArrayType(arrayType.Rank);
                 }
 
-                var constructedNamedTypeSymbol = typeSymbol as ConstructedNamedTypeSymbol;
-                if (constructedNamedTypeSymbol != null)
-                {
-                    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataTypeAdapter(constructedNamedTypeSymbol, genericContext), true);
-                    newContext.AppendMap(genericContext);
-                    return new MetadataTypeAdapter(constructedNamedTypeSymbol, newContext, isByRef, isPinned);
-                }
+                // TODO: for test gtest-176.cs it causes cercular references
+                ////var constructedNamedTypeSymbol = typeSymbol as ConstructedNamedTypeSymbol;
+                ////if (constructedNamedTypeSymbol != null)
+                ////{
+                ////    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataTypeAdapter(constructedNamedTypeSymbol, genericContext), true);
+                ////    newContext.AppendMap(genericContext);
+                ////    return new MetadataTypeAdapter(constructedNamedTypeSymbol, newContext, isByRef, isPinned);
+                ////}
 
                 var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
                 if (namedTypeSymbol != null)
@@ -375,13 +371,13 @@ namespace PEAssemblyReader
         /// </returns>
         internal static IMethod ResolveGeneric(this MethodSymbol methodSymbol, IGenericContext genericContext)
         {
-            var constructedMethodSymbol = methodSymbol as ConstructedMethodSymbol;
-            if (constructedMethodSymbol != null)
-            {
-                var newContext = MetadataGenericContext.DiscoverFrom(new MetadataMethodAdapter(constructedMethodSymbol, genericContext), true);
-                newContext.AppendMap(genericContext);
-                return new MetadataMethodAdapter(constructedMethodSymbol, newContext);
-            }
+            ////var constructedMethodSymbol = methodSymbol as ConstructedMethodSymbol;
+            ////if (constructedMethodSymbol != null)
+            ////{
+            ////    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataMethodAdapter(constructedMethodSymbol, genericContext), true);
+            ////    newContext.AppendMap(genericContext);
+            ////    return new MetadataMethodAdapter(constructedMethodSymbol, newContext);
+            ////}
 
             return new MetadataMethodAdapter(methodSymbol, genericContext);
         }

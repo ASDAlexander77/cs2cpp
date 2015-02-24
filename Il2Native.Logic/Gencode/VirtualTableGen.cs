@@ -23,18 +23,17 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualInterfaceTableByType
-            =
+        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> VirtualInterfaceTableByType = 
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<IMethod>> virtualInterfaceTableLayoutByType =
+        private static readonly IDictionary<string, List<IMethod>> VirtualInterfaceTableLayoutByType =
             new SortedDictionary<string, List<IMethod>>();
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> virtualTableByType =
+        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> VirtualTableByType =
             new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
@@ -119,8 +118,9 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public static void Clear()
         {
-            virtualTableByType.Clear();
-            virtualInterfaceTableByType.Clear();
+            VirtualTableByType.Clear();
+            VirtualInterfaceTableByType.Clear();
+            VirtualInterfaceTableLayoutByType.Clear();
         }
 
         /// <summary>
@@ -139,7 +139,7 @@ namespace Il2Native.Logic.Gencode
             List<LlvmWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
 
             var key = string.Concat(thisType.FullName, '+', @interface.FullName);
-            if (virtualInterfaceTableByType.TryGetValue(key, out virtualInterfaceTable))
+            if (VirtualInterfaceTableByType.TryGetValue(key, out virtualInterfaceTable))
             {
                 return virtualInterfaceTable;
             }
@@ -147,7 +147,7 @@ namespace Il2Native.Logic.Gencode
             virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
             virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface, typeResolver);
 
-            virtualInterfaceTableByType[key] = virtualInterfaceTable;
+            VirtualInterfaceTableByType[key] = virtualInterfaceTable;
 
             return virtualInterfaceTable;
         }
@@ -163,7 +163,7 @@ namespace Il2Native.Logic.Gencode
             List<IMethod> virtualInterfaceTableLayout;
 
             var key = string.Concat(@interface.FullName, '+', @interface.FullName);
-            if (virtualInterfaceTableLayoutByType.TryGetValue(key, out virtualInterfaceTableLayout))
+            if (VirtualInterfaceTableLayoutByType.TryGetValue(key, out virtualInterfaceTableLayout))
             {
                 return virtualInterfaceTableLayout;
             }
@@ -171,7 +171,7 @@ namespace Il2Native.Logic.Gencode
             virtualInterfaceTableLayout = new List<IMethod>();
             virtualInterfaceTableLayout.AddMethodsToVirtualInterfaceTableLayout(@interface, typeResolver);
 
-            virtualInterfaceTableLayoutByType[key] = virtualInterfaceTableLayout;
+            VirtualInterfaceTableLayoutByType[key] = virtualInterfaceTableLayout;
 
             return virtualInterfaceTableLayout;
         }
@@ -283,7 +283,7 @@ namespace Il2Native.Logic.Gencode
         {
             List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
 
-            if (virtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
+            if (VirtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
             {
                 return virtualTable;
             }
@@ -291,7 +291,7 @@ namespace Il2Native.Logic.Gencode
             virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
             virtualTable.BuildVirtualTable(thisType, llvmWriter);
 
-            virtualTableByType[thisType.FullName] = virtualTable;
+            VirtualTableByType[thisType.FullName] = virtualTable;
 
             return virtualTable;
         }

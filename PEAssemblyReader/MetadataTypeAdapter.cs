@@ -1286,7 +1286,9 @@ namespace PEAssemblyReader
             }
 
             sb.Append(this.Name);
-            return sb.ToString();
+            var result = sb.ToString();
+
+            return result;
         }
 
         /// <summary>
@@ -1396,7 +1398,8 @@ namespace PEAssemblyReader
                 sb.Append("*");
             }
 
-            return sb.ToString();
+            var result = sb.ToString();
+            return result;
         }
 
         /// <summary>

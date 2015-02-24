@@ -15,6 +15,7 @@ namespace PEAssemblyReader
     using Microsoft.CodeAnalysis.CSharp.Symbols;
     using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
+    // TODO: using generic context is not correct now, (or get rid of it, or make it right, see gtest-256.cs)
     /// <summary>
     /// </summary>
     public class MetadataGenericContext : IGenericContext
@@ -26,6 +27,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         private IType typeSpecialization;
+
+        /// <summary>
+        /// </summary>
+        private IGenericContext parentContext;
 
         /// <summary>
         /// </summary>
@@ -168,23 +173,14 @@ namespace PEAssemblyReader
 
         public void AppendMap(IGenericContext genericContext)
         {
-            foreach (var pair in this.Map.ToList())
+            Debug.Assert(genericContext != this, "Circular reference");
+
+            foreach (var pair in this.Map.Where(p => p.Value.IsGenericParameter).ToList())
             {
                 this.Map[pair.Key] = genericContext.ResolveTypeParameter(pair.Value);
             }
 
-            if (genericContext.Map != null)
-            {
-                foreach (var pair in genericContext.Map)
-                {
-                    this.Map[pair.Key] = pair.Value;
-                }
-            }
-
-            if (genericContext.IsCustom)
-            {
-                this.CustomMap = genericContext.CustomMap;
-            }
+            this.parentContext = genericContext;
         }
 
         /// <summary>
@@ -298,7 +294,7 @@ namespace PEAssemblyReader
                 return resolved;
             }
 
-            return typeParameter;
+            return (this.parentContext != null) ? this.parentContext.ResolveTypeParameter(typeParameter) : typeParameter;
         }
 
         /// <summary>
@@ -309,6 +305,11 @@ namespace PEAssemblyReader
         /// </param>
         private void Init(IType type, bool allowToUseDefinitionAsSpecialization = false)
         {
+            if (type == null)
+            {
+                return;
+            }
+
             if (type.IsGenericTypeDefinition)
             {
                 this.TypeDefinition = type;
@@ -336,6 +337,11 @@ namespace PEAssemblyReader
         /// </param>
         private void Init(IMethod method, bool allowToUseDefinitionAsSpecialization = false)
         {
+            if (method == null)
+            {
+                return;
+            }
+
             if (method.IsGenericMethodDefinition)
             {
                 this.MethodDefinition = method;
