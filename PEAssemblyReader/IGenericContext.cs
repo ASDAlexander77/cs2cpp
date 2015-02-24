@@ -20,18 +20,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        bool IsCustom { get; }
-
-        /// <summary>
-        /// </summary>
-        IDictionary<IType, IType> Map { get; }
-
-        /// <summary>
-        /// </summary>
-        IDictionary<string, IType> CustomMap { get; }
-
-        /// <summary>
-        /// </summary>
         IMethod MethodDefinition { get; }
 
         /// <summary>

@@ -22,30 +22,8 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
-        private IMethod methodSpecialization;
-
-        /// <summary>
-        /// </summary>
-        private IType typeSpecialization;
-
-        /// <summary>
-        /// </summary>
-        private IGenericContext parentContext;
-
-        /// <summary>
-        /// </summary>
         protected MetadataGenericContext()
-            : this(new SortedList<IType, IType>())
         {
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="map">
-        /// </param>
-        protected MetadataGenericContext(IDictionary<IType, IType> map)
-        {
-            this.Map = map;
         }
 
         /// <summary>
@@ -54,11 +32,6 @@ namespace PEAssemblyReader
         /// </param>
         protected MetadataGenericContext(object[] map)
         {
-            this.CustomMap = new Dictionary<string, IType>();
-            for (var index = 0; index < map.Length - 1; index++)
-            {
-                this.CustomMap[map[index].ToString()] = (IType)map[index + 1];
-            }
         }
 
         /// <summary>
@@ -71,10 +44,6 @@ namespace PEAssemblyReader
             : this()
         {
             this.Init(type, allowToUseDefinitionAsSpecialization);
-            if (this.TypeSpecialization != null)
-            {
-                this.TypeSpecialization.GenericMap(this.Map);
-            }
         }
 
         /// <summary>
@@ -87,10 +56,6 @@ namespace PEAssemblyReader
             : this(method.DeclaringType, allowToUseDefinitionAsSpecialization)
         {
             this.Init(method, allowToUseDefinitionAsSpecialization);
-            if (this.MethodSpecialization != null)
-            {
-                this.MethodSpecialization.GenericMap(this.Map);
-            }
         }
 
         /// <summary>
@@ -99,8 +64,8 @@ namespace PEAssemblyReader
         {
             get
             {
-                return (this.Map == null || this.Map.Count == 0) && this.TypeDefinition == null && this.TypeSpecialization == null
-                       && this.MethodDefinition == null && this.MethodSpecialization == null && (this.CustomMap == null || this.CustomMap.Count == 0);
+                return this.TypeDefinition == null && this.TypeSpecialization == null
+                       && this.MethodDefinition == null && this.MethodSpecialization == null;
             }
         }
 
@@ -108,17 +73,9 @@ namespace PEAssemblyReader
         {
             get
             {
-                return !(this.CustomMap == null || this.CustomMap.Count == 0);
+                return false;
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IDictionary<IType, IType> Map { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public IDictionary<string, IType> CustomMap { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -126,22 +83,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IMethod MethodSpecialization
-        {
-            get
-            {
-                return this.methodSpecialization;
-            }
-
-            private set
-            {
-                this.methodSpecialization = value;
-                if (this.MethodSpecialization != null)
-                {
-                    this.MethodSpecialization.GenericMap(this.Map);
-                }
-            }
-        }
+        public IMethod MethodSpecialization { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -149,22 +91,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IType TypeSpecialization
-        {
-            get
-            {
-                return this.typeSpecialization;
-            }
-
-            private set
-            {
-                this.typeSpecialization = value;
-                if (this.TypeSpecialization != null)
-                {
-                    this.TypeSpecialization.GenericMap(this.Map);
-                }
-            }
-        }
+        public IType TypeSpecialization { get; private set; }
 
         public IGenericContext Clone()
         {
@@ -173,30 +100,6 @@ namespace PEAssemblyReader
 
         public void AppendMap(IGenericContext genericContext)
         {
-            Debug.Assert(genericContext != this, "Circular reference");
-
-            foreach (var pair in this.Map.Where(p => p.Value.IsGenericParameter).ToList())
-            {
-                this.Map[pair.Key] = genericContext.ResolveTypeParameter(pair.Value);
-            }
-
-            this.parentContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="definitionMethod">
-        /// </param>
-        /// <param name="specializationMethod">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IGenericContext CreateMap(IMethod definitionMethod, IMethod specializationMethod)
-        {
-            var context = new MetadataGenericContext();
-            context.Map.GenericMap(definitionMethod.GetGenericParameters(), specializationMethod.GetGenericArguments());
-            context.Map.GenericMap(definitionMethod.DeclaringType.GenericTypeParameters, specializationMethod.DeclaringType.GenericTypeArguments);
-            return context;
         }
 
         public static IGenericContext Create(IType typeDefinition, IType typeSpecialization)
@@ -267,34 +170,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ResolveTypeParameter(IType typeParameter)
         {
-            if (!typeParameter.IsGenericParameter)
-            {
-                return typeParameter;
-            }
-
-            IType resolved = null;
-            if ((this.CustomMap != null && this.CustomMap.TryGetValue(typeParameter.ToString(), out resolved))
-                || this.Map.TryGetValue(typeParameter, out resolved))
-            {
-                if (typeParameter.IsByRef && typeParameter.IsPinned)
-                {
-                    return resolved.ToByRefTypeAndPinned();
-                }
-
-                if (typeParameter.IsByRef)
-                {
-                    return resolved.ToByRefType();
-                }
-
-                if (typeParameter.IsPinned)
-                {
-                    return resolved.ToPinned();
-                }
-
-                return resolved;
-            }
-
-            return (this.parentContext != null) ? this.parentContext.ResolveTypeParameter(typeParameter) : typeParameter;
+            return typeParameter;
         }
 
         /// <summary>

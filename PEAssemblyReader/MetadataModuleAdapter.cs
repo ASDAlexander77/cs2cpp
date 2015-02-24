@@ -1178,18 +1178,30 @@ namespace PEAssemblyReader
                 }             
              */
 
-            var methodSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(methodHandle) as MethodSymbol;
+            var symbolForIlToken = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(methodHandle);
+            var methodSymbol = symbolForIlToken as MethodSymbol;
             if (methodSymbol != null)
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(methodSymbol, genericContext);
+                    return new MetadataConstructorAdapter(SubstitutedMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
                 }
 
-                return new MetadataMethodAdapter(methodSymbol, genericContext);
+                return new MetadataMethodAdapter(SubstitutedMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
             }
 
             throw new KeyNotFoundException();
+        }
+
+        private static MethodSymbol SubstitutedMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
+        {
+            if (genericContext == null || genericContext.TypeSpecialization == null)
+            {
+                return methodSymbol;
+            }
+
+            var substitutedNamedTypeSymbol = (genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as SubstitutedNamedTypeSymbol;
+            return new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
         }
 
         /// <summary>

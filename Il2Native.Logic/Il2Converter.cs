@@ -500,7 +500,7 @@ namespace Il2Native.Logic
                 {
                     genericMethodSpecializations.Add(
                         genericMethodOfInterface.ToSpecialization(
-                            MetadataGenericContext.CreateMap(genericMethodOfInterface, specializedTypeMethod)));
+                            MetadataGenericContext.Create(genericMethodOfInterface, specializedTypeMethod)));
                 }
             }
         }
@@ -534,7 +534,7 @@ namespace Il2Native.Logic
                         method.IsMatchingOverride(specializationMethod)
                     select
                         genericMethod.ToSpecialization(
-                            MetadataGenericContext.CreateMap(genericMethod, specializationMethod)));
+                            MetadataGenericContext.Create(genericMethod, specializationMethod)));
             }
 
             // append to discovered
