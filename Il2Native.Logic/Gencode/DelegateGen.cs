@@ -778,7 +778,7 @@ namespace Il2Native.Logic.Gencode
             /// </returns>
             public IMethod GetMethodDefinition()
             {
-                return null;
+                return this;
             }
 
             /// <summary>

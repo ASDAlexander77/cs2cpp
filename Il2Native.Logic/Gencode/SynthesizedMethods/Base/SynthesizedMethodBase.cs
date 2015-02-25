@@ -252,7 +252,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </returns>
         public IMethod GetMethodDefinition()
         {
-            return null;
+            return this;
         }
 
         /// <summary>
