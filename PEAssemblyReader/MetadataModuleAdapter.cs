@@ -1218,14 +1218,14 @@ namespace PEAssemblyReader
                 throw new ArgumentException("genericContext");
             }
 
-            if (genericContext.TypeSpecialization != null)
-            {
-                return ((genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as NamedTypeSymbol).TypeSubstitution;
-            }
-
             if (genericContext.MethodSpecialization != null)
             {
                 return (genericContext.MethodSpecialization as MetadataMethodAdapter).MethodDef.TypeSubstitution;
+            }
+
+            if (genericContext.TypeSpecialization != null)
+            {
+                return ((genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as NamedTypeSymbol).TypeSubstitution;
             }
 
             throw new Exception("Context is empty");
@@ -1319,18 +1319,18 @@ namespace PEAssemblyReader
 
         private static MethodSymbol ConstructMethodSymbol(MethodSymbol methodSymbol, IGenericContext genericContext)
         {
-            var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
-            if (metadataTypeAdapter != null)
-            {
-                var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
-                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol));
-            }
-
             var metadataMethodAdapter = genericContext.MethodSpecialization as MetadataMethodAdapter;
             if (metadataMethodAdapter != null)
             {
                 var methodSymbolContext = metadataMethodAdapter.MethodDef;
                 return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, methodSymbolContext));
+            }
+
+            var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
+            if (metadataTypeAdapter != null)
+            {
+                var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
+                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol));
             }
 
             return null;

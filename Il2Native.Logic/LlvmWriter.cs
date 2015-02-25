@@ -1585,7 +1585,8 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCodeTypePart.Result = opCodeTypePart.OpCodeOperands[0].Result.ToClassType();
+                        var resultOfOper0 = opCodeTypePart.OpCodeOperands[0].Result;
+                        opCodeTypePart.Result = resultOfOper0.Type.IsStructureType() || resultOfOper0.Type.IsEnum ? resultOfOper0.ToClassType() : resultOfOper0;
                     }
 
                     break;
