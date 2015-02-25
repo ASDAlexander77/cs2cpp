@@ -1194,7 +1194,67 @@ namespace PEAssemblyReader
             throw new KeyNotFoundException();
         }
 
-        private static NamedTypeSymbol ResolveTypeSymbolIfNeeded(NamedTypeSymbol typeSymbol, IGenericContext genericContext)
+        private static TypeSymbol ResolveTypeParameterSymbolIfNeeded(TypeParameterSymbol typeParameterSymbol, IGenericContext genericContext)
+        {
+            if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
+            {
+                return typeParameterSymbol;
+            }
+
+            var typeSubstitution = ((genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as NamedTypeSymbol).TypeSubstitution;
+            var resolvedType = typeSubstitution.SubstituteType(typeParameterSymbol);
+            return resolvedType;
+        }
+
+        private static TypeSymbol ResolveTypeSymbolIfNeeded(TypeSymbol typeSymbol, IGenericContext genericContext)
+        {
+            if (typeSymbol == null || typeSymbol.TypeKind == TypeKind.Error)
+            {
+                throw new KeyNotFoundException();
+            }
+
+            if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
+            {
+                return typeSymbol;
+            }
+
+            var typeSubstitution = ((genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as NamedTypeSymbol).TypeSubstitution;
+            var resolvedType = typeSubstitution.SubstituteType(typeSymbol);
+            return resolvedType;
+
+            /*
+            var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
+            if (namedTypeSymbol != null)
+            {
+                return ResolveNamedTypeSymbolIfNeeded(namedTypeSymbol, genericContext);
+            }
+
+            var typeParameterSymbol = typeSymbol as TypeParameterSymbol;
+            if (typeParameterSymbol != null)
+            {
+                return ResolveTypeParameterSymbolIfNeeded(typeParameterSymbol, genericContext);
+            }
+
+            var arrayTypeSymbol = typeSymbol as ArrayTypeSymbol;
+            if (arrayTypeSymbol != null)
+            {
+                return new ArrayTypeSymbol(
+                    MetadataTypeAdapter.GetBareTypeSymbol(arrayTypeSymbol).ContainingAssembly,
+                    ResolveTypeSymbolIfNeeded(arrayTypeSymbol.ElementType, genericContext),
+                    rank: arrayTypeSymbol.Rank);
+            }
+
+            var pointerTypeSymbol = typeSymbol as PointerTypeSymbol;
+            if (pointerTypeSymbol != null)
+            {
+                return new PointerTypeSymbol(ResolveTypeSymbolIfNeeded(pointerTypeSymbol.PointedAtType, genericContext));
+            }
+
+            throw new KeyNotFoundException();
+            */
+        }
+
+        private static NamedTypeSymbol ResolveNamedTypeSymbolIfNeeded(NamedTypeSymbol typeSymbol, IGenericContext genericContext)
         {
             if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
             {
@@ -1234,7 +1294,7 @@ namespace PEAssemblyReader
             var field = new MetadataFieldAdapter(fiieldSymbol);
             if (field.DeclaringType.IsGenericTypeDefinition)
             {
-                var constructedContainingType = ResolveTypeSymbolIfNeeded(fiieldSymbol.ContainingType, genericContext);
+                var constructedContainingType = ResolveNamedTypeSymbolIfNeeded(fiieldSymbol.ContainingType, genericContext);
                 var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
                 resolvedFieldSymbol = new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fiieldSymbol);
                 return resolvedFieldSymbol;
@@ -1254,7 +1314,7 @@ namespace PEAssemblyReader
             var method = new MetadataMethodAdapter(methodSymbol);
             if (method.DeclaringType.IsGenericTypeDefinition)
             {
-                var constructedContainingType = ResolveTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
+                var constructedContainingType = ResolveNamedTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
                 var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
                 resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
                 return resolvedMethodSymbol;
@@ -1365,7 +1425,7 @@ namespace PEAssemblyReader
             var typeSymbol = symbolForIlToken as NamedTypeSymbol;
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return ResolveTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
+                return ResolveNamedTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
             }
 
             var fieldSymbol = symbolForIlToken as FieldSymbol;
@@ -1396,15 +1456,9 @@ namespace PEAssemblyReader
         public IType ResolveType(int token, IGenericContext genericContext)
         {
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
-
             var typeDefHandle = MetadataTokens.Handle(token);
             var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle) as TypeSymbol;
-            if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
-            {
-                return typeSymbol.ResolveGeneric(genericContext);
-            }
-
-            throw new KeyNotFoundException();
+            return ResolveTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
         }
 
         /// <summary>

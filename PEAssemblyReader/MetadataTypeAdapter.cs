@@ -1064,13 +1064,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            var type = this.typeDef.IsArray() ? (this.typeDef as ArrayTypeSymbol).ElementType : this.typeDef;
-            while (type.IsPointerType())
-            {
-                type = (type as PointerTypeSymbol).PointedAtType;
-            }
-
-            var containingAssembly = type.ContainingAssembly;
+            var containingAssembly = MetadataTypeAdapter.GetBareTypeSymbol(this.typeDef).ContainingAssembly;
             return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.GenericContext, this.IsByRef, this.IsPinned);
         }
 
@@ -1211,7 +1205,7 @@ namespace PEAssemblyReader
             return this.lazyToString.Value;
         }
 
-        private static TypeSymbol GetBareTypeSymbol(TypeSymbol typeDef, bool recursive = true)
+        internal static TypeSymbol GetBareTypeSymbol(TypeSymbol typeDef, bool recursive = true)
         {
             var currentTypeDef = typeDef;
             while (currentTypeDef != null)
