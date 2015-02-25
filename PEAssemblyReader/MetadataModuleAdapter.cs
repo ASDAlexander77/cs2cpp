@@ -1251,7 +1251,7 @@ namespace PEAssemblyReader
             return resolvedFieldSymbol;
         }
 
-        private static MethodSymbol SubstituteMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
+        internal static MethodSymbol SubstituteMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
         {
             if (MetadataGenericContext.IsNullOrEmptyOrNoSpecializations(genericContext))
             {

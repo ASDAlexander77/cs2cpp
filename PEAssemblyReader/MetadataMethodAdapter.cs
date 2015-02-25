@@ -594,7 +594,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IMethod ToSpecialization(IGenericContext genericContext)
         {
-            return this.methodDef.ResolveGeneric(genericContext);
+            return MetadataModuleAdapter.SubstituteMethodSymbolIfNeeded(this.methodDef, genericContext).ResolveGeneric(genericContext);
         }
 
         /// <summary>

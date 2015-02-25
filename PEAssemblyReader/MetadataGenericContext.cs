@@ -104,13 +104,6 @@ namespace PEAssemblyReader
             return (IGenericContext)this.MemberwiseClone();
         }
 
-        public static IGenericContext Create(IType typeDefinition, IType typeSpecialization)
-        {
-            var context = new MetadataGenericContext(typeDefinition);
-            context.TypeSpecialization = typeSpecialization;
-            return context;
-        }
-
         public static IGenericContext Create(IType typeDefinition, IType typeSpecialization, IMethod methodDefinition, IMethod methodSpecialization)
         {
             var context = new MetadataGenericContext();
@@ -120,10 +113,19 @@ namespace PEAssemblyReader
             context.MethodSpecialization = methodSpecialization;
             return context;
         }
-
-        public static IGenericContext Create(params object[] map)
+        
+        public static IGenericContext Create(IType typeDefinition, IType typeSpecialization)
         {
-            return new MetadataGenericContext(map);
+            var context = new MetadataGenericContext(typeDefinition);
+            context.TypeSpecialization = typeSpecialization;
+            return context;
+        }
+
+        public static IGenericContext Create(IMethod methodDefinition, IMethod methodSpecialization)
+        {
+            var context = new MetadataGenericContext(methodDefinition);
+            context.MethodSpecialization = methodSpecialization;
+            return context;
         }
 
         /// <summary>
