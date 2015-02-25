@@ -10,6 +10,7 @@ namespace PEAssemblyReader
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Diagnostics;
     using System.Reflection.Metadata;
     using System.Reflection.Metadata.Ecma335;
@@ -55,7 +56,7 @@ namespace PEAssemblyReader
             var fieldSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(fieldHandle) as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(SubstitutedFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
+                return new MetadataFieldAdapter(ResolveFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
             }
 
             return null;
@@ -82,10 +83,10 @@ namespace PEAssemblyReader
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(methodSymbol, genericContext);
+                    return new MetadataConstructorAdapter(ResolveMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
                 }
 
-                return new MetadataMethodAdapter(methodSymbol, genericContext);
+                return new MetadataMethodAdapter(ResolveMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
             }
 
             throw new NotImplementedException();
@@ -1184,47 +1185,139 @@ namespace PEAssemblyReader
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(SubstitutedMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                    return new MetadataConstructorAdapter(ResolveMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
                 }
 
-                return new MetadataMethodAdapter(SubstitutedMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                return new MetadataMethodAdapter(ResolveMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
             }
 
             throw new KeyNotFoundException();
         }
 
-        private static MethodSymbol SubstitutedMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
+        private static NamedTypeSymbol ResolveTypeSymbolIfNeeded(NamedTypeSymbol typeSymbol, IGenericContext genericContext)
         {
             if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
             {
-                return methodSymbol;
+                return typeSymbol;
             }
 
-            var method = new MetadataMethodAdapter(methodSymbol);
-            if (!method.IsGenericMethodDefinition && !method.DeclaringType.IsGenericTypeDefinition)
+            var resolvedTypeSymbol = typeSymbol;
+            var type = new MetadataTypeAdapter(typeSymbol);
+            if (type.IsGenericTypeDefinition)
             {
-                return methodSymbol;
+                if (typeSymbol.ContainingType != null)
+                {
+                    var constructedContainingType = ConstructTypeSymbol(typeSymbol.ContainingType, genericContext);
+                    var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
+                    var constructedType = ConstructTypeSymbol(typeSymbol, genericContext);
+                    resolvedTypeSymbol = new SubstitutedNestedTypeSymbol(substitutedNamedTypeSymbol, constructedType);
+                }
+                else
+                {
+                    resolvedTypeSymbol = ConstructTypeSymbol(typeSymbol, genericContext);
+                }
+
+                return resolvedTypeSymbol;
             }
 
-            var substitutedNamedTypeSymbol = (genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as SubstitutedNamedTypeSymbol;
-            return new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
+            return resolvedTypeSymbol;
         }
 
-        private static FieldSymbol SubstitutedFieldSymbolIfNeeded(FieldSymbol fieldSymbol, IGenericContext genericContext)
+        private static FieldSymbol ResolveFieldSymbolIfNeeded(FieldSymbol fiieldSymbol, IGenericContext genericContext)
         {
             if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
             {
-                return fieldSymbol;
+                return fiieldSymbol;
             }
 
-            var field = new MetadataFieldAdapter(fieldSymbol);
-            if (!field.DeclaringType.IsGenericTypeDefinition)
+            var resolvedFieldSymbol = fiieldSymbol;
+            var field = new MetadataFieldAdapter(fiieldSymbol);
+            if (field.DeclaringType.IsGenericTypeDefinition)
             {
-                return fieldSymbol;
+                var constructedContainingType = ResolveTypeSymbolIfNeeded(fiieldSymbol.ContainingType, genericContext);
+                var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
+                resolvedFieldSymbol = new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fiieldSymbol);
+                return resolvedFieldSymbol;
             }
 
-            var substitutedNamedTypeSymbol = (genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as SubstitutedNamedTypeSymbol;
-            return new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fieldSymbol.OriginalDefinition);
+            return resolvedFieldSymbol;
+        }
+
+        private static MethodSymbol ResolveMethodSymbolIfNeeded(MethodSymbol methodSymbol, IGenericContext genericContext)
+        {
+            if (genericContext == null || genericContext.IsEmpty || genericContext.TypeSpecialization == null)
+            {
+                return methodSymbol;
+            }
+
+            var resolvedMethodSymbol = methodSymbol;
+            var method = new MetadataMethodAdapter(methodSymbol);
+            if (method.DeclaringType.IsGenericTypeDefinition)
+            {
+                var constructedContainingType = ResolveTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
+                var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
+                resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
+                return resolvedMethodSymbol;
+            }
+
+            if (method.IsGenericMethodDefinition)
+            {
+                return ConstructMethodSymbol(resolvedMethodSymbol, genericContext);
+            }
+
+            return resolvedMethodSymbol;
+        }
+
+        private static NamedTypeSymbol ConstructTypeSymbol(NamedTypeSymbol typeSymbol, IGenericContext genericContext)
+        {
+            if (typeSymbol.TypeParameters.Length == 0)
+            {
+                return typeSymbol;
+            }
+
+            var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
+            if (metadataTypeAdapter != null)
+            {
+                var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
+                return new ConstructedNamedTypeSymbol(typeSymbol.OriginalDefinition, GetTypeArguments(typeSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol));
+            }
+
+            return null;
+        }
+
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol)
+        {
+            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
+
+            var current = namedTypeSymbol;
+            while (current != null && current.TypeArguments.Length == 0)
+            {
+                current = namedTypeSymbol.ContainingType;
+            }
+
+            if (current == null)
+            {
+                throw new Exception("Could not find TypeArguments in Generic Context");
+            }
+
+            foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
+            {
+                typeArguments.Add(current.TypeArguments[typeParameterSymbol.GetArity()]);
+            }
+
+            return typeArguments.ToImmutableArray();
+        }
+
+        private static MethodSymbol ConstructMethodSymbol(MethodSymbol methodSymbol, IGenericContext genericContext)
+        {
+            var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
+            if (metadataTypeAdapter != null)
+            {
+                var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
+                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol));
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -1269,22 +1362,22 @@ namespace PEAssemblyReader
 
             var typeDefHandle = MetadataTokens.Handle(token);
             var symbolForIlToken = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle);
-            var typeSymbol = symbolForIlToken as TypeSymbol;
+            var typeSymbol = symbolForIlToken as NamedTypeSymbol;
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return typeSymbol.ResolveGeneric(genericContext);
+                return ResolveTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
             }
 
             var fieldSymbol = symbolForIlToken as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(fieldSymbol, genericContext);
+                return new MetadataFieldAdapter(ResolveFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
             }
 
             var methodSymbol = symbolForIlToken as MethodSymbol;
             if (methodSymbol != null)
             {
-                return new MetadataMethodAdapter(methodSymbol, genericContext);
+                return new MetadataMethodAdapter(ResolveMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
             }
 
             throw new KeyNotFoundException();
