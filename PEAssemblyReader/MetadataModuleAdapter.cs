@@ -1276,7 +1276,7 @@ namespace PEAssemblyReader
             return resolvedMethodSymbol;
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol, TypeMap typeSubstitution)
         {
             var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
 
@@ -1293,13 +1293,13 @@ namespace PEAssemblyReader
 
             foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
             {
-                typeArguments.Add(current.TypeArguments[typeParameterSymbol.GetArity()]);
+                typeArguments.Add(current.TypeSubstitution.SubstituteType(typeSubstitution.SubstituteType(typeParameterSymbol)));
             }
 
             return typeArguments.ToImmutableArray();
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, MethodSymbol methodSymbol)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, MethodSymbol methodSymbol, TypeMap typeSubstitution)
         {
             var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
 
@@ -1311,7 +1311,7 @@ namespace PEAssemblyReader
 
             foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
             {
-                typeArguments.Add(current.TypeArguments[typeParameterSymbol.GetArity()]);
+                typeArguments.Add(current.TypeSubstitution.SubstituteType(typeSubstitution.SubstituteType(typeParameterSymbol)));
             }
 
             return typeArguments.ToImmutableArray();
@@ -1323,14 +1323,14 @@ namespace PEAssemblyReader
             if (metadataMethodAdapter != null)
             {
                 var methodSymbolContext = metadataMethodAdapter.MethodDef;
-                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, methodSymbolContext));
+                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, methodSymbolContext, methodSymbol.TypeSubstitution));
             }
 
             var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
             if (metadataTypeAdapter != null)
             {
                 var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
-                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol));
+                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol, methodSymbol.TypeSubstitution));
             }
 
             return null;
