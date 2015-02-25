@@ -111,9 +111,10 @@ namespace PEAssemblyReader
 
         public static IGenericContext Create(IType typeDefinition, IType typeSpecialization, IMethod methodDefinition, IMethod methodSpecialization)
         {
-            var context = new MetadataGenericContext(typeDefinition);
+            var context = new MetadataGenericContext();
+            context.Init(typeDefinition);
             context.TypeSpecialization = typeSpecialization;
-            context.MethodDefinition = methodDefinition;
+            context.Init(methodDefinition);
             context.MethodSpecialization = methodSpecialization;
             return context;
         }
