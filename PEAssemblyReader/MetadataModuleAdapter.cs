@@ -1293,7 +1293,9 @@ namespace PEAssemblyReader
 
             foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
             {
-                typeArguments.Add(current.TypeSubstitution.SubstituteType(typeSubstitution.SubstituteType(typeParameterSymbol)));
+                typeArguments.Add(
+                    current.TypeSubstitution.SubstituteType(
+                        typeSubstitution != null ? typeSubstitution.SubstituteType(typeParameterSymbol) : typeParameterSymbol));
             }
 
             return typeArguments.ToImmutableArray();
@@ -1311,7 +1313,9 @@ namespace PEAssemblyReader
 
             foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
             {
-                typeArguments.Add(current.TypeSubstitution.SubstituteType(typeSubstitution.SubstituteType(typeParameterSymbol)));
+                typeArguments.Add(
+                    current.TypeSubstitution.SubstituteType(
+                        typeSubstitution != null ? typeSubstitution.SubstituteType(typeParameterSymbol) : typeParameterSymbol));
             }
 
             return typeArguments.ToImmutableArray();
