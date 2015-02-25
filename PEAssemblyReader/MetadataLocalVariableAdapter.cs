@@ -103,7 +103,7 @@ namespace PEAssemblyReader
 
         private IType CaluclateLocalType()
         {
-            return this.localInfo.Type.ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
+            return MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.localInfo.Type, this.GenericContext).ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
         }
     }
 }

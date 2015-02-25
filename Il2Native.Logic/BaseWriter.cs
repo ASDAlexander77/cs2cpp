@@ -214,7 +214,6 @@ namespace Il2Native.Logic
             this.MethodReturnType = null;
             this.ThisType = methodInfo.DeclaringType;
 
-            ////this.GenericMethodArguments = methodBase.GetGenericArguments();
             var methodBody = methodInfo.ResolveMethodBody(genericContext);
             this.NoBody = !methodBody.HasBody;
             if (!this.NoBody)
@@ -226,7 +225,7 @@ namespace Il2Native.Logic
 #if DEBUG
                 Debug.Assert(
                     genericContext == null || !this.LocalInfo.Any(li => li.LocalType.IsGenericParameter),
-                    "Has Ganaric Parameter");
+                    "Has Generic Parameter");
 #endif
 
                 this.LocalInfoUsed = new bool[this.LocalInfo.Length];

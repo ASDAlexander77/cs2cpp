@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 namespace PEAssemblyReader
 {
+    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
@@ -58,6 +59,11 @@ namespace PEAssemblyReader
             this.Init(method, allowToUseDefinitionAsSpecialization);
         }
 
+        public static bool IsNullOrEmptyOrNoSpecializations(IGenericContext genericContext)
+        {
+            return genericContext == null || genericContext.IsEmpty || !genericContext.AnySpecializations;
+        }
+
         /// <summary>
         /// </summary>
         public bool IsEmpty
@@ -69,11 +75,11 @@ namespace PEAssemblyReader
             }
         }
 
-        public bool IsCustom
+        public bool AnySpecializations
         {
             get
             {
-                return false;
+                return this.TypeSpecialization != null || this.MethodSpecialization != null;
             }
         }
 
@@ -96,10 +102,6 @@ namespace PEAssemblyReader
         public IGenericContext Clone()
         {
             return (IGenericContext)this.MemberwiseClone();
-        }
-
-        public void AppendMap(IGenericContext genericContext)
-        {
         }
 
         public static IGenericContext Create(IType typeDefinition, IType typeSpecialization)
@@ -169,6 +171,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
+        [Obsolete]
         public IType ResolveTypeParameter(IType typeParameter)
         {
             return typeParameter;

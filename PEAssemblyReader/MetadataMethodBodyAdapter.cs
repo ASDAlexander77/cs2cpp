@@ -199,14 +199,10 @@ namespace PEAssemblyReader
                         var signatureHandle = module.MetadataReader.GetLocalSignature(methodBody.LocalSignature);
                         var signatureReader = module.GetMemoryReaderOrThrow(signatureHandle);
                         localInfo = new MetadataDecoder(peModuleSymbol, peMethodSymbol).DecodeLocalSignatureOrThrow(ref signatureReader);
-                    }
-                    else
-                    {
-                        localInfo = ImmutableArray<MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo>.Empty;
-                    }
 
-                    var index = 0;
-                    return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
+                        var index = 0;
+                        return localInfo.Select(li => new MetadataLocalVariableAdapter(li, index++, this.GenericContext)).ToArray();
+                    }
                 }
             }
             catch (UnsupportedSignatureContent)

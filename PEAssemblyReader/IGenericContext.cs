@@ -20,6 +20,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool AnySpecializations { get; }
+
+        /// <summary>
+        /// </summary>
         IMethod MethodDefinition { get; }
 
         /// <summary>
@@ -45,9 +49,5 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         IGenericContext Clone();
-
-        /// <summary>
-        /// </summary>
-        void AppendMap(IGenericContext genericContext);
     }
 }
