@@ -454,18 +454,28 @@ namespace Il2Native.Logic
             IGrouping<IType, IMethod> specializedTypeMethods)
         {
             var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
-            foreach (var specializedTypeMethod in specializedTypeMethods)
+            foreach (var interfaceMethodSpecialization in specializedTypeMethods)
             {
                 var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance;
-                foreach (var genericMethodOfInterface in
+                foreach (var classMethodDefinition in
                     types.SelectMany(
                         t =>
                             t.GetMethods(flags)
-                                .Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(specializedTypeMethod))))
+                                .Where(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(interfaceMethodSpecialization))))
                 {
-                    genericMethodSpecializations.Add(
-                        genericMethodOfInterface.ToSpecialization(
-                            MetadataGenericContext.Create(genericMethodOfInterface, specializedTypeMethod)));
+                    // find interface 
+                    var @interfaceDefinition =
+                        classMethodDefinition.DeclaringType.GetInterfaces()
+                            .First(i => i.TypeEquals(interfaceMethodSpecialization.DeclaringType));
+
+                    var @interfaceMethodDefinition = @interfaceDefinition.GetMethods(flags)
+                        .First(m => m.IsGenericMethodDefinition && m.IsMatchingOverride(interfaceMethodSpecialization));
+
+                    var classMethodSpecialization =
+                        classMethodDefinition.ToSpecialization(
+                            MetadataGenericContext.Create(classMethodDefinition, interfaceMethodSpecialization));
+
+                    genericMethodSpecializations.Add(classMethodSpecialization);
                 }
             }
         }
