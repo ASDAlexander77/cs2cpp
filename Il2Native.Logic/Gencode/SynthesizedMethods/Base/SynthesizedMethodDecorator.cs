@@ -19,10 +19,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedMethodDecorator : IMethod
     {
-        private readonly IMethod method;
         private readonly IMethodBody methodBody;
         private readonly IModule module;
         private readonly IEnumerable<IParameter> parameters;
+        private IMethod method;
 
         public SynthesizedMethodDecorator(IMethod method)
         {
@@ -206,7 +206,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public IMethod GetMethodDefinition()
         {
-            return this.method.GetMethodDefinition();
+            var methodClone = (SynthesizedMethodDecorator)this.MemberwiseClone();
+            methodClone.method = this.method.GetMethodDefinition();
+            return methodClone;
         }
 
         public IEnumerable<IParameter> GetParameters()
