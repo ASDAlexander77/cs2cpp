@@ -1283,7 +1283,19 @@ namespace PEAssemblyReader
             {
                 var constructedContainingType = SubstituteTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
                 var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
-                resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
+                if (substitutedNamedTypeSymbol != null)
+                {
+                    resolvedMethodSymbol = new SubstitutedMethodSymbol(
+                        substitutedNamedTypeSymbol,
+                        methodSymbol.ConstructedFrom.OriginalDefinition);
+                }
+                else
+                {
+                    var typeDef = (method.DeclaringType as MetadataTypeAdapter).TypeDef;
+                    constructedContainingType = SubstituteTypeSymbolIfNeeded(typeDef, genericContext);
+                    substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
+                    resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
+                }
             }
 
             if (method.IsGenericMethodDefinition)
