@@ -784,11 +784,11 @@ namespace Il2Native.Logic
             if (concurrent && applyConccurent)
             {
                 Parallel.ForEach(
-                    readingTypesContext.GenericTypeSpecializations,
+                    readingTypesContext.GenericTypeSpecializations.ToList(),
                     type => AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext));
 
                 Parallel.ForEach(
-                    readingTypesContext.AdditionalTypesToProcess,
+                    readingTypesContext.AdditionalTypesToProcess.ToList(),
                     type => AppendTypeWithRequiredTypePair(type, requiredTypes, subSetReadingContext));
             }
             else
@@ -816,11 +816,17 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (subSetGenericTypeSpecializations.Count > 0)
+            if (subSetGenericTypeSpecializations.Count > 0 || subSetAdditionalTypesToProcess.Count > 0)
             {
                 foreach (var discoveredType in requiredTypes.Select(t => t.Key))
                 {
                     subSetGenericTypeSpecializations.Remove(discoveredType);
+                }
+
+                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
+                {
+                    Debug.Assert(discoveredType != null);
+                    subSetAdditionalTypesToProcess.Remove(discoveredType);
                 }
 
                 ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(requiredTypes, subSetReadingContext);
@@ -831,17 +837,6 @@ namespace Il2Native.Logic
                     Debug.Assert(discoveredType != null);
                     readingTypesContext.GenericTypeSpecializations.Add(discoveredType);
                 }
-            }
-
-            if (subSetAdditionalTypesToProcess.Count > 0)
-            {
-                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
-                {
-                    Debug.Assert(discoveredType != null);
-                    subSetAdditionalTypesToProcess.Remove(discoveredType);
-                }
-
-                ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(requiredTypes, subSetReadingContext);
 
                 // join types
                 foreach (var discoveredType in subSetAdditionalTypesToProcess)
@@ -1083,10 +1078,10 @@ namespace Il2Native.Logic
                 }
             }
 
-            ////ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-            ////    typesWithRequired,
-            ////    readingTypesContext,
-            ////    true);
+            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
+                typesWithRequired,
+                readingTypesContext,
+                true);
 
             ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
 
