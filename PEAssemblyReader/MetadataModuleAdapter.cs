@@ -1293,8 +1293,7 @@ namespace PEAssemblyReader
                 {
                     var typeDef = (method.DeclaringType as MetadataTypeAdapter).TypeDef;
                     constructedContainingType = SubstituteTypeSymbolIfNeeded(typeDef, genericContext);
-                    substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
-                    resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
+                    resolvedMethodSymbol = (constructedContainingType as ArrayTypeSymbol).GetMembers(methodSymbol.Name)[0] as MethodSymbol;
                 }
             }
 

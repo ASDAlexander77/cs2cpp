@@ -185,22 +185,22 @@ namespace Microsoft.CodeAnalysis.CSharp.Symbols
         {
             if (name == ".ctor")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayConstructor(this)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(new ArrayConstructor(this));
             }
 
             if (name == "Set")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArraySetValueMethod(this)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(new ArraySetValueMethod(this));
             }
 
             if (name == "Get")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayGetValueMethod(this)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(new ArrayGetValueMethod(this));
             }
 
             if (name == "Address")
             {
-                return ImmutableArray.Create<Symbol>(Enumerable.Range(1, 7).Select(n => new ArrayAddressMethod(this)).ToArray<Symbol>());
+                return ImmutableArray.Create<Symbol>(new ArrayAddressMethod(this));
             }
 
             return ImmutableArray<Symbol>.Empty;
