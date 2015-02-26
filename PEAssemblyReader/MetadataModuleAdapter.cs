@@ -1211,21 +1211,40 @@ namespace PEAssemblyReader
             return resolvedType;
         }
 
-        private static TypeMap GetTypeSubstitutionMap(IGenericContext genericContext)
+        private static AbstractTypeParameterMap GetTypeSubstitutionMap(IGenericContext genericContext)
         {
             if (MetadataGenericContext.IsNullOrEmptyOrNoSpecializations(genericContext))
             {
                 throw new ArgumentException("genericContext");
             }
 
+            var metadataGenericContext = genericContext as MetadataGenericContext;
+            if (metadataGenericContext != null && metadataGenericContext.CustomTypeSubstitution != null)
+            {
+                return metadataGenericContext.CustomTypeSubstitution;
+            }
+
+
             if (genericContext.MethodSpecialization != null)
             {
-                return (genericContext.MethodSpecialization as MetadataMethodAdapter).MethodDef.TypeSubstitution;
+                var metadataMethodAdapter = (genericContext.MethodSpecialization as MetadataMethodAdapter);
+                if (metadataMethodAdapter != null)
+                {
+                    return metadataMethodAdapter.MethodDef.TypeSubstitution;
+                }
             }
 
             if (genericContext.TypeSpecialization != null)
             {
-                return ((genericContext.TypeSpecialization as MetadataTypeAdapter).TypeDef as NamedTypeSymbol).TypeSubstitution;
+                var metadataTypeAdapter = (genericContext.TypeSpecialization as MetadataTypeAdapter);
+                if (metadataTypeAdapter != null)
+                {
+                    var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
+                    if (namedTypeSymbol != null)
+                    {
+                        return namedTypeSymbol.TypeSubstitution;
+                    }
+                }
             }
 
             throw new Exception("Context is empty");
@@ -1265,7 +1284,6 @@ namespace PEAssemblyReader
                 var constructedContainingType = SubstituteTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
                 var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
                 resolvedMethodSymbol = new SubstitutedMethodSymbol(substitutedNamedTypeSymbol, methodSymbol.ConstructedFrom.OriginalDefinition);
-                return resolvedMethodSymbol;
             }
 
             if (method.IsGenericMethodDefinition)
@@ -1276,7 +1294,7 @@ namespace PEAssemblyReader
             return resolvedMethodSymbol;
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol, TypeMap typeSubstitution)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol, AbstractTypeParameterMap typeSubstitution)
         {
             var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
 
@@ -1301,7 +1319,7 @@ namespace PEAssemblyReader
             return typeArguments.ToImmutableArray();
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, MethodSymbol methodSymbol, TypeMap typeSubstitution)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, MethodSymbol methodSymbol, AbstractTypeParameterMap typeSubstitution)
         {
             var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
 
@@ -1321,8 +1339,30 @@ namespace PEAssemblyReader
             return typeArguments.ToImmutableArray();
         }
 
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, AbstractTypeParameterMap typeSubstitution)
+        {
+            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
+
+            foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
+            {
+                typeArguments.Add(typeSubstitution.SubstituteType(typeParameterSymbol));
+            }
+
+            return typeArguments.ToImmutableArray();
+        }
+
         private static MethodSymbol ConstructMethodSymbol(MethodSymbol methodSymbol, IGenericContext genericContext)
         {
+            var metadataGenericContext = genericContext as MetadataGenericContext;
+            if (metadataGenericContext != null)
+            {
+                var customTypeSubstitution = metadataGenericContext.CustomTypeSubstitution;
+                if (customTypeSubstitution != null)
+                {
+                    return new ConstructedMethodSymbol(methodSymbol, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, customTypeSubstitution));
+                }
+            }
+
             var metadataMethodAdapter = genericContext.MethodSpecialization as MetadataMethodAdapter;
             if (metadataMethodAdapter != null)
             {
@@ -1382,7 +1422,7 @@ namespace PEAssemblyReader
 
             var typeDefHandle = MetadataTokens.Handle(token);
             var symbolForIlToken = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle);
-            var typeSymbol = symbolForIlToken as NamedTypeSymbol;
+            var typeSymbol = symbolForIlToken as TypeSymbol;
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
                 return SubstituteTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);

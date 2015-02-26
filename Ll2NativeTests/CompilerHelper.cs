@@ -72,11 +72,11 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = true;
+        public const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>
-        public const bool MultiCore = false;
+        public const bool MultiCore = true;
 
         /// <summary>
         ///     ex. opt 'file'.ll -o 'file'.bc -O2

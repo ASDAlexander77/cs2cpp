@@ -473,7 +473,7 @@ namespace Il2Native.Logic
 
                     var classMethodSpecialization =
                         classMethodDefinition.ToSpecialization(
-                            MetadataGenericContext.Create(classMethodDefinition, interfaceMethodSpecialization));
+                            MetadataGenericContext.CreateCustomMap(@interfaceMethodDefinition, interfaceMethodSpecialization, classMethodDefinition));
 
                     genericMethodSpecializations.Add(classMethodSpecialization);
                 }
