@@ -129,6 +129,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        IEnumerable<IType> RequiredTypes { get; set; }
+
+        /// <summary>
+        /// </summary>
         /// <param name="setUseAsClass">
         /// </param>
         /// <param name="value">

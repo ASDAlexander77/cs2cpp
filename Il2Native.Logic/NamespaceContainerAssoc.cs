@@ -24,13 +24,13 @@
 
         public override bool Equals(object obj)
         {
-            var other = obj as MethodKey;
+            var other = obj as NamespaceContainerAssoc<K, V>;
             if (other != null)
             {
-                return this.Key.Equals(other.Method);
+                return this.Key.Equals(other.Key);
             }
 
-            return this.Key.Equals(other);
+            return this.Key.Equals(obj);
         }
 
         public override int GetHashCode()

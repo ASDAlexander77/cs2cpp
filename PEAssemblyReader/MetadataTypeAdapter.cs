@@ -342,6 +342,10 @@ namespace PEAssemblyReader
             }
         }
 
+        /// <summary>
+        /// </summary>
+        public IEnumerable<IType> RequiredTypes { get; set; }
+
         private bool CalculateIsGenericType()
         {
             IType current = this;

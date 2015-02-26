@@ -204,6 +204,8 @@
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private ISet<T> _basket;
 
+            private bool _interating;
+
             public int Count
             {
                 get
@@ -263,9 +265,14 @@
             {
                 if (_basket != null)
                 {
-                    foreach (var item in _basket)
+                    lock (_containerLocker)
                     {
-                        yield return item;
+                        _interating = true;
+                        foreach (var item in _basket)
+                        {
+                            yield return item;
+                        }
+                        _interating = false;
                     }
                 }
 
@@ -322,6 +329,11 @@
                 {
                     lock (_containerLocker)
                     {
+                        if (_interating)
+                        {
+                            throw new InvalidOperationException("Iteration is in progress");
+                        }
+
                         return this.Basket.Add(obj);
                     }
                 }

@@ -64,7 +64,6 @@ namespace Il2Native.Logic.Gencode
             SystemTypesToCTypes["UInt16"] = "i16";
             SystemTypesToCTypes["UInt32"] = "i32";
             SystemTypesToCTypes["UInt64"] = "i64";
-            SystemTypesToCTypes["Float"] = "float";
             SystemTypesToCTypes["Single"] = "float";
             SystemTypesToCTypes["Double"] = "double";
             SystemTypesToCTypes["Boolean"] = "i1";
@@ -75,13 +74,12 @@ namespace Il2Native.Logic.Gencode
             SystemTypeSizes["SByte"] = 1;
             SystemTypeSizes["Char"] = 2;
             SystemTypeSizes["Int16"] = 2;
-            SystemTypeSizes["Int32"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Int32"] = 4;
             SystemTypeSizes["Int64"] = 8;
             SystemTypeSizes["UInt16"] = 2;
-            SystemTypeSizes["UInt32"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["UInt32"] = 4;
             SystemTypeSizes["UInt64"] = 8;
-            SystemTypeSizes["Float"] = LlvmWriter.PointerSize;
-            SystemTypeSizes["Single"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Single"] = 4;
             SystemTypeSizes["Double"] = 8;
             SystemTypeSizes["Boolean"] = 1;
         }
@@ -682,7 +680,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypePrefix(this IType type, LlvmWriter llvmWriter, bool asReference = false)
         {
-            LlvmIndentedTextWriter writer = llvmWriter.Output;
+            var writer = llvmWriter.Output;
 
             type.WriteTypeWithoutModifiers(llvmWriter);
             type.WriteTypeModifiers(writer, asReference);
@@ -699,7 +697,7 @@ namespace Il2Native.Logic.Gencode
             LlvmWriter llvmWriter,
             bool isPointer = false)
         {
-            LlvmIndentedTextWriter writer = llvmWriter.Output;
+            var writer = llvmWriter.Output;
 
             var effectiveType = type;
 
