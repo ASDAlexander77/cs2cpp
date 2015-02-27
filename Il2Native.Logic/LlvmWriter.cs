@@ -1578,6 +1578,10 @@ namespace Il2Native.Logic
                     {
                         type.WriteCallBoxObjectMethod(this, opCode);
                     }
+                    else if (type.IsPointer)
+                    {
+                        this.System.System_Int32.WriteCallBoxObjectMethod(this, opCode);
+                    }
                     else
                     {
                         var resultOfOper0 = opCodeTypePart.OpCodeOperands[0].Result;
@@ -1594,6 +1598,10 @@ namespace Il2Native.Logic
                     if (type.IsValueType() || type.IsStructureType())
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
+                    }
+                    else if (type.IsPointer)
+                    {
+                        this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
                     }
                     else
                     {
@@ -2169,47 +2177,7 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
 
-                    var intPtrOper = this.IntTypeRequired(opCode);
-                    var nativeIntType = intPtrOper
-                        ? this.System.System_Int32
-                        : this.System.System_Void.ToPointerType();
-
-#if !MSCORLIB
-                    var requiredOutgoingType =
-                        RequiredIncomingType(
-                            opCode.UsedBy.OpCode.Any(Code.Add)
-                                ? opCode.UsedBy.OpCode.UsedBy.OpCode
-                                : opCode.UsedBy.OpCode);
-
-                    if (requiredOutgoingType.TypeEquals(this.System.System_Char.ToPointerType()) &&
-                        opCode.OpCodeOperands[0].Result.Type.TypeEquals(this.System.System_String))
-                    {
-                        // load address of first char of the string
-                        this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(this.System.System_String, "chars"));
-
-                        writer.WriteLine(string.Empty);
-
-                        var memberAccessResultNumber = opCode.Result;
-                        opCode.Result = null;
-                        this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
-
-                        writer.WriteLine(string.Empty);
-                        this.WriteBitcast(opCode, opCode.Result, this.System.System_Void.ToPointerType());
-                    }
-                    else
-                    {
-#endif
-                        this.LlvmConvert(
-                            opCode,
-                            "fptoui",
-                            "ptrtoint",
-                            nativeIntType,
-                            !intPtrOper,
-                           this.System.System_IntPtr,
-                           this.System.System_UIntPtr);
-#if !MSCORLIB
-                    }
-#endif
+                    this.WriteConvertToNativeInt(writer, opCode);
                     break;
 
                 case Code.Conv_I4:
@@ -2228,8 +2196,8 @@ namespace Il2Native.Logic
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    intPtrOper = this.IntTypeRequired(opCode);
-                    nativeIntType = intPtrOper
+                    var intPtrOper = this.IntTypeRequired(opCode);
+                    var nativeIntType = intPtrOper
                         ? this.System.System_Int32
                         : this.System.System_Void.ToPointerType();
                     this.LlvmConvert(
@@ -2494,6 +2462,51 @@ namespace Il2Native.Logic
                 case Code.Ckfinite:
                     throw new NotImplementedException();
             }
+        }
+
+        private void WriteConvertToNativeInt(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        {
+            var intPtrOper = this.IntTypeRequired(opCode);
+            var nativeIntType = intPtrOper
+                ? this.System.System_Int32
+                : this.System.System_Void.ToPointerType();
+
+#if !MSCORLIB
+            var requiredOutgoingType =
+                RequiredIncomingType(
+                    opCode.UsedBy.OpCode.Any(Code.Add)
+                        ? opCode.UsedBy.OpCode.UsedBy.OpCode
+                        : opCode.UsedBy.OpCode);
+
+            if (requiredOutgoingType.TypeEquals(this.System.System_Char.ToPointerType()) &&
+                opCode.OpCodeOperands[0].Result.Type.TypeEquals(this.System.System_String))
+            {
+                // load address of first char of the string
+                this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(this.System.System_String, "chars"));
+
+                writer.WriteLine(string.Empty);
+
+                var memberAccessResultNumber = opCode.Result;
+                opCode.Result = null;
+                this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
+
+                writer.WriteLine(string.Empty);
+                this.WriteBitcast(opCode, opCode.Result, this.System.System_Void.ToPointerType());
+            }
+            else
+            {
+#endif
+                this.LlvmConvert(
+                    opCode,
+                    "fptoui",
+                    "ptrtoint",
+                    nativeIntType,
+                    !intPtrOper,
+                    this.System.System_IntPtr,
+                    this.System.System_UIntPtr);
+#if !MSCORLIB
+            }
+#endif
         }
 
         public void AddRequiredRttiDeclaration(IType type)
