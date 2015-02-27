@@ -504,16 +504,16 @@ namespace Il2Native.Logic
                         t => t.GetMethods(flags).Where(m => m.IsOverride && m.IsGenericMethodDefinition)))
             {
                 var method = overrideGenericMethod;
-                var genericMethod = overrideGenericMethod;
+                var methodDefinition = overrideGenericMethod;
                 overrideSpecializedMethods.AddRange(
-                    from specializationMethod in
+                    from methodSpecialization in
                         genericMethodSpecializations.Where(m => m.IsVirtual || m.IsOverride || m.IsAbstract)
                     where
-                        method.DeclaringType.IsDerivedFrom(specializationMethod.DeclaringType) &&
-                        method.IsMatchingOverride(specializationMethod)
+                        method.DeclaringType.IsDerivedFrom(methodSpecialization.DeclaringType) &&
+                        method.IsMatchingOverride(methodSpecialization)
                     select
-                        genericMethod.ToSpecialization(
-                            MetadataGenericContext.Create(genericMethod, specializationMethod)));
+                        methodDefinition.ToSpecialization(
+                            MetadataGenericContext.CreateCustomMap(null, methodSpecialization, methodDefinition)));
             }
 
             // append to discovered

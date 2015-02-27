@@ -1250,20 +1250,20 @@ namespace PEAssemblyReader
             throw new Exception("Context is empty");
         }
 
-        private static FieldSymbol SubstituteFieldSymbolIfNeeded(FieldSymbol fiieldSymbol, IGenericContext genericContext)
+        private static FieldSymbol SubstituteFieldSymbolIfNeeded(FieldSymbol fieldSymbol, IGenericContext genericContext)
         {
             if (MetadataGenericContext.IsNullOrEmptyOrNoSpecializations(genericContext))
             {
-                return fiieldSymbol;
+                return fieldSymbol;
             }
 
-            var resolvedFieldSymbol = fiieldSymbol;
-            var field = new MetadataFieldAdapter(fiieldSymbol);
+            var resolvedFieldSymbol = fieldSymbol;
+            var field = new MetadataFieldAdapter(fieldSymbol);
             if (field.DeclaringType.IsGenericTypeDefinition)
             {
-                var constructedContainingType = SubstituteTypeSymbolIfNeeded(fiieldSymbol.ContainingType, genericContext);
+                var constructedContainingType = SubstituteTypeSymbolIfNeeded(fieldSymbol.ContainingType, genericContext);
                 var substitutedNamedTypeSymbol = constructedContainingType as SubstitutedNamedTypeSymbol;
-                resolvedFieldSymbol = new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fiieldSymbol);
+                resolvedFieldSymbol = new SubstitutedFieldSymbol(substitutedNamedTypeSymbol, fieldSymbol);
                 return resolvedFieldSymbol;
             }
 
@@ -1277,8 +1277,13 @@ namespace PEAssemblyReader
                 return methodSymbol;
             }
 
-            var resolvedMethodSymbol = methodSymbol;
             var method = new MetadataMethodAdapter(methodSymbol);
+            if (!method.IsGenericMethodDefinition && !method.DeclaringType.IsGenericTypeDefinition)
+            {
+                return methodSymbol;
+            }
+
+            var resolvedMethodSymbol = methodSymbol;
             if (method.DeclaringType.IsGenericTypeDefinition)
             {
                 var constructedContainingType = SubstituteTypeSymbolIfNeeded(methodSymbol.ContainingType, genericContext);
@@ -1297,7 +1302,7 @@ namespace PEAssemblyReader
                 }
             }
 
-            if (method.IsGenericMethodDefinition)
+            if (method.IsGenericMethodDefinition || method.IsGenericMethod)
             {
                 return ConstructMethodSymbol(resolvedMethodSymbol, methodSymbol.TypeSubstitution, genericContext);
             }
