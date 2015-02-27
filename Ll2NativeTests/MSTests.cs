@@ -569,6 +569,19 @@ namespace Ll2NativeTests
             // 237 - the same as 236
             // 239 - the same as 237, 236 etc
             // 243 - GetMethod
+            // 262 - GetMethods
+            // 278 - Type FullName not implemeneted fully
+            // 282 - Type.Base is not implemeneted
+            // 284 - 'System.Type' does not contain a definition for 'MakeArrayType'
+            // 285 - Type.IsAssignableFrom is not implemeneted
+            // 286 - GetCustomAttributes
+            // 287 - List.ToString not implemented
+            // 289 - GetConstructors not implemented
+            // 296 - 'ObjectModel' does not exist in the namespace 'System.Collections'
+            // 297 - 'RuntimeCompatibility' could not be found
+            // 305 - GetConstructors not implemented
+            // 311 - extern is used with DllImport
+            // 316 - TODO: NEED TO BE FIXED (new T() is removed in the code, find out why), call !!0 [CoreLib]System.Activator::CreateInstance<!!T>() needs to be replaced with new !!T();
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[]
@@ -609,9 +622,21 @@ namespace Ll2NativeTests
                 236,
                 237,
                 239,
-                243
+                243,
+                262,
+                278,
+                282,
+                284,
+                285,
+                286,
+                287,
+                289,
+                296,
+                297,
+                305,
+                311
             };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(311, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

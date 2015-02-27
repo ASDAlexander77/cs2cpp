@@ -421,14 +421,12 @@ namespace Il2Native.Logic
         /// </param>
         private static void DiscoverAllGenericMethodsOfInterfaces(
             IEnumerable<IType> allTypes,
-            ISet<IMethod> genericMethodSpecializations)
+            ReadingTypesContext readingTypesContext)
         {
-            var allSpecializedMethodsOfInterfaces =
-                genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod)
-                    .Distinct()
-                    .ToList();
-            var allSpecializedMethodsOfInterfacesGroupedByType =
-                allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
+            var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
+
+            var allSpecializedMethodsOfInterfaces = genericMethodSpecializations.Where(m => m.DeclaringType.IsInterface && m.IsGenericMethod).Distinct().ToList();
+            var allSpecializedMethodsOfInterfacesGroupedByType = allSpecializedMethodsOfInterfaces.GroupBy(m => m.DeclaringType);
 
             if (concurrent)
             {
@@ -437,8 +435,8 @@ namespace Il2Native.Logic
                     specializedTypeMethods =>
                         DiscoverAllGenericMethodsOfInterfacesForMethod(
                             allTypes,
-                            genericMethodSpecializations,
-                            specializedTypeMethods));
+                            specializedTypeMethods,
+                            readingTypesContext));
             }
             else
             {
@@ -446,16 +444,16 @@ namespace Il2Native.Logic
                 {
                     DiscoverAllGenericMethodsOfInterfacesForMethod(
                         allTypes,
-                        genericMethodSpecializations,
-                        specializedTypeMethods);
+                        specializedTypeMethods,
+                        readingTypesContext);
                 }
             }
         }
 
         private static void DiscoverAllGenericMethodsOfInterfacesForMethod(
             IEnumerable<IType> allTypes,
-            ISet<IMethod> genericMethodSpecializations,
-            IGrouping<IType, IMethod> specializedTypeMethods)
+            IGrouping<IType, IMethod> specializedTypeMethods,
+            ReadingTypesContext readingTypesContext)
         {
             var types = allTypes.Where(t => t.GetAllInterfaces().Contains(specializedTypeMethods.Key)).ToList();
             foreach (var interfaceMethodSpecialization in specializedTypeMethods)
@@ -479,7 +477,16 @@ namespace Il2Native.Logic
                         classMethodDefinition.ToSpecialization(
                             MetadataGenericContext.CreateCustomMap(@interfaceMethodDefinition, interfaceMethodSpecialization, classMethodDefinition));
 
-                    genericMethodSpecializations.Add(classMethodSpecialization);
+                    readingTypesContext.GenericMethodSpecializations.Add(classMethodSpecialization);
+
+                    // rediscover generic methods again
+                    classMethodSpecialization.DiscoverRequiredTypesAndMethodsInMethodBody(
+                        readingTypesContext.GenericTypeSpecializations,
+                        readingTypesContext.GenericMethodSpecializations,
+                        null,
+                        readingTypesContext.AdditionalTypesToProcess,
+                        new Queue<IMethod>());
+
                 }
             }
         }
@@ -492,8 +499,10 @@ namespace Il2Native.Logic
         /// </param>
         private static void DiscoverAllGenericVirtualMethods(
             IEnumerable<IType> allTypes,
-            ISet<IMethod> genericMethodSpecializations)
+            ReadingTypesContext readingTypesContext)
         {
+            var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
+
             // find all override of generic methods 
             var flags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static |
                         BindingFlags.Instance;
@@ -520,6 +529,14 @@ namespace Il2Native.Logic
             foreach (var overrideSpecializedMethod in overrideSpecializedMethods)
             {
                 genericMethodSpecializations.Add(overrideSpecializedMethod);
+
+                // rediscover generic methods again
+                overrideSpecializedMethod.DiscoverRequiredTypesAndMethodsInMethodBody(
+                    readingTypesContext.GenericTypeSpecializations,
+                    readingTypesContext.GenericMethodSpecializations,
+                    null,
+                    readingTypesContext.AdditionalTypesToProcess,
+                    new Queue<IMethod>());
             }
         }
 
@@ -910,11 +927,7 @@ namespace Il2Native.Logic
             // TODO: temp hack to initialize ThisType for TypeResolver
             _codeWriter.Initialize(allTypes.First());
 
-            sortedListOfTypes = SortTypesByUsage(types.ToList(), readingTypesContext);
-
-            DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext.GenericMethodSpecializations);
-
-            DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext.GenericMethodSpecializations);
+            sortedListOfTypes = SortTypesByUsage(types.ToList(), allTypes, readingTypesContext);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
@@ -1052,7 +1065,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> SortTypesByUsage(IList<IType> types, ReadingTypesContext readingTypesContext)
+        private static IList<IType> SortTypesByUsage(IList<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext)
         {
             var newOrder = new NamespaceContainer<IType>();
             var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
@@ -1082,6 +1095,10 @@ namespace Il2Native.Logic
                 typesWithRequired,
                 readingTypesContext,
                 true);
+
+            DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
+
+            DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
 
             ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
 
