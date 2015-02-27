@@ -640,7 +640,7 @@ namespace Ll2NativeTests
                 305,
                 311
             };
-            foreach (var index in Enumerable.Range(311, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(157, 400).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

@@ -43,7 +43,7 @@ namespace PEAssemblyReader
             this.localInfo = localInfo;
             this.LocalIndex = index;
 
-            this.lazyLocalType = new Lazy<IType>(this.CaluclateLocalType);
+            this.lazyLocalType = new Lazy<IType>(this.CalculateLocalType);
         }
 
         /// <summary>
@@ -101,9 +101,10 @@ namespace PEAssemblyReader
             }
         }
 
-        private IType CaluclateLocalType()
+        private IType CalculateLocalType()
         {
-            return MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.localInfo.Type, this.GenericContext).ResolveGeneric(this.GenericContext, this.localInfo.IsByRef, this.localInfo.IsPinned);
+            return MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.localInfo.Type, this.GenericContext)
+                                        .ToAdapter(this.localInfo.IsByRef, this.localInfo.IsPinned);
         }
     }
 }

@@ -31,18 +31,5 @@ namespace PEAssemblyReader
             this.methodDef = methodDef;
             this.IsConstructor = true;
         }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodDef">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataConstructorAdapter(MethodSymbol methodDef, IGenericContext genericContext)
-            : base(methodDef, genericContext)
-        {
-            this.methodDef = methodDef;
-            this.IsConstructor = true;
-        }
     }
 }

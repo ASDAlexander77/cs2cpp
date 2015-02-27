@@ -53,20 +53,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, IGenericContext genericContext, bool isFixed = false)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, bool isFixed = false)
             : this(fieldDef, isFixed)
-        {
-            this.GenericContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="fieldDef">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IGenericContext genericContext, bool isFixed = false)
-            : this(fieldDef, genericContext, isFixed)
         {
             this._contaningType = contaningType;
         }
@@ -91,10 +79,10 @@ namespace PEAssemblyReader
             {
                 if (_contaningType != null)
                 {
-                    return _contaningType.ResolveGeneric(this.GenericContext);
+                    return _contaningType.ToAdapter();
                 }
 
-                return this.fieldDef.ContainingType.ResolveGeneric(this.GenericContext);
+                return this.fieldDef.ContainingType.ToAdapter();
             }
         }
 
@@ -104,7 +92,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.fieldDef.Type.ResolveGeneric(this.GenericContext);
+                return this.fieldDef.Type.ToAdapter();
             }
         }
 
@@ -120,10 +108,6 @@ namespace PEAssemblyReader
                 return sb.ToString();
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>
@@ -233,7 +217,7 @@ namespace PEAssemblyReader
                 var peNamedTypeSymbol = this.fieldDef.ContainingType as PENamedTypeSymbol;
                 if (peNamedTypeSymbol != null)
                 {
-                    return new MetadataFieldAdapter(peNamedTypeSymbol.FixedElementField, this.GenericContext);
+                    return new MetadataFieldAdapter(peNamedTypeSymbol.FixedElementField);
                 }
 
                 return null;

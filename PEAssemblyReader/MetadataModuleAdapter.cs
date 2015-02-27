@@ -56,7 +56,7 @@ namespace PEAssemblyReader
             var fieldSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(fieldHandle) as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(SubstituteFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
+                return new MetadataFieldAdapter(SubstituteFieldSymbolIfNeeded(fieldSymbol, genericContext));
             }
 
             return null;
@@ -83,10 +83,10 @@ namespace PEAssemblyReader
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                    return new MetadataConstructorAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
                 }
 
-                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
             }
 
             throw new NotImplementedException();
@@ -1185,10 +1185,10 @@ namespace PEAssemblyReader
             {
                 if (methodSymbol.MethodKind == MethodKind.Constructor)
                 {
-                    return new MetadataConstructorAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                    return new MetadataConstructorAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
                 }
 
-                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
             }
 
             throw new KeyNotFoundException();
@@ -1441,19 +1441,19 @@ namespace PEAssemblyReader
             var typeSymbol = symbolForIlToken as TypeSymbol;
             if (typeSymbol != null && typeSymbol.TypeKind != TypeKind.Error)
             {
-                return SubstituteTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
+                return SubstituteTypeSymbolIfNeeded(typeSymbol, genericContext).ToAdapter();
             }
 
             var fieldSymbol = symbolForIlToken as FieldSymbol;
             if (fieldSymbol != null)
             {
-                return new MetadataFieldAdapter(SubstituteFieldSymbolIfNeeded(fieldSymbol, genericContext), genericContext);
+                return new MetadataFieldAdapter(SubstituteFieldSymbolIfNeeded(fieldSymbol, genericContext));
             }
 
             var methodSymbol = symbolForIlToken as MethodSymbol;
             if (methodSymbol != null)
             {
-                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext), genericContext);
+                return new MetadataMethodAdapter(SubstituteMethodSymbolIfNeeded(methodSymbol, genericContext));
             }
 
             throw new KeyNotFoundException();
@@ -1474,7 +1474,7 @@ namespace PEAssemblyReader
             var peModuleSymbol = this.moduleDef as PEModuleSymbol;
             var typeDefHandle = MetadataTokens.Handle(token);
             var typeSymbol = peModuleSymbol.GetMetadataDecoder(genericContext).GetSymbolForILToken(typeDefHandle) as TypeSymbol;
-            return SubstituteTypeSymbolIfNeeded(typeSymbol, genericContext).ResolveGeneric(genericContext);
+            return SubstituteTypeSymbolIfNeeded(typeSymbol, genericContext).ToAdapter();
         }
 
         /// <summary>
@@ -1503,10 +1503,10 @@ namespace PEAssemblyReader
             {
                 if (genericContext == null)
                 {
-                    return typeSymbol.OriginalDefinition.ResolveGeneric(genericContext);
+                    return typeSymbol.OriginalDefinition.ToAdapter();
                 }
 
-                return typeSymbol.ResolveGeneric(genericContext);
+                return typeSymbol.ToAdapter();
             }
 
             throw new KeyNotFoundException();

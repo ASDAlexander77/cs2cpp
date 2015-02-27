@@ -3635,7 +3635,7 @@ namespace Il2Native.Logic
 
                     writer.WriteLine(string.Empty);
                 }
-                else
+                else if (!effectiveType.IsByRef)
                 {
                     effectiveType = effectiveType.ToClass();
                 }
@@ -3660,7 +3660,7 @@ namespace Il2Native.Logic
 
             this.CheckIfTypeIsRequiredForBody(effectiveType);
 
-            this.WriteFieldIndex(writer, effectiveType, opCodeFieldInfoPart.Operand);
+            this.WriteFieldIndex(writer, effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType, opCodeFieldInfoPart.Operand);
         }
 
         /// <summary>

@@ -34,22 +34,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="paramDef">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataParameterAdapter(ParameterSymbol paramDef, IGenericContext genericContext)
-            : this(paramDef)
-        {
-            this.GenericContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool IsOut
         {
             get
@@ -84,7 +68,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                var paramType = this.paramDef.Type.ResolveGeneric(this.GenericContext, this.IsRef || this.IsOut);
+                var paramType = this.paramDef.Type.ToAdapter(this.IsRef || this.IsOut);
 
                 if (this.IsRef && !paramType.IsByRef)
                 {

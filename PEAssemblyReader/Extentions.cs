@@ -328,42 +328,9 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        [Obsolete]
-        internal static IType ResolveGeneric(this TypeSymbol typeSymbol, IGenericContext genericContext, bool isByRef = false, bool isPinned = false)
+        internal static IType ToAdapter(this TypeSymbol typeSymbol, bool isByRef = false, bool isPinned = false)
         {
-            // TODO: Array.Address return type is ErrorType ?, find out why.
-            ////Debug.Assert(!typeSymbol.IsErrorType());
-
-            if (genericContext != null && !genericContext.IsEmpty)
-            {
-                if (typeSymbol.IsTypeParameter() || typeSymbol is UnboundArgumentErrorTypeSymbol)
-                {
-                    return genericContext.ResolveTypeParameter(new MetadataTypeAdapter(typeSymbol, isByRef, isPinned));
-                }
-
-                var arrayType = typeSymbol as ArrayTypeSymbol;
-                if (arrayType != null)
-                {
-                    return arrayType.ElementType.ResolveGeneric(genericContext, isByRef, isPinned).ToArrayType(arrayType.Rank);
-                }
-
-                // TODO: for test gtest-176.cs it causes cercular references
-                ////var constructedNamedTypeSymbol = typeSymbol as ConstructedNamedTypeSymbol;
-                ////if (constructedNamedTypeSymbol != null)
-                ////{
-                ////    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataTypeAdapter(constructedNamedTypeSymbol, genericContext), true);
-                ////    newContext.AppendMap(genericContext);
-                ////    return new MetadataTypeAdapter(constructedNamedTypeSymbol, newContext, isByRef, isPinned);
-                ////}
-
-                var namedTypeSymbol = typeSymbol as NamedTypeSymbol;
-                if (namedTypeSymbol != null)
-                {
-                    return new MetadataTypeAdapter(namedTypeSymbol, genericContext, isByRef, isPinned);
-                }
-            }
-
-            return new MetadataTypeAdapter(typeSymbol, genericContext, isByRef, isPinned);
+            return new MetadataTypeAdapter(typeSymbol, isByRef, isPinned);
         }
 
         /// <summary>
@@ -374,18 +341,9 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        [Obsolete]
-        internal static IMethod ResolveGeneric(this MethodSymbol methodSymbol, IGenericContext genericContext)
+        internal static IMethod ToAdapter(this MethodSymbol methodSymbol)
         {
-            ////var constructedMethodSymbol = methodSymbol as ConstructedMethodSymbol;
-            ////if (constructedMethodSymbol != null)
-            ////{
-            ////    var newContext = MetadataGenericContext.DiscoverFrom(new MetadataMethodAdapter(constructedMethodSymbol, genericContext), true);
-            ////    newContext.AppendMap(genericContext);
-            ////    return new MetadataMethodAdapter(constructedMethodSymbol, newContext);
-            ////}
-
-            return new MetadataMethodAdapter(methodSymbol, genericContext);
+            return new MetadataMethodAdapter(methodSymbol);
         }
 
         /// <summary>

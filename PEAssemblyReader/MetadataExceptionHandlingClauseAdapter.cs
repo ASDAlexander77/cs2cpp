@@ -67,8 +67,7 @@ namespace PEAssemblyReader
             get
             {
                 return this.catchType != null
-                           ? new MetadataTypeAdapter(
-                                 MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.catchType, this.GenericContext), this.GenericContext)
+                           ? new MetadataTypeAdapter(MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.catchType, this.GenericContext))
                            : null;
             }
         }

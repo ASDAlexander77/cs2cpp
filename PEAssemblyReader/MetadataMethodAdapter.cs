@@ -81,18 +81,6 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyParameters = new Lazy<IEnumerable<IParameter>>(this.CalculateParameters);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodDef">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataMethodAdapter(MethodSymbol methodDef, IGenericContext genericContext)
-            : this(methodDef)
-        {
-            this.GenericContext = genericContext;
 
             var peMethodSymbol = methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
@@ -168,11 +156,11 @@ namespace PEAssemblyReader
                     var typeSymbol = this.methodDef.AssociatedSymbol as TypeSymbol;
                     if (typeSymbol != null)
                     {
-                        return typeSymbol.ResolveGeneric(this.GenericContext);
+                        return typeSymbol.ToAdapter();
                     }
                 }
 
-                return this.methodDef.ContainingType.ResolveGeneric(this.GenericContext);
+                return this.methodDef.ContainingType.ToAdapter();
             }
         }
 
@@ -207,10 +195,6 @@ namespace PEAssemblyReader
                 return this.lazyFullName.Value;
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -402,7 +386,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.ReturnType.ResolveGeneric(this.GenericContext);
+                return this.methodDef.ReturnType.ToAdapter();
             }
         }
 
@@ -487,7 +471,7 @@ namespace PEAssemblyReader
                 return new MetadataTypeAdapter[0];
             }
 
-            return this.methodDef.TypeArguments.Select(a => a.ResolveGeneric(this.GenericContext));
+            return this.methodDef.TypeArguments.Select(a => a.ToAdapter());
         }
 
         /// <summary>
@@ -536,7 +520,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
-            return new MetadataMethodBodyAdapter(this.methodDef, genericContext ?? this.GenericContext);
+            return new MetadataMethodBodyAdapter(this.methodDef, genericContext);
         }
 
         /// <summary>
@@ -559,7 +543,7 @@ namespace PEAssemblyReader
 
         public IEnumerable<IParameter> CalculateParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p, this.GenericContext)).ToList();
+            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p)).ToList();
         }
 
         /// <summary>
@@ -594,7 +578,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IMethod ToSpecialization(IGenericContext genericContext)
         {
-            return MetadataModuleAdapter.SubstituteMethodSymbolIfNeeded(this.methodDef, genericContext).ResolveGeneric(genericContext);
+            return MetadataModuleAdapter.SubstituteMethodSymbolIfNeeded(this.methodDef, genericContext).ToAdapter();
         }
 
         /// <summary>
@@ -700,13 +684,13 @@ namespace PEAssemblyReader
             {
                 if (this.methodDef.ContainingType.IsNestedType())
                 {
-                    result.Append(this.methodDef.ContainingType.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                    result.Append(this.methodDef.ContainingType.ContainingType.ToAdapter().Name);
                     ////result.Append('+');
                     // Metadata explicitname should contains +
                     result.Append('.');
                 }
 
-                result.Append(this.methodDef.ContainingType.ResolveGeneric(this.GenericContext).Name);
+                result.Append(this.methodDef.ContainingType.ToAdapter().Name);
                 result.Append('.');
             }
 
@@ -771,7 +755,7 @@ namespace PEAssemblyReader
             if (this.methodDef.ContainingType.IsGenericType && this.methodDef.IsExplicitInterfaceImplementation)
             {
                 var implMethodSymbol = this.methodDef.ExplicitInterfaceImplementations.First();
-                var resolveType = implMethodSymbol.ResolveGeneric(this.GenericContext);
+                var resolveType = implMethodSymbol.ToAdapter();
                 sb.Append(resolveType.FullName);
             }
             else
