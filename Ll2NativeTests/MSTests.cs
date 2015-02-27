@@ -323,6 +323,7 @@ namespace Ll2NativeTests
             // 135 - Reflection
             // 157 - reflection, attributes
             // 158 - reflection, attributes
+            // 167 - GetCustomAttributes
             // 174 - can't be compiled (21,3): error CS0103: The name 'comparer' does not exist in the current context
             // 177 - using Reflection
             // 178 - using Reflection
@@ -375,6 +376,7 @@ namespace Ll2NativeTests
             // 367 - GetFields not implemented
             // 377 - lib with .IL file
             // 382 - using GetField
+            // 388 - Xml
             // -----------
             // 32, 55, 74 - missing class
 
@@ -413,6 +415,7 @@ namespace Ll2NativeTests
                         135,
                         157,
                         158,
+                        167,
                         174,
                         177,
                         178,
@@ -464,7 +467,8 @@ namespace Ll2NativeTests
                         362,
                         367,
                         377,
-                        382
+                        382,
+                        388
                     });
 
             if (CompilerHelper.UsingRoslyn)
