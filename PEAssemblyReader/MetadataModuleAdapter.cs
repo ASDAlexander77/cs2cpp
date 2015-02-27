@@ -1299,16 +1299,14 @@ namespace PEAssemblyReader
 
             if (method.IsGenericMethodDefinition)
             {
-                return ConstructMethodSymbol(resolvedMethodSymbol, genericContext);
+                return ConstructMethodSymbol(resolvedMethodSymbol, methodSymbol.TypeSubstitution, genericContext);
             }
 
             return resolvedMethodSymbol;
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, NamedTypeSymbol namedTypeSymbol, AbstractTypeParameterMap typeSubstitution)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> definitionTypeParameters, NamedTypeSymbol namedTypeSymbol, AbstractTypeParameterMap typeSubstitution)
         {
-            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
-
             var current = namedTypeSymbol;
             while (current != null && current.TypeArguments.Length == 0)
             {
@@ -1320,49 +1318,49 @@ namespace PEAssemblyReader
                 throw new Exception("Could not find TypeArguments in Generic Context");
             }
 
-            foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
+            return GetTypeArguments(definitionTypeParameters, current.TypeSubstitution, typeSubstitution);
+        }
+
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> definitionTypeParameters, AbstractTypeParameterMap currentTypeMap, AbstractTypeParameterMap typeSubstitutionOpt)
+        {
+            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(definitionTypeParameters.Length);
+
+            foreach (var typeParameterSymbol in definitionTypeParameters)
             {
-                typeArguments.Add(
-                    current.TypeSubstitution.SubstituteType(
-                        typeSubstitution != null ? typeSubstitution.SubstituteType(typeParameterSymbol) : typeParameterSymbol));
+                if (typeSubstitutionOpt != null)
+                {
+                    var substitutedType = currentTypeMap.SubstituteType(typeParameterSymbol);
+                    if (!object.ReferenceEquals(substitutedType, typeParameterSymbol))
+                    {
+                        typeArguments.Add(currentTypeMap.SubstituteType(substitutedType));
+                    }
+                    else
+                    {
+                        var substitutedTypeOpt = typeSubstitutionOpt.SubstituteType(typeParameterSymbol.OriginalDefinition);
+                        typeArguments.Add(currentTypeMap.SubstituteType(substitutedTypeOpt));
+                    }
+                }
+                else
+                {
+                    typeArguments.Add(currentTypeMap.SubstituteType(typeParameterSymbol));
+                }
             }
 
             return typeArguments.ToImmutableArray();
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, MethodSymbol methodSymbol, AbstractTypeParameterMap typeSubstitution)
+        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> definitionTypeParameters, MethodSymbol methodSymbol, AbstractTypeParameterMap typeSubstitution)
         {
-            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
-
             var current = methodSymbol;
             if (current == null)
             {
                 throw new Exception("Could not find TypeArguments in Generic Context");
             }
 
-            foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
-            {
-                typeArguments.Add(
-                    current.TypeSubstitution.SubstituteType(
-                        typeSubstitution != null ? typeSubstitution.SubstituteType(typeParameterSymbol) : typeParameterSymbol));
-            }
-
-            return typeArguments.ToImmutableArray();
+            return GetTypeArguments(definitionTypeParameters, current.TypeSubstitution, typeSubstitution);
         }
 
-        private static ImmutableArray<TypeSymbol> GetTypeArguments(ImmutableArray<TypeParameterSymbol> originalDefinitionTypeParameters, AbstractTypeParameterMap typeSubstitution)
-        {
-            var typeArguments = ImmutableArray.CreateBuilder<TypeSymbol>(originalDefinitionTypeParameters.Length);
-
-            foreach (var typeParameterSymbol in originalDefinitionTypeParameters)
-            {
-                typeArguments.Add(typeSubstitution.SubstituteType(typeParameterSymbol));
-            }
-
-            return typeArguments.ToImmutableArray();
-        }
-
-        private static MethodSymbol ConstructMethodSymbol(MethodSymbol methodSymbol, IGenericContext genericContext)
+        private static MethodSymbol ConstructMethodSymbol(MethodSymbol methodSymbol, AbstractTypeParameterMap methodTypeSubstitution, IGenericContext genericContext)
         {
             var metadataGenericContext = genericContext as MetadataGenericContext;
             if (metadataGenericContext != null)
@@ -1370,7 +1368,7 @@ namespace PEAssemblyReader
                 var customTypeSubstitution = metadataGenericContext.CustomTypeSubstitution;
                 if (customTypeSubstitution != null)
                 {
-                    return new ConstructedMethodSymbol(methodSymbol, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, customTypeSubstitution));
+                    return new ConstructedMethodSymbol(methodSymbol, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, customTypeSubstitution, null));
                 }
             }
 
@@ -1378,14 +1376,16 @@ namespace PEAssemblyReader
             if (metadataMethodAdapter != null)
             {
                 var methodSymbolContext = metadataMethodAdapter.MethodDef;
-                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, methodSymbolContext, methodSymbol.TypeSubstitution));
+                var constructedFrom = methodSymbol.ConstructedFrom;
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, methodSymbolContext, methodTypeSubstitution));
             }
 
             var metadataTypeAdapter = genericContext.TypeSpecialization as MetadataTypeAdapter;
             if (metadataTypeAdapter != null)
             {
-                var namedTypeSymbol = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
-                return new ConstructedMethodSymbol(methodSymbol.OriginalDefinition, GetTypeArguments(methodSymbol.OriginalDefinition.TypeParameters, namedTypeSymbol, methodSymbol.TypeSubstitution));
+                var namedTypeSymbolContext = metadataTypeAdapter.TypeDef as NamedTypeSymbol;
+                var constructedFrom = methodSymbol.ConstructedFrom;
+                return new ConstructedMethodSymbol(constructedFrom.ConstructedFrom, GetTypeArguments(constructedFrom.TypeParameters, namedTypeSymbolContext, methodTypeSubstitution));
             }
 
             return null;
