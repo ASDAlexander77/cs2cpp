@@ -109,7 +109,7 @@ namespace Il2Native.Logic.Gencode
             code = codeList.GetCode();
 
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.System.System_Int32);
             if (!method.ReturnType.IsVoid())
             {
                 locals.Add(method.ReturnType);
@@ -126,7 +126,7 @@ namespace Il2Native.Logic.Gencode
                 new SynthesizedStaticMethod(
                     string.Empty,
                     method.DeclaringType,
-                    typeResolver.ResolveType("System.Void"),
+                    typeResolver.System.System_Void,
                     new List<IParameter>(),
                     (llvmWriter, opCode) =>
                     {
@@ -143,7 +143,7 @@ namespace Il2Native.Logic.Gencode
 
 #if MSCORLIB
             // 5, to case Object to Object[]
-            tokenResolutions.Add(typeResolver.ResolveType("System.Object").ToArrayType(1));
+            tokenResolutions.Add(typeResolver.System.System_Object.ToArrayType(1));
 #endif
         }
 
@@ -320,7 +320,7 @@ namespace Il2Native.Logic.Gencode
 
             var thisResult = opCode.Result;
 
-            var delegateType = llvmWriter.ResolveType("System.Delegate");
+            var delegateType = llvmWriter.System.System_Delegate;
 
             // write access to a field 1
             try
@@ -413,7 +413,7 @@ namespace Il2Native.Logic.Gencode
 
             var thisResult = opCode.Result;
 
-            var delegateType = llvmWriter.ResolveType("System.Delegate");
+            var delegateType = llvmWriter.System.System_Delegate;
 
             // write access to a field 1
             try
@@ -461,7 +461,7 @@ namespace Il2Native.Logic.Gencode
                 var methodResultNumber = opCode.Result;
 
                 // switch code if method is static
-                var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Boolean"));
+                var compareResult = llvmWriter.WriteSetResultNumber(opCode, llvmWriter.System.System_Boolean);
                 writer.Write("icmp ne ");
                 objectResultNumber.Type.WriteTypePrefix(llvmWriter);
                 writer.Write(" ");

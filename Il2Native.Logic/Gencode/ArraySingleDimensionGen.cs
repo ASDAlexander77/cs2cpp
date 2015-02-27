@@ -46,8 +46,8 @@ namespace Il2Native.Logic.Gencode
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var shortType = typeResolver.ResolveType("System.Int16");
-            var intType = typeResolver.ResolveType("System.Int32");
+            var shortType = typeResolver.System.System_Int16;
+            var intType = typeResolver.System.System_Int32;
 
             yield return shortType.ToField(arrayType, "rank");
             yield return shortType.ToField(arrayType, "typeCode");
@@ -190,8 +190,8 @@ namespace Il2Native.Logic.Gencode
 
             // locals
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
 
             // tokens
             tokenResolutions = new List<object>();
@@ -219,7 +219,7 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixDataType;
             }
 
-            var arraySystemType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+            var arraySystemType = typeResolver.System.System_Byte.ToArrayType(1);
 
             var sb = new StringBuilder();
             foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
@@ -264,7 +264,7 @@ namespace Il2Native.Logic.Gencode
                 return _singleDimArrayPrefixNullConstData;
             }
 
-            var arraySystemType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+            var arraySystemType = typeResolver.System.System_Byte.ToArrayType(1);
 
             var sb = new StringBuilder();
             foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
@@ -435,7 +435,7 @@ namespace Il2Native.Logic.Gencode
             Array.Copy(data, subData, Math.Min(data.Length, arrayLength));
 
             var bytesIndex = llvmWriter.GetBytesIndex(subData);
-            var byteType = llvmWriter.ResolveType("System.Byte");
+            var byteType = llvmWriter.System.System_Byte;
             var arrayData = llvmWriter.GetArrayTypeReference(
                 string.Concat("@.bytes", bytesIndex),
                 byteType,
@@ -484,7 +484,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
 
-            llvmWriter.CheckIfTypeIsRequiredForBody(llvmWriter.ResolveType("System.Byte").ToArrayType(1));
+            llvmWriter.CheckIfTypeIsRequiredForBody(llvmWriter.System.System_Byte.ToArrayType(1));
         }
 
         /// <summary>
@@ -519,7 +519,7 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.WriteBitcast(
                     opCodeNope,
                     arrayInstanceResult,
-                    llvmWriter.ResolveType("System.Byte").ToArrayType(1));
+                    llvmWriter.System.System_Byte.ToArrayType(1));
                 arrayInstanceResult = opCodeNope.Result;
 
                 writer.WriteLine(string.Empty);

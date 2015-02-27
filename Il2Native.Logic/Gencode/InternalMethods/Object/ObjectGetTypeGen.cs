@@ -27,8 +27,8 @@
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     SynthesizedGetTypeMethod.Name,
-                    typeResolver.ResolveType("System.Object"),
-                    typeResolver.ResolveType("System.Type"),
+                    typeResolver.System.System_Object,
+                    typeResolver.System.System_Type,
                     true));
 
             var locals = new List<IType>();

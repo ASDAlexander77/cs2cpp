@@ -23,7 +23,7 @@
             codeList.AppendInt(Code.Ldfld, 2);
             codeList.Add(Code.Ret);
 
-            var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
 
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(arrayType);

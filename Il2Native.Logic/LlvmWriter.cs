@@ -478,7 +478,7 @@ namespace Il2Native.Logic
                 StaticConstructors.Add(ctor);
             }
 
-            this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, ThisType, ResolveType("System.Void"));
+            this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, ThisType, this.System.System_Void);
 
             this.WriteMethodNumber();
 
@@ -851,11 +851,6 @@ namespace Il2Native.Logic
             RequiredTypesForBody.Clear();
         }
 
-        public void Initialize(IType type)
-        {
-            ReadTypeInfo(type);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="moduleName">
@@ -1039,11 +1034,11 @@ namespace Il2Native.Logic
             {
                 case Code.Ldc_I4_0:
                     opCode.Result = opCode.UseAsNull
-                        ? new ConstValue(null, ResolveType("System.Void").ToPointerType())
-                        : new ConstValue(0, ResolveType("System.Int32"));
+                        ? new ConstValue(null, this.System.System_Void.ToPointerType())
+                        : new ConstValue(0, this.System.System_Int32);
                     break;
                 case Code.Ldc_I4_1:
-                    opCode.Result = new ConstValue(1, ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(1, this.System.System_Int32);
                     break;
                 case Code.Ldc_I4_2:
                 case Code.Ldc_I4_3:
@@ -1055,42 +1050,42 @@ namespace Il2Native.Logic
                     var asString = code.ToString();
                     opCode.Result = new ConstValue(
                         int.Parse(asString.Substring(asString.Length - 1, 1)),
-                        ResolveType("System.Int32"));
+                       this.System.System_Int32);
                     break;
                 case Code.Ldc_I4_M1:
-                    opCode.Result = new ConstValue(-1, ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(-1, this.System.System_Int32);
                     break;
                 case Code.Ldc_I4:
                     var opCodeInt32 = opCode as OpCodeInt32Part;
-                    opCode.Result = new ConstValue(opCodeInt32.Operand, ResolveType("System.Int32"));
+                    opCode.Result = new ConstValue(opCodeInt32.Operand, this.System.System_Int32);
                     break;
                 case Code.Ldc_I4_S:
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     opCode.Result = new ConstValue(
                         opCodeInt32.Operand > 127 ? -(256 - opCodeInt32.Operand) : opCodeInt32.Operand,
-                        ResolveType("System.Int32"));
+                       this.System.System_Int32);
                     break;
                 case Code.Ldc_I8:
                     var opCodeInt64 = opCode as OpCodeInt64Part;
-                    opCode.Result = new ConstValue(opCodeInt64.Operand, ResolveType("System.Int64"));
+                    opCode.Result = new ConstValue(opCodeInt64.Operand, this.System.System_Int64);
                     break;
                 case Code.Ldc_R4:
                     var opCodeSingle = opCode as OpCodeSinglePart;
 
                     if (float.IsPositiveInfinity(opCodeSingle.Operand))
                     {
-                        opCode.Result = new ConstValue("0x7FF0000000000000", ResolveType("System.Single"));
+                        opCode.Result = new ConstValue("0x7FF0000000000000", this.System.System_Single);
                     }
                     else if (float.IsNegativeInfinity(opCodeSingle.Operand))
                     {
-                        opCode.Result = new ConstValue("0xFFF0000000000000", ResolveType("System.Single"));
+                        opCode.Result = new ConstValue("0xFFF0000000000000", this.System.System_Single);
                     }
                     else
                     {
                         var g = BitConverter.DoubleToInt64Bits(opCodeSingle.Operand);
                         opCode.Result = new ConstValue(
                             string.Format("0x{0}", g.ToString("X")),
-                            ResolveType("System.Single"));
+                           this.System.System_Single);
                     }
 
                     break;
@@ -1098,25 +1093,25 @@ namespace Il2Native.Logic
                     var opCodeDouble = opCode as OpCodeDoublePart;
                     if (double.IsPositiveInfinity(opCodeDouble.Operand))
                     {
-                        opCode.Result = new ConstValue("0x7FF0000000000000", ResolveType("System.Double"));
+                        opCode.Result = new ConstValue("0x7FF0000000000000", this.System.System_Double);
                     }
                     else if (double.IsNegativeInfinity(opCodeDouble.Operand))
                     {
-                        opCode.Result = new ConstValue("0xFFF0000000000000", ResolveType("System.Double"));
+                        opCode.Result = new ConstValue("0xFFF0000000000000", this.System.System_Double);
                     }
                     else
                     {
                         var g = BitConverter.DoubleToInt64Bits(opCodeDouble.Operand);
                         opCode.Result = new ConstValue(
                             string.Format("0x{0}", g.ToString("X")),
-                            ResolveType("System.Double"));
+                           this.System.System_Double);
                     }
 
                     break;
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
-                    var stringType = ResolveType("System.String");
-                    var charType = ResolveType("System.Char");
+                    var stringType = this.System.System_String;
+                    var charType = this.System.System_Char;
                     var charArrayType = charType.ToArrayType(1);
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
                     var firstParameterValue =
@@ -1131,13 +1126,13 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldnull:
-                    opCode.Result = new ConstValue(null, ResolveType("System.Void").ToPointerType());
+                    opCode.Result = new ConstValue(null, this.System.System_Void.ToPointerType());
                     break;
 
                 case Code.Arglist:
 
                     // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
-                    opCode.Result = new ConstValue("undef", ResolveType("System.Object"));
+                    opCode.Result = new ConstValue("undef", this.System.System_Object);
                     break;
 
                 case Code.Ldtoken:
@@ -1145,7 +1140,7 @@ namespace Il2Native.Logic
                     // TODO: finish loading Token  
                     //var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     ////var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
-                    opCode.Result = new ConstValue("undef", ResolveType("System.Object"));
+                    opCode.Result = new ConstValue("undef", this.System.System_Object);
 
                     var opCodeTypePart = opCode as OpCodeTypePart;
                     if (opCodeTypePart != null)
@@ -1161,7 +1156,7 @@ namespace Il2Native.Logic
                         opCode,
                         "alloca i8, ",
                         this.GetIntTypeByByteSize(PointerSize),
-                        ResolveType("System.Byte").ToPointerType(),
+                       this.System.System_Byte.ToPointerType(),
                         OperandOptions.AdjustIntTypes | OperandOptions.CastPointersToBytePointer);
                     writer.Write(", align 1");
 
@@ -1810,8 +1805,8 @@ namespace Il2Native.Logic
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
-                    var intPtrType = ResolveType("System.IntPtr");
-                    var voidPtrType = ResolveType("System.Void").ToPointerType();
+                    var intPtrType = this.System.System_IntPtr;
+                    var voidPtrType = this.System.System_Void.ToPointerType();
                     var convertString = this.WriteToString(
                         () =>
                         {
@@ -1821,7 +1816,7 @@ namespace Il2Native.Logic
                             this.Output.Write(opCodeMethodInfoPart.Operand.GetFullMethodName());
                             this.Output.Write(" to i8*)");
                         });
-                    var value = new FullyDefinedReference(convertString, ResolveType("System.Byte").ToPointerType());
+                    var value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
 
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
@@ -1868,7 +1863,7 @@ namespace Il2Native.Logic
                     }
 
                     // bitcast method function address to Byte*
-                    this.WriteSetResultNumber(opCode, ResolveType("System.Byte").ToPointerType());
+                    this.WriteSetResultNumber(opCode, this.System.System_Byte.ToPointerType());
                     writer.Write("bitcast ");
                     this.WriteMethodPointerType(writer, methodInfo, thisType);
                     writer.Write(" ");
@@ -1887,8 +1882,8 @@ namespace Il2Native.Logic
                     methodAddressResultNumber = opCode.Result;
                     opCode.Result = null;
 
-                    intPtrType = ResolveType("System.IntPtr");
-                    voidPtrType = ResolveType("System.Void").ToPointerType();
+                    intPtrType = this.System.System_IntPtr;
+                    voidPtrType = this.System.System_Void.ToPointerType();
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
@@ -1972,7 +1967,7 @@ namespace Il2Native.Logic
                         string.Format(oper, sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2035,7 +2030,7 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fcmp ueq" : "icmp eq",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2049,7 +2044,7 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fcmp ult" : string.Format("icmp {0}lt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2062,7 +2057,7 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fcmp ult" : "icmp ult",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2076,7 +2071,7 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fcmp ugt" : string.Format("icmp {0}gt", sign),
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2089,7 +2084,7 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fcmp ugt" : "icmp ugt",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
-                        ResolveType("System.Boolean"));
+                       this.System.System_Boolean);
 
                     this.WriteDbgLine(opCode);
 
@@ -2101,9 +2096,9 @@ namespace Il2Native.Logic
                         opCode,
                         "fptrunc",
                         "sitofp",
-                        ResolveType("System.Single"),
+                       this.System.System_Single,
                         false,
-                        ResolveType("System.Single"));
+                       this.System.System_Single);
                     break;
 
                 case Code.Conv_R8:
@@ -2111,9 +2106,9 @@ namespace Il2Native.Logic
                         opCode,
                         "fpext",
                         "sitofp",
-                        ResolveType("System.Double"),
+                       this.System.System_Double,
                         false,
-                        ResolveType("System.Double"));
+                       this.System.System_Double);
                     break;
 
                 case Code.Conv_I1:
@@ -2123,10 +2118,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptosi",
                         "trunc",
-                        ResolveType("System.SByte"),
+                       this.System.System_SByte,
                         false,
-                        ResolveType("System.SByte"),
-                        ResolveType("System.Byte"));
+                       this.System.System_SByte,
+                       this.System.System_Byte);
                     break;
 
                 case Code.Conv_U1:
@@ -2136,10 +2131,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptoui",
                         "trunc",
-                        ResolveType("System.Byte"),
+                       this.System.System_Byte,
                         false,
-                        ResolveType("System.SByte"),
-                        ResolveType("System.Byte"));
+                       this.System.System_SByte,
+                       this.System.System_Byte);
                     break;
 
                 case Code.Conv_I2:
@@ -2149,11 +2144,11 @@ namespace Il2Native.Logic
                         opCode,
                         "fptosi",
                         "trunc",
-                        ResolveType("System.Int16"),
+                       this.System.System_Int16,
                         false,
-                        ResolveType("System.Int16"),
-                        ResolveType("System.UInt16"),
-                        ResolveType("System.Char"));
+                       this.System.System_Int16,
+                       this.System.System_UInt16,
+                       this.System.System_Char);
                     break;
 
                 case Code.Conv_U2:
@@ -2163,11 +2158,11 @@ namespace Il2Native.Logic
                         opCode,
                         "fptoui",
                         "trunc",
-                        ResolveType("System.UInt16"),
+                       this.System.System_UInt16,
                         false,
-                        ResolveType("System.Int16"),
-                        ResolveType("System.UInt16"),
-                        ResolveType("System.Char"));
+                       this.System.System_Int16,
+                       this.System.System_UInt16,
+                       this.System.System_Char);
                     break;
 
                 case Code.Conv_I:
@@ -2176,8 +2171,8 @@ namespace Il2Native.Logic
 
                     var intPtrOper = this.IntTypeRequired(opCode);
                     var nativeIntType = intPtrOper
-                        ? ResolveType("System.Int32")
-                        : ResolveType("System.Void").ToPointerType();
+                        ? this.System.System_Int32
+                        : this.System.System_Void.ToPointerType();
 
 #if !MSCORLIB
                     var requiredOutgoingType =
@@ -2186,11 +2181,11 @@ namespace Il2Native.Logic
                                 ? opCode.UsedBy.OpCode.UsedBy.OpCode
                                 : opCode.UsedBy.OpCode);
 
-                    if (requiredOutgoingType.TypeEquals(ResolveType("System.Char").ToPointerType()) &&
-                        opCode.OpCodeOperands[0].Result.Type.TypeEquals(ResolveType("System.String")))
+                    if (requiredOutgoingType.TypeEquals(this.System.System_Char.ToPointerType()) &&
+                        opCode.OpCodeOperands[0].Result.Type.TypeEquals(this.System.System_String))
                     {
                         // load address of first char of the string
-                        this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(ResolveType("System.String"), "chars"));
+                        this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(this.System.System_String, "chars"));
 
                         writer.WriteLine(string.Empty);
 
@@ -2199,7 +2194,7 @@ namespace Il2Native.Logic
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
 
                         writer.WriteLine(string.Empty);
-                        this.WriteBitcast(opCode, opCode.Result, ResolveType("System.Void").ToPointerType());
+                        this.WriteBitcast(opCode, opCode.Result, this.System.System_Void.ToPointerType());
                     }
                     else
                     {
@@ -2210,8 +2205,8 @@ namespace Il2Native.Logic
                             "ptrtoint",
                             nativeIntType,
                             !intPtrOper,
-                            ResolveType("System.IntPtr"),
-                            ResolveType("System.UIntPtr"));
+                           this.System.System_IntPtr,
+                           this.System.System_UIntPtr);
 #if !MSCORLIB
                     }
 #endif
@@ -2224,10 +2219,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptoui",
                         "trunc",
-                        ResolveType("System.Int32"),
+                       this.System.System_Int32,
                         false,
-                        ResolveType("System.Int32"),
-                        ResolveType("System.UInt32"));
+                       this.System.System_Int32,
+                       this.System.System_UInt32);
                     break;
 
                 case Code.Conv_U:
@@ -2235,16 +2230,16 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U_Un:
                     intPtrOper = this.IntTypeRequired(opCode);
                     nativeIntType = intPtrOper
-                        ? ResolveType("System.Int32")
-                        : ResolveType("System.Void").ToPointerType();
+                        ? this.System.System_Int32
+                        : this.System.System_Void.ToPointerType();
                     this.LlvmConvert(
                         opCode,
                         "fptosi",
                         "trunc",
                         nativeIntType,
                         !intPtrOper,
-                        ResolveType("System.IntPtr"),
-                        ResolveType("System.UIntPtr"));
+                       this.System.System_IntPtr,
+                       this.System.System_UIntPtr);
                     break;
 
                 case Code.Conv_U4:
@@ -2254,10 +2249,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptosi",
                         "trunc",
-                        ResolveType("System.UInt32"),
+                       this.System.System_UInt32,
                         false,
-                        ResolveType("System.Int32"),
-                        ResolveType("System.UInt32"));
+                       this.System.System_Int32,
+                       this.System.System_UInt32);
                     break;
 
                 case Code.Conv_I8:
@@ -2267,10 +2262,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptosi",
                         "sext",
-                        ResolveType("System.Int64"),
+                       this.System.System_Int64,
                         false,
-                        ResolveType("System.Int64"),
-                        ResolveType("System.UInt64"));
+                       this.System.System_Int64,
+                       this.System.System_UInt64);
                     break;
 
                 case Code.Conv_U8:
@@ -2280,10 +2275,10 @@ namespace Il2Native.Logic
                         opCode,
                         "fptoui",
                         "zext",
-                        ResolveType("System.UInt64"),
+                       this.System.System_UInt64,
                         false,
-                        ResolveType("System.Int64"),
-                        ResolveType("System.UInt64"));
+                       this.System.System_Int64,
+                       this.System.System_UInt64);
                     break;
 
                 case Code.Castclass:
@@ -2343,7 +2338,7 @@ namespace Il2Native.Logic
                     WriteNewWithCallingConstructor(
                         opCodeTypePart,
                         opCodeTypePart.Operand.ToArrayType(1),
-                        ResolveType("System.Int32"),
+                       this.System.System_Int32,
                         opCodeTypePart.OpCodeOperands[0].Result);
 
                     break;
@@ -2458,7 +2453,7 @@ namespace Il2Native.Logic
                 case Code.Mkrefany:
                     ////var opResult = opCode.OpCodeOperands[0].Result;
                     ////opCode.Result = opResult;
-                    var typedRefType = ResolveType("System.TypedReference");
+                    var typedRefType = this.System.System_TypedReference;
                     this.WriteSetResultNumber(opCode, typedRefType);
                     this.WriteAlloca(typedRefType);
                     writer.WriteLine(string.Empty);
@@ -2469,7 +2464,7 @@ namespace Il2Native.Logic
                     ////var opResult = opCode.OpCodeOperands[0].Result;
                     ////opCode.Result = opResult;
 
-                    opCode.Result = new ConstValue("undef", ResolveType("System.Object"));
+                    opCode.Result = new ConstValue("undef", this.System.System_Object);
 
                     break;
 
@@ -2929,7 +2924,7 @@ namespace Il2Native.Logic
                     if (!type.IsPointer && !type.IsByRef && type.IntTypeBitSize() == PointerSize * 8)
                     {
                         // using int as intptr
-                        type = ResolveType("System.IntPtr");
+                        type = this.System.System_IntPtr;
                         this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], type.ToPointerType());
                         opCode.Result = opCode.OpCodeOperands[0].Result;
                     }
@@ -2937,46 +2932,46 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldind_I1:
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.SByte");
+                    ////type = this.System.System_SByte;
                     var result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
                     if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
-                        type = ResolveType("System.SByte");
+                        type = this.System.System_SByte;
                     }
                     break;
                 case Code.Ldind_U1:
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.Byte");
+                    ////type = this.System.System_Byte;
                     result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
 
                     if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
-                        type = ResolveType("System.Byte");
+                        type = this.System.System_Byte;
                     }
                     break;
                 case Code.Ldind_I2:
-                    type = ResolveType("System.Int16");
+                    type = this.System.System_Int16;
                     break;
                 case Code.Ldind_U2:
-                    type = ResolveType("System.UInt16");
+                    type = this.System.System_UInt16;
                     break;
                 case Code.Ldind_I4:
-                    type = ResolveType("System.Int32");
+                    type = this.System.System_Int32;
                     break;
                 case Code.Ldind_U4:
-                    type = ResolveType("System.UInt32");
+                    type = this.System.System_UInt32;
                     break;
                 case Code.Ldind_I8:
-                    type = ResolveType("System.Int64");
+                    type = this.System.System_Int64;
                     break;
                 case Code.Ldind_R4:
-                    type = ResolveType("System.Single");
+                    type = this.System.System_Single;
                     break;
                 case Code.Ldind_R8:
-                    type = ResolveType("System.Double");
+                    type = this.System.System_Double;
                     break;
                 case Code.Ldind_Ref:
                     type = this.GetTypeOfReference(opCode);
@@ -3523,7 +3518,7 @@ namespace Il2Native.Logic
 
             if (checkNull)
             {
-                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, ResolveType("System.Boolean"));
+                var testNullResultNumber = this.WriteSetResultNumber(opCodeTypePart, this.System.System_Boolean);
                 writer.Write("icmp eq ");
                 fromType.Type.WriteTypePrefix(this);
                 writer.WriteLine(" {0}, null", fromType);
@@ -3538,14 +3533,14 @@ namespace Il2Native.Logic
                 writer.Indent++;
             }
 
-            this.WriteBitcast(opCodeTypePart, fromType, ResolveType("System.Byte"));
+            this.WriteBitcast(opCodeTypePart, fromType, this.System.System_Byte);
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
 
             var dynamicCastResultNumber = this.WriteSetResultNumber(
                 opCodeTypePart,
-                ResolveType("System.Byte").ToPointerType());
+               this.System.System_Byte.ToPointerType());
 
             writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", firstCastToBytesResult);
             effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
@@ -4304,7 +4299,7 @@ namespace Il2Native.Logic
             }
             else if (detectAndWriteTypePrefix)
             {
-                (operand.Result.Type ?? ResolveType("System.Void")).WriteTypePrefix(this);
+                (operand.Result.Type ?? this.System.System_Void).WriteTypePrefix(this);
                 writer.Write(' ');
             }
 
@@ -4403,7 +4398,7 @@ namespace Il2Native.Logic
                     var val in
                         alternativeValues.Values.Where(v => v.ResultAtExit is ConstValue && v.Any(Code.Ldc_I4_0)))
                 {
-                    val.ResultAtExit = new ConstValue(null, ResolveType("System.Void").ToPointerType());
+                    val.ResultAtExit = new ConstValue(null, this.System.System_Void.ToPointerType());
                 }
             }
 
@@ -4570,7 +4565,7 @@ namespace Il2Native.Logic
             OpCodePart opCodePart,
             FullyDefinedReference resultToTest)
         {
-            var testNullResultNumber = this.WriteSetResultNumber(opCodePart, ResolveType("System.Boolean"));
+            var testNullResultNumber = this.WriteSetResultNumber(opCodePart, this.System.System_Boolean);
             opCodePart.Result = resultToTest;
 
             writer.Write("icmp eq ");
@@ -4947,8 +4942,8 @@ namespace Il2Native.Logic
             }
 
             // TODO: review it
-            if (sourceType.TypeEquals(ResolveType("System.Boolean")) &&
-                requiredType.TypeEquals(ResolveType("System.Byte")))
+            if (sourceType.TypeEquals(this.System.System_Boolean) &&
+                requiredType.TypeEquals(this.System.System_Byte))
             {
                 return;
             }
@@ -5001,7 +4996,7 @@ namespace Il2Native.Logic
                 : null;
 
             // write type
-            var effectiveType = ResolveType("System.Void");
+            var effectiveType = this.System.System_Void;
 
             var res1Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null &&
                               res1.IsPointerAccessRequired;
@@ -5033,8 +5028,8 @@ namespace Il2Native.Logic
                 if (options.HasFlag(OperandOptions.AdjustIntTypes) && res1 != null && res1.Type != null && res2 != null &&
                     res2.Type != null
                     && res1.Type.TypeEquals(res2.Type) && res1.Type.TypeNotEquals(requiredType) &&
-                    res1.Type.TypeEquals(ResolveType("System.Boolean"))
-                    && requiredType.TypeEquals(ResolveType("System.Byte")))
+                    res1.Type.TypeEquals(this.System.System_Boolean)
+                    && requiredType.TypeEquals(this.System.System_Byte))
                 {
                     effectiveType = res1.Type;
                 }
@@ -5373,48 +5368,48 @@ namespace Il2Native.Logic
             {
                 case Code.Ldelem_I:
 
-                    // type = this.ResolveType("System.Int32");
+                    // type = this.System.System_Int32;
                     type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Ldelem_I1:
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.SByte");
+                    ////type = this.System.System_SByte;
                     var result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
                     if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
-                        type = ResolveType("System.SByte");
+                        type = this.System.System_SByte;
                     }
 
                     break;
                 case Code.Ldelem_I2:
-                    type = ResolveType("System.Int16");
+                    type = this.System.System_Int16;
                     break;
                 case Code.Ldelem_I4:
-                    type = ResolveType("System.Int32");
+                    type = this.System.System_Int32;
                     break;
                 case Code.Ldelem_U1:
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.Byte");
+                    ////type = this.System.System_Byte;
                     result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
                     break;
                 case Code.Ldelem_U2:
-                    type = ResolveType("System.UInt16");
+                    type = this.System.System_UInt16;
                     break;
                 case Code.Ldelem_U4:
-                    type = ResolveType("System.UInt32");
+                    type = this.System.System_UInt32;
                     break;
                 case Code.Ldelem_I8:
-                    type = ResolveType("System.Int64");
+                    type = this.System.System_Int64;
                     break;
                 case Code.Ldelem_R4:
-                    type = ResolveType("System.Single");
+                    type = this.System.System_Single;
                     break;
                 case Code.Ldelem_R8:
-                    type = ResolveType("System.Double");
+                    type = this.System.System_Double;
                     break;
                 case Code.Ldelem:
                 case Code.Ldelem_Ref:
@@ -5503,35 +5498,35 @@ namespace Il2Native.Logic
             {
                 case Code.Stelem_I:
 
-                    // type = this.ResolveType("System.Void").ToPointerType();
+                    // type = this.System.System_Void.ToPointerType();
                     type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stelem_I1:
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.SByte");
+                    ////type = this.System.System_SByte;
                     var result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.GetElementType();
                     if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
-                        type = ResolveType("System.SByte");
+                        type = this.System.System_SByte;
                     }
 
                     break;
                 case Code.Stelem_I2:
-                    type = ResolveType("System.Int16");
+                    type = this.System.System_Int16;
                     break;
                 case Code.Stelem_I4:
-                    type = ResolveType("System.Int32");
+                    type = this.System.System_Int32;
                     break;
                 case Code.Stelem_I8:
-                    type = ResolveType("System.Int64");
+                    type = this.System.System_Int64;
                     break;
                 case Code.Stelem_R4:
-                    type = ResolveType("System.Single");
+                    type = this.System.System_Single;
                     break;
                 case Code.Stelem_R8:
-                    type = ResolveType("System.Double");
+                    type = this.System.System_Double;
                     break;
                 case Code.Stelem:
                 case Code.Stelem_Ref:
@@ -5587,32 +5582,32 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     break;
                 case Code.Stind_I1:
-                    ////type = this.ResolveType("System.Byte");
+                    ////type = this.System.System_Byte;
 
                     // it can be Bool or Byte, leave it null
-                    ////type = this.ResolveType("System.SByte");
+                    ////type = this.System.System_SByte;
                     var result = ResultOf(opCode.OpCodeOperands[0]);
                     type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
                     if (type.IsVoid() || type.IntTypeBitSize() > 8)
                     {
-                        type = ResolveType("System.SByte");
+                        type = this.System.System_SByte;
                     }
 
                     break;
                 case Code.Stind_I2:
-                    type = ResolveType("System.Int16");
+                    type = this.System.System_Int16;
                     break;
                 case Code.Stind_I4:
-                    type = ResolveType("System.Int32");
+                    type = this.System.System_Int32;
                     break;
                 case Code.Stind_I8:
-                    type = ResolveType("System.Int64");
+                    type = this.System.System_Int64;
                     break;
                 case Code.Stind_R4:
-                    type = ResolveType("System.Single");
+                    type = this.System.System_Single;
                     break;
                 case Code.Stind_R8:
-                    type = ResolveType("System.Double");
+                    type = this.System.System_Double;
                     break;
                 case Code.Stind_Ref:
                     type = this.GetTypeOfReference(opCode);
@@ -5779,8 +5774,8 @@ namespace Il2Native.Logic
             this.Output.Write(
                 "@.bytes{0} = private unnamed_addr constant {1} {3} {2}",
                 pair.Key,
-                this.GetArrayTypeHeader(ResolveType("System.Byte"), pair.Value.Length),
-                this.GetArrayValuesHeader(ResolveType("System.Byte"), pair.Value.Length, pair.Value.Length),
+                this.GetArrayTypeHeader(this.System.System_Byte, pair.Value.Length),
+                this.GetArrayValuesHeader(this.System.System_Byte, pair.Value.Length, pair.Value.Length),
                 "{");
 
             this.Output.Write(" [");
@@ -5976,6 +5971,7 @@ namespace Il2Native.Logic
             ThisType = baseWriter.ThisType;
 
             // start writing process
+            baseWriter.Initialize(ThisType);
             baseWriter.StartProcess();
             foreach (var opCodePart in ilReader.OpCodes(constructedMethod, genericContext, null))
             {
@@ -6096,25 +6092,25 @@ namespace Il2Native.Logic
             IMethod methodBase,
             IType thisType = null)
         {
-            this.WriteSetResultNumber(opCode, ResolveType("System.Int32").ToPointerType());
+            this.WriteSetResultNumber(opCode, this.System.System_Int32.ToPointerType());
             writer.Write("bitcast ");
             this.WriteMethodPointerType(writer, methodBase, thisType);
             writer.Write("* ");
             this.WriteResult(opCode.OpCodeOperands[0].Result);
             writer.Write(" to ");
-            ResolveType("System.Int32").ToPointerType().WriteTypePrefix(this);
+            this.System.System_Int32.ToPointerType().WriteTypePrefix(this);
             writer.WriteLine(string.Empty);
 
             var res = opCode.Result;
-            var offsetResult = this.WriteSetResultNumber(opCode, ResolveType("System.Int32"));
+            var offsetResult = this.WriteSetResultNumber(opCode, this.System.System_Int32);
             writer.Write("getelementptr ");
-            ResolveType("System.Int32").WriteTypePrefix(this);
+            this.System.System_Int32.WriteTypePrefix(this);
             writer.Write("* ");
             this.WriteResult(res);
             writer.WriteLine(", i32 -{0}", ObjectInfrastructure.FunctionsOffsetInVirtualTable);
 
             opCode.Result = null;
-            this.WriteLlvmLoad(opCode, ResolveType("System.Int32"), offsetResult);
+            this.WriteLlvmLoad(opCode, this.System.System_Int32, offsetResult);
         }
 
         /// <summary>
@@ -6442,7 +6438,7 @@ namespace Il2Native.Logic
             if (hasParameters)
             {
                 this.Output.Write("%local0 = alloca ");
-                ResolveType("System.String").ToArrayType(1).WriteTypePrefix(this);
+                this.System.System_String.ToArrayType(1).WriteTypePrefix(this);
                 this.Output.WriteLine(", align 4");
                 this.Output.WriteLine("%local1 = alloca i32, align 4");
                 this.Output.WriteLine("%\"0.value\" = alloca i32, align 4");
@@ -6467,8 +6463,8 @@ namespace Il2Native.Logic
                     new SynthesizedMethodStringAdapter(
                         "set_ExitCode",
                         "System.Environment",
-                        ResolveType("System.Void"),
-                        new[] { ResolveType("System.Int32").ToParameter() }));
+                       this.System.System_Void,
+                        new[] { this.System.System_Int32.ToParameter() }));
             }
 
             if (!MainMethod.ReturnType.IsVoid())
@@ -6506,7 +6502,7 @@ namespace Il2Native.Logic
                     new SynthesizedMethodStringAdapter(
                         "get_ExitCode",
                         "System.Environment",
-                        ResolveType("System.Int32")));
+                       this.System.System_Int32));
             }
 
             this.Output.Indent--;
@@ -6569,7 +6565,7 @@ namespace Il2Native.Logic
 
             var result = opCode.Result;
 
-            var testResult = this.WriteSetResultNumber(opCode, ResolveType("System.Boolean"));
+            var testResult = this.WriteSetResultNumber(opCode, this.System.System_Boolean);
             writer.Write("extractvalue { ");
             result.Type.WriteTypePrefix(this);
             writer.Write(", i1 } ");
@@ -6770,7 +6766,7 @@ namespace Il2Native.Logic
                             ctor,
                             this.HasMethodThis,
                             ThisType,
-                            ResolveType("System.Void"));
+                           this.System.System_Void);
                         this.Output.WriteLine(string.Empty);
                         continue;
                     }
@@ -6866,7 +6862,7 @@ namespace Il2Native.Logic
 
             if (!options.HasFlag(OperandOptions.IgnoreOperand))
             {
-                var type = effectiveType ?? ResolveType("System.Void");
+                var type = effectiveType ?? this.System.System_Void;
                 type.WriteTypePrefix(this);
                 if (options.HasFlag(OperandOptions.AppendPointer))
                 {
@@ -7047,8 +7043,8 @@ namespace Il2Native.Logic
             this.Output.Write(
                 "@.s{0} = private unnamed_addr constant {1} {3} {2}",
                 pair.Key,
-                this.GetArrayTypeHeader(ResolveType("System.Char"), pair.Value.Length + 1),
-                this.GetArrayValuesHeader(ResolveType("System.Char"), pair.Value.Length + 1, pair.Value.Length),
+                this.GetArrayTypeHeader(this.System.System_Char, pair.Value.Length + 1),
+                this.GetArrayValuesHeader(this.System.System_Char, pair.Value.Length + 1, pair.Value.Length),
                 "{");
 
             this.Output.Write(" [");

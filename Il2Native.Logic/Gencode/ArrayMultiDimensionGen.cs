@@ -14,9 +14,9 @@
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var shortType = typeResolver.ResolveType("System.Int16");
-            var intType = typeResolver.ResolveType("System.Int32");
-            var pointerType = typeResolver.ResolveType("System.Byte").ToPointerType();
+            var shortType = typeResolver.System.System_Int16;
+            var intType = typeResolver.System.System_Int32;
+            var pointerType = typeResolver.System.System_Byte.ToPointerType();
 
             // return dummy fields to compensate interfaces for SingleDim array
             foreach (var dummyField in arrayType.GetElementType().ToArrayType(1).GetInterfaces())
@@ -129,8 +129,8 @@
 
             // locals
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
-            locals.Add(typeResolver.ResolveType("System.Int32").ToArrayType(1));
+            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
+            locals.Add(typeResolver.System.System_Int32.ToArrayType(1));
 
             // tokens
             tokenResolutions = new List<object>();
@@ -138,10 +138,10 @@
             tokenResolutions.Add(arrayType.GetFieldByName("typeCode", typeResolver));
             tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             // lowerBounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(typeResolver.System.System_Int32);
             tokenResolutions.Add(arrayType.GetFieldByName("lowerBounds", typeResolver));
             // bounds
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
+            tokenResolutions.Add(typeResolver.System.System_Int32);
             tokenResolutions.Add(arrayType.GetFieldByName("lengths", typeResolver));
 
             // code
@@ -245,7 +245,7 @@
 
         public static List<IParameter> GetParameters(IType type, ITypeResolver typeResolver)
         {
-            var intType = typeResolver.ResolveType("System.Int32");
+            var intType = typeResolver.System.System_Int32;
             return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter()).ToList();
         }
 
@@ -411,7 +411,7 @@
             tokenResolutions.Add(arrayType.GetElementType().ToPointerType());
 
             locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.System.System_Int32);
 
             return codeList;
         }

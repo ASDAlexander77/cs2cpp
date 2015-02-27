@@ -14,11 +14,11 @@
             out IList<IType> locals,
             out IList<IParameter> parameters)
         {
-            var stringType = typeResolver.ResolveType("System.String");
-            var bytePointerType = typeResolver.ResolveType("System.Byte").ToPointerType();
+            var stringType = typeResolver.System.System_String;
+            var bytePointerType = typeResolver.System.System_Byte.ToPointerType();
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
             parameters.Add(bytePointerType.ToPointerType().ToParameter());
 
             var codeList = new List<object>();
@@ -69,7 +69,7 @@
 
             locals = new List<IType>();
             locals.Add(stringType.ToArrayType(1));
-            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.System.System_Int32);
 
             tokenResolutions = new List<object>();
             tokenResolutions.Add(stringType);

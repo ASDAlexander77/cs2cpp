@@ -53,8 +53,8 @@
 
             codeList.Add(Code.Ret);
 
-            var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
-            var arrayTypeMulti = typeResolver.ResolveType("System.Byte").ToArrayType(2);
+            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
+            var arrayTypeMulti = typeResolver.System.System_Byte.ToArrayType(2);
 
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
@@ -67,7 +67,7 @@
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
 
             MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

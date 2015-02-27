@@ -43,7 +43,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.typeResolver.ResolveType("System.Void"); }
+            get { return this.typeResolver.System.System_Void; }
         }
     }
 }

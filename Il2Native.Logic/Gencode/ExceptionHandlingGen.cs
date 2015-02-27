@@ -53,7 +53,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Allocate exception");
             var errorAllocationResultNumber = llvmWriter.WriteSetResultNumber(
                 opCode,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("call i8* @__cxa_allocate_exception(i32 {0})", LlvmWriter.PointerSize);
             writer.WriteLine(string.Empty);
 
@@ -99,7 +99,7 @@ namespace Il2Native.Logic.Gencode
             var catchType = exceptionHandlingClause.Catch;
 
             var opCodeNone = OpCodePart.CreateNop;
-            var bytePointerType = llvmWriter.ResolveType("System.Byte").ToPointerType();
+            var bytePointerType = llvmWriter.System.System_Byte.ToPointerType();
             var errorObjectOfCatchResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, bytePointerType);
             writer.WriteLine("load i8** %.error_object");
             var beginCatchResultNumber = llvmWriter.WriteSetResultNumber(opCodeNone, bytePointerType);
@@ -168,9 +168,9 @@ namespace Il2Native.Logic.Gencode
 
                 var fullyDefinedRef = new FullyDefinedReference(
                     string.Concat("%.finally_jump", exceptionHandlingClause.Offset),
-                    llvmWriter.ResolveType("System.Int32"));
+                    llvmWriter.System.System_Int32);
 
-                llvmWriter.WriteLlvmLoad(opCodeNope, llvmWriter.ResolveType("System.Int32"), fullyDefinedRef);
+                llvmWriter.WriteLlvmLoad(opCodeNope, llvmWriter.System.System_Int32, fullyDefinedRef);
                 writer.WriteLine(string.Empty);
                 writer.WriteLine(
                     "switch i32 {1}, label %.finally_exit{0} [",
@@ -217,7 +217,7 @@ namespace Il2Native.Logic.Gencode
                     {
                         upperLevelExceptionHandlingClause != null
                             ? upperLevelExceptionHandlingClause.Catch
-                            : llvmWriter.ResolveType("System.Exception")
+                            : llvmWriter.System.System_Exception
                     });
                 writer.WriteLine(string.Empty);
             }
@@ -347,17 +347,17 @@ namespace Il2Native.Logic.Gencode
             var opCodeNone = OpCodePart.CreateNop;
             var errorTypeIdOfCatchResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.System.System_Int32);
             writer.WriteLine("load i32* %.error_typeid");
             var errorTypeIdOfExceptionResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("call i32 @llvm.eh.typeid.for(i8* bitcast (");
             catchType.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine("* @\"{0}\" to i8*))", catchType.GetRttiPointerInfoName());
             var compareResultResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Boolean"));
+                llvmWriter.System.System_Boolean);
             writer.WriteLine("icmp eq i32 {0}, {1}", errorTypeIdOfCatchResultNumber, errorTypeIdOfExceptionResultNumber);
             writer.WriteLine(
                 "br i1 {0}, label %.exception_handler{1}, label %.{2}",
@@ -455,7 +455,7 @@ namespace Il2Native.Logic.Gencode
 
             var landingPadResult = llvmWriter.WriteSetResultNumber(
                 opCode,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
 
             writer.WriteLine(
                 "landingpad { i8*, i32 } personality i8* bitcast (i32 (...)* @__gxx_personality_v0 to i8*)");
@@ -508,12 +508,12 @@ namespace Il2Native.Logic.Gencode
 
             var getErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(
                 opCode,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.WriteLine("extractvalue {1} {0}, 0", landingPadResult, "{ i8*, i32 }");
             writer.WriteLine("store i8* {0}, i8** %.error_object", getErrorObjectResultNumber);
             var getErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(
                 opCode,
-                llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.System.System_Int32);
             writer.WriteLine("extractvalue {1} {0}, 1", landingPadResult, "{ i8*, i32 }");
             writer.Write("store i32 {0}, i32* %.error_typeid", getErrorTypeIdResultNumber);
 
@@ -567,19 +567,19 @@ namespace Il2Native.Logic.Gencode
             var opCodeNone = OpCodePart.CreateNop;
             var getErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.WriteLine("load i8** %.error_object");
             var getErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.System.System_Int32);
             writer.WriteLine("load i32* %.error_typeid");
             var insertedErrorObjectResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.WriteLine("insertvalue {1} undef, i8* {0}, 0", getErrorObjectResultNumber, "{ i8*, i32 }");
             var insertedErrorTypeIdResultNumber = llvmWriter.WriteSetResultNumber(
                 opCodeNone,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.WriteLine(
                 "insertvalue {2} {0}, i32 {1}, 1",
                 insertedErrorObjectResultNumber,
@@ -646,7 +646,7 @@ namespace Il2Native.Logic.Gencode
             writer.Indent--;
             writer.WriteLine(".unexpected:");
             writer.Indent++;
-            var result = llvmWriter.WriteSetResultNumber(null, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            var result = llvmWriter.WriteSetResultNumber(null, llvmWriter.System.System_Byte.ToPointerType());
             writer.WriteLine("load i8** %.error_object");
             writer.WriteLine("call void @__cxa_call_unexpected(i8* {0})", result);
             writer.WriteLine("unreachable");

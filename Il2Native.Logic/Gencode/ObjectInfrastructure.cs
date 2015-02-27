@@ -71,7 +71,7 @@ namespace Il2Native.Logic.Gencode
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
             size.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" ");
@@ -106,14 +106,14 @@ namespace Il2Native.Logic.Gencode
             var size = declaringClassType.GetTypeSize(llvmWriter);
 
             FullyDefinedReference allocResult = !declaringClassType.IsArray
-                ? new ConstValue(size, llvmWriter.ResolveType("System.Int32"))
+                ? new ConstValue(size, llvmWriter.System.System_Int32)
                 : !declaringClassType.IsMultiArray
                     ? llvmWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType)
                     : llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
-                llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
             allocResult.Type.WriteTypePrefix(llvmWriter);
             writer.Write(" {0}", allocResult);
@@ -505,9 +505,9 @@ namespace Il2Native.Logic.Gencode
             llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
             writer.WriteLine(string.Empty);
 
-            if (opCode.Result.Type.IntTypeBitSize() != llvmWriter.ResolveType("System.Int32").IntTypeBitSize())
+            if (opCode.Result.Type.IntTypeBitSize() != llvmWriter.System.System_Int32.IntTypeBitSize())
             {
-                llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.ResolveType("System.Int32"));
+                llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.System.System_Int32);
                 writer.WriteLine(string.Empty);
             }
 
@@ -526,7 +526,7 @@ namespace Il2Native.Logic.Gencode
 
             var method = new SynthesizedGetTypeMethod(type, llvmWriter);
 
-            var systemType = llvmWriter.ResolveType("System.Type");
+            var systemType = llvmWriter.System.System_Type;
 
             var opCode = OpCodePart.CreateNop;
             llvmWriter.WriteMethodStart(method, null);
@@ -629,7 +629,7 @@ namespace Il2Native.Logic.Gencode
 
             if (declaringTypeNormal.IsValueType)
             {
-                llvmWriter.WriteBitcast(opCodePart, objectSource, llvmWriter.ResolveType("System.Byte").ToPointerType());
+                llvmWriter.WriteBitcast(opCodePart, objectSource, llvmWriter.System.System_Byte.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 llvmWriter.WriteMemSet(declaringTypeNormal, opCodePart.Result);
@@ -650,7 +650,7 @@ namespace Il2Native.Logic.Gencode
                 llvmWriter.WriteBitcast(
                     opCodePart,
                     objectSource,
-                    llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+                    llvmWriter.System.System_Byte.ToPointerType().ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 writer.WriteLine("store i8* null, i8** {0}", opCodePart.Result);
@@ -689,7 +689,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.WriteBitcast(
                         opCode,
                         opCode.Result.ToClassType(),
-                        llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType().ToPointerType());
+                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
                 }
                 else
                 {
@@ -697,7 +697,7 @@ namespace Il2Native.Logic.Gencode
                         opCode,
                         thisType.ToClass(),
                         llvmWriter.GetThisName(),
-                        llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(),
+                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType(),
                         true);
                 }
 
@@ -727,7 +727,7 @@ namespace Il2Native.Logic.Gencode
                     llvmWriter.WriteBitcast(
                         opCode,
                         opCode.Result.ToClassType(),
-                        llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType().ToPointerType());
+                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
                 }
                 else
                 {
@@ -735,7 +735,7 @@ namespace Il2Native.Logic.Gencode
                         opCode,
                         @interface,
                         llvmWriter.GetThisName(),
-                        llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType(),
+                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType(),
                         true);
                 }
 

@@ -72,7 +72,7 @@ namespace Il2Native.Logic.Gencode
 
             var classType = typeIn.ToClass();
 
-            var systemType = llvmWriter.ResolveType("System.Type");
+            var systemType = llvmWriter.System.System_Type;
             var method = new SynthesizedGetTypeStaticMethod(classType, llvmWriter);
             writer.WriteLine("; Get Type Object method");
 
@@ -129,18 +129,18 @@ namespace Il2Native.Logic.Gencode
                     IType runtimeType = null;
                     try
                     {
-                        runtimeType = llvmWriter.ResolveType("System.RuntimeType");
+                        runtimeType = llvmWriter.System.System_RuntimeType;
                     }
                     catch (KeyNotFoundException)
                     {
-                        opCode.Result = new ConstValue(null, llvmWriter.ResolveType("System.Type"));
+                        opCode.Result = new ConstValue(null, llvmWriter.System.System_Type);
                         writer.Write("ret ");
-                        llvmWriter.ResolveType("System.Type").WriteTypePrefix(llvmWriter);
+                        llvmWriter.System.System_Type.WriteTypePrefix(llvmWriter);
                         writer.WriteLine(" null");
                         return;
                     }
 
-                    var byteType = llvmWriter.ResolveType("System.Byte");
+                    var byteType = llvmWriter.System.System_Byte;
                     var byteArrayType = byteType.ToArrayType(1);
                     var bytes = type.GenerateTypeInfoBytes(llvmWriter);
                     var bytesIndex = llvmWriter.GetBytesIndex(bytes);
@@ -232,7 +232,7 @@ namespace Il2Native.Logic.Gencode
                 "{0} = {1}global ",
                 type.GetTypeStaticFieldName(),
                 "linkonce_odr ");
-            llvmWriter.ResolveType("System.Type").WriteTypePrefix(llvmWriter);
+            llvmWriter.System.System_Type.WriteTypePrefix(llvmWriter);
             writer.WriteLine(" null");
         }
     }

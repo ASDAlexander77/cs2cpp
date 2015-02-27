@@ -93,7 +93,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public SystemTypes System { get; private set; }
+        public SystemTypes System { get; protected set; }
 
         /// <summary>
         /// </summary>
@@ -134,6 +134,12 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         protected List<IConstructor> StaticConstructors { get; set; }
+
+        public void Initialize(IType type)
+        {
+            ReadTypeInfo(type);
+            this.System = new SystemTypes(this.ThisType.Module);
+        }
 
         /// <summary>
         /// </summary>
@@ -349,52 +355,52 @@ namespace Il2Native.Logic
                 case Code.Bgt_Un_S:
                 case Code.Blt_Un:
                 case Code.Blt_Un_S:
-                    return new ReturnResult(this.ResolveType("System.Boolean"));
+                    return new ReturnResult(this.System.System_Boolean);
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    return new ReturnResult(this.ResolveType("System.Int32"));
+                    return new ReturnResult(this.System.System_Int32);
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    return new ReturnResult(this.ResolveType("System.UInt32"));
+                    return new ReturnResult(this.System.System_UInt32);
                 case Code.Conv_R_Un:
                 case Code.Conv_R4:
-                    return new ReturnResult(this.ResolveType("System.Single"));
+                    return new ReturnResult(this.System.System_Single);
                 case Code.Conv_R8:
-                    return new ReturnResult(this.ResolveType("System.Double"));
+                    return new ReturnResult(this.System.System_Double);
                 case Code.Conv_I1:
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
-                    return new ReturnResult(this.ResolveType("System.SByte"));
+                    return new ReturnResult(this.System.System_SByte);
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    return new ReturnResult(this.ResolveType("System.Int16"));
+                    return new ReturnResult(this.System.System_Int16);
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    return new ReturnResult(this.ResolveType("System.Int32"));
+                    return new ReturnResult(this.System.System_Int32);
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    return new ReturnResult(this.ResolveType("System.Int64"));
+                    return new ReturnResult(this.System.System_Int64);
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    return new ReturnResult(this.ResolveType("System.Byte"));
+                    return new ReturnResult(this.System.System_Byte);
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    return new ReturnResult(this.ResolveType("System.UInt16"));
+                    return new ReturnResult(this.System.System_UInt16);
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    return new ReturnResult(this.ResolveType("System.UInt32"));
+                    return new ReturnResult(this.System.System_UInt32);
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    return new ReturnResult(this.ResolveType("System.UInt64"));
+                    return new ReturnResult(this.System.System_UInt64);
                 case Code.Castclass:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Newarr:
@@ -405,7 +411,7 @@ namespace Il2Native.Logic
                 case Code.Dup:
                     return this.ResultOf(opCode.OpCodeOperands[0]);
                 case Code.Ldlen:
-                    return new ReturnResult(this.ResolveType("System.Int32"));
+                    return new ReturnResult(this.System.System_Int32);
                 case Code.Ldloca:
                 case Code.Ldloca_S:
                     var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
@@ -486,39 +492,39 @@ namespace Il2Native.Logic
                     return
                         new ReturnResult(
                             opCode.UseAsNull
-                                ? this.ResolveType("System.Void").ToPointerType()
-                                : this.ResolveType("System.Int32"))
+                                ? this.System.System_Void.ToPointerType()
+                                : this.System.System_Int32)
                         {
                             IsConst = true
                         };
                 case Code.Ldc_I8:
-                    return new ReturnResult(this.ResolveType("System.Int64")) { IsConst = true };
+                    return new ReturnResult(this.System.System_Int64) { IsConst = true };
                 case Code.Ldc_R4:
-                    return new ReturnResult(this.ResolveType("System.Single")) { IsConst = true };
+                    return new ReturnResult(this.System.System_Single) { IsConst = true };
                 case Code.Ldc_R8:
-                    return new ReturnResult(this.ResolveType("System.Double")) { IsConst = true };
+                    return new ReturnResult(this.System.System_Double) { IsConst = true };
                 case Code.Ldstr:
-                    return new ReturnResult(this.ResolveType("System.String"));
+                    return new ReturnResult(this.System.System_String);
                 case Code.Ldind_I:
-                    return new ReturnResult(this.ResolveType("System.Int32"));
+                    return new ReturnResult(this.System.System_Int32);
                 case Code.Ldind_I1:
-                    return new ReturnResult(this.ResolveType("System.Byte"));
+                    return new ReturnResult(this.System.System_Byte);
                 case Code.Ldind_I2:
-                    return new ReturnResult(this.ResolveType("System.Int16"));
+                    return new ReturnResult(this.System.System_Int16);
                 case Code.Ldind_I4:
-                    return new ReturnResult(this.ResolveType("System.Int32"));
+                    return new ReturnResult(this.System.System_Int32);
                 case Code.Ldind_I8:
-                    return new ReturnResult(this.ResolveType("System.Int64"));
+                    return new ReturnResult(this.System.System_Int64);
                 case Code.Ldind_U1:
-                    return new ReturnResult(this.ResolveType("System.Byte"));
+                    return new ReturnResult(this.System.System_Byte);
                 case Code.Ldind_U2:
-                    return new ReturnResult(this.ResolveType("System.UInt16"));
+                    return new ReturnResult(this.System.System_UInt16);
                 case Code.Ldind_U4:
-                    return new ReturnResult(this.ResolveType("System.UInt32"));
+                    return new ReturnResult(this.System.System_UInt32);
                 case Code.Ldind_R4:
-                    return new ReturnResult(this.ResolveType("System.Single"));
+                    return new ReturnResult(this.System.System_Single);
                 case Code.Ldind_R8:
-                    return new ReturnResult(this.ResolveType("System.Double"));
+                    return new ReturnResult(this.System.System_Double);
                 case Code.Ldind_Ref:
                     var resultType = this.ResultOf(opCode.OpCodeOperands[0]).Type;
                     return new ReturnResult(resultType.GetElementType());
@@ -551,7 +557,7 @@ namespace Il2Native.Logic
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
 
                 case Code.Localloc:
-                    return new ReturnResult(this.ResolveType("System.Byte").ToPointerType());
+                    return new ReturnResult(this.System.System_Byte.ToPointerType());
             }
 
             return null;
@@ -869,7 +875,7 @@ namespace Il2Native.Logic
             if (effectiveLocalType.IsPinned)
             {
                 var localPinnedType = effectiveLocalType.FullName == "System.IntPtr"
-                    ? this.ResolveType("System.Void").ToPointerType()
+                    ? this.System.System_Void.ToPointerType()
                     : effectiveLocalType.IsValueType ? effectiveLocalType.ToPointerType() : effectiveLocalType;
                 return localPinnedType;
             }
@@ -1397,7 +1403,7 @@ namespace Il2Native.Logic
                 retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
                 if (retType == null)
                 {
-                    retType = this.ResolveType("System.Void").ToPointerType();
+                    retType = this.System.System_Void.ToPointerType();
                 }
                 else if (retType.IsByRef)
                 {
@@ -1409,7 +1415,7 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stind_I))
             {
-                return this.ResolveType("System.Void").ToPointerType();
+                return this.System.System_Void.ToPointerType();
             }
 
             if (opCodePart.Any(Code.Stind_I1))
@@ -1418,7 +1424,7 @@ namespace Il2Native.Logic
                 var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
                 if (type.IsVoid() || type.IntTypeBitSize() > 8)
                 {
-                    type = this.ResolveType("System.SByte");
+                    type = this.System.System_SByte;
                 }
 
                 return type;
@@ -1426,27 +1432,27 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stind_I2))
             {
-                return this.ResolveType("System.Int16");
+                return this.System.System_Int16;
             }
 
             if (opCodePart.Any(Code.Stind_I4))
             {
-                return this.ResolveType("System.Int32");
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Stind_I8))
             {
-                return this.ResolveType("System.Int64");
+                return this.System.System_Int64;
             }
 
             if (opCodePart.Any(Code.Stind_R4))
             {
-                return this.ResolveType("System.Single");
+                return this.System.System_Single;
             }
 
             if (opCodePart.Any(Code.Stind_R8))
             {
-                return this.ResolveType("System.Double");
+                return this.System.System_Double;
             }
 
             if (opCodePart.Any(Code.Stelem_Ref))
@@ -1457,7 +1463,7 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stelem_I))
             {
-                return this.ResolveType("System.Void").ToPointerType();
+                return this.System.System_Void.ToPointerType();
             }
 
             if (opCodePart.Any(Code.Stelem_I1))
@@ -1466,7 +1472,7 @@ namespace Il2Native.Logic
                 var type = result.Type.GetElementType();
                 if (type.IsVoid() || type.IntTypeBitSize() > 8)
                 {
-                    type = this.ResolveType("System.SByte");
+                    type = this.System.System_SByte;
                 }
 
                 return type;
@@ -1474,27 +1480,27 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stelem_I2))
             {
-                return this.ResolveType("System.Int16");
+                return this.System.System_Int16;
             }
 
             if (opCodePart.Any(Code.Stelem_I4))
             {
-                return this.ResolveType("System.Int32");
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Stelem_I8))
             {
-                return this.ResolveType("System.Int64");
+                return this.System.System_Int64;
             }
 
             if (opCodePart.Any(Code.Stelem_R4))
             {
-                return this.ResolveType("System.Single");
+                return this.System.System_Single;
             }
 
             if (opCodePart.Any(Code.Stelem_R8))
             {
-                return this.ResolveType("System.Double");
+                return this.System.System_Double;
             }
 
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
@@ -1649,62 +1655,62 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Conv_I8, Code.Conv_Ovf_I8, Code.Conv_Ovf_I8_Un))
             {
-                return this.ResolveType("System.Int64");
+                return this.System.System_Int64;
             }
 
             if (opCodePart.Any(Code.Conv_I4, Code.Conv_Ovf_I4, Code.Conv_Ovf_I4_Un))
             {
-                return this.ResolveType("System.Int32");
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Conv_I2, Code.Conv_Ovf_I2, Code.Conv_Ovf_I2_Un))
             {
-                return this.ResolveType("System.Int16");
+                return this.System.System_Int16;
             }
 
             if (opCodePart.Any(Code.Conv_I1, Code.Conv_Ovf_I1, Code.Conv_Ovf_I1_Un))
             {
-                return this.ResolveType("System.SByte");
+                return this.System.System_SByte;
             }
 
             if (opCodePart.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I_Un))
             {
-                return this.ResolveType("System.Void").ToPointerType();
+                return this.System.System_Void.ToPointerType();
             }
 
             if (opCodePart.Any(Code.Conv_U8, Code.Conv_Ovf_U8, Code.Conv_Ovf_U8_Un))
             {
-                return this.ResolveType("System.UInt64");
+                return this.System.System_UInt64;
             }
 
             if (opCodePart.Any(Code.Conv_U4, Code.Conv_Ovf_U4, Code.Conv_Ovf_U4_Un))
             {
-                return this.ResolveType("System.UInt32");
+                return this.System.System_UInt32;
             }
 
             if (opCodePart.Any(Code.Conv_U2, Code.Conv_Ovf_U2, Code.Conv_Ovf_U2_Un))
             {
-                return this.ResolveType("System.UInt16");
+                return this.System.System_UInt16;
             }
 
             if (opCodePart.Any(Code.Conv_U1, Code.Conv_Ovf_U1, Code.Conv_Ovf_U1_Un))
             {
-                return this.ResolveType("System.Byte");
+                return this.System.System_Byte;
             }
 
             if (opCodePart.Any(Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un))
             {
-                return this.ResolveType("System.Void").ToPointerType();
+                return this.System.System_Void.ToPointerType();
             }
 
             if (opCodePart.Any(Code.Conv_R4))
             {
-                return this.ResolveType("System.Single");
+                return this.System.System_Single;
             }
 
             if (opCodePart.Any(Code.Conv_R8))
             {
-                return this.ResolveType("System.Double");
+                return this.System.System_Double;
             }
 
             return retType;

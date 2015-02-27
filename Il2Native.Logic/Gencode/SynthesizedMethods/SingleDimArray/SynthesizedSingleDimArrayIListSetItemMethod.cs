@@ -22,7 +22,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedSingleDimArrayIListSetItemMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("set_Item", arrayType, typeResolver.ResolveType("System.Void"))
+            : base("set_Item", arrayType, typeResolver.System.System_Void)
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);
@@ -40,7 +40,7 @@
                     codeList.GetCode());
 
             this._parameters = new List<IParameter>();
-            this._parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
+            this._parameters.Add(typeResolver.System.System_Int32.ToParameter());
             this._parameters.Add(arrayType.GetElementType().ToParameter());
 
             this._tokenResolutions = new List<object>();

@@ -22,7 +22,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedSingleDimArrayIListGetCountMethod(IType arrayType, ITypeResolver typeResolver)
-            : base("get_Count", arrayType, typeResolver.ResolveType("System.Int32"))
+            : base("get_Count", arrayType, typeResolver.System.System_Int32)
         {
             var codeList = new IlCodeBuilder();
             codeList.LoadArgument(0);

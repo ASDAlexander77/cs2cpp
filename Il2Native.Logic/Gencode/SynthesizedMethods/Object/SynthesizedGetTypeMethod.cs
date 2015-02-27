@@ -26,7 +26,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
-            : base(Name, type, typeResolver.ResolveType("System.Type"))
+            : base(Name, type, typeResolver.System.System_Type)
         {
             if (type.IsObject)
             {

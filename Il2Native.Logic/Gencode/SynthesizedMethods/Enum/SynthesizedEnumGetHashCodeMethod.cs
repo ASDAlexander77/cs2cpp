@@ -21,7 +21,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedEnumGetHashCodeMethod(IType type, ITypeResolver typeResolver)
-            : base("GetHashCode", type, typeResolver.ResolveType("System.Int32"), isOverride: true)
+            : base("GetHashCode", type, typeResolver.System.System_Int32, isOverride: true)
         {
             object[] code;
             IList<object> tokenResolutions;

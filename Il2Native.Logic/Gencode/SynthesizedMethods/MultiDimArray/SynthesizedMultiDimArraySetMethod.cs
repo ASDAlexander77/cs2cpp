@@ -22,7 +22,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedMultiDimArraySetMethod(IType type, ITypeResolver typeResolver)
-            : base("Set", type, typeResolver.ResolveType("System.Void"))
+            : base("Set", type, typeResolver.System.System_Void)
         {
             object[] code;
             IList<object> tokenResolutions;

@@ -250,7 +250,7 @@ namespace Il2Native.Logic.Gencode
             // load pointer
             llvmWriter.WriteSetResultNumber(
                 opCodeMethodInfo,
-                llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType().ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");

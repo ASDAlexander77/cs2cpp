@@ -203,9 +203,9 @@
 
             codeList.Add(Code.Ret);
 
-            var typedReferenceType = typeResolver.ResolveType("System.TypedReference");
-            var intPtrType = typeResolver.ResolveType("System.IntPtr");
-            var byteType = typeResolver.ResolveType("System.Byte");
+            var typedReferenceType = typeResolver.System.System_TypedReference;
+            var intPtrType = typeResolver.System.System_IntPtr;
+            var byteType = typeResolver.System.System_Byte;
             var arrayType = byteType.ToArrayType(1);
             var multiArrayType = byteType.ToArrayType(2);
 
@@ -223,14 +223,14 @@
             tokenResolutions.Add(multiArrayType.GetFieldByName("lengths", typeResolver));
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32"));
-            locals.Add(typeResolver.ResolveType("System.Int32"));
-            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(typeResolver.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Void").ToPointerType().ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToPointerType().ToParameter());
 
             MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

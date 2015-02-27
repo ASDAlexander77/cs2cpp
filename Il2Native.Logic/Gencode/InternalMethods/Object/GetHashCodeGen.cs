@@ -60,16 +60,16 @@
             tokenResolutions.Add(
                 new SynthesizedThisMethod(
                     SynthesizedGetSizeMethod.Name,
-                    typeResolver.ResolveType("System.Object"),
+                    typeResolver.System.System_Object,
                     typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize),
                     true));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
+            tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32"));
-            locals.Add(typeResolver.ResolveType("System.Int32"));
-            locals.Add(typeResolver.ResolveType("System.Int32"));
-            locals.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
+            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(typeResolver.System.System_Int32);
+            locals.Add(typeResolver.System.System_Byte.ToPointerType());
 
             var parameters = new List<IParameter>();
 

@@ -50,21 +50,21 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
-            var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
 
             // Registering GetHashCode
             var tokenResolutions = new List<object>();
-            tokenResolutions.Add(typeResolver.ResolveType("System.Byte").ToPointerType());
+            tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
             tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             tokenResolutions.Add(
                 new SynthesizedStaticMethod(
                     string.Empty,
-                    typeResolver.ResolveType("System.Array"),
-                    typeResolver.ResolveType("System.Void"),
+                    typeResolver.System.System_Array,
+                    typeResolver.System.System_Void,
                     new[]
                     {
-                        typeResolver.ResolveType("System.Byte").ToPointerType().ToParameter(),
-                        typeResolver.ResolveType("System.Int32").ToParameter()
+                        typeResolver.System.System_Byte.ToPointerType().ToParameter(),
+                        typeResolver.System.System_Int32.ToParameter()
                     },
                     (llvmWriter, opCode) =>
                     {
@@ -73,16 +73,16 @@
                         var len = opCode.OpCodeOperands[1].Result;
                         llvmWriter.WriteMemSet(firstByteOfSourceArray, len);
                     }));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Byte"));
+            tokenResolutions.Add(typeResolver.System.System_Byte);
             tokenResolutions.Add(arrayType);
 
             var locals = new List<IType>();
-            locals.Add(typeResolver.ResolveType("System.Int32"));
+            locals.Add(typeResolver.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Array").ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Int32").ToParameter());
+            parameters.Add(typeResolver.System.System_Array.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
 
             MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }

@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
             // TODO: fix issue with to change value for IntPtr/UIntPtr
 
             bool realExchange = false;
-            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(llvmWriter.ResolveType("System.IntPtr")) || operType.TypeEquals(llvmWriter.ResolveType("System.UIntPtr"));
+            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(llvmWriter.System.System_IntPtr) || operType.TypeEquals(llvmWriter.System.System_UIntPtr);
             if (pointerExchange)
             {
                 intType = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);

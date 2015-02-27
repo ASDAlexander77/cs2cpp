@@ -31,24 +31,28 @@
             this.System_Array = module.ResolveType("System.Array", null);
             this.System_Collections_IEnumerable = module.ResolveType("System.Collections.IEnumerable", null);
             this.System_Collections_Generic_IEnumerable_T = module.ResolveType("System.Collections.Generic.IEnumerable`1", null);
-            this.System_Collections_Generic_IList_T = module.ResolveType("System.Collections_Generic.IList`1", null);
-            this.System_Collections_Generic_ICollection_T = module.ResolveType("System.Collections_Generic.ICollection`1", null);
+            this.System_Collections_Generic_IList_T = module.ResolveType("System.Collections.Generic.IList`1", null);
+            this.System_Collections_Generic_ICollection_T = module.ResolveType("System.Collections.Generic.ICollection`1", null);
             this.System_Collections_IEnumerator = module.ResolveType("System.Collections.IEnumerator", null);
             this.System_Collections_Generic_IEnumerator_T = module.ResolveType("System.Collections.Generic.IEnumerator`1", null);
             this.System_Collections_Generic_IReadOnlyList_T = module.ResolveType("System.Collections.Generic.IReadOnlyList`1", null);
             this.System_Collections_Generic_IReadOnlyCollection_T = module.ResolveType("System.Collections.Generic.IReadOnlyCollection`1", null);
             this.System_Nullable_T = module.ResolveType("System.Nullable`1", null);
             this.System_DateTime = module.ResolveType("System.DateTime", null);
-            this.System_Runtime_CompilerServices_IsVoatile = module.ResolveType("System.Runtime.CompilerServices.IsVoatile", null);
             this.System_IDisposable = module.ResolveType("System.IDisposable", null);
             this.System_TypedReference = module.ResolveType("System.TypedReference", null);
-            this.System_ArgIterator = module.ResolveType("System.ArgIterator", null);
+            ////this.System_ArgIterator = module.ResolveType("System.ArgIterator", null);
             this.System_RuntimeArgumentHandle = module.ResolveType("System.RuntimeArgumentHandle", null);
             this.System_RuntimeFieldHandle = module.ResolveType("System.RuntimeFieldHandle", null);
             this.System_RuntimeMethodHandle = module.ResolveType("System.RuntimeMethodHandle", null);
             this.System_RuntimeTypeHandle = module.ResolveType("System.RuntimeTypeHandle", null);
             this.System_IAsyncResult = module.ResolveType("System.IAsyncResult", null);
             this.System_AsyncCallback = module.ResolveType("System.AsyncCallback", null);
+            this.System_ArraySegment_T1 = module.ResolveType("System.ArraySegment`1", null);
+            this.System_Exception = module.ResolveType("System.Exception", null);
+            this.System_NotSupportedException = module.ResolveType("System.NotSupportedException", null);
+            this.System_Type = module.ResolveType("System.Type", null);
+            this.System_RuntimeType = module.ResolveType("System.RuntimeType", null);
         }
 
         public IType System_Object { get; private set; }
@@ -117,13 +121,11 @@
 
         public IType System_DateTime { get; private set; }
 
-        public IType System_Runtime_CompilerServices_IsVoatile { get; private set; }
-
         public IType System_IDisposable { get; private set; }
 
         public IType System_TypedReference { get; private set; }
 
-        public IType System_ArgIterator { get; private set; }
+        ////public IType System_ArgIterator { get; private set; }
 
         public IType System_RuntimeArgumentHandle { get; private set; }
 
@@ -136,5 +138,15 @@
         public IType System_IAsyncResult { get; private set; }
 
         public IType System_AsyncCallback { get; private set; }
+
+        public IType System_ArraySegment_T1 { get; private set; }
+
+        public IType System_Exception { get; private set; }
+
+        public IType System_NotSupportedException { get; private set; }
+
+        public IType System_Type { get; private set; }
+
+        public IType System_RuntimeType { get; private set; }
     }
 }

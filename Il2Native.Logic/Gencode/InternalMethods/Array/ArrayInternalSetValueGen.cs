@@ -230,37 +230,37 @@
 
             codeList.Add(Code.Ret);
 
-            var typedReferenceType = typeResolver.ResolveType("System.TypedReference");
-            var intPtrType = typeResolver.ResolveType("System.IntPtr");
+            var typedReferenceType = typeResolver.System.System_TypedReference;
+            var intPtrType = typeResolver.System.System_IntPtr;
 
             var tokenResolutions = new List<object>();
             tokenResolutions.Add(typedReferenceType.GetFieldByName("Value", typeResolver));
             tokenResolutions.Add(typedReferenceType.GetFieldByName("Type", typeResolver));
             tokenResolutions.Add(intPtrType.GetFieldByName("m_value", typeResolver));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Object").ToPointerType());
-            tokenResolutions.Add(typeResolver.ResolveType("System.Object"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Boolean"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Char"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.SByte"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Byte"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int16"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.UInt16"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int32"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.UInt32"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Int64"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.UInt64"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Single"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Double"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Decimal"));
-            tokenResolutions.Add(typeResolver.ResolveType("System.DateTime"));
+            tokenResolutions.Add(typeResolver.System.System_Object.ToPointerType());
+            tokenResolutions.Add(typeResolver.System.System_Object);
+            tokenResolutions.Add(typeResolver.System.System_Boolean);
+            tokenResolutions.Add(typeResolver.System.System_Char);
+            tokenResolutions.Add(typeResolver.System.System_SByte);
+            tokenResolutions.Add(typeResolver.System.System_Byte);
+            tokenResolutions.Add(typeResolver.System.System_Int16);
+            tokenResolutions.Add(typeResolver.System.System_UInt16);
+            tokenResolutions.Add(typeResolver.System.System_Int32);
+            tokenResolutions.Add(typeResolver.System.System_UInt32);
+            tokenResolutions.Add(typeResolver.System.System_Int64);
+            tokenResolutions.Add(typeResolver.System.System_UInt64);
+            tokenResolutions.Add(typeResolver.System.System_Single);
+            tokenResolutions.Add(typeResolver.System.System_Double);
+            tokenResolutions.Add(typeResolver.System.System_Decimal);
+            tokenResolutions.Add(typeResolver.System.System_DateTime);
             tokenResolutions.Add(
-                IlReader.Constructors(typeResolver.ResolveType("System.NotSupportedException"), typeResolver).First(c => !c.GetParameters().Any()));
+                IlReader.Constructors(typeResolver.System.System_NotSupportedException, typeResolver).First(c => !c.GetParameters().Any()));
 
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.ResolveType("System.Void").ToPointerType().ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Object").ToParameter());
+            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Object.ToParameter());
 
             MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

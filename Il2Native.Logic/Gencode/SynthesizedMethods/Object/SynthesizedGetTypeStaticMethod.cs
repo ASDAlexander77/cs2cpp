@@ -28,7 +28,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public SynthesizedGetTypeStaticMethod(IType type, ITypeResolver typeResolver)
             : base(type, ".sgettype")
         {
-            this.systemType = typeResolver.ResolveType("System.Type");
+            this.systemType = typeResolver.System.System_Type;
         }
 
         /// <summary>

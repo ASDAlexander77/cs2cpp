@@ -599,7 +599,7 @@
                 var countOffset = type.GetFieldByName("length", this.llvmWriter).GetFieldOffset(this.llvmWriter);
                 countMember = this.DefineMember(
                     "length",
-                    this.llvmWriter.ResolveType("System.Int32"),
+                    this.llvmWriter.System.System_Int32,
                     countOffset * 8,
                     type,
                     true,

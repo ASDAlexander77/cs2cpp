@@ -21,7 +21,7 @@
 
             // Registering UnsafeCastToStackPointerGen
             var tokenResolutions = new List<object>();
-            var arrayType = typeResolver.ResolveType("System.Byte").ToArrayType(1);
+            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
             tokenResolutions.Add(arrayType);
             tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
 

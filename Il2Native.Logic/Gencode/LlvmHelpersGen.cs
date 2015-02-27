@@ -89,7 +89,7 @@ namespace Il2Native.Logic.Gencode
             // load pointer
             llvmWriter.WriteSetResultNumber(
                 opCodeMethodInfo,
-                llvmWriter.ResolveType("System.Byte").ToPointerType().ToPointerType());
+                llvmWriter.System.System_Byte.ToPointerType().ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("** ");
@@ -100,7 +100,7 @@ namespace Il2Native.Logic.Gencode
 
             // get address of a function
             writer.WriteLine("; Get Virtual Index of Method: {0}", methodInfo.FullName);
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("getelementptr inbounds ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
@@ -109,7 +109,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
             // load method address
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("load ");
             llvmWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
@@ -145,19 +145,19 @@ namespace Il2Native.Logic.Gencode
             switch (bitSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.Boolean");
+                    toType = llvmWriter.System.System_Boolean;
                     break;
                 case 8:
-                    toType = llvmWriter.ResolveType("System.SByte");
+                    toType = llvmWriter.System.System_SByte;
                     break;
                 case 16:
-                    toType = llvmWriter.ResolveType("System.Int16");
+                    toType = llvmWriter.System.System_Int16;
                     break;
                 case 32:
-                    toType = llvmWriter.ResolveType("System.Int32");
+                    toType = llvmWriter.System.System_Int32;
                     break;
                 case 64:
-                    toType = llvmWriter.ResolveType("System.Int64");
+                    toType = llvmWriter.System.System_Int64;
                     break;
             }
 
@@ -178,16 +178,16 @@ namespace Il2Native.Logic.Gencode
             switch (byteSize)
             {
                 case 1:
-                    toType = typeResolver.ResolveType("System.SByte");
+                    toType = typeResolver.System.System_SByte;
                     break;
                 case 2:
-                    toType = typeResolver.ResolveType("System.Int16");
+                    toType = typeResolver.System.System_Int16;
                     break;
                 case 4:
-                    toType = typeResolver.ResolveType("System.Int32");
+                    toType = typeResolver.System.System_Int32;
                     break;
                 case 8:
-                    toType = typeResolver.ResolveType("System.Int64");
+                    toType = typeResolver.System.System_Int64;
                     break;
             }
 
@@ -200,19 +200,19 @@ namespace Il2Native.Logic.Gencode
             switch (bitSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.Boolean");
+                    toType = llvmWriter.System.System_Boolean;
                     break;
                 case 8:
-                    toType = llvmWriter.ResolveType("System.Byte");
+                    toType = llvmWriter.System.System_Byte;
                     break;
                 case 16:
-                    toType = llvmWriter.ResolveType("System.UInt16");
+                    toType = llvmWriter.System.System_UInt16;
                     break;
                 case 32:
-                    toType = llvmWriter.ResolveType("System.UInt32");
+                    toType = llvmWriter.System.System_UInt32;
                     break;
                 case 64:
-                    toType = llvmWriter.ResolveType("System.UInt64");
+                    toType = llvmWriter.System.System_UInt64;
                     break;
             }
 
@@ -233,16 +233,16 @@ namespace Il2Native.Logic.Gencode
             switch (byteSize)
             {
                 case 1:
-                    toType = llvmWriter.ResolveType("System.Byte");
+                    toType = llvmWriter.System.System_Byte;
                     break;
                 case 2:
-                    toType = llvmWriter.ResolveType("System.UInt16");
+                    toType = llvmWriter.System.System_UInt16;
                     break;
                 case 4:
-                    toType = llvmWriter.ResolveType("System.UInt32");
+                    toType = llvmWriter.System.System_UInt32;
                     break;
                 case 8:
-                    toType = llvmWriter.ResolveType("System.UInt64");
+                    toType = llvmWriter.System.System_UInt64;
                     break;
             }
 
@@ -546,7 +546,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = llvmWriter.Output;
 
-            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.ResolveType("System.Byte").ToPointerType());
+            llvmWriter.WriteSetResultNumber(opCode, llvmWriter.System.System_Byte.ToPointerType());
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(llvmWriter, !result.Type.IsByRef && result.Type.IsValueType());
             writer.Write(" ");
@@ -759,7 +759,7 @@ namespace Il2Native.Logic.Gencode
                 LlvmConvert(llvmWriter, opCode, string.Empty, string.Empty, toType, true);
             }
             else if (fromResult.Type.IsArray
-                     || (fromResult.Type.IsPointer && bareType.TypeEquals(llvmWriter.ResolveType("System.Void")))
+                     || (fromResult.Type.IsPointer && bareType.TypeEquals(llvmWriter.System.System_Void))
                      || toType.IsArray 
                      || toType.IsPointer 
                      || toType.IsByRef 

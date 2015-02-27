@@ -23,7 +23,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedGetHashCodeMethod(IType type, ITypeResolver typeResolver)
-            : base("GetHashCode", type, typeResolver.ResolveType("System.Int32"))
+            : base("GetHashCode", type, typeResolver.System.System_Int32)
         {
             if (type.IsObject)
             {

@@ -21,7 +21,7 @@
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedEnumToStringMethod(IType type, ITypeResolver typeResolver)
-            : base("ToString", type, typeResolver.ResolveType("System.String"), isOverride: true)
+            : base("ToString", type, typeResolver.System.System_String, isOverride: true)
         {
             object[] code;
             IList<object> tokenResolutions;

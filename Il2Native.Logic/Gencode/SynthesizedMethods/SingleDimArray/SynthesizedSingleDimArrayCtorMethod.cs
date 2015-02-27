@@ -56,7 +56,7 @@
         /// </summary>
         public override IType ReturnType
         {
-            get { return this.typeResolver.ResolveType("System.Void"); }
+            get { return this.typeResolver.System.System_Void; }
         }
 
         public override IEnumerable<IParameter> GetParameters()
