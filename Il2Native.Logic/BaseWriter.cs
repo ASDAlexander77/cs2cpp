@@ -93,6 +93,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public SystemTypes System { get; private set; }
+
+        /// <summary>
+        /// </summary>
         protected IIlReader IlReader { get; set; }
 
         /// <summary>
