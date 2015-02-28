@@ -4,7 +4,7 @@
     using System.Linq;
 
     using PEAssemblyReader;
-    using SynthesizedMethods;
+
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     public static class UnsafeCastToStackPointerGen
@@ -35,9 +35,8 @@
 
             var locals = new List<IType>();
 
-            var parameters = new List<IParameter>();
-
-            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
+            // params will be taken from method
+            MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, null);
         }
     }
 }
