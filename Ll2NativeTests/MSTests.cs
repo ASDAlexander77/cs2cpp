@@ -508,6 +508,32 @@ namespace Ll2NativeTests
             }
         }
 
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscolibCSNative()
+        {
+            Il2Converter.Convert(
+                Path.GetFullPath(CompilerHelper.MscorlibPath),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false));
+
+            ////if (CompilerHelper.CompileWithOptimization)
+            ////{
+            ////    CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
+            ////    CompilerHelper.ExecCmd(
+            ////        "llc",
+            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.bc", CompilerHelper.Target));
+            ////}
+            ////else
+            ////{
+            ////    CompilerHelper.ExecCmd(
+            ////        "llc",
+            ////        string.Format("-filetype=obj -mtriple={0} mscorlib.ll", CompilerHelper.Target));
+            ////}
+        }
+
         /// <summary>
         /// </summary>
         [TestMethod]

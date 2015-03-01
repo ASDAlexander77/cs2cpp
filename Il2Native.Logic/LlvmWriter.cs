@@ -2535,6 +2535,7 @@ namespace Il2Native.Logic
         {
             if (opCode.Result is ConstValue)
             {
+                opCode.Result = new ConstValue(opCode.Result.ToString(), destType);
                 return false;
             }
 
@@ -5130,6 +5131,12 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        if (options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand) && res2.IsConst)
+                        {
+                            intAdjustment = res1.Type;
+                            intAdjustSecondOperand = true;
+                        }
+
                         // if it is pointer operation with integer adjust it to integer
                         if (res1.Type.IsPointer && res2.IsConst)
                         {
