@@ -91,6 +91,11 @@
 
         /// <summary>
         /// </summary>
+        public const bool Mscorlib = true;
+
+
+        /// <summary>
+        /// </summary>
         /// <param name="includeCoreLib">
         /// </param>
         /// <param name="roslyn">
@@ -110,7 +115,14 @@
             var args = new List<string>();
             if (includeCoreLib)
             {
-                args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
+                if (Mscorlib)
+                {
+                    args.Add("corelib:" + Path.GetFullPath(MscorlibPath));
+                }
+                else
+                {
+                    args.Add("corelib:" + Path.GetFullPath(CoreLibPath));
+                }
             }
 
             if (roslyn)

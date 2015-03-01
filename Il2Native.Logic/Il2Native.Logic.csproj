@@ -77,6 +77,7 @@
     <Compile Include="Gencode\InternalMethods\Array\ArrayInternalSetValueGen.cs" />
     <Compile Include="Gencode\InternalMethods\CompilerServices\OffsetToStringData.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
+    <Compile Include="Gencode\StringGen.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayAddressMethod.cs" />

@@ -1109,8 +1109,18 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldstr:
+#if MSCORLIB
                     var opCodeString = opCode as OpCodeStringPart;
                     var stringType = this.System.System_String;
+                    var stringIndex = this.GetStringIndex(opCodeString.Operand);
+                    opCode.Result =
+                        new FullyDefinedReference(
+                            this.GetStringTypeReference(
+                                string.Format("@.s{0}", stringIndex),
+                                opCodeString.Operand.Length + 1),
+                            stringType);
+#else
+                    var opCodeString = opCode as OpCodeStringPart;
                     var charType = this.System.System_Char;
                     var charArrayType = charType.ToArrayType(1);
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
@@ -1123,7 +1133,7 @@ namespace Il2Native.Logic
                             charArrayType);
 
                     this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
-
+#endif
                     break;
                 case Code.Ldnull:
                     opCode.Result = new ConstValue(null, this.System.System_Void.ToPointerType());
@@ -7054,6 +7064,43 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
         }
 
+#if MSCORLIB
+        /// <summary>
+        /// </summary>
+        /// <param name="pair">
+        /// </param>
+        private void WriteUnicodeString(KeyValuePair<int, string> pair)
+        {
+            this.Output.Write(
+                "@.s{0} = private unnamed_addr constant {1} {3} {2}",
+                pair.Key,
+                this.GetStringTypeHeader(pair.Value.Length + 1),
+                this.GetStringValuesHeader(pair.Value.Length + 1, pair.Value.Length),
+                "{");
+
+            this.Output.Write(" [");
+
+            var index = 0;
+            foreach (var c in pair.Value.ToCharArray())
+            {
+                if (index > 0)
+                {
+                    this.Output.Write(", ");
+                }
+
+                this.Output.Write("i16 {0}", (int)c);
+                index++;
+            }
+
+            if (index > 0)
+            {
+                this.Output.Write(", ");
+            }
+
+            this.Output.WriteLine("i16 0] {0}, align {1}", '}', PointerSize);
+        }
+
+#else
         /// <summary>
         /// </summary>
         /// <param name="pair">
@@ -7086,8 +7133,9 @@ namespace Il2Native.Logic
                 this.Output.Write(", ");
             }
 
-            this.Output.WriteLine("i16 0] {0}, align 2", '}');
+            this.Output.WriteLine("i16 0] {0}, align {1}", '}', PointerSize);
         }
+#endif
 
         /// <summary>
         /// </summary>

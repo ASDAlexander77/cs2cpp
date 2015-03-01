@@ -15,7 +15,11 @@
             out IList<IParameter> parameters)
         {
             var stringType = typeResolver.System.System_String;
+#if MSCORLIB
+            var bytePointerType = typeResolver.System.System_SByte.ToPointerType();
+#else
             var bytePointerType = typeResolver.System.System_Byte.ToPointerType();
+#endif
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_Int32.ToParameter());
