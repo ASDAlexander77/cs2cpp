@@ -1730,6 +1730,13 @@ namespace Il2Native.Logic
 
             if (assemblyIdentity.Name == "mscorlib")
             {
+                if (!string.IsNullOrWhiteSpace(this.CoreLibPath))
+                {
+                    return this.CoreLibPath;
+                }
+
+                Debug.Assert(false, "you are using mscorlib from .NET");
+
                 return typeof(int).Assembly.Location;
             }
 

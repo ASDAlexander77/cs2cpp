@@ -1123,6 +1123,7 @@ namespace Il2Native.Logic
                     var opCodeString = opCode as OpCodeStringPart;
                     var charType = this.System.System_Char;
                     var charArrayType = charType.ToArrayType(1);
+                    var stringType = this.System.System_String;
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
                     var firstParameterValue =
                         new FullyDefinedReference(
@@ -2748,7 +2749,9 @@ namespace Il2Native.Logic
 
             if (type.IsArray)
             {
+#if EXTRA_VALIDATION
                 Debug.Assert(!type.IsGenericTypeDefinition, "you can't use generic type definition");
+#endif
                 this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
             }
 
@@ -2758,7 +2761,9 @@ namespace Il2Native.Logic
             }
 
             var bareType = type.ToBareType();
+#if EXTRA_VALIDATION
             Debug.Assert(!bareType.IsGenericTypeDefinition, "you can't use generic type definition");
+#endif
             this.typeDeclRequired.Add(bareType);
         }
 
@@ -7015,7 +7020,9 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDeclarationStart(IType type)
         {
+#if EXTRA_VALIDATION
             Debug.Assert(!type.IsGenericTypeDefinition);
+#endif
 
             this.Output.Write("%");
 

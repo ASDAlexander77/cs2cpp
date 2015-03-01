@@ -517,7 +517,7 @@ namespace Ll2NativeTests
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
-                CompilerHelper.GetConverterArgs(false));
+                CompilerHelper.GetConverterArgs(false, stubs:true));
 
             ////if (CompilerHelper.CompileWithOptimization)
             ////{
@@ -547,8 +547,7 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompile()
         {
-            var skip =
-                new List<int>();
+            var skip = new List<int>();
 
             Debug.Listeners.Clear();
 
