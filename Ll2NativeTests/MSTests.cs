@@ -726,7 +726,7 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestMscorlibCompile_SmallBuild()
+        public void TestMscorlibCompile_ReducedBuild()
         {
             // Do not forget to set MSCORLIB variable
 
@@ -737,7 +737,68 @@ namespace Ll2NativeTests
                 new[]
                     {
                         "*",
-                        "System*"
+                        "System*",
+                        "System.Collections*",
+                        "System.Threading*",
+                        "System.Globalization*",
+                        "System.Runtime.Remoting*",
+                        "System.Runtime.Remoting.Contexts*",
+                        "System.Runtime.Remoting.Messaging*",
+                        "System.Runtime.CompilerServices*",
+                        "System.Security*",
+                        "System.Security.Policy*",
+                        "System.Reflection*"
+                    });
+        }
+
+        /// <summary>
+        /// </summary>
+        [TestMethod]
+        public void TestMscorlibCompile_SmallBuild()
+        {
+            // Do not forget to set MSCORLIB variable
+
+            Il2Converter.Convert(
+                Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                CompilerHelper.OutputPath,
+                CompilerHelper.GetConverterArgs(false),
+                new[]
+                    {
+                        //"*",
+                        //"System*"
+                        "System.Object",
+                        "System.Int32",
+                        "System.Globalization.Calendar",
+                        "System.Globalization.NumberFormatInfo",
+                        "System.Globalization.DateTimeFormatInfo",
+                        "System.Runtime.Remoting.RemotingException",
+                        "System.ArgumentNullException",
+                        "System.Collections.Hashtable",
+                        "System.Collections.Hashtable.SyncHashtable",
+                        "System.Collections.IComparer",
+                        "System.AsyncCallback",
+                        "System.MissingMethodException",
+                        "System.Threading.Thread",
+                        "System.Threading.ParameterizedThreadStart",
+                        "System.Threading.CompressedStack",
+                        "System.Runtime.CompilerServices.RuntimeHelpers+CleanupCode",
+                        "System.LocalDataStoreHolder",
+                        "System.Runtime.Remoting.Contexts.Context",
+                        "System.Threading.WaitHandle",
+                        "System.Runtime.Remoting.Contexts.IContributeClientContextSink",
+                        "System.Runtime.Remoting.Contexts.IContributeDynamicSink",
+                        "System.Security.PermissionListSet",
+                        "System.Resolver",
+                        "System.AppDomain",
+                        "System.Security.Policy.TrustManagerContext",
+                        "System.Security.Policy.Evidence",
+                        "System.Reflection.MethodBase",
+                        "System.Collections.Stack",
+                        "System.Threading.WaitCallback",
+                        "System.Random",
+                        "System.Runtime.Remoting.Messaging.CallContextSecurityData",
+                        "System.Security.Policy.Url",
+                        "System.Threading.DomainCompressedStack"
                     });
         }
 

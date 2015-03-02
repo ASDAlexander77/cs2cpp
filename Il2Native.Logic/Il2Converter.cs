@@ -161,7 +161,6 @@ namespace Il2Native.Logic
         /// </param>
         private static void ConvertAllTypes(
             IlReader ilReader,
-            string[] filter,
             ICodeWriter codeWriter,
             IList<IType> newListOfITypes,
             IDictionary<IType, IEnumerable<IMethod>> genMethodSpec,
@@ -172,11 +171,6 @@ namespace Il2Native.Logic
             {
                 Debug.Assert(type != null);
                 if (type == null)
-                {
-                    continue;
-                }
-
-                if (filter != null && !filter.Contains(type.FullName))
                 {
                     continue;
                 }
@@ -589,7 +583,6 @@ namespace Il2Native.Logic
 
             Writing(
                 ilReader,
-                filter,
                 codeWriter,
                 sortedListOfTypes,
                 genericMethodSpecializationsSorted);
@@ -943,7 +936,7 @@ namespace Il2Native.Logic
                     return true;
                 }
 
-                if (string.CompareOrdinal(type.FullName, 0, filter, 0, filter.Length) == 0)
+                if (string.CompareOrdinal(type.MetadataFullName, 0, filter, 0, filter.Length) == 0)
                 {
                     return true;
                 }
@@ -1160,7 +1153,6 @@ namespace Il2Native.Logic
 
         private static void Writing(
             IlReader ilReader,
-            string[] filter,
             ICodeWriter codeWriter,
             IList<IType> newListOfITypes,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
@@ -1172,7 +1164,6 @@ namespace Il2Native.Logic
 
             ConvertAllTypes(
                 ilReader,
-                filter,
                 codeWriter,
                 newListOfITypes,
                 genericMethodSpecializationsSorted,
@@ -1180,7 +1171,6 @@ namespace Il2Native.Logic
 
             ConvertAllTypes(
                 ilReader,
-                filter,
                 codeWriter,
                 newListOfITypes,
                 genericMethodSpecializationsSorted,
@@ -1189,7 +1179,6 @@ namespace Il2Native.Logic
             // Append definition of Generic Methods of not used non-generic types
             ConvertAllTypes(
                 ilReader,
-                filter,
                 codeWriter,
                 genericMethodSpecializationsSorted.Keys.Where(k => !newListOfITypes.Contains(k)).ToList(),
                 genericMethodSpecializationsSorted,

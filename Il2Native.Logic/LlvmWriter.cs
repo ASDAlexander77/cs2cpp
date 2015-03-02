@@ -2740,7 +2740,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void CheckIfExternalDeclarationIsRequired(IType type)
+        public void CheckIfExternalDeclarationIsRequired(IType type, bool inversAssemblyCheck = false)
         {
             if (type == null)
             {
@@ -2755,9 +2755,19 @@ namespace Il2Native.Logic
                 this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
             }
 
-            if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
+            if (inversAssemblyCheck)
             {
-                return;
+                if (type.AssemblyQualifiedName != this.AssemblyQualifiedName)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
+                {
+                    return;
+                }
             }
 
             var bareType = type.ToBareType();
@@ -7036,7 +7046,6 @@ namespace Il2Native.Logic
             // get all required types for type definition
             var requiredTypes = new NamespaceContainer<IType>();
             var readingTypesContext = new ReadingTypesContext();
-            readingTypesContext.GenericTypeSpecializations = null;
             readingTypesContext.GenericMethodSpecializations = null;
             Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, requiredTypes, readingTypesContext);
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
@@ -7047,6 +7056,11 @@ namespace Il2Native.Logic
             foreach (var additionalType in readingTypesContext.AdditionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
             {
                 CheckIfExternalDeclarationIsRequired(additionalType);
+            }
+
+            foreach (var genericTypeSpecialization in readingTypesContext.GenericTypeSpecializations)
+            {
+                CheckIfExternalDeclarationIsRequired(genericTypeSpecialization, true);
             }
 
             var interfacesList = type.GetInterfaces();
