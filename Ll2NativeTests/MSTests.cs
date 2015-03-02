@@ -514,6 +514,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscolibCSNative()
         {
+            // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
+
             Il2Converter.Convert(
                 Path.GetFullPath(CompilerHelper.MscorlibPath),
                 CompilerHelper.OutputPath,
@@ -675,6 +677,8 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestMscorlibCompile()
         {
+            // TODO: if you have undefined symbols, remove all linkodr_once and see which symbol is not defined
+
             // Do not forget to set MSCORLIB variable
 
             // you need to compile it with optimization, otherwise it will not be compiled as being to big
@@ -731,7 +735,8 @@ namespace Ll2NativeTests
             // Do not forget to set MSCORLIB variable
 
             Il2Converter.Convert(
-                Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                //Path.GetFullPath(@"C:\Windows\Microsoft.NET\assembly\GAC_32\mscorlib\v4.0_4.0.0.0__b77a5c561934e089\mscorlib.dll"),
+                CompilerHelper.MscorlibPath,
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false),
                 new[]
@@ -748,7 +753,10 @@ namespace Ll2NativeTests
                         "System.Runtime.CompilerServices*",
                         "System.Runtime.InteropServices*",
                         "System.Configuration.Assemblies*",
-                        "System.Deployment.Internal.Isolation*"
+                        "System.Deployment.Internal.Isolation*",
+                        "System.Diagnostics.Tracing*",
+                        "System.Runtime.InteropServices.WindowsRuntime.DictionaryToMapAdapter",
+                        "System.IO.FileSecurityState",
                     });
         }
 
