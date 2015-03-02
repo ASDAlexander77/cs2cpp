@@ -755,7 +755,7 @@ namespace Ll2NativeTests
                         "System.Configuration.Assemblies*",
                         "System.Deployment.Internal.Isolation*",
                         "System.Diagnostics.Tracing*",
-                        "System.Runtime.InteropServices.WindowsRuntime.DictionaryToMapAdapter",
+                        "System.Runtime.InteropServices.WindowsRuntime.MapToDictionaryAdapter",
                         "System.IO.FileSecurityState",
                     });
         }

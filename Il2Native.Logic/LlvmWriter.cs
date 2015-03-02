@@ -8,6 +8,7 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 #define INLINE_RTTI_INFO
+#define WHEN_NOT_ALL_TYPES_INCLUDED
 
 namespace Il2Native.Logic
 {
