@@ -1002,9 +1002,11 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedMethod(method, stackCall);
 
                         this.AddStructType(method.ReturnType);
+                        this.AddGenericSpecializedType(method.ReturnType);
                         foreach (var methodParameter in method.GetParameters())
                         {
                             this.AddStructType(methodParameter.ParameterType);
+                            this.AddGenericSpecializedType(methodParameter.ParameterType);
                         }
 
                         this.AddUsedType(method.DeclaringType);

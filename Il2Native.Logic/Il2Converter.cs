@@ -23,11 +23,11 @@ namespace Il2Native.Logic
     /// </summary>
     public class Il2Converter
     {
+        private static readonly IDictionary<IType, IEnumerable<IType>> cachedRequiredTypes = new SortedDictionary<IType, IEnumerable<IType>>();
+
         private static bool concurrent;
 
         private static ICodeWriter _codeWriter;
-
-        private static IDictionary<IType, IEnumerable<IType>> cachedRequiredTypes = new SortedDictionary<IType, IEnumerable<IType>>();
 
         /// <summary>
         /// </summary>
