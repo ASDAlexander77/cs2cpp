@@ -27,6 +27,8 @@ namespace Il2Native.Logic
 
         private static ICodeWriter _codeWriter;
 
+        private static IDictionary<IType, IEnumerable<IType>> cachedRequiredTypes = new SortedDictionary<IType, IEnumerable<IType>>();
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -573,6 +575,8 @@ namespace Il2Native.Logic
         {
             _codeWriter = codeWriter;
 
+            cachedRequiredTypes.Clear();
+
             IList<IType> sortedListOfTypes;
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             ReadingTypes(
@@ -609,14 +613,27 @@ namespace Il2Native.Logic
                 return typeSource.RequiredTypes;
             }
 
+            lock (cachedRequiredTypes)
+            {
+                IEnumerable<IType> cachedQuery;
+                if (cachedRequiredTypes.TryGetValue(typeSource, out cachedQuery))
+                {
+                    return cachedQuery;
+                }
+            }
+
             var query = IterateAllRequiredTypes(typeSource, readingTypesContext).ToList();
             typeSource.RequiredTypes = query;
-            return query;
-        }
 
-        private static IEnumerable<IType> IterateEmptyTypes()
-        {
-            yield break;
+            lock (cachedRequiredTypes)
+            {
+                if (!cachedRequiredTypes.ContainsKey(typeSource))
+                {
+                    cachedRequiredTypes.Add(typeSource, query);
+                }
+            }
+
+            return query;
         }
 
         private static IEnumerable<IType> IterateAllRequiredTypes(IType type, ReadingTypesContext readingTypesContext)

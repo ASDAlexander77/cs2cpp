@@ -7046,7 +7046,9 @@ namespace Il2Native.Logic
             // get all required types for type definition
             var requiredTypes = new NamespaceContainer<IType>();
             var readingTypesContext = new ReadingTypesContext();
+#if !WHEN_NOT_ALL_TYPES_INCLUDED
             readingTypesContext.GenericTypeSpecializations = null;
+#endif
             readingTypesContext.GenericMethodSpecializations = null;
             Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, requiredTypes, readingTypesContext);
             foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
@@ -7059,10 +7061,12 @@ namespace Il2Native.Logic
                 CheckIfExternalDeclarationIsRequired(additionalType);
             }
 
-            ////foreach (var genericTypeSpecialization in readingTypesContext.GenericTypeSpecializations)
-            ////{
-            ////    CheckIfExternalDeclarationIsRequired(genericTypeSpecialization, true);
-            ////}
+#if WHEN_NOT_ALL_TYPES_INCLUDED
+            foreach (var genericTypeSpecialization in readingTypesContext.GenericTypeSpecializations)
+            {
+                CheckIfExternalDeclarationIsRequired(genericTypeSpecialization, true);
+            }
+#endif
 
             var interfacesList = type.GetInterfaces();
             foreach (var @interface in interfacesList)
