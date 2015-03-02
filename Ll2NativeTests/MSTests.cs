@@ -739,15 +739,16 @@ namespace Ll2NativeTests
                         "*",
                         "System*",
                         "System.Collections*",
+                        "System.Reflection*",
                         "System.Threading*",
                         "System.Globalization*",
-                        "System.Runtime.Remoting*",
-                        "System.Runtime.Remoting.Contexts*",
-                        "System.Runtime.Remoting.Messaging*",
-                        "System.Runtime.CompilerServices*",
                         "System.Security*",
                         "System.Security.Policy*",
-                        "System.Reflection*"
+                        "System.Runtime.Remoting**",
+                        "System.Runtime.CompilerServices*",
+                        "System.Runtime.InteropServices*",
+                        "System.Configuration.Assemblies*",
+                        "System.Deployment.Internal.Isolation*"
                     });
         }
 

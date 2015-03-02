@@ -931,9 +931,24 @@ namespace Il2Native.Logic
         {
             foreach (var filter in filters)
             {
-                if (filter.EndsWith("*") && type.Namespace == filter.Substring(0, filter.Length - 1))
+                if (filter.EndsWith("*"))
                 {
-                    return true;
+                    if (filter.Length > 1 && filter[filter.Length - 2] == '*')
+                    {
+                        if (type.Namespace.StartsWith(filter.Substring(0, filter.Length - 2)))
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+
+                    if (type.Namespace == filter.Substring(0, filter.Length - 1))
+                    {
+                        return true;
+                    }
                 }
 
                 if (string.CompareOrdinal(type.MetadataFullName, 0, filter, 0, filter.Length) == 0)
