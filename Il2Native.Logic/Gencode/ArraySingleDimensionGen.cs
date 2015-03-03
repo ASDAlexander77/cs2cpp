@@ -213,6 +213,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetSingleDimArrayPrefixDataType(ITypeResolver typeResolver)
         {
+            // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()
             //return "i8*, i8*, i8*, i32, i32";
             if (_singleDimArrayPrefixDataType != null)
             {
@@ -259,6 +260,8 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetSingleDimArrayPrefixNullConstData(ITypeResolver typeResolver)
         {
+            // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()
+
             if (_singleDimArrayPrefixNullConstData != null)
             {
                 return _singleDimArrayPrefixNullConstData;
@@ -303,7 +306,6 @@ namespace Il2Native.Logic.Gencode
             var typeString = llvmWriter.WriteToString(
                 () =>
                 {
-                    var writer = llvmWriter.Output;
                     elementType.WriteTypePrefix(llvmWriter);
                 });
 

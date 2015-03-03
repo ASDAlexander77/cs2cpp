@@ -584,19 +584,12 @@ namespace Il2Native.Logic
 
             // extra fields
             var normal = type.ToNormal();
-            if (normal.IsPrimitiveTypeOrEnum())
+            if (normal.IsEnum)
             {
-                if (normal.IsEnum)
+                foreach (var field in EnumGen.GetFields(normal, typeResolver))
                 {
-                    foreach (var field in EnumGen.GetFields(normal, typeResolver))
-                    {
-                        yield return field;
-                    }                    
-                }
-                else
-                {
-                    yield return normal.ToField(type, "Value");
-                }
+                    yield return field;
+                }                    
             } 
             else if (type.IsMultiArray)
             {
@@ -1106,6 +1099,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var type = module.ResolveType(token, genericContext);
+
                         this.AddGenericSpecializedType(type);
                         this.AddUsedType(type);
                         if (code == Code.Box)

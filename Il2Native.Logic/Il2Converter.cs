@@ -894,7 +894,7 @@ namespace Il2Native.Logic
             Debug.Assert(type != null, "Type is null");
 
             var requiredTypes = GetAllRequiredTypesForType(type, readingTypesContext);
-            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsValueType() || requiredType.IsStructureType()))
+            foreach (var requiredType in requiredTypes)
             {
                 addedRequiredTypes.Add(requiredType);
             }
@@ -980,8 +980,7 @@ namespace Il2Native.Logic
         private static void RemoveAllResolvedTypesForType(
             IAssoc<IType, INamespaceContainer<IType>> type,
             IList<IType> newOrder,
-            IList<IAssoc<IType, INamespaceContainer<IType>>> toRemove,
-            object syncToRemove)
+            IList<IAssoc<IType, INamespaceContainer<IType>>> toRemove)
         {
             var requiredITypes = type.Value;
 
@@ -992,11 +991,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            lock (syncToRemove)
-            {
-                toRemove.Add(type);
-            }
-
+            toRemove.Add(type);
             newOrder.Add(type.Key);
         }
 
@@ -1023,41 +1018,27 @@ namespace Il2Native.Logic
                 allTypes.Add(type);
             }
 
+            // remove not used types, for example System.Object which maybe not in current assembly
+            foreach (var requiredITypes in typesWithRequired)
+            {
+                requiredITypes.Value.RemoveAll(r => !allTypes.Contains(r));
+            }
+
             var strictMode = true;
             while (typesWithRequired.Count > 0)
             {
                 var before = typesWithRequired.Count;
                 var toRemove = new NamespaceContainer<IType, INamespaceContainer<IType>>();
-                var syncToRemove = new object();
-
-                // remove not used types, for example System.Object which maybe not in current assembly
-                foreach (var requiredITypes in typesWithRequired)
-                {
-                    requiredITypes.Value.RemoveAll(r => !allTypes.Contains(r));
-                }
 
                 // step 1 find Root;
-                if (concurrent)
+                foreach (var type in typesWithRequired)
                 {
-                    Parallel.ForEach(
-                        typesWithRequired,
-                        type =>
-                            RemoveAllResolvedTypesForType(type, newOrder, toRemove, syncToRemove));
-                }
-                else
-                {
-                    foreach (var type in typesWithRequired)
-                    {
-                        RemoveAllResolvedTypesForType(type, newOrder, toRemove, syncToRemove);
-                    }
+                    RemoveAllResolvedTypesForType(type, newOrder, toRemove);
                 }
 
-                lock (syncToRemove)
+                foreach (var type in toRemove)
                 {
-                    foreach (var type in toRemove)
-                    {
-                        typesWithRequired.Remove(type);
-                    }
+                    typesWithRequired.Remove(type);
                 }
 
                 var after = typesWithRequired.Count;
@@ -1065,6 +1046,7 @@ namespace Il2Native.Logic
                 {
                     if (strictMode)
                     {
+                        Debug.Assert(false, "strict mode is off");
                         strictMode = false;
                         continue;
                     }

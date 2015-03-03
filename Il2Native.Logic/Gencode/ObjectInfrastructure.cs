@@ -28,13 +28,13 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="declaringType">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="typeResolver">
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetVirtualTableReference(this IType declaringType, LlvmWriter llvmWriter)
+        public static string GetVirtualTableReference(this IType declaringType, ITypeResolver typeResolver)
         {
-            var virtualTable = declaringType.GetVirtualTable(llvmWriter);
+            var virtualTable = declaringType.GetVirtualTable(typeResolver);
 
             return string.Format(
                 "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
@@ -828,7 +828,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!doNotCallInit)
             {
-                // llvmWriter.WriteInitObject(writer, opCode, declaringType);
+                // typeResolver.WriteInitObject(writer, opCode, declaringType);
                 declaringClassType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
             }
 

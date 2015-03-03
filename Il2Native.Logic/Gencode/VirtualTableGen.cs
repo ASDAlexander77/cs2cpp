@@ -273,13 +273,13 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="thisType">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="typeResolver">
         /// </param>
         /// <returns>
         /// </returns>
         public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(
             this IType thisType,
-            LlvmWriter llvmWriter)
+            ITypeResolver typeResolver)
         {
             List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
 
@@ -289,7 +289,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
-            virtualTable.BuildVirtualTable(thisType, llvmWriter);
+            virtualTable.BuildVirtualTable(thisType, typeResolver);
 
             VirtualTableByType[thisType.FullName] = virtualTable;
 

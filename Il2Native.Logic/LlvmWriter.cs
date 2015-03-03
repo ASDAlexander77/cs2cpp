@@ -83,6 +83,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly ISet<IType> typeVirtualTablesRequired = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<int, byte[]> bytesStorage = new SortedDictionary<int, byte[]>();
 
         /// <summary>
@@ -124,6 +128,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        private readonly ISet<IType> processedVirtualTablesRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -786,7 +794,9 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.WriteInterfaceVirtualTables(type);
+            this.WriteVirtualTables(type);
+            
+            this.processedVirtualTablesRequired.Add(type);
 
             this.Output.WriteLine(string.Empty);
 
@@ -2532,6 +2542,18 @@ namespace Il2Native.Logic
             }
         }
 
+        public void AddRequiredVirtualTablesDeclaration(IType type)
+        {
+            if (type.IsByRef)
+            {
+                this.typeVirtualTablesRequired.Add(type.GetElementType());
+            }
+            else
+            {
+                this.typeVirtualTablesRequired.Add(type);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2749,10 +2771,11 @@ namespace Il2Native.Logic
 
             if (type.IsArray)
             {
-#if EXTRA_VALIDATION
-                Debug.Assert(!type.IsGenericTypeDefinition, "you can't use generic type definition");
-#endif
-                this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
+                if (!type.IsGenericType)
+                {
+                    CheckIfExternalDeclarationIsRequired(type.GetElementType());
+                    this.typeDeclRequired.Add(type);
+                }                
             }
 
             var bareType = type.ToBareType();
@@ -2768,9 +2791,10 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfMethodExternalDeclarationIsRequired(
             IMethod methodBase,
-            IType ownerOfExplicitInterface = null)
+            IType ownerOfExplicitInterface = null, 
+            bool checkParamsAndReturn = false)
         {
-            if (methodBase.Name.StartsWith("%") || string.IsNullOrEmpty(methodBase.Name))
+            if (methodBase == null || methodBase.Name.StartsWith("%") || string.IsNullOrEmpty(methodBase.Name))
             {
                 return;
             }
@@ -2778,6 +2802,15 @@ namespace Il2Native.Logic
             if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
+            }
+
+            if (checkParamsAndReturn)
+            {
+                CheckIfExternalDeclarationIsRequired(methodBase.ReturnType);
+                foreach (var parameter in methodBase.GetParameters())
+                {
+                    CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
+                }
             }
         }
 
@@ -6241,52 +6274,59 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteInterfaceVirtualTables(IType type)
+        private void WriteVirtualTables(IType type, bool checkParamsAndReturn = false)
         {
             // write VirtualTable
-            if (!type.IsInterface)
+            if (type.IsInterface)
             {
-                var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
+                return;
+            }
 
-                var index = 0;
-                if (type.HasAnyVirtualMethod(this))
+            var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
+
+            var index = 0;
+            if (type.HasAnyVirtualMethod(this))
+            {
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write(type.GetVirtualTableName());
+                var virtualTable = type.GetVirtualTable(this);
+                virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
+
+                foreach (var methodInVirtualTable in virtualTable)
                 {
-                    this.Output.WriteLine(string.Empty);
-                    this.Output.Write(type.GetVirtualTableName());
-                    var virtualTable = type.GetVirtualTable(this);
-                    virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
-
-                    foreach (var methodInVirtualTable in virtualTable)
-                    {
-                        this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTable.Value);
-                    }
-
-                    index++;
+                    this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTable.Value, checkParamsAndReturn: checkParamsAndReturn);
                 }
 
-                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+                index++;
+            }
+
+            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            {
+                var current = type;
+                IType typeContainingInterface = null;
+                while (current != null && current.GetAllInterfaces().Contains(@interface))
                 {
-                    var current = type;
-                    IType typeContainingInterface = null;
-                    while (current != null && current.GetAllInterfaces().Contains(@interface))
-                    {
-                        typeContainingInterface = current;
-                        current = current.BaseType;
-                    }
+                    typeContainingInterface = current;
+                    current = current.BaseType;
+                }
 
-                    var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null
-                        ? typeContainingInterface.BaseType.GetTypeSize(this)
-                        : 0;
-                    var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
+                var baseTypeSizeOfTypeContainingInterface = typeContainingInterface.BaseType != null
+                    ? typeContainingInterface.BaseType.GetTypeSize(this)
+                    : 0;
+                var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
 
-                    this.Output.WriteLine(string.Empty);
-                    this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
-                    var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
-                    virtualInterfaceTable.WriteTableOfMethods(
-                        this,
-                        type,
-                        interfaceIndex,
-                        baseTypeSizeOfTypeContainingInterface);
+                this.Output.WriteLine(string.Empty);
+                this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
+                var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
+                virtualInterfaceTable.WriteTableOfMethods(
+                    this,
+                    type,
+                    interfaceIndex,
+                    baseTypeSizeOfTypeContainingInterface);
+
+                foreach (var methodInVirtualTableOfInterface in virtualInterfaceTable)
+                {
+                    this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTableOfInterface.Value, checkParamsAndReturn: checkParamsAndReturn);
                 }
             }
         }
@@ -6751,6 +6791,19 @@ namespace Il2Native.Logic
                 } while (any);
             }
 
+            if (this.typeVirtualTablesRequired.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+                foreach (
+                    var typeVirtualTableRequired in
+                        this.typeVirtualTablesRequired.Where(rdp => !this.processedVirtualTablesRequired.Contains(rdp)))
+                {
+                    this.WriteVirtualTables(typeVirtualTableRequired, true);
+                    this.processedVirtualTablesRequired.Add(typeVirtualTableRequired);
+                    this.Output.WriteLine(string.Empty);
+                }
+            }
+
             if (this.typeTokenRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -7021,7 +7074,7 @@ namespace Il2Native.Logic
 
             this.Output.Write("%");
 
-            type.WriteTypeName(this.Output, false);
+            type.ToClass().WriteTypeName(this.Output, false);
 
             this.Output.Write(" = type ");
         }
@@ -7039,15 +7092,15 @@ namespace Il2Native.Logic
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
 
-            foreach (var additionalType in readingTypesContext.AdditionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
-            {
-                CheckIfExternalDeclarationIsRequired(additionalType);
-            }
-
             var interfacesList = type.GetInterfaces();
             foreach (var @interface in interfacesList)
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(@interface);
+            }
+
+            foreach (var arrayType in readingTypesContext.AdditionalTypesToProcess)
+            {
+                this.CheckIfExternalDeclarationIsRequired(arrayType);
             }
         }
 

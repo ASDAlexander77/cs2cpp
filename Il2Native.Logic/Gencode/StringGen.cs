@@ -47,29 +47,19 @@ namespace Il2Native.Logic.Gencode
             var stringSystemType = typeResolver.System.System_String;
 
             var sb = new StringBuilder();
-            foreach (var memberLocationInfo in stringSystemType.GetTypeSizes(typeResolver))
-            {
-                if (memberLocationInfo.Size == 0)
-                {
-                    break;
-                }
 
+            sb.Append("i8*");
+            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            {
                 if (sb.Length > 0)
                 {
                     sb.Append(", ");
                 }
 
-                if (memberLocationInfo.MemberType == MemberTypes.Root || memberLocationInfo.MemberType == MemberTypes.Interface)
-                {
-                    sb.Append("i8*");
-                }
-                else
-                {
-                    break;
-                }
+                sb.Append("i8*");
             }
 
-            sb.Append("i32");
+            sb.Append(", i32");
 
             _stringPrefixDataType = sb.ToString();
             return _stringPrefixDataType;
@@ -79,31 +69,35 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <returns>
         /// </returns>
-        public static string GetStringPrefixNullConstData(ITypeResolver typeResolver)
+        public static string GetStringPrefixConstData(LlvmWriter llvmWriter)
         {
             if (_stringPrefixNullConstData != null)
             {
                 return _stringPrefixNullConstData;
             }
 
+            ITypeResolver typeResolver = llvmWriter;
+
             var stringSystemType = typeResolver.System.System_String;
 
-            var sb = new StringBuilder();
-            foreach (var memberLocationInfo in stringSystemType.GetTypeSizes(typeResolver))
-            {
-                if (memberLocationInfo.MemberType == MemberTypes.Root || memberLocationInfo.MemberType == MemberTypes.Interface)
-                {
-                    if (sb.Length > 0)
-                    {
-                        sb.Append(", ");
-                    }
+            llvmWriter.AddRequiredVirtualTablesDeclaration(stringSystemType);
 
-                    sb.Append("i8* null");
-                }
-                else
+            var sb = new StringBuilder();
+
+            sb.Append("i8* bitcast (i8** ");
+            sb.Append(stringSystemType.GetVirtualTableReference(typeResolver));
+            sb.AppendLine(" to i8*)");
+
+            foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            {
+                if (sb.Length > 0)
                 {
-                    break;
+                    sb.Append(", ");
                 }
+
+                sb.Append("i8* bitcast (i8** ");
+                sb.Append(stringSystemType.GetVirtualTableReference(@interface, typeResolver));
+                sb.AppendLine(" to i8*)");                
             }
 
             _stringPrefixNullConstData = sb.ToString();
@@ -189,7 +183,7 @@ namespace Il2Native.Logic.Gencode
                     charType.WriteTypePrefix(llvmWriter);
                 });
 
-            return GetStringPrefixNullConstData(llvmWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
+            return GetStringPrefixConstData(llvmWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
         }
     }
 }

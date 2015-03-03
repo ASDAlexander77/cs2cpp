@@ -10,6 +10,7 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System;
+    using System.Linq;
     using System.Reflection;
     using PEAssemblyReader;
 
@@ -28,7 +29,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
             : base(Name, type, typeResolver.System.System_Type)
         {
-            if (type.IsObject)
+            if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {
                 IsVirtual = true;
             }
