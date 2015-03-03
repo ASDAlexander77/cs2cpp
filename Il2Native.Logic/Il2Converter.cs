@@ -977,24 +977,29 @@ namespace Il2Native.Logic
             return false;
         }
 
-        private static void RemoveAllResolvedTypesForType(
+        private static bool RemoveAllResolvedTypesForType(
             IAssoc<IType, INamespaceContainer<IType>> type,
             IList<IType> newOrder,
             IList<IAssoc<IType, INamespaceContainer<IType>>> toRemove)
         {
             var requiredITypes = type.Value;
 
+            var before = requiredITypes.Count;
+
             requiredITypes.RemoveAll(newOrder.Contains);
 
             if (requiredITypes.Count != 0)
             {
-                return;
+                return before != requiredITypes.Count;
             }
 
             toRemove.Add(type);
             newOrder.Add(type.Key);
+
+            return before != requiredITypes.Count;
         }
 
+        [Obsolete]
         private static void ReorderTypeByUsage(
             IList<IType> types,
             ISet<IType> genericTypeSpecializations,
@@ -1002,6 +1007,8 @@ namespace Il2Native.Logic
             NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
             IList<IType> newOrder)
         {
+            // TODO: Not working, for example System.Array is required but not in types to be added to newOrder
+
             var allTypes = new NamespaceContainer<IType>();
             foreach (var type in types)
             {
@@ -1033,11 +1040,12 @@ namespace Il2Native.Logic
                 // step 1 find Root;
                 foreach (var type in typesWithRequired)
                 {
-                    RemoveAllResolvedTypesForType(type, newOrder, toRemove);
+                    strictMode |= RemoveAllResolvedTypesForType(type, newOrder, toRemove);
                 }
 
                 foreach (var type in toRemove)
                 {
+                    strictMode = true;
                     typesWithRequired.Remove(type);
                 }
 
@@ -1046,10 +1054,13 @@ namespace Il2Native.Logic
                 {
                     if (strictMode)
                     {
-                        Debug.Assert(false, "strict mode is off");
+                        typesWithRequired.RemoveAll(t => t.Value.Count == 1);
+
                         strictMode = false;
                         continue;
                     }
+
+                    Debug.Assert(false, "not all resolved");
 
                     // throw new Exception("Can't resolve any types anymore");
                     foreach (var typeItems in typesWithRequired)
@@ -1107,7 +1118,8 @@ namespace Il2Native.Logic
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
 
-            ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
+            //ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
+            newOrder.AddRange(typesWithRequired.Select(t => t.Key));
 
             return newOrder;
         }

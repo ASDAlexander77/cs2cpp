@@ -2774,7 +2774,7 @@ namespace Il2Native.Logic
                 if (!type.IsGenericType)
                 {
                     CheckIfExternalDeclarationIsRequired(type.GetElementType());
-                    this.typeDeclRequired.Add(type);
+                    this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
                 }                
             }
 

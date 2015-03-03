@@ -34,22 +34,33 @@ namespace System
         private const int TrimTail = 1;
         private const int TrimBoth = 2;
 
-        private char[] chars;
+        private int m_stringLength;
+        private char m_firstChar;
 
         public override int GetHashCode()
         {
-            int h = 0;
-            int len = this.Length;
-
-            if (h == 0 && len > 0)
+            unsafe
             {
-                for (int i = 0; i < len; i++)
+                fixed (char* src = this)
                 {
-                    h = 31 * h + chars[i];
+                    int hash1 = 5381;
+                    int hash2 = hash1;
+
+                    int c;
+                    char* s = src;
+                    while ((c = s[0]) != 0)
+                    {
+                        hash1 = ((hash1 << 5) + hash1) ^ c;
+                        c = s[1];
+                        if (c == 0)
+                            break;
+                        hash2 = ((hash2 << 5) + hash2) ^ c;
+                        s += 2;
+                    }
+
+                    return hash1 + (hash2 * 1566083941);
                 }
             }
-
-            return h;
         }
 
         public override bool Equals(object obj)
@@ -65,47 +76,20 @@ namespace System
 
         public static bool Equals(String a, String b)
         {
-            if (a == null && b == null)
+            if ((Object)a == (Object)b)
             {
                 return true;
             }
 
-            if (a == null || b == null)
+            if ((Object)a == null || (Object)b == null)
             {
                 return false;
             }
 
-            var charsA = a.chars;
-            var charsB = b.chars;
-
-            if (charsA == null && charsB == null)
-            {
-                return true;
-            }
-
-            if (charsA == null || charsB == null)
-            {
+            if (a.Length != b.Length)
                 return false;
-            }
 
-            if (charsA.Length != charsB.Length)
-            {
-                return false;
-            }
-
-            var len = charsA.Length;
-            for (var index = 0; index < len; index++)
-            {
-                var cA = charsA[index];
-                var cB = charsB[index];
-
-                if (cA != cB)
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            return EqualsHelper(a, b);
         }
 
         public static String Format(String format, Object arg0)
@@ -151,95 +135,84 @@ namespace System
         {
             get
             {
-                return this.chars[index];
+                if (index < 0 || index >= m_stringLength)
+                {
+                    throw new ArgumentOutOfRangeException("index");
+                }
+
+                unsafe
+                {
+                    fixed (char* p = this)
+                    {
+                        return *(p + index);
+                    }
+                }
             }
         }
 
-        public char[] ToCharArray()
+        public unsafe char[] ToCharArray()
         {
-            return this.chars;
-        }
-
-        public char[] ToCharArray(int startIndex, int length)
-        {
-            var newChars = new char[length];
-            var index = startIndex;
-            for (var dst = 0; dst < length; dst++)
+            int length = Length;
+            char[] chars = new char[length];
+            if (length > 0)
             {
-                newChars[dst] = this.chars[index++];
+                fixed (char* src = &this.m_firstChar)
+                fixed (char* dest = chars)
+                {
+                    wstrcpy(dest, src, length);
+                }
+            }
+            return chars;
+        }
+
+        public unsafe char[] ToCharArray(int startIndex, int length)
+        {
+            // Range check everything.
+            if (startIndex < 0 || startIndex > Length || startIndex > Length - length)
+                throw new ArgumentOutOfRangeException("startIndex");
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length");
+
+            char[] chars = new char[length];
+            if (length > 0)
+            {
+                fixed (char* src = &this.m_firstChar)
+                fixed (char* dest = chars)
+                {
+                    wstrcpy(dest, src + startIndex, length);
+                }
             }
 
-            return newChars;
+            return chars;
         }
 
         public int Length
         {
             get
             {
-                if (chars == null)
-                {
-                    return 0;
-                }
-
-                return chars.Length;
+                return m_stringLength;
             }
         }
 
         public String[] Split(params char[] separator)
         {
-            //throw new NotImplementedException();
-            // TODO:
-            return null;
+            throw new NotImplementedException();
         }
 
         public String[] Split(char[] separator, int count)
         {
-            //throw new NotImplementedException();
-            // TODO:
-            return null;
+            throw new NotImplementedException();
         }
-
 
         public String Substring(int startIndex)
         {
-            return new String(this.chars, startIndex, this.chars.Length - startIndex);
+            throw new NotImplementedException();
         }
 
 
         public String Substring(int startIndex, int length)
         {
-            //Bounds Checking.
-            if (startIndex < 0)
-            {
-                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndex"));
-            }
-
-            if (startIndex > Length)
-            {
-                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndexLargerThanLength"));
-            }
-
-            if (length < 0)
-            {
-                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_NegativeLength"));
-            }
-
-            if (startIndex > Length - length)
-            {
-                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_IndexLength"));
-            }
-
-            if (length == 0)
-            {
-                return String.Empty;
-            }
-
-            if (startIndex == 0 && length == this.Length)
-            {
-                return this;
-            }
-
-            return new String(this.chars, startIndex, length);
+            throw new NotImplementedException();
         }
 
 
@@ -259,251 +232,139 @@ namespace System
             return this.TrimHelper(trimChars, TrimTail);
         }
 
+        private unsafe static bool EqualsHelper(String strA, String strB)
+        {
+            int length = strA.Length;
+
+            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
+            {
+                char* a = ap;
+                char* b = bp;
+
+                while (length >= 10)
+                {
+                    if (*(int*)a != *(int*)b) return false;
+                    if (*(int*)(a + 2) != *(int*)(b + 2)) return false;
+                    if (*(int*)(a + 4) != *(int*)(b + 4)) return false;
+                    if (*(int*)(a + 6) != *(int*)(b + 6)) return false;
+                    if (*(int*)(a + 8) != *(int*)(b + 8)) return false;
+                    a += 10; b += 10; length -= 10;
+                }
+
+                // This depends on the fact that the String objects are
+                // always zero terminated and that the terminating zero is not included
+                // in the length. For odd string sizes, the last compare will include
+                // the zero terminator.
+                while (length > 0)
+                {
+                    if (*(int*)a != *(int*)b) break;
+                    a += 2; b += 2; length -= 2;
+                }
+
+                return (length <= 0);
+            }
+        }
+
         private String TrimHelper(char[] trimChars, int trimType)
         {
-            //end will point to the first non-trimmed character on the right
-            //start will point to the first non-trimmed character on the Left
-            int end = this.Length - 1;
-            int start = 0;
-
-            //Trim specified characters.
-            if (trimType != TrimTail)
-            {
-                for (start = 0; start < this.Length; start++)
-                {
-                    int i = 0;
-                    char ch = this.chars[start];
-                    for (i = 0; i < trimChars.Length; i++)
-                    {
-                        if (trimChars[i] == ch) break;
-                    }
-                    if (i == trimChars.Length)
-                    { // the character is not white space
-                        break;
-                    }
-                }
-            }
-
-            if (trimType != TrimHead)
-            {
-                for (end = Length - 1; end >= start; end--)
-                {
-                    int i = 0;
-                    char ch = this.chars[end];
-                    for (i = 0; i < trimChars.Length; i++)
-                    {
-                        if (trimChars[i] == ch) break;
-                    }
-                    if (i == trimChars.Length)
-                    { // the character is not white space
-                        break;
-                    }
-                }
-            }
-
-            //Create a new STRINGREF and initialize it from the range determined above.
-            int len = end - start + 1;
-            if (len == this.Length)
-            {
-                // Don't allocate a new string is the trimmed string has not changed.
-                return this;
-            }
-            else
-            {
-                if (len == 0)
-                {
-                    return String.Empty;
-                }
-                return new String(this.chars, start, len);
-            }
+            throw new NotImplementedException();
         }
 
         public String(char[] value, int startIndex, int length)
         {
-            this.chars = new char[length];
-            Array.Copy(value, startIndex, this.chars, 0, length);
+            throw new NotImplementedException();
         }
 
         public String(char[] value)
         {
-            this.chars = value;
+            throw new NotImplementedException();
         }
 
         public String(char c, int count)
         {
-            this.chars = new char[count];
-            for (var index = 0; index < count; index++)
-            {
-                chars[index] = c;
-            }
+            throw new NotImplementedException();
         }
 
         public unsafe String(char* src, int startIndex, int length)
         {
-            this.chars = new char[length];
-            fixed (char* dest = this.chars)
-                wstrcpy(dest, src + startIndex, length);
+            throw new NotImplementedException();
         }
 
-        public unsafe String(byte* src)
+        public unsafe String(sbyte* src)
         {
-            if (src == null)
-            {
-                throw new ArgumentNullException("src");
-            }
-
-            var count = (int)strlen(src);
-            this.chars = new char[Encoding.UTF8.GetCharCount(src, count)];
-            fixed (char* p = this.chars)
-            {
-                Encoding.UTF8.GetChars(src, count, p, this.chars.Length);
-            }
+            throw new NotImplementedException();
         }
 
-        public unsafe String(byte* src, int startIndex, int length)
+        public unsafe String(sbyte* src, int startIndex, int length)
         {
-            if (src == null)
-            {
-                throw new ArgumentNullException("src");
-            }
-
-            var startSrc = src + startIndex;
-            var count = (int)strlen(startSrc);
-            this.chars = new char[Encoding.UTF8.GetCharCount(startSrc, length)];
-            fixed (char* p = this.chars)
-            {
-                Encoding.UTF8.GetChars(src, count, p, this.chars.Length);
-            }
+            throw new NotImplementedException();
         }
 
-        public static int Compare(string a, int indexA, string b, int indexB, int length)
+        public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length)
         {
-            if (a == null && b == null)
+            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
             {
-                return 0;
-            }
+                char* a = ap;
+                char* b = bp;
 
-            if (a == null)
-            {
-                return 1;
-            }
+                a += indexA;
+                b += indexB;
 
-            if (b == null)
-            {
-                return -1;
-            }
+                // This depends on the fact that the String objects are
+                // always zero terminated and that the terminating zero is not included
+                // in the length. For odd string sizes, the last compare will include
+                // the zero terminator.
+                while (length > 0)
+                {
+                    if (*(int*)a != *(int*)b) break;
+                    a += 2; b += 2; length -= 2;
+                }
 
-            var charsA = a.chars;
-            var charsB = b.chars;
+                if (length == 0)
+                {
+                    return length;
+                }
 
-            if (charsA == null && charsB == null)
-            {
-                return 0;
-            }
-
-            if (charsA == null)
-            {
-                return 1;
-            }
-
-            if (charsB == null)
-            {
-                return -1;
-            }
-
-            if (charsA.Length - indexA < length)
-            {
-                return 1;
-            }
-
-            if (charsB.Length - indexB < length)
-            {
-                return -1;
-            }
-
-            var len = length;
-            for (var index = 0; index < len; index++)
-            {
-                var cA = charsA[index + indexA];
-                var cB = charsB[index + indexB];
-
-                if (cA < cB)
+                if (*a > *b)
                 {
                     return 1;
                 }
 
-                if (cA > cB)
-                {
-                    return -1;
-                }
+                return -1;
             }
-
-            return 0;            
         }
 
-        public static int Compare(String a, String b)
+        public unsafe static int Compare(String strA, String strB)
         {
-            if (a == null && b == null)
+            int length = strA.Length;
+
+            fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
             {
-                return 0;
-            }
+                char* a = ap;
+                char* b = bp;
 
-            if (a == null)
-            {
-                return 1;
-            }
+                // This depends on the fact that the String objects are
+                // always zero terminated and that the terminating zero is not included
+                // in the length. For odd string sizes, the last compare will include
+                // the zero terminator.
+                while (length > 0)
+                {
+                    if (*(int*)a != *(int*)b) break;
+                    a += 2; b += 2; length -= 2;
+                }
 
-            if (b == null)
-            {
-                return -1;
-            }
+                if (length == 0)
+                {
+                    return length;
+                }
 
-            var charsA = a.chars;
-            var charsB = b.chars;
-
-            if (charsA == null && charsB == null)
-            {
-                return 0;
-            }
-
-            if (charsA == null)
-            {
-                return 1;
-            }
-
-            if (charsB == null)
-            {
-                return -1;
-            }
-
-            var len = Math.Min(charsA.Length, charsB.Length);
-            for (var index = 0; index < len; index++)
-            {
-                var cA = charsA[index];
-                var cB = charsB[index];
-
-                if (cA < cB)
+                if (*a > *b)
                 {
                     return 1;
                 }
 
-                if (cA > cB)
-                {
-                    return -1;
-                }
-            }
-
-            if (charsA.Length < charsB.Length)
-            {
-                return 1;
-            }
-
-            if (charsA.Length > charsB.Length)
-            {
                 return -1;
             }
-
-            return 0;
         }
 
         public bool Equals(String value, StringComparison comparisonType)
@@ -549,7 +410,7 @@ namespace System
         {
             int length = Math.Min(strA.Length, strB.Length);
 
-            fixed (char* ap = strA.chars) fixed (char* bp = strB.chars)
+            fixed (char* ap = strA) fixed (char* bp = strB)
             {
                 char* a = ap;
                 char* b = bp;
@@ -576,40 +437,6 @@ namespace System
             }
         }
 
-        private unsafe static bool EqualsHelper(String strA, String strB)
-        {
-            int length = strA.Length;
-
-            fixed (char* ap = strA.chars) fixed (char* bp = strB.chars)
-            {
-                char* a = ap;
-                char* b = bp;
-
-                while (length >= 10)
-                {
-                    if (*(int*)a != *(int*)b) return false;
-                    if (*(int*)(a + 2) != *(int*)(b + 2)) return false;
-                    if (*(int*)(a + 4) != *(int*)(b + 4)) return false;
-                    if (*(int*)(a + 6) != *(int*)(b + 6)) return false;
-                    if (*(int*)(a + 8) != *(int*)(b + 8)) return false;
-                    a += 10; b += 10; length -= 10;
-                }
-
-                // This depends on the fact that the String objects are
-                // always zero terminated and that the terminating zero is not included
-                // in the length. For odd string sizes, the last compare will include
-                // the zero terminator.
-                while (length > 0)
-                {
-                    if (*(int*)a != *(int*)b) break;
-                    a += 2; b += 2; length -= 2;
-                }
-
-                return (length <= 0);
-            }
-        }
-
-
         public int CompareTo(Object value)
         {
             throw new NotImplementedException();
@@ -622,25 +449,41 @@ namespace System
 
         public int IndexOf(char value)
         {
-            for (var index = 0; index < this.chars.Length; index++)
+            unsafe
             {
-                if (this.chars[index] == value)
+                fixed (char* ap = this)
                 {
-                    return index;
+                    char* p = ap;
+
+                    for (var index = 0; index < m_stringLength; index++)
+                    {
+                        if (*p++ == value)
+                        {
+                            return index;
+                        }
+                    }
                 }
             }
 
             return -1;
         }
 
-
         public int IndexOf(char value, int startIndex)
         {
-            for (var index = startIndex; index < this.chars.Length; index++)
+            unsafe
             {
-                if (this.chars[index] == value)
+                fixed (char* ap = this)
                 {
-                    return index;
+                    char* p = ap;
+                    p += startIndex;
+
+                    for (var index = 0; index < m_stringLength; index++)
+                    {
+                        if (*p++ == value)
+                        {
+                            return index;
+                        }
+                    }
                 }
             }
 
@@ -649,11 +492,20 @@ namespace System
 
         public int IndexOf(char value, int startIndex, int count)
         {
-            for (var index = startIndex; index < Math.Min(count, this.chars.Length); index++)
+            unsafe
             {
-                if (this.chars[index] == value)
+                fixed (char* ap = this)
                 {
-                    return index;
+                    char* p = ap;
+                    p += startIndex;
+
+                    for (var index = 0; index < count; index++)
+                    {
+                        if (*p++ == value)
+                        {
+                            return index;
+                        }
+                    }
                 }
             }
 
@@ -670,29 +522,7 @@ namespace System
 
         public int IndexOf(String value)
         {
-            var length = value.chars.Length;
-            for (var index = 0; index < this.chars.Length - length + 1; index++)
-            {
-                var found = true;
-                for (var valueIndex = 0; valueIndex < length; valueIndex++)
-                {
-                    var index0 = index + valueIndex;
-                    if (this.chars[index0] == value.chars[valueIndex])
-                    {
-                        continue;
-                    }
-
-                    found = false;
-                    break;
-                }
-
-                if (found)
-                {
-                    return index;
-                }
-            }
-
-            return -1;
+            throw new NotImplementedException();
         }
 
         public static bool IsNullOrEmpty(String value)
@@ -744,15 +574,7 @@ namespace System
 
         public int LastIndexOf(char value)
         {
-            for (var index = this.chars.Length - 1; index >= 0; index--)
-            {
-                if (this.chars[index] == value)
-                {
-                    return index;
-                }
-            }
-
-            return -1;
+            throw new NotImplementedException();
         }
 
 
@@ -772,69 +594,17 @@ namespace System
 
         public int LastIndexOf(String value)
         {
-            var length = value.chars.Length;
-            for (var index = this.chars.Length - 1; index >= length; index--)
-            {
-                var found = true;
-                for (var valueIndex = 0; valueIndex < length; valueIndex++)
-                {
-                    var index0 = index - length + 1 + valueIndex;
-                    if (index0 >= 0 && this.chars[index0] == value.chars[valueIndex])
-                    {
-                        continue;
-                    }
-
-                    found = false;
-                    break;
-                }
-
-                if (found)
-                {
-                    return index - length + 1;
-                }
-            }
-
-            return -1;
+            throw new NotImplementedException();
         }
 
         public String ToLower()
         {
-            var newChars = new char[this.chars.Length];
-
-            for (var i = 0; i < this.chars.Length; i++)
-            {
-                var c = this.chars[i];
-                if ('A' <= c && c <= 'Z')
-                {
-                    newChars[i] = (char)(c | 0x20);
-                }
-                else
-                {
-                    newChars[i] = c;
-                }
-            }
-
-            return new string(newChars);
+            throw new NotImplementedException();
         }
 
         public String ToUpper()
         {
-            var newChars = new char[this.chars.Length];
-
-            for (var i = 0; i < this.chars.Length; i++)
-            {
-                var c = this.chars[i];
-                if ('a' <= c && c <= 'z')
-                {
-                    newChars[i] = (char)(c & ~0x20);
-                }
-                else
-                {
-                    newChars[i] = c;
-                }
-            }
-
-            return new string(newChars);
+            throw new NotImplementedException();
         }
 
         public override String ToString()
@@ -845,7 +615,7 @@ namespace System
 
         public String Trim()
         {
-            return this.TrimHelper(this.chars, TrimBoth);
+            throw new NotImplementedException();
         }
 
         ////// This method contains the same functionality as StringBuilder Replace. The only difference is that
@@ -1043,7 +813,7 @@ namespace System
             // Note: fixed does not like empty arrays
             if (count > 0)
             {
-                fixed (char* src = this.chars)
+                fixed (char* src = this)
                 fixed (char* dest = destination)
                     wstrcpy(dest + destinationIndex, src + sourceIndex, count);
             }

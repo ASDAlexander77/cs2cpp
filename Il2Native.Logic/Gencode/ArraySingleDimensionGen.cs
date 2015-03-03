@@ -211,6 +211,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <returns>
         /// </returns>
+        [Obsolete]
         public static string GetSingleDimArrayPrefixDataType(ITypeResolver typeResolver)
         {
             // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()
@@ -258,6 +259,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <returns>
         /// </returns>
+        [Obsolete]
         public static string GetSingleDimArrayPrefixNullConstData(ITypeResolver typeResolver)
         {
             // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()

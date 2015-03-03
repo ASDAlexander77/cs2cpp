@@ -93,7 +93,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool Mscorlib = true;
+        public const bool Mscorlib = false;
 
 
         /// <summary>
