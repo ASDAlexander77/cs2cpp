@@ -2740,7 +2740,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void CheckIfExternalDeclarationIsRequired(IType type, bool inversAssemblyCheck = false)
+        public void CheckIfExternalDeclarationIsRequired(IType type)
         {
             if (type == null)
             {
@@ -2753,21 +2753,6 @@ namespace Il2Native.Logic
                 Debug.Assert(!type.IsGenericTypeDefinition, "you can't use generic type definition");
 #endif
                 this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
-            }
-
-            if (inversAssemblyCheck)
-            {
-                if (type.AssemblyQualifiedName != this.AssemblyQualifiedName)
-                {
-                    return;
-                }
-            }
-            else
-            {
-                if (type.AssemblyQualifiedName == this.AssemblyQualifiedName)
-                {
-                    return;
-                }
             }
 
             var bareType = type.ToBareType();
@@ -7057,11 +7042,6 @@ namespace Il2Native.Logic
             foreach (var additionalType in readingTypesContext.AdditionalTypesToProcess.Where(t => !t.IsGenericTypeDefinition))
             {
                 CheckIfExternalDeclarationIsRequired(additionalType);
-            }
-
-            foreach (var fieldType in Logic.IlReader.Fields(type, this).Where(f => f.FieldType.IsGenericType).Select(f => f.FieldType))
-            {
-                CheckIfExternalDeclarationIsRequired(fieldType, true);
             }
 
             var interfacesList = type.GetInterfaces();
