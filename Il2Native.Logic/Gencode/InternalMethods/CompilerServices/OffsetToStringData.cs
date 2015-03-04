@@ -21,9 +21,9 @@
 
             // Registering UnsafeCastToStackPointerGen
             var tokenResolutions = new List<object>();
-            var arrayType = typeResolver.System.System_Byte.ToArrayType(1);
-            tokenResolutions.Add(arrayType);
-            tokenResolutions.Add(arrayType.GetFieldByName("data", typeResolver));
+            var stringType = typeResolver.System.System_String;
+            tokenResolutions.Add(stringType);
+            tokenResolutions.Add(stringType.GetFieldByName("m_firstChar", typeResolver));
 
             var locals = new List<IType>();
 

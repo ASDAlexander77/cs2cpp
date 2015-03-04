@@ -45,7 +45,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* nl = NewLine)
                 {
                     wprintf(nl);
                 }
@@ -61,8 +61,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pc = &PrintChar.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pc = PrintChar)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pc, value);
                     wprintf(nl);
@@ -74,9 +74,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* ps = &PrintString.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                fixed (char* b = &buffer[0])
+                fixed (char* ps = PrintString)
+                fixed (char* nl = NewLine)
+                fixed (char* b = buffer)
                 {
                     wprintf(ps, buffer.Length, b);
                     wprintf(nl);
@@ -98,8 +98,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pd = PrintDouble)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pd, value);
                     wprintf(nl);
@@ -111,8 +111,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pd = PrintDouble)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pd, value);
                     wprintf(nl);
@@ -124,8 +124,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pi = PrintInt)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pi, value);
                     wprintf(nl);
@@ -138,8 +138,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pi = PrintInt)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pi, value);
                     wprintf(nl);
@@ -151,8 +151,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pi = PrintLong)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pi, value);
                     wprintf(nl);
@@ -165,8 +165,8 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
+                fixed (char* pi = PrintLong)
+                fixed (char* nl = NewLine)
                 {
                     wprintf(pi, value);
                     wprintf(nl);
@@ -184,9 +184,9 @@ namespace System.IO
             var chars = value.ToCharArray();
             unsafe
             {
-                fixed (char* ps = &PrintString.ToCharArray()[0])
-                fixed (char* nl = &NewLine.ToCharArray()[0])
-                fixed (char* c = &chars[0])
+                fixed (char* ps = PrintString)
+                fixed (char* nl = NewLine)
+                fixed (char* c = chars)
                 {
                     wprintf(ps, chars.Length, c);
                     wprintf(nl);
@@ -259,7 +259,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pc = &PrintChar.ToCharArray()[0])
+                fixed (char* pc = PrintChar)
                 {
                     wprintf(pc, value);
                 }
@@ -270,7 +270,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* b = &buffer[0])
+                fixed (char* b = buffer)
                 {
                     wprintf(b);
                 }
@@ -286,7 +286,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                fixed (char* pd = PrintDouble)
                 {
                     wprintf(pd, value);
                 }
@@ -302,7 +302,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = &PrintDouble.ToCharArray()[0])
+                fixed (char* pd = PrintDouble)
                 {
                     wprintf(pd, value);
                 }
@@ -313,7 +313,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = PrintInt)
                 {
                     wprintf(pi, value);
                 }
@@ -325,7 +325,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintInt.ToCharArray()[0])
+                fixed (char* pi = PrintInt)
                 {
                     wprintf(pi, value);
                 }
@@ -336,7 +336,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
+                fixed (char* pi = PrintLong)
                 {
                     wprintf(pi, value);
                 }
@@ -348,7 +348,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = &PrintLong.ToCharArray()[0])
+                fixed (char* pi = PrintLong)
                 {
                     wprintf(pi, value);
                 }
@@ -364,7 +364,7 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* p = &value.ToCharArray()[0])
+                fixed (char* p = value)
                 {
                     wprintf(p);
                 }
