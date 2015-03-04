@@ -141,9 +141,7 @@
             // TypedReference
             TypedReferenceInternalToObjectGen.Register(typeResolver);
 
-#if MSCORLIB
             UnsafeCastToStackPointerGen.Register(typeResolver);
-#endif
 
             // Runtime helpers
             OffsetToStringData.Register(typeResolver);

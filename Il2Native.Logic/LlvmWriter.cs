@@ -795,7 +795,7 @@ namespace Il2Native.Logic
             }
 
             this.WriteVirtualTables(type);
-            
+
             this.processedVirtualTablesRequired.Add(type);
 
             this.Output.WriteLine(string.Empty);
@@ -1119,7 +1119,6 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldstr:
-#if MSCORLIB
                     var opCodeString = opCode as OpCodeStringPart;
                     var stringType = this.System.System_String;
                     var stringIndex = this.GetStringIndex(opCodeString.Operand);
@@ -1129,22 +1128,6 @@ namespace Il2Native.Logic
                                 string.Format("@.s{0}", stringIndex),
                                 opCodeString.Operand.Length + 1),
                             stringType);
-#else
-                    var opCodeString = opCode as OpCodeStringPart;
-                    var charType = this.System.System_Char;
-                    var charArrayType = charType.ToArrayType(1);
-                    var stringType = this.System.System_String;
-                    var stringIndex = this.GetStringIndex(opCodeString.Operand);
-                    var firstParameterValue =
-                        new FullyDefinedReference(
-                            this.GetArrayTypeReference(
-                                string.Format("@.s{0}", stringIndex),
-                                charType,
-                                opCodeString.Operand.Length + 1),
-                            charArrayType);
-
-                    this.WriteNewWithCallingConstructor(opCode, stringType, charArrayType, firstParameterValue);
-#endif
                     break;
                 case Code.Ldnull:
                     opCode.Result = new ConstValue(null, this.System.System_Void.ToPointerType());
@@ -2339,7 +2322,7 @@ namespace Il2Native.Logic
                             var opCodeThis = OpCodePart.CreateNop;
                             opCodeThis.Result = new ConstValue(null, System.System_String);
                             operands.Insert(0, opCodeThis);
-                            
+
                             opCodeNope.OpCodeOperands = operands.ToArray();
                         }
 
@@ -2531,42 +2514,14 @@ namespace Il2Native.Logic
                 ? this.System.System_Int32
                 : this.System.System_Void.ToPointerType();
 
-#if !MSCORLIB
-            var requiredOutgoingType =
-                RequiredIncomingType(
-                    opCode.UsedBy.OpCode.Any(Code.Add)
-                        ? opCode.UsedBy.OpCode.UsedBy.OpCode
-                        : opCode.UsedBy.OpCode);
-
-            if (requiredOutgoingType.TypeEquals(this.System.System_Char.ToPointerType()) &&
-                opCode.OpCodeOperands[0].Result.Type.TypeEquals(this.System.System_String))
-            {
-                // load address of first char of the string
-                this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(this.System.System_String, "chars"));
-
-                writer.WriteLine(string.Empty);
-
-                var memberAccessResultNumber = opCode.Result;
-                opCode.Result = null;
-                this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
-
-                writer.WriteLine(string.Empty);
-                this.WriteBitcast(opCode, opCode.Result, this.System.System_Void.ToPointerType());
-            }
-            else
-            {
-#endif
-                this.LlvmConvert(
-                    opCode,
-                    "fptoui",
-                    "ptrtoint",
-                    nativeIntType,
-                    !intPtrOper,
-                    this.System.System_IntPtr,
-                    this.System.System_UIntPtr);
-#if !MSCORLIB
-            }
-#endif
+            this.LlvmConvert(
+                opCode,
+                "fptoui",
+                "ptrtoint",
+                nativeIntType,
+                !intPtrOper,
+                this.System.System_IntPtr,
+                this.System.System_UIntPtr);
         }
 
         public void AddRequiredRttiDeclaration(IType type)
@@ -2814,7 +2769,7 @@ namespace Il2Native.Logic
                 {
                     CheckIfExternalDeclarationIsRequired(type.GetElementType());
                     this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
-                }                
+                }
             }
 
             var bareType = type.ToBareType();
@@ -2830,7 +2785,7 @@ namespace Il2Native.Logic
         /// </param>
         public void CheckIfMethodExternalDeclarationIsRequired(
             IMethod methodBase,
-            IType ownerOfExplicitInterface = null, 
+            IType ownerOfExplicitInterface = null,
             bool checkParamsAndReturn = false)
         {
             if (methodBase == null || methodBase.Name.StartsWith("%") || string.IsNullOrEmpty(methodBase.Name))
@@ -7158,7 +7113,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
         }
 
-#if MSCORLIB
         /// <summary>
         /// </summary>
         /// <param name="pair">
@@ -7193,43 +7147,6 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine("i16 0] {0}, align {1}", '}', PointerSize);
         }
-
-#else
-        /// <summary>
-        /// </summary>
-        /// <param name="pair">
-        /// </param>
-        private void WriteUnicodeString(KeyValuePair<int, string> pair)
-        {
-            this.Output.Write(
-                "@.s{0} = private unnamed_addr constant {1} {3} {2}",
-                pair.Key,
-                this.GetArrayTypeHeader(this.System.System_Char, pair.Value.Length + 1),
-                this.GetArrayValuesHeader(this.System.System_Char, pair.Value.Length + 1, pair.Value.Length),
-                "{");
-
-            this.Output.Write(" [");
-
-            var index = 0;
-            foreach (var c in pair.Value.ToCharArray())
-            {
-                if (index > 0)
-                {
-                    this.Output.Write(", ");
-                }
-
-                this.Output.Write("i16 {0}", (int)c);
-                index++;
-            }
-
-            if (index > 0)
-            {
-                this.Output.Write(", ");
-            }
-
-            this.Output.WriteLine("i16 0] {0}, align {1}", '}', PointerSize);
-        }
-#endif
 
         /// <summary>
         /// </summary>
