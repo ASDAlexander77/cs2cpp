@@ -698,10 +698,10 @@ namespace Il2Native.Logic
             }
             else if (type.IsString)
             {
-                yield return new SynthesizedCtorSByteArrayMethod(typeResolver);
-                yield return new SynthesizedCtorSByteArrayStartLengthMethod(typeResolver);
-                yield return new SynthesizedCtorSByteArrayStartLengthEncodingMethod(typeResolver);
                 yield return new SynthesizedStrLenMethod(typeResolver);
+                yield return new SynthesizedCtorSBytePtrMethod(typeResolver);
+                yield return new SynthesizedCtorSBytePtrStartLengthMethod(typeResolver);
+                yield return new SynthesizedCtorSBytePtrStartLengthEncodingMethod(typeResolver);
             }
 
             if (excludeSpecializations)

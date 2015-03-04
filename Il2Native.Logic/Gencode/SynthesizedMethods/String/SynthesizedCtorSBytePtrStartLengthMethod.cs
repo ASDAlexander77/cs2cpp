@@ -7,7 +7,7 @@
 
     /// <summary>
     /// </summary>
-    public class SynthesizedCtorSByteArrayMethod : SynthesizedStaticMethod
+    public class SynthesizedCtorSBytePtrStartLengthMethod : SynthesizedStaticMethod
     {
         private readonly IMethodBody _methodBody;
 
@@ -21,14 +21,14 @@
         /// </param>
         /// <param name="typeResolver">
         /// </param>
-        public SynthesizedCtorSByteArrayMethod(ITypeResolver typeResolver)
-            : base("CtorSByteArray", typeResolver.System.System_String, typeResolver.System.System_String)
+        public SynthesizedCtorSBytePtrStartLengthMethod(ITypeResolver typeResolver)
+            : base("CtorSBytePtrStartLengthEncoding", typeResolver.System.System_String, typeResolver.System.System_String)
         {
             byte[] code;
             IList<object> tokenResolutions;
             IList<IType> locals;
             IList<IParameter> parameters;
-            StringGen.GetCtorSByteArray(typeResolver, out code, out tokenResolutions, out locals, out parameters);
+            StringGen.GetCtorSBytePtrStartLength(typeResolver, out code, out tokenResolutions, out locals, out parameters);
 
             this._methodBody = new SynthesizedMethodBodyDecorator(
                 null,

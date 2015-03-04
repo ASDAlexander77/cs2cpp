@@ -2326,14 +2326,36 @@ namespace Il2Native.Logic
                         // special string case
                         var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
                             System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+                        var hasThis = stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis);
+
+                        OpCodePart opCodeNope = opCodeConstructorInfoPart;
+                        if (hasThis)
+                        {
+                            // insert 'This' as null
+                            opCodeNope = OpCodePart.CreateNop;
+                            var operands = new List<OpCodePart>(opCodeConstructorInfoPart.OpCodeOperands.Length);
+                            operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
+
+                            var opCodeThis = OpCodePart.CreateNop;
+                            opCodeThis.Result = new ConstValue(null, System.System_String);
+                            operands.Insert(0, opCodeThis);
+                            
+                            opCodeNope.OpCodeOperands = operands.ToArray();
+                        }
+
                         this.WriteCall(
-                            opCodeConstructorInfoPart,
+                            opCodeNope,
                             stringCtorMethodBase,
-                            code == Code.Callvirt,
-                            stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
+                            false,
+                            hasThis,
                             false,
                             null,
                             this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+
+                        if (hasThis)
+                        {
+                            opCodeConstructorInfoPart.Result = opCodeNope.Result;
+                        }
                     }
 
                     break;

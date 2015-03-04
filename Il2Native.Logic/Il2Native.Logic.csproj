@@ -90,9 +90,9 @@
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetEnumeratorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListGetItemMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\SingleDimArray\SynthesizedSingleDimArrayIListSetItemMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSByteArrayMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSByteArrayStartLengthEncodingMethod.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSByteArrayStartLengthMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthEncodingMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedStrLenMethod.cs" />
     <Compile Include="IIlReader.cs" />
     <Compile Include="IlCodeBuilder.cs" />

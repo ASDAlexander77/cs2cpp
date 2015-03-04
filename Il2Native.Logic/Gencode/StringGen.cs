@@ -302,7 +302,7 @@ namespace Il2Native.Logic.Gencode
             return method;
         }
 
-        public static void GetCtorSByteArrayStartLengthEncoding(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtrStartLengthEncoding(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
             IType systemString = typeResolver.System.System_String;
 
@@ -310,6 +310,9 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.LoadArgument(0);
             codeBuilder.LoadArgument(1);
+            codeBuilder.Add(Code.Add);
+            codeBuilder.Add(Code.Conv_I);
+
             codeBuilder.LoadArgument(2);
             codeBuilder.LoadArgument(3);
             codeBuilder.Add(Code.Call, 1);
@@ -329,7 +332,7 @@ namespace Il2Native.Logic.Gencode
             parameters.Add(typeResolver.ResolveType("System.Text.Encoding").ToParameter());
         }
 
-        public static void GetCtorSByteArrayStartLength(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtrStartLength(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
             IType systemString = typeResolver.System.System_String;
 
@@ -337,6 +340,9 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.LoadArgument(0);
             codeBuilder.LoadArgument(1);
+            codeBuilder.Add(Code.Add);
+            codeBuilder.Add(Code.Conv_I);
+
             codeBuilder.LoadArgument(2);
             codeBuilder.Add(Code.Ldnull);
             codeBuilder.Add(Code.Call, 1);
@@ -355,14 +361,13 @@ namespace Il2Native.Logic.Gencode
             parameters.Add(typeResolver.System.System_Int32.ToParameter());
         }
 
-        public static void GetCtorSByteArray(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        public static void GetCtorSBytePtr(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
         {
             IType systemString = typeResolver.System.System_String;
 
             var codeBuilder = new IlCodeBuilder();
 
             codeBuilder.LoadArgument(0);
-            codeBuilder.Add(Code.Ldc_I4_0);
             
             // calculate length
             codeBuilder.LoadArgument(0);
