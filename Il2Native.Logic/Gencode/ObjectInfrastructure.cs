@@ -99,17 +99,31 @@ namespace Il2Native.Logic.Gencode
             this LlvmWriter llvmWriter,
             OpCodePart opCodePart,
             IType declaringClassType,
-            bool doNotTestNullValue)
+            bool doNotTestNullValue,
+            bool enableStringFastAllocation = false)
         {
             var writer = llvmWriter.Output;
 
             var size = declaringClassType.GetTypeSize(llvmWriter);
 
-            FullyDefinedReference allocResult = !declaringClassType.IsArray
-                ? new ConstValue(size, llvmWriter.System.System_Int32)
-                : !declaringClassType.IsMultiArray
-                    ? llvmWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType)
-                    : llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+            FullyDefinedReference allocResult;
+
+            if (declaringClassType.IsMultiArray)
+            {
+                allocResult = llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+            }
+            else if (declaringClassType.IsArray)
+            {
+                allocResult = llvmWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType);
+            }
+            else if (enableStringFastAllocation && declaringClassType.IsString)
+            {
+                allocResult = llvmWriter.WriteStringAllocationSize(opCodePart, declaringClassType, llvmWriter.System.System_Char);
+            }
+            else
+            {
+                allocResult = new ConstValue(size, llvmWriter.System.System_Int32);
+            }
 
             var mallocResult = llvmWriter.WriteSetResultNumber(
                 opCodePart,
@@ -814,7 +828,8 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCodePart,
             IType declaringTypeIn,
             bool doNotCallInit = false,
-            bool doNotTestNullValue = false)
+            bool doNotTestNullValue = false,
+            bool enableStringFastAllocation = false)
         {
             var declaringClassType = declaringTypeIn.ToClass();
 
@@ -822,7 +837,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; New obj");
 
-            llvmWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue);
+            llvmWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
 
             var castResult = opCodePart.Result;
 

@@ -9,8 +9,15 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
+
+    using Il2Native.Logic.CodeParts;
+
+    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -22,7 +29,111 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static string _stringPrefixNullConstData;
+        private static string _stringPrefixConstData;
+
+
+        /// <summary>
+        /// </summary>
+        /// <param name="llvmWriter">
+        /// </param>
+        /// <param name="opCode">
+        /// </param>
+        /// <param name="elementType">
+        /// </param>
+        /// <param name="length">
+        /// </param>
+        public static FullyDefinedReference WriteStringAllocationSize(
+            this LlvmWriter llvmWriter,
+            OpCodePart opCode,
+            IType stringType,
+            IType charType)
+        {
+            Debug.Assert(stringType.IsString, "This is for string only");
+
+            var writer = llvmWriter.Output;
+
+            writer.WriteLine("; Calculate String allocation size");
+
+            object[] code;
+            IList<object> tokenResolutions;
+            IList<IType> locals;
+            IList<IParameter> parameters;
+            GetCalculationPartOfStringAllocationSizeMethodBody(
+                llvmWriter,
+                stringType,
+                charType,
+                out code,
+                out tokenResolutions,
+                out locals,
+                out parameters);
+
+            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
+
+            // actual write
+            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
+            return opCodes.Last().Result;
+        }
+
+        private static void GetCalculationPartOfStringAllocationSizeMethodBody(
+            ITypeResolver typeResolver,
+            IType stringType,
+            IType charType,
+            out object[] code,
+            out IList<object> tokenResolutions,
+            out IList<IType> locals,
+            out IList<IParameter> parameters)
+        {
+            var codeList = new List<object>();
+
+            // add element size
+            var elementSize = charType.GetTypeSize(typeResolver, true);
+            codeList.AppendLoadInt(elementSize);
+
+            // load length
+            codeList.AppendLoadArgument(0);
+            codeList.Add(Code.Mul);
+
+            var arrayTypeSizeWithoutArrayData = stringType.GetTypeSize(typeResolver);
+            codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
+            codeList.Add(Code.Add);
+
+            // calculate alignment
+            codeList.Add(Code.Dup);
+
+            var alignForType = Math.Max(LlvmWriter.PointerSize, !charType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            codeList.AppendLoadInt(alignForType - 1);
+            codeList.Add(Code.Add);
+
+            codeList.AppendLoadInt(~(alignForType - 1));
+            codeList.Add(Code.And);
+
+            // locals
+            locals = new List<IType>();
+
+            // tokens
+            tokenResolutions = new List<object>();
+
+            // parameters
+            parameters = GetParameters(typeResolver);
+
+            code = codeList.ToArray();
+        }
+
+        public static IList<IParameter> GetParameters(ITypeResolver typeResolver)
+        {
+            var parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            return parameters;
+        }
+
+        /// <summary>
+        /// resetting cahced values to force calling AddRequiredVirtualTablesDeclaration(stringType) and AddRequiredRttiDeclaration(stringType)
+        /// </summary>
+        public static void ResetClass()
+        {
+            _stringPrefixDataType = null;
+            _stringPrefixConstData = null;
+        }
 
         /// <summary>
         /// </summary>
@@ -63,9 +174,9 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetStringPrefixConstData(LlvmWriter llvmWriter)
         {
-            if (_stringPrefixNullConstData != null)
+            if (_stringPrefixConstData != null)
             {
-                return _stringPrefixNullConstData;
+                return _stringPrefixConstData;
             }
 
             ITypeResolver typeResolver = llvmWriter;
@@ -93,8 +204,8 @@ namespace Il2Native.Logic.Gencode
                 sb.AppendLine(" to i8*)");                
             }
 
-            _stringPrefixNullConstData = sb.ToString();
-            return _stringPrefixNullConstData;
+            _stringPrefixConstData = sb.ToString();
+            return _stringPrefixConstData;
         }
 
         /// <summary>

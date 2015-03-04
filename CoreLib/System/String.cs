@@ -92,6 +92,9 @@ namespace System
             return EqualsHelper(a, b);
         }
 
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static String FastAllocateString(int length);
+
         public static String Format(String format, Object arg0)
         {
             return Format(null, format, new Object[] { arg0 });

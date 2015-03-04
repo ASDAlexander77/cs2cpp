@@ -290,7 +290,7 @@
         }
 
         private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
-            LlvmWriter llvmWriter,
+            ITypeResolver typeResolver,
             IType arrayType,
             out object[] code,
             out IList<object> tokenResolutions,
@@ -301,7 +301,7 @@
 
             // add element size
             var elementType = arrayType.GetElementType();
-            var elementSize = elementType.GetTypeSize(llvmWriter, true);
+            var elementSize = elementType.GetTypeSize(typeResolver, true);
             codeList.AppendLoadInt(elementSize);
 
             // init each item in lowerBounds
@@ -312,7 +312,7 @@
             }
 
             // add element size
-            var multiArrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
+            var multiArrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(typeResolver);
             codeList.AppendLoadInt(multiArrayTypeSizeWithoutArrayData);
             codeList.Add(Code.Add);
 
@@ -333,7 +333,7 @@
             tokenResolutions = new List<object>();
 
             // parameters
-            parameters = GetParameters(arrayType, llvmWriter);
+            parameters = GetParameters(arrayType, typeResolver);
 
             code = codeList.ToArray();
         }

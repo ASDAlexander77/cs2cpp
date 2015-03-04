@@ -76,10 +76,7 @@
                 if (sizeOfEnum == 8)
                 {
                     codeList.AppendULong(
-                        Code.Ldc_I8,
-                        enumConstValue.ConstantValue.ToString() == "-1"
-                            ? 0xffffffffffffffff
-                            : Convert.ToUInt64(enumConstValue.ConstantValue));
+                        Code.Ldc_I8, enumConstValue.ConstantValue.ToString() == "-1" ? 0xffffffffffffffff : Convert.ToUInt64(enumConstValue.ConstantValue));
                 }
                 else
                 {

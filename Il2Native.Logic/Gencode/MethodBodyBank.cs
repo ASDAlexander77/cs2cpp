@@ -135,6 +135,9 @@
             ArrayInternalGetReferenceGen.Register(typeResolver);
             ArrayInternalSetValueGen.Register(typeResolver);
 
+            // String
+            FastAllocateStringGen.Register(typeResolver);
+
             // TypedReference
             TypedReferenceInternalToObjectGen.Register(typeResolver);
 

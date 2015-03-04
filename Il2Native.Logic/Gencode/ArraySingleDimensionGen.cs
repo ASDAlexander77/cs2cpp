@@ -102,7 +102,7 @@ namespace Il2Native.Logic.Gencode
         }
 
         private static void GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
-            LlvmWriter llvmWriter,
+            ITypeResolver typeResolver,
             IType arrayType,
             out object[] code,
             out IList<object> tokenResolutions,
@@ -113,14 +113,14 @@ namespace Il2Native.Logic.Gencode
 
             // add element size
             var elementType = arrayType.GetElementType();
-            var elementSize = elementType.GetTypeSize(llvmWriter, true);
+            var elementSize = elementType.GetTypeSize(typeResolver, true);
             codeList.AppendLoadInt(elementSize);
 
             // load length
             codeList.AppendLoadArgument(0);
             codeList.Add(Code.Mul);
 
-            var arrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(llvmWriter);
+            var arrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(typeResolver);
             codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
             codeList.Add(Code.Add);
 
@@ -141,7 +141,7 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions = new List<object>();
 
             // parameters
-            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, llvmWriter);
+            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
 
             code = codeList.ToArray();
         }

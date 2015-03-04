@@ -307,6 +307,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsString
+        {
+            get
+            {
+                return this.typeDef.SpecialType == SpecialType.System_String;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsGenericParameter
         {
             get

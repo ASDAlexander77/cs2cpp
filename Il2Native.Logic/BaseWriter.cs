@@ -139,6 +139,7 @@ namespace Il2Native.Logic
         {
             ReadTypeInfo(type);
             this.System = new SystemTypes(this.ThisType.Module);
+            StringGen.ResetClass();
         }
 
         /// <summary>

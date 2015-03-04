@@ -77,6 +77,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsString { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsGenericParameter { get; }
 
         /// <summary>
