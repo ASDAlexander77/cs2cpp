@@ -361,10 +361,13 @@ namespace Il2Native.Logic.Gencode
 
             var codeBuilder = new IlCodeBuilder();
 
-            // TODO: caluclate length of string
             codeBuilder.LoadArgument(0);
             codeBuilder.Add(Code.Ldc_I4_0);
-            codeBuilder.Add(Code.Ldc_I4_0);
+            
+            // calculate length
+            codeBuilder.LoadArgument(0);
+            codeBuilder.Add(Code.Call, 2);
+
             codeBuilder.Add(Code.Ldnull);
             codeBuilder.Add(Code.Call, 1);
             codeBuilder.Add(Code.Ret);
@@ -375,6 +378,7 @@ namespace Il2Native.Logic.Gencode
 
             tokenResolutions = new List<object>();
             tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(systemString.GetMethodByName("strlen", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
