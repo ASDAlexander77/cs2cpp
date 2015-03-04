@@ -913,8 +913,8 @@ namespace System
             if (stringLength == 0)
                 return String.Empty;
 
-            String s = new String('\x0', stringLength);
-            fixed (char* pTempChars = s)
+            String s = FastAllocateString(stringLength);
+            fixed (char* pTempChars = &s.m_firstChar)
             {
                 int doubleCheck = encoding.GetChars(bytes, byteLength, pTempChars, stringLength, null);
             }

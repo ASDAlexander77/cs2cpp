@@ -344,7 +344,7 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.Add(Code.Conv_I);
 
             codeBuilder.LoadArgument(2);
-            codeBuilder.Add(Code.Ldnull);
+            codeBuilder.Add(Code.Call, 2);
             codeBuilder.Add(Code.Call, 1);
             codeBuilder.Add(Code.Ret);
 
@@ -354,6 +354,7 @@ namespace Il2Native.Logic.Gencode
 
             tokenResolutions = new List<object>();
             tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
@@ -373,7 +374,7 @@ namespace Il2Native.Logic.Gencode
             codeBuilder.LoadArgument(0);
             codeBuilder.Add(Code.Call, 2);
 
-            codeBuilder.Add(Code.Ldnull);
+            codeBuilder.Add(Code.Call, 3);
             codeBuilder.Add(Code.Call, 1);
             codeBuilder.Add(Code.Ret);
 
@@ -384,6 +385,7 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions = new List<object>();
             tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
             tokenResolutions.Add(systemString.GetMethodByName("strlen", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
