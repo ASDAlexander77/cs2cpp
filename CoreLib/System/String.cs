@@ -199,25 +199,320 @@ namespace System
 
         public String[] Split(params char[] separator)
         {
-            throw new NotImplementedException();
+            return SplitInternal(separator, Int32.MaxValue, StringSplitOptions.None);
         }
 
-        public String[] Split(char[] separator, int count)
+        public string[] Split(char[] separator, int count)
         {
-            throw new NotImplementedException();
+            return SplitInternal(separator, count, StringSplitOptions.None);
+        }
+
+        public String[] Split(char[] separator, StringSplitOptions options)
+        {
+            return SplitInternal(separator, Int32.MaxValue, options);
+        }
+
+        public String[] Split(char[] separator, int count, StringSplitOptions options)
+        {
+            return SplitInternal(separator, count, options);
+        }
+
+        internal String[] SplitInternal(char[] separator, int count, StringSplitOptions options)
+        {
+            if (count < 0)
+                throw new ArgumentOutOfRangeException("count",
+                    Environment.GetResourceString("ArgumentOutOfRange_NegativeCount"));
+
+            if (options < StringSplitOptions.None || options > StringSplitOptions.RemoveEmptyEntries)
+                throw new ArgumentException("Arg_EnumIllegalVal");
+
+            bool omitEmptyEntries = (options == StringSplitOptions.RemoveEmptyEntries);
+
+            if ((count == 0) || (omitEmptyEntries && this.Length == 0))
+            {
+                return new String[0];
+            }
+
+            int[] sepList = new int[Length];
+            int numReplaces = MakeSeparatorList(separator, ref sepList);
+
+            //Handle the special case of no replaces and special count.
+            if (0 == numReplaces || count == 1)
+            {
+                String[] stringArray = new String[1];
+                stringArray[0] = this;
+                return stringArray;
+            }
+
+            if (omitEmptyEntries)
+            {
+                return InternalSplitOmitEmptyEntries(sepList, null, numReplaces, count);
+            }
+            else
+            {
+                return InternalSplitKeepEmptyEntries(sepList, null, numReplaces, count);
+            }
+        }
+
+        public String[] Split(String[] separator, StringSplitOptions options)
+        {
+            return Split(separator, Int32.MaxValue, options);
+        }
+
+        public String[] Split(String[] separator, Int32 count, StringSplitOptions options)
+        {
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException("count",
+                    Environment.GetResourceString("ArgumentOutOfRange_NegativeCount"));
+            }
+
+            if (options < StringSplitOptions.None || options > StringSplitOptions.RemoveEmptyEntries)
+            {
+                throw new ArgumentException(Environment.GetResourceString("Arg_EnumIllegalVal", (int)options));
+            }
+
+            bool omitEmptyEntries = (options == StringSplitOptions.RemoveEmptyEntries);
+
+            if (separator == null || separator.Length == 0)
+            {
+                return SplitInternal((char[])null, count, options);
+            }
+
+            if ((count == 0) || (omitEmptyEntries && this.Length == 0))
+            {
+                return new String[0];
+            }
+
+            int[] sepList = new int[Length];
+            int[] lengthList = new int[Length];
+            int numReplaces = MakeSeparatorList(separator, ref sepList, ref lengthList);
+
+            //Handle the special case of no replaces and special count.
+            if (0 == numReplaces || count == 1)
+            {
+                String[] stringArray = new String[1];
+                stringArray[0] = this;
+                return stringArray;
+            }
+
+            if (omitEmptyEntries)
+            {
+                return InternalSplitOmitEmptyEntries(sepList, lengthList, numReplaces, count);
+            }
+            else
+            {
+                return InternalSplitKeepEmptyEntries(sepList, lengthList, numReplaces, count);
+            }
+        }
+
+        private String[] InternalSplitKeepEmptyEntries(Int32[] sepList, Int32[] lengthList, Int32 numReplaces, int count)
+        {
+            int currIndex = 0;
+            int arrIndex = 0;
+
+            count--;
+            int numActualReplaces = (numReplaces < count) ? numReplaces : count;
+
+            //Allocate space for the new array.
+            //+1 for the string from the end of the last replace to the end of the String.
+            String[] splitStrings = new String[numActualReplaces + 1];
+
+            for (int i = 0; i < numActualReplaces && currIndex < Length; i++)
+            {
+                splitStrings[arrIndex++] = Substring(currIndex, sepList[i] - currIndex);
+                currIndex = sepList[i] + ((lengthList == null) ? 1 : lengthList[i]);
+            }
+
+            //Handle the last string at the end of the array if there is one.
+            if (currIndex < Length && numActualReplaces >= 0)
+            {
+                splitStrings[arrIndex] = Substring(currIndex);
+            }
+            else if (arrIndex == numActualReplaces)
+            {
+                //We had a separator character at the end of a string.  Rather than just allowing
+                //a null character, we'll replace the last element in the array with an empty string.
+                splitStrings[arrIndex] = String.Empty;
+
+            }
+
+            return splitStrings;
+        }
+
+        private String[] InternalSplitOmitEmptyEntries(Int32[] sepList, Int32[] lengthList, Int32 numReplaces, int count)
+        {
+            int maxItems = (numReplaces < count) ? (numReplaces + 1) : count;
+            String[] splitStrings = new String[maxItems];
+
+            int currIndex = 0;
+            int arrIndex = 0;
+
+            for (int i = 0; i < numReplaces && currIndex < Length; i++)
+            {
+                if (sepList[i] - currIndex > 0)
+                {
+                    splitStrings[arrIndex++] = Substring(currIndex, sepList[i] - currIndex);
+                }
+                currIndex = sepList[i] + ((lengthList == null) ? 1 : lengthList[i]);
+                if (arrIndex == count - 1)
+                {
+                    // If all the remaining entries at the end are empty, skip them
+                    while (i < numReplaces - 1 && currIndex == sepList[++i])
+                    {
+                        currIndex += ((lengthList == null) ? 1 : lengthList[i]);
+                    }
+                    break;
+                }
+            }
+
+            if (currIndex < Length)
+            {
+                splitStrings[arrIndex++] = Substring(currIndex);
+            }
+
+            String[] stringArray = splitStrings;
+            if (arrIndex != maxItems)
+            {
+                stringArray = new String[arrIndex];
+                for (int j = 0; j < arrIndex; j++)
+                {
+                    stringArray[j] = splitStrings[j];
+                }
+            }
+            return stringArray;
+        }
+
+        private unsafe int MakeSeparatorList(char[] separator, ref int[] sepList)
+        {
+            int foundCount = 0;
+
+            if (separator == null || separator.Length == 0)
+            {
+                fixed (char* pwzChars = &this.m_firstChar)
+                {
+                    for (int i = 0; i < Length && foundCount < sepList.Length; i++)
+                    {
+                        if (Char.IsWhiteSpace(pwzChars[i]))
+                        {
+                            sepList[foundCount++] = i;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                int sepListCount = sepList.Length;
+                int sepCount = separator.Length;
+                fixed (char* pwzChars = &this.m_firstChar, pSepChars = separator)
+                {
+                    for (int i = 0; i < Length && foundCount < sepListCount; i++)
+                    {
+                        char* pSep = pSepChars;
+                        for (int j = 0; j < sepCount; j++, pSep++)
+                        {
+                            if (pwzChars[i] == *pSep)
+                            {
+                                sepList[foundCount++] = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return foundCount;
+        }
+
+        private unsafe int MakeSeparatorList(String[] separators, ref int[] sepList, ref int[] lengthList)
+        {
+            int foundCount = 0;
+            int sepListCount = sepList.Length;
+            int sepCount = separators.Length;
+
+            fixed (char* pwzChars = &this.m_firstChar)
+            {
+                for (int i = 0; i < Length && foundCount < sepListCount; i++)
+                {
+                    for (int j = 0; j < separators.Length; j++)
+                    {
+                        String separator = separators[j];
+                        if (String.IsNullOrEmpty(separator))
+                        {
+                            continue;
+                        }
+                        Int32 currentSepLength = separator.Length;
+                        if (pwzChars[i] == separator[0] && currentSepLength <= Length - i)
+                        {
+                            if (currentSepLength == 1
+                                || String.CompareOrdinal(this, i, separator, 0, currentSepLength) == 0)
+                            {
+                                sepList[foundCount] = i;
+                                lengthList[foundCount] = currentSepLength;
+                                foundCount++;
+                                i += currentSepLength - 1;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            return foundCount;
         }
 
         public String Substring(int startIndex)
         {
-            throw new NotImplementedException();
+            return this.Substring(startIndex, Length - startIndex);
         }
-
 
         public String Substring(int startIndex, int length)
         {
-            throw new NotImplementedException();
+
+            //Bounds Checking.
+            if (startIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndex"));
+            }
+
+            if (startIndex > Length)
+            {
+                throw new ArgumentOutOfRangeException("startIndex", Environment.GetResourceString("ArgumentOutOfRange_StartIndexLargerThanLength"));
+            }
+
+            if (length < 0)
+            {
+                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_NegativeLength"));
+            }
+
+            if (startIndex > Length - length)
+            {
+                throw new ArgumentOutOfRangeException("length", Environment.GetResourceString("ArgumentOutOfRange_IndexLength"));
+            }
+
+            if (length == 0)
+            {
+                return String.Empty;
+            }
+
+            if (startIndex == 0 && length == this.Length)
+            {
+                return this;
+            }
+
+            return InternalSubString(startIndex, length);
         }
 
+        unsafe string InternalSubString(int startIndex, int length)
+        {
+            String result = FastAllocateString(length);
+
+            fixed (char* dest = &result.m_firstChar)
+            fixed (char* src = &this.m_firstChar)
+            {
+                wstrcpy(dest, src + startIndex, length);
+            }
+
+            return result;
+        }
 
         public String Trim(params char[] trimChars)
         {
@@ -342,36 +637,220 @@ namespace System
             }
         }
 
+        public static int CompareOrdinal(String strA, int indexA, String strB, int indexB, int length)
+        {
+            if (strA == null || strB == null)
+            {
+                if ((Object)strA == (Object)strB)
+                { //they're both null;
+                    return 0;
+                }
+
+                return (strA == null) ? -1 : 1; //-1 if A is null, 1 if B is null.
+            }
+
+            return nativeCompareOrdinalEx(strA, indexA, strB, indexB, length);
+        }
+
+        internal static int nativeCompareOrdinalEx(String strA, int indexA, String strB, int indexB, int count)
+        {
+            if (count < 0)
+            {
+                throw new ArgumentOutOfRangeException("count");
+            }
+
+            if (indexA < 0)
+            {
+                throw new ArgumentOutOfRangeException("indexA");
+            }
+
+            if (indexB < 0)
+            {
+                throw new ArgumentOutOfRangeException("indexB");
+            }
+
+            int countA = count;
+            int countB = count;
+
+            var strALength = strA.Length;
+            var strBLength = strB.Length;
+
+            //Do a lot of range checking to make sure that everything is kosher and legit.
+            if (count > (strALength - indexA))
+            {
+                countA = strALength - indexA;
+                if (countA < 0)
+                    throw new ArgumentOutOfRangeException("indexA");
+            }
+
+            if (count > (strBLength - indexB))
+            {
+                countB = strBLength - indexB;
+                if (countB < 0)
+                    throw new ArgumentOutOfRangeException("indexB");
+            }
+
+            // Set up the loop variables.
+            unsafe
+            {
+                fixed (char* strACharsFirstChar = &strA.m_firstChar)
+                fixed (char* strBCharsFirstChar = &strB.m_firstChar)
+                {
+                    char* strAChars = strACharsFirstChar + indexA;
+                    char* strBChars = strBCharsFirstChar + indexB;
+
+                    return FastCompareStringHelper(strAChars, countA, strBChars, countB);
+                }
+            }
+        }
+
+        private unsafe static int FastCompareStringHelper(char* strAChars, int countA, char* strBChars, int countB)
+        {
+            var count = (countA < countB) ? countA : countB;
+            var diff = strAChars - strBChars;
+
+            // Loop comparing a DWORD at a time.
+            while ((count -= 2) >= 0)
+            {
+                if ((*((int*)((char*)strBChars + diff)) - *strBChars) != 0)
+                {
+                    var ptr1 = (int*)((char*)strBChars + diff);
+                    var ptr2 = (int*)strBChars;
+                    if (*ptr1 != *ptr2)
+                    {
+                        return ((int)*ptr1 - (int)*ptr2);
+                    }
+                    return ((int)*(ptr1 + 1) - (int)*(ptr2 + 1));
+                }
+                ++strBChars;
+            }
+
+            int c;
+            if (count == -1)
+                if ((c = *((int*)((char*)strBChars + diff)) - *((int*)strBChars)) != 0)
+                    return c;
+
+            return countA - countB;
+        }
+
         public unsafe static int Compare(String strA, String strB)
         {
-            int length = strA.Length;
+            if ((Object)strA == (Object)strB)
+            {
+                return 0;
+            }
+
+            //they can't both be null;
+            if (strA == null)
+            {
+                return -1;
+            }
+
+            if (strB == null)
+            {
+                return 1;
+            }
+
+            // Most common case, first character is different.
+            if ((strA.m_firstChar - strB.m_firstChar) != 0)
+            {
+                return strA.m_firstChar - strB.m_firstChar;
+            }
+
+            return CompareOrdinalHelper(strA, strB);
+        }
+
+        private unsafe static int CompareOrdinalHelper(String strA, String strB)
+        {
+            int length = Math.Min(strA.Length, strB.Length);
+            int diffOffset = -1;
 
             fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
             {
                 char* a = ap;
                 char* b = bp;
 
-                // This depends on the fact that the String objects are
-                // always zero terminated and that the terminating zero is not included
-                // in the length. For odd string sizes, the last compare will include
-                // the zero terminator.
+                // unroll the loop
+                while (length >= 10)
+                {
+                    if (*(int*)a != *(int*)b)
+                    {
+                        diffOffset = 0;
+                        break;
+                    }
+
+                    if (*(int*)(a + 2) != *(int*)(b + 2))
+                    {
+                        diffOffset = 2;
+                        break;
+                    }
+
+                    if (*(int*)(a + 4) != *(int*)(b + 4))
+                    {
+                        diffOffset = 4;
+                        break;
+                    }
+
+                    if (*(int*)(a + 6) != *(int*)(b + 6))
+                    {
+                        diffOffset = 6;
+                        break;
+                    }
+
+                    if (*(int*)(a + 8) != *(int*)(b + 8))
+                    {
+                        diffOffset = 8;
+                        break;
+                    }
+                    a += 10;
+                    b += 10;
+                    length -= 10;
+                }
+
+                if (diffOffset != -1)
+                {
+                    // we already see a difference in the unrolled loop above
+                    a += diffOffset;
+                    b += diffOffset;
+                    int order;
+                    if ((order = (int)*a - (int)*b) != 0)
+                    {
+                        return order;
+                    }
+
+                    return ((int)*(a + 1) - (int)*(b + 1));
+                }
+
+                // now go back to slower code path and do comparison on 4 bytes one time.
+                // Following code also take advantage of the fact strings will 
+                // use even numbers of characters (runtime will have a extra zero at the end.)
+                // so even if length is 1 here, we can still do the comparsion.  
                 while (length > 0)
                 {
-                    if (*(int*)a != *(int*)b) break;
-                    a += 2; b += 2; length -= 2;
+                    if (*(int*)a != *(int*)b)
+                    {
+                        break;
+                    }
+                    a += 2;
+                    b += 2;
+                    length -= 2;
                 }
 
-                if (length == 0)
+                if (length > 0)
                 {
-                    return length;
+                    int c;
+                    // found a different int on above loop
+                    if ((c = (int)*a - (int)*b) != 0)
+                    {
+                        return c;
+                    }
+
+                    return ((int)*(a + 1) - (int)*(b + 1));
                 }
 
-                if (*a > *b)
-                {
-                    return 1;
-                }
-
-                return -1;
+                // At this point, we have compared all the characters in at least one string.
+                // The longer string will be larger.
+                return strA.Length - strB.Length;
             }
         }
 
@@ -1020,6 +1499,13 @@ namespace System
 
             return count;
         }
+    }
+
+    [Flags]
+    public enum StringSplitOptions
+    {
+        None = 0,
+        RemoveEmptyEntries = 1
     }
 }
 
