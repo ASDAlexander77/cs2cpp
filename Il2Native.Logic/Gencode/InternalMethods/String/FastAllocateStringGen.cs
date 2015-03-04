@@ -14,6 +14,9 @@
             var codeBuilder = new IlCodeBuilder();
             codeBuilder.LoadArgument(0);
             codeBuilder.Add(Code.Call, 1);
+            codeBuilder.Add(Code.Dup);
+            codeBuilder.LoadArgument(0);
+            codeBuilder.Add(Code.Stfld, 2);
             codeBuilder.Add(Code.Ret);
 
             var parameters = new List<IParameter>();
@@ -27,6 +30,7 @@
                     typeResolver.System.System_String,
                     parameters,
                     (llvmWriter, opCode) => llvmWriter.WriteNewMethodBody(opCode, typeResolver.System.System_String, enableStringFastAllocation: true)));
+            tokenResolutions.Add(typeResolver.System.System_String.GetFieldByName("m_stringLength", typeResolver));
 
             var locals = new List<IType>();
 
