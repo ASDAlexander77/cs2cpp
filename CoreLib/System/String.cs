@@ -303,6 +303,11 @@ namespace System
             throw new NotImplementedException();
         }
 
+        public unsafe String(sbyte* src, int startIndex, int length, Encoding enc)
+        {
+            throw new NotImplementedException();
+        }
+
         public unsafe static int Compare(string strA, int indexA, string strB, int indexB, int length)
         {
             fixed (char* ap = &strA.m_firstChar) fixed (char* bp = &strB.m_firstChar)
@@ -742,6 +747,161 @@ namespace System
             return str;
         }
 
+        private String CtorCharArray(char[] value)
+        {
+            if (value != null && value.Length != 0)
+            {
+                String result = FastAllocateString(value.Length);
+
+                unsafe
+                {
+                    fixed (char* dest = result, source = value)
+                    {
+                        wstrcpy(dest, source, value.Length);
+                    }
+                }
+                return result;
+            }
+            else
+                return String.Empty;
+        }
+
+        private String CtorCharArrayStartLength(char[] value, int startIndex, int length)
+        {
+            if (value == null)
+                throw new ArgumentNullException("value");
+
+            if (startIndex < 0)
+                throw new ArgumentOutOfRangeException("startIndex");
+
+            if (length < 0)
+                throw new ArgumentOutOfRangeException("length");
+
+            if (startIndex > value.Length - length)
+                throw new ArgumentOutOfRangeException("startIndex");
+
+            if (length > 0)
+            {
+                String result = FastAllocateString(length);
+
+                unsafe
+                {
+                    fixed (char* dest = result, source = value)
+                    {
+                        wstrcpy(dest, source + startIndex, length);
+                    }
+                }
+                return result;
+            }
+            else
+                return String.Empty;
+        }
+
+        private String CtorCharCount(char c, int count)
+        {
+            if (count > 0)
+            {
+                String result = FastAllocateString(count);
+                if (c != 0)
+                {
+                    unsafe
+                    {
+                        fixed (char* dest = result)
+                        {
+                            char* dmem = dest;
+                            while (((uint)dmem & 3) != 0 && count > 0)
+                            {
+                                *dmem++ = c;
+                                count--;
+                            }
+                            uint cc = (uint)((c << 16) | c);
+                            if (count >= 4)
+                            {
+                                count -= 4;
+                                do
+                                {
+                                    ((uint*)dmem)[0] = cc;
+                                    ((uint*)dmem)[1] = cc;
+                                    dmem += 4;
+                                    count -= 4;
+                                } while (count >= 0);
+                            }
+                            if ((count & 2) != 0)
+                            {
+                                ((uint*)dmem)[0] = cc;
+                                dmem += 2;
+                            }
+                            if ((count & 1) != 0)
+                                dmem[0] = c;
+                        }
+                    }
+                }
+                return result;
+            }
+            else if (count == 0)
+                return String.Empty;
+            else
+                throw new ArgumentOutOfRangeException("count");
+        }
+
+        private unsafe String CtorCharPtr(char* ptr)
+        {
+            if (ptr == null)
+                return String.Empty;
+
+            try
+            {
+                int count = wcslen(ptr);
+                if (count == 0)
+                    return String.Empty;
+
+                String result = FastAllocateString(count);
+                fixed (char* dest = result)
+                    wstrcpy(dest, ptr, count);
+                return result;
+            }
+            catch (NullReferenceException)
+            {
+                throw new ArgumentOutOfRangeException("ptr");
+            }
+        }
+
+        private unsafe String CtorCharPtrStartLength(char* ptr, int startIndex, int length)
+        {
+            if (length < 0)
+            {
+                throw new ArgumentOutOfRangeException("length");
+            }
+
+            if (startIndex < 0)
+            {
+                throw new ArgumentOutOfRangeException("startIndex");
+            }
+
+            char* pFrom = ptr + startIndex;
+            if (pFrom < ptr)
+            {
+                // This means that the pointer operation has had an overflow
+                throw new ArgumentOutOfRangeException("startIndex");
+            }
+
+            if (length == 0)
+                return String.Empty;
+
+            String result = FastAllocateString(length);
+
+            try
+            {
+                fixed (char* dest = result)
+                    wstrcpy(dest, pFrom, length);
+                return result;
+            }
+            catch (NullReferenceException)
+            {
+                throw new ArgumentOutOfRangeException("ptr");
+            }
+        }
+
         unsafe static internal String CreateStringFromEncoding(
             byte* bytes, int byteLength, Encoding encoding)
         {
@@ -827,13 +987,38 @@ namespace System
             Buffer.Memcpy((byte*)dmem, (byte*)smem, charCount * 2); // 2 used everywhere instead of sizeof(char)
         }
 
-        private unsafe static long strlen(byte* s)
+        private static unsafe int wcslen(char* ptr)
         {
-            byte* p = s;
-            while (*p > 0)
-                p++;
+            char* end = ptr;
 
-            return p - s;
+            // The following code is (somewhat surprisingly!) significantly faster than a naive loop,
+            // at least on x86 and the current jit.
+
+            // First make sure our pointer is aligned on a dword boundary
+            while (((uint)end & 3) != 0 && *end != 0)
+                end++;
+            if (*end != 0)
+            {
+                // The loop condition below works because if "end[0] & end[1]" is non-zero, that means
+                // neither operand can have been zero. If is zero, we have to look at the operands individually,
+                // but we hope this going to fairly rare.
+
+                // In general, it would be incorrect to access end[1] if we haven't made sure
+                // end[0] is non-zero. However, we know the ptr has been aligned by the loop above
+                // so end[0] and end[1] must be in the same page, so they're either both accessible, or both not.
+
+                while ((end[0] & end[1]) != 0 || (end[0] != 0 && end[1] != 0))
+                {
+                    end += 2;
+                }
+            }
+            // finish up with the naive loop
+            for (; *end != 0; end++)
+                ;
+
+            int count = (int)(end - ptr);
+
+            return count;
         }
     }
 }

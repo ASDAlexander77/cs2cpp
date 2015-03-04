@@ -34,11 +34,25 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public SynthesizedStaticMethod(
             string name,
             IType declaringType,
-            IType returnType,
-            IEnumerable<IParameter> parameters)
+            IType returnType)
             : base(declaringType, name)
         {
             this.returnType = returnType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="writer">
+        /// </param>
+        public SynthesizedStaticMethod(
+            string name,
+            IType declaringType,
+            IType returnType,
+            IEnumerable<IParameter> parameters)
+            : this(name, declaringType, returnType)
+        {
             this.parameters = parameters.ToList();
         }
 

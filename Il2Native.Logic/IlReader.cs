@@ -22,6 +22,7 @@ namespace Il2Native.Logic
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Enum;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.String;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -694,6 +695,13 @@ namespace Il2Native.Logic
                 yield return new SynthesizedSingleDimArrayIListGetCountMethod(type, typeResolver);
                 yield return new SynthesizedSingleDimArrayIListGetItemMethod(type, typeResolver);
                 yield return new SynthesizedSingleDimArrayIListSetItemMethod(type, typeResolver);
+            }
+            else if (type.IsString)
+            {
+                yield return new SynthesizedCtorSByteArrayMethod(typeResolver);
+                yield return new SynthesizedCtorSByteArrayStartLengthMethod(typeResolver);
+                yield return new SynthesizedCtorSByteArrayStartLengthEncodingMethod(typeResolver);
+                yield return new SynthesizedStrLenMethod(typeResolver);
             }
 
             if (excludeSpecializations)

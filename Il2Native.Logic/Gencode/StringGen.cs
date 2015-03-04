@@ -289,5 +289,140 @@ namespace Il2Native.Logic.Gencode
 
             return GetStringPrefixConstData(llvmWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
         }
+
+        public static IMethod GetCtorMethodByParameters(IType stringType, IEnumerable<IParameter> getParameters, ITypeResolver typeResolver)
+        {
+            var parameters = getParameters.ToArray();
+            var method =
+                IlReader.Methods(stringType, typeResolver)
+                        .FirstOrDefault(m => m.Name.StartsWith("Ctor") && m.GetParameters().ToArray().IsMatchingParams(parameters));
+
+            Debug.Assert(method != null, "String corresponding Ctor can't be found");
+
+            return method;
+        }
+
+        public static void GetCtorSByteArrayStartLengthEncoding(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            IType systemString = typeResolver.System.System_String;
+
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.LoadArgument(0);
+            codeBuilder.LoadArgument(1);
+            codeBuilder.LoadArgument(2);
+            codeBuilder.LoadArgument(3);
+            codeBuilder.Add(Code.Call, 1);
+            codeBuilder.Add(Code.Ret);
+
+            code = codeBuilder.GetCode();
+
+            locals = new List<IType>();
+
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+
+            parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.ResolveType("System.Text.Encoding").ToParameter());
+        }
+
+        public static void GetCtorSByteArrayStartLength(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            IType systemString = typeResolver.System.System_String;
+
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.LoadArgument(0);
+            codeBuilder.LoadArgument(1);
+            codeBuilder.LoadArgument(2);
+            codeBuilder.Add(Code.Ldnull);
+            codeBuilder.Add(Code.Call, 1);
+            codeBuilder.Add(Code.Ret);
+
+            code = codeBuilder.GetCode();
+
+            locals = new List<IType>();
+
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+
+            parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+        }
+
+        public static void GetCtorSByteArray(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            IType systemString = typeResolver.System.System_String;
+
+            var codeBuilder = new IlCodeBuilder();
+
+            // TODO: caluclate length of string
+            codeBuilder.LoadArgument(0);
+            codeBuilder.Add(Code.Ldc_I4_0);
+            codeBuilder.Add(Code.Ldc_I4_0);
+            codeBuilder.Add(Code.Ldnull);
+            codeBuilder.Add(Code.Call, 1);
+            codeBuilder.Add(Code.Ret);
+
+            code = codeBuilder.GetCode();
+
+            locals = new List<IType>();
+
+            tokenResolutions = new List<object>();
+            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+
+            parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+        }
+
+        public static void GetStrLen(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.LoadArgument(0);
+            codeBuilder.SaveLocal(0);
+            var initialJumpLabel = codeBuilder.Branch(Code.Br, Code.Br_S);
+
+            var jumpBack = codeBuilder.CreateLabel();
+
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadConstant(1);
+            codeBuilder.Add(Code.Conv_I);
+            codeBuilder.Add(Code.Add);
+            codeBuilder.SaveLocal(0);
+
+            codeBuilder.Add(initialJumpLabel);
+
+            codeBuilder.LoadLocal(0);
+            codeBuilder.Add(Code.Ldind_I1);
+            codeBuilder.LoadConstant(0);
+
+            codeBuilder.Branch(Code.Bgt, Code.Bgt_S, jumpBack);
+
+            codeBuilder.LoadLocal(0);
+            codeBuilder.LoadArgument(0);
+            codeBuilder.Add(Code.Sub);
+
+            // and if element size is bugger 1, you need to devide it by element size
+            // codeBuilder.LoadConstant(<size>);
+            // codeBuilder.Add(Code.Div);
+
+            codeBuilder.Add(Code.Ret);
+
+            code = codeBuilder.GetCode();
+
+            locals = new List<IType>();
+            locals.Add(typeResolver.System.System_SByte.ToPointerType());
+
+            tokenResolutions = new List<object>();
+
+            parameters = new List<IParameter>();
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+        }
     }
 }

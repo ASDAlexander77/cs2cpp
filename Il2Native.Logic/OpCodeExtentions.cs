@@ -302,6 +302,14 @@ namespace Il2Native.Logic
             return field;
         }
 
+        public static IMethod GetMethodByName(this IType classType, string methodName, ITypeResolver typeResolver)
+        {
+            var normalType = classType.ToNormal();
+            var method = IlReader.Methods(normalType, typeResolver).FirstOrDefault(f => f.Name == methodName);
+            Debug.Assert(method != null, string.Format("Method {0} could not be found", methodName));
+            return method;
+        }
+
         public static IField GetFieldByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();
@@ -1272,6 +1280,16 @@ namespace Il2Native.Logic
             var params1 = method.GetParameters().ToArray();
             var params2 = overridingMethod.GetParameters().ToArray();
 
+            if (!IsMatchingParams(params1, params2))
+            {
+                return false;
+            }
+
+            return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+        }
+
+        public static bool IsMatchingParams(this IParameter[] params1, IParameter[] params2)
+        {
             if (params1.Length != params2.Length)
             {
                 return false;
@@ -1288,7 +1306,7 @@ namespace Il2Native.Logic
                 }
             }
 
-            return CompareTypeParam(method.ReturnType, overridingMethod.ReturnType);
+            return true;
         }
 
         private static bool JumpOrLabelPoint(OpCodePart current, out bool startOrEnd)

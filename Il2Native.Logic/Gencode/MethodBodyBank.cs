@@ -149,6 +149,7 @@
             OffsetToStringData.Register(typeResolver);
         }
 
+        [Obsolete]
         public static IEnumerable<byte> Transform(IEnumerable<object> code)
         {
             foreach (var codeItem in code)

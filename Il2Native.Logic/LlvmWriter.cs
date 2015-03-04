@@ -2317,7 +2317,24 @@ namespace Il2Native.Logic
                     }
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    this.WriteNewObject(opCodeConstructorInfoPart);
+                    if (!opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    {
+                        this.WriteNewObject(opCodeConstructorInfoPart);
+                    }
+                    else
+                    {
+                        // special string case
+                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                            System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+                        this.WriteCall(
+                            opCodeConstructorInfoPart,
+                            stringCtorMethodBase,
+                            code == Code.Callvirt,
+                            stringCtorMethodBase.CallingConvention.HasFlag(CallingConventions.HasThis),
+                            false,
+                            null,
+                            this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
+                    }
 
                     break;
 
