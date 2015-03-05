@@ -1042,6 +1042,7 @@ namespace Il2Native.Logic
         public void ActualWriteOpCode(LlvmIndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
+            var firstOpCodeOperand = opCode != null && opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? opCode.OpCodeOperands[0] : null;
             switch (code)
             {
                 case Code.Ldc_I4_0:
@@ -1168,7 +1169,7 @@ namespace Il2Native.Logic
 
                     writer.WriteLine(string.Empty);
 
-                    this.WriteMemSet(opCode.Result, opCode.OpCodeOperands[0].Result, 1);
+                    this.WriteMemSet(opCode.Result, firstOpCodeOperand.Result, 1);
 
                     this.WriteDbgLine(opCode);
 
@@ -1266,7 +1267,7 @@ namespace Il2Native.Logic
                     if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
                     {
                         opCode.Result = reference;
-                        this.WriteLlvmLoad(opCode, operandType, opCode.OpCodeOperands[0].Result);
+                        this.WriteLlvmLoad(opCode, operandType, firstOpCodeOperand.Result);
                     }
                     else
                     {
@@ -1282,7 +1283,7 @@ namespace Il2Native.Logic
                 case Code.Ldobj:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    var resultOfOp0 = opCode.OpCodeOperands[0].Result;
+                    var resultOfOp0 = firstOpCodeOperand.Result;
                     var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
                     if (loadValueFromAddress)
                     {
@@ -1297,9 +1298,9 @@ namespace Il2Native.Logic
                             // using int as intptr
                             this.AdjustIntConvertableTypes(
                                 writer,
-                                opCode.OpCodeOperands[0],
+                                firstOpCodeOperand,
                                 opCodeTypePart.Operand.ToPointerType());
-                            opCode.Result = opCode.OpCodeOperands[0].Result;
+                            opCode.Result = firstOpCodeOperand.Result;
                         }
                         else
                         {
@@ -1557,8 +1558,8 @@ namespace Il2Native.Logic
 
                     var firstOperand = OpCodePart.CreateNop;
                     firstOperand.Result = isFloatingPoint
-                        ? new ConstValue("0.0", opCode.OpCodeOperands[0].Result.Type)
-                        : new ConstValue(0, opCode.OpCodeOperands[0].Result.Type);
+                        ? new ConstValue("0.0", firstOpCodeOperand.Result.Type)
+                        : new ConstValue(0, firstOpCodeOperand.Result.Type);
                     opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
 
                     this.BinaryOper(
@@ -1573,7 +1574,9 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Dup:
-                    opCode.Result = opCode.OpCodeOperands[0].ResultOpCode;
+                    opCode.Result = firstOpCodeOperand.UsedByAlternativeValues == null
+                                        ? firstOpCodeOperand.ResultOpCode
+                                        : firstOpCodeOperand.Result;
                     break;
 
                 case Code.Box:
@@ -1650,7 +1653,7 @@ namespace Il2Native.Logic
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                     if (localType.IsStructureType() && !localType.IsByRef)
                     {
-                        firstOperand = opCode.OpCodeOperands[0];
+                        firstOperand = firstOpCodeOperand;
                         if (firstOperand.Result.Type.IsPrimitiveType())
                         {
                             this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
@@ -1795,7 +1798,7 @@ namespace Il2Native.Logic
                         this.GetArgType(index));
                     if (argType.IsStructureType() && !argType.IsByRef)
                     {
-                        firstOperand = opCode.OpCodeOperands[0];
+                        firstOperand = firstOpCodeOperand;
                         if (firstOperand.Result.Type.IsPrimitiveType())
                         {
                             this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
@@ -1998,7 +2001,7 @@ namespace Il2Native.Logic
                 case Code.Brfalse_S:
 
                     var forTrue = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
-                    var resultOf = ResultOf(opCode.OpCodeOperands[0]);
+                    var resultOf = ResultOf(firstOpCodeOperand);
 
                     var opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
                     this.UnaryOper(writer, opCode, "icmp " + forTrue, options: opts);
@@ -2483,7 +2486,7 @@ namespace Il2Native.Logic
 
                 case Code.Refanyval:
 
-                    typedRefType = opCode.OpCodeOperands[0].Result.Type;
+                    typedRefType = firstOpCodeOperand.Result.Type;
 
                     var _targetFieldIndex = this.GetFieldIndex(typedRefType, "Value");
                     this.WriteFieldAccess(
@@ -2491,7 +2494,7 @@ namespace Il2Native.Logic
                         typedRefType,
                         typedRefType,
                         _targetFieldIndex,
-                        opCode.OpCodeOperands[0].Result);
+                        firstOpCodeOperand.Result);
                     writer.WriteLine(string.Empty);
                     this.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
                     writer.WriteLine(string.Empty);
