@@ -173,11 +173,15 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public FullyDefinedReference Result { get; set; }
+        public FullyDefinedReference ResultOpCode { get; set; }
 
         /// <summary>
         /// </summary>
         public FullyDefinedReference ResultAtExit { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public FullyDefinedReference Result { get; set; }
 
         /// <summary>
         /// </summary>

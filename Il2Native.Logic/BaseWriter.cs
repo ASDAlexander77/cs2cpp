@@ -794,7 +794,7 @@ namespace Il2Native.Logic
                     {
                         requiredType = this.RequiredOutgoingType(firstOpCode)
                                        ??
-                                       alternativeValues.Values.Select(v => this.RequiredOutgoingType(v))
+                                       alternativeValues.Values.Select(this.RequiredOutgoingType)
                                            .FirstOrDefault(v => v != null)
                                        ??
                                        alternativeValues.Values.Select(v => v.RequiredOutgoingType)
@@ -807,13 +807,11 @@ namespace Il2Native.Logic
                             foreach (
                                 var requiredItem in
                                     alternativeValues.Values.Select(this.RequiredOutgoingType)
-                                        .Where(t => t != null))
+                                                     .Where(t => t != null)
+                                                     .Where(requiredItem => requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem)
+                                                         || requiredItem.IsObject))
                             {
-                                if (requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) ||
-                                    requiredItem.IsObject)
-                                {
-                                    requiredType = requiredItem;
-                                }
+                                requiredType = requiredItem;
                             }
 
                             foreach (var val in alternativeValues.Values)

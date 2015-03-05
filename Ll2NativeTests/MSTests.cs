@@ -268,12 +268,14 @@ namespace Ll2NativeTests
                         864
                     });
 
-            Debug.Listeners.Clear();
+            CompilerHelper.AssertUiEnabled(false);
 
             foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.Compile(string.Format("test-{0}", index));
             }
+
+            CompilerHelper.AssertUiEnabled(true);
         }
 
         /// <summary>
@@ -377,6 +379,9 @@ namespace Ll2NativeTests
             // 377 - lib with .IL file
             // 382 - using GetField
             // 388 - Xml
+            // 389 - Xml, lib
+            // 397 - using PropertyInfo etc
+            // 399 - ArgIterator - NotImplemented (__arglist)
             // -----------
             // 32, 55, 74 - missing class
 
@@ -468,7 +473,10 @@ namespace Ll2NativeTests
                         367,
                         377,
                         382,
-                        388
+                        388,
+                        389,
+                        397,
+                        399
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -551,12 +559,14 @@ namespace Ll2NativeTests
         {
             var skip = new List<int>();
 
-            Debug.Listeners.Clear();
+            CompilerHelper.AssertUiEnabled(false);
 
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
             }
+
+            CompilerHelper.AssertUiEnabled(true);
         }
 
         /// <summary>
@@ -666,7 +676,7 @@ namespace Ll2NativeTests
                 305,
                 311
             };
-            foreach (var index in Enumerable.Range(1, 400).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

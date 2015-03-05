@@ -792,7 +792,6 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="requiredTypes">
         /// </param>
-        [Obsolete]
         private static void ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
             IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
             ReadingTypesContext readingTypesContext,
@@ -918,7 +917,7 @@ namespace Il2Native.Logic
         private static void ReadingTypes(
             IlReader ilReader,
             string[] filter,
-            out IList<IType> sortedListOfTypes,
+            out IList<IType> usedTypes,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // clean it as you are using IlReader
@@ -937,11 +936,11 @@ namespace Il2Native.Logic
             // TODO: temp hack to initialize ThisType for TypeResolver
             _codeWriter.Initialize(allTypes.First());
 
-            sortedListOfTypes = SortTypesByUsage(types.ToList(), allTypes, readingTypesContext);
+            usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
-            Debug.Assert(sortedListOfTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
+            Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
@@ -977,102 +976,6 @@ namespace Il2Native.Logic
             return false;
         }
 
-        private static bool RemoveAllResolvedTypesForType(
-            IAssoc<IType, INamespaceContainer<IType>> type,
-            IList<IType> newOrder,
-            IList<IAssoc<IType, INamespaceContainer<IType>>> toRemove)
-        {
-            var requiredITypes = type.Value;
-
-            var before = requiredITypes.Count;
-
-            requiredITypes.RemoveAll(newOrder.Contains);
-
-            if (requiredITypes.Count != 0)
-            {
-                return before != requiredITypes.Count;
-            }
-
-            toRemove.Add(type);
-            newOrder.Add(type.Key);
-
-            return before != requiredITypes.Count;
-        }
-
-        [Obsolete]
-        private static void ReorderTypeByUsage(
-            IList<IType> types,
-            ISet<IType> genericTypeSpecializations,
-            ISet<IType> additionalTypes,
-            NamespaceContainer<IType, INamespaceContainer<IType>> typesWithRequired,
-            IList<IType> newOrder)
-        {
-            // TODO: Not working, for example System.Array is required but not in types to be added to newOrder
-
-            var allTypes = new NamespaceContainer<IType>();
-            foreach (var type in types)
-            {
-                allTypes.Add(type);
-            }
-
-            foreach (var type in genericTypeSpecializations)
-            {
-                allTypes.Add(type);
-            }
-
-            foreach (var type in additionalTypes)
-            {
-                allTypes.Add(type);
-            }
-
-            // remove not used types, for example System.Object which maybe not in current assembly
-            foreach (var requiredITypes in typesWithRequired)
-            {
-                requiredITypes.Value.RemoveAll(r => !allTypes.Contains(r));
-            }
-
-            var strictMode = true;
-            while (typesWithRequired.Count > 0)
-            {
-                var before = typesWithRequired.Count;
-                var toRemove = new NamespaceContainer<IType, INamespaceContainer<IType>>();
-
-                // step 1 find Root;
-                foreach (var type in typesWithRequired)
-                {
-                    strictMode |= RemoveAllResolvedTypesForType(type, newOrder, toRemove);
-                }
-
-                foreach (var type in toRemove)
-                {
-                    strictMode = true;
-                    typesWithRequired.Remove(type);
-                }
-
-                var after = typesWithRequired.Count;
-                if (before == after)
-                {
-                    if (strictMode)
-                    {
-                        typesWithRequired.RemoveAll(t => t.Value.Count == 1);
-
-                        strictMode = false;
-                        continue;
-                    }
-
-                    Debug.Assert(false, "not all resolved");
-
-                    // throw new Exception("Can't resolve any types anymore");
-                    foreach (var typeItems in typesWithRequired)
-                    {
-                        newOrder.Add(typeItems.Key);
-                    }
-
-                    break;
-                }
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="types">
@@ -1083,45 +986,29 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static IList<IType> SortTypesByUsage(IList<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext)
+        private static IList<IType> FindUsedTypes(IEnumerable<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext)
         {
-            var newOrder = new NamespaceContainer<IType>();
             var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
 
             if (concurrent)
             {
-                Parallel.ForEach(
-                    types,
-                    type =>
-                        AppendTypeWithRequiredTypePair(
-                            type,
-                            typesWithRequired,
-                            readingTypesContext));
+                Parallel.ForEach(types, type => AppendTypeWithRequiredTypePair(type, typesWithRequired, readingTypesContext));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    AppendTypeWithRequiredTypePair(
-                        type,
-                        typesWithRequired,
-                        readingTypesContext);
+                    AppendTypeWithRequiredTypePair(type, typesWithRequired, readingTypesContext);
                 }
             }
 
-            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-                typesWithRequired,
-                readingTypesContext,
-                true);
+            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(typesWithRequired, readingTypesContext, true);
 
             DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
 
-            //ReorderTypeByUsage(types, readingTypesContext.GenericTypeSpecializations, readingTypesContext.AdditionalTypesToProcess, typesWithRequired, newOrder);
-            newOrder.AddRange(typesWithRequired.Select(t => t.Key));
-
-            return newOrder;
+            return typesWithRequired.Select(t => t.Key).ToList();
         }
 
         /// <summary>

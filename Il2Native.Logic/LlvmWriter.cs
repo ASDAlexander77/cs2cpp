@@ -1020,6 +1020,8 @@ namespace Il2Native.Logic
 
             this.ActualWriteOpCode(writer, opCode);
 
+            opCode.ResultOpCode = opCode.Result;
+
             this.AdjustResultTypeToOutgoingType(opCode);
 
             this.WriteCatchFinnallyEnd(writer, opCode);
@@ -1571,7 +1573,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Dup:
-                    opCode.Result = opCode.OpCodeOperands[0].Result;
+                    opCode.Result = opCode.OpCodeOperands[0].ResultOpCode;
                     break;
 
                 case Code.Box:
