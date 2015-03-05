@@ -507,19 +507,9 @@ namespace Ll2NativeTests
                 CompilerHelper.OutputPath,
                 CompilerHelper.GetConverterArgs(false));
 
-            if (CompilerHelper.CompileWithOptimization)
-            {
-                CompilerHelper.ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-                CompilerHelper.ExecCmd(
-                    "llc",
-                    string.Format("-filetype=obj -mtriple={0} CoreLib.bc", CompilerHelper.Target));
-            }
-            else
-            {
-                CompilerHelper.ExecCmd(
-                    "llc",
-                    string.Format("-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target));
-            }
+            CompilerHelper.ExecCmd(
+                "llc",
+                string.Format("{1}-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target, CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty));
         }
 
 
