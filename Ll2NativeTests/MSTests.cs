@@ -382,6 +382,7 @@ namespace Ll2NativeTests
             // 389 - Xml, lib
             // 397 - using PropertyInfo etc
             // 399 - ArgIterator - NotImplemented (__arglist)
+            // 414 - (12,28): error CS0507: 'BB.Data': cannot change access modifiers when overriding 'protected internal' inherited member 'AA.Data'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -476,7 +477,8 @@ namespace Ll2NativeTests
                         388,
                         389,
                         397,
-                        399
+                        399,
+                        414
                     });
 
             if (CompilerHelper.UsingRoslyn)
