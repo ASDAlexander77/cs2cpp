@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-#define INLINE_RTTI_INFO
+//#define INLINE_RTTI_INFO
 
 namespace Il2Native.Logic
 {
