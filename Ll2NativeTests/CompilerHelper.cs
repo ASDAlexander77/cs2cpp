@@ -83,7 +83,7 @@
         public const bool MultiCore = true;
 
         /// <summary>
-        ///     ex. opt 'file'.ll -o 'file'.bc -O2
+        ///     ex. llc -O2 'file'.ll
         /// </summary>
         public const bool CompileWithOptimization = true;
 
@@ -238,10 +238,8 @@
 
             // if GC Enabled with optimization
             /*
-                opt corelib.ll -o corelib.bc -O2
-                opt test-%1.ll -o test-%1.bc -O2
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
+                llc -O2 -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
+                llc -O2 -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
                 g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
                 del test-%1.o 
              */
@@ -256,27 +254,11 @@
                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
-                if (opt)
-                {
-                    ExecCmd("opt", "CoreLib.ll -o CoreLib.bc -O2");
-                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.bc", Target));
-                }
-                else
-                {
-                    ExecCmd("llc", string.Format("-filetype=obj -mtriple={0} CoreLib.ll", Target));
-                }
+                ExecCmd("llc", string.Format("{1}-filetype=obj -mtriple={0} CoreLib.ll", Target, opt ? "-O2 " : string.Empty));
             }
 
             // file obj
-            if (opt)
-            {
-                ExecCmd("opt", string.Format("{0}.ll -o {0}.bc -O2", fileName));
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.bc", fileName, Target));
-            }
-            else
-            {
-                ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", fileName, Target));
-            }
+            ExecCmd("llc", string.Format("{2}-filetype=obj -mtriple={1} {0}.ll", fileName, Target, opt ? "-O2 " : string.Empty));
 
             if (!justCompile)
             {

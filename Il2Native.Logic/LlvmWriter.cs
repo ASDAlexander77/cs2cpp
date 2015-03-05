@@ -41,7 +41,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private static int methodNumberIncremental;
+        private int methodNumberIncremental;
 
         public int ByValAlign = PointerSize;
 
@@ -873,6 +873,8 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteStart(IIlReader ilReader)
         {
+            this.resultNumberIncremental = 0;
+
             this.Output = new LlvmIndentedTextWriter(new StreamWriter(this.outputFile));
 
             this.IlReader = ilReader;
