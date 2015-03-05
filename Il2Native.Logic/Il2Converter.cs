@@ -793,7 +793,7 @@ namespace Il2Native.Logic
         /// <param name="requiredTypes">
         /// </param>
         private static void ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(
-            IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypes,
+            IList<IType> requiredTypes,
             ReadingTypesContext readingTypesContext,
             bool applyConccurent = false)
         {
@@ -844,12 +844,12 @@ namespace Il2Native.Logic
 
             if (subSetGenericTypeSpecializations.Count > 0 || subSetAdditionalTypesToProcess.Count > 0)
             {
-                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
+                foreach (var discoveredType in requiredTypes)
                 {
                     subSetGenericTypeSpecializations.Remove(discoveredType);
                 }
 
-                foreach (var discoveredType in requiredTypes.Select(t => t.Key))
+                foreach (var discoveredType in requiredTypes)
                 {
                     Debug.Assert(discoveredType != null);
                     subSetAdditionalTypesToProcess.Remove(discoveredType);
@@ -901,17 +901,16 @@ namespace Il2Native.Logic
             addedRequiredTypes.Remove(type);
         }
 
-        private static void AppendTypeWithRequiredTypePair(IType type, IList<IAssoc<IType, INamespaceContainer<IType>>> requiredTypesByType, ReadingTypesContext readingTypesContext)
+        private static void AppendTypeWithRequiredTypePair(IType type, IList<IType> requiredTypesByType, ReadingTypesContext readingTypesContext)
         {
             if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Reading info about type: {0}", type));
             }
 
-            var requiredITypesToAdd = new NamespaceContainer<IType>();
-            AppendRequiredTypesForType(type, requiredITypesToAdd, readingTypesContext);
+            GetAllRequiredTypesForType(type, readingTypesContext);
 
-            requiredTypesByType.Add(new NamespaceContainerAssoc<IType, INamespaceContainer<IType>>(type, requiredITypesToAdd));
+            requiredTypesByType.Add(type);
         }
 
         private static void ReadingTypes(
@@ -988,27 +987,27 @@ namespace Il2Native.Logic
         /// </returns>
         private static IList<IType> FindUsedTypes(IEnumerable<IType> types, IList<IType> allTypes, ReadingTypesContext readingTypesContext)
         {
-            var typesWithRequired = new NamespaceContainer<IType, INamespaceContainer<IType>>();
+            var usedTypes = new NamespaceContainer<IType>();
 
             if (concurrent)
             {
-                Parallel.ForEach(types, type => AppendTypeWithRequiredTypePair(type, typesWithRequired, readingTypesContext));
+                Parallel.ForEach(types, type => AppendTypeWithRequiredTypePair(type, usedTypes, readingTypesContext));
             }
             else
             {
                 foreach (var type in types)
                 {
-                    AppendTypeWithRequiredTypePair(type, typesWithRequired, readingTypesContext);
+                    AppendTypeWithRequiredTypePair(type, usedTypes, readingTypesContext);
                 }
             }
 
-            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(typesWithRequired, readingTypesContext, true);
+            ProcessGenericTypesAndAdditionalTypesToFindRequiredTypes(usedTypes, readingTypesContext, true);
 
             DiscoverAllGenericVirtualMethods(allTypes, readingTypesContext);
 
             DiscoverAllGenericMethodsOfInterfaces(allTypes, readingTypesContext);
 
-            return typesWithRequired.Select(t => t.Key).ToList();
+            return usedTypes;
         }
 
         /// <summary>
