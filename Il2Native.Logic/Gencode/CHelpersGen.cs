@@ -637,7 +637,6 @@ namespace Il2Native.Logic.Gencode
                 out requiredType);
 
             cWriter.CheckIfMethodExternalDeclarationIsRequired(methodInfo, ownerOfExplicitInterface);
-            cWriter.CheckIfExternalDeclarationIsRequired(methodInfo.DeclaringType);
 
             if (hasThisArgument)
             {

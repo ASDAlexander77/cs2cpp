@@ -337,7 +337,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public IEnumerable<IType> RequiredTypes { get; set; }
+        public IEnumerable<IType> RequiredDefinitionTypes { get; set; }
 
         private bool CalculateIsGenericType()
         {

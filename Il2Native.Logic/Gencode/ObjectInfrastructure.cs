@@ -228,7 +228,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Boxing");
 
             writer.WriteLine(string.Empty);
-            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             // call new if null
             if (newObjectResult == null)
@@ -484,8 +483,6 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Returning Hash Code");
             writer.WriteLine(string.Empty);
-
-            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             writer.WriteLine("; Get data");
 
@@ -961,8 +958,6 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine("; Unboxing");
             writer.WriteLine(string.Empty);
-
-            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             writer.WriteLine("; Copy data");
 

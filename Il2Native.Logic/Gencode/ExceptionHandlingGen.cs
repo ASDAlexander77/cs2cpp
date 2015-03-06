@@ -486,7 +486,6 @@ namespace Il2Native.Logic.Gencode
                         writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
 
                         cWriter.typeRttiPointerDeclRequired.Add(catchType);
-                        cWriter.CheckIfExternalDeclarationIsRequired(catchType);
                     }
                     else
                     {
@@ -632,7 +631,6 @@ namespace Il2Native.Logic.Gencode
                 : WriteThrowCall(cWriter, opCode);
 
             cWriter.typeRttiPointerDeclRequired.Add(exceptionPointerType);
-            cWriter.CheckIfExternalDeclarationIsRequired(exceptionPointerType);
         }
 
         /// <summary>

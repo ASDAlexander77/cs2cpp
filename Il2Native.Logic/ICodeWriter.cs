@@ -37,7 +37,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        bool IsProcessed(IType type);
+        bool IsTypeDefinitionWritten(IType type);
 
         /// <summary>
         /// </summary>

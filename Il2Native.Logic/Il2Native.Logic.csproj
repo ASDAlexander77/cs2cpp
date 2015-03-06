@@ -195,8 +195,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\llvm_declarations.ll" />
-    <None Include="Resources\llvm_gc_declarations.ll" />
+    <None Include="Resources\c_declarations.c" />
+    <None Include="Resources\gc_declarations.c" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DebugInfo\" />

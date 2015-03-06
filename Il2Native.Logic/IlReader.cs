@@ -1529,7 +1529,7 @@ namespace Il2Native.Logic
             this.AddGenericSpecializedType(method.ReturnType);
 
             // disover it again in specialized method
-            method.DiscoverRequiredTypesAndMethodsInMethodBody(
+            method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
                 this.usedGenericSpecialiazedTypes,
                 this.usedGenericSpecialiazedMethods,
                 null,

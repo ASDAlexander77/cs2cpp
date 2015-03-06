@@ -61,35 +61,26 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to declare i8* @malloc(i32) #99900
-        ///
-        ///; Function Attrs: nounwind
-        ///;declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture readonly, i32, i32, i1) #88801
-        ///declare void @llvm.memcpy.p0i8.p0i8.i32(i8* nocapture, i8* nocapture, i32, i32, i1) #88801
-        ///declare void @llvm.memset.p0i8.i32(i8*, i8, i32, i32, i1) #88802
-        ///
-        ///declare { i8, i1 } @llvm.sadd.with.overflow.i8(i8, i8) #0
-        ///declare { i16, i1 } @llvm.sadd.with.overflow.i16(i16, i16) #0
-        ///declare { i32, i1 } @llvm.sadd.with.overflow.i32(i32, i32) #0
-        ///de [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to int8_t* malloc(int32_t);
+        ///.
         /// </summary>
-        internal static string llvm_declarations {
+        internal static string c_declarations {
             get {
-                return ResourceManager.GetString("llvm_declarations", resourceCulture);
+                return ResourceManager.GetString("c_declarations", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to declare void @GC_init() #0
-        ///declare i8* @GC_malloc(i32) #0
-        ///declare i8* @GC_malloc_atomic(i32) #0
-        ///declare i8* @GC_realloc(i8*, i32) #0
-        ///declare i32 @GC_get_heap_size() #0
+        ///   Looks up a localized string similar to GC_init();
+        ///int8_t* GC_malloc(int32_t);
+        ///int8_t* GC_malloc_atomic(int32_t);
+        ///int8_t* GC_realloc(int8_t*, int32_t);
+        ///int32_t GC_get_heap_size();
         ///.
         /// </summary>
-        internal static string llvm_gc_declarations {
+        internal static string gc_declarations {
             get {
-                return ResourceManager.GetString("llvm_gc_declarations", resourceCulture);
+                return ResourceManager.GetString("gc_declarations", resourceCulture);
             }
         }
     }

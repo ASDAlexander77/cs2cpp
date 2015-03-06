@@ -22,6 +22,22 @@ namespace Il2Native.Logic
     /// </summary>
     public static class OpCodeExtensions
     {
+        public static string CleanUpName(this string typeBaseName)
+        {
+            typeBaseName = typeBaseName.Replace(' ', '_');
+            typeBaseName = typeBaseName.Replace('.', '_');
+            typeBaseName = typeBaseName.Replace('<', '_');
+            typeBaseName = typeBaseName.Replace('>', '_');
+            typeBaseName = typeBaseName.Replace('-', '_');
+            typeBaseName = typeBaseName.Replace(',', '_');
+            typeBaseName = typeBaseName.Replace('*', 'P');
+            typeBaseName = typeBaseName.Replace('[', 'A');
+            typeBaseName = typeBaseName.Replace(']', 'R');
+            typeBaseName = typeBaseName.Replace('&', 'R');
+            return typeBaseName;
+        }
+
+
         public static int Align(this int unalign, int alignSize)
         {
             var alignMinusOne = alignSize - 1;
@@ -176,7 +192,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="stackCall">
         /// </param>
-        public static void DiscoverRequiredTypesAndMethodsInMethodBody(
+        public static void DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
             this IMethod method,
             ISet<IType> genericTypeSpecializations, 
             ISet<IMethod> genericMethodSpecializations,

@@ -159,8 +159,6 @@ namespace Il2Native.Logic.Gencode
                 comaRequired = true;
             }
 
-            cWriter.CheckIfExternalDeclarationIsRequired(returnType);
-
             var argsContainsThisArg = used != null ? (used.Length - parameterInfos.Count()) > 0 : false;
             var argShift = @isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0;
 
@@ -487,8 +485,6 @@ namespace Il2Native.Logic.Gencode
             if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
             {
                 methodInfo.ReturnType.WriteTypePrefix(cWriter, false);
-
-                cWriter.CheckIfExternalDeclarationIsRequired(methodInfo.ReturnType);
             }
             else
             {
@@ -572,8 +568,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
-
             parameter.ParameterType.WriteTypePrefix(cWriter, parameter.ParameterType.IsStructureType());
             if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
             {
@@ -587,8 +581,6 @@ namespace Il2Native.Logic.Gencode
         private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)
         {
             var writer = cWriter.Output;
-
-            cWriter.CheckIfExternalDeclarationIsRequired(type);
 
             type.WriteTypePrefix(cWriter, type.IsStructureType());
             if (type.IsStructureType())

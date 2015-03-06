@@ -602,7 +602,7 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            return string.Concat('"', type.FullName, '"');
+            return type.FullName;
         }
 
         /// <summary>
@@ -660,29 +660,22 @@ namespace Il2Native.Logic.Gencode
         public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer)
         {
             var typeBaseName = type.TypeToCType(isPointer);
-
-            // clean name
-            if (typeBaseName.EndsWith("&"))
-            {
-                typeBaseName = typeBaseName.Substring(0, typeBaseName.Length - 1);
-            }
-
-            writer.Write(typeBaseName);
+            writer.Write(typeBaseName.CleanUpName());
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="cWriter">
+        /// <param name="codeWriter">
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, CWriter cWriter, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, CWriter codeWriter, bool asReference = false)
         {
-            var writer = cWriter.Output;
+            var writer = codeWriter.Output;
 
-            type.WriteTypeWithoutModifiers(cWriter);
+            type.WriteTypeWithoutModifiers(codeWriter);
             type.WriteTypeModifiers(writer, asReference);
         }
 
@@ -694,23 +687,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypeWithoutModifiers(
             this IType type,
-            CWriter cWriter,
+            CWriter codeWriter,
             bool isPointer = false)
         {
-            var writer = cWriter.Output;
+            var writer = codeWriter.Output;
 
             var effectiveType = type;
 
             if (effectiveType.IsPointer)
             {
-                effectiveType.GetElementType().WriteTypeWithoutModifiers(cWriter, type.IsPointer);
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(codeWriter, type.IsPointer);
                 return;
-            }
-
-            if (type.UseAsClass ||
-                !effectiveType.IsPrimitiveType() && !effectiveType.IsVoid() && !effectiveType.IsEnum)
-            {
-                writer.Write('%');
             }
 
             // write base name

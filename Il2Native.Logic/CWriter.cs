@@ -162,7 +162,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> typeDeclRequired = new NamespaceContainer<IType>();
+        private readonly ISet<IType> forwardTypeDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -323,7 +323,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool IsProcessed(IType type)
+        public bool IsTypeDefinitionWritten(IType type)
         {
             return this.processedTypes.Contains(type);
         }
@@ -361,7 +361,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
 
             this.Output.Indent--;
-            this.Output.WriteLine("}");
+            this.Output.WriteLine("};");
         }
 
         /// <summary>
@@ -385,33 +385,28 @@ namespace Il2Native.Logic
         {
             var baseType = ThisType.BaseType;
 
-            this.CheckIfExternalDeclarationIsRequired(baseType);
-
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
             // put virtual root table if type has no any base with virtual types
-            if (ThisType.IsRootInterface())
+            if (ThisType.IsRootInterface() || ThisType.IsRootOfVirtualTable(this))
             {
-                this.Output.WriteLine("i32 (...)**");
-            }
-            else if (ThisType.IsRootOfVirtualTable(this))
-            {
-                this.Output.WriteLine("i32 (...)**");
+                this.Output.WriteLine("anyFn* vtable;");
             }
 
             if (baseType != null)
             {
                 baseType.WriteTypeWithoutModifiers(this);
+                this.Output.WriteLine(" base;");
             }
 
             var index = 0;
             foreach (var @interface in ThisType.GetInterfacesExcludingBaseAllInterfaces())
             {
-                this.CheckIfExternalDeclarationIsRequired(@interface);
-
-                this.Output.WriteLine(index == 0 && baseType == null ? string.Empty : ", ");
                 @interface.WriteTypeWithoutModifiers(this);
+                this.Output.Write(" ");
+                @interface.WriteTypeName(this.Output, false);
+                this.Output.WriteLine(";");
                 index++;
             }
         }
@@ -547,9 +542,16 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.Output.WriteLine(',');
-
             this.WriteFieldType(field);
+            this.Output.Write(' ');
+            this.Output.Write(field.Name.CleanUpName());
+
+            if (field.IsFixed)
+            {
+                this.Output.Write("[{0}]", field.FixedSize);
+            }
+
+            this.Output.WriteLine(';');
         }
 
         /// <summary>
@@ -559,8 +561,6 @@ namespace Il2Native.Logic
         public void WriteFieldType(IType fieldType)
         {
             Debug.Assert(!fieldType.IsGenericParameter);
-
-            this.CheckIfExternalDeclarationIsRequired(fieldType);
 
             fieldType.WriteTypePrefix(this, false);
         }
@@ -850,26 +850,13 @@ namespace Il2Native.Logic
 
             this.IlReader = ilReader;
 
-            this.Output.WriteLine("target datalayout = \"{0}\"", this.DataLayout);
-            this.Output.WriteLine("target triple = \"{0}\"", this.Target);
-            this.Output.WriteLine(string.Empty);
-
-            if (this.Gctors)
-            {
-                // Global ctors
-                this.Output.WriteLine(
-                    "@llvm.global_ctors = appending global [1 x { i32, void ()* }] [{ i32, void ()* } { i32 65535, void ()* "
-                    + this.GetGlobalConstructorsFunctionName() + " }]");
-                this.Output.WriteLine(string.Empty);
-            }
-
             // declarations
-            this.Output.WriteLine(Resources.llvm_declarations);
+            this.Output.WriteLine(Resources.c_declarations);
             this.Output.WriteLine(string.Empty);
 
             if (this.Gc)
             {
-                this.Output.WriteLine(Resources.llvm_gc_declarations);
+                this.Output.WriteLine(Resources.gc_declarations);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -2610,33 +2597,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void CheckIfExternalDeclarationIsRequired(IType type)
-        {
-            if (type == null)
-            {
-                return;
-            }
-
-            if (type.IsArray)
-            {
-                if (!type.IsGenericType)
-                {
-                    CheckIfExternalDeclarationIsRequired(type.GetElementType());
-                    this.typeDeclRequired.Add(type.IsByRef ? type.GetElementType() : type);
-                }
-            }
-
-            var bareType = type.ToBareType();
-#if EXTRA_VALIDATION
-            Debug.Assert(!bareType.IsGenericTypeDefinition, "you can't use generic type definition");
-#endif
-            this.typeDeclRequired.Add(bareType);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="methodBase">
         /// </param>
         public void CheckIfMethodExternalDeclarationIsRequired(
@@ -2652,15 +2612,6 @@ namespace Il2Native.Logic
             if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
             {
                 this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
-            }
-
-            if (checkParamsAndReturn)
-            {
-                CheckIfExternalDeclarationIsRequired(methodBase.ReturnType);
-                foreach (var parameter in methodBase.GetParameters())
-                {
-                    CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
-                }
             }
         }
 
@@ -3303,7 +3254,6 @@ namespace Il2Native.Logic
             var writer = this.Output;
 
             writer.WriteLine(string.Empty);
-            this.CheckIfExternalDeclarationIsRequired(declaringType);
             declaringType.WriteCallNewObjectMethod(this, opCode);
 
             var newObjectResult = opCode.Result;
@@ -3718,10 +3668,7 @@ namespace Il2Native.Logic
         {
             if (field.IsFixed)
             {
-                this.Output.Write("[ {0}", field.FixedSize);
-                this.Output.Write(" x ");
                 this.WriteFieldType(field.FieldType.GetElementType());
-                this.Output.Write(" ]");
             }
             else
             {
@@ -3915,8 +3862,6 @@ namespace Il2Native.Logic
             var isAnonymousDelegate = method.IsAnonymousDelegate;
             foreach (var parameter in parameterInfos)
             {
-                this.CheckIfExternalDeclarationIsRequired(parameter.ParameterType);
-
                 if (isAnonymousDelegate)
                 {
                     isAnonymousDelegate = false;
@@ -4060,8 +4005,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodReturnType(CIndentedTextWriter writer, IMethod method)
         {
-            this.CheckIfExternalDeclarationIsRequired(method.ReturnType);
-
             if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
             {
                 method.ReturnType.WriteTypePrefix(this, false);
@@ -5160,7 +5103,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetGlobalConstructorsFunctionName()
         {
-            return this.GetGlobalConstructorsFunctionName(this.AssemblyQualifiedName);
+            return this.GetGlobalConstructorsFunctionName(Path.GetFileNameWithoutExtension(this.AssemblyQualifiedName));
         }
 
         /// <summary>
@@ -5171,7 +5114,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetGlobalConstructorsFunctionName(string assemblyQualifiedName)
         {
-            return string.Concat("@\"Global Ctors for ", assemblyQualifiedName, "\"");
+            return string.Concat("_gctors_for_", assemblyQualifiedName.CleanUpName());
         }
 
         /// <summary>
@@ -5973,26 +5916,21 @@ namespace Il2Native.Logic
         {
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
-            this.Output.WriteLine(
-                "define {2} void {0}() {1}",
-                this.GetGlobalConstructorsFunctionName(),
-                "{",
-                this.Gctors ? "internal" : string.Empty);
+            this.Output.WriteLine("extern \"C\" void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
             this.SortStaticConstructorsByUsage();
 
             if (this.Gc && this.IsCoreLib)
             {
-                this.Output.WriteLine("call void @GC_init()");
+                this.Output.WriteLine("GC_init();");
             }
 
             foreach (var staticCtor in StaticConstructors)
             {
-                this.Output.WriteLine("call void {0}()", staticCtor.GetFullMethodName());
+                this.Output.WriteLine("{0}();", staticCtor.GetFullMethodName());
             }
 
-            this.Output.WriteLine("ret void");
             this.Output.Indent--;
             this.Output.WriteLine("}");
         }
@@ -6257,8 +6195,6 @@ namespace Il2Native.Logic
                 this.Output.Write("{0} = ", this.GetLocalVarName(local.LocalIndex));
                 this.WriteAlloca(this.GetEffectiveLocalType(local));
 
-                this.CheckIfExternalDeclarationIsRequired(local.LocalType);
-
                 this.Output.WriteLine(string.Empty);
             }
         }
@@ -6389,7 +6325,6 @@ namespace Il2Native.Logic
         private void WriteNewObject(OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
             var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
-            this.CheckIfExternalDeclarationIsRequired(declaringType);
             this.WriteNew(opCodeConstructorInfoPart, declaringType);
         }
 
@@ -6594,18 +6529,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (this.typeDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (
-                    var opaqueType in
-                        this.typeDeclRequired.Where(ot => !this.processedTypes.Contains(ot)))
-                {
-                    this.WriteTypeDeclarationStart(opaqueType.ToClass());
-                    this.Output.WriteLine("opaque");
-                }
-            }
-
             if (this.methodDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -6754,7 +6677,6 @@ namespace Il2Native.Logic
             }
 
             field.FieldType.WriteTypePrefix(this, false);
-            this.CheckIfExternalDeclarationIsRequired(field.FieldType);
 
             if (!isExternal)
             {
@@ -6845,35 +6767,26 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.Output.Write("%");
-
+            this.Output.Write("extern \"C\" struct ");
             type.ToClass().WriteTypeName(this.Output, false);
-
-            this.Output.Write(" = type ");
+            this.Output.Write(" ");
         }
 
         private void WriteTypeRequiredDefinitions(IType type)
         {
-            // get all required types for type definition
-            var requiredTypes = new NamespaceContainer<IType>();
-            var readingTypesContext = new ReadingTypesContext();
-            readingTypesContext.GenericTypeSpecializations = null;
-            readingTypesContext.GenericMethodSpecializations = null;
-            Il2Converter.ProcessRequiredITypesForITypes(new[] { type }, requiredTypes, readingTypesContext);
-            foreach (var requiredType in requiredTypes.Where(requiredType => !requiredType.IsGenericTypeDefinition && !requiredType.IsArray))
+            foreach (
+                var requiredDeclarationType in
+                    Il2Converter.GetRequiredDeclarationTypes(type)
+                                .Where(requiredType => !requiredType.IsGenericTypeDefinition)
+                                .Where(requiredDeclarationType => this.forwardTypeDeclarationWritten.Add(requiredDeclarationType)))
+            {
+                this.WriteTypeDeclarationStart(requiredDeclarationType);
+                this.Output.WriteLine(";");
+            }
+
+            foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            }
-
-            var interfacesList = type.GetInterfaces();
-            foreach (var @interface in interfacesList)
-            {
-                this.WriteTypeDefinitionIfNotWrittenYet(@interface);
-            }
-
-            foreach (var arrayType in readingTypesContext.AdditionalTypesToProcess)
-            {
-                this.CheckIfExternalDeclarationIsRequired(arrayType);
             }
         }
 
@@ -6883,7 +6796,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
-            if (this.IsProcessed(type))
+            if (this.IsTypeDefinitionWritten(type))
             {
                 return;
             }

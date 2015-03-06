@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="llvm_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\llvm_declarations.ll;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="c_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\c_declarations.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="llvm_gc_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\llvm_gc_declarations.ll;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="gc_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\gc_declarations.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>
