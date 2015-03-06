@@ -38,10 +38,6 @@ namespace Il2Native.Logic
         /// </summary>
         public static int PointerSize = 4;
 
-        /// <summary>
-        /// </summary>
-        private int methodNumberIncremental;
-
         public int ByValAlign = PointerSize;
 
         /// <summary>
@@ -167,6 +163,11 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private string outputFile;
+
+        /// <summary>
+        /// append declaration
+        /// </summary>
+        private string declarationPrefix = "extern \"C\" ";
 
         /// <summary>
         /// </summary>
@@ -451,18 +452,9 @@ namespace Il2Native.Logic
             ReadMethodInfo(ctor, genericContext);
 
             var isDelegateBodyFunctions = ctor.IsDelegateFunctionBody();
-            if ((ctor.IsAbstract || (NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
-            {
-                this.Output.Write("declare ");
-            }
-            else
-            {
-                this.Output.Write("define ");
-                if (ThisType.IsGenericType || ThisType.IsArray)
-                {
-                    this.Output.Write("linkonce_odr ");
-                }
-            }
+
+            // extern "c"
+            this.Output.Write(declarationPrefix);
 
             this.Output.Write("void ");
 
@@ -474,8 +466,6 @@ namespace Il2Native.Logic
 
             this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, ThisType, this.System.System_Void);
 
-            this.WriteMethodNumber();
-
             // write local declarations
             var methodBase = ctor.ResolveMethodBody(genericContext);
             if (methodBase.HasBody)
@@ -483,7 +473,6 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
-                this.WriteArgumentCopyDeclarations(ctor, this.HasMethodThis);
 
                 this.Output.StartMethodBody();
             }
@@ -491,8 +480,10 @@ namespace Il2Native.Logic
             {
                 this.WriteDelegateFunctionBody(ctor);
             }
-
-            methodNumberIncremental++;
+            else
+            {
+                this.Output.WriteLine(";");
+            }
         }
 
         // TODO: if DynamicCast does not work for an type then something wrong with this value, (it should return value equals to the number of inheritance route * pointer size, 
@@ -630,6 +621,9 @@ namespace Il2Native.Logic
             {
                 return;
             }
+            
+            // extern "c"
+            this.Output.Write(declarationPrefix);
 
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -640,22 +634,21 @@ namespace Il2Native.Logic
                     {
                         return;
                     }
-
-                    this.Output.Write("declare ");
                 }
                 else
                 {
                     this.WriteMethodDefinitionName(this.Output, method);
+                    Debug.Assert(false, "Investigate");
                     this.Output.Write(" = ");
                 }
 
                 if (method.IsUnmanagedDllImport)
                 {
-                    this.Output.Write("dllimport ");
+                    this.Output.Write("__declspec( dllimport ) ");
                 }
                 else if (method.IsUnmanagedMethodReference)
                 {
-                    this.Output.Write("external ");
+                    this.Output.Write("extern ");
                 }
 
                 if (method.IsUnmanagedMethodReference)
@@ -666,15 +659,7 @@ namespace Il2Native.Logic
                 if (!method.IsUnmanagedMethodReference && method.DllImportData != null &&
                     method.DllImportData.CallingConvention == CallingConvention.StdCall)
                 {
-                    this.Output.Write("x86_stdcallcc ");
-                }
-            }
-            else
-            {
-                this.Output.Write("define ");
-                if (ThisType.IsGenericType || method.IsGenericMethod || ThisType.IsArray || linkOnceOdr)
-                {
-                    this.Output.Write("linkonce_odr ");
+                    this.Output.Write("__stdcall ");
                 }
             }
 
@@ -707,10 +692,6 @@ namespace Il2Native.Logic
             {
                 this.Output.Write("*");
             }
-            else
-            {
-                this.WriteMethodNumber();
-            }
 
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
@@ -722,7 +703,6 @@ namespace Il2Native.Logic
                 if (!noLocalVars)
                 {
                     this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-                    this.WriteArgumentCopyDeclarations(method, this.HasMethodThis);
                 }
 
                 this.Output.StartMethodBody();
@@ -732,12 +712,13 @@ namespace Il2Native.Logic
                 if (isDelegateBodyFunctions)
                 {
                     this.WriteDelegateFunctionBody(method);
+                    this.Output.WriteLine(string.Empty);
                 }
-
-                this.Output.WriteLine(string.Empty);
+                else
+                {
+                    this.Output.WriteLine(";");
+                }
             }
-
-            methodNumberIncremental++;
         }
 
         /// <summary>
@@ -2309,7 +2290,7 @@ namespace Il2Native.Logic
                     ////opCode.Result = opResult;
                     var typedRefType = this.System.System_TypedReference;
                     this.WriteSetResultNumber(opCode, typedRefType);
-                    this.WriteAlloca(typedRefType);
+                    //this.WriteAlloca(typedRefType);
                     writer.WriteLine(string.Empty);
 
                     break;
@@ -2649,9 +2630,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public string GetArgVarName(string name, int index, bool arg = false)
+        public string GetArgVarName(string name, int index)
         {
-            return string.Format("%\"{2}{1}.{0}\"", name, index, arg ? "arg." : string.Empty);
+            return string.Format("{0}_{1}", name, index);
         }
 
         /// <summary>
@@ -2727,7 +2708,7 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetLocalVarName(int index)
         {
-            return string.Concat("%local", index);
+            return string.Concat("local", index);
         }
 
         /// <summary>
@@ -2749,9 +2730,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public string GetThisName(bool arg = false)
+        public string GetThisName()
         {
-            return string.Format("%\"{0}0.this\"", arg ? "arg." : string.Empty);
+            return "this_0";
         }
 
         /// <summary>
@@ -3098,46 +3079,6 @@ namespace Il2Native.Logic
             {
                 this.WriteOperandResult(writer, opCode, operandIndex);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="name">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="typeIn">
-        /// </param>
-        /// <param name="isThis">
-        /// </param>
-        public void WriteArgumentCopyDeclaration(string name, int index, IType typeIn, bool isThis = false)
-        {
-            if (!isThis && typeIn.IsStructureType())
-            {
-                return;
-            }
-
-            var type = isThis ? typeIn.ToClass() : typeIn;
-
-            var paramFullName = isThis ? this.GetThisName() : this.GetArgVarName(name, index);
-            var paramArgFullName = isThis ? this.GetThisName(true) : this.GetArgVarName(name, index, true);
-            this.Output.Write("{0} = ", paramFullName);
-
-            // for value types
-            this.Output.Write("alloca ");
-            type.WriteTypePrefix(this, type.IsStructureType() || isThis);
-            this.Output.Write(", align " + PointerSize);
-            this.Output.WriteLine(string.Empty);
-
-            this.Output.Write("store ");
-            type.WriteTypePrefix(this, type.IsStructureType() || isThis);
-            this.Output.Write(" {0}", paramArgFullName);
-            this.Output.Write(", ");
-            type.WriteTypePrefix(this, type.IsStructureType() || isThis);
-
-            this.Output.Write("* {0}", paramFullName);
-            this.Output.Write(", align " + PointerSize);
-            this.Output.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -3828,32 +3769,16 @@ namespace Il2Native.Logic
 
             var hasParameterWritten = false;
 
-            if (returnType.IsStructureType())
-            {
-                returnType.WriteTypePrefix(this, returnType.IsStructureType());
-                hasParameterWritten = true;
-
-                if (!noArgumentName)
-                {
-                    writer.Write(" noalias sret %agg.result");
-                }
-            }
-
             var start = hasThis ? 1 : 0;
 
             if (hasThis)
             {
-                if (returnType.IsStructureType())
-                {
-                    writer.Write(", ");
-                }
-
                 thisType.ToClass().WriteTypePrefix(this, true);
                 hasParameterWritten = true;
 
                 if (!noArgumentName)
                 {
-                    writer.Write(" {0}", this.GetThisName(true));
+                    writer.Write(" {0}", this.GetThisName());
                 }
             }
 
@@ -3873,31 +3798,13 @@ namespace Il2Native.Logic
                         writer.Write(", ");
                     }
 
-                    parameter.ParameterType.WriteTypePrefix(this, parameter.ParameterType.IsStructureType());
+                    parameter.ParameterType.WriteTypePrefix(this);
                     hasParameterWritten = true;
-
-                    if (parameter.ParameterType.IsStructureType())
-                    {
-                        this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
-                        if (!noArgumentName)
-                        {
-                            if (!parameter.IsOut && !parameter.IsRef)
-                            {
-                                writer.Write(" byval align " + this.ByValAlign);
-                            }
-
-                            writer.Write(" %\"{0}.", parameterIndex);
-                        }
-                    }
-                    else if (!noArgumentName)
-                    {
-                        writer.Write(" %\"arg.{0}.", parameterIndex);
-                    }
 
                     if (!noArgumentName)
                     {
-                        writer.Write(parameter.Name);
-                        writer.Write("\"");
+                        writer.Write(" ");
+                        writer.Write(GetArgVarName(parameter, parameterIndex));
                     }
                 }
 
@@ -4005,9 +3912,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodReturnType(CIndentedTextWriter writer, IMethod method)
         {
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsStructureType())
+            if (!method.ReturnType.IsVoid())
             {
-                method.ReturnType.WriteTypePrefix(this, false);
+                method.ReturnType.WriteTypePrefix(this);
                 writer.Write(" ");
             }
             else
@@ -5554,38 +5461,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="parametersInfo">
-        /// </param>
-        /// <param name="hasThis">
-        /// </param>
-        private void WriteArgumentCopyDeclarations(IMethod methodInfo, bool hasThis)
-        {
-            var parametersInfo = methodInfo.GetParameters();
-
-            if (hasThis)
-            {
-                this.WriteArgumentCopyDeclaration(null, 0, ThisType, true);
-            }
-
-            var index = hasThis ? 1 : 0;
-            var isAnonymousDelegate = methodInfo.IsAnonymousDelegate;
-            foreach (var parameterInfo in parametersInfo)
-            {
-                if (isAnonymousDelegate)
-                {
-                    isAnonymousDelegate = false;
-                }
-                else
-                {
-                    this.WriteArgumentCopyDeclaration(parameterInfo.Name, index, parameterInfo.ParameterType);
-                }
-
-                index++;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="pair">
         /// </param>
         private void WriteBytesData(KeyValuePair<int, byte[]> pair)
@@ -5621,7 +5496,7 @@ namespace Il2Native.Logic
             // get all references
             foreach (var reference in this.AllReferences.Reverse().Distinct())
             {
-                this.Output.WriteLine("call void " + this.GetGlobalConstructorsFunctionName(reference) + "();");
+                this.Output.WriteLine(this.GetGlobalConstructorsFunctionName(reference) + "();");
             }
         }
 
@@ -5632,7 +5507,7 @@ namespace Il2Native.Logic
             // get all references
             foreach (var reference in this.AllReferences.Skip(1).Reverse().Distinct())
             {
-                this.Output.WriteLine("declare void " + this.GetGlobalConstructorsFunctionName(reference) + "();");
+                this.Output.WriteLine(this.GetGlobalConstructorsFunctionName(reference) + "();");
             }
         }
 
@@ -5916,7 +5791,7 @@ namespace Il2Native.Logic
         {
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
-            this.Output.WriteLine("extern \"C\" void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
+            this.Output.WriteLine("{2}void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{", declarationPrefix);
             this.Output.Indent++;
 
             this.SortStaticConstructorsByUsage();
@@ -6192,10 +6067,10 @@ namespace Il2Native.Logic
         {
             foreach (var local in locals)
             {
-                this.Output.Write("{0} = ", this.GetLocalVarName(local.LocalIndex));
-                this.WriteAlloca(this.GetEffectiveLocalType(local));
-
-                this.Output.WriteLine(string.Empty);
+                this.GetEffectiveLocalType(local).WriteTypePrefix(this);
+                this.Output.Write(" ");
+                this.Output.Write(this.GetLocalVarName(local.LocalIndex));
+                this.Output.WriteLine(";");
             }
         }
 
@@ -6206,30 +6081,23 @@ namespace Il2Native.Logic
             var hasParameters = MainMethod.GetParameters().Any();
             if (!hasParameters)
             {
-                this.Output.Write("define i32 @main()");
+                this.Output.Write("{0}i32 main()", declarationPrefix);
             }
             else
             {
-                this.Output.Write("define i32 @main(i32 %\"arg.0.value\", i8** %\"arg.1.value\")");
+                this.Output.Write("{0}i32 main(i32 value_0, char** value_1)", declarationPrefix);
             }
-
-            this.WriteMethodNumber();
 
             this.Output.WriteLine(" {");
 
             this.Output.Indent++;
 
             // create locals and args
+            this.Output.WriteLine("i32 local1;");
             if (hasParameters)
             {
-                this.Output.Write("%local0 = alloca ");
                 this.System.System_String.ToArrayType(1).WriteTypePrefix(this);
-                this.Output.WriteLine(", align 4");
-                this.Output.WriteLine("%local1 = alloca i32, align 4");
-                this.Output.WriteLine("%\"0.value\" = alloca i32, align 4");
-                this.Output.WriteLine("store i32 %\"arg.0.value\", i32* %\"0.value\", align 4");
-                this.Output.WriteLine("%\"1.value\" = alloca i8**, align 4");
-                this.Output.WriteLine("store i8** %\"arg.1.value\", i8*** %\"1.value\", align 4");
+                this.Output.WriteLine(" local0;");
             }
 
             if (!this.Gctors)
@@ -6237,12 +6105,12 @@ namespace Il2Native.Logic
                 this.WriteCallGctors();
             }
 
-            var result = hasParameters ? this.WriteLoadingArgumentsForMain(MainMethod, null) : null;
+            ////var result = hasParameters ? this.WriteLoadingArgumentsForMain(MainMethod, null) : null;
 
             if (MainMethod.ReturnType.IsVoid())
             {
-                var method = "Void System.Environment.set_ExitCode(Int32)";
-                this.Output.WriteLine("call void @\"{0}\"(i32 0)", method);
+                var method = "Void_System_Environment_set_ExitCodeFInt32N";
+                this.Output.WriteLine("{0}(0)", method);
 
                 this.CheckIfMethodExternalDeclarationIsRequired(
                     new SynthesizedMethodStringAdapter(
@@ -6254,11 +6122,7 @@ namespace Il2Native.Logic
 
             if (!MainMethod.ReturnType.IsVoid())
             {
-                this.Output.Write("%1 = call i32 ");
-            }
-            else
-            {
-                this.Output.Write("call void ");
+                this.Output.Write("local1 = ");
             }
 
             this.WriteMethodDefinitionName(this.Output, MainMethod);
@@ -6266,22 +6130,18 @@ namespace Il2Native.Logic
 
             if (hasParameters)
             {
-                result.Type.WriteTypePrefix(this);
-                this.Output.Write(" ");
-                this.WriteResult(result);
+            ////    result.Type.WriteTypePrefix(this);
+            ////    this.Output.Write(" ");
+            ////    this.WriteResult(result);
+                this.Output.Write("0");
             }
 
             this.Output.WriteLine(");");
 
-            if (!MainMethod.ReturnType.IsVoid())
-            {
-                this.Output.WriteLine("ret i32 %1");
-            }
-            else
+            if (MainMethod.ReturnType.IsVoid())
             {
                 var method = "Int32 System.Environment.get_ExitCode()";
-                this.Output.WriteLine("%1 = call i32 @\"{0}\"()", method);
-                this.Output.WriteLine("ret i32 %1");
+                this.Output.WriteLine("local1 = {0}()", method);
 
                 this.CheckIfMethodExternalDeclarationIsRequired(
                     new SynthesizedMethodStringAdapter(
@@ -6289,6 +6149,8 @@ namespace Il2Native.Logic
                         "System.Environment",
                        this.System.System_Int32));
             }
+
+            this.Output.WriteLine("return local1;");
 
             this.Output.Indent--;
             this.Output.WriteLine("}");
@@ -6307,15 +6169,6 @@ namespace Il2Native.Logic
                 this.ActualWrite(this.Output, opCodePart, true);
                 this.Output.WriteLine(string.Empty);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        private void WriteMethodNumber()
-        {
-            // write number of method
-            this.Output.Write(" #");
-            this.Output.Write(methodNumberIncremental);
         }
 
         /// <summary>
@@ -6767,7 +6620,7 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
-            this.Output.Write("extern \"C\" struct ");
+            this.Output.Write("{0}struct ", declarationPrefix);
             type.ToClass().WriteTypeName(this.Output, false);
             this.Output.Write(" ");
         }

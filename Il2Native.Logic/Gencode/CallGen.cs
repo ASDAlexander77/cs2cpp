@@ -461,7 +461,7 @@ namespace Il2Native.Logic.Gencode
 
                 // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
                 cWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
-                cWriter.WriteAlloca(methodInfo.ReturnType);
+                //cWriter.WriteAlloca(methodInfo.ReturnType);
                 writer.WriteLine(string.Empty);
             }
             else if (!isReturnVoidType)

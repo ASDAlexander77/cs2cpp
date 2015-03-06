@@ -471,22 +471,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="type">
-        /// </param>
-        public static void WriteAlloca(this CWriter cWriter, IType type)
-        {
-            var writer = cWriter.Output;
-
-            // for value types
-            writer.Write("alloca ");
-            type.WriteTypePrefix(cWriter);
-            writer.Write(", align " + CWriter.PointerSize);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="toType">

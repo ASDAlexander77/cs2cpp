@@ -50,32 +50,7 @@ namespace Il2Native.Logic
             var savedIndent = Indent;
             Indent = 0;
 
-            var lines = this.sb.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
-            {
-                if (!line.Contains("alloca "))
-                {
-                    continue;
-                }
-
-                if (line.IndexOf("%.r") > 0)
-                {
-                    // to support localalloc
-                    continue;
-                }
-
-                base.WriteLine(line);
-            }
-
-            foreach (var line in lines)
-            {
-                if (string.IsNullOrWhiteSpace(line) || (line.Contains("alloca ") && line.IndexOf("%.r") <= 0))
-                {
-                    continue;
-                }
-
-                base.WriteLine(line);
-            }
+            base.Write(this.sb.ToString());
 
             this.isMethod = false;
 

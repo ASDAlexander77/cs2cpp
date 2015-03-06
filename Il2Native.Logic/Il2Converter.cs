@@ -231,10 +231,10 @@ namespace Il2Native.Logic
                     {
                         codeWriter.WriteConstructorStart(ctor, genericTypeContext);
 
-                        foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? ctor.GetMethodDefinition() : ctor, genericTypeContext))
-                        {
-                            codeWriter.Write(ilCode);
-                        }
+                        //foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? ctor.GetMethodDefinition() : ctor, genericTypeContext))
+                        //{
+                        //    codeWriter.Write(ilCode);
+                        //}
 
                         codeWriter.WriteConstructorEnd(ctor, genericTypeContext);
                     }
@@ -270,10 +270,10 @@ namespace Il2Native.Logic
 
                         codeWriter.WriteMethodStart(method, genericMethodContext);
 
-                        foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
-                        {
-                            codeWriter.Write(ilCode);
-                        }
+                        //foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
+                        //{
+                        //    codeWriter.Write(ilCode);
+                        //}
 
                         codeWriter.WriteMethodEnd(method, genericMethodContext);
                     }
@@ -293,10 +293,10 @@ namespace Il2Native.Logic
 
                                 codeWriter.WriteMethodStart(methodSpec, genericMethodContext);
 
-                                foreach (var ilCode in ilReader.OpCodes(methodDefinition ?? method, genericMethodContext))
-                                {
-                                    codeWriter.Write(ilCode);
-                                }
+                                //foreach (var ilCode in ilReader.OpCodes(methodDefinition ?? method, genericMethodContext))
+                                //{
+                                //    codeWriter.Write(ilCode);
+                                //}
 
                                 codeWriter.WriteMethodEnd(methodSpec, genericMethodContext);
                             }
@@ -1086,36 +1086,36 @@ namespace Il2Native.Logic
         private static void Writing(
             IlReader ilReader,
             ICodeWriter codeWriter,
-            IList<IType> newListOfITypes,
+            IList<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // writing
             codeWriter.WriteStart(ilReader);
 
-            WriteForwardDeclarations(codeWriter, newListOfITypes);
+            WriteForwardDeclarations(codeWriter, types);
 
             ConvertAllTypes(
                 ilReader,
                 codeWriter,
-                newListOfITypes,
+                types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
-            //ConvertAllTypes(
-            //    ilReader,
-            //    codeWriter,
-            //    newListOfITypes,
-            //    genericMethodSpecializationsSorted,
-            //    ConvertingMode.Definition);
+            ConvertAllTypes(
+                ilReader,
+                codeWriter,
+                types,
+                genericMethodSpecializationsSorted,
+                ConvertingMode.Definition);
 
-            //// Append definition of Generic Methods of not used non-generic types
-            //ConvertAllTypes(
-            //    ilReader,
-            //    codeWriter,
-            //    genericMethodSpecializationsSorted.Keys.Where(k => !newListOfITypes.Contains(k)).ToList(),
-            //    genericMethodSpecializationsSorted,
-            //    ConvertingMode.Definition,
-            //    true);
+            // Append definition of Generic Methods of not used non-generic types
+            ConvertAllTypes(
+                ilReader,
+                codeWriter,
+                genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
+                genericMethodSpecializationsSorted,
+                ConvertingMode.Definition,
+                true);
 
             codeWriter.WriteEnd();
 

@@ -34,6 +34,8 @@ namespace Il2Native.Logic
             typeBaseName = typeBaseName.Replace('[', 'A');
             typeBaseName = typeBaseName.Replace(']', 'R');
             typeBaseName = typeBaseName.Replace('&', 'R');
+            typeBaseName = typeBaseName.Replace('(', 'F');
+            typeBaseName = typeBaseName.Replace(')', 'N');
             return typeBaseName;
         }
 
@@ -351,29 +353,10 @@ namespace Il2Native.Logic
         {
             if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
             {
-                return string.Concat('@', methodBase.Name.StartsWith("llvm_") ? methodBase.Name.Replace('_', '.') : methodBase.Name);
+                return methodBase.Name;
             }
 
-            if (methodBase.ToString().StartsWith("%"))
-            {
-                return methodBase.ToString();
-            }
-
-            var sb = new StringBuilder();
-            sb.Append("@\"");
-
-            if (ownerOfExplicitInterface != null)
-            {
-                sb.Append(methodBase.ToString(ownerOfExplicitInterface));
-            }
-            else
-            {
-                sb.Append(methodBase);
-            }
-
-            sb.Append('"');
-
-            return sb.ToString();
+            return ownerOfExplicitInterface != null ? methodBase.ToString(ownerOfExplicitInterface).CleanUpName() : methodBase.ToString().CleanUpName();
         }
 
         /// <summary>

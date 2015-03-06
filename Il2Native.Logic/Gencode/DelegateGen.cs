@@ -304,13 +304,6 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
 
-            // create this variable
-            cWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
-            for (var i = 1; i <= cWriter.GetArgCount() + 1; i++)
-            {
-                cWriter.WriteArgumentCopyDeclaration(cWriter.GetArgName(i), i, cWriter.GetArgType(i));
-            }
-
             // load 'this' variable
             cWriter.WriteLlvmLoad(
                 opCode,
@@ -393,16 +386,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             var opCode = OpCodePart.CreateNop;
-
-            if (!disableLoadingParams)
-            {
-                // create this variable
-                cWriter.WriteArgumentCopyDeclaration(null, 0, method.DeclaringType, true);
-                for (var i = 1; i <= cWriter.GetArgCount() + 1; i++)
-                {
-                    cWriter.WriteArgumentCopyDeclaration(cWriter.GetArgName(i), i, cWriter.GetArgType(i));
-                }
-            }
 
             // load 'this' variable
             cWriter.WriteLlvmLoad(
