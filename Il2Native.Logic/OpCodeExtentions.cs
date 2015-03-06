@@ -26,13 +26,13 @@ namespace Il2Native.Logic
         {
             typeBaseName = typeBaseName.Replace(' ', '_');
             typeBaseName = typeBaseName.Replace('.', '_');
-            typeBaseName = typeBaseName.Replace('<', '_');
-            typeBaseName = typeBaseName.Replace('>', '_');
+            typeBaseName = typeBaseName.Replace('<', 'G');
+            typeBaseName = typeBaseName.Replace('>', 'C');
             typeBaseName = typeBaseName.Replace('-', '_');
             typeBaseName = typeBaseName.Replace(',', '_');
             typeBaseName = typeBaseName.Replace('*', 'P');
             typeBaseName = typeBaseName.Replace('[', 'A');
-            typeBaseName = typeBaseName.Replace(']', 'R');
+            typeBaseName = typeBaseName.Replace(']', 'Y');
             typeBaseName = typeBaseName.Replace('&', 'R');
             typeBaseName = typeBaseName.Replace('(', 'F');
             typeBaseName = typeBaseName.Replace(')', 'N');

@@ -270,10 +270,14 @@ namespace Il2Native.Logic
 
                         codeWriter.WriteMethodStart(method, genericMethodContext);
 
-                        //foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
-                        //{
-                        //    codeWriter.Write(ilCode);
-                        //}
+                        // TODO: remove next if when all is done
+                        if (method.Name == "Main")
+                        {
+                            foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
+                            {
+                                codeWriter.Write(ilCode);
+                            }
+                        }
 
                         codeWriter.WriteMethodEnd(method, genericMethodContext);
                     }
