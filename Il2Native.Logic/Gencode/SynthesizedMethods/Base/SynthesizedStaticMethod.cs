@@ -21,7 +21,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedStaticMethod : SynthesizedMethodTypeBase, IMethodBodyCustomAction
     {
-        private readonly Action<LlvmWriter, OpCodePart> action;
+        private readonly Action<CWriter, OpCodePart> action;
         private readonly IEnumerable<IParameter> parameters;
         private readonly IType returnType;
 
@@ -61,7 +61,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             IType declaringType,
             IType returnType,
             IEnumerable<IParameter> parameters,
-            Action<LlvmWriter, OpCodePart> action)
+            Action<CWriter, OpCodePart> action)
             : this(name, declaringType, returnType, parameters)
         {
             this.action = action;
@@ -82,7 +82,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return this.returnType; }
         }
 
-        public void Execute(LlvmWriter writer, OpCodePart opCode)
+        public void Execute(CWriter writer, OpCodePart opCode)
         {
             if (this.action != null)
             {

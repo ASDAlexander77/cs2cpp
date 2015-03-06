@@ -56,14 +56,14 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRtti(this IType type, LlvmWriter llvmWriter)
+        public static void WriteRtti(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; RTTI class");
-            type.WriteRttiClassDefinition(llvmWriter);
+            type.WriteRttiClassDefinition(cWriter);
             writer.WriteLine("; RTTI pointer");
             type.WriteRttiPointerClassDefinition(writer);
         }
@@ -72,30 +72,30 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRttiClassDefinition(this IType type, LlvmWriter llvmWriter)
+        public static void WriteRttiClassDefinition(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             type.WriteRttiClassName(writer);
-            type.WriteRttiClassInfo(llvmWriter);
+            type.WriteRttiClassInfo(cWriter);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRttiClassInfo(this IType type, LlvmWriter llvmWriter)
+        public static void WriteRttiClassInfo(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.Write("@\"{0}\" = linkonce_odr constant ", type.GetRttiInfoName());
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(' ');
-            type.WriteRttiClassInfoDefinition(llvmWriter);
+            type.WriteRttiClassInfoDefinition(cWriter);
         }
 
         /// <summary>
@@ -134,42 +134,42 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRttiClassInfoDefinition(this IType type, LlvmWriter llvmWriter)
+        public static void WriteRttiClassInfoDefinition(this IType type, CWriter cWriter)
         {
             var interfaces = type.GetInterfaces();
             var anyInterface = interfaces.Any();
             var onlyInterface = interfaces.Count() == 1;
             if (type.BaseType == null && !anyInterface)
             {
-                RttiClassWithNoBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
+                RttiClassWithNoBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, cWriter);
                 return;
             }
 
             if (type.BaseType != null)
             {
-                llvmWriter.AddRequiredRttiDeclaration(type.BaseType);
+                cWriter.AddRequiredRttiDeclaration(type.BaseType);
             }
 
             if (anyInterface)
             {
                 foreach (var @interface in type.GetInterfaces())
                 {
-                    llvmWriter.AddRequiredRttiDeclaration(@interface);
+                    cWriter.AddRequiredRttiDeclaration(@interface);
                 }
 
                 if (type.BaseType == null && onlyInterface)
                 {
-                    RttiClassWithNoBaseAndSingleInterface.WriteRttiClassInfoDefinition(type, llvmWriter);
+                    RttiClassWithNoBaseAndSingleInterface.WriteRttiClassInfoDefinition(type, cWriter);
                     return;
                 }
 
-                RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
+                RttiClassWithBaseAndInterfaces.WriteRttiClassInfoDefinition(type, cWriter);
                 return;
             }
 
-            RttiClassWithBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, llvmWriter);
+            RttiClassWithBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, cWriter);
         }
 
         /// <summary>

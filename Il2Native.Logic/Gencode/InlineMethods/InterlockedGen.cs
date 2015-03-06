@@ -27,20 +27,20 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="attribs">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         public static void IncDecInterlockBase(
             this OpCodePart opCodeMethodInfo,
             string oper,
             string attribs,
-            LlvmWriter llvmWriter)
+            CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var first = opCodeMethodInfo.OpCodeOperands.First();
             var resultType = first.Result.Type.ToDereferencedType();
 
-            llvmWriter.WriteSetResultNumber(opCodeMethodInfo, resultType);
+            cWriter.WriteSetResultNumber(opCodeMethodInfo, resultType);
 
             writer.Write(oper);
 
@@ -53,13 +53,13 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(", ");
                 }
 
-                operand.Result.Type.WriteTypePrefix(llvmWriter);
+                operand.Result.Type.WriteTypePrefix(cWriter);
                 writer.Write(' ');
-                llvmWriter.WriteResult(operand.Result);
+                cWriter.WriteResult(operand.Result);
             }
 
             writer.Write(", ");
-            resultType.WriteTypePrefix(llvmWriter);
+            resultType.WriteTypePrefix(cWriter);
             writer.Write(" 1");
 
             writer.WriteLine(attribs);
@@ -75,17 +75,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="extractValue">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         public static void InterlockBase(
             this OpCodePart opCodeMethodInfo,
             string oper,
             string attribs,
             bool extractValue,
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             int[] operands)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; {0} start", oper);
 
@@ -97,12 +97,12 @@ namespace Il2Native.Logic.Gencode
             // TODO: fix issue with to change value for IntPtr/UIntPtr
 
             bool realExchange = false;
-            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(llvmWriter.System.System_IntPtr) || operType.TypeEquals(llvmWriter.System.System_UIntPtr);
+            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(cWriter.System.System_IntPtr) || operType.TypeEquals(cWriter.System.System_UIntPtr);
             if (pointerExchange)
             {
-                intType = llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize);
+                intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
 
-                llvmWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
+                cWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
@@ -112,17 +112,17 @@ namespace Il2Native.Logic.Gencode
                         originalType = operand.Result.Type;
                     }
 
-                    llvmWriter.WritePtrToInt(operand, operand.Result, intType);
+                    cWriter.WritePtrToInt(operand, operand.Result, intType);
                     writer.WriteLine(string.Empty);
                 }
             }
             else if (operType.IsReal())
             {
                 realExchange = true;
-                intType = llvmWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : LlvmWriter.PointerSize);
+                intType = cWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : CWriter.PointerSize);
 
                 // bitcast float to i32 and double to i64
-                llvmWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
+                cWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
@@ -134,7 +134,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (!(operand.Result is ConstValue))
                     {
-                        llvmWriter.WriteBitcast(operand, operand.Result, intType, false);
+                        cWriter.WriteBitcast(operand, operand.Result, intType, false);
                         writer.WriteLine(string.Empty);
                     }
                     else
@@ -144,7 +144,7 @@ namespace Il2Native.Logic.Gencode
                 }
             } 
             
-            var opResult = llvmWriter.WriteSetResultNumber(
+            var opResult = cWriter.WriteSetResultNumber(
                 opCodeMethodInfo,
                 intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
 
@@ -153,32 +153,32 @@ namespace Il2Native.Logic.Gencode
             var index = 0;
             foreach (var operandNumber in operands)
             {
-                llvmWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
+                cWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
             }
 
             writer.WriteLine(attribs);
 
             if (extractValue)
             {
-                llvmWriter.WriteSetResultNumber(
+                cWriter.WriteSetResultNumber(
                     opCodeMethodInfo,
                     intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
                 writer.Write("extractvalue { ");
-                opResult.Type.WriteTypePrefix(llvmWriter);
+                opResult.Type.WriteTypePrefix(cWriter);
                 writer.Write(", i1 } ");
-                llvmWriter.WriteResult(opResult);
+                cWriter.WriteResult(opResult);
                 writer.WriteLine(", 0");
             }
 
             if (pointerExchange)
             {
                 // cast back
-                llvmWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
+                cWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
             }
             else if (realExchange)
             {
                 // cast back to float/double
-                llvmWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
+                cWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
             }
 
             writer.WriteLine(string.Empty);
@@ -223,52 +223,52 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCodeMethodInfo">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         public static void WriteInterlockedFunction(
             this IMethod method,
             OpCodePart opCodeMethodInfo,
-            LlvmWriter llvmWriter)
+            CWriter cWriter)
         {
             switch (method.MetadataName)
             {
                 case "Increment":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", llvmWriter);
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", cWriter);
                     break;
 
                 case "Decrement":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", llvmWriter);
+                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", cWriter);
                     break;
 
                 case "Exchange`1":
                 case "Exchange":
-                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, llvmWriter, new[] { 0, 1 });
+                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, cWriter, new[] { 0, 1 });
                     break;
 
                 case "CompareExchange`1":
                 case "CompareExchange":
                     opCodeMethodInfo.InterlockBase(
                         "cmpxchg ",
-                        llvmWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
-                        !llvmWriter.IsLlvm35 && !llvmWriter.IsLlvm34OrLower,
-                        llvmWriter,
+                        cWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
+                        !cWriter.IsLlvm35 && !cWriter.IsLlvm34OrLower,
+                        cWriter,
                         new[] { 0, 2, 1 });
                     break;
             }
         }
 
-        private static int WriteParameter(this LlvmWriter llvmWriter, int index, OpCodePart operand)
+        private static int WriteParameter(this CWriter cWriter, int index, OpCodePart operand)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             if (index++ > 0)
             {
                 writer.Write(", ");
             }
 
-            operand.Result.Type.WriteTypePrefix(llvmWriter);
+            operand.Result.Type.WriteTypePrefix(cWriter);
             writer.Write(' ');
-            llvmWriter.WriteResult(operand.Result);
+            cWriter.WriteResult(operand.Result);
             return index;
         }
     }

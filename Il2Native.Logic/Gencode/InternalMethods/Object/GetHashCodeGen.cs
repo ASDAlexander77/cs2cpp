@@ -61,7 +61,7 @@
                 new SynthesizedThisMethod(
                     SynthesizedGetSizeMethod.Name,
                     typeResolver.System.System_Object,
-                    typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize),
+                    typeResolver.GetIntTypeByByteSize(CWriter.PointerSize),
                     true));
             tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
 

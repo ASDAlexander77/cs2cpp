@@ -56,14 +56,14 @@ namespace Il2Native.Logic.Gencode
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
         }
 
-        public static int GetDataFieldIndex(IType arrayType, LlvmWriter llvmWriter)
+        public static int GetDataFieldIndex(IType arrayType, CWriter cWriter)
         {
-            return llvmWriter.GetFieldIndex(arrayType, "data");
+            return cWriter.GetFieldIndex(arrayType, "data");
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -72,13 +72,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="length">
         /// </param>
         public static FullyDefinedReference WriteSingleDimArrayAllocationSize(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCode,
             IType arrayType)
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
 
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; Calculate SingleDim allocation size");
 
@@ -87,7 +87,7 @@ namespace Il2Native.Logic.Gencode
             IList<IType> locals;
             IList<IParameter> parameters;
             GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
-                llvmWriter,
+                cWriter,
                 arrayType,
                 out code,
                 out tokenResolutions,
@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
             var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
 
             // actual write
-            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
+            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
             return opCodes.Last().Result;
         }
 
@@ -127,7 +127,7 @@ namespace Il2Native.Logic.Gencode
             // calculate alignment
             codeList.Add(Code.Dup);
 
-            var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
             codeList.AppendLoadInt(alignForType - 1);
             codeList.Add(Code.Add);
 
@@ -295,7 +295,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="elementType">
         /// </param>
@@ -303,20 +303,20 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetArrayTypeHeader(this LlvmWriter llvmWriter, IType elementType, int length)
+        public static string GetArrayTypeHeader(this CWriter cWriter, IType elementType, int length)
         {
-            var typeString = llvmWriter.WriteToString(
+            var typeString = cWriter.WriteToString(
                 () =>
                 {
-                    elementType.WriteTypePrefix(llvmWriter);
+                    elementType.WriteTypePrefix(cWriter);
                 });
 
-            return "{ " + GetSingleDimArrayPrefixDataType(llvmWriter) + ", [" + length + " x " + typeString + "] }";
+            return "{ " + GetSingleDimArrayPrefixDataType(cWriter) + ", [" + length + " x " + typeString + "] }";
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="name">
         /// </param>
@@ -327,20 +327,20 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static string GetArrayTypeReference(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             string name,
             IType elementType,
             int length)
         {
-            var convertString = llvmWriter.WriteToString(
+            var convertString = cWriter.WriteToString(
                 () =>
                 {
-                    var writer = llvmWriter.Output;
+                    var writer = cWriter.Output;
 
                     var array = elementType.ToArrayType(1);
                     writer.Write("bitcast (");
-                    writer.Write("{1}* {0} to ", name, llvmWriter.GetArrayTypeHeader(elementType, length));
-                    array.WriteTypePrefix(llvmWriter);
+                    writer.Write("{1}* {0} to ", name, cWriter.GetArrayTypeHeader(elementType, length));
+                    array.WriteTypePrefix(cWriter);
                     writer.Write(")");
                 });
 
@@ -349,7 +349,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="elementType">
         /// </param>
@@ -360,20 +360,20 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static string GetArrayValuesHeader(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             IType elementType,
             int length,
             int storeLength)
         {
-            var typeString = llvmWriter.WriteToString(
+            var typeString = cWriter.WriteToString(
                 () =>
                 {
-                    var writer = llvmWriter.Output;
-                    elementType.WriteTypePrefix(llvmWriter);
+                    var writer = cWriter.Output;
+                    elementType.WriteTypePrefix(cWriter);
                 });
 
-            return GetSingleDimArrayPrefixNullConstData(llvmWriter) + ", i16 0, i16 " + elementType.GetTypeCode() +
-                   ", i32 " + elementType.GetTypeSize(llvmWriter, true) + ", i32 " + storeLength + ", [" +
+            return GetSingleDimArrayPrefixNullConstData(cWriter) + ", i16 0, i16 " + elementType.GetTypeCode() +
+                   ", i32 " + elementType.GetTypeSize(cWriter, true) + ", i32 " + storeLength + ", [" +
                    length + " x " + typeString + "]";
         }
 
@@ -395,25 +395,25 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteArrayGetLength(this LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteArrayGetLength(this CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
-            llvmWriter.LoadElement(writer, opCode, "length");
+            var writer = cWriter.Output;
+            cWriter.LoadElement(writer, opCode, "length");
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteArrayInit(this LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteArrayInit(this CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; Init array with values");
 
@@ -431,16 +431,16 @@ namespace Il2Native.Logic.Gencode
             var arrayLength = hasSize
                 ? int.Parse(
                     opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
-                : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(llvmWriter, true);
+                : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(cWriter, true);
 
-            arrayLength = arrayLength.Align(LlvmWriter.PointerSize);
+            arrayLength = arrayLength.Align(CWriter.PointerSize);
 
             var subData = new byte[arrayLength];
             Array.Copy(data, subData, Math.Min(data.Length, arrayLength));
 
-            var bytesIndex = llvmWriter.GetBytesIndex(subData);
-            var byteType = llvmWriter.System.System_Byte;
-            var arrayData = llvmWriter.GetArrayTypeReference(
+            var bytesIndex = cWriter.GetBytesIndex(subData);
+            var byteType = cWriter.System.System_Byte;
+            var arrayData = cWriter.GetArrayTypeReference(
                 string.Concat("@.bytes", bytesIndex),
                 byteType,
                 arrayLength);
@@ -449,12 +449,12 @@ namespace Il2Native.Logic.Gencode
 
             var opCodeConvert = OpCodePart.CreateNop;
 
-            llvmWriter.WriteFieldAccess(writer, opCode, GetDataFieldIndex(storedResult.Type, llvmWriter));
+            cWriter.WriteFieldAccess(writer, opCode, GetDataFieldIndex(storedResult.Type, cWriter));
             writer.WriteLine(string.Empty);
 
             var firstElementResult = opCode.Result;
 
-            llvmWriter.WriteBitcast(opCodeConvert, firstElementResult);
+            cWriter.WriteBitcast(opCodeConvert, firstElementResult);
             var firstBytes = opCodeConvert.Result;
             writer.WriteLine(string.Empty);
 
@@ -467,13 +467,13 @@ namespace Il2Native.Logic.Gencode
                 arrayData,
                 byteArrayType);
             var secondFirstElementResult = GetArrayDataAddressHelper(
-                llvmWriter,
+                cWriter,
                 opCodeDataHolder,
                 byteType,
-                GetDataFieldIndex(byteArrayType, llvmWriter) + llvmWriter.CalculateFirstFieldPositionInType(byteArrayType),
+                GetDataFieldIndex(byteArrayType, cWriter) + cWriter.CalculateFirstFieldPositionInType(byteArrayType),
                 0);
 
-            llvmWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
+            cWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
             var secondBytes = opCodeConvert.Result;
             writer.WriteLine(string.Empty);
 
@@ -482,18 +482,18 @@ namespace Il2Native.Logic.Gencode
                 firstBytes,
                 secondBytes,
                 arrayLength,
-                LlvmWriter.PointerSize /*Align*/);
+                CWriter.PointerSize /*Align*/);
 
             opCode.OpCodeOperands[0].Result = storedResult;
 
             writer.WriteLine(string.Empty);
 
-            llvmWriter.CheckIfTypeIsRequiredForBody(llvmWriter.System.System_Byte.ToArrayType(1));
+            cWriter.CheckIfTypeIsRequiredForBody(cWriter.System.System_Byte.ToArrayType(1));
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -506,35 +506,35 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         private static IncrementalResult GetArrayDataAddressHelper(
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             OpCodePart opCode,
             IType dataType,
             int dataIndex,
             int secondIndex = -1)
         {
             // TODO: is obsolete
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
             if (!arrayInstanceResult.Type.IsArray)
             {
                 // this is Array instance
                 var opCodeNope = OpCodePart.CreateNop;
-                llvmWriter.WriteBitcast(
+                cWriter.WriteBitcast(
                     opCodeNope,
                     arrayInstanceResult,
-                    llvmWriter.System.System_Byte.ToArrayType(1));
+                    cWriter.System.System_Byte.ToArrayType(1));
                 arrayInstanceResult = opCodeNope.Result;
 
                 writer.WriteLine(string.Empty);
             }
 
-            var result = llvmWriter.WriteSetResultNumber(opCode, dataType);
+            var result = cWriter.WriteSetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
-            arrayInstanceResult.Type.WriteTypePrefix(llvmWriter, true);
+            arrayInstanceResult.Type.WriteTypePrefix(cWriter, true);
             writer.Write(" ");
 
-            llvmWriter.WriteResult(arrayInstanceResult);
+            cWriter.WriteResult(arrayInstanceResult);
             writer.Write(", i32 0, i32 {0}", dataIndex);
             if (secondIndex != -1)
             {

@@ -44,11 +44,11 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRttiClassInfoDefinition(IType type, LlvmWriter llvmWriter)
+        public static void WriteRttiClassInfoDefinition(IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var @interfaces = type.GetInterfaces();
 
@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
 
                 // apply fields shift + base item
                 // nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
-                nextFlag += 1024 * (type.BaseType.GetTypeSize(llvmWriter) / LlvmWriter.PointerSize);
+                nextFlag += 1024 * (type.BaseType.GetTypeSize(cWriter) / CWriter.PointerSize);
             }
 
             foreach (var @interface in type.GetInterfaces())

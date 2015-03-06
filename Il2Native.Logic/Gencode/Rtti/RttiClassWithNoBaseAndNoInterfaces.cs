@@ -31,11 +31,11 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteRttiClassInfoDefinition(IType type, LlvmWriter llvmWriter)
+        public static void WriteRttiClassInfoDefinition(IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("{");
             writer.Indent++;

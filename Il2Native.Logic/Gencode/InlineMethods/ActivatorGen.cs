@@ -51,14 +51,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCodeMethodInfo">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <exception cref="NotImplementedException">
         /// </exception>
         public static void WriteActivatorFunction(
             this IMethod method,
             OpCodePart opCodeMethodInfo,
-            LlvmWriter llvmWriter)
+            CWriter cWriter)
         {
             switch (method.MetadataName)
             {

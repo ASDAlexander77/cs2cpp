@@ -34,7 +34,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -43,14 +43,14 @@ namespace Il2Native.Logic.Gencode
         /// <param name="length">
         /// </param>
         public static FullyDefinedReference WriteStringAllocationSize(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCode,
             IType stringType,
             IType charType)
         {
             Debug.Assert(stringType.IsString, "This is for string only");
 
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; Calculate String allocation size");
 
@@ -59,7 +59,7 @@ namespace Il2Native.Logic.Gencode
             IList<IType> locals;
             IList<IParameter> parameters;
             GetCalculationPartOfStringAllocationSizeMethodBody(
-                llvmWriter,
+                cWriter,
                 stringType,
                 charType,
                 out code,
@@ -70,7 +70,7 @@ namespace Il2Native.Logic.Gencode
             var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
 
             // actual write
-            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
+            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
             return opCodes.Last().Result;
         }
 
@@ -100,7 +100,7 @@ namespace Il2Native.Logic.Gencode
             // calculate alignment
             codeList.Add(Code.Dup);
 
-            var alignForType = Math.Max(LlvmWriter.PointerSize, !charType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            var alignForType = Math.Max(CWriter.PointerSize, !charType.IsStructureType() ? elementSize : CWriter.PointerSize);
             codeList.AppendLoadInt(alignForType - 1);
             codeList.Add(Code.Add);
 
@@ -172,19 +172,19 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <returns>
         /// </returns>
-        public static string GetStringPrefixConstData(LlvmWriter llvmWriter)
+        public static string GetStringPrefixConstData(CWriter cWriter)
         {
             if (_stringPrefixConstData != null)
             {
                 return _stringPrefixConstData;
             }
 
-            ITypeResolver typeResolver = llvmWriter;
+            ITypeResolver typeResolver = cWriter;
 
             var stringSystemType = typeResolver.System.System_String;
 
-            llvmWriter.AddRequiredVirtualTablesDeclaration(stringSystemType);
-            llvmWriter.AddRequiredRttiDeclaration(stringSystemType);
+            cWriter.AddRequiredVirtualTablesDeclaration(stringSystemType);
+            cWriter.AddRequiredRttiDeclaration(stringSystemType);
 
             var sb = new StringBuilder();
 
@@ -210,7 +210,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="charType">
         /// </param>
@@ -218,21 +218,21 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetStringTypeHeader(this LlvmWriter llvmWriter, int length)
+        public static string GetStringTypeHeader(this CWriter cWriter, int length)
         {
-            var charType = llvmWriter.System.System_Char;
-            var typeString = llvmWriter.WriteToString(
+            var charType = cWriter.System.System_Char;
+            var typeString = cWriter.WriteToString(
                 () =>
                 {
-                    charType.WriteTypePrefix(llvmWriter);
+                    charType.WriteTypePrefix(cWriter);
                 });
 
-            return "{ " + GetStringPrefixDataType(llvmWriter) + ", [" + length + " x " + typeString + "] }";
+            return "{ " + GetStringPrefixDataType(cWriter) + ", [" + length + " x " + typeString + "] }";
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="name">
         /// </param>
@@ -243,20 +243,20 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static string GetStringTypeReference(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             string name,
             int length)
         {
-            var convertString = llvmWriter.WriteToString(
+            var convertString = cWriter.WriteToString(
                 () =>
                 {
-                    var writer = llvmWriter.Output;
+                    var writer = cWriter.Output;
 
-                    var charType = llvmWriter.System.System_Char;
-                    var stringType = llvmWriter.System.System_String;
+                    var charType = cWriter.System.System_Char;
+                    var stringType = cWriter.System.System_String;
                     writer.Write("bitcast (");
-                    writer.Write("{1}* {0} to ", name, llvmWriter.GetStringTypeHeader(length));
-                    stringType.WriteTypePrefix(llvmWriter);
+                    writer.Write("{1}* {0} to ", name, cWriter.GetStringTypeHeader(length));
+                    stringType.WriteTypePrefix(cWriter);
                     writer.Write(")");
                 });
 
@@ -265,7 +265,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="elementType">
         /// </param>
@@ -276,18 +276,18 @@ namespace Il2Native.Logic.Gencode
         /// <returns>
         /// </returns>
         public static string GetStringValuesHeader(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             int length,
             int storeLength)
         {
-            var charType = llvmWriter.System.System_Char;
-            var typeString = llvmWriter.WriteToString(
+            var charType = cWriter.System.System_Char;
+            var typeString = cWriter.WriteToString(
                 () =>
                 {
-                    charType.WriteTypePrefix(llvmWriter);
+                    charType.WriteTypePrefix(cWriter);
                 });
 
-            return GetStringPrefixConstData(llvmWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
+            return GetStringPrefixConstData(cWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
         }
 
         public static IMethod GetCtorMethodByParameters(IType stringType, IEnumerable<IParameter> getParameters, ITypeResolver typeResolver)

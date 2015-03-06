@@ -27,7 +27,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetSizeMethod(IType type, ITypeResolver typeResolver)
-            : base(Name, type, typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize))
+            : base(Name, type, typeResolver.GetIntTypeByByteSize(CWriter.PointerSize))
         {
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {

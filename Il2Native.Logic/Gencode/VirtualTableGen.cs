@@ -23,8 +23,8 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> VirtualInterfaceTableByType = 
-            new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
+        private static readonly IDictionary<string, List<CWriter.Pair<IMethod, IMethod>>> VirtualInterfaceTableByType = 
+            new SortedDictionary<string, List<CWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
@@ -33,8 +33,8 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>> VirtualTableByType =
-            new SortedDictionary<string, List<LlvmWriter.Pair<IMethod, IMethod>>>();
+        private static readonly IDictionary<string, List<CWriter.Pair<IMethod, IMethod>>> VirtualTableByType =
+            new SortedDictionary<string, List<CWriter.Pair<IMethod, IMethod>>>();
 
         /// <summary>
         /// </summary>
@@ -45,7 +45,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="interface">
         /// </param>
         public static void BuildVirtualInterfaceTable(
-            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable,
+            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             IType thisType,
             IType @interface,
             ITypeResolver typeResolver)
@@ -66,7 +66,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="llvmWriter">
         /// </param>
         public static void BuildVirtualTable(
-            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable,
+            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             IType thisType,
             ITypeResolver typeResolver)
         {
@@ -86,7 +86,7 @@ namespace Il2Native.Logic.Gencode
                 if (virtualOrAbstractMethod.IsAbstract && virtualOrAbstractMethod.DeclaringType.Equals(thisType))
                 {
                     virtualTable.Add(
-                        new LlvmWriter.Pair<IMethod, IMethod>
+                        new CWriter.Pair<IMethod, IMethod>
                         {
                             Key = virtualOrAbstractMethod,
                             Value = virtualOrAbstractMethod
@@ -102,7 +102,7 @@ namespace Il2Native.Logic.Gencode
                 if (baseMethod == null)
                 {
                     virtualTable.Add(
-                        new LlvmWriter.Pair<IMethod, IMethod>
+                        new CWriter.Pair<IMethod, IMethod>
                         {
                             Key = virtualOrAbstractMethod,
                             Value = virtualOrAbstractMethod
@@ -131,12 +131,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualInterfaceTable(
+        public static List<CWriter.Pair<IMethod, IMethod>> GetVirtualInterfaceTable(
             this IType thisType,
             IType @interface,
             ITypeResolver typeResolver)
         {
-            List<LlvmWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
+            List<CWriter.Pair<IMethod, IMethod>> virtualInterfaceTable;
 
             var key = string.Concat(thisType.FullName, '+', @interface.FullName);
             if (VirtualInterfaceTableByType.TryGetValue(key, out virtualInterfaceTable))
@@ -144,7 +144,7 @@ namespace Il2Native.Logic.Gencode
                 return virtualInterfaceTable;
             }
 
-            virtualInterfaceTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
+            virtualInterfaceTable = new List<CWriter.Pair<IMethod, IMethod>>();
             virtualInterfaceTable.BuildVirtualInterfaceTable(thisType, @interface, typeResolver);
 
             VirtualInterfaceTableByType[key] = virtualInterfaceTable;
@@ -195,7 +195,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="methodInfo">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="requiredInterface">
         /// </param>
@@ -206,14 +206,14 @@ namespace Il2Native.Logic.Gencode
         public static int GetVirtualMethodIndex(
             this IType thisType,
             IMethod methodInfo,
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             out IType requiredInterface)
         {
             requiredInterface = null;
 
             if (!thisType.IsInterface)
             {
-                var virtualTable = thisType.GetVirtualTable(llvmWriter);
+                var virtualTable = thisType.GetVirtualTable(cWriter);
 
                 var index = 0;
                 foreach (var virtualMethod in virtualTable.Select(v => v.Value))
@@ -231,7 +231,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                var virtualTable = thisType.GetVirtualInterfaceTableLayout(llvmWriter);
+                var virtualTable = thisType.GetVirtualInterfaceTableLayout(cWriter);
 
                 var index = 0;
                 foreach (var virtualMethod in virtualTable)
@@ -248,7 +248,7 @@ namespace Il2Native.Logic.Gencode
                 // try to find a method in all interfaces
                 foreach (var @interface in thisType.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
                 {
-                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(llvmWriter);
+                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(cWriter);
 
                     index = 0;
                     foreach (var virtualMethod in virtualTableOfSecondaryInterface)
@@ -277,18 +277,18 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static List<LlvmWriter.Pair<IMethod, IMethod>> GetVirtualTable(
+        public static List<CWriter.Pair<IMethod, IMethod>> GetVirtualTable(
             this IType thisType,
             ITypeResolver typeResolver)
         {
-            List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable;
+            List<CWriter.Pair<IMethod, IMethod>> virtualTable;
 
             if (VirtualTableByType.TryGetValue(thisType.FullName, out virtualTable))
             {
                 return virtualTable;
             }
 
-            virtualTable = new List<LlvmWriter.Pair<IMethod, IMethod>>();
+            virtualTable = new List<CWriter.Pair<IMethod, IMethod>>();
             virtualTable.BuildVirtualTable(thisType, typeResolver);
 
             VirtualTableByType[thisType.FullName] = virtualTable;
@@ -313,7 +313,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static int GetVirtualTableSize(this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable)
+        public static int GetVirtualTableSize(this List<CWriter.Pair<IMethod, IMethod>> virtualTable)
         {
             return virtualTable.Count + 2;
         }
@@ -337,14 +337,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="methodInfo">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo, LlvmWriter llvmWriter)
+        public static bool HasVirtualMethod(this IType thisType, IMethod methodInfo, CWriter cWriter)
         {
             return
-                thisType.GetVirtualTable(llvmWriter)
+                thisType.GetVirtualTable(cWriter)
                     .Select(v => v.Value)
                     .Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
         }
@@ -353,7 +353,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="virtualTable">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="type">
         /// </param>
@@ -362,13 +362,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="baseTypeFieldsOffset">
         /// </param>
         public static void WriteTableOfMethods(
-            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable,
-            LlvmWriter llvmWriter,
+            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
+            CWriter cWriter,
             IType type,
             int interfaceIndex,
             int baseTypeFieldsOffset)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine(" = linkonce_odr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
 
@@ -379,7 +379,7 @@ namespace Il2Native.Logic.Gencode
                     ? "null"
                     : string.Format(
                         "inttoptr (i32 -{0} to i8*)",
-                        baseTypeFieldsOffset + ((interfaceIndex - 1) * LlvmWriter.PointerSize)));
+                        baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
             writer.Write("i8* bitcast (");
@@ -402,12 +402,12 @@ namespace Il2Native.Logic.Gencode
                 else
                 {
                     // write pointer to method
-                    llvmWriter.WriteMethodReturnType(writer, method);
-                    llvmWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
+                    cWriter.WriteMethodReturnType(writer, method);
+                    cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
                     writer.Write("* ");
-                    llvmWriter.WriteMethodDefinitionName(writer, method);
+                    cWriter.WriteMethodDefinitionName(writer, method);
 
-                    llvmWriter.CheckIfMethodExternalDeclarationIsRequired(method);
+                    cWriter.CheckIfMethodExternalDeclarationIsRequired(method);
                 }
 
                 writer.Write(" to i8*)");
@@ -427,7 +427,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="allPublic">
         /// </param>
         private static void AddMethodsToVirtualInterfaceTable(
-            this List<LlvmWriter.Pair<IMethod, IMethod>> virtualTable,
+            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             IType @interface,
             IEnumerable<IMethod> allPublic,
             ITypeResolver typeResolver)
@@ -450,7 +450,7 @@ namespace Il2Native.Logic.Gencode
                 interfaceMethods.Select(
                     interfaceMember =>
                     allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).FirstOrDefault())
-                                .Select(foundMethod => new LlvmWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
+                                .Select(foundMethod => new CWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
                                 .ToList();
 
             ////Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");

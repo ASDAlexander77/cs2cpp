@@ -1829,14 +1829,14 @@ namespace Il2Native.Logic
 
             var intOpBitSize = this.IntOpBitSize(opCodePart);
             var typeResolver = (ITypeResolver)this;
-            if (intOpBitSize == 1 || intOpBitSize >= (LlvmWriter.PointerSize * 8))
+            if (intOpBitSize == 1 || intOpBitSize >= (CWriter.PointerSize * 8))
             {
                 return uintRequired ? typeResolver.GetUIntTypeByBitSize(intOpBitSize) : this.GetIntTypeByBitSize(intOpBitSize);
             }
 
             return uintRequired
-                ? typeResolver.GetUIntTypeByByteSize(LlvmWriter.PointerSize)
-                : typeResolver.GetIntTypeByByteSize(LlvmWriter.PointerSize);
+                ? typeResolver.GetUIntTypeByByteSize(CWriter.PointerSize)
+                : typeResolver.GetIntTypeByByteSize(CWriter.PointerSize);
         }
 
         /// <summary>

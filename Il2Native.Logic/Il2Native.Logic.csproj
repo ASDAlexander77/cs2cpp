@@ -59,13 +59,6 @@
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
     <Compile Include="CodeParts\PhiNodes.cs" />
     <Compile Include="CodeParts\UsedByInfo.cs" />
-    <Compile Include="DebugInfo\DebugInfoGenerator.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoCompileUnitEntry.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceFile.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceFileEntry.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSourceMethodBuilder.cs" />
-    <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoSymbolWriter.cs" />
-    <Compile Include="DebugInfo\DebugVariableType.cs" />
     <Compile Include="Gencode\ArrayMultiDimensionGen.cs" />
     <Compile Include="Gencode\EnumGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetLengthDimGen.cs" />
@@ -151,7 +144,7 @@
     <Compile Include="Gencode\ArraySingleDimensionGen.cs" />
     <Compile Include="Gencode\DelegateGen.cs" />
     <Compile Include="Gencode\ExceptionHandlingGen.cs" />
-    <Compile Include="Gencode\LlvmHelpersGen.cs" />
+    <Compile Include="Gencode\CHelpersGen.cs" />
     <Compile Include="Gencode\ObjectInfrastructure.cs" />
     <Compile Include="Gencode\Rtti\RttiClassGen.cs" />
     <Compile Include="Gencode\Rtti\RttiPointerGen.cs" />
@@ -162,9 +155,9 @@
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="IlReader.cs" />
-    <Compile Include="LlvmIndentedTextWriter.cs" />
+    <Compile Include="CIndentedTextWriter.cs" />
     <Compile Include="OpResults\IncrementalResult.cs" />
-    <Compile Include="LlvmWriter.cs" />
+    <Compile Include="CWriter.cs" />
     <Compile Include="OpCodeExtentions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -206,6 +199,7 @@
     <None Include="Resources\llvm_gc_declarations.ll" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DebugInfo\" />
     <Folder Include="Instructions\Base\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

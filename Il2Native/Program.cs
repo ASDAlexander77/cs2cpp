@@ -178,7 +178,7 @@ namespace Il2Native
             Console.WriteLine("Done.");
 
             // you need to get target
-            var llvmDummyWriter = new LlvmWriter(string.Empty, string.Empty, string.Empty, processedArgs);
+            var llvmDummyWriter = new CWriter(string.Empty, string.Empty, string.Empty, processedArgs);
             var target = llvmDummyWriter.Target;
 
             // next step compile CoreLib

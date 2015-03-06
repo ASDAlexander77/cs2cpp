@@ -22,7 +22,6 @@ namespace Il2Native.Logic
     using System.Runtime.InteropServices;
     using System.Text;
     using CodeParts;
-    using DebugInfo;
     using Exceptions;
     using Gencode;
     using Gencode.InlineMethods;
@@ -33,7 +32,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class LlvmWriter : BaseWriter, ICodeWriter
+    public class CWriter : BaseWriter, ICodeWriter
     {
         /// <summary>
         /// </summary>
@@ -48,10 +47,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public Stack<CatchOfFinallyClause> catchScopes = new Stack<CatchOfFinallyClause>();
-
-        /// <summary>
-        /// </summary>
-        public DebugInfoGenerator debugInfoGenerator;
 
         /// <summary>
         /// </summary>
@@ -147,7 +142,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private LlvmIndentedTextWriter savedOutput;
+        private CIndentedTextWriter savedOutput;
 
         /// <summary>
         /// </summary>
@@ -221,7 +216,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="args">
         /// </param>
-        public LlvmWriter(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
+        public CWriter(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
             this.SetSettings(fileName, sourceFilePath, pdbFilePath, args);
         }
@@ -239,10 +234,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public string DataLayout { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool DebugInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -294,7 +285,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public LlvmIndentedTextWriter Output { get; private set; }
+        public CIndentedTextWriter Output { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -317,7 +308,7 @@ namespace Il2Native.Logic
             {
                 this.savedOutput = this.Output;
                 this.storedText.Clear();
-                this.Output = new LlvmIndentedTextWriter(new StringWriter(this.storedText));
+                this.Output = new CIndentedTextWriter(new StringWriter(this.storedText));
             }
             else
             {
@@ -494,13 +485,6 @@ namespace Il2Native.Logic
             var methodBase = ctor.ResolveMethodBody(genericContext);
             if (methodBase.HasBody)
             {
-                if (this.DebugInfo && ctor.Token.HasValue)
-                {
-                    this.debugInfoGenerator.GenerateFunction(ctor.Token.Value);
-                    // to find first debug line of method
-                    this.ReadDbgLine(OpCodePart.CreateNop);
-                }
-
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
                 this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
@@ -532,11 +516,6 @@ namespace Il2Native.Logic
             this.WriteGlobalConstructors();
 
             this.WriteRequiredDeclarations();
-
-            if (this.DebugInfo)
-            {
-                this.debugInfoGenerator.WriteTo(this.Output);
-            }
 
             this.Output.Close();
         }
@@ -737,14 +716,6 @@ namespace Il2Native.Logic
             var methodBodyBytes = method.ResolveMethodBody(genericContext);
             if (methodBodyBytes.HasBody)
             {
-                if (this.DebugInfo && method.Token.HasValue)
-                {
-                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
-
-                    // to find first debug line of method
-                    this.ReadDbgLine(OpCodePart.CreateNop);
-                }
-
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
 
@@ -875,7 +846,7 @@ namespace Il2Native.Logic
         {
             this.resultNumberIncremental = 0;
 
-            this.Output = new LlvmIndentedTextWriter(new StreamWriter(this.outputFile));
+            this.Output = new CIndentedTextWriter(new StreamWriter(this.outputFile));
 
             this.IlReader = ilReader;
 
@@ -905,17 +876,6 @@ namespace Il2Native.Logic
             StaticConstructors.Clear();
             VirtualTableGen.Clear();
             TypeGen.Clear();
-
-            if (this.DebugInfo)
-            {
-                this.Output.WriteLine("declare void @llvm.dbg.declare(metadata, metadata, metadata) #0");
-                this.Output.WriteLine(string.Empty);
-
-                if (!this.debugInfoGenerator.StartGenerating(this))
-                {
-                    this.DebugInfo = false;
-                }
-            }
         }
 
         /// <summary>
@@ -1004,7 +964,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="firstLevel">
         /// </param>
-        public void ActualWrite(LlvmIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
+        public void ActualWrite(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
             if (firstLevel)
             {
@@ -1041,7 +1001,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public void ActualWriteOpCode(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void ActualWriteOpCode(CIndentedTextWriter writer, OpCodePart opCode)
         {
             var code = opCode.ToCode();
             var firstOpCodeOperand = opCode != null && opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > 0 ? opCode.OpCodeOperands[0] : null;
@@ -1173,8 +1133,6 @@ namespace Il2Native.Logic
 
                     this.WriteMemSet(opCode.Result, firstOpCodeOperand.Result, 1);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Ldfld:
 
@@ -1189,8 +1147,6 @@ namespace Il2Native.Logic
                         var memberAccessResultNumber = opCode.Result;
                         opCode.Result = null;
                         this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
-
-                        this.WriteDbgLine(opCode);
                     }
 
                     break;
@@ -1230,8 +1186,6 @@ namespace Il2Native.Logic
                     if (!operandType.IsStructureType())
                     {
                         this.WriteLlvmLoad(opCode, operandType, reference);
-
-                        this.WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -1255,8 +1209,6 @@ namespace Il2Native.Logic
 
                     this.FieldAccessAndSaveToField(opCode as OpCodeFieldInfoPart);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Stsfld:
 
@@ -1276,8 +1228,6 @@ namespace Il2Native.Logic
                         this.WriteLlvmSave(opCode, operandType, 0, reference);
                     }
 
-                    this.WriteDbgLine(opCode);
-
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
@@ -1290,8 +1240,6 @@ namespace Il2Native.Logic
                     if (loadValueFromAddress)
                     {
                         this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
-
-                        this.WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -1323,16 +1271,10 @@ namespace Il2Native.Logic
 
                 case Code.Stobj:
                     this.SaveObject(opCode, 1, 0);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Ldlen:
                     this.WriteArrayGetLength(opCode);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Ldelem:
@@ -1350,9 +1292,6 @@ namespace Il2Native.Logic
                 case Code.Ldelema:
 
                     this.LoadElement(writer, opCode);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Stelem:
@@ -1366,9 +1305,6 @@ namespace Il2Native.Logic
                 case Code.Stelem_Ref:
 
                     this.SaveElement(writer, opCode);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Ldind_I:
@@ -1384,9 +1320,6 @@ namespace Il2Native.Logic
                 case Code.Ldind_U4:
 
                     this.LoadIndirect(writer, opCode);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Stind_I:
@@ -1399,9 +1332,6 @@ namespace Il2Native.Logic
                 case Code.Stind_Ref:
 
                     this.SaveIndirect(writer, opCode);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Call:
@@ -1441,9 +1371,6 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fadd" : "add",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Add_Ovf:
                     this.WriteOverflowWithThrow(writer, opCode, "sadd");
@@ -1458,9 +1385,6 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fmul" : "mul",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Mul_Ovf:
                     this.WriteOverflowWithThrow(writer, opCode, "smul");
@@ -1475,9 +1399,6 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fsub" : "sub",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Sub_Ovf:
                     this.WriteOverflowWithThrow(writer, opCode, "ssub");
@@ -1494,9 +1415,6 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "fdiv" : isUnsigned ? "udiv" : "sdiv",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
@@ -1507,40 +1425,22 @@ namespace Il2Native.Logic
                         opCode,
                         isFloatingPoint ? "frem" : isUnsigned ? "urem" : "srem",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.And:
                     this.BinaryOper(writer, opCode, "and", OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Or:
                     this.BinaryOper(writer, opCode, "or", OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Xor:
                     this.BinaryOper(writer, opCode, "xor", OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Shl:
                     this.BinaryOper(writer, opCode, "shl", OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
                     this.BinaryOper(writer, opCode, "lshr", OperandOptions.AdjustIntTypes);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Not:
                     var tempOper = opCode.OpCodeOperands;
@@ -1549,9 +1449,6 @@ namespace Il2Native.Logic
                     opCode.OpCodeOperands = new[] { tempOper[0], secondOperand };
                     this.BinaryOper(writer, opCode, "xor");
                     opCode.OpCodeOperands = tempOper;
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Neg:
                     isFloatingPoint = IsFloatingPointOp(opCode);
@@ -1570,8 +1467,6 @@ namespace Il2Native.Logic
                         isFloatingPoint ? "fsub" : "sub",
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     opCode.OpCodeOperands = tempOper;
-
-                    this.WriteDbgLine(opCode);
 
                     break;
 
@@ -1625,11 +1520,7 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ret:
-
                     this.WriteReturn(writer, opCode, MethodReturnType);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Stloc:
                 case Code.Stloc_0:
@@ -1671,8 +1562,6 @@ namespace Il2Native.Logic
                         this.WriteLlvmSave(opCode, localType, 0, destination);
                     }
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Ldloc:
                 case Code.Ldloc_0:
@@ -1697,8 +1586,6 @@ namespace Il2Native.Logic
                     if (!localType.IsStructureType() || localType.IsByRef)
                     {
                         this.WriteLlvmLoad(opCode, localType, definedReference);
-
-                        this.WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -1742,8 +1629,6 @@ namespace Il2Native.Logic
                             new FullyDefinedReference(this.GetThisName(), thisTypeAsClass),
                             true,
                             true);
-
-                        this.WriteDbgLine(opCode);
                     }
                     else
                     {
@@ -1755,7 +1640,6 @@ namespace Il2Native.Logic
                         if (!parameter.ParameterType.IsStructureType())
                         {
                             this.WriteLlvmLoad(opCode, parameter.ParameterType, fullyDefinedReference);
-                            this.WriteDbgLine(opCode);
                         }
                         else
                         {
@@ -1815,8 +1699,6 @@ namespace Il2Native.Logic
                     {
                         this.WriteLlvmSave(opCode, argType, 0, destination);
                     }
-
-                    this.WriteDbgLine(opCode);
 
                     break;
 
@@ -1907,8 +1789,6 @@ namespace Il2Native.Logic
 
                     this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Beq:
@@ -1988,8 +1868,6 @@ namespace Il2Native.Logic
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
 
-                    this.WriteDbgLine(opCode);
-
                     if (!opCode.UseAsConditionalExpression)
                     {
                         writer.WriteLine(string.Empty);
@@ -2017,8 +1895,6 @@ namespace Il2Native.Logic
                         writer.Write(", null");
                     }
 
-                    this.WriteDbgLine(opCode);
-
                     writer.WriteLine(string.Empty);
 
                     if (!opCode.UseAsConditionalExpression)
@@ -2031,9 +1907,6 @@ namespace Il2Native.Logic
                 case Code.Br_S:
 
                     writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
-
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Leave:
                 case Code.Leave_S:
@@ -2051,8 +1924,6 @@ namespace Il2Native.Logic
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Clt:
                     isFloatingPoint = IsFloatingPointOp(opCode);
@@ -2065,8 +1936,6 @@ namespace Il2Native.Logic
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Clt_Un:
                     isFloatingPoint = IsFloatingPointOp(opCode);
@@ -2077,8 +1946,6 @@ namespace Il2Native.Logic
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
-
-                    this.WriteDbgLine(opCode);
 
                     break;
                 case Code.Cgt:
@@ -2092,8 +1959,6 @@ namespace Il2Native.Logic
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
 
-                    this.WriteDbgLine(opCode);
-
                     break;
                 case Code.Cgt_Un:
                     isFloatingPoint = IsFloatingPointOp(opCode);
@@ -2104,9 +1969,6 @@ namespace Il2Native.Logic
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Conv_R4:
@@ -2268,9 +2130,6 @@ namespace Il2Native.Logic
                         opCodeTypePart.OpCodeOperands[0].Result,
                         opCodeTypePart.Operand,
                         true);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Isinst:
@@ -2292,9 +2151,6 @@ namespace Il2Native.Logic
                     {
                         this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, toType);
                     }
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Newobj:
@@ -2365,9 +2221,6 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteInit(opCode, opCodeTypePart.Operand);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Throw:
@@ -2382,9 +2235,6 @@ namespace Il2Native.Logic
                         opCode,
                         this.catchScopes.Count > 0 ? this.catchScopes.Peek() : null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
-
-                    this.WriteDbgLine(opCode);
-
                     break;
 
                 case Code.Endfilter:
@@ -2450,7 +2300,6 @@ namespace Il2Native.Logic
 
                     writer.WriteLine("]");
 
-                    this.WriteDbgLine(opCode);
                     writer.WriteLine(string.Empty);
 
                     writer.Indent--;
@@ -2514,7 +2363,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteConvertToNativeInt(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteConvertToNativeInt(CIndentedTextWriter writer, OpCodePart opCode)
         {
             var intPtrOper = this.IntTypeRequired(opCode);
             var nativeIntType = intPtrOper
@@ -2565,7 +2414,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool AdjustIntConvertableTypes(LlvmIndentedTextWriter writer, OpCodePart opCode, IType destType)
+        public bool AdjustIntConvertableTypes(CIndentedTextWriter writer, OpCodePart opCode, IType destType)
         {
             if (opCode.Result is ConstValue)
             {
@@ -2707,7 +2556,7 @@ namespace Il2Native.Logic
         /// <param name="beforeSecondOperand">
         /// </param>
         public void BinaryOper(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             string op,
             OperandOptions options = OperandOptions.None,
@@ -2887,7 +2736,7 @@ namespace Il2Native.Logic
             var output = this.Output;
 
             var sb = new StringBuilder();
-            this.Output = new LlvmIndentedTextWriter(new StringWriter(sb));
+            this.Output = new CIndentedTextWriter(new StringWriter(sb));
 
             this.ActualWrite(this.Output, opCodePart);
 
@@ -2960,7 +2809,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.Result != null)
             {
@@ -3049,7 +2898,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="type">
         /// </param>
-        public void LoadIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode, IType type)
+        public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type)
         {
             FullyDefinedReference accessIndexResultNumber2;
 
@@ -3109,7 +2958,7 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         public FullyDefinedReference ProcessOperator(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             string op,
             IType requiredType = null,
@@ -3216,7 +3065,6 @@ namespace Il2Native.Logic
             this.IsLlvm35 = !this.IsLlvm36 && args != null && args.Contains("llvm35");
             this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
             this.IsLlvm36 = !this.IsLlvm37 && !this.IsLlvm35 && !this.IsLlvm34OrLower;
-            this.DebugInfo = args != null && args.Contains("debug");
             this.Stubs = args != null && args.Contains("stubs");
 
             // prefefined settings
@@ -3258,7 +3106,7 @@ namespace Il2Native.Logic
         /// <param name="options">
         /// </param>
         public void UnaryOper(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             string op,
             IType requiredType = null,
@@ -3285,7 +3133,7 @@ namespace Il2Native.Logic
         /// <param name="options">
         /// </param>
         public void UnaryOper(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             int operandIndex,
             string op,
@@ -3339,13 +3187,6 @@ namespace Il2Native.Logic
             this.Output.Write("* {0}", paramFullName);
             this.Output.Write(", align " + PointerSize);
             this.Output.WriteLine(string.Empty);
-
-            if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLine.HasValue)
-            {
-                var effectiveName = isThis ? "this" : name;
-                var effectiveType = type.IsStructureType() || isThis ? type.ToClass() : type;
-                this.WriteDebugDeclare(effectiveName, effectiveType, paramFullName, DebugVariableType.Argument, index);
-            }
         }
 
         /// <summary>
@@ -3365,7 +3206,7 @@ namespace Il2Native.Logic
         /// <param name="action">
         /// </param>
         public void WriteBranchSwitchToExecute(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCodePart,
             FullyDefinedReference testValueResultNumber,
             string exceptionName,
@@ -3394,12 +3235,12 @@ namespace Il2Native.Logic
             writer.WriteLine(".{0}:", label);
             writer.Indent++;
 
-            LlvmHelpersGen.SetCustomLabel(opCodePart, label);
+            CHelpersGen.SetCustomLabel(opCodePart, label);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
@@ -3412,14 +3253,14 @@ namespace Il2Native.Logic
         /// <param name="labelSuffix">
         /// </param>
         public void WriteBranchSwitchToThrowOrPass(
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             OpCodePart opCodePart,
             FullyDefinedReference testValueResultNumber,
             string exceptionName,
             string labelPrefix,
             string labelSuffix)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             this.WriteBranchSwitchToExecute(
                 writer,
@@ -3428,7 +3269,7 @@ namespace Il2Native.Logic
                 exceptionName,
                 labelPrefix,
                 labelSuffix,
-                () => this.WriteThrowException(llvmWriter, exceptionName));
+                () => this.WriteThrowException(cWriter, exceptionName));
         }
 
         /// <summary>
@@ -3442,7 +3283,7 @@ namespace Il2Native.Logic
         /// <param name="falseLabel">
         /// </param>
         public void WriteCondBranch(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             IncrementalResult compareResult,
             string trueLabel,
             string falseLabel)
@@ -3506,7 +3347,7 @@ namespace Il2Native.Logic
         /// <param name="dest">
         /// </param>
         public void WriteCopyStruct(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             IType typeToCopy,
             FullyDefinedReference source,
@@ -3524,20 +3365,6 @@ namespace Il2Native.Logic
             opCode.Result = dest;
         }
 
-        public void WriteDbgLine(OpCodePart opCode)
-        {
-            if (!this.DebugInfo)
-            {
-                return;
-            }
-
-            var line = this.debugInfoGenerator.CurrentDebugLine;
-            if (line.HasValue)
-            {
-                this.Output.Write(", !dbg !{0}", line);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3553,7 +3380,7 @@ namespace Il2Native.Logic
         /// <param name="throwExceptionIfNull">
         /// </param>
         public void WriteDynamicCast(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCodeTypePart,
             FullyDefinedReference fromType,
             IType toType,
@@ -3655,7 +3482,7 @@ namespace Il2Native.Logic
                         throwExceptionIfNull ? "dynamic_cast_result_not_null" : "dynamic_cast_not_null"),
                     string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
 
-                LlvmHelpersGen.SetCustomLabel(opCodeTypePart, label);
+                CHelpersGen.SetCustomLabel(opCodeTypePart, label);
             }
 
             this.AddRequiredRttiDeclaration(effectiveFromType.Type);
@@ -3668,7 +3495,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCodeFieldInfoPart">
         /// </param>
-        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
+        public void WriteFieldAccess(CIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
             writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
 
@@ -3725,7 +3552,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="index">
         /// </param>
-        public void WriteFieldAccess(LlvmIndentedTextWriter writer, OpCodePart opCodePart, int index, FullyDefinedReference fixedArrayElementIndex = null)
+        public void WriteFieldAccess(CIndentedTextWriter writer, OpCodePart opCodePart, int index, FullyDefinedReference fixedArrayElementIndex = null)
         {
             var operand = ResultOf(opCodePart.OpCodeOperands[0]);
 
@@ -3798,7 +3625,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="fieldInfo">
         /// </param>
-        public void WriteFieldIndex(LlvmIndentedTextWriter writer, IType classType, IField fieldInfo)
+        public void WriteFieldIndex(CIndentedTextWriter writer, IType classType, IField fieldInfo)
         {
             var targetType = fieldInfo.DeclaringType;
             var type = classType;
@@ -3842,7 +3669,7 @@ namespace Il2Native.Logic
         /// <param name="fieldIndex">
         /// </param>
         public void WriteFieldIndex(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             IType classType,
             IType fieldContainerType,
             IField field,
@@ -3915,7 +3742,7 @@ namespace Il2Native.Logic
         /// <param name="pointerToInterfaceVirtualTablePointersResultNumber">
         /// </param>
         public void WriteGetThisPointerFromInterfacePointer(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCodeMethodInfo,
             IMethod methodInfo,
             IType thisType,
@@ -3966,7 +3793,7 @@ namespace Il2Native.Logic
         /// <param name="interface">
         /// </param>
         public void WriteInterfaceAccess(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             IType declaringTypeIn,
             IType @interface)
@@ -4000,7 +3827,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="label">
         /// </param>
-        public void WriteLabel(LlvmIndentedTextWriter writer, string label)
+        public void WriteLabel(CIndentedTextWriter writer, string label)
         {
             writer.Indent--;
             writer.WriteLine(string.Concat(label, ':'));
@@ -4016,7 +3843,7 @@ namespace Il2Native.Logic
         /// <param name="ownerOfExplicitInterface">
         /// </param>
         public void WriteMethodDefinitionName(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             IMethod methodBase,
             IType ownerOfExplicitInterface = null)
         {
@@ -4040,7 +3867,7 @@ namespace Il2Native.Logic
         /// <param name="varArgs">
         /// </param>
         public void WriteMethodParamsDef(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             IMethod method,
             bool hasThis,
             IType thisType,
@@ -4154,7 +3981,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public void WriteMethodPointerType(LlvmIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
+        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
         {
             var methodInfo = methodBase;
             var isStructureType = methodInfo.ReturnType.IsStructureType();
@@ -4231,7 +4058,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="method">
         /// </param>
-        public void WriteMethodReturnType(LlvmIndentedTextWriter writer, IMethod method)
+        public void WriteMethodReturnType(CIndentedTextWriter writer, IMethod method)
         {
             this.CheckIfExternalDeclarationIsRequired(method.ReturnType);
 
@@ -4254,10 +4081,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference WriteNewCallingDefaultConstructor(LlvmWriter llvmWriter, string typeName)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, string typeName)
         {
             var typeToCreate = ResolveType(typeName);
-            return this.WriteNewCallingDefaultConstructor(llvmWriter, typeToCreate);
+            return this.WriteNewCallingDefaultConstructor(cWriter, typeToCreate);
         }
 
         /// <summary>
@@ -4269,16 +4096,16 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         public FullyDefinedReference WriteNewCallingDefaultConstructor(
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             IType typeToCreate)
         {
-            LlvmIndentedTextWriter writer = llvmWriter.Output;
+            CIndentedTextWriter writer = cWriter.Output;
 
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(typeToCreate, llvmWriter).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(typeToCreate, cWriter).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
 
@@ -4343,7 +4170,7 @@ namespace Il2Native.Logic
         /// <param name="forcedType">
         /// </param>
         public void WriteOperandResult(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart operand,
             bool detectAndWriteTypePrefix = false,
             IType forcedType = null)
@@ -4375,7 +4202,7 @@ namespace Il2Native.Logic
         /// <param name="detectAndWriteTypePrefix">
         /// </param>
         public void WriteOperandResult(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             int index,
             bool detectAndWriteTypePrefix = false)
@@ -4389,7 +4216,7 @@ namespace Il2Native.Logic
             this.WriteOperandResult(writer, operand, detectAndWriteTypePrefix);
         }
 
-        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        public void WritePhi(CIndentedTextWriter writer, OpCodePart opCode)
         {
             while (opCode.AlternativeValues != null && opCode.AlternativeValues.Count > 0)
             {
@@ -4407,7 +4234,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public void WritePhi(LlvmIndentedTextWriter writer, OpCodePart opCode, PhiNodes alternativeValues)
+        public void WritePhi(CIndentedTextWriter writer, OpCodePart opCode, PhiNodes alternativeValues)
         {
             if (alternativeValues.Values.Count != alternativeValues.Labels.Count)
             {
@@ -4531,7 +4358,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="methodReturnType">
         /// </param>
-        public void WriteReturn(LlvmIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
+        public void WriteReturn(CIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
             var opts = this.WriteReturnStruct(opCode, methodReturnType);
 
@@ -4619,7 +4446,7 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         public IncrementalResult WriteTestNull(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCodePart,
             FullyDefinedReference resultToTest)
         {
@@ -4645,7 +4472,7 @@ namespace Il2Native.Logic
         /// <param name="labelPrefix">
         /// </param>
         public void WriteTestNullValueAndThrowException(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCodePart,
             IncrementalResult resultToTest,
             string exceptionName,
@@ -4667,9 +4494,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="exceptionName">
         /// </param>
-        public void WriteThrowException(LlvmWriter llvmWriter, string exceptionName)
+        public void WriteThrowException(CWriter cWriter, string exceptionName)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             // throw InvalidCast result
             writer.WriteLine(string.Empty);
@@ -4679,7 +4506,7 @@ namespace Il2Native.Logic
             var invalidCastExceptionType = ResolveType(exceptionName);
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType, llvmWriter).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(invalidCastExceptionType, cWriter).First(c => !c.GetParameters().Any());
 
             var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
             opCodeThrow.OpCodeOperands = new[] { opCodeNewInstance };
@@ -4702,7 +4529,7 @@ namespace Il2Native.Logic
             var output = this.Output;
 
             var sb = new StringBuilder();
-            this.Output = new LlvmIndentedTextWriter(new StringWriter(sb));
+            this.Output = new CIndentedTextWriter(new StringWriter(sb));
 
             action();
 
@@ -4828,7 +4655,7 @@ namespace Il2Native.Logic
         /// <returns>
         /// </returns>
         private IType ApplyTypeAdjustment(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             IType effectiveType,
             IType castFrom,
@@ -5419,7 +5246,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void LoadElement(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void LoadElement(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.Result != null)
             {
@@ -5496,7 +5323,7 @@ namespace Il2Native.Logic
             this.LoadElement(writer, opCode, "data", type, opCode.OpCodeOperands[1].Result, actualLoad);
         }
 
-        public void LoadElement(LlvmIndentedTextWriter writer, OpCodePart opCode, string field, IType type = null, FullyDefinedReference fixedArrayIndex = null, bool actualLoad = true)
+        public void LoadElement(CIndentedTextWriter writer, OpCodePart opCode, string field, IType type = null, FullyDefinedReference fixedArrayIndex = null, bool actualLoad = true)
         {
             this.WriteFieldAccess(
                 writer,
@@ -5528,24 +5355,9 @@ namespace Il2Native.Logic
         private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
             var extension = Path.GetExtension(fileName);
-            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".ll" : fileName;
+            this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".cpp" : fileName;
 
             this.ReadParameters(args);
-
-            if (this.DebugInfo)
-            {
-                this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
-            }
-        }
-
-        private void ReadDbgLine(OpCodePart opCode)
-        {
-            if (!this.DebugInfo)
-            {
-                return;
-            }
-
-            this.debugInfoGenerator.ReadAndSetCurrentDebugLine(opCode.AddressStart);
         }
 
         /// <summary>
@@ -5554,7 +5366,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void SaveElement(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void SaveElement(CIndentedTextWriter writer, OpCodePart opCode)
         {
             IType type = null;
 
@@ -5636,7 +5448,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void SaveIndirect(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void SaveIndirect(CIndentedTextWriter writer, OpCodePart opCode)
         {
             IType type = null;
 
@@ -5755,7 +5567,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="type">
         /// </param>
-        private void SaveStructElement(LlvmIndentedTextWriter writer, OpCodePart opCode, int operandIndex, IType type)
+        private void SaveStructElement(CIndentedTextWriter writer, OpCodePart opCode, int operandIndex, IType type)
         {
             // copy struct
             this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[operandIndex].Result);
@@ -5887,7 +5699,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchBegins(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCatchBegins(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.CatchOrFinallyBegin == null)
             {
@@ -5932,7 +5744,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchFinnallyEnd(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCatchFinnallyEnd(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.CatchOrFinallyEnds == null)
             {
@@ -5960,7 +5772,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCondBranch(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCondBranch(CIndentedTextWriter writer, OpCodePart opCode)
         {
             writer.Write(
                 "br i1 {0}, label %.a{1}, label %.a{2}",
@@ -5968,7 +5780,6 @@ namespace Il2Native.Logic
                 opCode.JumpAddress(),
                 opCode.AddressEnd);
 
-            this.WriteDbgLine(opCode);
             writer.WriteLine(string.Empty);
 
             writer.Indent--;
@@ -6058,34 +5869,13 @@ namespace Il2Native.Logic
             return rest;
         }
 
-        private void WriteDebugDeclare(
-            string name,
-            IType type,
-            string variableOrArgumentName,
-            DebugVariableType debugVariableType,
-            int index = 0)
-        {
-            if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
-            {
-                return;
-            }
-
-            this.Output.Write("call void @llvm.dbg.declare(metadata {0}", !this.IsLlvm36 ? "!{" : string.Empty);
-            type.WriteTypePrefix(this);
-            this.Output.Write(string.Concat("* ", variableOrArgumentName, "{0}, "), !this.IsLlvm36 ? "}" : string.Empty);
-            this.debugInfoGenerator.DefineVariable(name, type, debugVariableType, index).WriteTo(this.Output);
-            this.Output.Write(", ");
-            this.debugInfoGenerator.DefineTagExpression().WriteTo(this.Output);
-            this.Output.WriteLine("), !dbg !{0}", this.debugInfoGenerator.CurrentDebugLine);
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteEndFinally(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteEndFinally(CIndentedTextWriter writer, OpCodePart opCode)
         {
             writer.WriteLine("; EndFinally ");
             if (this.catchScopes.Count > 0)
@@ -6129,7 +5919,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteExceptionHandlersProlog(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteExceptionHandlersProlog(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.ExceptionHandlers == null)
             {
@@ -6151,7 +5941,7 @@ namespace Il2Native.Logic
         /// <param name="thisType">
         /// </param>
         private void WriteGetInterfaceOffsetToObjectRootPointer(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             IMethod methodBase,
             IType thisType = null)
@@ -6219,7 +6009,7 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        private bool WriteInterfaceIndex(LlvmIndentedTextWriter writer, IType classType, IType @interface)
+        private bool WriteInterfaceIndex(CIndentedTextWriter writer, IType classType, IType @interface)
         {
             var type = classType;
             if (!type.GetAllInterfaces().Contains(@interface))
@@ -6338,7 +6128,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteLabels(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteLabels(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
@@ -6369,7 +6159,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteLeave(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteLeave(CIndentedTextWriter writer, OpCodePart opCode)
         {
             writer.WriteLine("; Leave ");
             if (this.tryScopes.Count > 0)
@@ -6404,7 +6194,7 @@ namespace Il2Native.Logic
         /// <param name="asReference">
         /// </param>
         private void WriteLlvmArgVarAccess(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             int index,
             int argIndex,
             bool asReference = false)
@@ -6470,18 +6260,6 @@ namespace Il2Native.Logic
                 this.CheckIfExternalDeclarationIsRequired(local.LocalType);
 
                 this.Output.WriteLine(string.Empty);
-            }
-
-            if (this.DebugInfo)
-            {
-                foreach (var local in locals)
-                {
-                    this.WriteDebugDeclare(
-                        this.debugInfoGenerator.GetLocalNameByIndex(local.LocalIndex),
-                        this.GetEffectiveLocalType(local),
-                        this.GetLocalVarName(local.LocalIndex),
-                        DebugVariableType.Auto);
-                }
             }
         }
 
@@ -6590,7 +6368,6 @@ namespace Il2Native.Logic
 
             foreach (var opCodePart in rest)
             {
-                this.ReadDbgLine(opCodePart);
                 this.ActualWrite(this.Output, opCodePart, true);
                 this.Output.WriteLine(string.Empty);
             }
@@ -6624,7 +6401,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="operator">
         /// </param>
-        private void WriteOverflowWithThrow(LlvmIndentedTextWriter writer, OpCodePart opCode, string @operator)
+        private void WriteOverflowWithThrow(CIndentedTextWriter writer, OpCodePart opCode, string @operator)
         {
             this.BinaryOper(
                 writer,
@@ -6675,7 +6452,7 @@ namespace Il2Native.Logic
         /// <param name="stopAddress">
         /// </param>
         private void WritePhiNodeLabel(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             FullyDefinedReference result,
             OpCodePart startOpCode,
             OpCodePart endOpCode,
@@ -6900,7 +6677,7 @@ namespace Il2Native.Logic
         /// <param name="effectiveType">
         /// </param>
         private void WriteResultAndFirstOperandType(
-            LlvmIndentedTextWriter writer,
+            CIndentedTextWriter writer,
             OpCodePart opCode,
             string op,
             IType requiredType,
@@ -6994,11 +6771,6 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
             }
-
-            if (!isExternal && this.DebugInfo)
-            {
-                this.debugInfoGenerator.DefineGlobal(field);
-            }
         }
 
         /// <summary>
@@ -7027,7 +6799,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteTryBegins(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteTryBegins(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.TryBegin == null || opCode.TryBegin.Count <= 0)
             {
@@ -7050,7 +6822,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteTryEnds(LlvmIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteTryEnds(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.TryEnd == null)
             {

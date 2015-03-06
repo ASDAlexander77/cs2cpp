@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
             SystemTypesToCTypes["Boolean"] = "i1";
 
             SystemTypeSizes["Void"] = 0;
-            SystemTypeSizes["Void*"] = LlvmWriter.PointerSize;
+            SystemTypeSizes["Void*"] = CWriter.PointerSize;
             SystemTypeSizes["Byte"] = 1;
             SystemTypeSizes["SByte"] = 1;
             SystemTypeSizes["Char"] = 2;
@@ -112,10 +112,10 @@ namespace Il2Native.Logic.Gencode
         public static int CalculateSize(this IType type, ITypeResolver typeResolver, out IList<MemberLocationInfo> membersLayout)
         {
             var fieldSizes = type.GetFieldsSizesRecursive(typeResolver, true).ToList();
-            var typeAlign = fieldSizes.Any() ? fieldSizes.Max(m => m.Size) : LlvmWriter.PointerSize;
+            var typeAlign = fieldSizes.Any() ? fieldSizes.Max(m => m.Size) : CWriter.PointerSize;
             if (type.BaseType != null)
             {
-                typeAlign = Math.Max(typeAlign, LlvmWriter.PointerSize);
+                typeAlign = Math.Max(typeAlign, CWriter.PointerSize);
             }
 
             var offset = 0;
@@ -221,7 +221,7 @@ namespace Il2Native.Logic.Gencode
                     }
                     else
                     {
-                        yield return new MemberLocationInfo(field, LlvmWriter.PointerSize);
+                        yield return new MemberLocationInfo(field, CWriter.PointerSize);
                     }
                 }
                 else if (!excludingStructs && fieldType.IsStructureType())
@@ -291,7 +291,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (!type.IsStructureType() && !type.IsEnum)
                 {
-                    return LlvmWriter.PointerSize;
+                    return CWriter.PointerSize;
                 }
             }
 
@@ -441,7 +441,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (!any)
                 {
-                    yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                    yield return new MemberLocationInfo(type, CWriter.PointerSize);
                 }
 
                 yield break;
@@ -450,14 +450,14 @@ namespace Il2Native.Logic.Gencode
             if (type.IsPointer)
             {
                 // type*
-                yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                yield return new MemberLocationInfo(type, CWriter.PointerSize);
                 yield break;
             }
 
             if (!firstLevel && type.IsArray)
             {
                 // type*
-                yield return new MemberLocationInfo(type, LlvmWriter.PointerSize);
+                yield return new MemberLocationInfo(type, CWriter.PointerSize);
                 yield break;
             }
 
@@ -477,7 +477,7 @@ namespace Il2Native.Logic.Gencode
             // add shift for virtual table
             if (type.IsRootOfVirtualTable(typeResolver))
             {
-                yield return new MemberLocationInfo(LlvmWriter.PointerSize);
+                yield return new MemberLocationInfo(CWriter.PointerSize);
             }
 
             if (type.BaseType != null)
@@ -657,7 +657,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="isPointer">
         /// </param>
-        public static void WriteTypeName(this IType type, LlvmIndentedTextWriter writer, bool isPointer)
+        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer)
         {
             var typeBaseName = type.TypeToCType(isPointer);
 
@@ -674,15 +674,15 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, LlvmWriter llvmWriter, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, CWriter cWriter, bool asReference = false)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            type.WriteTypeWithoutModifiers(llvmWriter);
+            type.WriteTypeWithoutModifiers(cWriter);
             type.WriteTypeModifiers(writer, asReference);
         }
 
@@ -694,16 +694,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteTypeWithoutModifiers(
             this IType type,
-            LlvmWriter llvmWriter,
+            CWriter cWriter,
             bool isPointer = false)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var effectiveType = type;
 
             if (effectiveType.IsPointer)
             {
-                effectiveType.GetElementType().WriteTypeWithoutModifiers(llvmWriter, type.IsPointer);
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(cWriter, type.IsPointer);
                 return;
             }
 

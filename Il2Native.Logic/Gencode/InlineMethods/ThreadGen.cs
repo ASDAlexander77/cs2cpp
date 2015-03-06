@@ -49,14 +49,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCodeMethodInfo">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         public static void WriteThreadingFunction(
             this IMethod method,
             OpCodePart opCodeMethodInfo,
-            LlvmWriter llvmWriter)
+            CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             switch (method.MetadataName)
             {

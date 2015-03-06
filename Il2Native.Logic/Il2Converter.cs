@@ -761,7 +761,7 @@ namespace Il2Native.Logic
             string outputFolder,
             string[] args)
         {
-            return new LlvmWriter(Path.Combine(outputFolder, fileName), sourceFilePath, pdbFilePath, args);
+            return new CWriter(Path.Combine(outputFolder, fileName), sourceFilePath, pdbFilePath, args);
         }
 
         /// <summary>

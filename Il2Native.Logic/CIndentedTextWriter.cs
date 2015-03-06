@@ -17,7 +17,7 @@ namespace Il2Native.Logic
 
     /// <summary>
     /// </summary>
-    public class LlvmIndentedTextWriter : IndentedTextWriter
+    public class CIndentedTextWriter : IndentedTextWriter
     {
         /// <summary>
         /// </summary>
@@ -35,7 +35,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="writer">
         /// </param>
-        public LlvmIndentedTextWriter(TextWriter writer)
+        public CIndentedTextWriter(TextWriter writer)
             : base(writer)
         {
         }

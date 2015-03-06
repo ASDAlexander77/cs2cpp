@@ -251,7 +251,7 @@
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -260,13 +260,13 @@
         /// <param name="length">
         /// </param>
         public static FullyDefinedReference WriteMultiDimArrayAllocationSize(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCode,
             IType arrayType)
         {
             Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
 
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; Calculate MultiDim allocation size");
 
@@ -275,7 +275,7 @@
             IList<IType> locals;
             IList<IParameter> parameters;
             GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
-                llvmWriter,
+                cWriter,
                 arrayType,
                 out code,
                 out tokenResolutions,
@@ -285,7 +285,7 @@
             var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
 
             // actual write
-            var opCodes = llvmWriter.WriteCustomMethodPart(constructedMethod, null);
+            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
             return opCodes.Last().Result;
         }
 
@@ -319,7 +319,7 @@
             // calculate alignment
             codeList.Add(Code.Dup);
 
-            var alignForType = Math.Max(LlvmWriter.PointerSize, !elementType.IsStructureType() ? elementSize : LlvmWriter.PointerSize);
+            var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
             codeList.AppendLoadInt(alignForType - 1);
             codeList.Add(Code.Add);
 

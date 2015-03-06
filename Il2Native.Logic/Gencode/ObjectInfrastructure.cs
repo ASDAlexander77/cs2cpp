@@ -62,25 +62,25 @@ namespace Il2Native.Logic.Gencode
         }
 
         public static void WriteAllocateMemory(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCodePart,
             FullyDefinedReference size,
             bool doNotTestNullValue)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(
+            var mallocResult = cWriter.WriteSetResultNumber(
                 opCodePart,
-                llvmWriter.System.System_Byte.ToPointerType());
-            writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
-            size.Type.WriteTypePrefix(llvmWriter);
+                cWriter.System.System_Byte.ToPointerType());
+            writer.Write("call i8* @{0}(", cWriter.GetAllocator());
+            size.Type.WriteTypePrefix(cWriter);
             writer.Write(" ");
-            llvmWriter.WriteResult(size);
+            cWriter.WriteResult(size);
             writer.WriteLine(")");
 
             if (!doNotTestNullValue)
             {
-                llvmWriter.WriteTestNullValueAndThrowException(
+                cWriter.WriteTestNullValueAndThrowException(
                     writer,
                     opCodePart,
                     mallocResult,
@@ -88,54 +88,54 @@ namespace Il2Native.Logic.Gencode
                     "new_obj");
             }
 
-            if (!llvmWriter.Gc)
+            if (!cWriter.Gc)
             {
-                llvmWriter.WriteMemSet(mallocResult, size);
+                cWriter.WriteMemSet(mallocResult, size);
                 writer.WriteLine(string.Empty);
             }
         }
 
         public static void WriteAllocateMemoryForObject(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCodePart,
             IType declaringClassType,
             bool doNotTestNullValue,
             bool enableStringFastAllocation = false)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var size = declaringClassType.GetTypeSize(llvmWriter);
+            var size = declaringClassType.GetTypeSize(cWriter);
 
             FullyDefinedReference allocResult;
 
             if (declaringClassType.IsMultiArray)
             {
-                allocResult = llvmWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+                allocResult = cWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
             }
             else if (declaringClassType.IsArray)
             {
-                allocResult = llvmWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType);
+                allocResult = cWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType);
             }
             else if (enableStringFastAllocation && declaringClassType.IsString)
             {
-                allocResult = llvmWriter.WriteStringAllocationSize(opCodePart, declaringClassType, llvmWriter.System.System_Char);
+                allocResult = cWriter.WriteStringAllocationSize(opCodePart, declaringClassType, cWriter.System.System_Char);
             }
             else
             {
-                allocResult = new ConstValue(size, llvmWriter.System.System_Int32);
+                allocResult = new ConstValue(size, cWriter.System.System_Int32);
             }
 
-            var mallocResult = llvmWriter.WriteSetResultNumber(
+            var mallocResult = cWriter.WriteSetResultNumber(
                 opCodePart,
-                llvmWriter.System.System_Byte.ToPointerType());
-            writer.Write("call i8* @{0}(", llvmWriter.GetAllocator());
-            allocResult.Type.WriteTypePrefix(llvmWriter);
+                cWriter.System.System_Byte.ToPointerType());
+            writer.Write("call i8* @{0}(", cWriter.GetAllocator());
+            allocResult.Type.WriteTypePrefix(cWriter);
             writer.Write(" {0}", allocResult);
             writer.WriteLine(")");
 
             if (!doNotTestNullValue)
             {
-                llvmWriter.WriteTestNullValueAndThrowException(
+                cWriter.WriteTestNullValueAndThrowException(
                     writer,
                     opCodePart,
                     mallocResult,
@@ -143,13 +143,13 @@ namespace Il2Native.Logic.Gencode
                     "new_obj");
             }
 
-            if (!llvmWriter.Gc)
+            if (!cWriter.Gc)
             {
-                llvmWriter.WriteMemSet(declaringClassType, mallocResult);
+                cWriter.WriteMemSet(declaringClassType, mallocResult);
                 writer.WriteLine(string.Empty);
             }
 
-            llvmWriter.WriteBitcast(opCodePart, mallocResult, declaringClassType);
+            cWriter.WriteBitcast(opCodePart, mallocResult, declaringClassType);
             writer.WriteLine(string.Empty);
         }
 
@@ -157,11 +157,11 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="typeIn">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteBoxMethod(this IType typeIn, LlvmWriter llvmWriter)
+        public static void WriteBoxMethod(this IType typeIn, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var classType = typeIn.ToClass();
             var normalType = typeIn.ToNormal();
@@ -173,34 +173,34 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
 
-            llvmWriter.WriteMethodStart(method, null);
+            cWriter.WriteMethodStart(method, null);
 
-            llvmWriter.WriteNewMethodBody(opCode, normalType, true);
+            cWriter.WriteNewMethodBody(opCode, normalType, true);
             var newObjectResult = opCode.Result;
             opCode.Result = null;
 
             if (!isStruct)
             {
-                llvmWriter.WriteLlvmLoad(
+                cWriter.WriteLlvmLoad(
                     opCode,
                     normalType,
-                    new FullyDefinedReference(llvmWriter.GetArgVarName("value", 0), normalType));
+                    new FullyDefinedReference(cWriter.GetArgVarName("value", 0), normalType));
                 writer.WriteLine(string.Empty);
             }
 
-            llvmWriter.WriteBoxObject(opCode, classType, newObjectResult, true);
+            cWriter.WriteBoxObject(opCode, classType, newObjectResult, true);
 
             writer.Write("ret ");
-            classType.WriteTypePrefix(llvmWriter);
+            classType.WriteTypePrefix(cWriter);
             writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
+            cWriter.WriteResult(opCode.Result);
 
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -211,13 +211,13 @@ namespace Il2Native.Logic.Gencode
         /// <param name="callInit">
         /// </param>
         public static void WriteBoxObject(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCode,
             IType declaringType,
             FullyDefinedReference newObjectResult = null,
             bool callInit = false)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var valueLoadResult = opCode.Result;
 
@@ -228,12 +228,12 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Boxing");
 
             writer.WriteLine(string.Empty);
-            llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
+            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             // call new if null
             if (newObjectResult == null)
             {
-                declaringType.WriteCallNewObjectMethod(llvmWriter, opCode);
+                declaringType.WriteCallNewObjectMethod(cWriter, opCode);
                 newObjectResult = opCode.Result;
             }
             else
@@ -247,7 +247,7 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(
+                if (!cWriter.WriteFieldAccess(
                     opCode,
                     declaringType.ToClass(),
                     declaringType.ToClass(),
@@ -267,10 +267,10 @@ namespace Il2Native.Logic.Gencode
             opCode.OpCodeOperands[0].Result = valueLoadResult;
             if (valueLoadResult == null)
             {
-                llvmWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
+                cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
             }
 
-            llvmWriter.SaveToField(opCode, fieldType, 0);
+            cWriter.SaveToField(opCode, fieldType, 0);
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
@@ -278,7 +278,7 @@ namespace Il2Native.Logic.Gencode
             if (callInit)
             {
                 opCode.Result = newObjectResult;
-                declaringType.WriteCallInitObjectMethod(llvmWriter, opCode);
+                declaringType.WriteCallInitObjectMethod(cWriter, opCode);
                 writer.WriteLine(string.Empty);
             }
 
@@ -289,68 +289,68 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallBoxObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallBoxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var method = new SynthesizedBoxMethod(type);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Box Object method");
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCode,
                 method,
                 false,
                 false,
                 false,
                 null,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCode.Result = opCode.Result.ToClassType();
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodeConstructorInfoPart">
         /// </param>
         public static void WriteCallConstructor(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodeConstructorInfoPart opCodeConstructorInfoPart)
         {
-            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Operand);
+            cWriter.WriteCallConstructor(opCodeConstructorInfoPart, opCodeConstructorInfoPart.Operand);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
         /// <param name="methodBase">
         /// </param>
         public static void WriteCallConstructor(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCodePart,
             IConstructor methodBase)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; Call Constructor");
             var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCodePart,
                 methodBase,
                 opCodePart.ToCode() == Code.Callvirt,
                 true,
                 true,
                 resAlloc,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCodePart.Result = resAlloc;
         }
 
@@ -358,27 +358,27 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallGetTypeObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallGetTypeObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedGetTypeStaticMethod(type, llvmWriter);
+            var method = new SynthesizedGetTypeStaticMethod(type, cWriter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call .getType Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCodeNope,
                 method,
                 false,
                 false,
                 false,
                 opCode.Result,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCode.Result = opCodeNope.Result;
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Getting data");
@@ -388,55 +388,55 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallInitObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallInitObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedInitMethod(type, llvmWriter);
+            var method = new SynthesizedInitMethod(type, cWriter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Init Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCodeNope,
                 method,
                 false,
                 true,
                 false,
                 opCode.Result,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallNewObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallNewObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedNewMethod(type, llvmWriter);
+            var method = new SynthesizedNewMethod(type, cWriter);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call New Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCodeNope,
                 method,
                 false,
                 false,
                 false,
                 opCode.Result,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCode.Result = opCodeNope.Result;
         }
 
@@ -444,48 +444,48 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteCallUnboxObjectMethod(this IType type, LlvmWriter llvmWriter, OpCodePart opCode)
+        public static void WriteCallUnboxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var method = new SynthesizedUnboxMethod(type);
             writer.WriteLine(string.Empty);
             writer.WriteLine("; call Unbox Object method");
-            llvmWriter.WriteCall(
+            cWriter.WriteCall(
                 opCode,
                 method,
                 false,
                 true,
                 false,
                 null,
-                llvmWriter.tryScopes.Count > 0 ? llvmWriter.tryScopes.Peek() : null);
+                cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="declaringType">
         /// </param>
         public static void WriteGetHashCodeObjectForEnum(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCode,
             IType declaringType)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var isStruct = declaringType.IsStructureType();
 
             writer.WriteLine("; Returning Hash Code");
             writer.WriteLine(string.Empty);
 
-            llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
+            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             writer.WriteLine("; Get data");
 
@@ -493,7 +493,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // write access to a field
                 if (
-                    !llvmWriter.WriteFieldAccess(
+                    !cWriter.WriteFieldAccess(
                         opCode,
                         declaringType.ToClass(),
                         declaringType.ToClass(),
@@ -516,12 +516,12 @@ namespace Il2Native.Logic.Gencode
             var memberAccessResultNumber = opCode.Result;
 
             opCode.Result = null;
-            llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
+            cWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
             writer.WriteLine(string.Empty);
 
-            if (opCode.Result.Type.IntTypeBitSize() != llvmWriter.System.System_Int32.IntTypeBitSize())
+            if (opCode.Result.Type.IntTypeBitSize() != cWriter.System.System_Int32.IntTypeBitSize())
             {
-                llvmWriter.AdjustIntConvertableTypes(writer, opCode, llvmWriter.System.System_Int32);
+                cWriter.AdjustIntConvertableTypes(writer, opCode, cWriter.System.System_Int32);
                 writer.WriteLine(string.Empty);
             }
 
@@ -532,95 +532,95 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteInternalGetTypeMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteInternalGetTypeMethod(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedGetTypeMethod(type, llvmWriter);
+            var method = new SynthesizedGetTypeMethod(type, cWriter);
 
-            var systemType = llvmWriter.System.System_Type;
+            var systemType = cWriter.System.System_Type;
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteLlvmLoad(
+            cWriter.WriteMethodStart(method, null);
+            cWriter.WriteLlvmLoad(
                 opCode,
                 type.ToClass(),
-                new FullyDefinedReference(llvmWriter.GetThisName(), llvmWriter.ThisType),
+                new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
                 true,
                 true);
             writer.WriteLine(string.Empty);
 
             var normalType = type.ToNormal();
 
-            llvmWriter.TypeTokenRequired.Add(normalType);
+            cWriter.TypeTokenRequired.Add(normalType);
 
-            llvmWriter.WriteGetTypeObject(opCode, normalType);
+            cWriter.WriteGetTypeObject(opCode, normalType);
 
             writer.Write("ret ");
-            systemType.WriteTypePrefix(llvmWriter);
+            systemType.WriteTypePrefix(cWriter);
 
             writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
+            cWriter.WriteResult(opCode.Result);
 
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
 
-            llvmWriter.methodsHaveDefinition.Add(method);
+            cWriter.methodsHaveDefinition.Add(method);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteInternalGetSizeMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteInternalGetSizeMethod(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedGetSizeMethod(type, llvmWriter);
+            var method = new SynthesizedGetSizeMethod(type, cWriter);
 
-            llvmWriter.WriteMethodStart(method, null, noLocalVars:true);
+            cWriter.WriteMethodStart(method, null, noLocalVars:true);
 
             writer.Write("ret ");
-            llvmWriter.GetIntTypeByByteSize(LlvmWriter.PointerSize).WriteTypePrefix(llvmWriter);
-            writer.WriteLine(" {0}", type.GetTypeSize(llvmWriter));
+            cWriter.GetIntTypeByByteSize(CWriter.PointerSize).WriteTypePrefix(cWriter);
+            writer.WriteLine(" {0}", type.GetTypeSize(cWriter));
 
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
 
-            llvmWriter.methodsHaveDefinition.Add(method);
+            cWriter.methodsHaveDefinition.Add(method);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="declaringType">
         /// </param>
-        public static void WriteGetTypeObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static void WriteGetTypeObject(this CWriter cWriter, OpCodePart opCode, IType declaringType)
         {
-            declaringType.WriteCallGetTypeObjectMethod(llvmWriter, opCode);
+            declaringType.WriteCallGetTypeObjectMethod(cWriter, opCode);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
         /// <param name="declaringTypeIn">
         /// </param>
-        public static void WriteInit(this LlvmWriter llvmWriter, OpCodePart opCodePart, IType declaringTypeIn)
+        public static void WriteInit(this CWriter cWriter, OpCodePart opCodePart, IType declaringTypeIn)
         {
-            llvmWriter.WriteInit(opCodePart, declaringTypeIn, opCodePart.OpCodeOperands[0].Result);
+            cWriter.WriteInit(opCodePart, declaringTypeIn, opCodePart.OpCodeOperands[0].Result);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
@@ -629,12 +629,12 @@ namespace Il2Native.Logic.Gencode
         /// <param name="objectSource">
         /// </param>
         public static void WriteInit(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCodePart,
             IType declaringTypeIn,
             FullyDefinedReference objectSource)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var declaringTypeNormal = declaringTypeIn.ToNormal();
             var declaringTypeClass = declaringTypeIn.IsValueType ? declaringTypeIn.ToClass() : declaringTypeIn;
@@ -643,10 +643,10 @@ namespace Il2Native.Logic.Gencode
 
             if (declaringTypeNormal.IsValueType)
             {
-                llvmWriter.WriteBitcast(opCodePart, objectSource, llvmWriter.System.System_Byte.ToPointerType());
+                cWriter.WriteBitcast(opCodePart, objectSource, cWriter.System.System_Byte.ToPointerType());
                 writer.WriteLine(string.Empty);
 
-                llvmWriter.WriteMemSet(declaringTypeNormal, opCodePart.Result);
+                cWriter.WriteMemSet(declaringTypeNormal, opCodePart.Result);
                 writer.WriteLine(string.Empty);
 
                 if (declaringTypeNormal.IsStructureType())
@@ -654,17 +654,17 @@ namespace Il2Native.Logic.Gencode
                     // init now
                     opCodePart.Result = objectSource;
 
-                    declaringTypeClass.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                    declaringTypeClass.WriteCallInitObjectMethod(cWriter, opCodePart);
                     writer.WriteLine(string.Empty);
                 }
             }
             else
             {
                 // this is type reference, initialize it with null
-                llvmWriter.WriteBitcast(
+                cWriter.WriteBitcast(
                     opCodePart,
                     objectSource,
-                    llvmWriter.System.System_Byte.ToPointerType().ToPointerType());
+                    cWriter.System.System_Byte.ToPointerType().ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 writer.WriteLine("store i8* null, i8** {0}", opCodePart.Result);
@@ -675,23 +675,23 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteInitObject(this LlvmWriter llvmWriter, IType declaringType, OpCodePart opCode)
+        public static void WriteInitObject(this CWriter cWriter, IType declaringType, OpCodePart opCode)
         {
             if (declaringType.IsInterface)
             {
                 return;
             }
 
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var thisType = opCode.Result.Type;
 
             // Init Object From Here
-            if (declaringType.HasAnyVirtualMethod(llvmWriter))
+            if (declaringType.HasAnyVirtualMethod(cWriter))
             {
                 var opCodeResult = opCode.Result;
 
@@ -700,26 +700,26 @@ namespace Il2Native.Logic.Gencode
                 // initialize virtual table
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteBitcast(
+                    cWriter.WriteBitcast(
                         opCode,
                         opCode.Result.ToClassType(),
-                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
+                        cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
                 }
                 else
                 {
-                    llvmWriter.WriteCast(
+                    cWriter.WriteCast(
                         opCode,
                         thisType.ToClass(),
-                        llvmWriter.GetThisName(),
-                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType(),
+                        cWriter.GetThisName(),
+                        cWriter.System.System_Byte.ToPointerType().ToPointerType(),
                         true);
                 }
 
                 writer.WriteLine(string.Empty);
 
-                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(llvmWriter));
+                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(cWriter));
 
-                llvmWriter.WriteResult(opCode.Result);
+                cWriter.WriteResult(opCode.Result);
 
                 writer.WriteLine(string.Empty);
 
@@ -734,29 +734,29 @@ namespace Il2Native.Logic.Gencode
 
                 writer.WriteLine("; set virtual interface table");
 
-                llvmWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
+                cWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
 
                 if (opCode.HasResult)
                 {
-                    llvmWriter.WriteBitcast(
+                    cWriter.WriteBitcast(
                         opCode,
                         opCode.Result.ToClassType(),
-                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
+                        cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
                 }
                 else
                 {
-                    llvmWriter.WriteCast(
+                    cWriter.WriteCast(
                         opCode,
                         @interface,
-                        llvmWriter.GetThisName(),
-                        llvmWriter.System.System_Byte.ToPointerType().ToPointerType(),
+                        cWriter.GetThisName(),
+                        cWriter.System.System_Byte.ToPointerType().ToPointerType(),
                         true);
                 }
 
                 writer.WriteLine(string.Empty);
 
-                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface, llvmWriter));
-                llvmWriter.WriteResult(opCode.Result);
+                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface, cWriter));
+                cWriter.WriteResult(opCode.Result);
                 writer.WriteLine(string.Empty);
 
                 // restore
@@ -768,52 +768,52 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="typeIn">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteInitObjectMethod(this IType typeIn, LlvmWriter llvmWriter)
+        public static void WriteInitObjectMethod(this IType typeIn, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var classType = typeIn.ToClass();
             var mainArrayType = classType;
 
-            var method = new SynthesizedInitMethod(mainArrayType, llvmWriter);
+            var method = new SynthesizedInitMethod(mainArrayType, cWriter);
             writer.WriteLine("; Init Object method");
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteLlvmLoad(
+            cWriter.WriteMethodStart(method, null);
+            cWriter.WriteLlvmLoad(
                 opCode,
                 classType,
-                new FullyDefinedReference(llvmWriter.GetThisName(), classType),
+                new FullyDefinedReference(cWriter.GetThisName(), classType),
                 true,
                 true);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteInitObject(mainArrayType, opCode);
+            cWriter.WriteInitObject(mainArrayType, opCode);
             writer.WriteLine("ret void");
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodeConstructorInfoPart">
         /// </param>
         /// <param name="declaringType">
         /// </param>
         public static void WriteNew(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodeConstructorInfoPart opCodeConstructorInfoPart,
             IType declaringType)
         {
-            declaringType.WriteCallNewObjectMethod(llvmWriter, opCodeConstructorInfoPart);
-            llvmWriter.WriteCallConstructor(opCodeConstructorInfoPart);
+            declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+            cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
@@ -824,7 +824,7 @@ namespace Il2Native.Logic.Gencode
         /// <param name="doNotTestNullValue">
         /// </param>
         public static void WriteNewMethodBody(
-            this LlvmWriter llvmWriter,
+            this CWriter cWriter,
             OpCodePart opCodePart,
             IType declaringTypeIn,
             bool doNotCallInit = false,
@@ -833,18 +833,18 @@ namespace Il2Native.Logic.Gencode
         {
             var declaringClassType = declaringTypeIn.ToClass();
 
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             writer.WriteLine("; New obj");
 
-            llvmWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
+            cWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
 
             var castResult = opCodePart.Result;
 
             if (!doNotCallInit)
             {
                 // typeResolver.WriteInitObject(writer, opCode, declaringType);
-                declaringClassType.WriteCallInitObjectMethod(llvmWriter, opCodePart);
+                declaringClassType.WriteCallInitObjectMethod(cWriter, opCodePart);
             }
 
             // restore result and type
@@ -858,36 +858,36 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteNewObjectMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteNewObjectMethod(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
-            var method = new SynthesizedNewMethod(type, llvmWriter);
+            var method = new SynthesizedNewMethod(type, cWriter);
             writer.WriteLine("; New Object method");
 
             var opCode = OpCodePart.CreateNop;
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteNewMethodBody(opCode, type);
+            cWriter.WriteMethodStart(method, null);
+            cWriter.WriteNewMethodBody(opCode, type);
             writer.WriteLine(string.Empty);
             writer.Write("ret ");
-            type.WriteTypePrefix(llvmWriter);
+            type.WriteTypePrefix(cWriter);
             writer.Write(" ");
-            llvmWriter.WriteResult(opCode.Result);
+            cWriter.WriteResult(opCode.Result);
             writer.WriteLine(string.Empty);
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
-        public static void WriteUnboxMethod(this IType type, LlvmWriter llvmWriter)
+        public static void WriteUnboxMethod(this IType type, CWriter cWriter)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var method = new SynthesizedUnboxMethod(type);
             writer.WriteLine("; Unbox method");
@@ -901,34 +901,34 @@ namespace Il2Native.Logic.Gencode
                 opCode.Result = new FullyDefinedReference("%agg.result", normalType);
             }
 
-            llvmWriter.WriteMethodStart(method, null);
-            llvmWriter.WriteLlvmLoad(
+            cWriter.WriteMethodStart(method, null);
+            cWriter.WriteLlvmLoad(
                 opCode,
                 type.ToClass(),
-                new FullyDefinedReference(llvmWriter.GetThisName(), llvmWriter.ThisType),
+                new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
                 true,
                 true);
             writer.WriteLine(string.Empty);
 
-            var resultPresents = llvmWriter.WriteUnboxObject(opCode, normalType);
+            var resultPresents = cWriter.WriteUnboxObject(opCode, normalType);
 
             writer.Write("ret ");
             if (!isStruct)
             {
                 if (normalType.IsEnum)
                 {
-                    normalType.GetEnumUnderlyingType().WriteTypePrefix(llvmWriter);
+                    normalType.GetEnumUnderlyingType().WriteTypePrefix(cWriter);
                 }
                 else
                 {
-                    normalType.WriteTypePrefix(llvmWriter);
+                    normalType.WriteTypePrefix(cWriter);
                 }
 
                 writer.Write(" ");
 
                 if (resultPresents)
                 {
-                    llvmWriter.WriteResult(opCode.Result);
+                    cWriter.WriteResult(opCode.Result);
                 }
                 else
                 {
@@ -940,12 +940,12 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(" void");
             }
 
-            llvmWriter.WriteMethodEnd(method, null);
+            cWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="llvmWriter">
+        /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
@@ -953,23 +953,23 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static bool WriteUnboxObject(this LlvmWriter llvmWriter, OpCodePart opCode, IType declaringType)
+        public static bool WriteUnboxObject(this CWriter cWriter, OpCodePart opCode, IType declaringType)
         {
-            var writer = llvmWriter.Output;
+            var writer = cWriter.Output;
 
             var isStruct = declaringType.IsStructureType();
 
             writer.WriteLine("; Unboxing");
             writer.WriteLine(string.Empty);
 
-            llvmWriter.CheckIfExternalDeclarationIsRequired(declaringType);
+            cWriter.CheckIfExternalDeclarationIsRequired(declaringType);
 
             writer.WriteLine("; Copy data");
 
             if (!isStruct)
             {
                 // write access to a field
-                if (!llvmWriter.WriteFieldAccess(
+                if (!cWriter.WriteFieldAccess(
                     opCode,
                     declaringType.ToClass(),
                     declaringType.ToClass(),
@@ -991,7 +991,7 @@ namespace Il2Native.Logic.Gencode
                 opCode.Result = null;
             }
 
-            llvmWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
+            cWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");
