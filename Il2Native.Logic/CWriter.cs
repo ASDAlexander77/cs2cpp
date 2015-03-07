@@ -86,10 +86,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<MethodKey> methodDeclRequired = new NamespaceContainer<MethodKey>();
-
-        /// <summary>
-        /// </summary>
         private readonly IDictionary<int, IMethod> methodsByToken = new SortedDictionary<int, IMethod>();
 
         /// <summary>
@@ -159,6 +155,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> forwardTypeDeclarationWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        private readonly ISet<MethodKey> forwardMethodDeclarationWritten = new NamespaceContainer<MethodKey>();
 
         /// <summary>
         /// </summary>
@@ -573,6 +573,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
+            this.WriteMethodBeginning(method, genericContext);
             this.WriteMethodBody(method);
             this.WritePostMethodEnd(method);
         }
@@ -622,9 +623,25 @@ namespace Il2Native.Logic
             // to gather all info about method which we need
             IlReader.UsedStrings = new SortedDictionary<int, string>();
             IlReader.CalledMethods = new NamespaceContainer<IMethod>();
+        }
 
+        private void WriteMethodBeginning(IMethod method, IGenericContext genericContext)
+        {
+            if (method.IsAbstract
+                || method.IsSkipped())
+            {
+                return;
+            }
+
+
+            this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
+            WriteMethodRequiredDeclatations();
+
+            // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
+            ReadMethodInfo(method, genericContext);
+            
             // extern "c"
-            this.Output.Write(declarationPrefix);
+            this.Output.Write(this.declarationPrefix);
 
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
@@ -701,10 +718,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" {");
                 this.Output.Indent++;
 
-                if (!noLocalVars)
-                {
-                    this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
-                }
+                this.WriteLocalVariableDeclarations(methodBodyBytes.LocalVariables);
 
                 this.Output.StartMethodBody();
             }
@@ -1698,8 +1712,6 @@ namespace Il2Native.Logic
 
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
-                    this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
-
                     break;
 
                 case Code.Ldvirtftn:
@@ -1763,8 +1775,6 @@ namespace Il2Native.Logic
                     intPtrType = this.System.System_IntPtr;
                     voidPtrType = this.System.System_Void.ToPointerType();
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
-
-                    this.CheckIfMethodExternalDeclarationIsRequired(opCodeMethodInfoPart.Operand);
 
                     break;
 
@@ -2585,26 +2595,6 @@ namespace Il2Native.Logic
             index += interfacesCount;
 
             return index;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodBase">
-        /// </param>
-        public void CheckIfMethodExternalDeclarationIsRequired(
-            IMethod methodBase,
-            IType ownerOfExplicitInterface = null,
-            bool checkParamsAndReturn = false)
-        {
-            if (methodBase == null || methodBase.Name.StartsWith("%") || string.IsNullOrEmpty(methodBase.Name))
-            {
-                return;
-            }
-
-            if (methodBase.AssemblyQualifiedName != this.AssemblyQualifiedName)
-            {
-                this.methodDeclRequired.Add(new MethodKey(methodBase, ownerOfExplicitInterface));
-            }
         }
 
         /// <summary>
@@ -5892,7 +5882,6 @@ namespace Il2Native.Logic
 
                 foreach (var methodInVirtualTable in virtualTable)
                 {
-                    this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTable.Value, checkParamsAndReturn: checkParamsAndReturn);
                 }
 
                 index++;
@@ -5924,7 +5913,6 @@ namespace Il2Native.Logic
 
                 foreach (var methodInVirtualTableOfInterface in virtualInterfaceTable)
                 {
-                    this.CheckIfMethodExternalDeclarationIsRequired(methodInVirtualTableOfInterface.Value, checkParamsAndReturn: checkParamsAndReturn);
                 }
             }
         }
@@ -6105,13 +6093,6 @@ namespace Il2Native.Logic
             {
                 var method = "Void_System_Environment_set_ExitCodeFInt32N";
                 this.Output.WriteLine("{0}(0)", method);
-
-                this.CheckIfMethodExternalDeclarationIsRequired(
-                    new SynthesizedMethodStringAdapter(
-                        "set_ExitCode",
-                        "System.Environment",
-                       this.System.System_Void,
-                        new[] { this.System.System_Int32.ToParameter() }));
             }
 
             if (!MainMethod.ReturnType.IsVoid())
@@ -6136,12 +6117,6 @@ namespace Il2Native.Logic
             {
                 var method = "Int32 System.Environment.get_ExitCode()";
                 this.Output.WriteLine("local1 = {0}()", method);
-
-                this.CheckIfMethodExternalDeclarationIsRequired(
-                    new SynthesizedMethodStringAdapter(
-                        "get_ExitCode",
-                        "System.Environment",
-                       this.System.System_Int32));
             }
 
             this.Output.WriteLine("return local1;");
@@ -6375,49 +6350,6 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (this.methodDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (
-                    var methodKey in this.methodDeclRequired.Where(m => !this.processedMethods.Contains(m)))
-                {
-                    var externalMethodDecl = methodKey.Method;
-
-                    this.Output.Write("declare ");
-
-                    var ctor = externalMethodDecl as IConstructor;
-                    if (ctor != null)
-                    {
-                        ReadMethodInfo(ctor, null);
-                        this.Output.Write("void ");
-                        this.WriteMethodDefinitionName(this.Output, ctor);
-                        this.WriteMethodParamsDef(
-                            this.Output,
-                            ctor,
-                            this.HasMethodThis,
-                            ThisType,
-                           this.System.System_Void);
-                        this.Output.WriteLine(string.Empty);
-                        continue;
-                    }
-
-                    var method = externalMethodDecl;
-                    if (method != null)
-                    {
-                        ReadMethodInfo(method, null);
-                        this.WriteMethodReturnType(this.Output, method);
-                        this.WriteMethodDefinitionName(this.Output, method, methodKey.OwnerOfExplicitInterface);
-                        this.WriteMethodParamsDef(
-                            this.Output,
-                            method,
-                            HasMethodThis,
-                            methodKey.OwnerOfExplicitInterface ?? ThisType,
-                            method.ReturnType);
-                        this.Output.WriteLine(string.Empty);
-                    }
-                }
-            }
-
             if (this.staticFieldExtrenalDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -6426,6 +6358,41 @@ namespace Il2Native.Logic
                 {
                     this.WriteStaticFieldDeclaration(staticFieldExtrenalDecl, true);
                 }
+            }
+        }
+
+        private void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
+        {
+            var ctor = methodDecl as IConstructor;
+            if (ctor != null)
+            {
+                ReadMethodInfo(ctor, null);
+                // extern "c"
+                this.Output.Write(this.declarationPrefix);
+                this.WriteMethodDefinitionName(this.Output, ctor);
+                this.WriteMethodParamsDef(
+                    this.Output,
+                    ctor,
+                    this.HasMethodThis,
+                    ThisType,
+                    this.System.System_Void);
+                return;
+            }
+
+            var method = methodDecl;
+            if (method != null)
+            {
+                ReadMethodInfo(method, null);
+                // extern "c"
+                this.Output.Write(this.declarationPrefix);
+                this.WriteMethodReturnType(this.Output, method);
+                this.WriteMethodDefinitionName(this.Output, method, ownerOfExplicitInterface);
+                this.WriteMethodParamsDef(
+                    this.Output,
+                    method,
+                    HasMethodThis,
+                    ownerOfExplicitInterface ?? ThisType,
+                    method.ReturnType);
             }
         }
 
@@ -6561,6 +6528,21 @@ namespace Il2Native.Logic
             foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+        }
+
+        private void WriteMethodRequiredDeclatations()
+        {
+            foreach (
+                var requiredDeclarationMethod in
+                    IlReader.CalledMethods
+                        .Where(
+                            requiredMethodDeclaration =>
+                                this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null)))
+                )
+            {
+                WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
+                this.Output.WriteLine(";");
             }
         }
 

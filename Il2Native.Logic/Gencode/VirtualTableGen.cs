@@ -406,8 +406,6 @@ namespace Il2Native.Logic.Gencode
                     cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
                     writer.Write("* ");
                     cWriter.WriteMethodDefinitionName(writer, method);
-
-                    cWriter.CheckIfMethodExternalDeclarationIsRequired(method);
                 }
 
                 writer.Write(" to i8*)");
