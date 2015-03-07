@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var mallocResult = cWriter.WriteSetResultNumber(
+            var mallocResult = cWriter.SetResultNumber(
                 opCodePart,
                 cWriter.System.System_Byte.ToPointerType());
             writer.Write("call i8* @{0}(", cWriter.GetAllocator());
@@ -125,7 +125,7 @@ namespace Il2Native.Logic.Gencode
                 allocResult = new ConstValue(size, cWriter.System.System_Int32);
             }
 
-            var mallocResult = cWriter.WriteSetResultNumber(
+            var mallocResult = cWriter.SetResultNumber(
                 opCodePart,
                 cWriter.System.System_Byte.ToPointerType());
             writer.Write("call i8* @{0}(", cWriter.GetAllocator());

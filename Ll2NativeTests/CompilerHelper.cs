@@ -76,16 +76,16 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = false;
+        public const bool DebugInfo = true;
 
         /// <summary>
         /// </summary>
-        public const bool MultiCore = true;
+        public const bool MultiCore = false;
 
         /// <summary>
         ///     ex. llc -O2 'file'.ll
         /// </summary>
-        public const bool CompileWithOptimization = true;
+        public const bool CompileWithOptimization = false;
 
         /// <summary>
         /// </summary>

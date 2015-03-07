@@ -40,7 +40,7 @@ namespace Il2Native.Logic.Gencode
             var first = opCodeMethodInfo.OpCodeOperands.First();
             var resultType = first.Result.Type.ToDereferencedType();
 
-            cWriter.WriteSetResultNumber(opCodeMethodInfo, resultType);
+            cWriter.SetResultNumber(opCodeMethodInfo, resultType);
 
             writer.Write(oper);
 
@@ -144,7 +144,7 @@ namespace Il2Native.Logic.Gencode
                 }
             } 
             
-            var opResult = cWriter.WriteSetResultNumber(
+            var opResult = cWriter.SetResultNumber(
                 opCodeMethodInfo,
                 intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
 
@@ -160,7 +160,7 @@ namespace Il2Native.Logic.Gencode
 
             if (extractValue)
             {
-                cWriter.WriteSetResultNumber(
+                cWriter.SetResultNumber(
                     opCodeMethodInfo,
                     intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
                 writer.Write("extractvalue { ");

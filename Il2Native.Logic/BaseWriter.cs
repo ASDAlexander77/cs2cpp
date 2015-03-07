@@ -279,7 +279,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public ReturnResult ResultOf(OpCodePart opCode, bool doNotUseCachedResult = false)
+        public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false)
         {
             if (!doNotUseCachedResult && opCode.HasResult)
             {
@@ -324,8 +324,8 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-                    var op1 = this.ResultOf(opCode.OpCodeOperands[0]);
-                    return !op1.IsConst ? op1 : this.ResultOf(opCode.OpCodeOperands[1]);
+                    var op1 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+                    return !op1.IsConst ? op1 : this.EstimatedResultOf(opCode.OpCodeOperands[1]);
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Ceq:
@@ -411,7 +411,7 @@ namespace Il2Native.Logic
                 case Code.Neg:
                 case Code.Not:
                 case Code.Dup:
-                    return this.ResultOf(opCode.OpCodeOperands[0]);
+                    return this.EstimatedResultOf(opCode.OpCodeOperands[0]);
                 case Code.Ldlen:
                     return new ReturnResult(this.System.System_Int32);
                 case Code.Ldloca:
@@ -465,15 +465,15 @@ namespace Il2Native.Logic
                 case Code.Ldelem_U1:
                 case Code.Ldelem_U2:
                 case Code.Ldelem_U4:
-                    var result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    var result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     return new ReturnResult(result.Type.GetElementType());
                 case Code.Ldelem_Ref:
-                    result = this.ResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
+                    result = this.EstimatedResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
                     return result;
                 case Code.Ldelema:
-                    result = this.ResultOf(opCode.OpCodeOperands[0]);
+                    result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
 
                     // we are loading address of item of the array so we need to return type of element not the type of the array
                     // var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
@@ -528,7 +528,7 @@ namespace Il2Native.Logic
                 case Code.Ldind_R8:
                     return new ReturnResult(this.System.System_Double);
                 case Code.Ldind_Ref:
-                    var resultType = this.ResultOf(opCode.OpCodeOperands[0]).Type;
+                    var resultType = this.EstimatedResultOf(opCode.OpCodeOperands[0]).Type;
                     return new ReturnResult(resultType.GetElementType());
                 case Code.Ldflda:
                 case Code.Ldsflda:
@@ -543,7 +543,7 @@ namespace Il2Native.Logic
                 case Code.Box:
 
                     // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
-                    var res = this.ResultOf(opCode.OpCodeOperands[0]);
+                    var res = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
                     if (res != null)
                     {
                         result = new ReturnResult(res.Type.ToClass());
@@ -900,7 +900,7 @@ namespace Il2Native.Logic
             }
             else if (opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operandIndex)
             {
-                var resultOf = this.ResultOf(opCode.OpCodeOperands[operandIndex]);
+                var resultOf = this.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
                 type = resultOf.Type;
             }
 
@@ -959,7 +959,7 @@ namespace Il2Native.Logic
 
         protected int IntOpOperandBitSize(OpCodePart opCode)
         {
-            var op1ReturnResult = this.ResultOf(opCode);
+            var op1ReturnResult = this.EstimatedResultOf(opCode);
 
             if (op1ReturnResult == null || op1ReturnResult.Type == null || op1ReturnResult.IsConst)
             {
@@ -975,6 +975,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        [Obsolete]
         protected bool IsFloatingPointOp(OpCodePart opCode)
         {
             return opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0])
@@ -989,7 +990,7 @@ namespace Il2Native.Logic
         /// </returns>
         protected bool IsFloatingPointOpOperand(OpCodePart opCode)
         {
-            var op1ReturnResult = this.ResultOf(opCode);
+            var op1ReturnResult = this.EstimatedResultOf(opCode);
 
             // TODO: result of unbox is null, fix it
             if (op1ReturnResult == null || op1ReturnResult.Type == null)
@@ -1014,7 +1015,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (!opCode.OpCodeOperands.Any(o => o.Result.Type.IsPointer))
+            if (!opCode.OpCodeOperands.Any(o => this.EstimatedResultOf(o).Type.IsPointer))
             {
                 return false;
             }
@@ -1420,7 +1421,7 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stind_I1))
             {
-                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                 var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
                 if (type.IsVoid() || type.IntTypeBitSize() > 8)
                 {
@@ -1468,7 +1469,7 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Stelem_I1))
             {
-                var result = this.ResultOf(opCodePart.OpCodeOperands[0]);
+                var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                 var type = result.Type.GetElementType();
                 if (type.IsVoid() || type.IntTypeBitSize() > 8)
                 {

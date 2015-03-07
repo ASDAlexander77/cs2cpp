@@ -206,10 +206,11 @@ namespace Il2Native.Logic.Gencode
             var opCodeNopeForBitCast = OpCodePart.CreateNop;
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
             opCodeNopeForBitCast.OpCodeOperands[0].Result = methodResult;
+
+            writer.Write("bitcast");
             cWriter.UnaryOper(
                 writer,
                 opCodeNopeForBitCast,
-                "bitcast",
                 methodResult.Type,
                 options: CWriter.OperandOptions.GenerateResult);
             writer.Write(" to ");
@@ -444,7 +445,7 @@ namespace Il2Native.Logic.Gencode
                 var methodResultNumber = opCode.Result;
 
                 // switch code if method is static
-                var compareResult = cWriter.WriteSetResultNumber(opCode, cWriter.System.System_Boolean);
+                var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
                 writer.Write("icmp ne ");
                 objectResultNumber.Type.WriteTypePrefix(cWriter);
                 writer.Write(" ");

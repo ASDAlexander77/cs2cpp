@@ -367,5 +367,18 @@ namespace Il2Native.Logic
                 this.sw.Write(format, arg);
             }
         }
+
+        public override void WriteLine(char c)
+        {
+            if (!this.isMethod)
+            {
+                base.WriteLine(c);
+            }
+            else
+            {
+                this.sw.Indent = Indent;
+                this.sw.WriteLine(c);
+            }
+        }
     }
 }

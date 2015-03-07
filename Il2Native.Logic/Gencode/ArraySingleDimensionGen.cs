@@ -529,7 +529,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
             }
 
-            var result = cWriter.WriteSetResultNumber(opCode, dataType);
+            var result = cWriter.SetResultNumber(opCode, dataType);
             writer.Write("getelementptr ");
             arrayInstanceResult.Type.WriteTypePrefix(cWriter, true);
             writer.Write(" ");

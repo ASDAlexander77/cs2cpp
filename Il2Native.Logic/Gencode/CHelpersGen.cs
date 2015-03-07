@@ -79,7 +79,8 @@ namespace Il2Native.Logic.Gencode
                 requiredType = requiredInterface;
             }
 
-            cWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType ?? thisType);
+            writer.Write("bitcast");
+            cWriter.UnaryOper(writer, opCodeMethodInfo, requiredType ?? thisType);
             writer.Write(" to ");
             cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.WriteLine("**");
@@ -87,7 +88,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
 
             // load pointer
-            cWriter.WriteSetResultNumber(
+            cWriter.SetResultNumber(
                 opCodeMethodInfo,
                 cWriter.System.System_Byte.ToPointerType().ToPointerType());
             writer.Write("load ");
@@ -100,7 +101,7 @@ namespace Il2Native.Logic.Gencode
 
             // get address of a function
             writer.WriteLine("; Get Virtual Index of Method: {0}", methodInfo.FullName);
-            cWriter.WriteSetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
+            cWriter.SetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
             writer.Write("getelementptr inbounds ");
             cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
@@ -109,7 +110,7 @@ namespace Il2Native.Logic.Gencode
             var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
 
             // load method address
-            cWriter.WriteSetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
+            cWriter.SetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
             writer.Write("load ");
             cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
@@ -276,36 +277,36 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var resultOf = cWriter.ResultOf(opCode.OpCodeOperands[0]);
+            var resultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
             var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
             var typeToTest = resultOf.Type.IsEnum ? resultOf.Type.GetEnumUnderlyingType() : resultOf.Type;
             if (!typesToExclude.Any(typeToTest.TypeEquals) && !areBothPointers)
             {
                 if (resultOf.Type.IsReal())
                 {
+                    writer.Write(realConvert);
                     cWriter.UnaryOper(
                         writer,
                         opCode,
-                        realConvert,
                         resultType: toType,
                         options: CWriter.OperandOptions.GenerateResult);
                 }
                 else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
                 {
                     Debug.Assert(!toType.IsPointer);
+                    writer.Write("ptrtoint");
                     cWriter.UnaryOper(
                         writer,
                         opCode,
-                        "ptrtoint",
                         resultType: toType,
                         options: CWriter.OperandOptions.GenerateResult);
                 }
                 else if (toType.IsPointer || toType.IsByRef)
                 {
+                    writer.Write(resultOf.Type.IsValueType() && !resultOf.Type.IsPointer && !resultOf.Type.IsByRef ? "inttoptr" : "bitcast");
                     cWriter.UnaryOper(
                         writer,
                         opCode,
-                        resultOf.Type.IsValueType() && !resultOf.Type.IsPointer && !resultOf.Type.IsByRef ? "inttoptr" : "bitcast",
                         resultType: toType,
                         options: CWriter.OperandOptions.GenerateResult);
                 }
@@ -337,10 +338,10 @@ namespace Il2Native.Logic.Gencode
                         return;
                     }
 
+                    writer.Write(intConvert);
                     cWriter.UnaryOper(
                         writer,
                         opCode,
-                        intConvert,
                         resultType: toType,
                         options: CWriter.OperandOptions.GenerateResult);
                 }
@@ -374,10 +375,12 @@ namespace Il2Native.Logic.Gencode
 
             var incomingResult = opCode.Result;
 
+            writer.Write(intConvert);
+            writer.Write(' ');
+
             cWriter.ProcessOperator(
                 writer,
                 opCode,
-                intConvert,
                 opCode.Result.Type,
                 toType,
                 CWriter.OperandOptions.GenerateResult);
@@ -386,7 +389,7 @@ namespace Il2Native.Logic.Gencode
 
             opCode.Result = incomingResult;
 
-            cWriter.WriteOperandResult(writer, opCode);
+            cWriter.WriteResultOrActualWrite(writer, opCode);
 
             writer.Write(" to ");
             toType.WriteTypePrefix(cWriter);
@@ -481,7 +484,7 @@ namespace Il2Native.Logic.Gencode
 
             var result = opCode.Result;
 
-            cWriter.WriteSetResultNumber(opCode, toType);
+            cWriter.SetResultNumber(opCode, toType);
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(cWriter, true);
             writer.Write(" ");
@@ -509,7 +512,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.WriteSetResultNumber(opCode, toType);
+            cWriter.SetResultNumber(opCode, toType);
             writer.Write("bitcast ");
             source.Type.WriteTypePrefix(cWriter, asReference);
             writer.Write(" ");
@@ -530,7 +533,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.WriteSetResultNumber(opCode, cWriter.System.System_Byte.ToPointerType());
+            cWriter.SetResultNumber(opCode, cWriter.System.System_Byte.ToPointerType());
             writer.Write("bitcast ");
             result.Type.WriteTypePrefix(cWriter, !result.Type.IsByRef && result.Type.IsValueType());
             writer.Write(" ");
@@ -559,7 +562,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.WriteSetResultNumber(opCode, null);
+            cWriter.SetResultNumber(opCode, null);
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(cWriter, true);
             writer.Write(' ');
@@ -749,7 +752,7 @@ namespace Il2Native.Logic.Gencode
                      || bareType.IsDerivedFrom(toType) 
                      || (fromResult is ConstValue))
             {
-                cWriter.WriteSetResultNumber(opCode, toType);
+                cWriter.SetResultNumber(opCode, toType);
                 writer.Write("bitcast ");
                 fromResult.Type.WriteTypePrefix(cWriter);
                 writer.Write(' ');
@@ -805,7 +808,7 @@ namespace Il2Native.Logic.Gencode
                 ////opCode.Result = res;
                 ////this.WriteInterfaceAccess(writer, opCode, fromType, toType);
             }
-            cWriter.WriteSetResultNumber(opCode, toType);
+            cWriter.SetResultNumber(opCode, toType);
             writer.Write("bitcast ");
             fromType.WriteTypePrefix(cWriter, true);
             writer.Write(' ');
@@ -841,7 +844,7 @@ namespace Il2Native.Logic.Gencode
 
             Debug.Assert(!source.Type.IsPointer && !source.Type.IsByRef);
 
-            cWriter.WriteSetResultNumber(opCode, toType);
+            cWriter.SetResultNumber(opCode, toType);
             writer.Write("inttoptr ");
             source.Type.WriteTypePrefix(cWriter);
             writer.Write(" ");
@@ -937,22 +940,7 @@ namespace Il2Native.Logic.Gencode
                     effectiveSource = opCode.Result;
                 }
 
-                cWriter.WriteSetResultNumber(opCode, typeToLoad);
-
-                // last part
-                writer.Write("load ");
-                typeToLoad.WriteTypePrefix(cWriter, structAsRef);
-                if (appendReference)
-                {
-                    // add reference to type
-                    writer.Write('*');
-                }
-
-                writer.Write(' ');
-                writer.Write(effectiveSource.ToString());
-
-                // TODO: optional do we need to calculate it propertly?
-                writer.Write(", align " + CWriter.PointerSize);
+                opCode.Result = effectiveSource;
             }
             else
             {
@@ -1034,19 +1022,19 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
+            cWriter.WriteResult(destination);
+
+            writer.Write(" = ");
+
             cWriter.ProcessOperator(
                 writer,
                 opCode,
-                "store",
                 typeToSave,
                 options: CWriter.OperandOptions.CastPointersToBytePointer | CWriter.OperandOptions.AdjustIntTypes,
                 operand1: operandIndex,
                 operand2: -1);
+
             cWriter.WriteOperandResult(writer, opCode, operandIndex);
-            writer.Write(", ");
-            typeToSave.WriteTypePrefix(cWriter);
-            writer.Write("* ");
-            writer.Write(destination);
         }
 
         public static void WriteLlvmSavePrimitiveIntoStructure(
@@ -1180,7 +1168,7 @@ namespace Il2Native.Logic.Gencode
 
             Debug.Assert(!toType.IsPointer);
 
-            cWriter.WriteSetResultNumber(opCode, toType);
+            cWriter.SetResultNumber(opCode, toType);
             writer.Write("ptrtoint ");
             source.Type.WriteTypePrefix(cWriter, true);
             writer.Write(" ");

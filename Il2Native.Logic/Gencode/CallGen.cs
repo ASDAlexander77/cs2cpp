@@ -246,7 +246,7 @@ namespace Il2Native.Logic.Gencode
             // if this is external method reference we need to load reference first
             // %4 = load i32 ()** @__glewCreateProgram, align 4
             // load pointer
-            cWriter.WriteSetResultNumber(
+            cWriter.SetResultNumber(
                 opCodeMethodInfo,
                 cWriter.System.System_Byte.ToPointerType().ToPointerType());
             writer.Write("load ");
@@ -400,7 +400,7 @@ namespace Il2Native.Logic.Gencode
             opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
                 ? opCodeMethodInfo.OpCodeOperands[0]
                 : null;
-            resultOfFirstOperand = opCodeFirstOperand != null ? cWriter.ResultOf(opCodeFirstOperand) : null;
+            resultOfFirstOperand = opCodeFirstOperand != null ? cWriter.EstimatedResultOf(opCodeFirstOperand) : null;
 
             isIndirectMethodCall = isVirtual
                                    &&
@@ -460,13 +460,13 @@ namespace Il2Native.Logic.Gencode
                 // todo so you need to request a destination reference as you did before
 
                 // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
-                cWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
+                cWriter.SetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
                 //cWriter.WriteAlloca(methodInfo.ReturnType);
                 writer.WriteLine(string.Empty);
             }
             else if (!isReturnVoidType)
             {
-                cWriter.WriteSetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
+                cWriter.SetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
 
             return opCodeMethodInfo.Result;
