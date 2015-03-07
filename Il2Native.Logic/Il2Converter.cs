@@ -271,7 +271,7 @@ namespace Il2Native.Logic
                         codeWriter.WriteMethodStart(method, genericMethodContext);
 
                         // TODO: remove next if when all is done
-                        if (method.Name == "Main")
+                        if (method.AssemblyQualifiedName != null && method.AssemblyQualifiedName.StartsWith("test-"))
                         {
                             foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
                             {

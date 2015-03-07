@@ -79,8 +79,7 @@ namespace Il2Native.Logic.Gencode
                 requiredType = requiredInterface;
             }
 
-            writer.Write("bitcast");
-            cWriter.UnaryOper(writer, opCodeMethodInfo, requiredType ?? thisType);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType ?? thisType);
             writer.Write(" to ");
             cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.WriteLine("**");
@@ -256,145 +255,34 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="realConvert">
-        /// </param>
-        /// <param name="intConvert">
-        /// </param>
         /// <param name="toType">
         /// </param>
-        /// <param name="toAddress">
-        /// </param>
-        /// <param name="typesToExclude">
-        /// </param>
-        public static void LlvmConvert(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            string realConvert,
-            string intConvert,
-            IType toType,
-            bool toAddress,
-            params IType[] typesToExclude)
+        public static void ConvertCCast(this CWriter cWriter, OpCodePart opCode, IType toType)
         {
             var writer = cWriter.Output;
 
-            var resultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
-            var areBothPointers = (resultOf.Type.IsPointer || resultOf.Type.IsByRef) && toAddress;
-            var typeToTest = resultOf.Type.IsEnum ? resultOf.Type.GetEnumUnderlyingType() : resultOf.Type;
-            if (!typesToExclude.Any(typeToTest.TypeEquals) && !areBothPointers)
-            {
-                if (resultOf.Type.IsReal())
-                {
-                    writer.Write(realConvert);
-                    cWriter.UnaryOper(
-                        writer,
-                        opCode,
-                        resultType: toType,
-                        options: CWriter.OperandOptions.GenerateResult);
-                }
-                else if (resultOf.Type.IsPointer || resultOf.Type.IsByRef)
-                {
-                    Debug.Assert(!toType.IsPointer);
-                    writer.Write("ptrtoint");
-                    cWriter.UnaryOper(
-                        writer,
-                        opCode,
-                        resultType: toType,
-                        options: CWriter.OperandOptions.GenerateResult);
-                }
-                else if (toType.IsPointer || toType.IsByRef)
-                {
-                    writer.Write(resultOf.Type.IsValueType() && !resultOf.Type.IsPointer && !resultOf.Type.IsByRef ? "inttoptr" : "bitcast");
-                    cWriter.UnaryOper(
-                        writer,
-                        opCode,
-                        resultType: toType,
-                        options: CWriter.OperandOptions.GenerateResult);
-                }
-                else
-                {
-                    var intSize = toType.IntTypeBitSize();
-                    if (intSize > 0)
-                    {
-                        var toIntType = toType.IsUnsignedType()
-                            ? cWriter.GetUIntTypeByByteSize(intSize / 8)
-                            : cWriter.GetIntTypeByByteSize(intSize / 8);
-                        if (cWriter.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], toIntType))
-                        {
-                            opCode.Result = opCode.OpCodeOperands[0].Result;
-                            return;
-                        }
-                    }
+            writer.Write("(");
+            toType.WriteTypePrefix(cWriter);
+            writer.Write(") ");
 
-                    // if types are equals then
-                    if (opCode.OpCodeOperands[0].Result.Type.TypeEquals(toType))
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                        return;
-                    }
+            writer.Write("(");
+            cWriter.WriteResultOrActualWrite(writer, opCode);
+            writer.Write(")");
 
-                    if (intSize == opCode.OpCodeOperands[0].Result.Type.IntTypeBitSize())
-                    {
-                        opCode.Result = opCode.OpCodeOperands[0].Result;
-                        return;
-                    }
-
-                    writer.Write(intConvert);
-                    cWriter.UnaryOper(
-                        writer,
-                        opCode,
-                        resultType: toType,
-                        options: CWriter.OperandOptions.GenerateResult);
-                }
-
-                writer.Write(" to ");
-                toType.WriteTypePrefix(cWriter);
-            }
-            else
-            {
-                opCode.Result = opCode.OpCodeOperands[0].Result;
-            }
+            cWriter.SetResultNumber(opCode, toType);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="intConvert">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public static void LlvmIntConvert(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            string intConvert,
-            IType toType)
+        public static void ConvertCCast(this CWriter cWriter, OpCodePart opCode, int operand, IType toType)
         {
             var writer = cWriter.Output;
 
-            var incomingResult = opCode.Result;
-
-            writer.Write(intConvert);
-            writer.Write(' ');
-
-            cWriter.ProcessOperator(
-                writer,
-                opCode,
-                opCode.Result.Type,
-                toType,
-                CWriter.OperandOptions.GenerateResult);
-
-            var returnResult = opCode.Result;
-
-            opCode.Result = incomingResult;
-
-            cWriter.WriteResultOrActualWrite(writer, opCode);
-
-            writer.Write(" to ");
+            writer.Write("(");
             toType.WriteTypePrefix(cWriter);
+            writer.Write(") ");
 
-            opCode.Result = returnResult;
+            writer.Write("(");
+            cWriter.WriteOperandResult(writer, opCode, operand, false);
+            writer.Write(")");
         }
 
         /// <summary>
@@ -468,29 +356,6 @@ namespace Il2Native.Logic.Gencode
             {
                 opCodePart.CreatedLabel = label;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public static void WriteBitcast(this CWriter cWriter, OpCodePart opCode, IType toType)
-        {
-            var writer = cWriter.Output;
-
-            var result = opCode.Result;
-
-            cWriter.SetResultNumber(opCode, toType);
-            writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(cWriter, true);
-            writer.Write(" ");
-            cWriter.WriteResult(result);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(cWriter, true);
         }
 
         /// <summary>
@@ -731,7 +596,7 @@ namespace Il2Native.Logic.Gencode
             else if (fromResult.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
                      (toType.IsPointer || toType.IsByRef))
             {
-                LlvmConvert(cWriter, opCode, string.Empty, string.Empty, toType, true);
+                ConvertCCast(cWriter, opCode, toType);
             }
             else if (fromResult.Type.IsArray
                      || (fromResult.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
@@ -1012,17 +877,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             cWriter.WriteResult(destination);
-
             writer.Write(" = ");
-
-            cWriter.ProcessOperator(
-                writer,
-                opCode,
-                typeToSave,
-                options: CWriter.OperandOptions.CastPointersToBytePointer | CWriter.OperandOptions.AdjustIntTypes,
-                operand1: operandIndex,
-                operand2: -1);
-
             cWriter.WriteOperandResult(writer, opCode, operandIndex);
         }
 

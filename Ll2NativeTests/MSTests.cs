@@ -353,7 +353,7 @@ namespace Ll2NativeTests
             // 273 - GetCustomAttributes
             // 276 - GetType.GetEvents(); (NotImplemented)
             // 279 - Enum ToString with Flags
-            // 282 - error:  error CS1502: The best overloaded method match for 'System.Convert.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
+            // 282 - error:  error CS1502: The best overloaded method match for 'System.ConvertCCast.ToDouble(string)' has some invalid arguments,  error CS1503: Argument 1: cannot convert from 'int' to 'string'
             // 286 - Xml (not implemented)
             // 287 - System.Type, GetConstructors, IsSealed
             // 295 - System.Reflection

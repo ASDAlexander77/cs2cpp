@@ -207,12 +207,11 @@ namespace Il2Native.Logic.Gencode
             opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
             opCodeNopeForBitCast.OpCodeOperands[0].Result = methodResult;
 
-            writer.Write("bitcast");
             cWriter.UnaryOper(
                 writer,
                 opCodeNopeForBitCast,
-                methodResult.Type,
-                options: CWriter.OperandOptions.GenerateResult);
+                "bitcast",
+                methodResult.Type);
             writer.Write(" to ");
             cWriter.WriteMethodPointerType(writer, method);
             writer.WriteLine(string.Empty);

@@ -66,8 +66,7 @@ namespace Il2Native.Logic.Gencode
 
             opCode.OpCodeOperands[0].Result = newExceptionResult;
 
-            writer.Write("=");
-            cWriter.UnaryOper(writer, opCode);
+            cWriter.UnaryOper(writer, opCode, "=");
             writer.Write(", ");
             opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(cWriter);
             writer.Write("* ");

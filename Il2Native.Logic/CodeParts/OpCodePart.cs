@@ -193,10 +193,6 @@ namespace Il2Native.Logic.CodeParts
 
         /// <summary>
         /// </summary>
-        public bool UseAsConditionalExpression { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool UseAsNull { get; set; }
 
         /// <summary>
