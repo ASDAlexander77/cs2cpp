@@ -619,6 +619,10 @@ namespace Il2Native.Logic
                 return;
             }
             
+            // to gather all info about method which we need
+            IlReader.UsedStrings = new SortedDictionary<int, string>();
+            IlReader.CalledMethods = new NamespaceContainer<IMethod>();
+
             // extern "c"
             this.Output.Write(declarationPrefix);
 

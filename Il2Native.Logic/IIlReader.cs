@@ -19,6 +19,14 @@
 
         /// <summary>
         /// </summary>
+        ISet<IMethod> CalledMethods { get; set; }
+
+        /// <summary>
+        /// </summary>
+        IDictionary<int, string> UsedStrings { get; set; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         IEnumerable<string> AllReferences();

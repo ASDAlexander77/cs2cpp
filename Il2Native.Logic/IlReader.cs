@@ -69,7 +69,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IMethod> calledMethods;
+        private ISet<IMethod> _calledMethods;
+
+        /// <summary>
+        /// </summary>
+        private IDictionary<int, string> _usedStrings;
 
         /// <summary>
         /// </summary>
@@ -380,12 +384,27 @@ namespace Il2Native.Logic
         {
             get
             {
-                return this.calledMethods;
+                return this._calledMethods;
             }
 
             set
             {
-                this.calledMethods = value;
+                this._calledMethods = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IDictionary<int, string> UsedStrings
+        {
+            get
+            {
+                return this._usedStrings;
+            }
+
+            set
+            {
+                this._usedStrings = value;
             }
         }
 
@@ -974,6 +993,7 @@ namespace Il2Native.Logic
                         // read token, next 
                         token = ReadInt32(enumerator, ref currentAddress);
                         var @string = module.ResolveString(token);
+                        this.AddString(token, @string);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, @string);
                         continue;
                     case Code.Newobj:
@@ -1011,7 +1031,10 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(method.DeclaringType);
-                        this.AddCalledMethod(method);
+                        if (code == Code.Call)
+                        {
+                            this.AddCalledMethod(method);
+                        }
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -1267,12 +1290,22 @@ namespace Il2Native.Logic
         /// </param>
         private void AddCalledMethod(IMethod method)
         {
-            if (this.calledMethods == null || method == null)
+            if (this._calledMethods == null || method == null)
             {
                 return;
             }
 
-            this.calledMethods.Add(method);
+            this._calledMethods.Add(method);
+        }
+
+        private void AddString(int token, string usedString)
+        {
+            if (this._usedStrings == null || usedString == null)
+            {
+                return;
+            }
+
+            this._usedStrings[token] = usedString;
         }
 
         /// <summary>
