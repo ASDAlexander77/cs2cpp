@@ -102,10 +102,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<MethodKey> processedMethods = new NamespaceContainer<MethodKey>();
-
-        /// <summary>
-        /// </summary>
         private readonly ISet<IType> processedRttiPointerTypes = new NamespaceContainer<IType>();
 
         /// <summary>
@@ -419,8 +415,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteConstructorEnd(IConstructor ctor, IGenericContext genericContext)
         {
-            this.WriteMethodBody(ctor);
-            this.WritePostMethodEnd(ctor);
+            this.WriteMethodEnd(ctor, genericContext);
         }
 
         /// <summary>
@@ -431,52 +426,7 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteConstructorStart(IConstructor ctor, IGenericContext genericContext)
         {
-            this.StartProcess();
-
-            Debug.Assert(!ctor.IsGenericMethodDefinition);
-            Debug.Assert(!ctor.DeclaringType.IsGenericTypeDefinition);
-
-            this.processedMethods.Add(new MethodKey(ctor, null));
-            if (ctor.Token.HasValue)
-            {
-                this.methodsByToken[ctor.Token.Value] = ctor;
-            }
-
-            ReadMethodInfo(ctor, genericContext);
-
-            var isDelegateBodyFunctions = ctor.IsDelegateFunctionBody();
-
-            // extern "c"
-            this.Output.Write(declarationPrefix);
-
-            this.Output.Write("void ");
-
-            this.WriteMethodDefinitionName(this.Output, ctor);
-            if (ctor.IsStatic)
-            {
-                StaticConstructors.Add(ctor);
-            }
-
-            this.WriteMethodParamsDef(this.Output, ctor, this.HasMethodThis, ThisType, this.System.System_Void);
-
-            // write local declarations
-            var methodBase = ctor.ResolveMethodBody(genericContext);
-            if (methodBase.HasBody)
-            {
-                this.Output.WriteLine(" {");
-                this.Output.Indent++;
-                this.WriteLocalVariableDeclarations(methodBase.LocalVariables);
-
-                this.Output.StartMethodBody();
-            }
-            else if (isDelegateBodyFunctions)
-            {
-                this.WriteDelegateFunctionBody(ctor);
-            }
-            else
-            {
-                this.Output.WriteLine(";");
-            }
+            this.WriteMethodStart(ctor, genericContext);
         }
 
         // TODO: if DynamicCast does not work for an type then something wrong with this value, (it should return value equals to the number of inheritance route * pointer size, 
@@ -593,13 +543,6 @@ namespace Il2Native.Logic
             }
 
             ReadMethodInfo(method, genericContext);
-
-            if (method.IsUnmanaged && this.processedMethods.Any(m => m.Method.Name == method.Name))
-            {
-                return;
-            }
-
-            this.processedMethods.Add(new MethodKey(method, null));
 
             var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) &&
                          method.Name.Equals("Main");
@@ -797,31 +740,6 @@ namespace Il2Native.Logic
 
             normalType.WriteInternalGetTypeMethod(this);
             normalType.WriteInternalGetSizeMethod(this);
-        }
-
-        /// <summary>
-        /// </summary>
-        public void WriteRequiredTypesForBody()
-        {
-            ////// get all required types for methods bodies
-            ////var count = 0;
-            ////do
-            ////{
-            ////    var requiredTypesForBodyToWrite = this.requiredTypesForBody.ToArray();
-            ////    count = requiredTypesForBodyToWrite.Length;
-            ////    foreach (var requiredType in requiredTypesForBodyToWrite)
-            ////    {
-            ////        this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            ////    }
-            ////}
-            ////while (count > 0 && this.requiredTypesForBody.Count != count);
-            foreach (var requiredType in RequiredTypesForBody.ToArray())
-            {
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
-            }
-
-            // clear types for next type
-            RequiredTypesForBody.Clear();
         }
 
         /// <summary>
@@ -1126,8 +1044,7 @@ namespace Il2Native.Logic
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
                     // we wait when opCode.DestinationName is set;
-                    this.WriteFieldAccess(writer, opCodeFieldInfoPart);
-                    writer.WriteLine(string.Empty);
+                    this.WriteFieldAccess(opCodeFieldInfoPart);
 
                     if (!opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
                     {
@@ -1142,7 +1059,7 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     if (!opCodeFieldInfoPart.Operand.HasFixedElementField)
                     {
-                        this.WriteFieldAccess(writer, opCodeFieldInfoPart);
+                        this.WriteFieldAccess(opCodeFieldInfoPart);
                         var fieldLoadResult = opCodeFieldInfoPart.Result;
 
                         // convert return type of the field to pointer of a field type (unless it is fixed data field)
@@ -2800,16 +2717,7 @@ namespace Il2Native.Logic
             else
             {
                 var writer = this.Output;
-
-                var opts = OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes;
-
-                writer.Write(" = ");
-
-                this.WriteOperandResult(writer, opCodePart, valueOperand);
-                writer.Write(", ");
-                opCodePart.Result.Type.WriteTypePrefix(this);
-                writer.Write("* ");
-                this.WriteResult(opCodePart.Result);
+                UnaryOper(writer, opCodePart, valueOperand, " = ", fieldType);
             }
         }
 
@@ -3168,9 +3076,9 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCodeFieldInfoPart">
         /// </param>
-        public void WriteFieldAccess(CIndentedTextWriter writer, OpCodeFieldInfoPart opCodeFieldInfoPart)
+        public void WriteFieldAccess(OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
-            writer.WriteLine("; Access to '{0}' field", opCodeFieldInfoPart.Operand.Name);
+            var writer = this.Output;
 
             var operand = opCodeFieldInfoPart.OpCodeOperands[0];
             var operandResultCalc = EstimatedResultOf(operand);
@@ -3203,16 +3111,11 @@ namespace Il2Native.Logic
                 writer.WriteLine(string.Empty);
             }
 
-            writer.Write("getelementptr inbounds");
-            this.UnaryOper(
-                writer,
-                opCodeFieldInfoPart,
-                "getelementptr inbounds",
-                asPointer ? effectiveType.ToPointerType() : effectiveType);
+            this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
+            writer.Write("->");
+            this.WriteFieldIndex(effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType, opCodeFieldInfoPart.Operand);
 
-            this.CheckIfTypeIsRequiredForBody(effectiveType);
-
-            this.WriteFieldIndex(writer, effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType, opCodeFieldInfoPart.Operand);
+            SetResultNumber(opCodeFieldInfoPart, opCodeFieldInfoPart.Operand.FieldType);
         }
 
         /// <summary>
@@ -3234,11 +3137,9 @@ namespace Il2Native.Logic
             var field = classType.GetFieldByFieldNumber(index, this);
             var fieldType = field.FieldType;
 
-            writer.WriteLine("; Access to '#{0}' field({1})", index, field.Name);
+            this.UnaryOper(writer, opCodePart, string.Empty, classType);
 
-            this.UnaryOper(writer, opCodePart, "getelementptr inbounds", classType);
-
-            this.CheckIfTypeIsRequiredForBody(classType);
+            writer.Write("->");
 
             this.WriteFieldIndex(writer, classType, classType, field, index, fixedArrayElementIndex);
         }
@@ -3277,13 +3178,8 @@ namespace Il2Native.Logic
             var fieldType = field.FieldType;
             this.SetResultNumber(opCodePart, fieldType);
 
-            writer.Write("getelementptr inbounds ");
-            valueReference.Type.ToClass().WriteTypePrefix(this);
-            writer.Write(" ");
             writer.Write(valueReference);
-
-            this.CheckIfTypeIsRequiredForBody(valueReference.Type);
-
+            writer.Write("->");
             this.WriteFieldIndex(writer, classType, fieldContainerType, field, index);
 
             return true;
@@ -3297,13 +3193,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="fieldInfo">
         /// </param>
-        public void WriteFieldIndex(CIndentedTextWriter writer, IType classType, IField fieldInfo)
+        public void WriteFieldIndex(IType classType, IField fieldInfo)
         {
+            var writer = this.Output;
+
             var targetType = fieldInfo.DeclaringType;
             var type = classType;
-
-            // first element for pointer (IType* + 0)
-            writer.Write(", i32 0");
 
             while (type.TypeNotEquals(targetType))
             {
@@ -3315,19 +3210,11 @@ namespace Il2Native.Logic
                 }
 
                 // first index is base type index
-                writer.Write(", i32 0");
+                writer.Write(".");
+                type.WriteTypePrefix(this);
             }
 
-            var index = this.GetFieldPosition(type, fieldInfo);
-
-            writer.Write(", i32 ");
-            writer.Write(index);
-
-            // if we loading fixed data we need to convert [ 0 x Ty ]* into Ty*
-            if (fieldInfo.IsFixed)
-            {
-                writer.Write(", i32 0");
-            }
+            writer.Write(fieldInfo.Name);
         }
 
         /// <summary>
@@ -3477,8 +3364,6 @@ namespace Il2Native.Logic
                 
             writer.Write(' ');
             writer.Write(objectResult);
-
-            this.CheckIfTypeIsRequiredForBody(declaringType);
 
             this.WriteInterfaceIndex(writer, declaringType, @interface);
 
@@ -4664,13 +4549,10 @@ namespace Il2Native.Logic
         /// </param>
         private void FieldAccessAndSaveToField(OpCodeFieldInfoPart opCodeFieldInfoPart)
         {
-            var writer = this.Output;
-
-            this.WriteFieldAccess(writer, opCodeFieldInfoPart);
-            writer.WriteLine(string.Empty);
+            this.WriteFieldAccess(opCodeFieldInfoPart);
 
             var fieldType = opCodeFieldInfoPart.Operand.FieldType;
-
+            
             this.SaveToField(opCodeFieldInfoPart, fieldType);
         }
 
@@ -4936,8 +4818,6 @@ namespace Il2Native.Logic
                 this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, field),
                 fixedArrayIndex);
 
-            this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
-
             if (actualLoad)
             {
                 writer.WriteLine(string.Empty);
@@ -5023,8 +4903,6 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsVoid());
 
             this.WriteFieldAccess(writer, opCode, this.GetFieldIndex(opCode.OpCodeOperands[0].Result.Type, "data"), opCode.OpCodeOperands[1].Result);
-
-            this.CheckIfTypeIsRequiredForBody(opCode.OpCodeOperands[0].Result.Type);
 
             writer.WriteLine(string.Empty);
 
@@ -6117,6 +5995,7 @@ namespace Il2Native.Logic
                 ReadMethodInfo(ctor, null);
                 // extern "c"
                 this.Output.Write(this.declarationPrefix);
+                this.WriteMethodReturnType(this.Output, ctor);
                 this.WriteMethodDefinitionName(this.Output, ctor);
                 this.WriteMethodParamsDef(
                     this.Output,

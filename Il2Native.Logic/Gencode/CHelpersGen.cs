@@ -490,6 +490,8 @@ namespace Il2Native.Logic.Gencode
 
             if (hasThisArgument)
             {
+                cWriter.ActualWrite(writer, opCodeFirstOperand);
+
                 opCodeMethodInfo.WriteFunctionCallPrepareThisExpression(
                     thisType,
                     opCodeFirstOperand,

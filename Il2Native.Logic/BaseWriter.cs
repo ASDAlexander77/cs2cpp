@@ -27,10 +27,6 @@ namespace Il2Native.Logic
     {
         /// <summary>
         /// </summary>
-        protected readonly ISet<IType> RequiredTypesForBody = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         protected readonly IDictionary<string, IType> ResolvedTypes = new SortedDictionary<string, IType>();
 
         /// <summary>
@@ -150,39 +146,6 @@ namespace Il2Native.Logic
         public void AddOpCode(OpCodePart opCode)
         {
             this.Ops.Add(opCode);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="parameters">
-        /// </param>
-        public void CheckIfParameterTypeIsRequired(IEnumerable<IParameter> parameters)
-        {
-            if (parameters == null)
-            {
-                return;
-            }
-
-            foreach (var parameter in parameters)
-            {
-                if (parameter.ParameterType.IsStructureType())
-                {
-                    this.CheckIfTypeIsRequiredForBody(parameter.ParameterType);
-                }
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        public void CheckIfTypeIsRequiredForBody(IType type)
-        {
-            var item = type.IsArray ? type.NormalizeType() : type.ToBareType();
-            if (!item.IsPrimitiveType())
-            {
-                this.RequiredTypesForBody.Add(item);
-            }
         }
 
         /// <summary>
@@ -1084,7 +1047,6 @@ namespace Il2Native.Logic
                         opCode,
                         size,
                         methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
-                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
@@ -1092,7 +1054,6 @@ namespace Il2Native.Logic
                         opCode,
                         (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count(),
                         methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
-                    this.CheckIfParameterTypeIsRequired(methodBase.GetParameters());
                     break;
                 case Code.Newobj:
                     if (opCode.ReadExceptionFromStack)
@@ -1105,7 +1066,6 @@ namespace Il2Native.Logic
                         opCode,
                         (code == Code.Callvirt ? 1 : 0) + ctorInfo.GetParameters().Count(),
                         ctorInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
-                    this.CheckIfParameterTypeIsRequired(ctorInfo.GetParameters());
                     break;
                 case Code.Stelem:
                 case Code.Stelem_I:

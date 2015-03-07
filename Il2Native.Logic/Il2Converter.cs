@@ -243,7 +243,6 @@ namespace Il2Native.Logic
                 codeWriter.DisableWrite(false);
 
                 // Actual Write
-                codeWriter.WriteRequiredTypesForBody();
                 codeWriter.WriteStoredText();
             }
 
@@ -311,7 +310,6 @@ namespace Il2Native.Logic
                 codeWriter.DisableWrite(false);
 
                 // Actual Write
-                codeWriter.WriteRequiredTypesForBody();
                 codeWriter.WriteStoredText();
             }
 

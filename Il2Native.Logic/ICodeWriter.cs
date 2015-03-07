@@ -159,10 +159,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        void WriteRequiredTypesForBody();
-
-        /// <summary>
-        /// </summary>
         /// <param name="moduleName">
         /// </param>
         /// <param name="assemblyName">
