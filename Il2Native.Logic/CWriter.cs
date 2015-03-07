@@ -150,10 +150,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly IDictionary<int, string> stringStorage = new SortedDictionary<int, string>();
-
-        /// <summary>
-        /// </summary>
         private readonly ISet<IType> forwardTypeDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
@@ -1074,12 +1070,11 @@ namespace Il2Native.Logic
                 case Code.Ldstr:
                     var opCodeString = opCode as OpCodeStringPart;
                     var stringType = this.System.System_String;
-                    var stringIndex = this.GetStringIndex(opCodeString.Operand);
+                    var stringToken = opCodeString.Operand.Key;
+                    var strType = this.WriteToString(() => { stringType.WriteTypePrefix(this); });
                     opCode.Result =
                         new FullyDefinedReference(
-                            this.GetStringTypeReference(
-                                string.Format("@.s{0}", stringIndex),
-                                opCodeString.Operand.Length + 1),
+                            string.Format("({1}) &_s{0}_", stringToken, strType),
                             stringType);
                     break;
                 case Code.Ldnull:
@@ -2618,7 +2613,7 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetAllocator()
         {
-            return this.Gc ? "GC_malloc" : "_Znwj";
+            return this.Gc ? "GC_malloc" : "malloc";
         }
 
         /// <summary>
@@ -2710,19 +2705,6 @@ namespace Il2Native.Logic
         public string GetLocalVarName(int index)
         {
             return string.Concat("local", index);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="str">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public int GetStringIndex(string str)
-        {
-            var idx = ++this.stringIndexIncremental;
-            this.stringStorage[idx] = str;
-            return idx;
         }
 
         /// <summary>
@@ -5598,18 +5580,6 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteConstData()
         {
-            // write set of strings
-            foreach (var pair in this.stringStorage)
-            {
-                this.WriteUnicodeString(pair);
-            }
-
-            if (this.stringStorage.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                this.stringStorage.Clear();
-            }
-
             // write set of array data
             foreach (var pair in this.bytesStorage)
             {
@@ -6264,6 +6234,9 @@ namespace Il2Native.Logic
                 this.WriteCallGctorsDeclarations();
             }
 
+            // TODO: tmporary disabled
+            return;
+
             if (this.typeRttiPointerDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -6533,6 +6506,19 @@ namespace Il2Native.Logic
 
         private void WriteMethodRequiredDeclatations()
         {
+            // const strings
+            foreach (var usedString in IlReader.UsedStrings)
+            {
+                WriteUnicodeString(usedString);
+            }
+
+            if (IlReader.UsedStrings.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
+            var any = false;
+            // methods
             foreach (
                 var requiredDeclarationMethod in
                     IlReader.CalledMethods
@@ -6541,8 +6527,14 @@ namespace Il2Native.Logic
                                 this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null)))
                 )
             {
+                any = true;
                 WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
                 this.Output.WriteLine(";");
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
             }
         }
 
@@ -6567,14 +6559,15 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
+            this.Output.Write(declarationPrefix);
             this.Output.Write(
-                "@.s{0} = private unnamed_addr constant {1} {3} {2}",
+                "const struct {1} _s{0}_ = {3} {2}",
                 pair.Key,
                 this.GetStringTypeHeader(pair.Value.Length + 1),
                 this.GetStringValuesHeader(pair.Value.Length + 1, pair.Value.Length),
-                "{");
+                "{", "}");
 
-            this.Output.Write(" [");
+            this.Output.Write("{ ");
 
             var index = 0;
             foreach (var c in pair.Value.ToCharArray())
@@ -6584,7 +6577,7 @@ namespace Il2Native.Logic
                     this.Output.Write(", ");
                 }
 
-                this.Output.Write("i16 {0}", (int)c);
+                this.Output.Write("{0}", (int)c);
                 index++;
             }
 
@@ -6593,7 +6586,7 @@ namespace Il2Native.Logic
                 this.Output.Write(", ");
             }
 
-            this.Output.WriteLine("i16 0] {0}, align {1}", '}', PointerSize);
+            this.Output.WriteLine("0 {0} {0};", '}');
         }
 
         /// <summary>

@@ -151,18 +151,20 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            sb.Append("i8*");
+            sb.Append("i8* vtable");
+
+            var index = 0;
             foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
             {
                 if (sb.Length > 0)
                 {
-                    sb.Append(", ");
+                    sb.Append("; ");
                 }
 
-                sb.Append("i8*");
+                sb.Append("i8* ifce" + index);
             }
 
-            sb.Append(", i32");
+            sb.Append("; i32 len");
 
             _stringPrefixDataType = sb.ToString();
             return _stringPrefixDataType;
@@ -187,22 +189,27 @@ namespace Il2Native.Logic.Gencode
             cWriter.AddRequiredRttiDeclaration(stringSystemType);
 
             var sb = new StringBuilder();
-
-            sb.Append("i8* bitcast (i8** ");
-            sb.Append(stringSystemType.GetVirtualTableReference(typeResolver));
-            sb.AppendLine(" to i8*)");
+            
+            sb.AppendLine(string.Empty);
+            sb.Append("(i8*) ");
+            // TODO: finish it
+            //sb.Append(stringSystemType.GetVirtualTableReference(typeResolver));
+            sb.Append("0");
 
             foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
             {
                 if (sb.Length > 0)
                 {
-                    sb.Append(", ");
+                    sb.AppendLine(", ");
                 }
 
-                sb.Append("i8* bitcast (i8** ");
-                sb.Append(stringSystemType.GetVirtualTableReference(@interface, typeResolver));
-                sb.AppendLine(" to i8*)");                
+                sb.Append("(i8*) ");
+                // TODO: finish it
+                //sb.Append(stringSystemType.GetVirtualTableReference(@interface, typeResolver));
+                sb.Append("0");                
             }
+
+            sb.AppendLine(string.Empty);
 
             _stringPrefixConstData = sb.ToString();
             return _stringPrefixConstData;
@@ -227,40 +234,7 @@ namespace Il2Native.Logic.Gencode
                     charType.WriteTypePrefix(cWriter);
                 });
 
-            return "{ " + GetStringPrefixDataType(cWriter) + ", [" + length + " x " + typeString + "] }";
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="name">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetStringTypeReference(
-            this CWriter cWriter,
-            string name,
-            int length)
-        {
-            var convertString = cWriter.WriteToString(
-                () =>
-                {
-                    var writer = cWriter.Output;
-
-                    var charType = cWriter.System.System_Char;
-                    var stringType = cWriter.System.System_String;
-                    writer.Write("bitcast (");
-                    writer.Write("{1}* {0} to ", name, cWriter.GetStringTypeHeader(length));
-                    stringType.WriteTypePrefix(cWriter);
-                    writer.Write(")");
-                });
-
-            return convertString;
+            return "{ " + GetStringPrefixDataType(cWriter) + "; " + typeString + " data[" + length + "]; }";
         }
 
         /// <summary>
@@ -280,14 +254,7 @@ namespace Il2Native.Logic.Gencode
             int length,
             int storeLength)
         {
-            var charType = cWriter.System.System_Char;
-            var typeString = cWriter.WriteToString(
-                () =>
-                {
-                    charType.WriteTypePrefix(cWriter);
-                });
-
-            return GetStringPrefixConstData(cWriter) + ", i32 " + storeLength + ", [" + length + " x " + typeString + "]";
+            return GetStringPrefixConstData(cWriter) + ", " + storeLength + ", ";
         }
 
         public static IMethod GetCtorMethodByParameters(IType stringType, IEnumerable<IParameter> getParameters, ITypeResolver typeResolver)

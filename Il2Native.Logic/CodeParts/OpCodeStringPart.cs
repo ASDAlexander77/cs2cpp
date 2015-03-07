@@ -9,11 +9,12 @@
 
 namespace Il2Native.Logic.CodeParts
 {
+    using System.Collections.Generic;
     using System.Reflection.Emit;
 
     /// <summary>
     /// </summary>
-    public class OpCodeStringPart : OpCodeParamPart<string>
+    public class OpCodeStringPart : OpCodeParamPart<KeyValuePair<int, string>>
     {
         /// <summary>
         /// </summary>
@@ -25,7 +26,7 @@ namespace Il2Native.Logic.CodeParts
         /// </param>
         /// <param name="param">
         /// </param>
-        public OpCodeStringPart(OpCode opcode, int addressStart, int addressEnd, string param)
+        public OpCodeStringPart(OpCode opcode, int addressStart, int addressEnd, KeyValuePair<int, string> param)
             : base(opcode, addressStart, addressEnd, param)
         {
         }

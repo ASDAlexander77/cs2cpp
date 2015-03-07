@@ -535,15 +535,6 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opArg,
             IParameter parameter)
         {
-            var writer = cWriter.Output;
-
-            parameter.ParameterType.WriteTypePrefix(cWriter, parameter.ParameterType.IsStructureType());
-            if (parameter.ParameterType.IsStructureType() && !parameter.IsOut && !parameter.IsRef)
-            {
-                writer.Write(" byval align " + cWriter.ByValAlign);
-            }
-
-            writer.Write(' ');
             cWriter.WriteResult(opArg);
         }
 
