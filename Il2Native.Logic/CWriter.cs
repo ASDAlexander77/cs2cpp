@@ -977,6 +977,11 @@ namespace Il2Native.Logic
             this.WriteExceptionHandlersProlog(writer, opCode);
 
             opCode.ResultAtExit = opCode.Result;
+
+            if (firstLevel)
+            {
+                this.Output.WriteLine(";");
+            }
         }
 
         /// <summary>
@@ -1345,8 +1350,6 @@ namespace Il2Native.Logic
                         null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
-                    writer.WriteLine(';');
-
                     break;
                 case Code.Add:
                     this.BinaryOper(
@@ -1537,7 +1540,6 @@ namespace Il2Native.Logic
                     else
                     {
                         this.WriteLlvmSave(opCode, localType, 0, destination);
-                        writer.WriteLine(';');
                     }
 
                     break;
@@ -1800,42 +1802,42 @@ namespace Il2Native.Logic
                             break;
                         case Code.Blt:
                         case Code.Blt_S:
-                            oper = isFloatingPoint ? "fcmp ult" : "icmp {0}lt";
+                            oper = " < ";
                             break;
                         case Code.Blt_Un:
                         case Code.Blt_Un_S:
-                            oper = isFloatingPoint ? "fcmp ult" : "icmp ult";
+                            oper = " < ";
                             break;
                         case Code.Ble:
                         case Code.Ble_S:
-                            oper = isFloatingPoint ? "fcmp ule" : "icmp {0}le";
+                            oper = " <= ";
                             break;
                         case Code.Ble_Un:
                         case Code.Ble_Un_S:
-                            oper = isFloatingPoint ? "fcmp ule" : "icmp ule";
+                            oper = " <= ";
                             break;
                         case Code.Bgt:
                         case Code.Bgt_S:
-                            oper = isFloatingPoint ? "fcmp ugt" : "icmp {0}gt";
+                            oper = " > ";
                             break;
                         case Code.Bgt_Un:
                         case Code.Bgt_Un_S:
-                            oper = isFloatingPoint ? "fcmp ugt" : "icmp ugt";
+                            oper = " > ";
                             break;
                         case Code.Bge:
                         case Code.Bge_S:
-                            oper = isFloatingPoint ? "fcmp uge" : "icmp {0}ge";
+                            oper = " >= ";
                             break;
                         case Code.Bge_Un:
                         case Code.Bge_Un_S:
-                            oper = isFloatingPoint ? "fcmp uge" : "icmp uge";
+                            oper = " >= ";
                             break;
                     }
 
                     this.BinaryOper(
                         writer,
                         opCode,
-                        string.Format(oper, sign),
+                        oper,
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer |
                         OperandOptions.AdjustIntTypes,
                        this.System.System_Boolean);
@@ -1846,28 +1848,23 @@ namespace Il2Native.Logic
                 case Code.Brfalse:
                 case Code.Brfalse_S:
 
-                    var forTrue = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "ne" : "eq";
+                    oper = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? "" : "!";
                     var resultOf = EstimatedResultOf(firstOpCodeOperand);
 
                     var opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
-                    this.UnaryOper(writer, opCode, "icmp " + forTrue);
+                    this.UnaryOper(
+                        writer,
+                        opCode,
+                        "if (" + oper,
+                       this.System.System_Boolean);
 
-                    if (resultOf.Type.IsValueType() && !resultOf.Type.UseAsClass)
-                    {
-                        writer.Write(", 0");
-                    }
-                    else
-                    {
-                        writer.Write(", null");
-                    }
-
-                    writer.WriteLine(string.Empty);
+                    writer.Write(string.Concat(") goto a", opCode.JumpAddress()));
 
                     break;
                 case Code.Br:
                 case Code.Br_S:
 
-                    writer.WriteLine(string.Concat("goto a", opCode.JumpAddress(), ";"));
+                    writer.Write(string.Concat("goto a", opCode.JumpAddress()));
                     break;
                 case Code.Leave:
                 case Code.Leave_S:
@@ -3996,8 +3993,6 @@ namespace Il2Native.Logic
                     methodReturnType);
                 
             }
-
-            writer.WriteLine(";");
         }
 
         /// <summary>
@@ -5691,21 +5686,7 @@ namespace Il2Native.Logic
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
-                var previousOpCode = opCode.Previous;
-                var splitBlock = previousOpCode == null
-                                 || (previousOpCode != null
-                                     && (previousOpCode.OpCode.FlowControl == FlowControl.Meta
-                                         || previousOpCode.OpCode.FlowControl == FlowControl.Next
-                                         || previousOpCode.OpCode.FlowControl == FlowControl.Call));
-
-                // opCode.Skip to fix issue with using it in 'conditional expresions'
-                if (splitBlock)
-                {
-                    // we need to fix issue with blocks in llvm http://zanopia.wordpress.com/2010/09/14/understanding-llvm-assembly-with-fractals-part-i/
-                    writer.WriteLine(string.Concat("br label %.a", opCode.AddressStart));
-                }
-
-                if (splitBlock || !opCode.JumpProcessed)
+                if (!opCode.JumpProcessed)
                 {
                     this.WriteLabel(writer, string.Concat("a", opCode.AddressStart));
                 }
