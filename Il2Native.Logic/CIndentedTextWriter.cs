@@ -46,15 +46,8 @@ namespace Il2Native.Logic
         {
             Debug.Assert(this.sw != null);
             this.sw.Close();
-
-            var savedIndent = Indent;
-            Indent = 0;
-
             base.Write(this.sb.ToString());
-
             this.isMethod = false;
-
-            Indent = savedIndent;
         }
 
         /// <summary>
