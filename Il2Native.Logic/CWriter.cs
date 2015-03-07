@@ -359,8 +359,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteAfterFields(int count)
         {
-            this.Output.WriteLine(string.Empty);
-
             this.Output.Indent--;
             this.Output.WriteLine("};");
         }
@@ -375,7 +373,6 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteBeforeConstructors()
         {
-            this.Output.WriteLine(string.Empty);
         }
 
         /// <summary>

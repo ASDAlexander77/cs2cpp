@@ -65,7 +65,6 @@ namespace Il2Native.Logic
             this.sb = new StringBuilder();
             this.sw = new IndentedTextWriter(new StringWriter(this.sb));
             this.sw.Indent = Indent;
-            this.sw.WriteLine(string.Empty);
         }
 
         /// <summary>
