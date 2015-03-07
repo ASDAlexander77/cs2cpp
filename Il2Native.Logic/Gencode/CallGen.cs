@@ -48,6 +48,8 @@ namespace Il2Native.Logic.Gencode
             {
                 var operand = opCodeMethodInfo.OpCodeOperands[index];
 
+                cWriter.ActualWriteOpCode(writer, operand);
+
                 var dynamicCastRequired = false;
                 if (parameter.ParameterType.IsClassCastRequired(operand, out dynamicCastRequired))
                 {
@@ -59,24 +61,6 @@ namespace Il2Native.Logic.Gencode
                 cWriter.AdjustOperandResultTypeToIncomingType(operand);
 
                 index++;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="tryClause">
-        /// </param>
-        public static void WriteFunctionCall(this CIndentedTextWriter writer, TryClause tryClause)
-        {
-            if (tryClause != null)
-            {
-                writer.Write("invoke ");
-            }
-            else
-            {
-                writer.Write("call ");
             }
         }
 
@@ -200,21 +184,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.Write(")");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteFunctionCallAttributes(this IMethod methodInfo, CIndentedTextWriter writer)
-        {
-            if (methodInfo.DllImportData != null &&
-                methodInfo.DllImportData.CallingConvention == CallingConvention.StdCall)
-            {
-                writer.Write("x86_stdcallcc ");
-            }
         }
 
         /// <summary>

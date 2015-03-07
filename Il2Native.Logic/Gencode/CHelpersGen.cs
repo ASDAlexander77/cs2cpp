@@ -661,10 +661,6 @@ namespace Il2Native.Logic.Gencode
 
             var returnFullyDefinedReference = methodInfo.WriteFunctionCallResult(opCodeMethodInfo, cWriter);
 
-            writer.WriteFunctionCall(tryClause);
-
-            methodInfo.WriteFunctionCallAttributes(writer);
-
             if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
                 cWriter.WriteMethodPointerType(writer, methodInfo);
@@ -672,11 +668,6 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                methodInfo.WriteFunctionCallReturnType(cWriter);
-
-                writer.Write(' ');
-
-                // extra support
                 if (methodInfo.IsExternalLibraryMethod())
                 {
                     writer.Write("(...)* ");

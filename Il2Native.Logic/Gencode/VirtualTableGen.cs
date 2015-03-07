@@ -186,7 +186,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualInterfaceTableName(this IType type, IType @interface)
         {
-            return string.Concat("@\"", type.FullName, " Virtual Table ", @interface.FullName, " Interface\"");
+            return string.Concat(type.FullName, " vtable ", @interface.FullName, " interface").CleanUpName();
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualTableName(this IType type)
         {
-            return string.Concat("@\"", type.FullName, " Virtual Table\"");
+            return string.Concat("@\"", type.FullName, " vtable\"").CleanUpName();
         }
 
         /// <summary>

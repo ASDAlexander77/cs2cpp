@@ -46,7 +46,7 @@ namespace Il2Native.Logic
         {
             Debug.Assert(this.sw != null);
             this.sw.Close();
-            base.Write(this.sb.ToString());
+            base.WriteLine(this.sb.ToString());
             this.isMethod = false;
         }
 

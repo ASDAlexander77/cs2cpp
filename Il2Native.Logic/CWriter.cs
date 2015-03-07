@@ -1333,6 +1333,8 @@ namespace Il2Native.Logic
                         null,
                         this.tryScopes.Count > 0 ? this.tryScopes.Peek() : null);
 
+                    writer.WriteLine(';');
+
                     break;
                 case Code.Add:
                     var isFloatingPoint = IsFloatingPointOp(opCode);
@@ -6262,9 +6264,9 @@ namespace Il2Native.Logic
             {
                 this.WriteExceptionEnvironment(method);
 
+                this.Output.Indent--;
                 this.Output.EndMethodBody();
 
-                this.Output.Indent--;
                 this.Output.WriteLine("}");
             }
 
