@@ -112,8 +112,6 @@ namespace Il2Native.Logic.Gencode
             // allocate space for structure if return type is structure
             if (returnIsStruct)
             {
-                returnType.WriteTypePrefix(cWriter, returnType.IsStructureType());
-                writer.Write(' ');
                 if (resultNumberForReturn != null)
                 {
                     cWriter.WriteResult(resultNumberForReturn);
@@ -129,8 +127,6 @@ namespace Il2Native.Logic.Gencode
                     writer.Write(", ");
                 }
 
-                thisType.ToClass().WriteTypePrefix(cWriter);
-                writer.Write(' ');
                 if (resultNumberForThis != null)
                 {
                     cWriter.WriteResult(resultNumberForThis);

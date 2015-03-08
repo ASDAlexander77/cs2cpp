@@ -868,7 +868,7 @@ namespace Il2Native.Logic
                 this.WriteLabels(writer, opCode);
             }
 
-            if (opCode.Result != null || (firstLevel && opCode.UsedBy != null))
+            if (opCode.Result != null || (firstLevel && opCode.UsedBy != null && !opCode.Any(Code.Newobj)))
             {
                 return;
             }
@@ -2177,6 +2177,10 @@ namespace Il2Native.Logic
                     this.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
                     writer.WriteLine(string.Empty);
 
+                    break;
+
+                case Code.Nop:
+                    writer.Write("// nop");
                     break;
 
                 case Code.Initblk:

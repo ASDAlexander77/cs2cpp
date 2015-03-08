@@ -336,10 +336,6 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCodePart,
             IConstructor methodBase)
         {
-            var writer = cWriter.Output;
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; Call Constructor");
             var resAlloc = opCodePart.Result;
             opCodePart.Result = null;
             cWriter.WriteCall(
@@ -423,8 +419,6 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var method = new SynthesizedNewMethod(type, cWriter);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; call New Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
@@ -804,7 +798,15 @@ namespace Il2Native.Logic.Gencode
             OpCodeConstructorInfoPart opCodeConstructorInfoPart,
             IType declaringType)
         {
+            // temp var
+            declaringType.WriteTypePrefix(cWriter);
+            var newVar = string.Format("_new{0}", opCodeConstructorInfoPart.AddressStart);
+            cWriter.Output.Write(" {0} = ", newVar);
+
             declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+            cWriter.Output.WriteLine(";");
+
+            opCodeConstructorInfoPart.Result = new FullyDefinedReference(newVar, declaringType);
             cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
