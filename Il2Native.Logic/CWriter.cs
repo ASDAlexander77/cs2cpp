@@ -2014,6 +2014,8 @@ namespace Il2Native.Logic
 
                 case Code.Initobj:
 
+                    ActualWrite(writer, opCode.OpCodeOperands[0]);
+
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteInit(opCode, opCodeTypePart.Operand);
                     break;
