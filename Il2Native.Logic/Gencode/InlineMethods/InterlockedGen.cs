@@ -102,7 +102,7 @@ namespace Il2Native.Logic.Gencode
             {
                 intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
 
-                cWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
+                cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
@@ -122,7 +122,7 @@ namespace Il2Native.Logic.Gencode
                 intType = cWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : CWriter.PointerSize);
 
                 // bitcast float to i32 and double to i64
-                cWriter.WriteBitcast(first, first.Result, intType.ToPointerType());
+                cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
                 writer.WriteLine(string.Empty);
 
                 foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
@@ -134,7 +134,7 @@ namespace Il2Native.Logic.Gencode
 
                     if (!(operand.Result is ConstValue))
                     {
-                        cWriter.WriteBitcast(operand, operand.Result, intType, false);
+                        cWriter.WriteCCast(operand, operand.Result, intType, false);
                         writer.WriteLine(string.Empty);
                     }
                     else
@@ -178,7 +178,7 @@ namespace Il2Native.Logic.Gencode
             else if (realExchange)
             {
                 // cast back to float/double
-                cWriter.WriteBitcast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
+                cWriter.WriteCCast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
             }
 
             writer.WriteLine(string.Empty);

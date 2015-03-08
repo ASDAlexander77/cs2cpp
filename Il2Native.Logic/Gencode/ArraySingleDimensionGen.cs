@@ -518,7 +518,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // this is Array instance
                 var opCodeNope = OpCodePart.CreateNop;
-                cWriter.WriteBitcast(
+                cWriter.WriteCCast(
                     opCodeNope,
                     arrayInstanceResult,
                     cWriter.System.System_Byte.ToArrayType(1));

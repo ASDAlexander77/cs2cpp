@@ -61,7 +61,7 @@ namespace Il2Native.Logic.Gencode
 
             opCode.OpCodeOperands[0].Result = opCode.Result;
 
-            cWriter.WriteBitcast(opCode, opCode.Result, newExceptionResult.Type);
+            cWriter.WriteCCast(opCode, opCode.Result, newExceptionResult.Type);
             writer.WriteLine("*");
 
             opCode.OpCodeOperands[0].Result = newExceptionResult;
@@ -106,7 +106,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("call i8* @__cxa_begin_catch(i8* {0})", errorObjectOfCatchResultNumber);
             if (catchType != null)
             {
-                cWriter.WriteBitcast(opCodeNone, beginCatchResultNumber, catchType);
+                cWriter.WriteCCast(opCodeNone, beginCatchResultNumber, catchType);
                 writer.WriteLine(string.Empty);
 
                 exceptionHandlingClause.ExceptionResult = opCodeNone.Result;

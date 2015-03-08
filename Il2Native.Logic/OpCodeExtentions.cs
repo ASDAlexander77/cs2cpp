@@ -365,7 +365,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetFullName(this IField field)
+        public static string GetFullName(this IField field, bool cleanUp = false)
         {
             var sb = new StringBuilder();
 

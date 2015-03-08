@@ -368,7 +368,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void WriteBitcast(
+        public static void WriteCCast(
             this CWriter cWriter,
             OpCodePart opCode,
             FullyDefinedReference source,
@@ -378,12 +378,11 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             cWriter.SetResultNumber(opCode, toType);
-            writer.Write("bitcast ");
-            source.Type.WriteTypePrefix(cWriter, asReference);
-            writer.Write(" ");
-            cWriter.WriteResult(source);
-            writer.Write(" to ");
+            writer.Write("(");
             toType.WriteTypePrefix(cWriter, asReference);
+            writer.Write(") (");
+            cWriter.WriteResult(source);
+            writer.Write(")");
         }
 
         /// <summary>
@@ -765,41 +764,29 @@ namespace Il2Native.Logic.Gencode
             // TODO: review the whole proc.
             var writer = cWriter.Output;
 
-            var isStruct = typeToLoad.ToNormal().IsStructureType();
+            ////Debug.Assert(source.Type.IsPointer);
+            var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
 
-            Debug.Assert(
-                structAsRef || !isStruct || typeToLoad.IsByRef || isStruct && !typeToLoad.IsByRef && opCode.HasResult);
+            var effectiveSource = source;
 
-            if (!isStruct || typeToLoad.IsByRef || structAsRef || !opCode.HasResult || (indirect && !isStruct))
+            // check if you need bitcast pointer type
+            if (!typeToLoad.IsPointer && dereferencedType != null && typeToLoad.TypeNotEquals(dereferencedType))
             {
-                ////Debug.Assert(source.Type.IsPointer);
-                var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
-
-                var effectiveSource = source;
-
-                // check if you need bitcast pointer type
-                if (!typeToLoad.IsPointer && dereferencedType != null && typeToLoad.TypeNotEquals(dereferencedType))
-                {
-                    // check if you need cast here
-                    cWriter.WriteBitcast(opCode, source, typeToLoad);
-                    writer.WriteLine(string.Empty);
-                    effectiveSource = opCode.Result;
-                }
-
-                if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
-                {
-                    // check if you need cast here
-                    cWriter.WriteIntToPtr(opCode, source, typeToLoad);
-                    writer.WriteLine(string.Empty);
-                    effectiveSource = opCode.Result;
-                }
-
-                opCode.Result = effectiveSource;
+                // check if you need cast here
+                cWriter.WriteCCast(opCode, source, typeToLoad);
+                writer.WriteLine(string.Empty);
+                effectiveSource = opCode.Result;
             }
-            else
+
+            if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
             {
-                cWriter.WriteCopyStruct(writer, opCode, typeToLoad, source, opCode.Result);
+                // check if you need cast here
+                cWriter.WriteIntToPtr(opCode, source, typeToLoad);
+                writer.WriteLine(string.Empty);
+                effectiveSource = opCode.Result;
             }
+
+            opCode.Result = effectiveSource;
         }
 
         public static void WriteLlvmLoadPrimitiveFromStructure(
@@ -968,13 +955,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write(
-                "call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, i32 {1}, i32 {2}, i1 false)",
-                op1,
-                type.GetTypeSize(cWriter, type.IsPrimitiveType() && !type.UseAsClass),
-                CWriter.PointerSize
-
-                /*Align*/);
+            writer.Write("memset((i8*) ({0}), 0, sizeof(", op1);
+            type.WriteTypePrefix(cWriter);
+            writer.Write("))");
         }
 
         public static void WriteMemSet(

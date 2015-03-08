@@ -149,7 +149,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
             }
 
-            cWriter.WriteBitcast(opCodePart, mallocResult, declaringClassType);
+            cWriter.WriteCCast(opCodePart, mallocResult, declaringClassType);
             writer.WriteLine(string.Empty);
         }
 
@@ -389,11 +389,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallInitObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = cWriter.Output;
-
             var method = new SynthesizedInitMethod(type, cWriter);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; call Init Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             cWriter.WriteCall(
@@ -634,10 +630,8 @@ namespace Il2Native.Logic.Gencode
 
             if (declaringTypeNormal.IsValueType)
             {
-                cWriter.WriteBitcast(opCodePart, objectSource, cWriter.System.System_Byte.ToPointerType());
-                writer.WriteLine(string.Empty);
-
-                cWriter.WriteMemSet(declaringTypeNormal, opCodePart.Result);
+                cWriter.ActualWrite(writer, opCodePart.OpCodeOperands[0]);
+                cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0].Result);
                 writer.WriteLine(string.Empty);
 
                 if (declaringTypeNormal.IsStructureType())
@@ -652,7 +646,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // this is type reference, initialize it with null
-                cWriter.WriteBitcast(
+                cWriter.WriteCCast(
                     opCodePart,
                     objectSource,
                     cWriter.System.System_Byte.ToPointerType().ToPointerType());
@@ -691,7 +685,7 @@ namespace Il2Native.Logic.Gencode
                 // initialize virtual table
                 if (opCode.HasResult)
                 {
-                    cWriter.WriteBitcast(
+                    cWriter.WriteCCast(
                         opCode,
                         opCode.Result.ToClassType(),
                         cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
@@ -729,7 +723,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (opCode.HasResult)
                 {
-                    cWriter.WriteBitcast(
+                    cWriter.WriteCCast(
                         opCode,
                         opCode.Result.ToClassType(),
                         cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
@@ -769,7 +763,6 @@ namespace Il2Native.Logic.Gencode
             var mainArrayType = classType;
 
             var method = new SynthesizedInitMethod(mainArrayType, cWriter);
-            writer.WriteLine("; Init Object method");
 
             var opCode = OpCodePart.CreateNop;
             cWriter.WriteMethodStart(method, null);

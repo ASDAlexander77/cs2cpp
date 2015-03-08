@@ -572,7 +572,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
             WriteMethodRequiredDeclatations();
 
@@ -1092,16 +1091,9 @@ namespace Il2Native.Logic
                         out intAdjustSecondOperand);
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    var destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
+                    var destinationName = opCodeFieldInfoPart.Operand.GetFullName().CleanUpName();
                     var reference = new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType);
-                    if (!operandType.IsStructureType())
-                    {
-                        this.WriteLlvmLoad(opCode, operandType, reference);
-                    }
-                    else
-                    {
-                        opCode.Result = reference;
-                    }
+                    this.WriteLlvmLoad(opCode, operandType, reference);
 
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
@@ -1110,7 +1102,7 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     opCodeFieldInfoPart.Result = new FullyDefinedReference(
-                        string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"'),
+                        "&" + opCodeFieldInfoPart.Operand.GetFullName().CleanUpName(),
                         opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
 
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
@@ -1125,19 +1117,11 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    destinationName = string.Concat("@\"", opCodeFieldInfoPart.Operand.GetFullName(), '"');
+                    destinationName = opCodeFieldInfoPart.Operand.GetFullName().CleanUpName();
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
                     reference = new FullyDefinedReference(destinationName, operandType);
 
-                    if (opCodeFieldInfoPart.Operand.FieldType.IsStructureType())
-                    {
-                        opCode.Result = reference;
-                        this.WriteLlvmLoad(opCode, operandType, firstOpCodeOperand.Result);
-                    }
-                    else
-                    {
-                        this.WriteLlvmSave(opCode, operandType, 0, reference);
-                    }
+                    this.WriteLlvmSave(opCode, operandType, 0, reference);
 
                     this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
@@ -1443,22 +1427,7 @@ namespace Il2Native.Logic
                     var localType = LocalInfo[index].LocalType;
 
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
-                    if (localType.IsStructureType() && !localType.IsByRef)
-                    {
-                        if (firstOpCodeOperand.Result.Type.IsPrimitiveType())
-                        {
-                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
-                        }
-                        else
-                        {
-                            opCode.Result = destination;
-                            this.WriteLlvmLoad(opCode, localType, firstOpCodeOperand.Result);
-                        }
-                    }
-                    else
-                    {
-                        this.WriteLlvmSave(opCode, localType, 0, destination);
-                    }
+                    this.WriteLlvmSave(opCode, localType, 0, destination);
 
                     break;
                 case Code.Ldloc:
@@ -1497,7 +1466,7 @@ namespace Il2Native.Logic
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
                     opCode.Result = new FullyDefinedReference(
-                        this.GetLocalVarName(index),
+                        "&" + this.GetLocalVarName(index),
                         LocalInfo[index].LocalType.ToPointerType());
 
                     break;
@@ -3008,7 +2977,7 @@ namespace Il2Native.Logic
                 writer.Indent++;
             }
 
-            this.WriteBitcast(opCodeTypePart, fromType, this.System.System_Byte);
+            this.WriteCCast(opCodeTypePart, fromType, this.System.System_Byte);
             writer.WriteLine(string.Empty);
 
             var firstCastToBytesResult = opCodeTypePart.Result;
@@ -3038,7 +3007,7 @@ namespace Il2Native.Logic
             }
 
             var toClassType = toType.ToClass();
-            this.WriteBitcast(opCodeTypePart, dynamicCastResultNumber, toClassType);
+            this.WriteCCast(opCodeTypePart, dynamicCastResultNumber, toClassType);
 
             var dynamicCastResult = opCodeTypePart.Result;
 
@@ -5004,7 +4973,7 @@ namespace Il2Native.Logic
             if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteBitcast(opCode, resultOfOperand0, type);
+                this.WriteCCast(opCode, resultOfOperand0, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
