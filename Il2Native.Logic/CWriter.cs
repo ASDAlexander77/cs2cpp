@@ -558,7 +558,7 @@ namespace Il2Native.Logic
             {
                 return;
             }
-            
+
             // to gather all info about method which we need
             IlReader.UsedStrings = new SortedDictionary<int, string>();
             IlReader.CalledMethods = new NamespaceContainer<IMethod>();
@@ -578,7 +578,7 @@ namespace Il2Native.Logic
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             ReadMethodInfo(method, genericContext);
-            
+
             // extern "c"
             this.Output.Write(this.declarationPrefix);
 
@@ -876,7 +876,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (firstLevel && !opCode.Any(Code.Newobj) && opCode.UsedBy != null && opCode.UsedByAlternativeValues == null)
+            if (firstLevel && !opCode.Any(Code.Newobj, Code.Dup) && opCode.UsedBy != null && opCode.UsedByAlternativeValues == null)
             {
                 return;
             }
@@ -1350,13 +1350,29 @@ namespace Il2Native.Logic
                     this.UnaryOper(writer, opCode, "~");
                     break;
                 case Code.Neg:
-                    this.UnaryOper(writer, opCode, "-"); 
+                    this.UnaryOper(writer, opCode, "-");
                     break;
 
                 case Code.Dup:
+
+                    this.ActualWrite(writer, firstOpCodeOperand);
+
                     opCode.Result = firstOpCodeOperand.UsedByAlternativeValues == null
                                         ? firstOpCodeOperand.ResultOpCode
                                         : firstOpCodeOperand.Result;
+
+                    var dupVar = string.Format("_dup{0}", opCode.AddressStart);
+
+                    opCode.Result.Type.WriteTypePrefix(this);
+                    this.Output.WriteLine(string.Concat(" ", dupVar, ";"));
+
+                    this.Output.Write(string.Concat(dupVar, " = "));
+
+                    this.WriteResultOrActualWrite(writer, opCode);
+
+                    opCode.Result = new FullyDefinedReference(dupVar, opCode.Result.Type);
+                    firstOpCodeOperand.Result = opCode.Result;
+
                     break;
 
                 case Code.Box:
@@ -2386,6 +2402,7 @@ namespace Il2Native.Logic
             OperandOptions options = OperandOptions.None,
             IType resultType = null)
         {
+            writer.Write("(");
             this.WriteOperandResult(writer, opCode, 0);
             writer.Write(op);
             this.WriteOperandResult(
@@ -2393,6 +2410,7 @@ namespace Il2Native.Logic
                 opCode,
                 1,
                 options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand));
+            writer.Write(")");
 
             SetResultNumber(opCode, opCode.OpCodeOperands[0].Result.Type);
         }
@@ -3352,7 +3370,7 @@ namespace Il2Native.Logic
             var declaringType = declaringTypeIn.ToClass();
 
             writer.Write("getelementptr inbounds");
-                
+
             writer.Write(' ');
             writer.Write(objectResult);
 
@@ -4558,7 +4576,7 @@ namespace Il2Native.Logic
             this.WriteFieldAccess(opCodeFieldInfoPart);
 
             var fieldType = opCodeFieldInfoPart.Operand.FieldType;
-            
+
             this.SaveToField(opCodeFieldInfoPart, fieldType);
         }
 
@@ -5735,9 +5753,9 @@ namespace Il2Native.Logic
 
             if (hasParameters)
             {
-            ////    result.Type.WriteTypePrefix(this);
-            ////    this.Output.Write(" ");
-            ////    this.WriteResult(result);
+                ////    result.Type.WriteTypePrefix(this);
+                ////    this.Output.Write(" ");
+                ////    this.WriteResult(result);
                 this.Output.Write("0");
             }
 
