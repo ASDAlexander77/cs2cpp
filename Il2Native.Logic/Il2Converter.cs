@@ -567,6 +567,7 @@ namespace Il2Native.Logic
             concurrent = args != null && args.Any(a => a == "multi");
             VerboseOutput = args != null && args.Any(a => a == "verbose");
             var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
+            ilReader.TypeResolver = codeWriter;
             GenerateSource(ilReader, filter, codeWriter);
         }
 

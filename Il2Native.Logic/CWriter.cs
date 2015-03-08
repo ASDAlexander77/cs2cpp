@@ -161,6 +161,8 @@ namespace Il2Native.Logic
         /// </summary>
         private string declarationPrefix = "extern \"C\" ";
 
+        private Stack<OpCodePart> scopes = new Stack<OpCodePart>();
+
         /// <summary>
         /// </summary>
         [Flags]
@@ -899,6 +901,13 @@ namespace Il2Native.Logic
             if (firstLevel)
             {
                 this.Output.WriteLine(";");
+
+                if (this.scopes.Count > 0 && this.scopes.Peek() == opCode)
+                {
+                    this.Output.Indent--;
+                    this.Output.WriteLine("}");
+                    this.scopes.Pop();
+                }
             }
         }
 
@@ -1988,8 +1997,12 @@ namespace Il2Native.Logic
                     }
 
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
-                    if (!opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    if (opCodeConstructorInfoPart != null && !opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
                     {
+                        this.scopes.Push(opCodeConstructorInfoPart.UsedBy.OpCode);
+                        this.Output.WriteLine("{");
+                        this.Output.Indent++;
+
                         this.WriteNewObject(opCodeConstructorInfoPart);
                     }
                     else
@@ -5276,6 +5289,7 @@ namespace Il2Native.Logic
 
             // write custom part
             var ilReader = new IlReader();
+            ilReader.TypeResolver = this;
             var baseWriter = new BaseWriter();
             baseWriter.Parameters = constructedMethod.GetParameters().ToArray();
             baseWriter.LocalInfo = constructedMethod.GetMethodBody().LocalVariables.ToArray();

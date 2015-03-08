@@ -360,6 +360,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public ITypeResolver TypeResolver { get; set; }
+
+        /// <summary>
+        /// </summary>
         public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
         {
             set
@@ -1009,6 +1013,7 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(constructor.DeclaringType);
+                        this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
                         this.AddCalledMethod(constructor);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
