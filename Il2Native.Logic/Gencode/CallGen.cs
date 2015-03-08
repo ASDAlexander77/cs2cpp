@@ -48,10 +48,8 @@ namespace Il2Native.Logic.Gencode
             {
                 var operand = opCodeMethodInfo.OpCodeOperands[index];
 
-                cWriter.ActualWriteOpCode(writer, operand);
-
                 var dynamicCastRequired = false;
-                if (parameter.ParameterType.IsClassCastRequired(operand, out dynamicCastRequired))
+                if (parameter.ParameterType.IsClassCastRequired(cWriter, operand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of '{0}' parameter", parameter.Name);
                     cWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
@@ -133,7 +131,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (used != null && used.Length > 0)
                 {
-                    cWriter.WriteResult(used[0].Result);
+                    cWriter.WriteResultOrActualWrite(writer, used[0]);
                 }
 
                 comaRequired = true;
@@ -251,7 +249,7 @@ namespace Il2Native.Logic.Gencode
 
             var dynamicCastRequired = false;
             if (!isPrimitive && !isPrimitivePointer &&
-                thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
                 writer.WriteLine("; Cast of 'This' parameter");
                 cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -309,7 +307,7 @@ namespace Il2Native.Logic.Gencode
                 opCodeFirstOperand.Result = opCodeNone.Result;
                 writer.WriteLine(string.Empty);
 
-                if (thisType.IsClassCastRequired(opCodeFirstOperand, out dynamicCastRequired))
+                if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'Boxed' 'This' parameter");
                     cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
@@ -531,7 +529,7 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opArg,
             IParameter parameter)
         {
-            cWriter.WriteResult(opArg);
+            cWriter.WriteResultOrActualWrite(cWriter.Output, opArg);
         }
 
         private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)

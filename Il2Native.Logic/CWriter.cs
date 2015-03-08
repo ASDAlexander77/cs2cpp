@@ -161,8 +161,6 @@ namespace Il2Native.Logic
         /// </summary>
         private string declarationPrefix = "extern \"C\" ";
 
-        private Stack<OpCodePart> scopes = new Stack<OpCodePart>();
-
         /// <summary>
         /// </summary>
         [Flags]
@@ -688,12 +686,10 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (this.postDeclarationsProcessedTypes.Contains(type))
+            if (!this.postDeclarationsProcessedTypes.Add(type))
             {
                 return;
             }
-
-            this.postDeclarationsProcessedTypes.Add(type);
 
             this.WriteStaticFieldDeclarations(type);
 
@@ -870,19 +866,23 @@ namespace Il2Native.Logic
                 this.WriteLabels(writer, opCode);
             }
 
-            if (opCode.Result != null || (firstLevel && opCode.UsedBy != null && !opCode.Any(Code.Newobj)))
+            if (opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteStartOfPhiValues(writer, opCode);
+            }
+
+            if (opCode.Result != null)
+            {
+                return;
+            }
+
+            if (firstLevel && !opCode.Any(Code.Newobj) && opCode.UsedBy != null && opCode.UsedByAlternativeValues == null)
             {
                 return;
             }
 
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
-
-            // process Phi Nodes
-            if (opCode.AlternativeValues != null)
-            {
-                this.WritePhi(writer, opCode);
-            }
 
             this.ActualWriteOpCode(writer, opCode);
 
@@ -898,16 +898,14 @@ namespace Il2Native.Logic
 
             opCode.ResultAtExit = opCode.Result;
 
+            if (opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteEndOfPhiValues(writer, opCode);
+            }
+
             if (firstLevel)
             {
                 this.Output.WriteLine(";");
-
-                if (this.scopes.Count > 0 && this.scopes.Peek() == opCode)
-                {
-                    this.Output.Indent--;
-                    this.Output.WriteLine("}");
-                    this.scopes.Pop();
-                }
             }
         }
 
@@ -1333,47 +1331,26 @@ namespace Il2Native.Logic
                         OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
                     break;
                 case Code.And:
-                    this.BinaryOper(writer, opCode, "and", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " & ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Or:
-                    this.BinaryOper(writer, opCode, "or", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " | ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Xor:
-                    this.BinaryOper(writer, opCode, "xor", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " ^ ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Shl:
-                    this.BinaryOper(writer, opCode, "shl", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " >> ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
-                    this.BinaryOper(writer, opCode, "lshr", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " << ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Not:
-                    var tempOper = opCode.OpCodeOperands;
-                    var secondOperand = new OpCodePart(OpCodesEmit.Ldc_I4_M1, 0, 0);
-                    this.ActualWrite(writer, secondOperand);
-                    opCode.OpCodeOperands = new[] { tempOper[0], secondOperand };
-                    this.BinaryOper(writer, opCode, "xor");
-                    opCode.OpCodeOperands = tempOper;
+                    this.UnaryOper(writer, opCode, "~");
                     break;
                 case Code.Neg:
-                    var isFloatingPoint = IsFloatingPointOp(opCode);
-
-                    tempOper = opCode.OpCodeOperands;
-
-                    var firstOperand = OpCodePart.CreateNop;
-                    firstOperand.Result = isFloatingPoint
-                        ? new ConstValue("0.0", firstOpCodeOperand.Result.Type)
-                        : new ConstValue(0, firstOpCodeOperand.Result.Type);
-                    opCode.OpCodeOperands = new[] { firstOperand, tempOper[0] };
-
-                    this.BinaryOper(
-                        writer,
-                        opCode,
-                        " - ",
-                        OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
-                    opCode.OpCodeOperands = tempOper;
-
+                    this.UnaryOper(writer, opCode, "-"); 
                     break;
 
                 case Code.Dup:
@@ -1452,15 +1429,14 @@ namespace Il2Native.Logic
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
                     if (localType.IsStructureType() && !localType.IsByRef)
                     {
-                        firstOperand = firstOpCodeOperand;
-                        if (firstOperand.Result.Type.IsPrimitiveType())
+                        if (firstOpCodeOperand.Result.Type.IsPrimitiveType())
                         {
-                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
+                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                         }
                         else
                         {
                             opCode.Result = destination;
-                            this.WriteLlvmLoad(opCode, localType, firstOperand.Result);
+                            this.WriteLlvmLoad(opCode, localType, firstOpCodeOperand.Result);
                         }
                     }
                     else
@@ -1590,15 +1566,14 @@ namespace Il2Native.Logic
                         this.GetArgType(index));
                     if (argType.IsStructureType() && !argType.IsByRef)
                     {
-                        firstOperand = firstOpCodeOperand;
-                        if (firstOperand.Result.Type.IsPrimitiveType())
+                        if (firstOpCodeOperand.Result.Type.IsPrimitiveType())
                         {
-                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOperand.Result, destination);
+                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                         }
                         else
                         {
                             opCode.Result = destination;
-                            this.WriteLlvmLoad(opCode, argType, firstOperand.Result);
+                            this.WriteLlvmLoad(opCode, argType, firstOpCodeOperand.Result);
                         }
                     }
                     else
@@ -1975,6 +1950,7 @@ namespace Il2Native.Logic
 
                     var dynamicCastRequired = false;
                     var castRequired = toType.IsClassCastRequired(
+                        this,
                         opCodeTypePart.OpCodeOperands[0],
                         out dynamicCastRequired);
                     if (dynamicCastRequired || !castRequired)
@@ -1999,10 +1975,6 @@ namespace Il2Native.Logic
                     var opCodeConstructorInfoPart = opCode as OpCodeConstructorInfoPart;
                     if (opCodeConstructorInfoPart != null && !opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
                     {
-                        this.scopes.Push(opCodeConstructorInfoPart.UsedBy.OpCode);
-                        this.Output.WriteLine("{");
-                        this.Output.Indent++;
-
                         this.WriteNewObject(opCodeConstructorInfoPart);
                     }
                     else
@@ -2378,6 +2350,7 @@ namespace Il2Native.Logic
         {
             writer.Write(op);
             this.WriteOperandResult(writer, opCode, 0, false);
+            SetResultNumber(opCode, opCode.OpCodeOperands[0].Result.Type);
         }
 
         public void UnaryOper(
@@ -2389,6 +2362,7 @@ namespace Il2Native.Logic
         {
             writer.Write(op);
             this.WriteOperandResult(writer, opCode, operand, false);
+            SetResultNumber(opCode, opCode.OpCodeOperands[operand].Result.Type);
         }
 
         /// <summary>
@@ -3732,6 +3706,27 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, operand, detectAndWriteTypePrefix);
         }
 
+        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
+        {
+            if (opCode == opCode.UsedByAlternativeValues.Values[0])
+            {
+                opCode.RequiredOutgoingType.WriteTypePrefix(this);
+                this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+            }
+
+            if (opCode.Result == null)
+            {
+                this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+            }
+        }
+
+        public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
+        {
+            this.WriteResult(opCode);
+            opCode.Result = new FullyDefinedReference("_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, opCode.Result.Type);
+        }
+
+        [Obsolete]
         public void WritePhi(CIndentedTextWriter writer, OpCodePart opCode)
         {
             while (opCode.AlternativeValues != null && opCode.AlternativeValues.Count > 0)
@@ -3884,16 +3879,10 @@ namespace Il2Native.Logic
         public void WriteReturn(CIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
             var opts = this.WriteReturnStruct(opCode, methodReturnType);
-
-            writer.Write("return ");
-            if (!methodReturnType.IsVoid())
+            writer.Write("return");
+            if (methodReturnType != null && !methodReturnType.IsVoid())
             {
-                this.UnaryOper(
-                    writer,
-                    opCode,
-                    "",
-                    methodReturnType);
-                
+                this.UnaryOper(writer, opCode, " ", methodReturnType);
             }
         }
 

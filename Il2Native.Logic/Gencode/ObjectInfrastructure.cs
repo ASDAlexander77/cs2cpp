@@ -801,7 +801,9 @@ namespace Il2Native.Logic.Gencode
             // temp var
             declaringType.WriteTypePrefix(cWriter);
             var newVar = string.Format("_new{0}", opCodeConstructorInfoPart.AddressStart);
-            cWriter.Output.Write(" {0} = ", newVar);
+            cWriter.Output.WriteLine(" {0};", newVar);
+
+            cWriter.Output.Write("{0} = ", newVar);
 
             declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
             cWriter.Output.WriteLine(";");

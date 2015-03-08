@@ -515,12 +515,13 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static bool IsClassCastRequired(
             this IType requiredType,
+            CWriter cWriter,
             OpCodePart opCodePart,
             out bool dynamicCastRequired)
         {
             dynamicCastRequired = false;
 
-            var resultType = opCodePart.Result.Type;
+            var resultType = cWriter.EstimatedResultOf(opCodePart).Type;
             var other = resultType.IsPointer || resultType.IsByRef ? resultType.GetElementType() : resultType;
             var constValue = opCodePart.Result as ConstValue;
             if (constValue != null && constValue.IsNull)
