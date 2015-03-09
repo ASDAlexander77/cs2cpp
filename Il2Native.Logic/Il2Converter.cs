@@ -1064,28 +1064,6 @@ namespace Il2Native.Logic
                        || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="codeWriter">
-        /// </param>
-        /// <param name="newListOfITypes">
-        /// </param>
-        private static void WriteForwardDeclarations(ICodeWriter codeWriter, IList<IType> newListOfITypes)
-        {
-            // write forward declaration
-            for (var index = 0; index < newListOfITypes.Count; index++)
-            {
-                var type = newListOfITypes[index];
-                Debug.Assert(type != null);
-                if (type == null || type.IsGenericTypeDefinition)
-                {
-                    continue;
-                }
-
-                codeWriter.WriteForwardDeclaration(type, index, newListOfITypes.Count);
-            }
-        }
-
         private static void Writing(
             IlReader ilReader,
             ICodeWriter codeWriter,
@@ -1094,8 +1072,6 @@ namespace Il2Native.Logic
         {
             // writing
             codeWriter.WriteStart(ilReader);
-
-            WriteForwardDeclarations(codeWriter, types);
 
             ConvertAllTypes(
                 ilReader,

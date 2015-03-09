@@ -501,18 +501,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        public void WriteForwardDeclaration(IType type, int number, int count)
-        {
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="method">
         /// </param>
         /// <param name="genericContext">
@@ -5662,7 +5650,23 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteMainFunction()
         {
+            var isVoid = MainMethod.ReturnType.IsVoid();
             var hasParameters = MainMethod.GetParameters().Any();
+
+            if (isVoid)
+            {
+                var environmentType = this.ResolveType("System.Environment");
+                var setExitCode = environmentType.GetMethodByName("set_ExitCode", this);
+                var getExitCode = environmentType.GetMethodByName("get_ExitCode", this);
+                this.forwardMethodDeclarationWritten.Add(new MethodKey(setExitCode, null));
+                this.forwardMethodDeclarationWritten.Add(new MethodKey(getExitCode, null));
+                this.WriteMethodForwardDeclaration(setExitCode, null);
+                this.Output.WriteLine(";");
+                this.WriteMethodForwardDeclaration(getExitCode, null);
+                this.Output.WriteLine(";");
+                this.Output.WriteLine(string.Empty);
+            }
+
             if (!hasParameters)
             {
                 this.Output.Write("{0}i32 main()", declarationPrefix);
@@ -5677,12 +5681,13 @@ namespace Il2Native.Logic
             this.Output.Indent++;
 
             // create locals and args
-            this.Output.WriteLine("i32 local1;");
             if (hasParameters)
             {
                 this.System.System_String.ToArrayType(1).WriteTypePrefix(this);
                 this.Output.WriteLine(" local0;");
             }
+
+            this.Output.WriteLine("i32 local1;");
 
             if (!this.Gctors)
             {
@@ -5691,13 +5696,13 @@ namespace Il2Native.Logic
 
             ////var result = hasParameters ? this.WriteLoadingArgumentsForMain(MainMethod, null) : null;
 
-            if (MainMethod.ReturnType.IsVoid())
+            if (isVoid)
             {
                 var method = "Void_System_Environment_set_ExitCodeFInt32N";
-                this.Output.WriteLine("{0}(0)", method);
+                this.Output.WriteLine("{0}(0);", method);
             }
 
-            if (!MainMethod.ReturnType.IsVoid())
+            if (!isVoid)
             {
                 this.Output.Write("local1 = ");
             }
@@ -5715,13 +5720,15 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(");");
 
-            if (MainMethod.ReturnType.IsVoid())
+            if (isVoid)
             {
-                var method = "Int32 System.Environment.get_ExitCode()";
-                this.Output.WriteLine("local1 = {0}()", method);
+                var method = "System.Environment.get_ExitCode";
+                this.Output.WriteLine("return {0}();", method);
             }
-
-            this.Output.WriteLine("return local1;");
+            else
+            {
+                this.Output.WriteLine("return local1;");
+            }
 
             this.Output.Indent--;
             this.Output.WriteLine("}");

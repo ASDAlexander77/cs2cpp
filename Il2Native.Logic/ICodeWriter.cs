@@ -127,16 +127,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="number">
-        /// </param>
-        /// <param name="count">
-        /// </param>
-        void WriteForwardDeclaration(IType type, int number, int count);
-
-        /// <summary>
-        /// </summary>
         /// <param name="method">
         /// </param>
         /// <param name="genericContext">
