@@ -294,11 +294,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallBoxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = cWriter.Output;
-
             var method = new SynthesizedBoxMethod(type);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; call Box Object method");
             cWriter.WriteCall(
                 opCode,
                 method,
@@ -359,11 +355,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallGetTypeObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = cWriter.Output;
-
             var method = new SynthesizedGetTypeStaticMethod(type, cWriter);
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; call .getType Object method");
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             cWriter.WriteCall(
@@ -375,8 +367,6 @@ namespace Il2Native.Logic.Gencode
                 opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCode.Result = opCodeNope.Result;
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; End of Getting data");
         }
 
         /// <summary>
@@ -443,7 +433,6 @@ namespace Il2Native.Logic.Gencode
 
             var method = new SynthesizedUnboxMethod(type);
             writer.WriteLine(string.Empty);
-            writer.WriteLine("; call Unbox Object method");
             cWriter.WriteCall(
                 opCode,
                 method,

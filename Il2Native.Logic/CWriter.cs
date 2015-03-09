@@ -996,7 +996,7 @@ namespace Il2Native.Logic
                             stringType);
                     break;
                 case Code.Ldnull:
-                    opCode.Result = new ConstValue(null, this.System.System_Void.ToPointerType());
+                    opCode.Result = new ConstValue(0, this.System.System_Void.ToPointerType());
                     break;
 
                 case Code.Arglist:

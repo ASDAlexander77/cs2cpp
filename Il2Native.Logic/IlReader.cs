@@ -1169,6 +1169,12 @@ namespace Il2Native.Logic
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
+                            this.AddCalledMethod(new SynthesizedBoxMethod(type));
+                        }
+
+                        if (code == Code.Unbox || code == Code.Unbox_Any)
+                        {
+                            this.AddCalledMethod(new SynthesizedUnboxMethod(type));
                         }
 
                         if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
