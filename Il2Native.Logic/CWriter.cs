@@ -663,12 +663,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.WriteVirtualTables(type);
-
-            this.processedVirtualTablesRequired.Add(type);
-
-            this.Output.WriteLine(string.Empty);
-
             /*
             type.WriteRtti(this);
 
@@ -676,6 +670,7 @@ namespace Il2Native.Logic
             this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
+            */
 
             // object oriented methods
             if (!type.IsVoid())
@@ -683,6 +678,7 @@ namespace Il2Native.Logic
                 type.WriteNewObjectMethod(this);
             }
 
+            /*
             type.WriteInitObjectMethod(this);
 
             var normalType = type.ToNormal();
@@ -705,6 +701,12 @@ namespace Il2Native.Logic
             normalType.WriteInternalGetTypeMethod(this);
             normalType.WriteInternalGetSizeMethod(this);
             */
+
+            this.WriteVirtualTables(type);
+
+            this.processedVirtualTablesRequired.Add(type);
+
+            this.Output.WriteLine(string.Empty);
         }
 
         /// <summary>
