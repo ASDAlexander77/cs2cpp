@@ -794,7 +794,7 @@ namespace Il2Native.Logic.Gencode
             /// </returns>
             /// <exception cref="NotImplementedException">
             /// </exception>
-            public string ToString(IType ownerOfExplicitInterface)
+            public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
             {
                 throw new NotImplementedException();
             }

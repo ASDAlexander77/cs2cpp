@@ -132,6 +132,6 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        string ToString(IType ownerOfExplicitInterface);
+        string ToString(IType ownerOfExplicitInterface, bool shortName = false);
     }
 }

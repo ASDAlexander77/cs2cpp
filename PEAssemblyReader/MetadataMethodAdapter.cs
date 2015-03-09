@@ -635,13 +635,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        public string ToString(IType ownerOfExplicitInterface)
+        public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
         {
-            if (ownerOfExplicitInterface == null)
-            {
-                return this.ToString();
-            }
-
             var result = new StringBuilder();
 
             // write return type
@@ -649,9 +644,20 @@ namespace PEAssemblyReader
             result.Append(' ');
 
             // write Full Name
-            result.Append(ownerOfExplicitInterface.FullName);
-            result.Append('.');
-            result.Append(this.FullName);
+            if (ownerOfExplicitInterface != null)
+            {
+                result.Append(ownerOfExplicitInterface.FullName);
+                result.Append('.');
+            }
+
+            if (shortName)
+            {
+                result.Append(this.Name);
+            }
+            else
+            {
+                result.Append(this.FullName);
+            }
 
             // write Parameter Types
             result.Append('(');

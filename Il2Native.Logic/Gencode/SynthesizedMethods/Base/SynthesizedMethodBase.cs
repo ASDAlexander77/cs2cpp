@@ -285,14 +285,47 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </returns>
         /// <exception cref="NotImplementedException">
         /// </exception>
-        public string ToString(IType ownerOfExplicitInterface)
+        public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
         {
-            if (ownerOfExplicitInterface == null)
+            var result = new StringBuilder();
+
+            // write return type
+            result.Append(this.ReturnType);
+            result.Append(' ');
+
+            // write Full Name
+            if (ownerOfExplicitInterface != null)
             {
-                return this.ToString();
+                result.Append(ownerOfExplicitInterface.FullName);
+                result.Append('.');
             }
 
-            throw new NotImplementedException();
+            if (shortName)
+            {
+                result.Append(this.Name);
+            }
+            else
+            {
+                result.Append(this.FullName);
+            }
+
+            // write Parameter Types
+            result.Append('(');
+            var index = 0;
+            foreach (var parameterType in this.GetParameters())
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append(parameterType);
+                index++;
+            }
+
+            result.Append(')');
+
+            return result.ToString();
         }
 
         public override bool Equals(object obj)

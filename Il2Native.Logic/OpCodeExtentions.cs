@@ -356,7 +356,17 @@ namespace Il2Native.Logic
                 return methodBase.Name;
             }
 
-            return ownerOfExplicitInterface != null ? methodBase.ToString(ownerOfExplicitInterface).CleanUpName() : methodBase.ToString().CleanUpName();
+            return methodBase.ToString(ownerOfExplicitInterface).CleanUpName();
+        }
+
+        public static string GetMethodName(this IMethod methodBase, IType ownerOfExplicitInterface = null)
+        {
+            if (methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport)
+            {
+                return methodBase.Name;
+            }
+
+            return methodBase.ToString(ownerOfExplicitInterface, true).CleanUpName();
         }
 
         /// <summary>

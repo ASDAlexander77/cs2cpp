@@ -226,9 +226,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             return this.method.ToSpecialization(genericContext);
         }
 
-        public string ToString(IType ownerOfExplicitInterface)
+        public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
         {
-            return this.method.ToString(ownerOfExplicitInterface);
+            return this.method.ToString(ownerOfExplicitInterface, shortName);
         }
 
         public override bool Equals(object obj)

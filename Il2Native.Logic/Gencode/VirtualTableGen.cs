@@ -381,13 +381,14 @@ namespace Il2Native.Logic.Gencode
             writer.Write(cWriter.declarationPrefix);
             writer.Write("struct ");
             writer.Write(type.GetVirtualTableName());
+            writer.Write(" ");
         }
 
         private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter)
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine(" {");
+            writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine("i8* thisOffset;");
 
@@ -404,7 +405,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("(*)");
                 cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
                 writer.Write(" ");
-                cWriter.WriteMethodDefinitionName(writer, method);
+                cWriter.WriteMethodDefinitionName(writer, method, shortName: true);
 
                 // write method pointer
                 writer.WriteLine(";");
@@ -420,11 +421,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("{");
+            writer.WriteLine("{");
 
             writer.Indent++;
             writer.WriteLine(
-                "i8* {0},", interfaceIndex == 0 ? "0" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
+                "i8* {0},",
+                interfaceIndex == 0 ? "0" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
             writer.Write("i8* bitcast (");

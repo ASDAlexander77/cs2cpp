@@ -3295,9 +3295,10 @@ namespace Il2Native.Logic
         public void WriteMethodDefinitionName(
             CIndentedTextWriter writer,
             IMethod methodBase,
-            IType ownerOfExplicitInterface = null)
+            IType ownerOfExplicitInterface = null,
+            bool shortName = false)
         {
-            writer.Write(methodBase.GetFullMethodName(ownerOfExplicitInterface));
+            writer.Write(shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface));
         }
 
         /// <summary>
