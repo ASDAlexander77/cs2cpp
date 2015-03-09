@@ -23,6 +23,10 @@
 
         /// <summary>
         /// </summary>
+        ISet<IField> StaticFields { get; set; }
+
+        /// <summary>
+        /// </summary>
         IDictionary<int, string> UsedStrings { get; set; }
 
         /// <summary>

@@ -134,10 +134,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IField> staticFieldExtrenalDeclRequired = new NamespaceContainer<IField>();
-
-        /// <summary>
-        /// </summary>
         private readonly StringBuilder storedText = new StringBuilder();
 
         /// <summary>
@@ -151,6 +147,10 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<MethodKey> forwardMethodDeclarationWritten = new NamespaceContainer<MethodKey>();
+
+        /// <summary>
+        /// </summary>
+        private readonly ISet<IField> forwardStaticDeclarationWritten = new NamespaceContainer<IField>();
 
         /// <summary>
         /// </summary>
@@ -562,6 +562,7 @@ namespace Il2Native.Logic
             // to gather all info about method which we need
             IlReader.UsedStrings = new SortedDictionary<int, string>();
             IlReader.CalledMethods = new NamespaceContainer<IMethod>();
+            IlReader.StaticFields = new NamespaceContainer<IField>();
         }
 
         private void WriteMethodBeginning(IMethod method, IGenericContext genericContext)
@@ -1095,8 +1096,6 @@ namespace Il2Native.Logic
                     var reference = new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType);
                     this.WriteLlvmLoad(opCode, operandType, reference);
 
-                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
-
                     break;
                 case Code.Ldsflda:
 
@@ -1104,8 +1103,6 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart.Result = new FullyDefinedReference(
                         "&" + opCodeFieldInfoPart.Operand.GetFullName().CleanUpName(),
                         opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
-
-                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Stfld:
@@ -1122,8 +1119,6 @@ namespace Il2Native.Logic
                     reference = new FullyDefinedReference(destinationName, operandType);
 
                     this.WriteLlvmSave(opCode, operandType, 0, reference);
-
-                    this.CheckIfStaticFieldExternalDeclarationIsRequired(opCodeFieldInfoPart.Operand);
 
                     break;
 
@@ -2416,21 +2411,6 @@ namespace Il2Native.Logic
             index += interfacesCount;
 
             return index;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="field">
-        /// </param>
-        public void CheckIfStaticFieldExternalDeclarationIsRequired(IField field)
-        {
-            if (field == null || !field.IsStatic || field.DeclaringType.AssemblyQualifiedName == this.AssemblyQualifiedName ||
-                field.DeclaringType.IsGenericType)
-            {
-                return;
-            }
-
-            this.staticFieldExtrenalDeclRequired.Add(field);
         }
 
         /// <summary>
@@ -5886,9 +5866,7 @@ namespace Il2Native.Logic
                 this.WriteCallGctorsDeclarations();
             }
 
-            // TODO: tmporary disabled
-            return;
-
+            /*
             if (this.typeRttiPointerDeclRequired.Count > 0)
             {
                 this.Output.WriteLine(string.Empty);
@@ -5974,16 +5952,7 @@ namespace Il2Native.Logic
                     loadToken.WriteGetTypeStaticMethod(this);
                 }
             }
-
-            if (this.staticFieldExtrenalDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-
-                foreach (var staticFieldExtrenalDecl in this.staticFieldExtrenalDeclRequired)
-                {
-                    this.WriteStaticFieldDeclaration(staticFieldExtrenalDecl, true);
-                }
-            }
+            */
         }
 
         private void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
@@ -6031,35 +6000,20 @@ namespace Il2Native.Logic
         private void WriteStaticFieldDeclaration(IField field, bool externalRef = false)
         {
             var isExternal = externalRef;
+
             if (isExternal)
             {
-                this.Output.Write("@\"{0}\" = external global ", field.GetFullName());
-            }
-            else
-            {
-                this.Output.Write(
-                    "@\"{0}\" = {1} global ",
-                    field.GetFullName(),
-                    field.DeclaringType.IsGenericType ? "linkonce_odr" : string.Empty);
+                this.forwardStaticDeclarationWritten.Add(field);
+                this.Output.Write(declarationPrefix);
             }
 
             field.FieldType.WriteTypePrefix(this, false);
 
-            if (!isExternal)
-            {
-                if (field.FieldType.IsStructureType())
-                {
-                    this.Output.WriteLine(" zeroinitializer, align {0}", PointerSize);
-                }
-                else
-                {
-                    this.Output.WriteLine(" undef");
-                }
-            }
-            else
-            {
-                this.Output.WriteLine(string.Empty);
-            }
+            // TODO: do not forget static generic
+            this.Output.Write(" ");
+            this.Output.Write(field.GetFullName().CleanUpName());
+
+            this.Output.WriteLine(";");
         }
 
         /// <summary>
@@ -6177,11 +6131,29 @@ namespace Il2Native.Logic
                     IlReader.CalledMethods
                         .Where(
                             requiredMethodDeclaration =>
-                                this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null)))
-                )
+                                this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null))))
             {
                 any = true;
                 WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
+                this.Output.WriteLine(";");
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
+            any = false;
+            // static fields
+            foreach (
+                var requiredStaticFieldDeclaration in
+                    IlReader.StaticFields
+                        .Where(
+                            requiredStaticFieldDeclaration =>
+                                this.forwardStaticDeclarationWritten.Add(requiredStaticFieldDeclaration)))
+            {
+                any = true;
+                this.WriteStaticFieldDeclaration(requiredStaticFieldDeclaration, true);
                 this.Output.WriteLine(";");
             }
 

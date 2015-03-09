@@ -73,6 +73,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IField> _staticFields;
+
+        /// <summary>
+        /// </summary>
         private IDictionary<int, string> _usedStrings;
 
         /// <summary>
@@ -394,6 +398,21 @@ namespace Il2Native.Logic
             set
             {
                 this._calledMethods = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IField> StaticFields
+        {
+            get
+            {
+                return this._staticFields;
+            }
+
+            set
+            {
+                this._staticFields = value;
             }
         }
 
@@ -1082,6 +1101,11 @@ namespace Il2Native.Logic
                             this.AddUsedStaticFieldToRead(field);
                         }
 
+                        if (code == Code.Stsfld || code == Code.Ldsfld || code == Code.Ldsflda)
+                        {
+                            this.AddStaticField(field);
+                        }
+
                         yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, field);
                         continue;
                     case Code.Ldtoken: // can it be anything?
@@ -1305,6 +1329,16 @@ namespace Il2Native.Logic
             }
 
             this._calledMethods.Add(method);
+        }
+
+        private void AddStaticField(IField field)
+        {
+            if (this._staticFields == null || field == null)
+            {
+                return;
+            }
+
+            this._staticFields.Add(field);
         }
 
         private void AddString(int token, string usedString)
