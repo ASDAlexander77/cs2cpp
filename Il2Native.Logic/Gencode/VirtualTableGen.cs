@@ -387,7 +387,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("{");
+            writer.WriteLine(" {");
             writer.Indent++;
             writer.WriteLine("i8* thisOffset;");
 
@@ -401,15 +401,15 @@ namespace Il2Native.Logic.Gencode
 
                 // write pointer to method
                 cWriter.WriteMethodReturnType(writer, method);
-                writer.Write(" (*)");
+                writer.Write("(*)");
                 cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
+                writer.Write(" ");
                 cWriter.WriteMethodDefinitionName(writer, method);
 
                 // write method pointer
                 writer.WriteLine(";");
             }
 
-            writer.WriteLine(string.Empty);
             writer.Indent--;
 
             writer.Write("}");
