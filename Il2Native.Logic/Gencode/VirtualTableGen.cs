@@ -368,20 +368,22 @@ namespace Il2Native.Logic.Gencode
             int interfaceIndex,
             int baseTypeFieldsOffset)
         {
+            var writer = cWriter.Output;
+
             VirtualTableCName(cWriter, type);
             VirtualTableDeclaration(virtualTable, cWriter);
+            cWriter.Output.Write(" ");
+            writer.Write(type.GetVirtualTableName());
             cWriter.Output.Write(" = ");
-            VirtualTableDefinition(virtualTable, cWriter, type, interfaceIndex, baseTypeFieldsOffset);
+            VirtualTableDefinition(virtualTable, cWriter, interfaceIndex, baseTypeFieldsOffset);
+            cWriter.Output.Write(";");
         }
 
         private static void VirtualTableCName(CWriter cWriter, IType type)
         {
             var writer = cWriter.Output;
 
-            writer.Write(cWriter.declarationPrefix);
             writer.Write("struct ");
-            writer.Write(type.GetVirtualTableName());
-            writer.Write(" ");
         }
 
         private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter)
@@ -402,10 +404,10 @@ namespace Il2Native.Logic.Gencode
 
                 // write pointer to method
                 cWriter.WriteMethodReturnType(writer, method);
-                writer.Write("(*)");
-                cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
-                writer.Write(" ");
+                writer.Write("(*");
                 cWriter.WriteMethodDefinitionName(writer, method, shortName: true);
+                writer.Write(")");
+                cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
 
                 // write method pointer
                 writer.WriteLine(";");
@@ -417,7 +419,7 @@ namespace Il2Native.Logic.Gencode
         }
 
         private static void VirtualTableDefinition(
-            List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, IType type, int interfaceIndex, int baseTypeFieldsOffset)
+            List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, int interfaceIndex, int baseTypeFieldsOffset)
         {
             var writer = cWriter.Output;
 
@@ -425,42 +427,45 @@ namespace Il2Native.Logic.Gencode
 
             writer.Indent++;
             writer.WriteLine(
-                "i8* {0},",
-                interfaceIndex == 0 ? "0" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
+                "(i8*) {0},",
+                interfaceIndex == 0
+                    ? "0"
+                    : string.Format("-{0}", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
-            writer.Write("i8* bitcast (");
-            type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write("* @\"{0}\" to i8*)", type.GetRttiInfoName());
+            //writer.Write("(i8*) &{0}", type.GetRttiInfoName().CleanUpName());
+            writer.Write("(i8*) 0");
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)
             {
-                var method = virtualMethod.Value;
-
-                // write method pointer
                 writer.WriteLine(",");
 
-                writer.Write("i8* bitcast (");
-                if (virtualMethod.Value == null || virtualMethod.Value.IsAbstract)
+                var methodKey = virtualMethod.Key;
+                var method = virtualMethod.Value;
+
+                writer.Write("(");
+                cWriter.WriteMethodReturnType(writer, methodKey);
+                writer.Write("(*)");
+                cWriter.WriteMethodParamsDef(writer, methodKey, true, methodKey.DeclaringType, methodKey.ReturnType, true);
+                writer.Write(")");
+                writer.Write(" ");
+
+                if (method == null || virtualMethod.Value.IsAbstract)
                 {
-                    writer.Write("void ()* @__cxa_pure_virtual");
+                    writer.Write("&__cxa_pure_virtual()");
                 }
                 else
                 {
                     // write pointer to method
-                    cWriter.WriteMethodReturnType(writer, method);
-                    cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
-                    writer.Write("* ");
+                    writer.Write("&");
                     cWriter.WriteMethodDefinitionName(writer, method);
                 }
-
-                writer.Write(" to i8*)");
             }
 
             writer.WriteLine(string.Empty);
             writer.Indent--;
-            writer.WriteLine("}");
+            writer.Write("}");
         }
 
         /// <summary>

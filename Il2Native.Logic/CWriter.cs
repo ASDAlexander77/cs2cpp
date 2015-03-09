@@ -134,10 +134,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly StringBuilder storedText = new StringBuilder();
-
-        /// <summary>
-        /// </summary>
         private int stringIndexIncremental;
 
         /// <summary>
@@ -289,25 +285,6 @@ namespace Il2Native.Logic
         public void Close()
         {
             this.Output.Close();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="value">
-        /// </param>
-        public void DisableWrite(bool value)
-        {
-            if (value)
-            {
-                this.savedOutput = this.Output;
-                this.storedText.Clear();
-                this.Output = new CIndentedTextWriter(new StringWriter(this.storedText));
-            }
-            else
-            {
-                this.Output.Close();
-                this.Output = this.savedOutput;
-            }
         }
 
         /// <summary>
@@ -761,13 +738,6 @@ namespace Il2Native.Logic
             StaticConstructors.Clear();
             VirtualTableGen.Clear();
             TypeGen.Clear();
-        }
-
-        /// <summary>
-        /// </summary>
-        public void WriteStoredText()
-        {
-            this.Output.Write(this.storedText);
         }
 
         /// <summary>
@@ -5329,15 +5299,28 @@ namespace Il2Native.Logic
                 return;
             }
 
+            // TODO: review next line (use sizeof)
             var baseTypeSize = type.BaseType != null ? type.BaseType.GetTypeSize(this) : 0;
 
             var index = 0;
             if (type.HasAnyVirtualMethod(this))
             {
-                this.Output.WriteLine(string.Empty);
                 var virtualTable = type.GetVirtualTable(this);
+
+                // forward declarations
+                foreach (
+                    var method in
+                        virtualTable.Where(m => m.Value != null)
+                            .Select(m => m.Value)
+                            .Where(m => forwardMethodDeclarationWritten.Add(new MethodKey(m, null))))
+                {
+                    this.WriteMethodForwardDeclaration(method, null);
+                    this.Output.WriteLine(";");
+                }
+
                 virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
                 index++;
+                this.Output.WriteLine(string.Empty);
             }
 
             foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
@@ -5358,11 +5341,25 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
                 this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
+
+                // forward declarations
+                foreach (
+                    var method in
+                        virtualInterfaceTable.Where(m => m.Value != null)
+                            .Select(m => m.Value)
+                            .Where(m => forwardMethodDeclarationWritten.Add(new MethodKey(m, null))))
+                {
+                    this.WriteMethodForwardDeclaration(method, null);
+                    this.Output.WriteLine(";");
+                }
+                
                 virtualInterfaceTable.WriteTableOfMethods(
                     this,
                     type,
                     interfaceIndex,
                     baseTypeSizeOfTypeContainingInterface);
+
+                this.Output.WriteLine(string.Empty);
             }
         }
 
@@ -5614,7 +5611,7 @@ namespace Il2Native.Logic
 
             this.Output.Write("{0} = ", newVar);
 
-            var objectReference  = new FullyDefinedReference(newVar, arrayType);
+            var objectReference = new FullyDefinedReference(newVar, arrayType);
             this.WriteNewWithCallingConstructor(opCodeTypePart, arrayType, this.System.System_Int32, opCodeTypePart.OpCodeOperands[0], objectReference);
         }
 

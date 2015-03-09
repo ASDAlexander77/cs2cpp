@@ -27,12 +27,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="value">
-        /// </param>
-        void DisableWrite(bool value);
-
-        /// <summary>
-        /// </summary>
         /// <param name="type">
         /// </param>
         /// <returns>
@@ -159,10 +153,6 @@ namespace Il2Native.Logic
         /// </param>
         /// ///
         void WriteStart(IIlReader ilReader);
-
-        /// <summary>
-        /// </summary>
-        void WriteStoredText();
 
         /// <summary>
         /// </summary>

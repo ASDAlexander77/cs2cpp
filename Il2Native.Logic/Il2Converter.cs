@@ -214,15 +214,11 @@ namespace Il2Native.Logic
                     WriteTypeDefinition(codeWriter, type, genericTypeContext);
                 }
 
-                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
-
                 codeWriter.WriteBeforeConstructors();
             }
 
             if (mode == ConvertingMode.Definition)
             {
-                codeWriter.DisableWrite(true);
-
                 if (!processGenericMethodsOnly)
                 {
                     // pre process step to get all used undefined structures
@@ -238,11 +234,6 @@ namespace Il2Native.Logic
                         codeWriter.WriteConstructorEnd(ctor, genericTypeContext);
                     }
                 }
-
-                codeWriter.DisableWrite(false);
-
-                // Actual Write
-                codeWriter.WriteStoredText();
             }
 
             if (mode == ConvertingMode.Declaration)
@@ -253,8 +244,6 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
-                codeWriter.DisableWrite(true);
-
                 // pre process step to get all used undefined structures
                 foreach (
                     var method in
@@ -305,17 +294,21 @@ namespace Il2Native.Logic
                         }
                     }
                 }
-
-                codeWriter.DisableWrite(false);
-
-                // Actual Write
-                codeWriter.WriteStoredText();
             }
 
             if (mode == ConvertingMode.Declaration)
             {
                 codeWriter.WriteAfterMethods();
                 codeWriter.WriteTypeEnd(type);
+            }
+
+            if (mode == ConvertingMode.Definition)
+            {
+                // TODO: remove next if when all is done
+                if (type.AssemblyQualifiedName != null && type.AssemblyQualifiedName.StartsWith("test-"))
+                {
+                    codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+                }
             }
         }
 
