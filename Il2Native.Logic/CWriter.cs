@@ -1242,11 +1242,14 @@ namespace Il2Native.Logic
 
                     if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
                     {
+                        this.ActualWrite(writer, opCodeMethodInfoPart.OpCodeOperands[0]);
+
                         // if we call constructor on struct we need to initialize object before
                         opCodeMethodInfoPart.Result = opCodeMethodInfoPart.OpCodeOperands[0].Result;
                         methodBase.DeclaringType.WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
                         opCodeMethodInfoPart.Result = null;
-                        this.Output.WriteLine(string.Empty);
+                        // TODO: maybe here we need use ','?
+                        this.Output.WriteLine(";");
                     }
 
                     this.WriteCall(

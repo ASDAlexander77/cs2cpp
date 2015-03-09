@@ -646,7 +646,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // this is type reference, initialize it with null
-                writer.WriteLine("((i8*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
+                writer.WriteLine("*((i8*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
             }
 
             writer.Write("// end");

@@ -1039,6 +1039,10 @@ namespace Il2Native.Logic
                         if (code == Code.Call)
                         {
                             this.AddCalledMethod(method);
+                            if (method.DeclaringType.IsStructureType() && method.IsConstructor)
+                            {
+                                this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
+                            }
                         }
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
