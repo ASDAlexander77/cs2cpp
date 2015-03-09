@@ -56,9 +56,9 @@ namespace Il2Native.Logic.Gencode
             yield return arrayType.GetElementType().ToField(arrayType, "data", isFixed: true);
         }
 
-        public static int GetDataFieldIndex(IType arrayType, CWriter cWriter)
+        public static IField GetDataField(IType arrayType, CWriter cWriter)
         {
-            return cWriter.GetFieldIndex(arrayType, "data");
+            return arrayType.GetFieldByName("data", cWriter);
         }
 
         /// <summary>
@@ -415,76 +415,78 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine("// Init array with values");
+            // TODO: finish it
 
-            var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
-            Debug.Assert(opCodeFieldInfoPart != null, "opCode is not OpCodeFieldInfoPart");
-            if (opCodeFieldInfoPart == null)
-            {
-                return;
-            }
+            //writer.WriteLine("// Init array with values");
 
-            var staticArrayInitTypeSizeLabel = "__StaticArrayInitTypeSize=";
-            var hasSize = opCodeFieldInfoPart.Operand.FieldType.MetadataName.Contains(staticArrayInitTypeSizeLabel);
+            //var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
+            //Debug.Assert(opCodeFieldInfoPart != null, "opCode is not OpCodeFieldInfoPart");
+            //if (opCodeFieldInfoPart == null)
+            //{
+            //    return;
+            //}
 
-            var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
-            var arrayLength = hasSize
-                ? int.Parse(
-                    opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
-                : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(cWriter, true);
+            //var staticArrayInitTypeSizeLabel = "__StaticArrayInitTypeSize=";
+            //var hasSize = opCodeFieldInfoPart.Operand.FieldType.MetadataName.Contains(staticArrayInitTypeSizeLabel);
 
-            arrayLength = arrayLength.Align(CWriter.PointerSize);
+            //var data = opCodeFieldInfoPart.Operand.GetFieldRVAData();
+            //var arrayLength = hasSize
+            //    ? int.Parse(
+            //        opCodeFieldInfoPart.Operand.FieldType.MetadataName.Substring(staticArrayInitTypeSizeLabel.Length))
+            //    : opCodeFieldInfoPart.Operand.FieldType.GetTypeSize(cWriter, true);
 
-            var subData = new byte[arrayLength];
-            Array.Copy(data, subData, Math.Min(data.Length, arrayLength));
+            //arrayLength = arrayLength.Align(CWriter.PointerSize);
 
-            var bytesIndex = cWriter.GetBytesIndex(subData);
-            var byteType = cWriter.System.System_Byte;
-            var arrayData = cWriter.GetArrayTypeReference(
-                string.Concat("@.bytes", bytesIndex),
-                byteType,
-                arrayLength);
+            //var subData = new byte[arrayLength];
+            //Array.Copy(data, subData, Math.Min(data.Length, arrayLength));
 
-            var storedResult = opCode.OpCodeOperands[0].Result;
+            //var bytesIndex = cWriter.GetBytesIndex(subData);
+            //var byteType = cWriter.System.System_Byte;
+            //var arrayData = cWriter.GetArrayTypeReference(
+            //    string.Concat("@.bytes", bytesIndex),
+            //    byteType,
+            //    arrayLength);
 
-            var opCodeConvert = OpCodePart.CreateNop;
+            //var storedResult = opCode.OpCodeOperands[0].Result;
 
-            cWriter.WriteFieldAccess(writer, opCode, GetDataFieldIndex(storedResult.Type, cWriter));
-            writer.WriteLine(string.Empty);
+            //var opCodeConvert = OpCodePart.CreateNop;
 
-            var firstElementResult = opCode.Result;
+            //cWriter.WriteFieldAccess(writer, opCode, GetDataField(storedResult.Type, cWriter));
+            //writer.WriteLine(string.Empty);
 
-            cWriter.WriteBitcast(opCodeConvert, firstElementResult);
-            var firstBytes = opCodeConvert.Result;
-            writer.WriteLine(string.Empty);
+            //var firstElementResult = opCode.Result;
 
-            // second array to i8*
-            var byteArrayType = byteType.ToArrayType(1);
+            //cWriter.WriteBitcast(opCodeConvert, firstElementResult);
+            //var firstBytes = opCodeConvert.Result;
+            //writer.WriteLine(string.Empty);
 
-            var opCodeDataHolder = OpCodePart.CreateNop;
-            opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(
-                arrayData,
-                byteArrayType);
-            var secondFirstElementResult = GetArrayDataAddressHelper(
-                cWriter,
-                opCodeDataHolder,
-                byteType,
-                GetDataFieldIndex(byteArrayType, cWriter) + cWriter.CalculateFirstFieldPositionInType(byteArrayType),
-                0);
+            //// second array to i8*
+            //var byteArrayType = byteType.ToArrayType(1);
 
-            cWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
-            var secondBytes = opCodeConvert.Result;
-            writer.WriteLine(string.Empty);
+            //var opCodeDataHolder = OpCodePart.CreateNop;
+            //opCodeDataHolder.OpCodeOperands = new[] { OpCodePart.CreateNop };
+            //opCodeDataHolder.OpCodeOperands[0].Result = new FullyDefinedReference(
+            //    arrayData,
+            //    byteArrayType);
+            //var secondFirstElementResult = GetArrayDataAddressHelper(
+            //    cWriter,
+            //    opCodeDataHolder,
+            //    byteType,
+            //    GetDataField(byteArrayType, cWriter) + cWriter.CalculateFirstFieldPositionInType(byteArrayType),
+            //    0);
 
-            writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
-                firstBytes,
-                secondBytes,
-                arrayLength,
-                CWriter.PointerSize /*Align*/);
+            //cWriter.WriteBitcast(opCodeConvert, secondFirstElementResult);
+            //var secondBytes = opCodeConvert.Result;
+            //writer.WriteLine(string.Empty);
 
-            opCode.OpCodeOperands[0].Result = storedResult;
+            //writer.WriteLine(
+            //    "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+            //    firstBytes,
+            //    secondBytes,
+            //    arrayLength,
+            //    CWriter.PointerSize /*Align*/);
+
+            //opCode.OpCodeOperands[0].Result = storedResult;
 
             writer.WriteLine(string.Empty);
         }

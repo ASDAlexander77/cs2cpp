@@ -402,8 +402,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallNewObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = cWriter.Output;
-
             var method = new SynthesizedNewMethod(type, cWriter);
             var opCodeNope = OpCodePart.CreateNop;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
@@ -417,6 +415,8 @@ namespace Il2Native.Logic.Gencode
                 opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
             opCode.Result = opCodeNope.Result;
+
+            cWriter.Output.WriteLine(";");
         }
 
         /// <summary>

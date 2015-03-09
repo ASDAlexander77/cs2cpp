@@ -1032,7 +1032,11 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(constructor.DeclaringType);
-                        this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
+                        if (this.TypeResolver != null)
+                        {
+                            this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
+                        }
+
                         this.AddCalledMethod(constructor);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
@@ -1058,7 +1062,7 @@ namespace Il2Native.Logic
                         if (code == Code.Call)
                         {
                             this.AddCalledMethod(method);
-                            if (method.DeclaringType.IsStructureType() && method.IsConstructor)
+                            if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
                             {
                                 this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                             }
@@ -1179,7 +1183,23 @@ namespace Il2Native.Logic
 
                         if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
                         {
-                            this.AddArrayType(type.ToArrayType(1));
+                            var arrayType = type.ToArrayType(1);
+                            this.AddArrayType(arrayType);
+
+                            if (code == Code.Newarr)
+                            {
+                                if (this.TypeResolver != null)
+                                {
+                                    this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.TypeResolver));
+                                    var constructorInfo =
+                                        Logic.IlReader.Constructors(arrayType, this.TypeResolver)
+                                             .FirstOrDefault(
+                                                 c =>
+                                                 c.GetParameters().Count() == 1
+                                                 && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
+                                    this.AddCalledMethod(constructorInfo);
+                                }
+                            }
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);

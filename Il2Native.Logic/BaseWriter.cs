@@ -249,6 +249,11 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.Result);
             }
 
+            if (opCode.RequiredOutgoingType != null)
+            {
+                return new ReturnResult(opCode.RequiredOutgoingType);
+            }
+
             var code = opCode.ToCode();
             switch (code)
             {
@@ -291,11 +296,6 @@ namespace Il2Native.Logic
                     return !op1.IsConst ? op1 : this.EstimatedResultOf(opCode.OpCodeOperands[1]);
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
-                case Code.Ceq:
-                case Code.Cgt:
-                case Code.Cgt_Un:
-                case Code.Clt:
-                case Code.Clt_Un:
                 case Code.Beq:
                 case Code.Beq_S:
                 case Code.Blt:
@@ -321,62 +321,11 @@ namespace Il2Native.Logic
                 case Code.Blt_Un:
                 case Code.Blt_Un_S:
                     return new ReturnResult(this.System.System_Boolean);
-                case Code.Conv_I:
-                case Code.Conv_Ovf_I:
-                case Code.Conv_Ovf_I_Un:
-                    return new ReturnResult(this.System.System_Int32);
-                case Code.Conv_U:
-                case Code.Conv_Ovf_U:
-                case Code.Conv_Ovf_U_Un:
-                    return new ReturnResult(this.System.System_UInt32);
-                case Code.Conv_R_Un:
-                case Code.Conv_R4:
-                    return new ReturnResult(this.System.System_Single);
-                case Code.Conv_R8:
-                    return new ReturnResult(this.System.System_Double);
-                case Code.Conv_I1:
-                case Code.Conv_Ovf_I1:
-                case Code.Conv_Ovf_I1_Un:
-                    return new ReturnResult(this.System.System_SByte);
-                case Code.Conv_I2:
-                case Code.Conv_Ovf_I2:
-                case Code.Conv_Ovf_I2_Un:
-                    return new ReturnResult(this.System.System_Int16);
-                case Code.Conv_I4:
-                case Code.Conv_Ovf_I4:
-                case Code.Conv_Ovf_I4_Un:
-                    return new ReturnResult(this.System.System_Int32);
-                case Code.Conv_I8:
-                case Code.Conv_Ovf_I8:
-                case Code.Conv_Ovf_I8_Un:
-                    return new ReturnResult(this.System.System_Int64);
-                case Code.Conv_U1:
-                case Code.Conv_Ovf_U1:
-                case Code.Conv_Ovf_U1_Un:
-                    return new ReturnResult(this.System.System_Byte);
-                case Code.Conv_U2:
-                case Code.Conv_Ovf_U2:
-                case Code.Conv_Ovf_U2_Un:
-                    return new ReturnResult(this.System.System_UInt16);
-                case Code.Conv_U4:
-                case Code.Conv_Ovf_U4:
-                case Code.Conv_Ovf_U4_Un:
-                    return new ReturnResult(this.System.System_UInt32);
-                case Code.Conv_U8:
-                case Code.Conv_Ovf_U8:
-                case Code.Conv_Ovf_U8_Un:
-                    return new ReturnResult(this.System.System_UInt64);
-                case Code.Castclass:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
-                case Code.Newarr:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand.ToArrayType(1));
                 case Code.Ret:
                 case Code.Neg:
                 case Code.Not:
                 case Code.Dup:
                     return this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                case Code.Ldlen:
-                    return new ReturnResult(this.System.System_Int32);
                 case Code.Ldloca:
                 case Code.Ldloca_S:
                     var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
@@ -442,54 +391,6 @@ namespace Il2Native.Logic
                     // var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
                     var typeOfElement = result.Type.GetElementType();
                     return new ReturnResult(typeOfElement.ToPointerType());
-                case Code.Ldc_I4_0:
-                case Code.Ldc_I4_1:
-                case Code.Ldc_I4_2:
-                case Code.Ldc_I4_3:
-                case Code.Ldc_I4_4:
-                case Code.Ldc_I4_5:
-                case Code.Ldc_I4_6:
-                case Code.Ldc_I4_7:
-                case Code.Ldc_I4_8:
-                case Code.Ldc_I4_M1:
-                case Code.Ldc_I4:
-                case Code.Ldc_I4_S:
-                    return
-                        new ReturnResult(
-                            opCode.UseAsNull
-                                ? this.System.System_Void.ToPointerType()
-                                : this.System.System_Int32)
-                        {
-                            IsConst = true
-                        };
-                case Code.Ldc_I8:
-                    return new ReturnResult(this.System.System_Int64) { IsConst = true };
-                case Code.Ldc_R4:
-                    return new ReturnResult(this.System.System_Single) { IsConst = true };
-                case Code.Ldc_R8:
-                    return new ReturnResult(this.System.System_Double) { IsConst = true };
-                case Code.Ldstr:
-                    return new ReturnResult(this.System.System_String);
-                case Code.Ldind_I:
-                    return new ReturnResult(this.System.System_Int32);
-                case Code.Ldind_I1:
-                    return new ReturnResult(this.System.System_Byte);
-                case Code.Ldind_I2:
-                    return new ReturnResult(this.System.System_Int16);
-                case Code.Ldind_I4:
-                    return new ReturnResult(this.System.System_Int32);
-                case Code.Ldind_I8:
-                    return new ReturnResult(this.System.System_Int64);
-                case Code.Ldind_U1:
-                    return new ReturnResult(this.System.System_Byte);
-                case Code.Ldind_U2:
-                    return new ReturnResult(this.System.System_UInt16);
-                case Code.Ldind_U4:
-                    return new ReturnResult(this.System.System_UInt32);
-                case Code.Ldind_R4:
-                    return new ReturnResult(this.System.System_Single);
-                case Code.Ldind_R8:
-                    return new ReturnResult(this.System.System_Double);
                 case Code.Ldind_Ref:
                     var resultType = this.EstimatedResultOf(opCode.OpCodeOperands[0]).Type;
                     return new ReturnResult(resultType.GetElementType());
@@ -500,26 +401,6 @@ namespace Il2Native.Logic
                     return new ReturnResult(fieldType.ToPointerType());
                 case Code.Nop:
                     return null;
-                case Code.Ldobj:
-                    var opCodeTypePart = opCode as OpCodeTypePart;
-                    return new ReturnResult(opCodeTypePart.Operand);
-                case Code.Box:
-
-                    // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
-                    var res = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    if (res != null)
-                    {
-                        result = new ReturnResult(res.Type.ToClass());
-                        return result;
-                    }
-
-                    return null;
-
-                case Code.Unbox:
-                case Code.Unbox_Any:
-
-                    // TODO: call .KeyedCollection`2, Method ContainsItem have a problem with Box and Stloc.1
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
 
                 case Code.Localloc:
                     return new ReturnResult(this.System.System_Byte.ToPointerType());
@@ -1271,6 +1152,8 @@ namespace Il2Native.Logic
                 return;
             }
 
+            opCode.RequiredOutgoingType = this.RequiredOutgoingType(opCode);
+
             var isItMethodWithVoid = opCode.OpCode.StackBehaviourPush == StackBehaviour.Varpush &&
                                      opCode is OpCodeMethodInfoPart
                                      && ((OpCodeMethodInfoPart)opCode).Operand.ReturnType.IsVoid();
@@ -1547,6 +1430,11 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Ldstr))
+            {
+                return this.System.System_String;
+            }
+
             if (opCodePart.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
             {
                 retType = opCodePart.GetLocalType(this);
@@ -1607,6 +1495,12 @@ namespace Il2Native.Logic
             {
                 var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                 return opCodeConstructorInfoPart.Operand.DeclaringType;
+            }
+
+            if (opCodePart.Any(Code.Newarr))
+            {
+                var opCodeTypePart = opCodePart as OpCodeTypePart;
+                return opCodeTypePart.Operand.ToArrayType(1);
             }
 
             if (opCodePart.Any(Code.Castclass))
@@ -1672,6 +1566,26 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Conv_R8))
             {
                 return this.System.System_Double;
+            }
+
+            if (opCodePart.Any(Code.Ldc_I4, Code.Ldc_I4_0, Code.Ldc_I4_1, Code.Ldc_I4_2, Code.Ldc_I4_3, Code.Ldc_I4_4, Code.Ldc_I4_5, Code.Ldc_I4_6, Code.Ldc_I4_7, Code.Ldc_I4_M1, Code.Ldc_I4_S))
+            {
+                return this.System.System_Int32;
+            }
+            
+            if (opCodePart.Any(Code.Ldc_I8))
+            {
+                return this.System.System_Int64;
+            }
+
+            if (opCodePart.Any(Code.Ceq, Code.Cgt, Code.Cgt_Un, Code.Clt, Code.Clt_Un))
+            {
+                return this.System.System_Boolean;
+            }
+
+            if (opCodePart.Any(Code.Ldlen))
+            {
+                return this.System.System_Int32;
             }
 
             return retType;

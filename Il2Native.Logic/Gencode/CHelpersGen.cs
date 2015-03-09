@@ -281,7 +281,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(") ");
 
             writer.Write("(");
-            cWriter.WriteOperandResult(writer, opCode, operand, false);
+            cWriter.WriteOperandResult(writer, opCode, operand);
             writer.Write(")");
         }
 
@@ -375,14 +375,24 @@ namespace Il2Native.Logic.Gencode
             IType toType,
             bool asReference = true)
         {
+            cWriter.WriteStartCCast(opCode, toType, asReference);
+            cWriter.WriteResult(source);
+            cWriter.WriteEndCCast(opCode, toType);
+        }
+
+        public static void WriteEndCCast(this CWriter cWriter, OpCodePart opCode, IType toType)
+        {
+            cWriter.Output.Write(")");
+            cWriter.SetResultNumber(opCode, toType);
+        }
+
+        public static void WriteStartCCast(this CWriter cWriter, OpCodePart opCode, IType toType, bool asReference = false)
+        {
             var writer = cWriter.Output;
 
-            cWriter.SetResultNumber(opCode, toType);
             writer.Write("(");
             toType.WriteTypePrefix(cWriter, asReference);
             writer.Write(") (");
-            cWriter.WriteResult(source);
-            writer.Write(")");
         }
 
         /// <summary>
@@ -513,8 +523,6 @@ namespace Il2Native.Logic.Gencode
                 thisType,
                 ref methodAddressResultNumber,
                 cWriter);
-
-            methodInfo.PreProcessCallParameters(opCodeMethodInfo, cWriter);
 
             if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
@@ -797,12 +805,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             // write access to a field
-            if (!cWriter.WriteFieldAccess(
-                opCode,
-                source.Type.ToClass(),
-                source.Type.ToClass(),
-                0,
-                source))
+            if (!cWriter.WriteFieldAccess(opCode, source.Type, source.Type, 0, source))
             {
                 writer.WriteLine("; No data");
                 return;
@@ -865,6 +868,14 @@ namespace Il2Native.Logic.Gencode
 
             cWriter.WriteResult(destination);
             writer.Write(" = ");
+
+            if (typeToSave.TypeNotEquals(opCode.OpCodeOperands[operandIndex].RequiredOutgoingType))
+            {
+                writer.Write("(");
+                typeToSave.WriteTypePrefix(cWriter);
+                writer.Write(") ");
+            }
+
             cWriter.WriteOperandResult(writer, opCode, operandIndex);
         }
 

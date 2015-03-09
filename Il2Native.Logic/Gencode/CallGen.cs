@@ -22,47 +22,6 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        /// <param name="methodBase">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void PreProcessCallParameters(
-            this IMethod methodBase,
-            OpCodePart opCodeMethodInfo,
-            CWriter cWriter)
-        {
-            // check if you need to cast parameter
-            if (opCodeMethodInfo.OpCodeOperands == null)
-            {
-                return;
-            }
-
-            var writer = cWriter.Output;
-
-            var parameters = methodBase.GetParameters();
-            var index = opCodeMethodInfo.OpCodeOperands.Count() - parameters.Count();
-            foreach (var parameter in parameters)
-            {
-                var operand = opCodeMethodInfo.OpCodeOperands[index];
-
-                var dynamicCastRequired = false;
-                if (parameter.ParameterType.IsClassCastRequired(cWriter, operand, out dynamicCastRequired))
-                {
-                    writer.WriteLine("; Cast of '{0}' parameter", parameter.Name);
-                    cWriter.WriteCast(operand, operand.Result, parameter.ParameterType);
-                }
-
-                operand.RequiredIncomingType = parameter.ParameterType;
-                cWriter.AdjustOperandResultTypeToIncomingType(operand);
-
-                index++;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="parameterInfos">
         /// </param>
         /// <param name="used">
@@ -507,10 +466,27 @@ namespace Il2Native.Logic.Gencode
 
         private static void WriteFunctionCallParameterArgument(
             this CWriter cWriter,
-            OpCodePart opArg,
+            OpCodePart operand,
             IParameter parameter)
         {
-            cWriter.WriteResultOrActualWrite(cWriter.Output, opArg);
+            var castOpened = false;
+            var dynamicCastRequired = false;
+            if (parameter.ParameterType.IsClassCastRequired(cWriter, operand, out dynamicCastRequired))
+            {
+                castOpened = true;
+                cWriter.WriteStartCCast(operand, parameter.ParameterType);
+            }
+
+            // TODO: review next 2 lines
+            operand.RequiredIncomingType = parameter.ParameterType;
+            cWriter.AdjustOperandResultTypeToIncomingType(operand);
+
+            cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
+
+            if (castOpened)
+            {
+                cWriter.WriteEndCCast(operand, parameter.ParameterType);
+            }
         }
 
         private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)
