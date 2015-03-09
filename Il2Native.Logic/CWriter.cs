@@ -5722,7 +5722,7 @@ namespace Il2Native.Logic
 
             if (isVoid)
             {
-                var method = "System.Environment.get_ExitCode";
+                var method = "Int32_System_Environment_get_ExitCodeFN";
                 this.Output.WriteLine("return {0}();", method);
             }
             else
