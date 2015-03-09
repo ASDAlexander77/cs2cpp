@@ -869,7 +869,8 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteResult(destination);
             writer.Write(" = ");
 
-            if (typeToSave.TypeNotEquals(opCode.OpCodeOperands[operandIndex].RequiredOutgoingType))
+            var estimatedResultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
+            if (typeToSave.TypeNotEquals(estimatedResultOf.Type))
             {
                 writer.Write("(");
                 typeToSave.WriteTypePrefix(cWriter);
