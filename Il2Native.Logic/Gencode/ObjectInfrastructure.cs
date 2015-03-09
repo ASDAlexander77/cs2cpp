@@ -782,7 +782,6 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write("{0} = ", newVar);
 
             declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
-            cWriter.Output.WriteLine(";");
 
             opCodeConstructorInfoPart.Result = new FullyDefinedReference(newVar, declaringType);
             cWriter.WriteCallConstructor(opCodeConstructorInfoPart);

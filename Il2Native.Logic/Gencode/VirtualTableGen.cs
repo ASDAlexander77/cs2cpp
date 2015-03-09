@@ -304,7 +304,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetVirtualTableName(this IType type)
         {
-            return string.Concat("@\"", type.FullName, " vtable\"").CleanUpName();
+            return string.Concat(type.FullName, " vtable").CleanUpName();
         }
 
         /// <summary>
@@ -368,18 +368,63 @@ namespace Il2Native.Logic.Gencode
             int interfaceIndex,
             int baseTypeFieldsOffset)
         {
+            VirtualTableCName(cWriter, type);
+            VirtualTableDeclaration(virtualTable, cWriter);
+            cWriter.Output.Write(" = ");
+            VirtualTableDefinition(virtualTable, cWriter, type, interfaceIndex, baseTypeFieldsOffset);
+        }
+
+        private static void VirtualTableCName(CWriter cWriter, IType type)
+        {
             var writer = cWriter.Output;
 
-            writer.WriteLine(" = linkonce_odr constant [{0} x i8*] [", virtualTable.GetVirtualTableSize());
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("struct ");
+            writer.Write(type.GetVirtualTableName());
+        }
+
+        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write("{");
+            writer.Indent++;
+            writer.WriteLine("i8* thisOffset;");
+
+            // RTTI info class
+            writer.WriteLine("i8* rttiInfo;");
+
+            // define virtual table
+            foreach (var virtualMethod in virtualTable)
+            {
+                var method = virtualMethod.Key;
+
+                // write pointer to method
+                cWriter.WriteMethodReturnType(writer, method);
+                writer.Write(" (*)");
+                cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
+                cWriter.WriteMethodDefinitionName(writer, method);
+
+                // write method pointer
+                writer.WriteLine(";");
+            }
+
+            writer.WriteLine(string.Empty);
+            writer.Indent--;
+
+            writer.Write("}");
+        }
+
+        private static void VirtualTableDefinition(
+            List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, IType type, int interfaceIndex, int baseTypeFieldsOffset)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write("{");
 
             writer.Indent++;
             writer.WriteLine(
-                "i8* {0},",
-                interfaceIndex == 0
-                    ? "null"
-                    : string.Format(
-                        "inttoptr (i32 -{0} to i8*)",
-                        baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
+                "i8* {0},", interfaceIndex == 0 ? "0" : string.Format("inttoptr (i32 -{0} to i8*)", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
             writer.Write("i8* bitcast (");
@@ -413,7 +458,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
             writer.Indent--;
-            writer.WriteLine("]");
+            writer.WriteLine("}");
         }
 
         /// <summary>
@@ -447,9 +492,13 @@ namespace Il2Native.Logic.Gencode
             var list =
                 interfaceMethods.Select(
                     interfaceMember =>
-                    allPublic.Where(interfaceMember.IsMatchingInterfaceOverride).OrderByDescending(x => x.IsExplicitInterfaceImplementation).FirstOrDefault())
-                                .Select(foundMethod => new CWriter.Pair<IMethod, IMethod> { Key = foundMethod, Value = foundMethod })
-                                .ToList();
+                    new CWriter.Pair<IMethod, IMethod>
+                        {
+                            Key = interfaceMember,
+                            Value = allPublic.Where(interfaceMember.IsMatchingInterfaceOverride)
+                                         .OrderByDescending(x => x.IsExplicitInterfaceImplementation)
+                                         .FirstOrDefault()
+                        }).ToList();
 
             ////Debug.Assert(list.All(i => i.Value != null), "Not all method could be resolved");
 

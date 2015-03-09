@@ -214,8 +214,7 @@ namespace Il2Native.Logic
                     WriteTypeDefinition(codeWriter, type, genericTypeContext);
                 }
 
-                // TODO: uncomment when done
-                ////codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
 
                 codeWriter.WriteBeforeConstructors();
             }

@@ -159,7 +159,7 @@ namespace Il2Native.Logic
         /// <summary>
         /// append declaration
         /// </summary>
-        private string declarationPrefix = "extern \"C\" ";
+        public string declarationPrefix = "extern \"C\" ";
 
         /// <summary>
         /// </summary>
@@ -692,6 +692,7 @@ namespace Il2Native.Logic
 
             this.Output.WriteLine(string.Empty);
 
+            /*
             type.WriteRtti(this);
 
             this.processedRttiTypes.Add(type);
@@ -726,6 +727,7 @@ namespace Il2Native.Logic
 
             normalType.WriteInternalGetTypeMethod(this);
             normalType.WriteInternalGetSizeMethod(this);
+            */
         }
 
         /// <summary>
@@ -5318,7 +5320,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteVirtualTables(IType type, bool checkParamsAndReturn = false)
+        private void WriteVirtualTables(IType type)
         {
             // write VirtualTable
             if (type.IsInterface)
@@ -5332,14 +5334,8 @@ namespace Il2Native.Logic
             if (type.HasAnyVirtualMethod(this))
             {
                 this.Output.WriteLine(string.Empty);
-                this.Output.Write(type.GetVirtualTableName());
                 var virtualTable = type.GetVirtualTable(this);
                 virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
-
-                foreach (var methodInVirtualTable in virtualTable)
-                {
-                }
-
                 index++;
             }
 
@@ -5366,10 +5362,6 @@ namespace Il2Native.Logic
                     type,
                     interfaceIndex,
                     baseTypeSizeOfTypeContainingInterface);
-
-                foreach (var methodInVirtualTableOfInterface in virtualInterfaceTable)
-                {
-                }
             }
         }
 
