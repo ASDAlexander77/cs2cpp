@@ -957,7 +957,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write("memset((i8*) ({0}), 0, sizeof(", op1);
             type.WriteTypePrefix(cWriter);
-            writer.Write("))");
+            writer.Write("));");
         }
 
         public static void WriteMemSet(

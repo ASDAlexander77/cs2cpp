@@ -12,7 +12,6 @@ namespace Il2Native.Logic.Gencode
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-    using System.Runtime.InteropServices;
     using CodeParts;
     using Exceptions;
     using PEAssemblyReader;
@@ -103,28 +102,10 @@ namespace Il2Native.Logic.Gencode
 
             var index = 0;
 
-            var returnIsStruct = returnType != null && returnType.IsStructureType();
-
             var comaRequired = false;
-
-            // allocate space for structure if return type is structure
-            if (returnIsStruct)
-            {
-                if (resultNumberForReturn != null)
-                {
-                    cWriter.WriteResult(resultNumberForReturn);
-                }
-
-                comaRequired = true;
-            }
 
             if (hasThis)
             {
-                if (comaRequired)
-                {
-                    writer.Write(", ");
-                }
-
                 if (resultNumberForThis != null)
                 {
                     cWriter.WriteResult(resultNumberForThis);

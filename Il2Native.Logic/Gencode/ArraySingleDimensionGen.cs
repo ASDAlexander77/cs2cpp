@@ -415,7 +415,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine("; Init array with values");
+            writer.WriteLine("// Init array with values");
 
             var opCodeFieldInfoPart = opCode.OpCodeOperands[1] as OpCodeFieldInfoPart;
             Debug.Assert(opCodeFieldInfoPart != null, "opCode is not OpCodeFieldInfoPart");

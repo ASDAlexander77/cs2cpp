@@ -626,11 +626,11 @@ namespace Il2Native.Logic.Gencode
             var declaringTypeNormal = declaringTypeIn.ToNormal();
             var declaringTypeClass = declaringTypeIn.IsValueType ? declaringTypeIn.ToClass() : declaringTypeIn;
 
-            writer.WriteLine("; Init obj");
+            writer.WriteLine("// Init obj");
 
+            cWriter.ActualWrite(writer, opCodePart.OpCodeOperands[0]);
             if (declaringTypeNormal.IsValueType)
             {
-                cWriter.ActualWrite(writer, opCodePart.OpCodeOperands[0]);
                 cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0].Result);
                 writer.WriteLine(string.Empty);
 
@@ -640,22 +640,16 @@ namespace Il2Native.Logic.Gencode
                     opCodePart.Result = objectSource;
 
                     declaringTypeClass.WriteCallInitObjectMethod(cWriter, opCodePart);
-                    writer.WriteLine(string.Empty);
+                    writer.WriteLine(";");
                 }
             }
             else
             {
                 // this is type reference, initialize it with null
-                cWriter.WriteCCast(
-                    opCodePart,
-                    objectSource,
-                    cWriter.System.System_Byte.ToPointerType().ToPointerType());
-                writer.WriteLine(string.Empty);
-
-                writer.WriteLine("store i8* null, i8** {0}", opCodePart.Result);
+                writer.WriteLine("((i8*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
             }
 
-            writer.Write("; end of init obj");
+            writer.Write("// end");
         }
 
         /// <summary>
@@ -845,7 +839,7 @@ namespace Il2Native.Logic.Gencode
             opCodePart.Result = castResult;
 
             writer.WriteLine(string.Empty);
-            writer.WriteLine("; end of new obj");
+            writer.WriteLine("// end");
         }
 
         /// <summary>

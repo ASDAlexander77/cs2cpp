@@ -19,3 +19,4 @@ typedef int64_t i64;
 typedef i32 (*anyFn)(...);
 
 extern i8* malloc(i32);
+extern i8* memset(i8*, i8 ch, i32);
