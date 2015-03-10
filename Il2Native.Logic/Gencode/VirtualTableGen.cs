@@ -370,7 +370,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            VirtualTableCName(cWriter, type);
+            VirtualTableCName(cWriter);
             VirtualTableDeclaration(virtualTable, cWriter);
             cWriter.Output.Write(" ");
             writer.Write(type.GetVirtualTableName());
@@ -379,7 +379,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write(";");
         }
 
-        private static void VirtualTableCName(CWriter cWriter, IType type)
+        private static void VirtualTableCName(CWriter cWriter)
         {
             var writer = cWriter.Output;
 

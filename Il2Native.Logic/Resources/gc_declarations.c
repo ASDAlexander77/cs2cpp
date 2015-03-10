@@ -1,5 +1,5 @@
-extern void GC_init();
-extern i8* GC_malloc(i32);
-extern i8* GC_malloc_atomic(i32);
-extern i8* GC_realloc(i8*, i32);
-extern i32 GC_get_heap_size();
+extern "C" void GC_init();
+extern "C" void* GC_malloc(u32);
+extern "C" void* GC_malloc_atomic(u32);
+extern "C" void* GC_realloc(i8*, u32);
+extern "C" u32 GC_get_heap_size();

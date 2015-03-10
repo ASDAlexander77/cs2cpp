@@ -627,7 +627,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        public static void WriteInitObject(this CWriter cWriter, IType declaringType, OpCodePart opCode)
+        public static void WriteInitObjectMethodBody(this CWriter cWriter, IType declaringType, OpCodePart opCode)
         {
             if (declaringType.IsInterface)
             {
@@ -736,7 +736,7 @@ namespace Il2Native.Logic.Gencode
                 true,
                 true);
             writer.WriteLine(string.Empty);
-            cWriter.WriteInitObject(mainArrayType, opCode);
+            cWriter.WriteInitObjectMethodBody(mainArrayType, opCode);
             writer.WriteLine("ret void");
             cWriter.WriteMethodEnd(method, null);
         }
