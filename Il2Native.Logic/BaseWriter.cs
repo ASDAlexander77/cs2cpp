@@ -47,7 +47,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string AssemblyQualifiedName 
+        public string AssemblyQualifiedName
         {
             get
             {
@@ -133,7 +133,7 @@ namespace Il2Native.Logic
 
         public void Initialize(IType type)
         {
-            
+
             ReadTypeInfo(type);
             this.System = new SystemTypes(this.ThisType.Module);
             StringGen.ResetClass();
@@ -928,8 +928,11 @@ namespace Il2Native.Logic
             {
                 case Code.Call:
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    IEnumerable<IParameter> parameters = methodBase.GetParameters();
                     var size = (methodBase.CallingConvention.HasFlag(CallingConventions.HasThis) ? 1 : 0) +
-                               methodBase.GetParameters().Count();
+                               (parameters != null
+                                   ? parameters.Count()
+                                   : 0);
                     this.FoldNestedOpCodes(
                         opCode,
                         size,
@@ -937,9 +940,10 @@ namespace Il2Native.Logic
                     break;
                 case Code.Callvirt:
                     methodBase = (opCode as OpCodeMethodInfoPart).Operand;
+                    parameters = methodBase.GetParameters();
                     this.FoldNestedOpCodes(
                         opCode,
-                        (code == Code.Callvirt ? 1 : 0) + methodBase.GetParameters().Count(),
+                        (code == Code.Callvirt ? 1 : 0) + parameters.Count(),
                         methodBase.CallingConvention.HasFlag(CallingConventions.VarArgs));
                     break;
                 case Code.Newobj:
@@ -1382,15 +1386,18 @@ namespace Il2Native.Logic
 
                 var parameters = opCodePartMethod.Operand.GetParameters();
                 var index = 0;
-                foreach (var parameter in parameters)
+                if (parameters != null)
                 {
-                    if (index == effectiveoperandPosition)
+                    foreach (var parameter in parameters)
                     {
-                        retType = parameter.ParameterType;
-                        break;
-                    }
+                        if (index == effectiveoperandPosition)
+                        {
+                            retType = parameter.ParameterType;
+                            break;
+                        }
 
-                    index++;
+                        index++;
+                    }
                 }
             }
 
@@ -1578,7 +1585,7 @@ namespace Il2Native.Logic
             {
                 return this.System.System_Int32;
             }
-            
+
             if (opCodePart.Any(Code.Ldc_I8))
             {
                 return this.System.System_Int64;

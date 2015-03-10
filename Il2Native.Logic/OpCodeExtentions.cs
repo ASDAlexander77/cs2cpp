@@ -454,7 +454,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool HasAnyVirtualMethodInCurrentType(this IType thisType, ITypeResolver typeResolver)
         {
-            if (IlReader.Methods(thisType, typeResolver).Any(m => m.IsVirtual || m.IsOverride || m.IsAbstract))
+            if ((thisType.IsObject || thisType.IsInterface || thisType.BaseType != null)
+                && IlReader.Methods(thisType, typeResolver).Any(m => m.IsVirtual || m.IsOverride || m.IsAbstract))
             {
                 return true;
             }

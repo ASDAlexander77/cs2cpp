@@ -302,8 +302,9 @@ namespace Il2Native.Logic.Gencode
         {
             thisType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
 
+            var parameters = methodInfo.GetParameters();
             hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null
-                              && opCodeMethodInfo.OpCodeOperands.Length - methodInfo.GetParameters().Count() > 0;
+                && opCodeMethodInfo.OpCodeOperands.Length - (parameters != null ? parameters.Count() : 0) > 0;
             opCodeFirstOperand = opCodeMethodInfo.OpCodeOperands != null && opCodeMethodInfo.OpCodeOperands.Length > 0
                 ? opCodeMethodInfo.OpCodeOperands[0]
                 : null;

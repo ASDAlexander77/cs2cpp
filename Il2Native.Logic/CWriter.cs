@@ -355,12 +355,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine("{");
             this.Output.Indent++;
 
-            // put virtual root table if type has no any base with virtual types
-            if (ThisType.IsRootInterface() || ThisType.IsRootOfVirtualTable(this))
-            {
-                this.Output.WriteLine("anyFn* vtable;");
-            }
-
             if (baseType != null)
             {
                 baseType.WriteTypeWithoutModifiers(this);

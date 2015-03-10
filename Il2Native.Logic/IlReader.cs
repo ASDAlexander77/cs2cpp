@@ -650,6 +650,10 @@ namespace Il2Native.Logic
                     yield return field;
                 }
             }
+            else if (type.IsObject || (type.IsInterface && type.BaseType == null))
+            {
+                yield return typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, "vtable");
+            }
         }
 
         /// <summary>
@@ -708,6 +712,7 @@ namespace Il2Native.Logic
             }
 
             yield return new SynthesizedNewMethod(type, typeResolver);
+            yield return new SynthesizedInitMethod(type, typeResolver);
 
             if (!excludeSpecializations)
             {
@@ -1054,10 +1059,15 @@ namespace Il2Native.Logic
 
                         this.AddStructType(method.ReturnType);
                         this.AddGenericSpecializedType(method.ReturnType);
-                        foreach (var methodParameter in method.GetParameters())
+
+                        var methodParameters = method.GetParameters();
+                        if (methodParameters != null)
                         {
-                            this.AddStructType(methodParameter.ParameterType);
-                            this.AddGenericSpecializedType(methodParameter.ParameterType);
+                            foreach (var methodParameter in methodParameters)
+                            {
+                                this.AddStructType(methodParameter.ParameterType);
+                                this.AddGenericSpecializedType(methodParameter.ParameterType);
+                            }
                         }
 
                         this.AddUsedType(method.DeclaringType);
@@ -1351,7 +1361,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddCalledMethod(IMethod method)
         {
-            if (this._calledMethods == null || method == null)
+            if (this._calledMethods == null || method == null || method.DeclaringType == null)
             {
                 return;
             }
@@ -1624,9 +1634,13 @@ namespace Il2Native.Logic
             stackCall.Enqueue(method);
 
             // add all generic types in parameters
-            foreach (var parameter in method.GetParameters())
+            var parameters = method.GetParameters();
+            if (parameters != null)
             {
-                this.AddGenericSpecializedType(parameter.ParameterType);
+                foreach (var parameter in parameters)
+                {
+                    this.AddGenericSpecializedType(parameter.ParameterType);
+                }
             }
 
             // add return type

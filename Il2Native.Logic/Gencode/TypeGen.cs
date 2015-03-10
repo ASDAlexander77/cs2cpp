@@ -133,6 +133,8 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
+            Debug.Assert(typeAlign != 0, "typeAlign can't be 0");
+
             var alignToApply = offset % typeAlign;
             if (alignToApply > 0)
             {
@@ -439,11 +441,6 @@ namespace Il2Native.Logic.Gencode
                     yield return item;
                 }
 
-                if (!any)
-                {
-                    yield return new MemberLocationInfo(type, CWriter.PointerSize);
-                }
-
                 yield break;
             }
 
@@ -472,12 +469,6 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 yield break;
-            }
-
-            // add shift for virtual table
-            if (type.IsRootOfVirtualTable(typeResolver))
-            {
-                yield return new MemberLocationInfo(CWriter.PointerSize);
             }
 
             if (type.BaseType != null)

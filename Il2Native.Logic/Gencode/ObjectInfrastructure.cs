@@ -11,6 +11,7 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Diagnostics;
+    using System.Reflection.Emit;
     using CodeParts;
     using PEAssemblyReader;
     using SynthesizedMethods;
@@ -621,12 +622,44 @@ namespace Il2Native.Logic.Gencode
             writer.Write("// end");
         }
 
+        public static IlCodeBuilder GetInitMethod(this ITypeResolver typeResolver, IType declaringType)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            if (declaringType.HasAnyVirtualMethod(typeResolver))
+            {
+                // set virtual table
+                codeBuilder.LoadArgument(0);
+
+                codeBuilder.Call(
+                    new SynthesizedStaticMethod(
+                        string.Empty,
+                        typeResolver.System.System_Object,
+                        typeResolver.System.System_Void.ToPointerType(),
+                        new IParameter[] { },
+                        (codeWriter, opCodePart) =>
+                        {
+                            opCodePart.Result = new FullyDefinedReference(
+                                "&this",
+                                codeWriter.System.System_Void.ToPointerType());
+                        }
+                        ));
+
+                codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName("vtable", typeResolver));
+            }
+
+            codeBuilder.Add(Code.Ret);
+
+            return codeBuilder;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
         /// </param>
+        [Obsolete]
         public static void WriteInitObjectMethodBody(this CWriter cWriter, IType declaringType, OpCodePart opCode)
         {
             if (declaringType.IsInterface)
@@ -710,35 +743,6 @@ namespace Il2Native.Logic.Gencode
                 // restore
                 opCode.Result = opCodeResult;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="typeIn">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteInitObjectMethod(this IType typeIn, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            var classType = typeIn.ToClass();
-            var mainArrayType = classType;
-
-            var method = new SynthesizedInitMethod(mainArrayType, cWriter);
-
-            var opCode = OpCodePart.CreateNop;
-            cWriter.WriteMethodStart(method, null);
-            cWriter.WriteLlvmLoad(
-                opCode,
-                classType,
-                new FullyDefinedReference(cWriter.GetThisName(), classType),
-                true,
-                true);
-            writer.WriteLine(string.Empty);
-            cWriter.WriteInitObjectMethodBody(mainArrayType, opCode);
-            writer.WriteLine("ret void");
-            cWriter.WriteMethodEnd(method, null);
         }
 
         /// <summary>

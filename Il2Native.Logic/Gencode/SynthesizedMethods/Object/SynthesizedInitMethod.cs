@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="SynthesizedInitMethod.cs" company="">
+// <copyright file="SynthesizedNewMethod.cs" company="">
 //   
 // </copyright>
 // <summary>
@@ -9,41 +9,30 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Reflection;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedInitMethod : SynthesizedMethodTypeBase
+    public class SynthesizedInitMethod : SynthesizedIlCodeBuilderThisMethod
     {
-        /// <summary>
-        /// </summary>
-        private readonly ITypeResolver typeResolver;
+        private ITypeResolver _typeResolver;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="writer">
         /// </param>
         public SynthesizedInitMethod(IType type, ITypeResolver typeResolver)
-            : base(type, ".init")
+            : base(null, ".init", type, typeResolver.System.System_Void)
         {
-            this.typeResolver = typeResolver;
+            _typeResolver = typeResolver;
         }
 
-        /// <summary>
-        /// </summary>
-        public override CallingConventions CallingConvention
+        protected override IlCodeBuilder GetIlCodeBuilder()
         {
-            get { return CallingConventions.HasThis; }
-        }
-
-        /// <summary>
-        /// </summary>
-        public override IType ReturnType
-        {
-            get { return this.typeResolver.System.System_Void; }
+            return _typeResolver.GetInitMethod(Type);
         }
     }
 }

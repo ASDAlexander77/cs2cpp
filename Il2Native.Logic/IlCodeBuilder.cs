@@ -230,6 +230,18 @@
             this.Add(Code.Castclass, (int)TokenResolutions.Count);
         }
 
+        public void LoadField(IField field)
+        {
+            TokenResolutions.Add(field);
+            this.Add(field.IsStatic ? Code.Ldsfld : Code.Ldfld, (int)TokenResolutions.Count);
+        }
+
+        public void SaveField(IField field)
+        {
+            TokenResolutions.Add(field);
+            this.Add(field.IsStatic ? Code.Stsfld : Code.Stfld, (int)TokenResolutions.Count);
+        }
+
         // helpers
         public void LoadConstant(int @const)
         {
