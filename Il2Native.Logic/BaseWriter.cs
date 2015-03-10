@@ -188,7 +188,8 @@ namespace Il2Native.Logic
         /// </param>
         public void ReadMethodInfo(IMethod methodInfo, IGenericContext genericContext)
         {
-            this.Parameters = methodInfo.GetParameters().ToArray();
+            var parameters = methodInfo.GetParameters();
+            this.Parameters = parameters != null ? parameters.ToArray() : new IParameter[0];
             this.HasMethodThis = methodInfo.CallingConvention.HasFlag(CallingConventions.HasThis);
 
             this.MethodReturnType = null;

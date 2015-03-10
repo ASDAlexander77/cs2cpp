@@ -31,7 +31,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         {
             this.customBody = customBody;
             var index = 0;
-            this.locals = locals.Select(t => new SynthesizedLocalVariable(index++, t)).ToList();
+            if (locals != null)
+            {
+                this.locals = locals.Select(t => new SynthesizedLocalVariable(index++, t)).ToList();
+            }
+            else
+            {
+                this.locals = new ILocalVariable[0];
+            }
         }
 
         /// <summary>

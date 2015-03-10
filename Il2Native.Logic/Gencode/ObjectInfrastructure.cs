@@ -87,12 +87,6 @@ namespace Il2Native.Logic.Gencode
                     "System.OutOfMemoryException",
                     "new_obj");
             }
-
-            if (!cWriter.Gc)
-            {
-                cWriter.WriteMemSet(mallocResult, size);
-                writer.WriteLine(string.Empty);
-            }
         }
 
         public static IlCodeBuilder GetAllocateMemoryCodeForObject(
@@ -118,9 +112,8 @@ namespace Il2Native.Logic.Gencode
             }
 
             newAlloc.Call(
-                new SynthesizedStaticMethod(
+                new SynthesizedMethod(
                     typeResolver.GetAllocator(),
-                    null,
                     typeResolver.System.System_Byte.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter() }));
 

@@ -1387,7 +1387,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddGenericSpecializedMethod(IMethod method, Queue<IMethod> stackCall)
         {
-            if (this.usedGenericSpecialiazedMethods == null || method == null)
+            if (this.usedGenericSpecialiazedMethods == null || method == null || method.DeclaringType == null)
             {
                 return;
             }

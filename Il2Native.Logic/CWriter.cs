@@ -991,7 +991,7 @@ namespace Il2Native.Logic
 
                     writer.WriteLine(string.Empty);
 
-                    this.WriteMemSet(opCode.Result, firstOpCodeOperand.Result, 1);
+                    this.WriteMemSet(opCode.Result, firstOpCodeOperand.Result);
 
                     break;
                 case Code.Ldfld:
@@ -2095,6 +2095,10 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Initblk:
+
+                    this.WriteMemSet(opCode.OpCodeOperands[0].Result, opCode.OpCodeOperands[1].Result);
+
+                    break;
                 case Code.Cpblk:
                 case Code.Cpobj:
                 case Code.Jmp:
@@ -3312,31 +3316,35 @@ namespace Il2Native.Logic
             var index = start;
             var parameterIndex = start;
             var isAnonymousDelegate = method.IsAnonymousDelegate;
-            foreach (var parameter in parameterInfos)
+            var parameters = parameterInfos;
+            if (parameters != null)
             {
-                if (isAnonymousDelegate)
+                foreach (var parameter in parameters)
                 {
-                    isAnonymousDelegate = false;
-                }
-                else
-                {
-                    if (hasParameterWritten)
+                    if (isAnonymousDelegate)
                     {
-                        writer.Write(", ");
+                        isAnonymousDelegate = false;
+                    }
+                    else
+                    {
+                        if (hasParameterWritten)
+                        {
+                            writer.Write(", ");
+                        }
+
+                        parameter.ParameterType.WriteTypePrefix(this);
+                        hasParameterWritten = true;
+
+                        if (!noArgumentName)
+                        {
+                            writer.Write(" ");
+                            writer.Write(GetArgVarName(parameter, parameterIndex));
+                        }
                     }
 
-                    parameter.ParameterType.WriteTypePrefix(this);
-                    hasParameterWritten = true;
-
-                    if (!noArgumentName)
-                    {
-                        writer.Write(" ");
-                        writer.Write(GetArgVarName(parameter, parameterIndex));
-                    }
+                    index++;
+                    parameterIndex++;
                 }
-
-                index++;
-                parameterIndex++;
             }
 
             if (varArgs)

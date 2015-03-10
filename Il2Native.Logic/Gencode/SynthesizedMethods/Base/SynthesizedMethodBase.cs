@@ -312,15 +312,19 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             // write Parameter Types
             result.Append('(');
             var index = 0;
-            foreach (var parameterType in this.GetParameters())
+            var parameterTypes = this.GetParameters();
+            if (parameterTypes != null)
             {
-                if (index != 0)
+                foreach (var parameterType in parameterTypes)
                 {
-                    result.Append(", ");
-                }
+                    if (index != 0)
+                    {
+                        result.Append(", ");
+                    }
 
-                result.Append(parameterType);
-                index++;
+                    result.Append(parameterType);
+                    index++;
+                }
             }
 
             result.Append(')');
@@ -387,15 +391,19 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             // write Parameter Types
             result.Append('(');
             var index = 0;
-            foreach (var parameterType in this.GetParameters())
+            var parameterTypes = this.GetParameters();
+            if (parameterTypes != null)
             {
-                if (index != 0)
+                foreach (var parameterType in parameterTypes)
                 {
-                    result.Append(", ");
-                }
+                    if (index != 0)
+                    {
+                        result.Append(", ");
+                    }
 
-                result.Append(parameterType);
-                index++;
+                    result.Append(parameterType);
+                    index++;
+                }
             }
 
             result.Append(')');

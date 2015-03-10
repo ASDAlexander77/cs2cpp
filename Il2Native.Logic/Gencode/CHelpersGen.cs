@@ -972,19 +972,27 @@ namespace Il2Native.Logic.Gencode
             writer.Write("));");
         }
 
-        public static void WriteMemSet(
-            this CWriter cWriter,
-            FullyDefinedReference op1,
-            FullyDefinedReference size,
-            int align = 0)
+        public static void WriteMemSet(this CWriter cWriter, FullyDefinedReference op1, FullyDefinedReference size)
         {
             var writer = cWriter.Output;
 
-            writer.Write("call void @llvm.memset.p0i8.i32(i8* {0}, i8 0, ", op1);
-            size.Type.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            cWriter.WriteResult(size);
-            writer.Write(", i32 {0}, i1 false)", align > 0 ? align : CWriter.PointerSize /*Align*/);
+            writer.Write("memset((i8*) ({0}), 0, ({1}))", op1, size);
+        }
+
+        public static void WriteMemSet(
+            this CWriter cWriter,
+            OpCodePart reference,
+            OpCodePart init,
+            OpCodePart size)
+        {
+            var writer = cWriter.Output;
+            writer.Write("memset((i8*) (");
+            cWriter.WriteResultOrActualWrite(writer, reference);
+            writer.Write("), ");
+            cWriter.WriteResultOrActualWrite(writer, init);
+            writer.Write(", (");
+            cWriter.WriteResultOrActualWrite(writer, size);
+            writer.Write("))");
         }
 
         /// <summary>

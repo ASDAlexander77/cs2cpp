@@ -266,7 +266,7 @@
                     this.Add(Code.Ldc_I4_M1);
                     break;
                 default:
-                    if (@const <= byte.MaxValue)
+                    if (@const>= 0 && @const <= byte.MaxValue)
                     {
                         this.Add(Code.Ldc_I4_S, checked((byte)@const));
                     }

@@ -77,24 +77,28 @@ namespace Il2Native.Logic.Gencode
                 comaRequired = true;
             }
 
-            var argsContainsThisArg = used != null ? (used.Length - parameterInfos.Count()) > 0 : false;
+            var parameters = parameterInfos;
+            var argsContainsThisArg = used != null ? (used.Length - (parameters != null ? parameters.Count() : 0)) > 0 : false;
             var argShift = @isVirtual || (hasThis && !isCtor && argsContainsThisArg) ? 1 : 0;
 
             // add parameters
-            foreach (var parameter in parameterInfos)
+            if (parameters != null)
             {
-                var effectiveIndex = index + argShift;
-                var usedItem = used[effectiveIndex];
-
-                if (comaRequired)
+                foreach (var parameter in parameters)
                 {
-                    writer.Write(", ");
+                    var effectiveIndex = index + argShift;
+                    var usedItem = used[effectiveIndex];
+
+                    if (comaRequired)
+                    {
+                        writer.Write(", ");
+                    }
+
+                    cWriter.WriteFunctionCallParameterArgument(usedItem, parameter);
+
+                    comaRequired = true;
+                    index++;
                 }
-
-                cWriter.WriteFunctionCallParameterArgument(usedItem, parameter);
-
-                comaRequired = true;
-                index++;
             }
 
             if (varArg)

@@ -726,11 +726,13 @@ namespace Il2Native.Logic
                 method.ReturnType,
                 readingTypesContext);
 
-            foreach (var param in method.GetParameters())
+            var parameters = method.GetParameters();
+            if (parameters != null)
             {
-                DiscoverGenericSpecializedTypesAndAdditionalTypes(
-                    param.ParameterType,
-                    readingTypesContext);
+                foreach (var param in parameters)
+                {
+                    DiscoverGenericSpecializedTypesAndAdditionalTypes(param.ParameterType, readingTypesContext);
+                }
             }
 
             if (method.DeclaringType.IsInterface)
