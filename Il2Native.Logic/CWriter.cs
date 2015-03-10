@@ -670,15 +670,7 @@ namespace Il2Native.Logic
             this.processedRttiPointerTypes.Add(type);
 
             this.Output.WriteLine(string.Empty);
-            */
 
-            // object oriented methods
-            if (!type.IsVoid())
-            {
-                type.WriteNewObjectMethod(this);
-            }
-
-            /*
             type.WriteInitObjectMethod(this);
 
             var normalType = type.ToNormal();
@@ -2327,9 +2319,9 @@ namespace Il2Native.Logic
         /// </summary>
         /// <returns>
         /// </returns>
-        public string GetAllocator()
+        public override string GetAllocator()
         {
-            return this.Gc ? "GC_malloc" : "malloc";
+            return this.Gc ? "GC_malloc" : "calloc";
         }
 
         /// <summary>
@@ -3777,6 +3769,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="labelPrefix">
         /// </param>
+        [Obsolete]
         public void WriteTestNullValueAndThrowException(
             CIndentedTextWriter writer,
             OpCodePart opCodePart,
@@ -5054,7 +5047,7 @@ namespace Il2Native.Logic
         }
 
         public IEnumerable<OpCodePart> WriteCustomMethodPart(
-            SynthesizedMethodDecorator constructedMethod,
+            IMethod constructedMethod,
             IGenericContext genericContext)
         {
             // save important vars

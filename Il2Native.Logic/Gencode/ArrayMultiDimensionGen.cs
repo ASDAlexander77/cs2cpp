@@ -249,93 +249,43 @@
             return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter()).ToList();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        public static FullyDefinedReference WriteMultiDimArrayAllocationSize(
-            this CWriter cWriter,
-            OpCodePart opCode,
+        public static IlCodeBuilder MultiDimArrayAllocationSizeMethodBody(
+            ITypeResolver typeResolver,
             IType arrayType)
         {
-            Debug.Assert(arrayType.IsMultiArray, "This is for multi arrays only");
+            var codeBuilder = new IlCodeBuilder();
 
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; Calculate MultiDim allocation size");
-
-            object[] code;
-            IList<object> tokenResolutions;
-            IList<IType> locals;
-            IList<IParameter> parameters;
-            GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
-                cWriter,
-                arrayType,
-                out code,
-                out tokenResolutions,
-                out locals,
-                out parameters);
-
-            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
-
-            // actual write
-            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
-            return opCodes.Last().Result;
-        }
-
-        private static void GetCalculationPartOfMultiDimArrayAllocationSizeMethodBody(
-            ITypeResolver typeResolver,
-            IType arrayType,
-            out object[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
-        {
-            var codeList = new List<object>();
-
+            // TODO: replace with sizeof
             // add element size
             var elementType = arrayType.GetElementType();
             var elementSize = elementType.GetTypeSize(typeResolver, true);
-            codeList.AppendLoadInt(elementSize);
+            codeBuilder.SizeOf(elementType);
 
             // init each item in lowerBounds
             foreach (var i in Enumerable.Range(0, arrayType.ArrayRank))
             {
-                codeList.AppendLoadArgument(i);
-                codeList.Add(Code.Mul);
+                codeBuilder.LoadArgument(i);
+                codeBuilder.Add(Code.Mul);
             }
 
             // add element size
-            var multiArrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(typeResolver);
-            codeList.AppendLoadInt(multiArrayTypeSizeWithoutArrayData);
-            codeList.Add(Code.Add);
+            codeBuilder.SizeOf(arrayType);
+            codeBuilder.Add(Code.Add);
 
             // calculate alignment
-            codeList.Add(Code.Dup);
+            codeBuilder.Add(Code.Dup);
 
             var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
-            codeList.AppendLoadInt(alignForType - 1);
-            codeList.Add(Code.Add);
+            codeBuilder.LoadConstant(alignForType - 1);
+            codeBuilder.Add(Code.Add);
 
-            codeList.AppendLoadInt(~(alignForType - 1));
-            codeList.Add(Code.And);
-
-            // locals
-            locals = new List<IType>();
-
-            // tokens
-            tokenResolutions = new List<object>();
+            codeBuilder.LoadConstant(~(alignForType - 1));
+            codeBuilder.Add(Code.And);
 
             // parameters
-            parameters = GetParameters(arrayType, typeResolver);
+            codeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));
 
-            code = codeList.ToArray();
+            return codeBuilder;
         }
 
         private static List<object> GetIndexPartMethodBody(

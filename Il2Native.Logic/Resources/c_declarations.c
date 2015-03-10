@@ -21,4 +21,4 @@ typedef int64_t i64;
 
 typedef i32 (*anyFn)(...);
 
-extern i8* malloc(i32);
+extern i8* calloc(i32);

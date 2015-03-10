@@ -95,62 +95,48 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        public static void WriteAllocateMemoryForObject(
-            this CWriter cWriter,
-            OpCodePart opCodePart,
-            IType declaringClassType,
-            bool doNotTestNullValue,
-            bool enableStringFastAllocation = false)
+        public static IlCodeBuilder GetAllocateMemoryCodeForObject(
+            this ITypeResolver typeResolver, IType declaringClassType, bool doNotTestNullValue, bool enableStringFastAllocation = false)
         {
-            var writer = cWriter.Output;
-
-            var size = declaringClassType.GetTypeSize(cWriter);
-
-            FullyDefinedReference allocResult;
-
+            IlCodeBuilder newAlloc;
             if (declaringClassType.IsMultiArray)
             {
-                allocResult = cWriter.WriteMultiDimArrayAllocationSize(opCodePart, declaringClassType);
+                newAlloc = ArrayMultiDimensionGen.MultiDimArrayAllocationSizeMethodBody(typeResolver, declaringClassType);
             }
             else if (declaringClassType.IsArray)
             {
-                allocResult = cWriter.WriteSingleDimArrayAllocationSize(opCodePart, declaringClassType);
+                newAlloc = ArraySingleDimensionGen.SingleDimArrayAllocationSizeMethodBody(typeResolver, declaringClassType);
             }
             else if (enableStringFastAllocation && declaringClassType.IsString)
             {
-                allocResult = cWriter.WriteStringAllocationSize(opCodePart, declaringClassType, cWriter.System.System_Char);
+                newAlloc = StringGen.StringAllocationSizeMethodBody(typeResolver, declaringClassType, typeResolver.System.System_Char);
             }
             else
             {
-                allocResult = new ConstValue(size, cWriter.System.System_Int32);
+                newAlloc = new IlCodeBuilder();
+                newAlloc.SizeOf(declaringClassType);
             }
 
-            var mallocResult = cWriter.SetResultNumber(
-                opCodePart,
-                cWriter.System.System_Byte.ToPointerType());
-            writer.Write("call i8* @{0}(", cWriter.GetAllocator());
-            allocResult.Type.WriteTypePrefix(cWriter);
-            writer.Write(" {0}", allocResult);
-            writer.WriteLine(")");
+            newAlloc.Call(
+                new SynthesizedStaticMethod(
+                    typeResolver.GetAllocator(),
+                    null,
+                    typeResolver.System.System_Byte.ToPointerType(),
+                    new[] { typeResolver.System.System_Int32.ToParameter() }));
 
             if (!doNotTestNullValue)
             {
-                cWriter.WriteTestNullValueAndThrowException(
-                    writer,
-                    opCodePart,
-                    mallocResult,
-                    "System.OutOfMemoryException",
-                    "new_obj");
+                //cWriter.WriteTestNullValueAndThrowException(
+                //    writer,
+                //    opCodePart,
+                //    mallocResult,
+                //    "System.OutOfMemoryException",
+                //    "new_obj");
             }
 
-            if (!cWriter.Gc)
-            {
-                cWriter.WriteMemSet(declaringClassType, mallocResult);
-                writer.WriteLine(string.Empty);
-            }
+            newAlloc.Castclass(declaringClassType);
 
-            cWriter.WriteCCast(opCodePart, mallocResult, declaringClassType);
-            writer.WriteLine(string.Empty);
+            return newAlloc;
         }
 
         /// <summary>
@@ -175,7 +161,8 @@ namespace Il2Native.Logic.Gencode
 
             cWriter.WriteMethodStart(method, null);
 
-            cWriter.WriteNewMethodBody(opCode, normalType, true);
+            // TODO: finish it
+            //cWriter.WriteNewMethodBody(opCode, normalType, true);
             var newObjectResult = opCode.Result;
             opCode.Result = null;
 
@@ -789,7 +776,7 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="cWriter">
+        /// <param name="typeResolver">
         /// </param>
         /// <param name="opCodePart">
         /// </param>
@@ -799,9 +786,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotTestNullValue">
         /// </param>
-        public static void WriteNewMethodBody(
-            this CWriter cWriter,
-            OpCodePart opCodePart,
+        public static IlCodeBuilder GetNewMethod(
+            this ITypeResolver typeResolver,
             IType declaringTypeIn,
             bool doNotCallInit = false,
             bool doNotTestNullValue = false,
@@ -809,50 +795,16 @@ namespace Il2Native.Logic.Gencode
         {
             var declaringClassType = declaringTypeIn.ToClass();
 
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; New obj");
-
-            cWriter.WriteAllocateMemoryForObject(opCodePart, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
-
-            var castResult = opCodePart.Result;
+            var ilCodeBuilder = typeResolver.GetAllocateMemoryCodeForObject(declaringClassType, doNotTestNullValue, enableStringFastAllocation);
 
             if (!doNotCallInit)
             {
-                // typeResolver.WriteInitObject(writer, opCode, declaringType);
-                declaringClassType.WriteCallInitObjectMethod(cWriter, opCodePart);
+                ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
             }
 
-            // restore result and type
-            opCodePart.Result = castResult;
+            ilCodeBuilder.Add(Code.Ret);
 
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("// end");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteNewObjectMethod(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            var method = new SynthesizedNewMethod(type, cWriter);
-            writer.WriteLine("; New Object method");
-
-            var opCode = OpCodePart.CreateNop;
-            cWriter.WriteMethodStart(method, null);
-            cWriter.WriteNewMethodBody(opCode, type);
-            writer.WriteLine(string.Empty);
-            writer.Write("ret ");
-            type.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            cWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-            cWriter.WriteMethodEnd(method, null);
+            return ilCodeBuilder;
         }
 
         /// <summary>

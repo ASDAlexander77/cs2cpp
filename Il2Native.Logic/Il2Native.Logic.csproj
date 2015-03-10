@@ -72,6 +72,8 @@
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayAddressMethod.cs" />

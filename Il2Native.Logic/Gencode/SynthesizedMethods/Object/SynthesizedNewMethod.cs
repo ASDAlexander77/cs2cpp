@@ -9,13 +9,14 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedNewMethod : SynthesizedMethodTypeBase
+    public class SynthesizedNewMethod : SynthesizedIlCodeBuilderStaticMethod
     {
-        private ITypeResolver typeResolver;
+        private readonly ITypeResolver typeResolver;
 
         /// <summary>
         /// </summary>
@@ -24,7 +25,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedNewMethod(IType type, ITypeResolver typeResolver)
-            : base(type, ".new")
+            : base(typeResolver.GetNewMethod(type), ".new", type, type)
         {
             Type = type.ToClass();
             this.typeResolver = typeResolver;
@@ -32,12 +33,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public override System.Collections.Generic.IEnumerable<IParameter> GetParameters()
         {
-            if (Type.IsArray)
-            {
-                return ArrayMultiDimensionGen.GetParameters(Type, this.typeResolver);
-            }
-
-            return base.GetParameters();
+            return this.Type.IsArray ? ArrayMultiDimensionGen.GetParameters(this.Type, this.typeResolver) : base.GetParameters();
         }
     }
 }

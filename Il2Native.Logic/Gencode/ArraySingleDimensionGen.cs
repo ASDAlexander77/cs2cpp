@@ -12,11 +12,8 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
     using System.Text;
     using CodeParts;
-
-    using Il2Native.Logic.Gencode.SynthesizedMethods;
 
     using PEAssemblyReader;
 
@@ -61,89 +58,38 @@ namespace Il2Native.Logic.Gencode
             return arrayType.GetFieldByName("data", cWriter);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        public static FullyDefinedReference WriteSingleDimArrayAllocationSize(
-            this CWriter cWriter,
-            OpCodePart opCode,
+        public static IlCodeBuilder SingleDimArrayAllocationSizeMethodBody(
+            ITypeResolver typeResolver,
             IType arrayType)
         {
-            Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for single dim arrays only");
-
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; Calculate SingleDim allocation size");
-
-            object[] code;
-            IList<object> tokenResolutions;
-            IList<IType> locals;
-            IList<IParameter> parameters;
-            GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
-                cWriter,
-                arrayType,
-                out code,
-                out tokenResolutions,
-                out locals,
-                out parameters);
-
-            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
-
-            // actual write
-            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
-            return opCodes.Last().Result;
-        }
-
-        private static void GetCalculationPartOfSingleDimArrayAllocationSizeMethodBody(
-            ITypeResolver typeResolver,
-            IType arrayType,
-            out object[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
-        {
-            var codeList = new List<object>();
+            var codeList = new IlCodeBuilder();
 
             // add element size
             var elementType = arrayType.GetElementType();
             var elementSize = elementType.GetTypeSize(typeResolver, true);
-            codeList.AppendLoadInt(elementSize);
+            codeList.SizeOf(elementType);
 
             // load length
-            codeList.AppendLoadArgument(0);
+            codeList.LoadArgument(0);
             codeList.Add(Code.Mul);
 
-            var arrayTypeSizeWithoutArrayData = arrayType.GetTypeSize(typeResolver);
-            codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
+            codeList.SizeOf(arrayType);
             codeList.Add(Code.Add);
 
             // calculate alignment
             codeList.Add(Code.Dup);
 
             var alignForType = Math.Max(CWriter.PointerSize, !elementType.IsStructureType() ? elementSize : CWriter.PointerSize);
-            codeList.AppendLoadInt(alignForType - 1);
+            codeList.LoadConstant(alignForType - 1);
             codeList.Add(Code.Add);
 
-            codeList.AppendLoadInt(~(alignForType - 1));
+            codeList.LoadConstant(~(alignForType - 1));
             codeList.Add(Code.And);
 
-            // locals
-            locals = new List<IType>();
-
-            // tokens
-            tokenResolutions = new List<object>();
-
             // parameters
-            parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
+            codeList.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
 
-            code = codeList.ToArray();
+            return codeList;
         }
 
         public static void GetSingleDimensionArrayCtor(

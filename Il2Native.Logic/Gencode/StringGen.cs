@@ -31,92 +31,38 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         private static string _stringPrefixConstData;
 
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        public static FullyDefinedReference WriteStringAllocationSize(
-            this CWriter cWriter,
-            OpCodePart opCode,
+        public static IlCodeBuilder StringAllocationSizeMethodBody(
+            ITypeResolver typeResolver,
             IType stringType,
             IType charType)
         {
-            Debug.Assert(stringType.IsString, "This is for string only");
-
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; Calculate String allocation size");
-
-            object[] code;
-            IList<object> tokenResolutions;
-            IList<IType> locals;
-            IList<IParameter> parameters;
-            GetCalculationPartOfStringAllocationSizeMethodBody(
-                cWriter,
-                stringType,
-                charType,
-                out code,
-                out tokenResolutions,
-                out locals,
-                out parameters);
-
-            var constructedMethod = MethodBodyBank.GetMethodDecorator(null, code, tokenResolutions, locals, parameters);
-
-            // actual write
-            var opCodes = cWriter.WriteCustomMethodPart(constructedMethod, null);
-            return opCodes.Last().Result;
-        }
-
-        private static void GetCalculationPartOfStringAllocationSizeMethodBody(
-            ITypeResolver typeResolver,
-            IType stringType,
-            IType charType,
-            out object[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
-        {
-            var codeList = new List<object>();
+            var codeList = new IlCodeBuilder();
 
             // add element size
             var elementSize = charType.GetTypeSize(typeResolver, true);
-            codeList.AppendLoadInt(elementSize);
+            codeList.SizeOf(charType);
 
             // load length
-            codeList.AppendLoadArgument(0);
+            codeList.LoadArgument(0);
             codeList.Add(Code.Mul);
 
-            var arrayTypeSizeWithoutArrayData = stringType.GetTypeSize(typeResolver);
-            codeList.AppendLoadInt(arrayTypeSizeWithoutArrayData);
+            codeList.SizeOf(stringType);
             codeList.Add(Code.Add);
 
             // calculate alignment
             codeList.Add(Code.Dup);
 
             var alignForType = Math.Max(CWriter.PointerSize, !charType.IsStructureType() ? elementSize : CWriter.PointerSize);
-            codeList.AppendLoadInt(alignForType - 1);
+            codeList.LoadConstant(alignForType - 1);
             codeList.Add(Code.Add);
 
-            codeList.AppendLoadInt(~(alignForType - 1));
+            codeList.LoadConstant(~(alignForType - 1));
             codeList.Add(Code.And);
 
-            // locals
-            locals = new List<IType>();
-
-            // tokens
-            tokenResolutions = new List<object>();
-
             // parameters
-            parameters = GetParameters(typeResolver);
+            codeList.Parameters.AddRange(GetParameters(typeResolver));
 
-            code = codeList.ToArray();
+            return codeList;
         }
 
         public static IList<IParameter> GetParameters(ITypeResolver typeResolver)

@@ -709,6 +709,8 @@ namespace Il2Native.Logic
 
             if (!excludeSpecializations)
             {
+                yield return new SynthesizedNewMethod(type, typeResolver);
+
                 // TODO: remove if and write code to get info from following synth methods
                 // append C# native compiler infrastructure methods
                 yield return new SynthesizedGetSizeMethod(type, typeResolver);

@@ -4,9 +4,79 @@
     using System.Collections.Generic;
     using System.Linq;
 
+    using Il2Native.Logic.Gencode;
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
+    using PEAssemblyReader;
+
     public class IlCodeBuilder
     {
         private readonly List<object> parts = new List<object>();
+
+        private List<IParameter> _parameters;
+
+        private List<object> _tokenResolutions;
+
+        private List<IType> _locals;
+
+        public List<IParameter> Parameters
+        {
+            get
+            {
+                return this._parameters ?? (this._parameters = new List<IParameter>());
+            }
+
+            set
+            {
+                _parameters = value;
+            }
+        }
+
+        public List<object> TokenResolutions
+        {
+            get
+            {
+                return this._tokenResolutions ?? (this._tokenResolutions = new List<object>());
+            }
+
+            set
+            {
+                _tokenResolutions = value;
+            }
+        }
+
+        public List<IType> Locals
+        {
+            get
+            {
+                return this._locals ?? (this._locals = new List<IType>());
+            }
+
+            set
+            {
+                _locals = value;
+            }
+        }
+
+        public void Register(string fullMethodName)
+        {
+            MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
+        }
+
+        public IMethodBody GetMethodBody(IMethodBody originalOpt = null)
+        {
+            return new SynthesizedMethodBodyDecorator(originalOpt, _locals, this.GetCode());
+        }
+
+        public IList<IParameter> GetParameters()
+        {
+            return _parameters;
+        }
+
+        public IList<object> GetTokenResolutions()
+        {
+            return _tokenResolutions;
+        }
 
         public void Add(Code code)
         {
@@ -142,6 +212,24 @@
             }
         }
 
+        public void SizeOf(IType type)
+        {
+            TokenResolutions.Add(type);
+            this.Add(Code.Sizeof, (int)TokenResolutions.Count);
+        }
+
+        public void Call(IMethod method)
+        {
+            TokenResolutions.Add(method);
+            this.Add(Code.Call, (int)TokenResolutions.Count);
+        }
+
+        public void Castclass(IType type)
+        {
+            TokenResolutions.Add(type);
+            this.Add(Code.Castclass, (int)TokenResolutions.Count);
+        }
+
         // helpers
         public void LoadConstant(int @const)
         {
@@ -186,7 +274,7 @@
                     {
                         this.Add(Code.Ldc_I4, @const);
                     }
- 
+
                     break;
             }
         }
@@ -408,7 +496,7 @@
 
             public Label Label { get; private set; }
 
-            public bool IsLong 
+            public bool IsLong
             {
                 get
                 {

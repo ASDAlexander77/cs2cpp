@@ -4,10 +4,10 @@
 
     public interface ITypeResolver
     {
-        /// <summary>
-        /// </summary>
-        IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
-
         SystemTypes System { get; }
+
+        string GetAllocator();
+
+        IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
     }
 }

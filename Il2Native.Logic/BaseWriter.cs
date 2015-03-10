@@ -139,6 +139,11 @@ namespace Il2Native.Logic
             StringGen.ResetClass();
         }
 
+        public virtual string GetAllocator()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
