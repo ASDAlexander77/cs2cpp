@@ -27,6 +27,14 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.MethodName = methodName;
         }
 
+        public override string AssemblyQualifiedName
+        {
+            get
+            {
+                return this.Type.AssemblyQualifiedName;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public override IType DeclaringType

@@ -1589,7 +1589,7 @@ namespace Il2Native.Logic
                 return this.System.System_Boolean;
             }
 
-            if (opCodePart.Any(Code.Ldlen))
+            if (opCodePart.Any(Code.Ldlen, Code.Sizeof))
             {
                 return this.System.System_Int32;
             }

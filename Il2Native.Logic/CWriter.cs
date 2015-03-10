@@ -1285,20 +1285,14 @@ namespace Il2Native.Logic
 
                 case Code.Dup:
 
-                    this.ActualWrite(writer, firstOpCodeOperand);
-
-                    opCode.Result = firstOpCodeOperand.Result;
-
+                    var estimatedResult = this.EstimatedResultOf(firstOpCodeOperand);
                     var dupVar = string.Format("_dup{0}", opCode.AddressStart);
-
-                    opCode.Result.Type.WriteTypePrefix(this);
+                    estimatedResult.Type.WriteTypePrefix(this);
                     this.Output.WriteLine(string.Concat(" ", dupVar, ";"));
-
                     this.Output.Write(string.Concat(dupVar, " = "));
-
-                    this.WriteResultOrActualWrite(writer, opCode);
-
-                    opCode.Result = new FullyDefinedReference(dupVar, opCode.Result.Type);
+                    this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                    opCode.Result = new FullyDefinedReference(dupVar, firstOpCodeOperand.Result.Type);
+                    // do not remove next live, it contains _dup variable
                     firstOpCodeOperand.Result = opCode.Result;
 
                     break;
@@ -1340,7 +1334,7 @@ namespace Il2Native.Logic
                     {
                         this.WriteCast(
                             opCodeTypePart,
-                            opCodeTypePart.OpCodeOperands[0].Result,
+                            opCodeTypePart.OpCodeOperands[0],
                             opCodeTypePart.Operand,
                             true);
                     }
@@ -1863,9 +1857,10 @@ namespace Il2Native.Logic
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
+
                     this.WriteCast(
                         opCodeTypePart,
-                        opCodeTypePart.OpCodeOperands[0].Result,
+                        opCodeTypePart.OpCodeOperands[0],
                         opCodeTypePart.Operand,
                         true);
                     break;
@@ -1884,11 +1879,11 @@ namespace Il2Native.Logic
                         out dynamicCastRequired);
                     if (dynamicCastRequired || !castRequired)
                     {
-                        this.WriteDynamicCast(writer, opCodeTypePart, fromType, toType, true);
+                        this.WriteDynamicCast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0], toType, true);
                     }
                     else
                     {
-                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0].Result, toType);
+                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], toType);
                     }
                     break;
 
@@ -2226,7 +2221,7 @@ namespace Il2Native.Logic
                 if (castRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.WriteCast(opCode, opCode.Result, opCode.RequiredIncomingType);
+                    this.WriteCast(opCode, opCode, opCode.RequiredIncomingType);
                 }
 
                 if (intAdjustmentRequired)
@@ -2244,7 +2239,7 @@ namespace Il2Native.Logic
             IType resultType = null)
         {
             writer.Write(op);
-            this.WriteOperandResult(writer, opCode, 0);
+            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             SetResultNumber(opCode, opCode.OpCodeOperands[0].Result.Type);
         }
 
@@ -2256,7 +2251,7 @@ namespace Il2Native.Logic
             IType resultType = null)
         {
             writer.Write(op);
-            this.WriteOperandResult(writer, opCode, operand);
+            this.WriteOperandResultOrActualWrite(writer, opCode, operand);
             SetResultNumber(opCode, opCode.OpCodeOperands[operand].Result.Type);
         }
 
@@ -2282,9 +2277,9 @@ namespace Il2Native.Logic
             IType resultType = null)
         {
             writer.Write("(");
-            this.WriteOperandResult(writer, opCode, 0);
+            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             writer.Write(op);
-            this.WriteOperandResult(writer, opCode, 1);
+            this.WriteOperandResultOrActualWrite(writer, opCode, 1);
             writer.Write(")");
 
             SetResultNumber(opCode, opCode.OpCodeOperands[0].Result.Type);
@@ -2832,11 +2827,14 @@ namespace Il2Native.Logic
         public void WriteDynamicCast(
             CIndentedTextWriter writer,
             OpCodePart opCodeTypePart,
-            FullyDefinedReference fromType,
+            OpCodePart opCodeOperand,
             IType toType,
             bool checkNull = false,
             bool throwExceptionIfNull = false)
         {
+            // TODO: finish it
+            FullyDefinedReference fromType = null;
+
             var effectiveFromType = fromType.Type.UseAsClass
                 ? fromType.ToDereferencedType().ToClassType()
                 : fromType.ToDereferencedType();
@@ -3615,7 +3613,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="index">
         /// </param>
-        public void WriteOperandResult(
+        public void WriteOperandResultOrActualWrite(
             CIndentedTextWriter writer,
             OpCodePart opCode,
             int index)
@@ -3988,7 +3986,7 @@ namespace Il2Native.Logic
 
             if (castFrom != null)
             {
-                this.WriteCast(operator1, operator1.Result, effectiveType);
+                this.WriteCast(operator1, operator1, effectiveType);
             }
 
             if (intAdjustment != null)
@@ -4716,7 +4714,7 @@ namespace Il2Native.Logic
             this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
 
             writer.Write(" = ");
-            this.WriteOperandResult(writer, opCode, operandIndex);
+            this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
         /// <summary>
@@ -4799,7 +4797,7 @@ namespace Il2Native.Logic
                 writer.Write(", ");
 
                 destinationType.WriteTypePrefix(this);
-                this.WriteOperandResult(writer, opCode, 0);
+                this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             }
             else
             {

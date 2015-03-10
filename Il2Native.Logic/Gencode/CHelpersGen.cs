@@ -281,8 +281,10 @@ namespace Il2Native.Logic.Gencode
             writer.Write(") ");
 
             writer.Write("(");
-            cWriter.WriteOperandResult(writer, opCode, operand);
+            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operand);
             writer.Write(")");
+
+            cWriter.SetResultNumber(opCode, toType);
         }
 
         /// <summary>
@@ -579,55 +581,53 @@ namespace Il2Native.Logic.Gencode
         public static bool WriteCast(
             this CWriter cWriter,
             OpCodePart opCode,
-            FullyDefinedReference fromResult,
+            OpCodePart opCodeOperand,
             IType toType,
             bool throwExceptionIfNull = false)
         {
             var writer = cWriter.Output;
 
-            var bareType = !fromResult.Type.IsArray
-                ? fromResult.Type.ToBareType()
-                : fromResult.Type;
-            if (toType.IsInterface && !(fromResult is ConstValue))
+            var estimatedOperandResultOf = cWriter.EstimatedResultOf(opCodeOperand);
+
+            var bareType = !estimatedOperandResultOf.Type.IsArray
+                ? estimatedOperandResultOf.Type.ToBareType()
+                : estimatedOperandResultOf.Type;
+            if (toType.IsInterface && !(estimatedOperandResultOf is ConstValue))
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    opCode.Result = fromResult;
+                    cWriter.ActualWrite(writer, opCodeOperand);
+
+                    opCode.Result = opCodeOperand.Result;
                     cWriter.WriteInterfaceAccess(writer, opCode, bareType, toType);
                 }
                 else
                 {
-                    cWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
+                    cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, true, throwExceptionIfNull);
                 }
             }
-            else if (fromResult.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
+            else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
                      (toType.IsPointer || toType.IsByRef))
             {
-                ConvertCCast(cWriter, opCode, toType);
+                ConvertCCast(cWriter, opCode, 0, toType);
+                cWriter.SetResultNumber(opCode, toType);
             }
-            else if (fromResult.Type.IsArray
-                     || (fromResult.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
+            else if (estimatedOperandResultOf.Type.IsArray
+                     || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
                      || toType.IsArray 
                      || toType.IsPointer 
                      || toType.IsByRef 
                      || bareType.IsDerivedFrom(toType) 
-                     || (fromResult is ConstValue))
+                     || (estimatedOperandResultOf is ConstValue))
             {
+                ConvertCCast(cWriter, opCode, 0, toType);
                 cWriter.SetResultNumber(opCode, toType);
-                writer.Write("bitcast ");
-                fromResult.Type.WriteTypePrefix(cWriter);
-                writer.Write(' ');
-                cWriter.WriteResult(fromResult);
-                writer.Write(" to ");
-                toType.WriteTypePrefix(cWriter, toType.IsStructureType());
             }
             else
             {
-                Debug.Assert(fromResult.Type.IntTypeBitSize() == 0);
-                cWriter.WriteDynamicCast(writer, opCode, fromResult, toType, true, throwExceptionIfNull);
+                Debug.Assert(estimatedOperandResultOf.Type.IntTypeBitSize() == 0);
+                cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, true, throwExceptionIfNull);
             }
-
-            writer.WriteLine(string.Empty);
 
             return true;
         }
@@ -877,7 +877,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(") ");
             }
 
-            cWriter.WriteOperandResult(writer, opCode, operandIndex);
+            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 
         public static void WriteLlvmSavePrimitiveIntoStructure(

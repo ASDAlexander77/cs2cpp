@@ -196,14 +196,14 @@ namespace Il2Native.Logic.Gencode
                 thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
                 writer.WriteLine("; Cast of 'This' parameter");
-                cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
                 writer.WriteLine(string.Empty);
             }
 
             if (dynamicCastRequired)
             {
                 writer.WriteLine("; Dynamic Cast of 'This' parameter");
-                cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
                 writer.WriteLine(string.Empty);
             }
 
@@ -254,7 +254,7 @@ namespace Il2Native.Logic.Gencode
                 if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
                     writer.WriteLine("; Cast of 'Boxed' 'This' parameter");
-                    cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand.Result, thisType);
+                    cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
                     writer.WriteLine(string.Empty);
                 }
             }
@@ -300,7 +300,7 @@ namespace Il2Native.Logic.Gencode
             out IType ownerOfExplicitInterface,
             out IType requiredType)
         {
-            thisType = methodInfo.DeclaringType.ToClass();
+            thisType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
 
             hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null
                               && opCodeMethodInfo.OpCodeOperands.Length - methodInfo.GetParameters().Count() > 0;
@@ -460,6 +460,11 @@ namespace Il2Native.Logic.Gencode
             if (isIndirectMethodCall || methodInfo.IsUnmanagedMethodReference)
             {
                 cWriter.WriteResult(methodAddressResultNumber);
+            }
+            else if (methodInfo.DeclaringType == null)
+            {
+                // just name (for example calloc)
+                cWriter.Output.Write(methodInfo.Name);
             }
             else
             {

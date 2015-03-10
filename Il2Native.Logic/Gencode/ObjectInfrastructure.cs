@@ -114,7 +114,7 @@ namespace Il2Native.Logic.Gencode
             newAlloc.Call(
                 new SynthesizedMethod(
                     typeResolver.GetAllocator(),
-                    typeResolver.System.System_Byte.ToPointerType(),
+                    typeResolver.System.System_Void.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter() }));
 
             if (!doNotTestNullValue)
@@ -792,6 +792,7 @@ namespace Il2Native.Logic.Gencode
 
             if (!doNotCallInit)
             {
+                ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
             }
 
