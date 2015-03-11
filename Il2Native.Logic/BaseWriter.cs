@@ -1036,6 +1036,7 @@ namespace Il2Native.Logic
                 case Code.Stind_R4:
                 case Code.Stind_R8:
                 case Code.Stind_Ref:
+                case Code.Cpobj:
                     this.FoldNestedOpCodes(opCode, 2);
                     break;
                 case Code.Stloc:

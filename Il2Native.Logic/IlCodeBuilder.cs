@@ -121,7 +121,7 @@
         public void Add(Code code, byte value)
         {
             this.Add(code);
-            this.Add(value);
+            this.parts.Add(value);
         }
 
         public void Add(BranchNode branchNode)

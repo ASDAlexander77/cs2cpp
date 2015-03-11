@@ -1067,44 +1067,15 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldobj:
-
-                    opCodeTypePart = opCode as OpCodeTypePart;
-                    var resultOfOp0 = firstOpCodeOperand.Result;
-                    var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
-                    if (loadValueFromAddress)
-                    {
-                        this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
-                    }
-                    else
-                    {
-                        if (resultOfOp0.Type.IntTypeBitSize() == PointerSize * 8)
-                        {
-                            // using int as intptr
-                            this.AdjustIntConvertableTypes(
-                                writer,
-                                firstOpCodeOperand,
-                                opCodeTypePart.Operand.ToPointerType());
-                            opCode.Result = firstOpCodeOperand.Result;
-                        }
-                        else
-                        {
-                            // should be address, so Pointer or IsByRef is accepted
-                            Debug.Assert(resultOfOp0.Type.IsPointer || resultOfOp0.Type.IsByRef || resultOfOp0.Type.UseAsClass);
-                            opCode.Result = resultOfOp0.ToType(resultOfOp0.Type.UseAsClass ? resultOfOp0.Type : resultOfOp0.Type.GetElementType());
-                            if (opCode.Result.Type.IsVoid())
-                            {
-                                // in case we receive void* to load struct
-                                opCode.Result = resultOfOp0;
-                            }
-
-                            Debug.Assert(!opCode.Result.Type.IsVoid());
-                        }
-                    }
-
+                    this.LoadObject(opCode, 0);
                     break;
 
                 case Code.Stobj:
                     this.SaveObject(opCode, 1, 0);
+                    break;
+
+                case Code.Cpobj:
+                    this.SaveObject(opCode, 1, 0, true);
                     break;
 
                 case Code.Ldlen:
@@ -2091,7 +2062,6 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Cpblk:
-                case Code.Cpobj:
                 case Code.Jmp:
                 case Code.Ckfinite:
                     throw new NotImplementedException();
@@ -2950,7 +2920,7 @@ namespace Il2Native.Logic
             var asPointer = false;
             if (effectiveType.IsValueType)
             {
-                if (operand.Result.Type.IntTypeBitSize() == PointerSize * 8)
+                if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                     this.WriteCCast(operand, effectiveType.ToPointerType());
@@ -4780,6 +4750,40 @@ namespace Il2Native.Logic
             }
         }
 
+        private void LoadObject(OpCodePart opCode, int operandIndex)
+        {
+            OpCodeTypePart opCodeTypePart;
+            opCodeTypePart = opCode as OpCodeTypePart;
+            var resultOfOp0 = opCode.OpCodeOperands[operandIndex].Result;
+            var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
+            if (loadValueFromAddress)
+            {
+                this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
+            }
+            else
+            {
+                if (resultOfOp0.Type.IntTypeBitSize() == PointerSize * 8)
+                {
+                    // using int as intptr
+                    this.AdjustIntConvertableTypes(this.Output, opCode.OpCodeOperands[operandIndex], opCodeTypePart.Operand.ToPointerType());
+                    opCode.Result = opCode.OpCodeOperands[operandIndex].Result;
+                }
+                else
+                {
+                    // should be address, so Pointer or IsByRef is accepted
+                    Debug.Assert(resultOfOp0.Type.IsPointer || resultOfOp0.Type.IsByRef || resultOfOp0.Type.UseAsClass);
+                    opCode.Result = resultOfOp0.ToType(resultOfOp0.Type.UseAsClass ? resultOfOp0.Type : resultOfOp0.Type.GetElementType());
+                    if (opCode.Result.Type.IsVoid())
+                    {
+                        // in case we receive void* to load struct
+                        opCode.Result = resultOfOp0;
+                    }
+
+                    Debug.Assert(!opCode.Result.Type.IsVoid());
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -4788,22 +4792,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="destinationIndex">
         /// </param>
-        private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex)
+        private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex, bool destinationIsIndirect = false)
         {
-            var operandResult = opCode.OpCodeOperands[operandIndex].Result.ToNormalType();
-            if (!operandResult.Type.IsStructureType())
-            {
-                this.WriteLlvmSave(
-                    opCode,
-                    operandResult.Type,
-                    operandIndex,
-                    opCode.OpCodeOperands[destinationIndex].Result);
-            }
-            else
-            {
-                opCode.Result = opCode.OpCodeOperands[0].Result;
-                this.WriteLlvmLoad(opCode, operandResult.Type, operandResult);
-            }
+            var operandResult = this.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
+            this.WriteLlvmSave(
+                opCode,
+                operandResult.Type,
+                operandIndex,
+                opCode.OpCodeOperands[destinationIndex].Result,
+                destinationIsIndirect);
         }
 
         /// <summary>

@@ -854,11 +854,22 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCode,
             IType typeToSave,
             int operandIndex,
-            FullyDefinedReference destination)
+            FullyDefinedReference destination,
+            bool destinationIsIndirect = false)
         {
             var writer = cWriter.Output;
 
+            if (destinationIsIndirect)
+            {
+                writer.Write("*(");
+            }
+            
             cWriter.WriteResult(destination);
+            if (destinationIsIndirect)
+            {
+                writer.Write(")");
+            }
+
             writer.Write(" = ");
 
             var estimatedResultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);

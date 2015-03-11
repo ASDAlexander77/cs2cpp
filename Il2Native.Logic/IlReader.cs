@@ -1194,6 +1194,7 @@ namespace Il2Native.Logic
                     case Code.Isinst:
                     case Code.Ldobj:
                     case Code.Stobj:
+                    case Code.Cpobj:
                     case Code.Constrained:
                     case Code.Sizeof:
                     case Code.Mkrefany:
