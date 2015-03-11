@@ -62,73 +62,46 @@ namespace Il2Native.Logic.Gencode
 
             // get pointer to Virtual Table and call method
             // 1) get pointer to virtual table
-            writer.WriteLine("; Get Virtual Table");
-
             IType requiredInterface;
             var effectiveType = requiredType ?? thisType;
             var methodIndex = effectiveType.GetVirtualMethodIndex(methodInfo, cWriter, out requiredInterface);
 
             if (requiredInterface != null)
             {
-                ////cWriter.WriteInterfaceAccess(
-                ////    writer,
-                ////    opCodeMethodInfo.OpCodeOperands[0],
-                ////    effectiveType,
-                ////    requiredInterface);
+                cWriter.WriteInterfaceAccess(
+                    opCodeMethodInfo.OpCodeOperands[0],
+                    effectiveType,
+                    requiredInterface);
                 opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
                 requiredType = requiredInterface;
             }
 
-            cWriter.UnaryOper(writer, opCodeMethodInfo, "bitcast", requiredType ?? thisType);
-            writer.Write(" to ");
-            cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.WriteLine("**");
+            //cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
 
-            var pointerToInterfaceVirtualTablePointersResultNumber = opCodeMethodInfo.Result;
-
-            // load pointer
-            cWriter.SetResultNumber(
-                opCodeMethodInfo,
-                cWriter.System.System_Byte.ToPointerType().ToPointerType());
-            writer.Write("load ");
-            cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("** ");
-            cWriter.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
-            writer.Write(", align {0}", CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-            var virtualTableOfMethodPointersResultNumber = opCodeMethodInfo.Result;
-
-            // get address of a function
-            writer.WriteLine("; Get Virtual Index of Method: {0}", methodInfo.FullName);
-            cWriter.SetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
-            writer.Write("getelementptr inbounds ");
-            cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("* ");
-            cWriter.WriteResult(virtualTableOfMethodPointersResultNumber);
-            writer.WriteLine(", i64 {0}", methodIndex);
-            var pointerToFunctionPointerResultNumber = opCodeMethodInfo.Result;
+            cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
+            writer.Write("[{0}]", methodIndex);
 
             // load method address
+            /*
             cWriter.SetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
             writer.Write("load ");
             cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
             writer.Write("* ");
             cWriter.WriteResult(pointerToFunctionPointerResultNumber);
             writer.WriteLine(string.Empty);
+            */
 
             // remember virtual method address result
             virtualMethodAddressResultNumber = opCodeMethodInfo.Result;
 
             if (thisType.IsInterface)
             {
-                opCodeFirstOperand.Result = virtualTableOfMethodPointersResultNumber;
-
                 cWriter.WriteGetThisPointerFromInterfacePointer(
                     writer,
                     opCodeMethodInfo,
                     methodInfo,
                     thisType,
-                    pointerToInterfaceVirtualTablePointersResultNumber);
+                    null);
 
                 var thisPointerResultNumber = opCodeMethodInfo.Result;
 

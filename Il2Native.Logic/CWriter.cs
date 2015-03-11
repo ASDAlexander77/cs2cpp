@@ -2959,6 +2959,41 @@ namespace Il2Native.Logic
             SetResultNumber(opCodeFieldInfoPart, opCodeFieldInfoPart.Operand.FieldType);
         }
 
+        public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType)
+        {
+            var writer = this.Output;
+
+            var operand = opCodePart;
+            var operandResultCalc = EstimatedResultOf(operand);
+            var operandType = operandResultCalc.Type;
+            var effectiveType = operandType;
+            if (effectiveType.IsValueType)
+            {
+                if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
+                {
+                    effectiveType = classType;
+                    this.WriteCCast(operand, effectiveType.ToPointerType());
+                }
+                else if (!effectiveType.IsByRef)
+                {
+                    effectiveType = effectiveType.ToClass();
+                }
+            }
+            else if (effectiveType.IsPointer)
+            {
+                effectiveType = classType;
+                this.WriteCCast(operand, effectiveType.ToPointerType());
+            }
+
+            this.WriteResultOrActualWrite(writer, operand);
+            writer.Write("->");
+            effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
+            var vtableField = interfaceType.GetFieldByName("vtable", this);
+            this.WriteInterfacePath(effectiveType, classType, vtableField);
+
+            SetResultNumber(opCodePart, vtableField.FieldType);
+        }
+
         /// <summary>
         ///     fixing issue with Code.Ldind when you need to load first field value
         /// </summary>
