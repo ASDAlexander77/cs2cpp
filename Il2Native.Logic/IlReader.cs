@@ -1361,7 +1361,7 @@ namespace Il2Native.Logic
         /// </param>
         private void AddCalledMethod(IMethod method)
         {
-            if (this._calledMethods == null || method == null || method.DeclaringType == null)
+            if (this._calledMethods == null || method == null || method.DeclaringType == null || string.IsNullOrEmpty(method.Name))
             {
                 return;
             }
