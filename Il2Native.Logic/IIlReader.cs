@@ -19,15 +19,19 @@
 
         /// <summary>
         /// </summary>
-        ISet<IType> UsedStructTypes { get; set; }
-
-        /// <summary>
-        /// </summary>
         ISet<IMethod> CalledMethods { get; set; }
 
         /// <summary>
         /// </summary>
         ISet<IField> StaticFields { get; set; }
+
+        /// <summary>
+        /// </summary>
+        ISet<IType> UsedStructTypes { get; set; }
+
+        /// <summary>
+        /// </summary>
+        ISet<IType> UsedArrayTypes { get; set; }
 
         /// <summary>
         /// </summary>

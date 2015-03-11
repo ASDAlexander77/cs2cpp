@@ -328,6 +328,7 @@ namespace Il2Native.Logic
         {
             // TODO: you need to discover only actual usage of arrays and generics(?)
             // for example function Main(string[] args) needs only forward declararion, so gather only arrays and generics in method bodies only
+            // I even belive that you need to take only array which used in Code.Newarr code. and the same is for Generics
 
             Debug.Assert(typeSource != null, "Type is null");
             if (typeSource == null || typeSource.IsValueType)

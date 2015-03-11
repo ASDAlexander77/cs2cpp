@@ -523,6 +523,8 @@ namespace Il2Native.Logic
             IlReader.CalledMethods = new NamespaceContainer<IMethod>();
             IlReader.StaticFields = new NamespaceContainer<IField>();
             IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
+            IlReader.UsedStructTypes = new NamespaceContainer<IType>();
+            IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
         }
 
         private void WriteMethodBeginning(IMethod method, IGenericContext genericContext)
@@ -534,7 +536,7 @@ namespace Il2Native.Logic
             }
 
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
-            this.WriteMethodRequiredDeclatationsAndDefinitions(method);
+            this.WriteMethodRequiredDeclarationsAndDefinitions(method);
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             ReadMethodInfo(method, genericContext);
@@ -4648,9 +4650,8 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
-            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
-
-            this.WriteFieldAccess(writer, opCode, opCode.OpCodeOperands[0].Result.Type.GetFieldByName("data", this), opCode.OpCodeOperands[1]);
+            var estimatedResultOf = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+            this.WriteFieldAccess(writer, opCode, estimatedResultOf.Type.GetFieldByName("data", this), opCode.OpCodeOperands[1]);
 
             var operandIndex = 2;
 
@@ -5403,35 +5404,6 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="argIndex">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        private void WriteLlvmArgVarAccess(
-            CIndentedTextWriter writer,
-            int index,
-            int argIndex,
-            bool asReference = false)
-        {
-            Parameters[index].ParameterType.WriteTypePrefix(this);
-            if (asReference)
-            {
-                writer.Write('*');
-            }
-
-            writer.Write(' ');
-            writer.Write(this.GetArgVarName(index, argIndex));
-
-            // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + PointerSize);
-        }
-
         private FullyDefinedReference WriteLoadingArgumentsForMain(
             IMethod currentMethod,
             IGenericContext currentGenericContext)
@@ -5978,7 +5950,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredDeclatationsAndDefinitions(IMethod method)
+        private void WriteMethodRequiredDeclarationsAndDefinitions(IMethod method)
         {
             // const strings
             foreach (var usedString in IlReader.UsedStrings)
@@ -5991,9 +5963,36 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
+            var any = false;
+            // structs
+            foreach (var requiredType in IlReader.UsedStructTypes)
+            {
+                any = true;
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
+            any = false;
+            // arrays
+            foreach (var requiredType in IlReader.UsedArrayTypes)
+            {
+                any = true;
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
+            // forward declrations
             this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
 
-            var any = false;
+            any = false;
             // methods
             foreach (
                 var requiredDeclarationMethod in
@@ -6003,7 +6002,7 @@ namespace Il2Native.Logic
                                 this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null))))
             {
                 any = true;
-                WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
+                this.WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
                 this.Output.WriteLine(";");
             }
 
