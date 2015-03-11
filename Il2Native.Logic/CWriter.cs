@@ -972,7 +972,14 @@ namespace Il2Native.Logic
                         // special case
                         if (tokenType.IsVirtualTable)
                         {
-                            opCode.Result = new ConstValue(tokenType.GetVirtualTableNameReference(), tokenType);
+                            if (tokenType.InterfaceOwner != null)
+                            {
+                                opCode.Result = new ConstValue(tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType), tokenType);
+                            }
+                            else
+                            {
+                                opCode.Result = new ConstValue(tokenType.GetVirtualTableNameReference(), tokenType);
+                            }
                         }
                     }
 
@@ -2919,17 +2926,12 @@ namespace Il2Native.Logic
             var operandResultCalc = EstimatedResultOf(operand);
             var operandType = operandResultCalc.Type;
             var effectiveType = operandType;
-            var asPointer = false;
             if (effectiveType.IsValueType)
             {
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                     this.WriteCCast(operand, effectiveType.ToPointerType());
-
-                    asPointer = true;
-
-                    writer.WriteLine(string.Empty);
                 }
                 else if (!effectiveType.IsByRef)
                 {
@@ -2940,15 +2942,19 @@ namespace Il2Native.Logic
             {
                 effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                 this.WriteCCast(operand, effectiveType.ToPointerType());
-
-                asPointer = true;
-
-                writer.WriteLine(string.Empty);
             }
 
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
             writer.Write("->");
-            this.WriteFieldPath(effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType, opCodeFieldInfoPart.Operand);
+            effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
+            if (opCodeFieldInfoPart.Operand.DeclaringType.IsInterface)
+            {
+                this.WriteInterfacePath(effectiveType, opCodeFieldInfoPart.Operand.DeclaringType, opCodeFieldInfoPart.Operand);
+            }
+            else
+            {
+                this.WriteFieldPath(effectiveType, opCodeFieldInfoPart.Operand);
+            }
 
             SetResultNumber(opCodeFieldInfoPart, opCodeFieldInfoPart.Operand.FieldType);
         }
@@ -3049,6 +3055,122 @@ namespace Il2Native.Logic
             }
 
             writer.Write(fieldInfo.Name);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="writer">
+        /// </param>
+        /// <param name="classType">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <exception cref="IndexOutOfRangeException">
+        /// </exception>
+        /// <returns>
+        /// </returns>
+        private bool WriteInterfacePath(IType classType, IType @interface, IField fieldInfo)
+        {
+            var writer = this.Output;
+
+            var type = classType;
+            if (!type.GetAllInterfaces().Contains(@interface))
+            {
+                return false;
+            }
+
+            while (
+                !type.GetInterfacesExcludingBaseAllInterfaces()
+                    .Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
+            {
+                type = type.BaseType;
+                if (type == null)
+                {
+                    // throw new IndexOutOfRangeException("Could not find an type");
+                    break;
+                }
+
+                // first index is base type index
+                writer.Write("base.");
+            }
+
+            var path = FindInterfacePath(type, @interface);
+
+            foreach (var i in path)
+            {
+                writer.Write(i);
+                writer.Write(".");
+            }
+
+            writer.Write(fieldInfo.Name);
+
+            return true;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="interface">
+        /// </param>
+        /// <param name="index">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private static List<string> FindInterfacePath(IType type, IType @interface)
+        {
+            var indexes = new List<string>();
+
+            var currentType = type;
+
+            var baseCount = 0;
+            while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
+            {
+                // add base index;
+                indexes.Add("base.");
+                baseCount++;
+                currentType = currentType.BaseType;
+            }
+
+            while (currentType != null)
+            {
+                var interfacePath = FindInterfacePathForOneStep(currentType, @interface, out currentType);
+                indexes.Add(interfacePath.ToString().CleanUpName());
+            }
+
+            return indexes;
+        }
+
+        public static IType FindInterfacePathForOneStep(IType currentType, IType @interface, out IType nextCurrentType)
+        {
+            nextCurrentType = currentType;
+            var found = false;
+            IType interfacePath = null;
+            foreach (var subInterface in currentType.GetInterfaces().ToList())
+            {
+                interfacePath = subInterface;
+
+                if (subInterface.TypeEquals(@interface))
+                {
+                    nextCurrentType = null;
+                    found = true;
+                    break;
+                }
+
+                if (subInterface.GetAllInterfaces().Contains(@interface))
+                {
+                    nextCurrentType = subInterface;
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                throw new KeyNotFoundException("type can't be found");
+            }
+
+            return interfacePath;
         }
 
         /// <summary>
@@ -3169,38 +3291,6 @@ namespace Il2Native.Logic
             this.WriteResult(thisAddressFromInterfaceResultNumber);
             writer.Write(" to ");
             thisType.WriteTypePrefix(this);
-            writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringTypeIn">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        public void WriteInterfaceAccess(
-            CIndentedTextWriter writer,
-            OpCodePart opCode,
-            IType declaringTypeIn,
-            IType @interface)
-        {
-            var objectResult = opCode.Result;
-
-            writer.WriteLine("; Get type '{0}' of '{1}'", @interface, declaringTypeIn);
-
-            var declaringType = declaringTypeIn.ToClass();
-
-            writer.Write("getelementptr inbounds");
-
-            writer.Write(' ');
-            writer.Write(objectResult);
-
-            this.WriteInterfaceIndex(writer, declaringType, @interface);
-
             writer.WriteLine(string.Empty);
         }
 
@@ -5196,67 +5286,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine("}");
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="classType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <exception cref="IndexOutOfRangeException">
-        /// </exception>
-        /// <returns>
-        /// </returns>
-        private bool WriteInterfaceIndex(CIndentedTextWriter writer, IType classType, IType @interface)
-        {
-            var type = classType;
-            if (!type.GetAllInterfaces().Contains(@interface))
-            {
-                return false;
-            }
-
-            // first element for pointer (IType* + 0)
-            writer.Write(", i32 0");
-
-            while (
-                !type.GetInterfacesExcludingBaseAllInterfaces()
-                    .Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
-            {
-                type = type.BaseType;
-                if (type == null)
-                {
-                    // throw new IndexOutOfRangeException("Could not find an type");
-                    break;
-                }
-
-                // first index is base type index
-                writer.Write(", i32 0");
-            }
-
-            // find index
-            var index = 0;
-
-            if (type.IsRootOfVirtualTable(this))
-            {
-                index++;
-            }
-
-            if (type.BaseType != null)
-            {
-                index++;
-            }
-
-            var indexes = FindInterfaceIndexes(type, @interface, index);
-
-            foreach (var i in indexes)
-            {
-                writer.Write(", i32 ");
-                writer.Write(i);
-            }
-
-            return true;
-        }
 
         // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the type belong to
 
@@ -5311,8 +5340,6 @@ namespace Il2Native.Logic
                     : 0;
                 var interfaceIndex = FindInterfaceIndexes(typeContainingInterface, @interface, index).Sum();
 
-                this.Output.WriteLine(string.Empty);
-                this.Output.Write(type.GetVirtualInterfaceTableName(@interface));
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
 
                 // forward declarations
@@ -5325,12 +5352,13 @@ namespace Il2Native.Logic
                     this.WriteMethodForwardDeclaration(method, null);
                     this.Output.WriteLine(";");
                 }
-                
+
                 virtualInterfaceTable.WriteTableOfMethods(
                     this,
                     type,
                     interfaceIndex,
-                    baseTypeSizeOfTypeContainingInterface);
+                    baseTypeSizeOfTypeContainingInterface,
+                    @interface);
 
                 this.Output.WriteLine(string.Empty);
             }

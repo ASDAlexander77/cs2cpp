@@ -25,6 +25,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        IType InterfaceOwner { get; }
+
+        /// <summary>
+        /// </summary>
         bool ContainsGenericParameters { get; }
 
         /// <summary>
@@ -38,6 +42,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool HasDeclaringType { get; }
+
+        /// <summary>
+        /// </summary>
+        IType DeclaringType { get; }
 
         /// <summary>
         /// </summary>
@@ -243,7 +251,7 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IType ToVirtualTable();
+        IType ToVirtualTable(IType interfaceOwner = null);
 
         /// <summary>
         /// </summary>

@@ -517,6 +517,17 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName("vtable", typeResolver));
             }
 
+            // init all interfaces
+            foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+            {
+                //cWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
+
+                // set virtual table
+                codeBuilder.LoadArgument(0);
+                codeBuilder.LoadToken(@interface.ToVirtualTable(declaringType));
+                codeBuilder.SaveField(@interface.GetFieldByName("vtable", typeResolver));
+            }
+
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;

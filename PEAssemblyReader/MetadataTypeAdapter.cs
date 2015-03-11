@@ -177,8 +177,13 @@ namespace PEAssemblyReader
         /// </exception>
         public IType DeclaringType
         {
-            get { return this.lazyDeclaringType.Value; }
+            get
+            {
+                return this.lazyDeclaringType.Value;
+            }
         }
+
+        public IType InterfaceOwner { get; set; }
 
         /// <summary>
         /// </summary>
@@ -342,10 +347,6 @@ namespace PEAssemblyReader
                 return this.CalculateIsGenericType();
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IEnumerable<IType> RequiredDefinitionTypes { get; set; }
 
         private bool CalculateIsGenericType()
         {
@@ -620,11 +621,12 @@ namespace PEAssemblyReader
             return typeAdapter;
         }
 
-        public IType AsVirtualTable()
+        public IType AsVirtualTable(IType interfaceOwner = null)
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
             typeAdapter.UseAsClass = true;
             typeAdapter.UseAsVirtualTable = true;
+            typeAdapter.InterfaceOwner = interfaceOwner;
             return typeAdapter;
         }
 
@@ -1099,14 +1101,14 @@ namespace PEAssemblyReader
             return this.Clone(true, true);
         }
 
-        public IType ToVirtualTable()
+        public IType ToVirtualTable(IType interfaceOwner = null)
         {
             if (this.UseAsVirtualTable)
             {
                 return this;
             }
 
-            return this.AsVirtualTable();
+            return this.AsVirtualTable(interfaceOwner);
         }
 
         /// <summary>

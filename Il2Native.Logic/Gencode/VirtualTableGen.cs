@@ -189,6 +189,11 @@ namespace Il2Native.Logic.Gencode
             return string.Concat(type.FullName, " vtable ", @interface.FullName, " interface").CleanUpName();
         }
 
+        public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface)
+        {
+            return string.Concat("(i8**) (((i8**) &", GetVirtualInterfaceTableName(type, @interface), ") + 2)");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="thisType">
@@ -371,14 +376,22 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter,
             IType type,
             int interfaceIndex,
-            int baseTypeFieldsOffset)
+            int baseTypeFieldsOffset,
+            IType interfaceType = null)
         {
             var writer = cWriter.Output;
 
             writer.Write("static struct ");
             VirtualTableDeclaration(virtualTable, cWriter);
             cWriter.Output.Write(" ");
-            writer.Write(type.GetVirtualTableName());
+            if (interfaceType == null)
+            {
+                writer.Write(type.GetVirtualTableName());
+            }
+            else
+            {
+                writer.Write(type.GetVirtualInterfaceTableName(interfaceType));
+            }
             cWriter.Output.Write(" = ");
             VirtualTableDefinition(virtualTable, cWriter, interfaceIndex, baseTypeFieldsOffset);
             cWriter.Output.Write(";");
