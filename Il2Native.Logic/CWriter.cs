@@ -5989,7 +5989,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            // forward declrations
+            // forward declarations
             this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
 
             any = false;

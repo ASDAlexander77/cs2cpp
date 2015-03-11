@@ -732,11 +732,14 @@ namespace Il2Native.Logic
 
             var normal = type.ToNormal();
 
-            yield return new SynthesizedNewMethod(type, typeResolver);
-            yield return new SynthesizedInitMethod(type, typeResolver);
+            if (!type.IsInterface)
+            {
+                yield return new SynthesizedNewMethod(type, typeResolver);
+                yield return new SynthesizedInitMethod(type, typeResolver);
 
-            // append C# native compiler infrastructure methods
-            yield return new SynthesizedGetSizeMethod(type, typeResolver);
+                // append C# native compiler infrastructure methods
+                yield return new SynthesizedGetSizeMethod(type, typeResolver);
+            }
 
             // TODO: remove comment when finish
             // append internal methods
