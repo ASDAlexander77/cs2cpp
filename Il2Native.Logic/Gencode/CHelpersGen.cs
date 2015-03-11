@@ -68,18 +68,14 @@ namespace Il2Native.Logic.Gencode
 
             if (requiredInterface != null)
             {
-                cWriter.WriteInterfaceAccess(
-                    opCodeMethodInfo.OpCodeOperands[0],
-                    effectiveType,
-                    requiredInterface);
-                opCodeMethodInfo.Result = opCodeMethodInfo.OpCodeOperands[0].Result;
-                requiredType = requiredInterface;
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, requiredInterface.GetFieldByName("vtable", cWriter));
+                writer.Write("[{0}]", methodIndex);
             }
-
-            //cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-
-            cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
-            writer.Write("[{0}]", methodIndex);
+            else
+            {
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
+                writer.Write("[{0}]", methodIndex);
+            }
 
             // load method address
             /*
