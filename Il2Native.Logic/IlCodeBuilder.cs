@@ -83,6 +83,11 @@
             this.parts.Add(code);
         }
 
+        public void RemoveLast()
+        {
+            this.parts.RemoveAt(this.parts.Count - 1);
+        }
+
         public void Add(int valueOrToken)
         {
             var value = BitConverter.GetBytes(valueOrToken);
@@ -246,6 +251,12 @@
         {
             TokenResolutions.Add(type);
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
+        public void CopyObject(IType type)
+        {
+            TokenResolutions.Add(type);
+            this.Add(Code.Cpobj, (int)TokenResolutions.Count);
         }
 
         // helpers

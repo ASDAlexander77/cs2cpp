@@ -133,136 +133,41 @@ namespace Il2Native.Logic.Gencode
             return newAlloc;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="typeIn">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteBoxMethod(this IType typeIn, CWriter cWriter)
+        public static IlCodeBuilder GetBoxMethod(
+            this ITypeResolver typeResolver,
+            IType type,
+            bool doNotTestNullValue)
         {
-            var writer = cWriter.Output;
+            var declaringClassType = type.ToClass();
+            var normal = type.ToNormal();
+            var isStruct = normal.IsStructureType();
 
-            var classType = typeIn.ToClass();
-            var normalType = typeIn.ToNormal();
+            var ilCodeBuilder = typeResolver.GetNewMethod(declaringClassType, true, doNotTestNullValue);
 
-            var method = new SynthesizedBoxMethod(classType);
-            writer.WriteLine("; Box method");
+            ilCodeBuilder.Parameters.Add(normal.ToParameter());
 
-            var isStruct = classType.ToNormal().IsStructureType();
-
-            var opCode = OpCodePart.CreateNop;
-
-            cWriter.WriteMethodStart(method, null);
-
-            // TODO: finish it
-            //cWriter.WriteNewMethodBody(opCode, normalType, true);
-            var newObjectResult = opCode.Result;
-            opCode.Result = null;
+            // we need to remove last code which is Code.Ret
+            ilCodeBuilder.RemoveLast();
 
             if (!isStruct)
             {
-                cWriter.WriteLlvmLoad(
-                    opCode,
-                    normalType,
-                    new FullyDefinedReference(cWriter.GetArgVarName("value", 0), normalType));
-                writer.WriteLine(string.Empty);
-            }
-
-            cWriter.WriteBoxObject(opCode, classType, newObjectResult, true);
-
-            writer.Write("ret ");
-            classType.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            cWriter.WriteResult(opCode.Result);
-
-            cWriter.WriteMethodEnd(method, null);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        /// <param name="newObjectResult">
-        /// </param>
-        /// <param name="callInit">
-        /// </param>
-        public static void WriteBoxObject(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            IType declaringType,
-            FullyDefinedReference newObjectResult = null,
-            bool callInit = false)
-        {
-            var writer = cWriter.Output;
-
-            var valueLoadResult = opCode.Result;
-
-            var isStruct = declaringType.ToNormal().IsStructureType();
-
-            opCode.Result = null;
-
-            writer.WriteLine("; Boxing");
-
-            writer.WriteLine(string.Empty);
-
-            // call new if null
-            if (newObjectResult == null)
-            {
-                declaringType.WriteCallNewObjectMethod(cWriter, opCode);
-                newObjectResult = opCode.Result;
+                ilCodeBuilder.Add(Code.Dup);
+                ilCodeBuilder.LoadArgument(0);
+                ilCodeBuilder.SaveField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
             }
             else
             {
-                opCode.Result = newObjectResult;
+                // copy structure
+                ilCodeBuilder.LoadArgumentAddress(0);
+                ilCodeBuilder.CopyObject(declaringClassType);
             }
 
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; Copy data");
+            ilCodeBuilder.Add(Code.Dup);
+            ilCodeBuilder.Call(declaringClassType.GetMethodByName(SynthesizedInitMethod.Name, typeResolver));
 
-            if (!isStruct)
-            {
-                // write access to a field
-                if (!cWriter.WriteFieldAccess(
-                    opCode,
-                    declaringType.ToClass(),
-                    declaringType.ToClass(),
-                    0,
-                    opCode.Result))
-                {
-                    writer.WriteLine("; No data");
-                    return;
-                }
+            ilCodeBuilder.Add(Code.Ret);
 
-                writer.WriteLine(string.Empty);
-            }
-
-            var fieldType = declaringType.ToNormal();
-
-            opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
-            opCode.OpCodeOperands[0].Result = valueLoadResult;
-            if (valueLoadResult == null)
-            {
-                cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-            }
-
-            cWriter.SaveToField(opCode, fieldType, 0);
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; End of Copy data");
-
-            if (callInit)
-            {
-                opCode.Result = newObjectResult;
-                declaringType.WriteCallInitObjectMethod(cWriter, opCode);
-                writer.WriteLine(string.Empty);
-            }
-
-            opCode.Result = newObjectResult.ToClassType();
+            return ilCodeBuilder;
         }
 
         /// <summary>
@@ -275,7 +180,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallBoxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var method = new SynthesizedBoxMethod(type);
+            var method = new SynthesizedBoxMethod(type, cWriter);
             cWriter.WriteCall(
                 opCode,
                 method,
@@ -620,98 +525,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="opCode">
-        /// </param>
-        [Obsolete]
-        public static void WriteInitObjectMethodBody(this CWriter cWriter, IType declaringType, OpCodePart opCode)
-        {
-            if (declaringType.IsInterface)
-            {
-                return;
-            }
-
-            var writer = cWriter.Output;
-
-            var thisType = opCode.Result.Type;
-
-            // Init Object From Here
-            if (declaringType.HasAnyVirtualMethod(cWriter))
-            {
-                var opCodeResult = opCode.Result;
-
-                writer.WriteLine("; set virtual table");
-
-                // initialize virtual table
-                if (opCode.HasResult)
-                {
-                    cWriter.WriteCCast(
-                        opCode,
-                        opCode.Result.ToClassType(),
-                        cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
-                }
-                else
-                {
-                    cWriter.WriteCast(
-                        opCode,
-                        thisType.ToClass(),
-                        cWriter.GetThisName(),
-                        cWriter.System.System_Byte.ToPointerType().ToPointerType(),
-                        true);
-                }
-
-                writer.WriteLine(string.Empty);
-
-                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(cWriter));
-
-                cWriter.WriteResult(opCode.Result);
-
-                writer.WriteLine(string.Empty);
-
-                // restore
-                opCode.Result = opCodeResult;
-            }
-
-            // init all interfaces
-            foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces())
-            {
-                var opCodeResult = opCode.Result;
-
-                writer.WriteLine("; set virtual interface table");
-
-                cWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
-
-                if (opCode.HasResult)
-                {
-                    cWriter.WriteCCast(
-                        opCode,
-                        opCode.Result.ToClassType(),
-                        cWriter.System.System_Byte.ToPointerType().ToPointerType().ToPointerType());
-                }
-                else
-                {
-                    cWriter.WriteCast(
-                        opCode,
-                        @interface,
-                        cWriter.GetThisName(),
-                        cWriter.System.System_Byte.ToPointerType().ToPointerType(),
-                        true);
-                }
-
-                writer.WriteLine(string.Empty);
-
-                writer.Write("store i8** {0}, i8*** ", declaringType.GetVirtualTableReference(@interface, cWriter));
-                cWriter.WriteResult(opCode.Result);
-                writer.WriteLine(string.Empty);
-
-                // restore
-                opCode.Result = opCodeResult;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="opCodeConstructorInfoPart">
         /// </param>
         /// <param name="declaringType">
@@ -740,7 +553,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCodePart">
         /// </param>
-        /// <param name="declaringTypeIn">
+        /// <param name="type">
         /// </param>
         /// <param name="doNotCallInit">
         /// </param>
@@ -748,12 +561,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static IlCodeBuilder GetNewMethod(
             this ITypeResolver typeResolver,
-            IType declaringTypeIn,
+            IType type,
             bool doNotCallInit = false,
             bool doNotTestNullValue = false,
             bool enableStringFastAllocation = false)
         {
-            var declaringClassType = declaringTypeIn.ToClass();
+            var declaringClassType = type.ToClass();
 
             var ilCodeBuilder = typeResolver.GetAllocateMemoryCodeForObject(declaringClassType, doNotTestNullValue, enableStringFastAllocation);
 

@@ -16,6 +16,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedInitMethod : SynthesizedIlCodeBuilderThisMethod
     {
+        public const string Name = ".init";
+
         private ITypeResolver _typeResolver;
 
         /// <summary>
@@ -25,7 +27,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedInitMethod(IType type, ITypeResolver typeResolver)
-            : base(null, ".init", type, typeResolver.System.System_Void)
+            : base(null, Name, type, typeResolver.System.System_Void)
         {
             _typeResolver = typeResolver;
         }

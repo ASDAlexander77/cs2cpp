@@ -10,35 +10,22 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedBoxMethod : SynthesizedMethodTypeBase
+    public class SynthesizedBoxMethod : SynthesizedIlCodeBuilderStaticMethod
     {
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        public SynthesizedBoxMethod(IType type)
-            : base(type, ".box")
+        public SynthesizedBoxMethod(IType type, ITypeResolver typeResolver)
+            : base(typeResolver.GetBoxMethod(type, false), ".box", type, type.ToClass())
         {
-        }
-
-        /// <summary>
-        /// </summary>
-        public override IType ReturnType
-        {
-            get { return Type.ToClass(); }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public override IEnumerable<IParameter> GetParameters()
-        {
-            return new[] { Type.ToNormal().ToParameter() };
         }
     }
 }

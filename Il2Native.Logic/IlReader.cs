@@ -730,6 +730,8 @@ namespace Il2Native.Logic
                 }
             }
 
+            var normal = type.ToNormal();
+
             yield return new SynthesizedNewMethod(type, typeResolver);
             yield return new SynthesizedInitMethod(type, typeResolver);
 
@@ -740,7 +742,11 @@ namespace Il2Native.Logic
             // append internal methods
             //yield return new SynthesizedGetTypeMethod(type, typeResolver);
 
-            var normal = type.ToNormal();
+            if (normal.IsValueType || normal.IsEnum)
+            {
+                yield return new SynthesizedBoxMethod(type, typeResolver);
+            }
+
             if (normal.IsEnum)
             {
                 yield return new SynthesizedEnumGetHashCodeMethod(type, typeResolver);
@@ -1202,7 +1208,10 @@ namespace Il2Native.Logic
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
-                            this.AddCalledMethod(new SynthesizedBoxMethod(type));
+                            if (this.TypeResolver != null)
+                            {
+                                this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
+                            }
                         }
 
                         if (code == Code.Unbox || code == Code.Unbox_Any)
