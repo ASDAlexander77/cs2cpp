@@ -1581,7 +1581,19 @@ namespace Il2Native.Logic
                 return this.System.System_Double;
             }
 
-            if (opCodePart.Any(Code.Ldc_I4, Code.Ldc_I4_0, Code.Ldc_I4_1, Code.Ldc_I4_2, Code.Ldc_I4_3, Code.Ldc_I4_4, Code.Ldc_I4_5, Code.Ldc_I4_6, Code.Ldc_I4_7, Code.Ldc_I4_M1, Code.Ldc_I4_S))
+            if (opCodePart.Any(
+                Code.Ldc_I4,
+                Code.Ldc_I4_0,
+                Code.Ldc_I4_1,
+                Code.Ldc_I4_2,
+                Code.Ldc_I4_3,
+                Code.Ldc_I4_4,
+                Code.Ldc_I4_5,
+                Code.Ldc_I4_6,
+                Code.Ldc_I4_7,
+                Code.Ldc_I4_8,
+                Code.Ldc_I4_M1,
+                Code.Ldc_I4_S))
             {
                 return this.System.System_Int32;
             }
@@ -1589,6 +1601,16 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ldc_I8))
             {
                 return this.System.System_Int64;
+            }
+
+            if (opCodePart.Any(Code.Ldc_R4))
+            {
+                return this.System.System_Single;
+            }
+
+            if (opCodePart.Any(Code.Ldc_R8))
+            {
+                return this.System.System_Double;
             }
 
             if (opCodePart.Any(Code.Ceq, Code.Cgt, Code.Cgt_Un, Code.Clt, Code.Clt_Un))
