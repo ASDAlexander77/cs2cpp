@@ -56,6 +56,11 @@
 
         public object ResolveToken(int token, IGenericContext genericContext)
         {
+            if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
+            {
+                return this.tokenResolutions[token - 1];
+            }
+
             return this.method.Module.ResolveToken(token, genericContext);
         }
 

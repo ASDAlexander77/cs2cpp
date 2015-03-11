@@ -630,21 +630,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // set virtual table
                 codeBuilder.LoadArgument(0);
-
-                codeBuilder.Call(
-                    new SynthesizedStaticMethod(
-                        string.Empty,
-                        typeResolver.System.System_Object,
-                        typeResolver.System.System_Void.ToPointerType(),
-                        new IParameter[] { },
-                        (codeWriter, opCodePart) =>
-                        {
-                            opCodePart.Result = new FullyDefinedReference(
-                                "&this",
-                                codeWriter.System.System_Void.ToPointerType());
-                        }
-                        ));
-
+                codeBuilder.LoadToken(declaringType.ToVirtualTable());
                 codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName("vtable", typeResolver));
             }
 

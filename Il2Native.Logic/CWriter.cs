@@ -522,6 +522,7 @@ namespace Il2Native.Logic
             IlReader.UsedStrings = new SortedDictionary<int, string>();
             IlReader.CalledMethods = new NamespaceContainer<IMethod>();
             IlReader.StaticFields = new NamespaceContainer<IField>();
+            IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
         }
 
         private void WriteMethodBeginning(IMethod method, IGenericContext genericContext)
@@ -533,7 +534,7 @@ namespace Il2Native.Logic
             }
 
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
-            WriteMethodRequiredDeclatations();
+            this.WriteMethodRequiredDeclatationsAndDefinitions();
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             ReadMethodInfo(method, genericContext);
@@ -686,13 +687,13 @@ namespace Il2Native.Logic
 
             normalType.WriteInternalGetTypeMethod(this);
             normalType.WriteInternalGetSizeMethod(this);
-            */
 
             this.WriteVirtualTables(type);
 
             this.processedVirtualTablesRequired.Add(type);
 
             this.Output.WriteLine(string.Empty);
+            */
         }
 
         /// <summary>
@@ -969,7 +970,14 @@ namespace Il2Native.Logic
                     var opCodeTypePart = opCode as OpCodeTypePart;
                     if (opCodeTypePart != null)
                     {
-                        this.typeTokenRequired.Add(opCodeTypePart.Operand);
+                        var tokenType = opCodeTypePart.Operand;
+                        this.typeTokenRequired.Add(tokenType);
+
+                        // special case
+                        if (tokenType.IsVirtualTable)
+                        {
+                            opCode.Result = new ConstValue(tokenType.GetVirtualTableNameReference(), tokenType);
+                        }
                     }
 
                     break;
@@ -3071,8 +3079,7 @@ namespace Il2Native.Logic
                 }
 
                 // first index is base type index
-                writer.Write(".");
-                type.WriteTypePrefix(this);
+                writer.Write("base.");
             }
 
             writer.Write(fieldInfo.Name);
@@ -5717,10 +5724,12 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        [Obsolete]
         private void WriteRequiredDeclarations()
         {
             if (MainMethod != null && !this.Gctors)
             {
+                // TODO: Review it
                 this.Output.WriteLine(string.Empty);
                 this.WriteCallGctorsDeclarations();
             }
@@ -5970,7 +5979,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredDeclatations()
+        private void WriteMethodRequiredDeclatationsAndDefinitions()
         {
             // const strings
             foreach (var usedString in IlReader.UsedStrings)
@@ -6014,6 +6023,18 @@ namespace Il2Native.Logic
                 any = true;
                 this.WriteStaticFieldDeclaration(requiredStaticFieldDeclaration, true);
                 this.Output.WriteLine(";");
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
+            // structs (including virtual tables)
+            foreach (var vtableType in IlReader.UsedVirtualTables)
+            {
+                any = true;
+                this.WriteVirtualTables(vtableType);
             }
 
             if (any)

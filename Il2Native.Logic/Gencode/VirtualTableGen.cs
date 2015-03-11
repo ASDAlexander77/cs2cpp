@@ -307,6 +307,11 @@ namespace Il2Native.Logic.Gencode
             return string.Concat(type.FullName, " vtable").CleanUpName();
         }
 
+        public static string GetVirtualTableNameReference(this IType type)
+        {
+            return string.Concat("(i8**) (((i8**) &", GetVirtualTableName(type), ") + 2)");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="virtualTable">
@@ -370,20 +375,13 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            VirtualTableCName(cWriter);
+            writer.Write("static struct ");
             VirtualTableDeclaration(virtualTable, cWriter);
             cWriter.Output.Write(" ");
             writer.Write(type.GetVirtualTableName());
             cWriter.Output.Write(" = ");
             VirtualTableDefinition(virtualTable, cWriter, interfaceIndex, baseTypeFieldsOffset);
             cWriter.Output.Write(";");
-        }
-
-        private static void VirtualTableCName(CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            writer.Write("static struct ");
         }
 
         private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter)

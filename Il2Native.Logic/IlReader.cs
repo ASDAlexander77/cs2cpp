@@ -101,6 +101,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IType> _usedVirtualTables;
+
+        /// <summary>
+        /// </summary>
         private ISet<IType> usedTypes;
 
         /// <summary>
@@ -539,6 +543,21 @@ namespace Il2Native.Logic
             set
             {
                 this._usedArrayTypes = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedVirtualTables
+        {
+            get
+            {
+                return this._usedVirtualTables;
+            }
+
+            set
+            {
+                this._usedVirtualTables = value;
             }
         }
 
@@ -1134,6 +1153,7 @@ namespace Il2Native.Logic
                         if (typeToken != null)
                         {
                             this.AddUsedType(typeToken);
+                            this.AddVirtualTable(typeToken);
 
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
@@ -1499,6 +1519,16 @@ namespace Il2Native.Logic
             }
 
             this.usedTypes.Add(type);
+        }
+
+        private void AddVirtualTable(IType type)
+        {
+            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTable)
+            {
+                return;
+            }
+
+            this._usedVirtualTables.Add(type);
         }
 
         /// <summary>

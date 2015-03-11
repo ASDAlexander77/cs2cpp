@@ -65,6 +65,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsVirtualTable { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsDelegate { get; }
 
         /// <summary>
@@ -234,6 +238,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToClass();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToVirtualTable();
 
         /// <summary>
         /// </summary>

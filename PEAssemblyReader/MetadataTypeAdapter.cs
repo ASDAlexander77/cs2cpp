@@ -270,6 +270,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsVirtualTable
+        {
+            get
+            {
+                return this.UseAsVirtualTable;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public bool IsDelegate
@@ -581,6 +589,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool UseAsVirtualTable { get; set; }
+
+        /// <summary>
+        /// </summary>
         internal TypeSymbol TypeDef
         {
             get
@@ -605,6 +617,14 @@ namespace PEAssemblyReader
                 typeAdapter.UseAsClass = value;
             }
 
+            return typeAdapter;
+        }
+
+        public IType AsVirtualTable()
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsClass = true;
+            typeAdapter.UseAsVirtualTable = true;
             return typeAdapter;
         }
 
@@ -1077,6 +1097,16 @@ namespace PEAssemblyReader
             }
 
             return this.Clone(true, true);
+        }
+
+        public IType ToVirtualTable()
+        {
+            if (this.UseAsVirtualTable)
+            {
+                return this;
+            }
+
+            return this.AsVirtualTable();
         }
 
         /// <summary>

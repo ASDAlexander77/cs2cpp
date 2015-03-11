@@ -242,6 +242,12 @@
             this.Add(field.IsStatic ? Code.Stsfld : Code.Stfld, (int)TokenResolutions.Count);
         }
 
+        public void LoadToken(IType type)
+        {
+            TokenResolutions.Add(type);
+            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
         // helpers
         public void LoadConstant(int @const)
         {
