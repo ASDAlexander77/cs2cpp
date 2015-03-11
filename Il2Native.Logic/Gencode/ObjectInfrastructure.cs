@@ -528,29 +528,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteInternalGetSizeMethod(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            var method = new SynthesizedGetSizeMethod(type, cWriter);
-
-            cWriter.WriteMethodStart(method, null, noLocalVars:true);
-
-            writer.Write("ret ");
-            cWriter.GetIntTypeByByteSize(CWriter.PointerSize).WriteTypePrefix(cWriter);
-            writer.WriteLine(" {0}", type.GetTypeSize(cWriter));
-
-            cWriter.WriteMethodEnd(method, null);
-
-            cWriter.methodsHaveDefinition.Add(method);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="cWriter">
         /// </param>
         /// <param name="opCode">
@@ -788,6 +765,16 @@ namespace Il2Native.Logic.Gencode
 
             ilCodeBuilder.Add(Code.Ret);
 
+            return ilCodeBuilder;
+        }
+
+        public static IlCodeBuilder GetSizeMethod(
+            this ITypeResolver typeResolver,
+            IType type)
+        {
+            var ilCodeBuilder = new IlCodeBuilder();
+            ilCodeBuilder.SizeOf(type.ToClass());
+            ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
         }
 

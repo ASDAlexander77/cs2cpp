@@ -199,66 +199,27 @@
             Trace.WriteLine("==========================================================================");
             if (justCompile)
             {
-                Trace.WriteLine("Compiling LLVM for " + fileName);
+                Trace.WriteLine("Compiling " + fileName);
             }
             else
             {
-                Trace.WriteLine("Compiling/Executing LLVM for " + fileName);
+                Trace.WriteLine("Compiling/Executing " + fileName);
             }
 
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
-            /*
-                call vcvars32.bat
-                llc -mtriple i686-pc-win32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-win32 -filetype=obj test-%1.ll
-                link -defaultlib:libcmt -nodefaultlib:msvcrt.lib -nodefaultlib:libcd.lib -nodefaultlib:libcmtd.lib -nodefaultlib:msvcrtd.lib corelib.obj test-%1.obj /OUT:test-%1.exe
-                del test-%1.obj
-            */
-
-            // to test working try/catch with g++ compilation
-            // http://mingw-w64.sourceforge.net/download.php
-            // Windows 32	DWARF	i686 - use this config to test exceptions on windows
-            // GC - http://www.hboehm.info/gc/ (use git and cmake to compile libgc-lib.a file
-            /*
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -march=i686
-                del test-%1.o
-            */
-
-            // if GC Enabled
-            /*
-                llc -mtriple i686-pc-mingw32 -filetype=obj corelib.ll
-                llc -mtriple i686-pc-mingw32 -filetype=obj test-%1.ll
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
-                del test-%1.o 
-             */
-
-            // if GC Enabled with optimization
-            /*
-                llc -O2 -mtriple i686-pc-mingw32 -filetype=obj corelib.bc
-                llc -O2 -mtriple i686-pc-mingw32 -filetype=obj test-%1.bc
-                g++.exe -o test-%1.exe corelib.o test-%1.o -lstdc++ -lgc-lib -march=i686 -L .
-                del test-%1.o 
-             */
-
-            // Android target - target triple = "armv7-none-linux-androideabi"
 
             // compile CoreLib
             if (!File.Exists(Path.Combine(OutputPath, string.Concat("CoreLib.", OutputObjectFileExt))))
             {
-                if (!File.Exists(Path.Combine(OutputPath, "CoreLib.ll")))
+                if (!File.Exists(Path.Combine(OutputPath, "CoreLib.cpp")))
                 {
                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
-                ExecCmd("llc", string.Format("{1}-filetype=obj -mtriple={0} CoreLib.ll", Target, opt ? "-O2 " : string.Empty));
+                ExecCmd("g++", string.Format("-c {0}-o CoreLib.{1} CoreLib.cpp", opt ? "-O3 " : string.Empty, OutputObjectFileExt));
             }
-
-            // file obj
-            ExecCmd("llc", string.Format("{2}-filetype=obj -mtriple={1} {0}.ll", fileName, Target, opt ? "-O2 " : string.Empty));
 
             if (!justCompile)
             {
@@ -271,9 +232,10 @@
                 ExecCmd(
                     "g++",
                     string.Format(
-                        "-o {0}.exe {0}.{1} CoreLib.{1} -lstdc++ -lgc-lib -march=i686 -L .",
+                        "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .",
                         fileName,
-                        OutputObjectFileExt));
+                        OutputObjectFileExt,
+                        opt ? "-O3 " : string.Empty));
 
                 // test execution
                 ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);
@@ -301,21 +263,21 @@
             processStartInfo.RedirectStandardOutput = readOutput;
             processStartInfo.UseShellExecute = false;
 
-            var processCoreLibObj = Process.Start(processStartInfo);
+            var process = Process.Start(processStartInfo);
             var output = string.Empty;
             if (readOutput)
             {
-                output = processCoreLibObj.StandardOutput.ReadToEnd();
+                output = process.StandardOutput.ReadToEnd();
             }
 
-            processCoreLibObj.WaitForExit();
+            process.WaitForExit();
 
             if (readOutput)
             {
                 Trace.WriteLine(output);
             }
 
-            Assert.AreEqual(0, processCoreLibObj.ExitCode);
+            Assert.AreEqual(0, process.ExitCode);
         }
 
         /// <summary>
@@ -326,7 +288,7 @@
         {
             Trace.WriteLine(string.Empty);
             Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("Generating C for " + fileName);
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 

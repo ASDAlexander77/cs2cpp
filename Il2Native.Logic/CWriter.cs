@@ -352,7 +352,7 @@ namespace Il2Native.Logic
         {
             var baseType = ThisType.BaseType;
 
-            this.Output.WriteLine("{");
+            this.Output.WriteLine(" {");
             this.Output.Indent++;
 
             if (baseType != null)
@@ -534,7 +534,7 @@ namespace Il2Native.Logic
             }
 
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
-            this.WriteMethodRequiredDeclatationsAndDefinitions();
+            this.WriteMethodRequiredDeclatationsAndDefinitions(method);
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             ReadMethodInfo(method, genericContext);
@@ -914,10 +914,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        var g = BitConverter.DoubleToInt64Bits(opCodeSingle.Operand);
-                        opCode.Result = new ConstValue(
-                            string.Format("0x{0}", g.ToString("X")),
-                           this.System.System_Single);
+                        opCode.Result = new ConstValue(string.Concat(opCodeSingle.Operand, "f"), this.System.System_Single);
                     }
 
                     break;
@@ -933,10 +930,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        var g = BitConverter.DoubleToInt64Bits(opCodeDouble.Operand);
-                        opCode.Result = new ConstValue(
-                            string.Format("0x{0}", g.ToString("X")),
-                           this.System.System_Double);
+                        opCode.Result = new ConstValue(opCodeDouble.Operand, this.System.System_Double);
                     }
 
                     break;
@@ -1750,14 +1744,14 @@ namespace Il2Native.Logic
 
                 case Code.Conv_R4:
                 case Code.Conv_R_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Single);
                     break;
 
                 case Code.Conv_R8:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Double);
@@ -1767,7 +1761,7 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I1:
                 case Code.Conv_Ovf_I1_Un:
 
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_SByte);
@@ -1776,7 +1770,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U1:
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Byte);
@@ -1785,7 +1779,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I2:
                 case Code.Conv_Ovf_I2:
                 case Code.Conv_Ovf_I2_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Int16);
@@ -1794,7 +1788,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U2:
                 case Code.Conv_Ovf_U2:
                 case Code.Conv_Ovf_U2_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_UInt16);
@@ -1810,7 +1804,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I4:
                 case Code.Conv_Ovf_I4:
                 case Code.Conv_Ovf_I4_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Int32);
@@ -1823,7 +1817,7 @@ namespace Il2Native.Logic
                     var nativeIntType = intPtrOper
                         ? this.System.System_Int32
                         : this.System.System_Void.ToPointerType();
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                         nativeIntType);
@@ -1832,7 +1826,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U4:
                 case Code.Conv_Ovf_U4:
                 case Code.Conv_Ovf_U4_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_UInt32);
@@ -1841,7 +1835,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
                 case Code.Conv_Ovf_I8_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_Int64);
@@ -1850,7 +1844,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
                 case Code.Conv_Ovf_U8_Un:
-                    this.ConvertCCast(
+                    this.WriteCCastOperand(
                         opCode,
                         0,
                        this.System.System_UInt64);
@@ -2111,7 +2105,7 @@ namespace Il2Native.Logic
                 ? this.System.System_Int32
                 : this.System.System_Void.ToPointerType();
 
-            this.ConvertCCast(
+            this.WriteCCast(
                 opCode,
                 nativeIntType);
         }
@@ -2163,7 +2157,7 @@ namespace Il2Native.Logic
             if (!destType.IsPointer && !sourceType.IsPointer &&
                 destType.IsIntValueTypeExtCastRequired(sourceType))
             {
-                this.ConvertCCast(
+                this.WriteCCast(
                     opCode,
                     destType);
                 return true;
@@ -2172,7 +2166,7 @@ namespace Il2Native.Logic
             if (!destType.IsPointer && !sourceType.IsPointer &&
                 destType.IsIntValueTypeTruncCastRequired(sourceType))
             {
-                this.ConvertCCast(opCode, destType);
+                this.WriteCCast(opCode, destType);
                 return true;
             }
 
@@ -2180,21 +2174,21 @@ namespace Il2Native.Logic
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef &&
                 (sourceType.IsPointer || sourceType.IsByRef))
             {
-                this.ConvertCCast(opCode, destType);
+                this.WriteCCast(opCode, destType);
                 return true;
             }
 
             if (sourceType.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) &&
                 !sourceType.IsPointer && !sourceType.IsByRef)
             {
-                this.ConvertCCast(opCode, destType);
+                this.WriteCCast(opCode, destType);
                 return true;
             }
 
             if ((sourceType.IsPointer || sourceType.IsByRef) && (destType.IsPointer || destType.IsByRef)
                 && sourceType.GetElementType().TypeNotEquals(destType.GetElementType()))
             {
-                this.ConvertCCast(opCode, destType);
+                this.WriteCCast(opCode, destType);
                 return true;
             }
 
@@ -2959,7 +2953,7 @@ namespace Il2Native.Logic
                 if (operand.Result.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                    this.ConvertCCast(operand, effectiveType.ToPointerType());
+                    this.WriteCCast(operand, effectiveType.ToPointerType());
 
                     asPointer = true;
 
@@ -2973,7 +2967,7 @@ namespace Il2Native.Logic
             else if (effectiveType.IsPointer)
             {
                 effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                this.ConvertCCast(operand, effectiveType.ToPointerType());
+                this.WriteCCast(operand, effectiveType.ToPointerType());
 
                 asPointer = true;
 
@@ -3688,37 +3682,11 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteReturn(CIndentedTextWriter writer, OpCodePart opCode, IType methodReturnType)
         {
-            var opts = this.WriteReturnStruct(opCode, methodReturnType);
             writer.Write("return");
             if (methodReturnType != null && !methodReturnType.IsVoid())
             {
                 this.UnaryOper(writer, opCode, " ", methodReturnType);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="methodReturnType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public OperandOptions WriteReturnStruct(OpCodePart opCode, IType methodReturnType)
-        {
-            var opts = OperandOptions.None;
-
-            if (methodReturnType.IsStructureType())
-            {
-                var operands = opCode.OpCodeOperands;
-                var opCodeOperand = operands[0];
-                opCode.Result = new FullyDefinedReference("%agg.result", methodReturnType);
-                this.WriteLlvmLoad(opCode, methodReturnType, opCodeOperand.Result.ToNormalType());
-
-                opts |= OperandOptions.IgnoreOperand;
-            }
-
-            return opts;
         }
 
         /// <summary>
@@ -4635,11 +4603,14 @@ namespace Il2Native.Logic
                 writer.Write("&");
             }
 
+            var fieldByName = opCode.OpCodeOperands[0].RequiredOutgoingType.GetFieldByName(field, this);
             this.WriteFieldAccess(
                 writer,
                 opCode,
-                opCode.OpCodeOperands[0].RequiredOutgoingType.GetFieldByName(field, this),
+                fieldByName,
                 fixedArrayIndex);
+
+            this.SetResultNumber(opCode, fieldByName.FieldType);
         }
 
         private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
@@ -4706,6 +4677,8 @@ namespace Il2Native.Logic
             }
 
             Debug.Assert(!type.IsVoid());
+
+            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
 
             this.WriteFieldAccess(writer, opCode, opCode.OpCodeOperands[0].Result.Type.GetFieldByName("data", this), opCode.OpCodeOperands[1]);
 
@@ -5365,6 +5338,27 @@ namespace Il2Native.Logic
             }
         }
 
+        private void WriteMethodRequiredForwardDeclarationsWithoutMethodBody(IMethod method)
+        {
+            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsValueType && this.forwardTypeDeclarationWritten.Add(method.ReturnType))
+            {
+                this.WriteTypeForwardDeclaration(method.ReturnType);
+                this.Output.WriteLine(";");
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters != null)
+            {
+                foreach (
+                    var parameter in
+                        parameters.Where(parameter => !parameter.ParameterType.IsValueType && this.forwardTypeDeclarationWritten.Add(parameter.ParameterType)))
+                {
+                    this.WriteTypeForwardDeclaration(parameter.ParameterType);
+                    this.Output.WriteLine(";");
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -5823,8 +5817,15 @@ namespace Il2Native.Logic
             */
         }
 
+        private void WriteTypeForwardDeclaration(IType type)
+        {
+            WriteTypeDeclarationStart(type);
+        }
+
         private void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
         {
+            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(methodDecl);
+
             var ctor = methodDecl as IConstructor;
             if (ctor != null)
             {
@@ -5956,9 +5957,10 @@ namespace Il2Native.Logic
             Debug.Assert(!type.IsGenericTypeDefinition);
 #endif
 
+            this.forwardTypeDeclarationWritten.Add(type);
+
             this.Output.Write("{0}struct ", declarationPrefix);
             type.ToClass().WriteTypeName(this.Output, false);
-            this.Output.Write(" ");
         }
 
         private void WriteTypeRequiredDefinitions(IType type)
@@ -5969,7 +5971,7 @@ namespace Il2Native.Logic
                                 .Where(requiredType => !requiredType.IsGenericTypeDefinition)
                                 .Where(requiredDeclarationType => this.forwardTypeDeclarationWritten.Add(requiredDeclarationType)))
             {
-                this.WriteTypeDeclarationStart(requiredDeclarationType);
+                this.WriteTypeForwardDeclaration(requiredDeclarationType);
                 this.Output.WriteLine(";");
             }
 
@@ -5979,7 +5981,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredDeclatationsAndDefinitions()
+        private void WriteMethodRequiredDeclatationsAndDefinitions(IMethod method)
         {
             // const strings
             foreach (var usedString in IlReader.UsedStrings)
@@ -5991,6 +5993,8 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
             }
+
+            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
 
             var any = false;
             // methods

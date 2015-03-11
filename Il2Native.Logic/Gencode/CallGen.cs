@@ -44,7 +44,8 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteFunctionCallArguments(
             this IEnumerable<IParameter> parameterInfos,
-            OpCodePart[] used,
+            OpCodePart opCodeMethodInfo,
+            BaseWriter.ReturnResult resultOfFirstOperand,
             bool @isVirtual,
             bool hasThis,
             bool isCtor,
@@ -56,6 +57,8 @@ namespace Il2Native.Logic.Gencode
             bool varArg)
         {
             var writer = cWriter.Output;
+
+            OpCodePart[] used = opCodeMethodInfo.OpCodeOperands;
 
             writer.Write("(");
 
@@ -71,6 +74,12 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (used != null && used.Length > 0)
                 {
+                    opCodeMethodInfo.WriteFunctionCallThisExpression(
+                        thisType,
+                        used[0],
+                        resultOfFirstOperand,
+                        cWriter);
+
                     cWriter.WriteResultOrActualWrite(writer, used[0]);
                 }
 
@@ -177,7 +186,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static void WriteFunctionCallPrepareThisExpression(
+        public static void WriteFunctionCallThisExpression(
             this OpCodePart opCodeMethodInfo,
             IType thisType,
             OpCodePart opCodeFirstOperand,
@@ -195,9 +204,7 @@ namespace Il2Native.Logic.Gencode
             if (!isPrimitive && !isPrimitivePointer &&
                 thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
-                writer.WriteLine("; Cast of 'This' parameter");
-                cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
-                writer.WriteLine(string.Empty);
+                cWriter.WriteCCast(opCodeFirstOperand, thisType);
             }
 
             if (dynamicCastRequired)

@@ -232,10 +232,10 @@ namespace Il2Native.Logic
                     {
                         codeWriter.WriteConstructorStart(ctor, genericTypeContext);
 
-                        //foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? ctor.GetMethodDefinition() : ctor, genericTypeContext))
-                        //{
-                        //    codeWriter.Write(ilCode);
-                        //}
+                        foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? ctor.GetMethodDefinition() : ctor, genericTypeContext))
+                        {
+                            codeWriter.Write(ilCode);
+                        }
 
                         codeWriter.WriteConstructorEnd(ctor, genericTypeContext);
                     }
@@ -263,13 +263,9 @@ namespace Il2Native.Logic
 
                         codeWriter.WriteMethodStart(method, genericMethodContext);
 
-                        // TODO: remove next if when all is done
-                        if (method.AssemblyQualifiedName != null && method.AssemblyQualifiedName.StartsWith("test-"))
+                        foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
                         {
-                            foreach (var ilCode in ilReader.OpCodes(type.IsGenericType ? method.GetMethodDefinition() : method, genericMethodContext))
-                            {
-                                codeWriter.Write(ilCode);
-                            }
+                            codeWriter.Write(ilCode);
                         }
 
                         codeWriter.WriteMethodEnd(method, genericMethodContext);
@@ -331,7 +327,7 @@ namespace Il2Native.Logic
             ReadingTypesContext readingTypesContext)
         {
             Debug.Assert(typeSource != null, "Type is null");
-            if (typeSource == null)
+            if (typeSource == null || typeSource.IsValueType)
             {
                 return;
             }
@@ -728,9 +724,10 @@ namespace Il2Native.Logic
             IMethod method,
             ReadingTypesContext readingTypesContext)
         {
-            DiscoverGenericSpecializedTypesAndAdditionalTypes(
-                method.ReturnType,
-                readingTypesContext);
+            if (!method.ReturnType.IsVoid())
+            {
+                DiscoverGenericSpecializedTypesAndAdditionalTypes(method.ReturnType, readingTypesContext);
+            }
 
             var parameters = method.GetParameters();
             if (parameters != null)
@@ -931,7 +928,8 @@ namespace Il2Native.Logic
                 Trace.WriteLine(string.Format("Reading info about type: {0}", type));
             }
 
-            DiscoverGenericSpecializedTypesAndAdditionalTypes(type, readingTypesContext);
+            // TODO: remove next comment when finish
+            //DiscoverGenericSpecializedTypesAndAdditionalTypes(type, readingTypesContext);
 
             requiredTypesByType.Add(type);
         }

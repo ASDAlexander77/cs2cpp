@@ -257,7 +257,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="toType">
         /// </param>
-        public static void ConvertCCast(this CWriter cWriter, OpCodePart opCode, IType toType)
+        public static void WriteCCast(this CWriter cWriter, OpCodePart opCode, IType toType)
         {
             var writer = cWriter.Output;
 
@@ -272,7 +272,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.SetResultNumber(opCode, toType);
         }
 
-        public static void ConvertCCast(this CWriter cWriter, OpCodePart opCode, int operand, IType toType)
+        public static void WriteCCastOperand(this CWriter cWriter, OpCodePart opCode, int operand, IType toType)
         {
             var writer = cWriter.Output;
 
@@ -499,15 +499,6 @@ namespace Il2Native.Logic.Gencode
                 out ownerOfExplicitInterface,
                 out requiredType);
 
-            if (hasThisArgument)
-            {
-                opCodeMethodInfo.WriteFunctionCallPrepareThisExpression(
-                    thisType,
-                    opCodeFirstOperand,
-                    resultOfFirstOperand,
-                    cWriter);
-            }
-
             FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
             {
@@ -550,7 +541,8 @@ namespace Il2Native.Logic.Gencode
 
             methodInfo.GetParameters()
                 .WriteFunctionCallArguments(
-                    opCodeMethodInfo.OpCodeOperands,
+                    opCodeMethodInfo,
+                    resultOfFirstOperand,
                     isVirtual,
                     hasThis,
                     isCtor,
@@ -609,7 +601,7 @@ namespace Il2Native.Logic.Gencode
             else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
                      (toType.IsPointer || toType.IsByRef))
             {
-                ConvertCCast(cWriter, opCode, 0, toType);
+                WriteCCastOperand(cWriter, opCode, 0, toType);
                 cWriter.SetResultNumber(opCode, toType);
             }
             else if (estimatedOperandResultOf.Type.IsArray
@@ -620,7 +612,7 @@ namespace Il2Native.Logic.Gencode
                      || bareType.IsDerivedFrom(toType) 
                      || (estimatedOperandResultOf is ConstValue))
             {
-                ConvertCCast(cWriter, opCode, 0, toType);
+                WriteCCastOperand(cWriter, opCode, 0, toType);
                 cWriter.SetResultNumber(opCode, toType);
             }
             else

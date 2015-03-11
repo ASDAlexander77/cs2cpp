@@ -9,14 +9,15 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System;
     using System.Linq;
-    using System.Reflection;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetSizeMethod : SynthesizedThisMethod
+    public class SynthesizedGetSizeMethod : SynthesizedIlCodeBuilderThisMethod
     {
         public const string Name = ".getsize";
 
@@ -27,7 +28,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetSizeMethod(IType type, ITypeResolver typeResolver)
-            : base(Name, type, typeResolver.GetIntTypeByByteSize(CWriter.PointerSize))
+            : base(typeResolver.GetSizeMethod(type), Name, type, typeResolver.GetIntTypeByByteSize(CWriter.PointerSize))
         {
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {

@@ -651,12 +651,12 @@ namespace Il2Native.Logic
                 foreach (var field in EnumGen.GetFields(normal, typeResolver))
                 {
                     yield return field;
-                }                    
-            } 
+                }
+            }
             else if (type.IsMultiArray)
             {
                 // append methods or MultiArray
-                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver)) 
+                foreach (var field in ArrayMultiDimensionGen.GetFields(type, typeResolver))
                 {
                     yield return field;
                 }
@@ -733,15 +733,12 @@ namespace Il2Native.Logic
             yield return new SynthesizedNewMethod(type, typeResolver);
             yield return new SynthesizedInitMethod(type, typeResolver);
 
-            if (!excludeSpecializations)
-            {
-                // TODO: remove if and write code to get info from following synth methods
-                // append C# native compiler infrastructure methods
-                yield return new SynthesizedGetSizeMethod(type, typeResolver);
+            // append C# native compiler infrastructure methods
+            yield return new SynthesizedGetSizeMethod(type, typeResolver);
 
-                // append internal methods
-                yield return new SynthesizedGetTypeMethod(type, typeResolver);
-            }
+            // TODO: remove comment when finish
+            // append internal methods
+            //yield return new SynthesizedGetTypeMethod(type, typeResolver);
 
             var normal = type.ToNormal();
             if (normal.IsEnum)

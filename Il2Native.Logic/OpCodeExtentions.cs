@@ -1287,8 +1287,21 @@ namespace Il2Native.Logic
         /// </returns>
         private static bool IsMatchingParamsAndReturnType(this IMethod method, IMethod overridingMethod)
         {
-            var params1 = method.GetParameters().ToArray();
-            var params2 = overridingMethod.GetParameters().ToArray();
+            var parameters = method.GetParameters();
+            var otherParameters = overridingMethod.GetParameters();
+
+            if ((object)parameters == (object)otherParameters)
+            {
+                return true;
+            }
+
+            if (parameters == null || otherParameters == null)
+            {
+                return false;
+            }
+
+            var params1 = parameters.ToArray();
+            var params2 = otherParameters.ToArray();
 
             if (!IsMatchingParams(params1, params2))
             {
