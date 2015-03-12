@@ -679,6 +679,12 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsVirtualTable.CompareTo(type.IsVirtualTable);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             if (!this.HasDeclaringType && !type.HasDeclaringType)
             {
                 return 0;

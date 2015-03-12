@@ -5329,14 +5329,26 @@ namespace Il2Native.Logic
             this.Output.WriteLine("}");
         }
 
+        public void WriteVirtualTableDefinition(IType type)
+        {
+            var virtualTable = type.GetVirtualTable(this);
 
-        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the type belong to
+            // forward declarations
+            foreach (var method in virtualTable.Where(m => m.Value != null).Select(m => m.Value))
+            {
+                this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
+            }
+
+            virtualTable.WriteTableOfMethodsAsDefinition(this, type);
+            this.Output.WriteLine(string.Empty);
+        }
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        private void WriteVirtualTables(IType type)
+        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the type belong to
+        private void WriteVirtualTableImplementations(IType type)
         {
             // write VirtualTable
             if (type.IsInterface)
@@ -5363,7 +5375,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(";");
                 }
 
-                virtualTable.WriteTableOfMethods(this, type, 0, baseTypeSize);
+                virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
                 index++;
                 this.Output.WriteLine(string.Empty);
             }
@@ -5396,7 +5408,7 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(";");
                 }
 
-                virtualInterfaceTable.WriteTableOfMethods(
+                virtualInterfaceTable.WriteTableOfMethodsWithImplementation(
                     this,
                     type,
                     interfaceIndex,
@@ -5409,21 +5421,23 @@ namespace Il2Native.Logic
 
         private void WriteMethodRequiredForwardDeclarationsWithoutMethodBody(IMethod method)
         {
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsValueType && this.forwardTypeDeclarationWritten.Add(method.ReturnType))
+            if (!method.IsStatic)
             {
-                this.WriteTypeForwardDeclaration(method.ReturnType);
-                this.Output.WriteLine(";");
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(method.DeclaringType);
+            }
+
+            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsValueType)
+            {
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(method.ReturnType);
             }
 
             var parameters = method.GetParameters();
             if (parameters != null)
             {
-                foreach (
-                    var parameter in
-                        parameters.Where(parameter => !parameter.ParameterType.IsValueType && this.forwardTypeDeclarationWritten.Add(parameter.ParameterType)))
+                foreach (var parameter in
+                    parameters.Where(parameter => !parameter.ParameterType.IsValueType))
                 {
-                    this.WriteTypeForwardDeclaration(parameter.ParameterType);
-                    this.Output.WriteLine(";");
+                    this.WriteTypeForwardDeclarationIfNotWrittenYet(parameter.ParameterType);
                 }
             }
         }
@@ -5857,9 +5871,15 @@ namespace Il2Native.Logic
             */
         }
 
-        private void WriteTypeForwardDeclaration(IType type)
+        private void WriteTypeForwardDeclarationIfNotWrittenYet(IType type)
         {
-            WriteTypeDeclarationStart(type);
+            if (!this.forwardTypeDeclarationWritten.Add(type))
+            {
+                return;
+            }
+
+            this.WriteTypeDeclarationStart(type);
+            this.Output.WriteLine(";");
         }
 
         private void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
@@ -6008,15 +6028,20 @@ namespace Il2Native.Logic
             foreach (
                 var requiredDeclarationType in
                     Il2Converter.GetRequiredDeclarationTypes(type)
-                                .Where(requiredType => !requiredType.IsGenericTypeDefinition)
-                                .Where(requiredDeclarationType => this.forwardTypeDeclarationWritten.Add(requiredDeclarationType)))
+                                .Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
-                this.WriteTypeForwardDeclaration(requiredDeclarationType);
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredDeclarationType);
                 this.Output.WriteLine(";");
             }
 
             foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
+                if (requiredType.IsVirtualTable)
+                {
+                    this.WriteVirtualTableDefinition(requiredType);
+                    continue;
+                }
+
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
             }
         }
@@ -6105,7 +6130,7 @@ namespace Il2Native.Logic
             foreach (var vtableType in IlReader.UsedVirtualTables)
             {
                 any = true;
-                this.WriteVirtualTables(vtableType);
+                this.WriteVirtualTableImplementations(vtableType);
             }
 
             if (any)
@@ -6120,6 +6145,8 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
+            Debug.Assert(!type.IsVirtualTable, "you can't use virtual table here");
+
             if (this.IsTypeDefinitionWritten(type))
             {
                 return;

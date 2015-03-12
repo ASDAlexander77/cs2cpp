@@ -673,7 +673,7 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject || (type.IsInterface && type.BaseType == null))
             {
-                yield return type.ToVirtualTable().ToField(type, "vtable");
+                yield return typeResolver.System.System_Void.ToPointerType().ToField(type, "vtable");
             }
         }
 
@@ -747,7 +747,7 @@ namespace Il2Native.Logic
             // append internal methods
             //yield return new SynthesizedGetTypeMethod(type, typeResolver);
 
-            if (normal.IsValueType || normal.IsEnum)
+            if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
             {
                 yield return new SynthesizedBoxMethod(type, typeResolver);
             }

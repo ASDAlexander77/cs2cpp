@@ -191,7 +191,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface)
         {
-            return string.Concat("(i8**) (((i8**) &", GetVirtualInterfaceTableName(type, @interface, true), ") + 2)");
+            return string.Concat("(i8*) (((i8**) &", GetVirtualInterfaceTableName(type, @interface, true), ") + 2)");
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualTableNameReference(this IType type)
         {
-            return string.Concat("(i8**) (((i8**) &", GetVirtualTableName(type, true), ") + 2)");
+            return string.Concat("(i8*) (((i8**) &", GetVirtualTableName(type, true), ") + 2)");
         }
 
         /// <summary>
@@ -359,6 +359,22 @@ namespace Il2Native.Logic.Gencode
                     .Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
         }
 
+        public static void WriteTableOfMethodsAsDefinition(
+            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
+            CWriter cWriter,
+            IType type)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("struct ");
+            
+            writer.Write(type.GetVirtualTableName());
+            writer.Write(" ");
+            VirtualTableDeclaration(virtualTable, cWriter, true);
+            cWriter.Output.Write(";");
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="virtualTable">
@@ -371,7 +387,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="baseTypeFieldsOffset">
         /// </param>
-        public static void WriteTableOfMethods(
+        public static void WriteTableOfMethodsWithImplementation(
             this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
             CWriter cWriter,
             IType type,
@@ -397,16 +413,20 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write(";");
         }
 
-        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter)
+        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, bool methodsOnly = false)
         {
             var writer = cWriter.Output;
 
             writer.WriteLine("{");
             writer.Indent++;
-            writer.WriteLine("i8* thisOffset;");
 
-            // RTTI info class
-            writer.WriteLine("i8* rttiInfo;");
+            if (!methodsOnly)
+            {
+                writer.WriteLine("i8* thisOffset;");
+
+                // RTTI info class
+                writer.WriteLine("i8* rttiInfo;");
+            }
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

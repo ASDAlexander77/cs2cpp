@@ -684,28 +684,29 @@ namespace Il2Native.Logic
                 }
             }
 
-            if (!type.IsInterface)
+            var fields = IlReader.Fields(
+                type, IlReader.DefaultFlags, _codeWriter);
+            foreach (var field in fields.Where(field => (field.FieldType.IsStructureType() && !field.FieldType.IsPointer) || field.FieldType.IsVirtualTable))
             {
-                var fields = IlReader.Fields(
-                    type, IlReader.DefaultFlags, _codeWriter);
-                foreach (var field in fields.Where(field => field.FieldType.IsStructureType() && !field.FieldType.IsPointer))
-                {
-                    yield return field.FieldType;
-                }
+                yield return field.FieldType;
+            }
 
-                var ctors = IlReader.Constructors(
-                    type, IlReader.DefaultFlags, _codeWriter);
-                foreach (var requiredType in ctors.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
-                {
-                    yield return requiredType;
-                }
+            if (type.IsInterface)
+            {
+                yield break;
+            }
 
-                var methods = IlReader.Methods(
-                    type, IlReader.DefaultFlags, _codeWriter);
-                foreach (var requiredType in methods.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
-                {
-                    yield return requiredType;
-                }
+            // excluding interface
+            var ctors = IlReader.Constructors(type, IlReader.DefaultFlags, _codeWriter);
+            foreach (var requiredType in ctors.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
+            {
+                yield return requiredType;
+            }
+
+            var methods = IlReader.Methods(type, IlReader.DefaultFlags, _codeWriter);
+            foreach (var requiredType in methods.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
+            {
+                yield return requiredType;
             }
         }
 
@@ -713,16 +714,13 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null, "Type is null");
 
-            if (type.IsInterface)
-            {
-                yield break;
-            }
-
             var fields = IlReader.Fields(
                 type, IlReader.DefaultFlags, _codeWriter);
             foreach (var effectiveType in
                 fields.Select(field => !field.FieldType.IsArray ? field.FieldType.ToBareType() : field.FieldType)
-                      .Where(effectiveType => !effectiveType.IsVoid() && !effectiveType.IsValueType))
+                      .Where(
+                          effectiveType =>
+                          !effectiveType.IsVoid() && !effectiveType.IsValueType && type.TypeNotEquals(effectiveType) && !effectiveType.IsVirtualTable))
             {
                 yield return effectiveType;
             }
