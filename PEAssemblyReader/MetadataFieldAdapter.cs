@@ -31,6 +31,8 @@ namespace PEAssemblyReader
 
         private readonly TypeSymbol _contaningType;
 
+        private readonly IType _fieldType;
+
         /// <summary>
         /// </summary>
         /// <param name="fieldDef">
@@ -57,6 +59,18 @@ namespace PEAssemblyReader
             : this(fieldDef, isFixed)
         {
             this._contaningType = contaningType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="fieldDef">
+        /// </param>
+        /// <param name="genericContext">
+        /// </param>
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false)
+            : this(fieldDef, contaningType, isFixed)
+        {
+            this._fieldType = fieldType;
         }
 
         /// <summary>
@@ -92,6 +106,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this._fieldType != null)
+                {
+                    return this._fieldType;
+                }
+
                 return this.fieldDef.Type.ToAdapter();
             }
         }

@@ -37,6 +37,8 @@ namespace Il2Native.Logic
     /// </summary>
     public class IlReader : IIlReader
     {
+        public const BindingFlags DefaultFlags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+
         /// <summary>
         /// </summary>
         private static readonly OpCode[] OpCodesMap = new OpCode[256];
@@ -598,7 +600,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IConstructor> Constructors(IType type, ITypeResolver typeResolver)
         {
-            return Constructors(type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, typeResolver);
+            return Constructors(type, IlReader.DefaultFlags, typeResolver);
         }
 
         /// <summary>
@@ -609,7 +611,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IField> Fields(IType type, ITypeResolver typeResolver)
         {
-            return Fields(type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, typeResolver);
+            return Fields(type, IlReader.DefaultFlags, typeResolver);
         }
 
         /// <summary>
@@ -622,7 +624,7 @@ namespace Il2Native.Logic
         {
             return Methods(
                 type,
-                BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance,
+                IlReader.DefaultFlags,
                 typeResolver,
                 excludeSpecializations);
         }
@@ -671,7 +673,7 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject || (type.IsInterface && type.BaseType == null))
             {
-                yield return typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, "vtable");
+                yield return type.ToVirtualTable().ToField(type, "vtable");
             }
         }
 

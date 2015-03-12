@@ -389,7 +389,7 @@ namespace Il2Native.Logic
             if (!type.IsInterface)
             {
                 var fields = IlReader.Fields(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                    type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var field in fields)
                 {
                     ////#if DEBUG
@@ -399,7 +399,7 @@ namespace Il2Native.Logic
                 }
 
                 var ctors = IlReader.Constructors(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                    type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var ctor in ctors)
                 {
                     DiscoverGenericSpecializedTypesAndAdditionalTypes(ctor, readingTypesContext);
@@ -407,7 +407,7 @@ namespace Il2Native.Logic
             }
 
             var methods = IlReader.Methods(
-                type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                type, IlReader.DefaultFlags, _codeWriter);
             foreach (var method in methods)
             {
                 DiscoverGenericSpecializedTypesAndAdditionalTypes(method, readingTypesContext);
@@ -687,21 +687,21 @@ namespace Il2Native.Logic
             if (!type.IsInterface)
             {
                 var fields = IlReader.Fields(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                    type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var field in fields.Where(field => field.FieldType.IsStructureType() && !field.FieldType.IsPointer))
                 {
                     yield return field.FieldType;
                 }
 
                 var ctors = IlReader.Constructors(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                    type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var requiredType in ctors.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
                 {
                     yield return requiredType;
                 }
 
                 var methods = IlReader.Methods(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
+                    type, IlReader.DefaultFlags, _codeWriter);
                 foreach (var requiredType in methods.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
                 {
                     yield return requiredType;
@@ -713,14 +713,18 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null, "Type is null");
 
-            if (!type.IsInterface)
+            if (type.IsInterface)
             {
-                var fields = IlReader.Fields(
-                    type, BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, _codeWriter);
-                foreach (var field in fields.Where(field => !field.FieldType.IsValueType() && !field.FieldType.IsVoid()))
-                {
-                    yield return !field.FieldType.IsArray ? field.FieldType.ToBareType() : field.FieldType;
-                }
+                yield break;
+            }
+
+            var fields = IlReader.Fields(
+                type, IlReader.DefaultFlags, _codeWriter);
+            foreach (var effectiveType in
+                fields.Select(field => !field.FieldType.IsArray ? field.FieldType.ToBareType() : field.FieldType)
+                      .Where(effectiveType => !effectiveType.IsVoid() && !effectiveType.IsValueType))
+            {
+                yield return effectiveType;
             }
         }
 

@@ -184,14 +184,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetVirtualInterfaceTableName(this IType type, IType @interface)
+        public static string GetVirtualInterfaceTableName(this IType type, IType @interface, bool implementation = false)
         {
-            return string.Concat(type.FullName, " vtable ", @interface.FullName, " interface").CleanUpName();
+            return string.Concat(type.FullName, " vtable ", @interface.FullName, implementation ? " interface_impl"  : " interface").CleanUpName();
         }
 
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface)
         {
-            return string.Concat("(i8**) (((i8**) &", GetVirtualInterfaceTableName(type, @interface), ") + 2)");
+            return string.Concat("(i8**) (((i8**) &", GetVirtualInterfaceTableName(type, @interface, true), ") + 2)");
         }
 
         /// <summary>
@@ -307,14 +307,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetVirtualTableName(this IType type)
+        public static string GetVirtualTableName(this IType type, bool implementation = false)
         {
-            return string.Concat(type.FullName, " vtable").CleanUpName();
+            return string.Concat(type.FullName, implementation ? " vtable_impl" : " vtable").CleanUpName();
         }
 
         public static string GetVirtualTableNameReference(this IType type)
         {
-            return string.Concat("(i8**) (((i8**) &", GetVirtualTableName(type), ") + 2)");
+            return string.Concat("(i8**) (((i8**) &", GetVirtualTableName(type, true), ") + 2)");
         }
 
         /// <summary>
@@ -386,11 +386,11 @@ namespace Il2Native.Logic.Gencode
             cWriter.Output.Write(" ");
             if (interfaceType == null)
             {
-                writer.Write(type.GetVirtualTableName());
+                writer.Write(type.GetVirtualTableName(true));
             }
             else
             {
-                writer.Write(type.GetVirtualInterfaceTableName(interfaceType));
+                writer.Write(type.GetVirtualInterfaceTableName(interfaceType, true));
             }
             cWriter.Output.Write(" = ");
             VirtualTableDefinition(virtualTable, cWriter, interfaceIndex, baseTypeFieldsOffset);

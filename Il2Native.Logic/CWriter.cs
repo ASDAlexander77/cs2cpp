@@ -467,7 +467,15 @@ namespace Il2Native.Logic
         {
             Debug.Assert(!fieldType.IsGenericParameter);
 
-            fieldType.WriteTypePrefix(this, false);
+            if (fieldType.IsVirtualTable)
+            {
+                this.Output.Write(fieldType.GetVirtualTableName());
+                this.Output.Write("*");
+            }
+            else
+            {
+                fieldType.WriteTypePrefix(this);
+            }
         }
 
         /// <summary>
