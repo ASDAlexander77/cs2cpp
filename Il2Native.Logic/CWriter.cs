@@ -2996,10 +2996,9 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, operand);
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            var vtableField = interfaceType.GetFieldByName("vtable", this);
-            this.WriteInterfacePath(effectiveType, classType, vtableField);
+            this.WriteInterfacePath(effectiveType, interfaceType, null);
 
-            SetResultNumber(opCodePart, vtableField.FieldType);
+            SetResultNumber(opCodePart, interfaceType);
         }
 
         /// <summary>
@@ -3146,13 +3145,20 @@ namespace Il2Native.Logic
 
             var path = FindInterfacePath(type, @interface);
 
-            foreach (var i in path)
+            for (var i = 0; i < path.Count; i++)
             {
-                writer.Write(i);
-                writer.Write(".");
+                writer.Write(path[i]);
+
+                if (fieldInfo != null || i < path.Count - 1)
+                {
+                    writer.Write(".");
+                }
             }
 
-            writer.Write(fieldInfo.Name);
+            if (fieldInfo != null)
+            {
+                writer.Write(fieldInfo.Name);
+            }
 
             return true;
         }

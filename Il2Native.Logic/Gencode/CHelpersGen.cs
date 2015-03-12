@@ -550,10 +550,8 @@ namespace Il2Native.Logic.Gencode
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    cWriter.ActualWrite(writer, opCodeOperand);
-
-                    opCode.Result = opCodeOperand.Result;
-                    ////cWriter.WriteInterfaceAccess(writer, opCode, bareType, toType);
+                    writer.Write("&");
+                    cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
                 }
                 else
                 {
@@ -837,9 +835,7 @@ namespace Il2Native.Logic.Gencode
             var estimatedResultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
             if (typeToSave.TypeNotEquals(estimatedResultOf.Type))
             {
-                writer.Write("(");
-                typeToSave.WriteTypePrefix(cWriter);
-                writer.Write(") ");
+                cWriter.WriteCast(opCode, opCode.OpCodeOperands[operandIndex], typeToSave);
             }
 
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
