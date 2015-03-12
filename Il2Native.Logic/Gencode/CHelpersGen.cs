@@ -590,59 +590,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="custromName">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="doNotConvert">
-        /// </param>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
-        public static void WriteCast(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            IType fromType,
-            string custromName,
-            IType toType,
-            bool appendReference = false,
-            bool doNotConvert = false)
-        {
-            // TODO: remove this one. use anather one
-            var writer = cWriter.Output;
-
-            if (!fromType.IsInterface && toType.IsInterface)
-            {
-                throw new NotImplementedException();
-
-                ////opCode.Result = res;
-                ////this.WriteInterfaceAccess(writer, opCode, fromType, toType);
-            }
-            cWriter.SetResultNumber(opCode, toType);
-            writer.Write("bitcast ");
-            fromType.WriteTypePrefix(cWriter, true);
-            writer.Write(' ');
-            writer.Write(custromName);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(cWriter, true);
-            if (appendReference)
-            {
-                // result should be array
-                writer.Write('*');
-            }
-
-            writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="source">
         /// </param>
         /// <param name="toType">
