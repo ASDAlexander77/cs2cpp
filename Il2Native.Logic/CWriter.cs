@@ -1540,7 +1540,7 @@ namespace Il2Native.Logic
                     FullyDefinedReference methodAddressResultNumber = null;
                     if (isIndirectMethodCall)
                     {
-                        methodAddressResultNumber = this.GenerateVirtualCall(
+                        this.GenerateVirtualCall(
                             opCodeMethodInfoPart,
                             methodInfo,
                             thisType,

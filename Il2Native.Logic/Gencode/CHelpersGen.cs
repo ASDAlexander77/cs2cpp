@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static FullyDefinedReference GenerateVirtualCall(
+        public static void GenerateVirtualCall(
             this CWriter cWriter,
             OpCodePart opCodeMethodInfo,
             IMethod methodInfo,
@@ -51,8 +51,6 @@ namespace Il2Native.Logic.Gencode
             ref IType requiredType)
         {
             var writer = cWriter.Output;
-
-            FullyDefinedReference virtualMethodAddressResultNumber = null;
 
             if (thisType.IsInterface && resultOfirstOperand.Type.TypeNotEquals(thisType))
             {
@@ -64,48 +62,40 @@ namespace Il2Native.Logic.Gencode
             // 1) get pointer to virtual table
             IType requiredInterface;
             var effectiveType = requiredType ?? thisType;
-            var methodIndex = effectiveType.GetVirtualMethodIndex(methodInfo, cWriter, out requiredInterface);
+            effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
+
+            writer.Write("(*");
 
             if (requiredInterface != null)
             {
+                writer.Write("({0}*)", thisType.GetVirtualTableName());
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, requiredInterface.GetFieldByName("vtable", cWriter));
-                writer.Write("[{0}]", methodIndex);
             }
             else
             {
+                writer.Write("({0}*)", thisType.GetVirtualTableName());
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
-                writer.Write("[{0}]", methodIndex);
             }
 
-            // load method address
-            /*
-            cWriter.SetResultNumber(opCodeMethodInfo, cWriter.System.System_Byte.ToPointerType());
-            writer.Write("load ");
-            cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("* ");
-            cWriter.WriteResult(pointerToFunctionPointerResultNumber);
-            writer.WriteLine(string.Empty);
-            */
+            writer.Write(")->");
+            writer.Write(methodInfo.ToString(null, true).CleanUpName());
 
-            // remember virtual method address result
-            virtualMethodAddressResultNumber = opCodeMethodInfo.Result;
+            //if (thisType.IsInterface)
+            //{
+            //    cWriter.WriteGetThisPointerFromInterfacePointer(
+            //        writer,
+            //        opCodeMethodInfo,
+            //        methodInfo,
+            //        thisType,
+            //        null);
 
-            if (thisType.IsInterface)
-            {
-                cWriter.WriteGetThisPointerFromInterfacePointer(
-                    writer,
-                    opCodeMethodInfo,
-                    methodInfo,
-                    thisType,
-                    null);
+            //    var thisPointerResultNumber = opCodeMethodInfo.Result;
 
-                var thisPointerResultNumber = opCodeMethodInfo.Result;
+            //    // set ot for Call op code
+            //    opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
+            //}
 
-                // set ot for Call op code
-                opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
-            }
-
-            return virtualMethodAddressResultNumber;
+            writer.Write(")");
         }
 
         public static IType GetIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)
@@ -471,7 +461,7 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference methodAddressResultNumber = null;
             if (isIndirectMethodCall)
             {
-                methodAddressResultNumber = cWriter.GenerateVirtualCall(
+                cWriter.GenerateVirtualCall(
                     opCodeMethodInfo,
                     methodInfo,
                     thisType,
@@ -506,7 +496,10 @@ namespace Il2Native.Logic.Gencode
                 }
             }
 
-            methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
+            if (!isIndirectMethodCall)
+            {
+                methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);
+            }
 
             methodInfo.GetParameters()
                 .WriteFunctionCallArguments(

@@ -208,7 +208,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         /// <exception cref="KeyNotFoundException">
         /// </exception>
-        public static int GetVirtualMethodIndex(
+        public static int GetVirtualMethodIndexAndRequiredInterface(
             this IType thisType,
             IMethod methodInfo,
             CWriter cWriter,
