@@ -1106,6 +1106,11 @@ namespace Il2Native.Logic
                                 this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                             }
                         }
+                        else
+                        {
+                            // vtable used
+                            this.AddVirtualTable(method.DeclaringType.ToVirtualTable());
+                        }
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -1535,7 +1540,7 @@ namespace Il2Native.Logic
 
         private void AddVirtualTable(IType type)
         {
-            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTable)
+            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTable && !type.IsVirtualTableImplementation)
             {
                 return;
             }

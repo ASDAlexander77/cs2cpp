@@ -283,6 +283,14 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsVirtualTableImplementation
+        {
+            get
+            {
+                return this.UseAsVirtualTableImplementation;
+            }
+        }
+
         /// <summary>
         /// </summary>
         public bool IsDelegate
@@ -594,6 +602,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool UseAsVirtualTableImplementation { get; set; }
+
+        /// <summary>
+        /// </summary>
         internal TypeSymbol TypeDef
         {
             get
@@ -621,11 +633,19 @@ namespace PEAssemblyReader
             return typeAdapter;
         }
 
-        public IType AsVirtualTable(IType interfaceOwner = null)
+        public IType AsVirtualTable()
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
             typeAdapter.UseAsClass = true;
             typeAdapter.UseAsVirtualTable = true;
+            return typeAdapter;
+        }
+
+        public IType AsVirtualTableImplementation(IType interfaceOwner = null)
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsClass = true;
+            typeAdapter.UseAsVirtualTableImplementation = true;
             typeAdapter.InterfaceOwner = interfaceOwner;
             return typeAdapter;
         }
@@ -1107,14 +1127,24 @@ namespace PEAssemblyReader
             return this.Clone(true, true);
         }
 
-        public IType ToVirtualTable(IType interfaceOwner = null)
+        public IType ToVirtualTable()
         {
             if (this.UseAsVirtualTable)
             {
                 return this;
             }
 
-            return this.AsVirtualTable(interfaceOwner);
+            return this.AsVirtualTable();
+        }
+
+        public IType ToVirtualTableImplementation(IType interfaceOwner = null)
+        {
+            if (this.UseAsVirtualTableImplementation)
+            {
+                return this;
+            }
+
+            return this.AsVirtualTableImplementation(interfaceOwner);
         }
 
         /// <summary>

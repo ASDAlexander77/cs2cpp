@@ -64,7 +64,7 @@ namespace Il2Native.Logic.Gencode
             var effectiveType = requiredType ?? thisType;
             effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
 
-            writer.Write("(*");
+            writer.Write("(*(");
 
             if (requiredInterface != null)
             {

@@ -513,7 +513,7 @@ namespace Il2Native.Logic.Gencode
             {
                 // set virtual table
                 codeBuilder.LoadArgument(0);
-                codeBuilder.LoadToken(declaringType.ToVirtualTable());
+                codeBuilder.LoadToken(declaringType.ToVirtualTableImplementation());
                 codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName("vtable", typeResolver));
             }
 
@@ -524,7 +524,7 @@ namespace Il2Native.Logic.Gencode
 
                 // set virtual table
                 codeBuilder.LoadArgument(0);
-                codeBuilder.LoadToken(@interface.ToVirtualTable(declaringType));
+                codeBuilder.LoadToken(@interface.ToVirtualTableImplementation(declaringType));
                 codeBuilder.SaveField(@interface.GetFieldByName("vtable", typeResolver));
             }
 

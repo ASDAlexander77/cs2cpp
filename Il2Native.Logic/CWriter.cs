@@ -978,7 +978,7 @@ namespace Il2Native.Logic
                         this.typeTokenRequired.Add(tokenType);
 
                         // special case
-                        if (tokenType.IsVirtualTable)
+                        if (tokenType.IsVirtualTableImplementation)
                         {
                             if (tokenType.InterfaceOwner != null)
                             {
@@ -5550,8 +5550,6 @@ namespace Il2Native.Logic
                 var environmentType = this.ResolveType("System.Environment");
                 var setExitCode = environmentType.GetMethodByName("set_ExitCode", this);
                 var getExitCode = environmentType.GetMethodByName("get_ExitCode", this);
-                this.forwardMethodDeclarationWritten.Add(new MethodKey(setExitCode, null));
-                this.forwardMethodDeclarationWritten.Add(new MethodKey(getExitCode, null));
                 this.WriteMethodForwardDeclaration(setExitCode, null);
                 this.Output.WriteLine(";");
                 this.WriteMethodForwardDeclaration(getExitCode, null);
@@ -6127,10 +6125,18 @@ namespace Il2Native.Logic
             }
 
             // structs (including virtual tables)
+            any = false;
             foreach (var vtableType in IlReader.UsedVirtualTables)
             {
                 any = true;
-                this.WriteVirtualTableImplementations(vtableType);
+                if (vtableType.IsVirtualTableImplementation)
+                {
+                    this.WriteVirtualTableImplementations(vtableType);
+                }
+                else
+                {
+                    this.WriteVirtualTableDefinition(vtableType);
+                }
             }
 
             if (any)

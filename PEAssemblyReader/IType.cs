@@ -77,6 +77,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsVirtualTableImplementation { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsDelegate { get; }
 
         /// <summary>
@@ -251,7 +255,13 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        IType ToVirtualTable(IType interfaceOwner = null);
+        IType ToVirtualTable();
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToVirtualTableImplementation(IType interfaceOwner = null);
 
         /// <summary>
         /// </summary>
