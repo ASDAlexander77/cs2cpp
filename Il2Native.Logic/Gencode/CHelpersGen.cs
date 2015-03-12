@@ -65,16 +65,16 @@ namespace Il2Native.Logic.Gencode
             effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
 
             writer.Write("(*(");
+            writer.Write("({0}*)", thisType.GetVirtualTableName());
 
             if (requiredInterface != null)
             {
-                writer.Write("({0}*)", thisType.GetVirtualTableName());
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, requiredInterface.GetFieldByName("vtable", cWriter));
             }
             else
             {
-                writer.Write("({0}*)", thisType.GetVirtualTableName());
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
+                cWriter.WriteFieldAccess(
+                    writer, opCodeMethodInfo, (effectiveType.IsInterface ? effectiveType : cWriter.System.System_Object).GetFieldByName("vtable", cWriter));
             }
 
             writer.Write(")->");

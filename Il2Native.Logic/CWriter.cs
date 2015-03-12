@@ -3018,7 +3018,14 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
             writer.Write("->");
-            this.WriteFieldPath(classType, field);
+            if (field.DeclaringType.IsInterface && !classType.IsInterface)
+            {
+                this.WriteInterfacePath(classType, field.DeclaringType, field);
+            }
+            else
+            {
+                this.WriteFieldPath(classType, field);
+            }
 
             if (fixedArrayElementIndex != null)
             {
