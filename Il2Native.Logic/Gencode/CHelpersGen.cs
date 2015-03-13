@@ -526,11 +526,13 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var estimatedOperandResultOf = cWriter.EstimatedResultOf(opCodeOperand);
+            var resultIsConst = estimatedOperandResultOf.IsConst;
 
             var bareType = !estimatedOperandResultOf.Type.IsArray
                 ? estimatedOperandResultOf.Type.ToBareType()
                 : estimatedOperandResultOf.Type;
-            if (toType.IsInterface && !(estimatedOperandResultOf is ConstValue))
+
+            if (toType.IsInterface && !resultIsConst)
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
@@ -554,7 +556,7 @@ namespace Il2Native.Logic.Gencode
                      || toType.IsPointer 
                      || toType.IsByRef 
                      || bareType.IsDerivedFrom(toType) 
-                     || (estimatedOperandResultOf is ConstValue))
+                     || resultIsConst)
             {
                 WriteCCastOperand(cWriter, opCode, 0, toType);
                 cWriter.SetResultNumber(opCode, toType);
@@ -763,11 +765,7 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(" = ");
 
-            var estimatedResultOf = cWriter.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
-            if (typeToSave.TypeNotEquals(estimatedResultOf.Type))
-            {
-                cWriter.WriteCast(opCode, opCode.OpCodeOperands[operandIndex], typeToSave);
-            }
+            cWriter.AdjustToType(opCode.OpCodeOperands[operandIndex], typeToSave);
 
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }

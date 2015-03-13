@@ -1257,9 +1257,15 @@ namespace PEAssemblyReader
 
             return
                 new MetadataFieldAdapter(
-                    new SynthesizedFieldSymbol(containingTypeSymbol as NamedTypeSymbol, isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef, name, isPublic, isReadOnly, isStatic),
+                    new SynthesizedFieldSymbol(
+                        containingTypeSymbol as NamedTypeSymbol,
+                        isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef,
+                        name,
+                        isPublic,
+                        isReadOnly,
+                        isStatic),
                     containingTypeSymbol,
-                    this,
+                    isFixed ? this.ToPointerType() : this,
                     isFixed);
         }
 

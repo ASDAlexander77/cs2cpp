@@ -2184,33 +2184,39 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="opCode">
-        /// </param>
         public void AdjustOperandResultTypeToIncomingType(OpCodePart opCode)
         {
+            AdjustToType(opCode, opCode.RequiredIncomingType);
+        }
+
+        /// <summary>
+        /// </summary>
+        public void AdjustToType(OpCodePart opCode, IType typeDest)
+        {
             // cast result if required
-            if (opCode.RequiredIncomingType != null && opCode.Result != null &&
-                opCode.RequiredIncomingType.TypeNotEquals(opCode.Result.Type)
-                && !(opCode.Result is ConstValue))
+            var estimatedResult = this.EstimatedResultOf(opCode);
+            if (typeDest != null && estimatedResult != null &&
+                typeDest.TypeNotEquals(estimatedResult.Type)
+                && !(estimatedResult.IsConst))
             {
                 bool castRequired;
                 bool intAdjustmentRequired;
                 this.DetectConversion(
-                    opCode.Result.Type,
-                    opCode.RequiredIncomingType,
+                    estimatedResult.Type,
+                    typeDest,
                     out castRequired,
                     out intAdjustmentRequired);
 
                 if (castRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.WriteCast(opCode, opCode, opCode.RequiredIncomingType);
+                    this.WriteCast(opCode, opCode, typeDest);
                 }
 
                 if (intAdjustmentRequired)
                 {
                     this.Output.WriteLine(string.Empty);
-                    this.AdjustIntConvertableTypes(this.Output, opCode, opCode.RequiredIncomingType);
+                    this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
                 }
             }
         }
@@ -3314,7 +3320,7 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            writer.Write("+= (*(((int*)*(int**)(");
+            writer.Write(" += (*(((int*)*(int**)(");
             this.WriteResultOrActualWrite(writer, opCodeThis);
             writer.Write("))-2) >> 2)");
         }
