@@ -102,9 +102,9 @@ namespace Il2Native.Logic.Gencode
             writer.Indent++;
             writer.WriteLine(
                 "(Byte*)_ZTVN10__cxxabiv119__pointer_type_infoE[2],");
-            writer.WriteLine("(Byte*){0},", type.GetRttiPointerStringName());
+            writer.WriteLine("(Byte*)&{0},", type.GetRttiPointerStringName());
             writer.WriteLine("0,");
-            writer.WriteLine("(Byte*){0}", type.GetRttiInfoName());
+            writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName());
             writer.Indent--;
             writer.Write("}");
         }

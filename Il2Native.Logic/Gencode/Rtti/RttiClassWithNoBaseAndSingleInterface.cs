@@ -42,15 +42,15 @@ namespace Il2Native.Logic.Gencode
             writer.Indent++;
             writer.WriteLine(
                 "(Byte*)_ZTVN10__cxxabiv120__si_class_type_infoE[2],");
-            writer.WriteLine("(Byte*){0},", type.GetRttiStringName());
-            writer.Write("(Byte*)");
+            writer.WriteLine("(Byte*)&{0},", type.GetRttiStringName());
+            writer.Write("(Byte*)&");
 
             var singleInheritanceType = type.GetInterfaces().First();
 
             singleInheritanceType.WriteRttiClassInfoDeclaration(writer);
             writer.WriteLine("{0}", singleInheritanceType.GetRttiInfoName());
             writer.Indent--;
-            writer.WriteLine("}");
+            writer.Write("}");
         }
     }
 }

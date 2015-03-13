@@ -63,6 +63,8 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
+            cWriter.forwardTypeRttiDeclarationWritten.Add(type);
+
             if (type.BaseType != null)
             {
                 cWriter.WriteRttiDeclarationIfNotWrittenYet(type.BaseType);
@@ -124,7 +126,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write(type.GetRttiInfoName());
             writer.Write(" = ");
             type.WriteRttiClassInfoDefinition(cWriter);
-            writer.Write(";");
+            writer.WriteLine(";");
         }
 
         /// <summary>

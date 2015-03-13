@@ -94,7 +94,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> forwardTypeRttiDeclarationWritten = new NamespaceContainer<IType>();
+        public readonly ISet<IType> forwardTypeRttiDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
