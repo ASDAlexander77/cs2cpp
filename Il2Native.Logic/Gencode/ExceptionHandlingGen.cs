@@ -484,8 +484,6 @@ namespace Il2Native.Logic.Gencode
                         writer.Write("catch i8* bitcast (");
                         catchType.WriteRttiPointerClassInfoDeclaration(writer);
                         writer.WriteLine("* @\"{0}\" to i8*)", catchType.GetRttiPointerInfoName());
-
-                        cWriter.typeRttiPointerDeclRequired.Add(catchType);
                     }
                     else
                     {
@@ -629,8 +627,6 @@ namespace Il2Native.Logic.Gencode
             var exceptionPointerType = exceptionHandlingClause != null
                 ? WriteThrowInvoke(cWriter, opCode, exceptionHandlingClause)
                 : WriteThrowCall(cWriter, opCode);
-
-            cWriter.typeRttiPointerDeclRequired.Add(exceptionPointerType);
         }
 
         /// <summary>

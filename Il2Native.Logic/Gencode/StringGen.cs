@@ -131,9 +131,6 @@ namespace Il2Native.Logic.Gencode
 
             var stringSystemType = typeResolver.System.System_String;
 
-            cWriter.AddRequiredVirtualTablesDeclaration(stringSystemType);
-            cWriter.AddRequiredRttiDeclaration(stringSystemType);
-
             var sb = new StringBuilder();
             
             sb.AppendLine(string.Empty);

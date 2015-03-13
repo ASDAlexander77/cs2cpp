@@ -35,7 +35,7 @@ namespace Il2Native.Logic.Gencode
             var index = 7;
             foreach (var @interface in type.GetInterfaces())
             {
-                writer.Write("; Byte* f{0}; Int32 f{0}", index++);
+                writer.Write("; Byte* f{0}; Int32 f{1};", index++, index++);
             }
 
             writer.Write(" }");

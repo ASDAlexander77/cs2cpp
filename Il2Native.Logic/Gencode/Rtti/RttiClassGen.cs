@@ -9,6 +9,7 @@
 
 namespace Il2Native.Logic.Gencode
 {
+    using System;
     using System.CodeDom.Compiler;
     using System.Linq;
     using PEAssemblyReader;
@@ -62,10 +63,35 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine("// RTTI class");
+            if (type.BaseType != null)
+            {
+                cWriter.WriteRttiDeclarationIfNotWrittenYet(type.BaseType);
+            }
+
+            foreach (var @interface in type.GetInterfaces())
+            {
+                cWriter.WriteRttiDeclarationIfNotWrittenYet(@interface);
+            }
+
             type.WriteRttiClassDefinition(cWriter);
-            writer.WriteLine("// RTTI pointer");
             type.WriteRttiPointerClassDefinition(writer);
+        }
+
+        public static void WriteRttiDeclaration(this IType type, CWriter cWriter)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write(cWriter.declarationPrefix);
+            type.WriteRttiClassInfoDeclaration(writer);
+            writer.Write(" ");
+            writer.Write(type.GetRttiInfoName());
+            writer.WriteLine(";");
+
+            writer.Write(cWriter.declarationPrefix);
+            type.WriteRttiPointerClassInfoDeclaration(writer);
+            writer.Write(" ");
+            writer.Write(type.GetRttiPointerInfoName());
+            writer.WriteLine(";");
         }
 
         /// <summary>
@@ -92,6 +118,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
+            cWriter.Write("static ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiInfoName());
@@ -149,18 +176,8 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (type.BaseType != null)
-            {
-                cWriter.AddRequiredRttiDeclaration(type.BaseType);
-            }
-
             if (anyInterface)
             {
-                foreach (var @interface in type.GetInterfaces())
-                {
-                    cWriter.AddRequiredRttiDeclaration(@interface);
-                }
-
                 if (type.BaseType == null && onlyInterface)
                 {
                     RttiClassWithNoBaseAndSingleInterface.WriteRttiClassInfoDefinition(type, cWriter);

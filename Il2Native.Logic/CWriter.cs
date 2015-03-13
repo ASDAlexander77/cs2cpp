@@ -70,18 +70,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly ISet<IType> typeRttiDeclRequired = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> typeRttiPointerDeclRequired = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        public readonly ISet<IType> typeVirtualTablesRequired = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         private int blockJumpAddressIncremental;
 
         /// <summary>
@@ -130,31 +118,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> processedRttiPointerTypes = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        private readonly ISet<IType> processedRttiTypes = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
-        private readonly ISet<IType> processedVirtualTablesRequired = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         private int resultNumberIncremental;
-
-        /// <summary>
-        /// </summary>
-        private CIndentedTextWriter savedOutput;
-
-        /// <summary>
-        /// </summary>
-        private int stringIndexIncremental;
 
         /// <summary>
         /// </summary>
@@ -1479,30 +1447,6 @@ namespace Il2Native.Logic
             }
         }
 
-        public void AddRequiredRttiDeclaration(IType type)
-        {
-            if (type.IsByRef)
-            {
-                this.typeRttiDeclRequired.Add(type.GetElementType());
-            }
-            else
-            {
-                this.typeRttiDeclRequired.Add(type);
-            }
-        }
-
-        public void AddRequiredVirtualTablesDeclaration(IType type)
-        {
-            if (type.IsByRef)
-            {
-                this.typeVirtualTablesRequired.Add(type.GetElementType());
-            }
-            else
-            {
-                this.typeVirtualTablesRequired.Add(type);
-            }
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -2386,13 +2330,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
-            // fromType.Type.WriteRttiClassInfoDeclaration(writer);
-            // writer.Write(", {0}", fromType.Type.GetRttiInfoName());
-            writer.Write(", 0");
-
-            // toType.WriteRttiClassInfoDeclaration(writer);
-            // writer.WriteLine(", {0}", toType.GetRttiInfoName());
-            writer.Write(", 0");
+            writer.Write(", &{0}", fromType.Type.GetRttiInfoName());
+            writer.Write(", &{0}", toType.GetRttiInfoName());
             writer.Write(", {0})", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             if (throwExceptionIfNull)
@@ -2437,9 +2376,6 @@ namespace Il2Native.Logic
 
                 // CHelpersGen.SetCustomLabel(opCodePart, label);
             }
-
-            this.AddRequiredRttiDeclaration(fromType.Type);
-            this.AddRequiredRttiDeclaration(toType);
         }
 
         /// <summary>
@@ -2453,7 +2389,11 @@ namespace Il2Native.Logic
 
             this.WriteGlobalConstructors();
 
-            this.WriteRequiredDeclarations();
+            if (this.MainMethod != null && !this.Gctors)
+            {
+                this.Output.WriteLine(string.Empty);
+                this.WriteCallGctorsDeclarations();
+            }
 
             this.Output.Close();
         }
@@ -3217,42 +3157,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            /*
             type.WriteRtti(this);
-
-            this.processedRttiTypes.Add(type);
-            this.processedRttiPointerTypes.Add(type);
-
-            this.Output.WriteLine(string.Empty);
-
-            type.WriteInitObjectMethod(this);
-
-            var normalType = type.ToNormal();
-
-            var isEnum = normalType.IsEnum;
-            var canBeBoxed = normalType.IsPrimitiveType() || normalType.IsStructureType() || isEnum;
-            var canBeUnboxed = canBeBoxed;
-            var excluded = normalType.FullName == "System.Enum";
-
-            if (canBeBoxed && !excluded)
-            {
-                normalType.WriteBoxMethod(this);
-            }
-
-            if (canBeUnboxed && !excluded)
-            {
-                normalType.WriteUnboxMethod(this);
-            }
-
-            normalType.WriteInternalGetTypeMethod(this);
-            normalType.WriteInternalGetSizeMethod(this);
-
-            this.WriteVirtualTables(type);
-
-            this.processedVirtualTablesRequired.Add(type);
-
-            this.Output.WriteLine(string.Empty);
-            */
         }
 
         /// <summary>
@@ -3312,6 +3217,17 @@ namespace Il2Native.Logic
             {
                 this.UnaryOper(writer, opCode, " ", methodReturnType);
             }
+        }
+
+        public bool WriteRttiDeclarationIfNotWrittenYet(IType type)
+        {
+            if (this.forwardTypeRttiDeclarationWritten.Add(type))
+            {
+                type.WriteRttiDeclaration(this);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -5289,15 +5205,11 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            // rttis
+            // rtti-s
             any = false;
-            foreach (var type in this.IlReader.UsedRtti)
+            foreach (var type in this.IlReader.UsedRtti.Where(type => this.forwardTypeRttiDeclarationWritten.Add(type)))
             {
-                if (this.forwardTypeRttiDeclarationWritten.Add(type))
-                {
-                    any = true;
-                    type.WriteRtti(this);
-                }
+                any |= WriteRttiDeclarationIfNotWrittenYet(type);
             }
 
             if (any)
@@ -5450,107 +5362,6 @@ namespace Il2Native.Logic
             this.Output.WriteLine(string.Empty);
 
             this.WriteConstData();
-        }
-
-        /// <summary>
-        /// </summary>
-        [Obsolete]
-        private void WriteRequiredDeclarations()
-        {
-            if (this.MainMethod != null && !this.Gctors)
-            {
-                // TODO: Review it
-                this.Output.WriteLine(string.Empty);
-                this.WriteCallGctorsDeclarations();
-            }
-
-            /*
-            if (this.typeRttiPointerDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (
-                    var rttiPointerDecl in
-                        this.typeRttiPointerDeclRequired.Where(rdp => !this.processedRttiPointerTypes.Contains(rdp)))
-                {
-#if !INLINE_RTTI_INFO
-                    if (!rttiPointerDecl.IsArray && !rttiPointerDecl.IsGenericType && !rttiPointerDecl.IsGenericTypeDefinition)
-                    {
-                        rttiPointerDecl.WriteRttiPointerClassInfoExternalDeclaration(this.Output);
-                    }
-                    else
-                    {
-                        rttiPointerDecl.WriteRttiPointerClassName(this.Output);
-                        rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
-                        this.AddRequiredRttiDeclaration(rttiPointerDecl);
-                    }
-#else
-                    rttiPointerDecl.WriteRttiPointerClassName(this.Output);
-                    rttiPointerDecl.WriteRttiPointerClassInfo(this.Output);
-                    this.AddRequiredRttiDeclaration(rttiPointerDecl);
-#endif
-                    this.Output.WriteLine(string.Empty);
-                }
-            }
-
-            if (this.typeRttiDeclRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-
-                bool any;
-                do
-                {
-                    any = false;
-                    foreach (
-                        var rttiDecl in
-                            this.typeRttiDeclRequired.ToList().Where(rd => !this.processedRttiTypes.Contains(rd)))
-                    {
-#if !INLINE_RTTI_INFO
-                        if (!rttiDecl.IsArray && !rttiDecl.IsGenericType && !rttiDecl.IsGenericTypeDefinition)
-                        {
-                            rttiDecl.WriteRttiClassInfoExternalDeclaration(this.Output);
-                        }
-                        else
-                        {
-                            rttiDecl.WriteRttiClassName(this.Output);
-                            rttiDecl.WriteRttiClassInfo(this);
-                        }
-#else
-                        rttiDecl.WriteRttiClassName(this.Output);
-                        rttiDecl.WriteRttiClassInfo(this);
-#endif
-                        this.Output.WriteLine(string.Empty);
-
-                        this.processedRttiTypes.Add(rttiDecl);
-                        any = true;
-                    }
-                } while (any);
-            }
-
-            if (this.typeVirtualTablesRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                foreach (
-                    var typeVirtualTableRequired in
-                        this.typeVirtualTablesRequired.Where(rdp => !this.processedVirtualTablesRequired.Contains(rdp)))
-                {
-                    this.WriteVirtualTables(typeVirtualTableRequired, true);
-                    this.processedVirtualTablesRequired.Add(typeVirtualTableRequired);
-                    this.Output.WriteLine(string.Empty);
-                }
-            }
-
-            if (this.typeTokenRequired.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-
-                foreach (var loadToken in this.typeTokenRequired)
-                {
-                    // add type infrastructure
-                    loadToken.WriteTypeStorageStaticField(this);
-                    loadToken.WriteGetTypeStaticMethod(this);
-                }
-            }
-            */
         }
 
         /// <summary>
