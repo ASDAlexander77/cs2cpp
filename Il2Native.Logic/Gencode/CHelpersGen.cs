@@ -79,22 +79,6 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(")->");
             writer.Write(methodInfo.ToString(null, true).CleanUpName());
-
-            //if (thisType.IsInterface)
-            //{
-            //    cWriter.WriteGetThisPointerFromInterfacePointer(
-            //        writer,
-            //        opCodeMethodInfo,
-            //        methodInfo,
-            //        thisType,
-            //        null);
-
-            //    var thisPointerResultNumber = opCodeMethodInfo.Result;
-
-            //    // set ot for Call op code
-            //    opCodeMethodInfo.OpCodeOperands[0].Result = thisPointerResultNumber;
-            //}
-
             writer.Write(")");
         }
 

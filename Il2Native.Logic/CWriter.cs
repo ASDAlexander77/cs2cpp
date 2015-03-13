@@ -3310,44 +3310,13 @@ namespace Il2Native.Logic
         /// <param name="pointerToInterfaceVirtualTablePointersResultNumber">
         /// </param>
         public void WriteGetThisPointerFromInterfacePointer(
-            CIndentedTextWriter writer,
-            OpCodePart opCodeMethodInfo,
-            IMethod methodInfo,
-            IType thisType,
-            FullyDefinedReference pointerToInterfaceVirtualTablePointersResultNumber)
+            OpCodePart opCodeThis)
         {
-            writer.WriteLine("; Get 'this' from Interface Virtual Table");
+            var writer = this.Output;
 
-            this.WriteGetInterfaceOffsetToObjectRootPointer(writer, opCodeMethodInfo, methodInfo, thisType);
-
-            writer.WriteLine(string.Empty);
-            var offsetAddressAsIntResultNumber = opCodeMethodInfo.Result;
-
-            // convert to i8*
-            this.SetResultNumber(opCodeMethodInfo, thisType);
-            writer.Write("bitcast ");
-            this.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("** ");
-            this.WriteResult(pointerToInterfaceVirtualTablePointersResultNumber);
-            writer.Write(" to i8*");
-            writer.WriteLine(string.Empty);
-            var pointerToInterfaceVirtualTablePointersAsBytePointerResultNumber = opCodeMethodInfo.Result;
-
-            // get 'this' address
-            var thisAddressFromInterfaceResultNumber = this.SetResultNumber(opCodeMethodInfo, thisType);
-            writer.Write("getelementptr i8* ");
-            this.WriteResult(pointerToInterfaceVirtualTablePointersAsBytePointerResultNumber);
-            writer.Write(", i32 ");
-            this.WriteResult(offsetAddressAsIntResultNumber);
-            writer.WriteLine(string.Empty);
-
-            // adjust 'this' pointer
-            this.SetResultNumber(opCodeMethodInfo, thisType);
-            writer.Write("bitcast i8* ");
-            this.WriteResult(thisAddressFromInterfaceResultNumber);
-            writer.Write(" to ");
-            thisType.WriteTypePrefix(this);
-            writer.WriteLine(string.Empty);
+            writer.Write("+= (*(((int*)*(int**)(");
+            this.WriteResultOrActualWrite(writer, opCodeThis);
+            writer.Write("))-2) >> 2)");
         }
 
         /// <summary>

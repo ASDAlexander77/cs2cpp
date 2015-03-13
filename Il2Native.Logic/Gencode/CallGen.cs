@@ -74,6 +74,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (used != null && used.Length > 0)
                 {
+                    // this expression
                     opCodeMethodInfo.WriteFunctionCallThisExpression(
                         thisType,
                         used[0],
@@ -81,6 +82,11 @@ namespace Il2Native.Logic.Gencode
                         cWriter);
 
                     cWriter.WriteResultOrActualWrite(writer, used[0]);
+
+                    if (thisType.IsInterface)
+                    {
+                        cWriter.WriteGetThisPointerFromInterfacePointer(used[0]);
+                    }
                 }
 
                 comaRequired = true;
