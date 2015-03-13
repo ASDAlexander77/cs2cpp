@@ -85,16 +85,16 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(cWriter.declarationPrefix);
             writer.Write("struct ");
-            writer.Write(type.GetRttiInfoName());
-            writer.Write(" ");
             type.WriteRttiClassInfoDeclaration(writer);
+            writer.Write(" ");
+            writer.Write(type.GetRttiInfoName());
             writer.WriteLine(";");
 
             writer.Write(cWriter.declarationPrefix);
             writer.Write("struct ");
-            writer.Write(type.GetRttiPointerInfoName());
-            writer.Write(" ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
+            writer.Write(" ");
+            writer.Write(type.GetRttiPointerInfoName());
             writer.WriteLine(";");
         }
 
