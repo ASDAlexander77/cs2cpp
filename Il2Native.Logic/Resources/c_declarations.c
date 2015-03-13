@@ -21,17 +21,24 @@
 	#define memset __builtin_memset
 #endif
 
-typedef bool i1;
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+typedef void Void;
+typedef bool Boolean;
+typedef int8_t SByte;
+typedef int16_t Int16;
+typedef int32_t Int32;
+typedef int64_t Int64;
+typedef uint8_t Byte;
+typedef uint16_t Char;
+typedef uint16_t UInt16;
+typedef uint32_t UInt32;
+typedef uint64_t UInt64;
+typedef float Single;
+typedef double Double;
 
-typedef i32 (*anyFn)(...);
+typedef Int32 Int;
+typedef UInt32 UInt;
 
-extern "C" void* calloc(u32);
-extern "C" void* __dynamic_cast(void*, void*, void*, i32);
+typedef Int32 (*anyFn)(...);
+
+extern "C" void* calloc(Int);
+extern "C" void* __dynamic_cast(Void*, Void*, Void*, Int32);

@@ -2848,11 +2848,6 @@ namespace Il2Native.Logic
                 //writer.Indent++;
             }
 
-            //this.WriteCCast(opCodePart, this.System.System_Byte);
-            //writer.WriteLine(string.Empty);
-
-            var firstCastToBytesResult = opCodePart.Result;
-
             var dynamicCastResultNumber = this.SetResultNumber(
                 opCodePart,
                this.System.System_Byte.ToPointerType());
@@ -2880,11 +2875,6 @@ namespace Il2Native.Logic
                 //    "System.InvalidCastException",
                 //    "dynamic_cast");
             }
-
-            //var toClassType = toType.ToClass();
-            //this.WriteCCast(opCodePart, dynamicCastResultNumber, toClassType);
-
-            //var dynamicCastResult = opCodePart.Result;
 
             if (checkNull)
             {
@@ -5545,7 +5535,7 @@ namespace Il2Native.Logic
 
             if (!hasParameters)
             {
-                this.Output.Write("{0}i32 main()", declarationPrefix);
+                this.Output.Write("{0}Int32 main()", declarationPrefix);
             }
             else
             {
@@ -5563,7 +5553,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" local0;");
             }
 
-            this.Output.WriteLine("i32 local1;");
+            this.Output.WriteLine("Int32 local1;");
 
             if (!this.Gctors)
             {
@@ -6160,7 +6150,7 @@ namespace Il2Native.Logic
                 pair.Key,
                 this.GetStringTypeHeader(pair.Value.Length + 1),
                 this.GetStringValuesHeader(pair.Value.Length + 1, pair.Value.Length),
-                "{", "}");
+                "{");
 
             this.Output.Write("{ ");
 

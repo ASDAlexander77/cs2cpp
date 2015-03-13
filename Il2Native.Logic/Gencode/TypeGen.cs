@@ -23,16 +23,7 @@ namespace Il2Native.Logic.Gencode
     {
         /// <summary>
         /// </summary>
-        private static readonly IDictionary<string, string> SystemPointerTypesToCTypes =
-            new SortedDictionary<string, string>();
-
-        /// <summary>
-        /// </summary>
         private static readonly IDictionary<string, int> SystemTypeSizes = new SortedDictionary<string, int>();
-
-        /// <summary>
-        /// </summary>
-        private static readonly IDictionary<string, string> SystemTypesToCTypes = new SortedDictionary<string, string>();
 
         /// <summary>
         /// </summary>
@@ -51,25 +42,7 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         static TypeGen()
         {
-            SystemPointerTypesToCTypes["Void"] = "i8";
-
-            SystemTypesToCTypes["Void"] = "void";
-            SystemTypesToCTypes["Void*"] = "i8";
-            SystemTypesToCTypes["Byte"] = "i8";
-            SystemTypesToCTypes["SByte"] = "i8";
-            SystemTypesToCTypes["Char"] = "i16";
-            SystemTypesToCTypes["Int16"] = "i16";
-            SystemTypesToCTypes["Int32"] = "i32";
-            SystemTypesToCTypes["Int64"] = "i64";
-            SystemTypesToCTypes["UInt16"] = "i16";
-            SystemTypesToCTypes["UInt32"] = "i32";
-            SystemTypesToCTypes["UInt64"] = "i64";
-            SystemTypesToCTypes["Single"] = "float";
-            SystemTypesToCTypes["Double"] = "double";
-            SystemTypesToCTypes["Boolean"] = "i1";
-
             SystemTypeSizes["Void"] = 0;
-            SystemTypeSizes["Void*"] = CWriter.PointerSize;
             SystemTypeSizes["Byte"] = 1;
             SystemTypeSizes["SByte"] = 1;
             SystemTypeSizes["Char"] = 2;
@@ -548,49 +521,16 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string TypeToCType(this IType type, bool? isPointerOpt = null)
         {
-            var isPointer = isPointerOpt.HasValue ? isPointerOpt.Value : type.IsPointer;
-
-            var effectiveType = type;
-
             if (!type.UseAsClass)
             {
-                if (effectiveType.Namespace == "System")
-                {
-                    string ctype;
-
-                    if (isPointer && SystemPointerTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
-                    {
-                        return ctype;
-                    }
-
-                    if (SystemTypesToCTypes.TryGetValue(effectiveType.Name, out ctype))
-                    {
-                        return ctype;
-                    }
-                }
-
                 if (type.IsEnum)
                 {
-                    switch (type.GetEnumUnderlyingType().FullName)
-                    {
-                        case "System.SByte":
-                        case "System.Byte":
-                            return "i8";
-                        case "System.Int16":
-                        case "System.UInt16":
-                            return "i16";
-                        case "System.Int32":
-                        case "System.UInt32":
-                            return "i32";
-                        case "System.Int64":
-                        case "System.UInt64":
-                            return "i64";
-                    }
+                    return type.GetEnumUnderlyingType().Name;
                 }
 
-                if (type.IsValueType && type.IsPrimitive)
+                if (type.IsValueType && type.IsPrimitive || type.IsVoid())
                 {
-                    return type.Name.ToLowerInvariant();
+                    return type.Name;
                 }
             }
 

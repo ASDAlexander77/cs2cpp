@@ -97,7 +97,7 @@ namespace Il2Native.Logic.Gencode
 
             var sb = new StringBuilder();
 
-            sb.Append("i8* vtable");
+            sb.Append("Byte* vtable");
 
             var index = 0;
             foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
@@ -107,10 +107,10 @@ namespace Il2Native.Logic.Gencode
                     sb.Append("; ");
                 }
 
-                sb.Append("i8* ifce" + index);
+                sb.Append("Byte* ifce" + index);
             }
 
-            sb.Append("; i32 len");
+            sb.Append("; Int32 len");
 
             _stringPrefixDataType = sb.ToString();
             return _stringPrefixDataType;
@@ -137,7 +137,7 @@ namespace Il2Native.Logic.Gencode
             var sb = new StringBuilder();
             
             sb.AppendLine(string.Empty);
-            sb.Append("(i8*) ");
+            sb.Append("(Byte*) ");
             // TODO: finish it
             //sb.Append(stringSystemType.GetVirtualTableReference(typeResolver));
             sb.Append("0");
@@ -149,7 +149,7 @@ namespace Il2Native.Logic.Gencode
                     sb.AppendLine(", ");
                 }
 
-                sb.Append("(i8*) ");
+                sb.Append("(Byte*) ");
                 // TODO: finish it
                 //sb.Append(stringSystemType.GetVirtualTableReference(@interface, typeResolver));
                 sb.Append("0");                
@@ -174,11 +174,7 @@ namespace Il2Native.Logic.Gencode
         public static string GetStringTypeHeader(this CWriter cWriter, int length)
         {
             var charType = cWriter.System.System_Char;
-            var typeString = cWriter.WriteToString(
-                () =>
-                {
-                    charType.WriteTypePrefix(cWriter);
-                });
+            var typeString = cWriter.WriteToString(() => charType.WriteTypePrefix(cWriter));
 
             return "{ " + GetStringPrefixDataType(cWriter) + "; " + typeString + " data[" + length + "]; }";
         }
