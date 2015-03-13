@@ -41,7 +41,7 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*)_ZTVN10__cxxabiv120__si_class_type_infoE[2],");
+                "(Byte*)&_ZTVN10__cxxabiv120__si_class_type_infoE[2],");
             writer.WriteLine("(Byte*)&{0},", type.GetRttiStringName());
             writer.Write("(Byte*)&");
 
