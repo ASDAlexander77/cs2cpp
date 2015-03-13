@@ -84,15 +84,17 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write(cWriter.declarationPrefix);
-            type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write(" ");
+            writer.Write("struct ");
             writer.Write(type.GetRttiInfoName());
+            writer.Write(" ");
+            type.WriteRttiClassInfoDeclaration(writer);
             writer.WriteLine(";");
 
             writer.Write(cWriter.declarationPrefix);
-            type.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.Write(" ");
+            writer.Write("struct ");
             writer.Write(type.GetRttiPointerInfoName());
+            writer.Write(" ");
+            type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.WriteLine(";");
         }
 
@@ -120,7 +122,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.Write("static ");
+            cWriter.Write("static struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiInfoName());

@@ -70,7 +70,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("static ");
+            writer.Write("static struct ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiPointerInfoName());
@@ -87,7 +87,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("struct { Byte* f1; Byte* f2; Int32 f3; Byte* f4; }");
+            writer.Write("{ Byte* f1; Byte* f2; Int32 f3; Byte* f4; }");
         }
 
         /// <summary>

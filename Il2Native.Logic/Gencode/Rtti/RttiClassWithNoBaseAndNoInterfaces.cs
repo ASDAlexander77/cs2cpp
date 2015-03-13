@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDeclaration(IType type, IndentedTextWriter writer)
         {
-            writer.Write("struct { Byte* f1; Byte* f2; }");
+            writer.Write("{ Byte* f1; Byte* f2; }");
         }
 
         /// <summary>
