@@ -16,12 +16,13 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-    using Gencode.SynthesizedMethods.MultiDimArray;
-    using Gencode.SynthesizedMethods.SingleDimArray;
+
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.SynthesizedMethods;
     using Il2Native.Logic.Gencode.SynthesizedMethods.Enum;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.MultiDimArray;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.SingleDimArray;
     using Il2Native.Logic.Gencode.SynthesizedMethods.String;
 
     using Microsoft.CodeAnalysis;
@@ -37,8 +38,6 @@ namespace Il2Native.Logic
     /// </summary>
     public class IlReader : IIlReader
     {
-        public const BindingFlags DefaultFlags = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-
         /// <summary>
         /// </summary>
         private static readonly OpCode[] OpCodesMap = new OpCode[256];
@@ -46,6 +45,34 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private static IDictionary<IType, IEnumerable<IMethod>> genMethodSpec;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IMethod> _calledMethods;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IField> _staticFields;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IType> _usedArrayTypes;
+
+        /// <summary>
+        /// </summary>
+        private IDictionary<int, string> _usedStrings;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IType> _usedStructTypes;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IType> _usedVirtualTables;
+
+        /// <summary>
+        /// </summary>
+        private ISet<IType> _usedRtti;
 
         /// <summary>
         /// </summary>
@@ -71,18 +98,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IMethod> _calledMethods;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IField> _staticFields;
-
-        /// <summary>
-        /// </summary>
-        private IDictionary<int, string> _usedStrings;
-
-        /// <summary>
-        /// </summary>
         private ISet<IMethod> usedGenericSpecialiazedMethods;
 
         /// <summary>
@@ -92,18 +107,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private ISet<IField> usedStaticFieldsToRead;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedStructTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedArrayTypes;
-
-        /// <summary>
-        /// </summary>
-        private ISet<IType> _usedVirtualTables;
 
         /// <summary>
         /// </summary>
@@ -370,10 +373,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ITypeResolver TypeResolver { get; set; }
-
-        /// <summary>
-        /// </summary>
         public static IDictionary<IType, IEnumerable<IMethod>> GenericMethodSpecializations
         {
             set
@@ -404,36 +403,6 @@ namespace Il2Native.Logic
             set
             {
                 this._calledMethods = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public ISet<IField> StaticFields
-        {
-            get
-            {
-                return this._staticFields;
-            }
-
-            set
-            {
-                this._staticFields = value;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public IDictionary<int, string> UsedStrings
-        {
-            get
-            {
-                return this._usedStrings;
-            }
-
-            set
-            {
-                this._usedStrings = value;
             }
         }
 
@@ -472,6 +441,40 @@ namespace Il2Native.Logic
         public string PdbFilePath { get; private set; }
 
         public string SourceFilePath { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IField> StaticFields
+        {
+            get
+            {
+                return this._staticFields;
+            }
+
+            set
+            {
+                this._staticFields = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ITypeResolver TypeResolver { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedArrayTypes
+        {
+            get
+            {
+                return this._usedArrayTypes;
+            }
+
+            set
+            {
+                this._usedArrayTypes = value;
+            }
+        }
 
         /// <summary>
         /// </summary>
@@ -520,6 +523,21 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public IDictionary<int, string> UsedStrings
+        {
+            get
+            {
+                return this._usedStrings;
+            }
+
+            set
+            {
+                this._usedStrings = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public ISet<IType> UsedStructTypes
         {
             get
@@ -535,16 +553,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedArrayTypes
+        public ISet<IType> UsedTypes
         {
             get
             {
-                return this._usedArrayTypes;
+                return this.usedTypes;
             }
 
             set
             {
-                this._usedArrayTypes = value;
+                this.usedTypes = value;
             }
         }
 
@@ -565,18 +583,19 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedTypes
+        public ISet<IType> UsedRtti
         {
             get
             {
-                return this.usedTypes;
+                return this._usedRtti;
             }
 
             set
             {
-                this.usedTypes = value;
+                this._usedRtti = value;
             }
         }
+
 
         /// <summary>
         /// </summary>
@@ -600,7 +619,35 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IConstructor> Constructors(IType type, ITypeResolver typeResolver)
         {
-            return Constructors(type, IlReader.DefaultFlags, typeResolver);
+            return Constructors(type, DefaultFlags, typeResolver);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        /// <param name="flags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        {
+            Debug.Assert(type != null);
+
+            foreach (var constructor in type.GetConstructors(flags).Where(m => !m.IsGenericMethodDefinition))
+            {
+                yield return constructor;
+            }
+
+            // append methods or MultiArray
+            if (type.IsMultiArray)
+            {
+                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
+            }
+            else if (type.IsArray)
+            {
+                yield return new SynthesizedSingleDimArrayCtorMethod(type, typeResolver);
+            }
         }
 
         /// <summary>
@@ -611,22 +658,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IField> Fields(IType type, ITypeResolver typeResolver)
         {
-            return Fields(type, IlReader.DefaultFlags, typeResolver);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false)
-        {
-            return Methods(
-                type,
-                IlReader.DefaultFlags,
-                typeResolver,
-                excludeSpecializations);
+            return Fields(type, DefaultFlags, typeResolver);
         }
 
         /// <summary>
@@ -681,28 +713,11 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="flags">
-        /// </param>
         /// <returns>
         /// </returns>
-        public static IEnumerable<IConstructor> Constructors(IType type, BindingFlags flags, ITypeResolver typeResolver)
+        public static IEnumerable<IMethod> Methods(IType type, ITypeResolver typeResolver, bool excludeSpecializations = false)
         {
-            Debug.Assert(type != null);
-
-            foreach (var constructor in type.GetConstructors(flags).Where(m => !m.IsGenericMethodDefinition))
-            {
-                yield return constructor;
-            }
-
-            // append methods or MultiArray
-            if (type.IsMultiArray)
-            {
-                yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
-            }
-            else if (type.IsArray)
-            {
-                yield return new SynthesizedSingleDimArrayCtorMethod(type, typeResolver);
-            }
+            return Methods(type, DefaultFlags, typeResolver, excludeSpecializations);
         }
 
         /// <summary>
@@ -745,8 +760,7 @@ namespace Il2Native.Logic
 
             // TODO: remove comment when finish
             // append internal methods
-            //yield return new SynthesizedGetTypeMethod(type, typeResolver);
-
+            // yield return new SynthesizedGetTypeMethod(type, typeResolver);
             if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
             {
                 yield return new SynthesizedBoxMethod(type, typeResolver);
@@ -1241,14 +1255,19 @@ namespace Il2Native.Logic
                                 {
                                     this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.TypeResolver));
                                     var constructorInfo =
-                                        Logic.IlReader.Constructors(arrayType, this.TypeResolver)
-                                             .FirstOrDefault(
-                                                 c =>
-                                                 c.GetParameters().Count() == 1
-                                                 && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
+                                        Constructors(arrayType, this.TypeResolver)
+                                            .FirstOrDefault(
+                                                c =>
+                                                c.GetParameters().Count() == 1
+                                                && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
                                     this.AddCalledMethod(constructorInfo);
                                 }
                             }
+                        }
+
+                        if (code == Code.Isinst || code == Code.Castclass)
+                        {
+                            this.AddRtti(type.ToRtti());
                         }
 
                         yield return new OpCodeTypePart(opCode, startAddress, currentAddress, type);
@@ -1394,6 +1413,20 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        /// <param name="type">
+        /// </param>
+        private void AddArrayType(IType type)
+        {
+            if (this._usedArrayTypes == null || type == null || !type.IsArray)
+            {
+                return;
+            }
+
+            this._usedArrayTypes.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="method">
         /// </param>
         private void AddCalledMethod(IMethod method)
@@ -1404,26 +1437,6 @@ namespace Il2Native.Logic
             }
 
             this._calledMethods.Add(method);
-        }
-
-        private void AddStaticField(IField field)
-        {
-            if (this._staticFields == null || field == null)
-            {
-                return;
-            }
-
-            this._staticFields.Add(field);
-        }
-
-        private void AddString(int token, string usedString)
-        {
-            if (this._usedStrings == null || usedString == null)
-            {
-                return;
-            }
-
-            this._usedStrings[token] = usedString;
         }
 
         /// <summary>
@@ -1481,6 +1494,26 @@ namespace Il2Native.Logic
             this.usedGenericSpecialiazedTypes.Add(type.ToBareType().ToNormal());
         }
 
+        private void AddStaticField(IField field)
+        {
+            if (this._staticFields == null || field == null)
+            {
+                return;
+            }
+
+            this._staticFields.Add(field);
+        }
+
+        private void AddString(int token, string usedString)
+        {
+            if (this._usedStrings == null || usedString == null)
+            {
+                return;
+            }
+
+            this._usedStrings[token] = usedString;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -1493,20 +1526,6 @@ namespace Il2Native.Logic
             }
 
             this._usedStructTypes.Add(type);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void AddArrayType(IType type)
-        {
-            if (this._usedArrayTypes == null || type == null || !type.IsArray)
-            {
-                return;
-            }
-
-            this._usedArrayTypes.Add(type);
         }
 
         /// <summary>
@@ -1546,6 +1565,16 @@ namespace Il2Native.Logic
             }
 
             this._usedVirtualTables.Add(type);
+        }
+
+        private void AddRtti(IType type)
+        {
+            if (this._usedRtti == null || type == null || !type.IsRtti || type.IsObject)
+            {
+                return;
+            }
+
+            this._usedRtti.Add(type);
         }
 
         /// <summary>
@@ -1595,7 +1624,7 @@ namespace Il2Native.Logic
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions =
                 string.Concat(
-                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty),
+                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty), 
                     string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 
@@ -1625,7 +1654,7 @@ namespace Il2Native.Logic
         /// </returns>
         private AssemblyMetadata CompileWithRoslyn(string[] source)
         {
-            var srcFileName = Path.GetFileNameWithoutExtension(FirstSource);
+            var srcFileName = Path.GetFileNameWithoutExtension(this.FirstSource);
             var baseName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
             var nameDll = srcFileName + "_" + baseName + ".dll";
             var namePdb = srcFileName + "_" + baseName + ".pdb";
@@ -1695,11 +1724,7 @@ namespace Il2Native.Logic
 
             // disover it again in specialized method
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes,
-                this.usedGenericSpecialiazedMethods,
-                null,
-                this._usedArrayTypes,
-                stackCall);
+                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, stackCall);
 
             stackCall.Dequeue();
         }
@@ -1954,5 +1979,8 @@ namespace Il2Native.Logic
 
             Debug.Fail("CoreLib not set");
         }
+
+        public const BindingFlags DefaultFlags =
+            BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
     }
 }

@@ -39,6 +39,10 @@
 
         /// <summary>
         /// </summary>
+        ISet<IType> UsedRtti { get; set; }
+
+        /// <summary>
+        /// </summary>
         IDictionary<int, string> UsedStrings { get; set; }
 
         /// <summary>

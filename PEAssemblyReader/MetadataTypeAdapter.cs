@@ -36,7 +36,28 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>> lazyConstructors =
+            new SortedDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>>();
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IType> lazyDeclaringType;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IType> lazyDeclaringTypeOriginal;
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IField>>> lazyFields = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IField>>>();
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<string> lazyFullName;
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<IType> lazyGetElementType;
 
         /// <summary>
         /// </summary>
@@ -45,6 +66,14 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         private readonly Lazy<string> lazyMetadataName;
+
+        /// <summary>
+        /// </summary>
+        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
+
+        /// <summary>
+        /// </summary>
+        private readonly Lazy<MetadataModuleAdapter> lazyModule;
 
         /// <summary>
         /// </summary>
@@ -60,34 +89,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private readonly Lazy<IType> lazyDeclaringTypeOriginal;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<IType> lazyGetElementType;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<IType> lazyDeclaringType;
-
-        /// <summary>
-        /// </summary>
-        private readonly Lazy<MetadataModuleAdapter> lazyModule;
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IField>>> lazyFields = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IField>>>();
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>> lazyConstructors = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IConstructor>>>();
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>> lazyMethods = new SortedDictionary<BindingFlags, Lazy<IEnumerable<IMethod>>>();
-
-        /// <summary>
-        /// </summary>
         private readonly TypeSymbol typeDef;
 
         /// <summary>
@@ -95,6 +96,8 @@ namespace PEAssemblyReader
         /// <param name="typeDef">
         /// </param>
         /// <param name="isByRef">
+        /// </param>
+        /// <param name="isPinned">
         /// </param>
         internal MetadataTypeAdapter(TypeSymbol typeDef, bool isByRef = false, bool isPinned = false)
         {
@@ -133,10 +136,14 @@ namespace PEAssemblyReader
             }
         }
 
-        public int? Token
+        /// <summary>
+        /// </summary>
+        public int ArrayRank
         {
-            get;
-            private set;
+            get
+            {
+                return this.typeDef.IsArray() ? ((ArrayTypeSymbol)this.typeDef).Rank : 0;
+            }
         }
 
         /// <summary>
@@ -183,8 +190,6 @@ namespace PEAssemblyReader
             }
         }
 
-        public IType InterfaceOwner { get; set; }
-
         /// <summary>
         /// </summary>
         public string FullName
@@ -201,7 +206,10 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GenericTypeArguments
         {
-            get { return this.CalculateGenericArguments(); }
+            get
+            {
+                return this.CalculateGenericArguments();
+            }
         }
 
         /// <summary>
@@ -210,14 +218,20 @@ namespace PEAssemblyReader
         /// </exception>
         public IEnumerable<IType> GenericTypeParameters
         {
-            get { return this.CalculateGenericParameters(); }
+            get
+            {
+                return this.CalculateGenericParameters();
+            }
         }
 
         /// <summary>
         /// </summary>
         public bool HasDeclaringType
         {
-            get { return this.DeclaringType != null; }
+            get
+            {
+                return this.DeclaringType != null;
+            }
         }
 
         /// <summary>
@@ -232,27 +246,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public IType InterfaceOwner { get; set; }
+
+        /// <summary>
+        /// </summary>
         public bool IsArray
         {
             get
             {
                 return this.typeDef.IsArray();
-            }
-        }
-
-        public bool IsMultiArray
-        {
-            get
-            {
-                return this.typeDef.IsArray() && !this.typeDef.IsSingleDimensionalArray();
-            }
-        }
-
-        public int ArrayRank
-        {
-            get
-            {
-                return this.typeDef.IsArray() ? ((ArrayTypeSymbol)this.typeDef).Rank : 0;
             }
         }
 
@@ -271,23 +273,8 @@ namespace PEAssemblyReader
                     return true;
                 }
 
-                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType() || this.typeDef.SpecialType == SpecialType.System_Enum;
-            }
-        }
-
-        public bool IsVirtualTable
-        {
-            get
-            {
-                return this.UseAsVirtualTable;
-            }
-        }
-
-        public bool IsVirtualTableImplementation
-        {
-            get
-            {
-                return this.UseAsVirtualTableImplementation;
+                return this.typeDef.IsClassType() && !this.IsDerivedFromEnum() && !this.IsDerivedFromValueType()
+                       || this.typeDef.SpecialType == SpecialType.System_Enum;
             }
         }
 
@@ -318,26 +305,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsObject
-        {
-            get
-            {
-                return this.typeDef.SpecialType == SpecialType.System_Object;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        public bool IsString
-        {
-            get
-            {
-                return this.typeDef.SpecialType == SpecialType.System_String;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         public bool IsGenericParameter
         {
             get
@@ -356,32 +323,6 @@ namespace PEAssemblyReader
             }
         }
 
-        private bool CalculateIsGenericType()
-        {
-            IType current = this;
-            while (current != null)
-            {
-                if (current.IsGenericTypeLocal)
-                {
-                    return true;
-                }
-
-                if (current.HasElementType && current.GetElementType().IsGenericType)
-                {
-                    return true;
-                }
-
-                if (!current.IsNested)
-                {
-                    break;
-                }
-
-                current = current.DeclaringType;
-            }
-
-            return false;
-        }
-
         /// <summary>
         /// </summary>
         public bool IsGenericTypeDefinition
@@ -390,32 +331,6 @@ namespace PEAssemblyReader
             {
                 return this.CalculateIsGenericTypeDefinition();
             }
-        }
-
-        private bool CalculateIsGenericTypeDefinition()
-        {
-            IType current = this;
-            while (current != null)
-            {
-                if (current.IsGenericTypeDefinitionLocal)
-                {
-                    return true;
-                }
-
-                if (current.HasElementType && current.ToBareType().IsGenericTypeDefinition)
-                {
-                    return true;
-                }
-
-                if (!current.IsNested)
-                {
-                    break;
-                }
-
-                current = current.DeclaringType;
-            }
-
-            return current.IsGenericParameter;
         }
 
         /// <summary>
@@ -450,11 +365,31 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsMultiArray
+        {
+            get
+            {
+                return this.typeDef.IsArray() && !this.typeDef.IsSingleDimensionalArray();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsNested
         {
             get
             {
                 return this.typeDef.IsNestedType();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsObject
+        {
+            get
+            {
+                return this.typeDef.SpecialType == SpecialType.System_Object;
             }
         }
 
@@ -487,37 +422,23 @@ namespace PEAssemblyReader
             }
         }
 
-        private bool CalculateIsPrimitive()
+        /// <summary>
+        /// </summary>
+        public bool IsRtti
         {
-            if (this.typeDef.IsPrimitiveRecursiveStruct())
+            get
             {
-                switch (this.typeDef.SpecialType)
-                {
-                    case SpecialType.System_IntPtr:
-                    case SpecialType.System_UIntPtr:
-                        return false;
-                }
-
-                return true;
+                return this.UseAsRtti;
             }
+        }
 
-            switch (this.typeDef.SpecialType)
+        /// <summary>
+        /// </summary>
+        public bool IsString
+        {
+            get
             {
-                case SpecialType.System_Boolean:
-                case SpecialType.System_Byte:
-                case SpecialType.System_Char:
-                case SpecialType.System_Double:
-                case SpecialType.System_Int16:
-                case SpecialType.System_Int32:
-                case SpecialType.System_Int64:
-                case SpecialType.System_UInt16:
-                case SpecialType.System_UInt32:
-                case SpecialType.System_UInt64:
-                case SpecialType.System_SByte:
-                case SpecialType.System_Single:
-                    return true;
-                default:
-                    return false;
+                return this.typeDef.SpecialType == SpecialType.System_String;
             }
         }
 
@@ -539,6 +460,26 @@ namespace PEAssemblyReader
                 }
 
                 return this.typeDef.IsValueType || isEnum || this.IsDerivedFromValueType();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsVirtualTable
+        {
+            get
+            {
+                return this.UseAsVirtualTable;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public bool IsVirtualTableImplementation
+        {
+            get
+            {
+                return this.UseAsVirtualTableImplementation;
             }
         }
 
@@ -594,7 +535,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public int? Token { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool UseAsClass { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public bool UseAsRtti { get; set; }
 
         /// <summary>
         /// </summary>
@@ -616,6 +565,78 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType AsRtti()
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsClass = true;
+            typeAdapter.UseAsRtti = true;
+            return typeAdapter;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType AsVirtualTable()
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsClass = true;
+            typeAdapter.UseAsVirtualTable = true;
+            return typeAdapter;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="interfaceOwner">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType AsVirtualTableImplementation(IType interfaceOwner = null)
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsClass = true;
+            typeAdapter.UseAsVirtualTableImplementation = true;
+            typeAdapter.InterfaceOwner = interfaceOwner;
+            return typeAdapter;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IConstructor> CalculateConstructors(BindingFlags bindingFlags)
+        {
+            return this.IterateConstructors(bindingFlags).ToList();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IField> CalculateFields(BindingFlags bindingFlags)
+        {
+            return this.IterateFields(bindingFlags).ToList();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IEnumerable<IMethod> CalculateMethods(BindingFlags bindingFlags)
+        {
+            return this.IterateMethods(bindingFlags).ToList();
+        }
+
+        /// <summary>
+        /// </summary>
         /// <param name="setUseAsClass">
         /// </param>
         /// <param name="value">
@@ -630,23 +651,6 @@ namespace PEAssemblyReader
                 typeAdapter.UseAsClass = value;
             }
 
-            return typeAdapter;
-        }
-
-        public IType AsVirtualTable()
-        {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsClass = true;
-            typeAdapter.UseAsVirtualTable = true;
-            return typeAdapter;
-        }
-
-        public IType AsVirtualTableImplementation(IType interfaceOwner = null)
-        {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsClass = true;
-            typeAdapter.UseAsVirtualTableImplementation = true;
-            typeAdapter.InterfaceOwner = interfaceOwner;
             return typeAdapter;
         }
 
@@ -705,6 +709,18 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsVirtualTableImplementation.CompareTo(type.IsVirtualTableImplementation);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
+            cmp = this.IsRtti.CompareTo(type.IsRtti);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             if (!this.HasDeclaringType && !type.HasDeclaringType)
             {
                 return 0;
@@ -722,6 +738,19 @@ namespace PEAssemblyReader
 
             cmp = this.GetDeclaringTypeOriginal().CompareTo(type.GetDeclaringTypeOriginal());
             return cmp;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="types">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType Construct(params IType[] types)
+        {
+            var builder = ImmutableArray.CreateBuilder<TypeSymbol>();
+            builder.AddRange(types.Select(t => ((MetadataTypeAdapter)t).TypeDef));
+            return new ConstructedNamedTypeSymbol(this.typeDef as NamedTypeSymbol, builder.ToImmutable()).ToAdapter();
         }
 
         /// <summary>
@@ -792,28 +821,6 @@ namespace PEAssemblyReader
             return this.lazyGetElementType.Value;
         }
 
-        internal TypeSymbol GetElementTypeSymbol()
-        {
-            if (this.IsByRef)
-            {
-                return this.typeDef;
-            }
-
-            if (this.IsArray)
-            {
-                return (this.typeDef as ArrayTypeSymbol).ElementType;
-            }
-
-            if (this.IsPointer)
-            {
-                return (this.typeDef as PointerTypeSymbol).PointedAtType;
-            }
-
-            Debug.Fail(string.Empty);
-
-            return null;
-        }
-
         /// <summary>
         /// </summary>
         /// <returns>
@@ -849,50 +856,6 @@ namespace PEAssemblyReader
             }
 
             return lazyFieldsByFlags.Value;
-        }
-
-        private IEnumerable<IType> CalculateGenericArguments()
-        {
-            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
-            {
-                return namedTypeSymbol.TypeArguments.Select(a => a.ToAdapter());
-            }
-
-            return new IType[0];
-        }
-
-        private bool AnyGenericArguments()
-        {
-            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private IEnumerable<IType> CalculateGenericParameters()
-        {
-            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
-            {
-                return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a));
-            }
-
-            return new IType[0];
-        }
-
-        private bool AnyGenericParameters()
-        {
-            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
-            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
-            {
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -944,86 +907,6 @@ namespace PEAssemblyReader
             }
 
             return lazyMethodsByFlags.Value;
-        }
-
-        public IEnumerable<IField> CalculateFields(BindingFlags bindingFlags)
-        {
-            return this.IterateFields(bindingFlags).ToList();
-        }
-
-        private IEnumerable<IField> IterateFields(BindingFlags bindingFlags)
-        {
-            if (this.typeDef.IsUnboundGenericType())
-            {
-                return
-                    this.typeDef.OriginalDefinition.GetMembers()
-                        .Where(m => m is FieldSymbol)
-                        .Select(f => new MetadataFieldAdapter(f as FieldSymbol));
-            }
-
-            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
-        }
-
-        public IEnumerable<IConstructor> CalculateConstructors(BindingFlags bindingFlags)
-        {
-            return this.IterateConstructors(bindingFlags).ToList();
-        }
-
-        private IEnumerable<IConstructor> IterateConstructors(BindingFlags bindingFlags)
-        {
-            if (this.typeDef.IsUnboundGenericType())
-            {
-                return
-                    this.typeDef.OriginalDefinition.GetMembers()
-                        .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                        .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
-            }
-
-            return
-                this.typeDef.GetMembers()
-                    .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
-        }
-
-        public IEnumerable<IMethod> CalculateMethods(BindingFlags bindingFlags)
-        {
-            return this.IterateMethods(bindingFlags).ToList();
-        }
-
-        private IEnumerable<IMethod> IterateMethods(BindingFlags bindingFlags)
-        {
-            if (this.typeDef.IsUnboundGenericType())
-            {
-                foreach (var method in
-                    this.typeDef.OriginalDefinition.GetMembers()
-                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
-                {
-                    yield return method;
-                }
-            }
-            else
-            {
-                foreach (var method in
-                    this.typeDef.GetMembers()
-                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
-                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
-                {
-                    yield return method;
-                }
-            }
-
-            if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))
-            {
-                var baseType = this.BaseType;
-                if (baseType != null)
-                {
-                    foreach (var method in baseType.GetMethods(bindingFlags))
-                    {
-                        yield return method;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -1109,51 +992,8 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToArrayType(int rank)
         {
-            var containingAssembly = MetadataTypeAdapter.GetBareTypeSymbol(this.typeDef).ContainingAssembly;
+            var containingAssembly = GetBareTypeSymbol(this.typeDef).ContainingAssembly;
             return new MetadataTypeAdapter(new ArrayTypeSymbol(containingAssembly, this.typeDef, rank: rank), this.IsByRef, this.IsPinned);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToClass()
-        {
-            if (this.UseAsClass)
-            {
-                return this;
-            }
-
-            return this.Clone(true, true);
-        }
-
-        public IType ToVirtualTable()
-        {
-            if (this.UseAsVirtualTable)
-            {
-                return this;
-            }
-
-            return this.AsVirtualTable();
-        }
-
-        public IType ToVirtualTableImplementation(IType interfaceOwner = null)
-        {
-            if (this.UseAsVirtualTableImplementation)
-            {
-                return this;
-            }
-
-            return this.AsVirtualTableImplementation(interfaceOwner);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToDereferencedType()
-        {
-            return this.IsPointer ? this.GetElementType() : this;
         }
 
         /// <summary>
@@ -1164,17 +1004,6 @@ namespace PEAssemblyReader
         {
             var newType = this.typeDef.ToAdapter(true);
             Debug.Assert(newType.IsByRef);
-            return newType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToPinned()
-        {
-            var newType = this.typeDef.ToAdapter(false, true);
-            Debug.Assert(newType.IsPinned);
             return newType;
         }
 
@@ -1194,6 +1023,69 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        public IType ToClass()
+        {
+            if (this.UseAsClass)
+            {
+                return this;
+            }
+
+            return this.Clone(true, true);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToDereferencedType()
+        {
+            return this.IsPointer ? this.GetElementType() : this;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="containingType">
+        /// </param>
+        /// <param name="name">
+        /// </param>
+        /// <param name="isPublic">
+        /// </param>
+        /// <param name="isReadOnly">
+        /// </param>
+        /// <param name="isStatic">
+        /// </param>
+        /// <param name="isFixed">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IField ToField(
+            IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
+        {
+            TypeSymbol containingTypeSymbol = null;
+            var metadataTypeAdapter = containingType as MetadataTypeAdapter;
+            if (metadataTypeAdapter != null)
+            {
+                containingTypeSymbol = metadataTypeAdapter.TypeDef;
+            }
+
+            return
+                new MetadataFieldAdapter(
+                    new SynthesizedFieldSymbol(
+                        containingTypeSymbol as NamedTypeSymbol, 
+                        isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef, 
+                        name, 
+                        isPublic, 
+                        isReadOnly, 
+                        isStatic), 
+                    containingTypeSymbol, 
+                    isFixed ? this.ToPointerType() : this, 
+                    isFixed);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         public IType ToNormal()
         {
             if (!this.UseAsClass)
@@ -1206,24 +1098,12 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToPointerType()
-        {
-            return new PointerTypeSymbol(this.typeDef).ToAdapter();
-        }
-
-        /// <summary>
-        /// </summary>
-        public IType Construct(params IType[] types)
-        {
-            var builder = ImmutableArray.CreateBuilder<TypeSymbol>();
-            builder.AddRange(types.Select(t => ((MetadataTypeAdapter)t).TypeDef));
-            return new ConstructedNamedTypeSymbol(this.typeDef as NamedTypeSymbol, builder.ToImmutable()).ToAdapter();
-        }
-
-        /// <summary>
-        /// </summary>
+        /// <param name="isOut">
+        /// </param>
+        /// <param name="isRef">
+        /// </param>
+        /// <param name="name">
+        /// </param>
         /// <returns>
         /// </returns>
         public IParameter ToParameter(bool isOut = false, bool isRef = false, string name = "value")
@@ -1246,27 +1126,34 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
-        public IField ToField(IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
+        public IType ToPinned()
         {
-            TypeSymbol containingTypeSymbol = null;
-            var metadataTypeAdapter = containingType as MetadataTypeAdapter;
-            if (metadataTypeAdapter != null)
+            var newType = this.typeDef.ToAdapter(false, true);
+            Debug.Assert(newType.IsPinned);
+            return newType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToPointerType()
+        {
+            return new PointerTypeSymbol(this.typeDef).ToAdapter();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToRtti()
+        {
+            if (this.UseAsRtti)
             {
-                containingTypeSymbol = metadataTypeAdapter.TypeDef;
+                return this;
             }
 
-            return
-                new MetadataFieldAdapter(
-                    new SynthesizedFieldSymbol(
-                        containingTypeSymbol as NamedTypeSymbol,
-                        isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef,
-                        name,
-                        isPublic,
-                        isReadOnly,
-                        isStatic),
-                    containingTypeSymbol,
-                    isFixed ? this.ToPointerType() : this,
-                    isFixed);
+            return this.AsRtti();
         }
 
         /// <summary>
@@ -1278,6 +1165,44 @@ namespace PEAssemblyReader
             return this.lazyToString.Value;
         }
 
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        public IType ToVirtualTable()
+        {
+            if (this.UseAsVirtualTable)
+            {
+                return this;
+            }
+
+            return this.AsVirtualTable();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="interfaceOwner">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        public IType ToVirtualTableImplementation(IType interfaceOwner = null)
+        {
+            if (this.UseAsVirtualTableImplementation)
+            {
+                return this;
+            }
+
+            return this.AsVirtualTableImplementation(interfaceOwner);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="typeDef">
+        /// </param>
+        /// <param name="recursive">
+        /// </param>
+        /// <returns>
+        /// </returns>
         internal static TypeSymbol GetBareTypeSymbol(TypeSymbol typeDef, bool recursive = true)
         {
             var currentTypeDef = typeDef;
@@ -1307,6 +1232,62 @@ namespace PEAssemblyReader
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        internal TypeSymbol GetElementTypeSymbol()
+        {
+            if (this.IsByRef)
+            {
+                return this.typeDef;
+            }
+
+            if (this.IsArray)
+            {
+                return (this.typeDef as ArrayTypeSymbol).ElementType;
+            }
+
+            if (this.IsPointer)
+            {
+                return (this.typeDef as PointerTypeSymbol).PointedAtType;
+            }
+
+            Debug.Fail(string.Empty);
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool AnyGenericArguments()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool AnyGenericParameters()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1352,6 +1333,30 @@ namespace PEAssemblyReader
         /// </summary>
         /// <returns>
         /// </returns>
+        private IType CalculateDeclaringType()
+        {
+            var containingType = GetBareTypeSymbol(this.typeDef).ContainingType;
+            if (containingType == null)
+            {
+                return null;
+            }
+
+            return containingType.ToAdapter();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private IType CalculateDeclaringTypeOriginal()
+        {
+            return new MetadataTypeAdapter(GetBareTypeSymbol(this.typeDef).ContainingType);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
         private string CalculateFullName()
         {
             var sb = new StringBuilder();
@@ -1364,6 +1369,149 @@ namespace PEAssemblyReader
             var result = sb.ToString();
 
             return result;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IType> CalculateGenericArguments()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeArguments.Length != 0)
+            {
+                return namedTypeSymbol.TypeArguments.Select(a => a.ToAdapter());
+            }
+
+            return new IType[0];
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IType> CalculateGenericParameters()
+        {
+            var namedTypeSymbol = this.typeDef as NamedTypeSymbol;
+            if (namedTypeSymbol != null && namedTypeSymbol.TypeParameters.Length != 0)
+            {
+                return namedTypeSymbol.TypeParameters.Select(a => new MetadataTypeAdapter(a));
+            }
+
+            return new IType[0];
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private IType CalculateGetElementType()
+        {
+            var typeSymbol = this.GetElementTypeSymbol();
+            if (typeSymbol != null)
+            {
+                return typeSymbol.ToAdapter();
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool CalculateIsGenericType()
+        {
+            IType current = this;
+            while (current != null)
+            {
+                if (current.IsGenericTypeLocal)
+                {
+                    return true;
+                }
+
+                if (current.HasElementType && current.GetElementType().IsGenericType)
+                {
+                    return true;
+                }
+
+                if (!current.IsNested)
+                {
+                    break;
+                }
+
+                current = current.DeclaringType;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool CalculateIsGenericTypeDefinition()
+        {
+            IType current = this;
+            while (current != null)
+            {
+                if (current.IsGenericTypeDefinitionLocal)
+                {
+                    return true;
+                }
+
+                if (current.HasElementType && current.ToBareType().IsGenericTypeDefinition)
+                {
+                    return true;
+                }
+
+                if (!current.IsNested)
+                {
+                    break;
+                }
+
+                current = current.DeclaringType;
+            }
+
+            return current.IsGenericParameter;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private bool CalculateIsPrimitive()
+        {
+            if (this.typeDef.IsPrimitiveRecursiveStruct())
+            {
+                switch (this.typeDef.SpecialType)
+                {
+                    case SpecialType.System_IntPtr:
+                    case SpecialType.System_UIntPtr:
+                        return false;
+                }
+
+                return true;
+            }
+
+            switch (this.typeDef.SpecialType)
+            {
+                case SpecialType.System_Boolean:
+                case SpecialType.System_Byte:
+                case SpecialType.System_Char:
+                case SpecialType.System_Double:
+                case SpecialType.System_Int16:
+                case SpecialType.System_Int32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt16:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_SByte:
+                case SpecialType.System_Single:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -1417,6 +1565,21 @@ namespace PEAssemblyReader
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        private MetadataModuleAdapter CalculateModule()
+        {
+            var module = this.typeDef.ContainingModule;
+            if (module != null)
+            {
+                return new MetadataModuleAdapter(module);
+            }
+
+            return new MetadataModuleAdapter(GetBareTypeSymbol(this.typeDef).ContainingModule);
         }
 
         /// <summary>
@@ -1484,44 +1647,6 @@ namespace PEAssemblyReader
         private string CalculateNamespace()
         {
             return GetBareTypeSymbol(this.typeDef).CalculateNamespace();
-        }
-
-        private IType CalculateGetElementType()
-        {
-            var typeSymbol = this.GetElementTypeSymbol();
-            if (typeSymbol != null)
-            {
-                return typeSymbol.ToAdapter();
-            }
-
-            return null;
-        }
-
-        private MetadataModuleAdapter CalculateModule()
-        {
-            var module = this.typeDef.ContainingModule;
-            if (module != null)
-            {
-                return new MetadataModuleAdapter(module);
-            }
-
-            return new MetadataModuleAdapter(GetBareTypeSymbol(this.typeDef).ContainingModule);
-        }
-
-        private IType CalculateDeclaringTypeOriginal()
-        {
-            return new MetadataTypeAdapter(GetBareTypeSymbol(this.typeDef).ContainingType);
-        }
-
-        private IType CalculateDeclaringType()
-        {
-            var containingType = GetBareTypeSymbol(this.typeDef).ContainingType;
-            if (containingType == null)
-            {
-                return null;
-            }
-
-            return containingType.ToAdapter();
         }
 
         /// <summary>
@@ -1630,6 +1755,86 @@ namespace PEAssemblyReader
         private bool IsDerivedFromValueType()
         {
             return this.BaseType != null && this.BaseType.IsValueType;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IConstructor> IterateConstructors(BindingFlags bindingFlags)
+        {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
+            }
+
+            return
+                this.typeDef.GetMembers()
+                    .Where(m => m is MethodSymbol && this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                    .Select(f => new MetadataConstructorAdapter(f as MethodSymbol));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IField> IterateFields(BindingFlags bindingFlags)
+        {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                return this.typeDef.OriginalDefinition.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            }
+
+            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="bindingFlags">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        private IEnumerable<IMethod> IterateMethods(BindingFlags bindingFlags)
+        {
+            if (this.typeDef.IsUnboundGenericType())
+            {
+                foreach (var method in
+                    this.typeDef.OriginalDefinition.GetMembers()
+                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
+                {
+                    yield return method;
+                }
+            }
+            else
+            {
+                foreach (var method in
+                    this.typeDef.GetMembers()
+                        .Where(m => m is MethodSymbol && !this.IsAny(((MethodSymbol)m).MethodKind, MethodKind.Constructor, MethodKind.StaticConstructor))
+                        .Select(f => new MetadataMethodAdapter(f as MethodSymbol)))
+                {
+                    yield return method;
+                }
+            }
+
+            if (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy))
+            {
+                var baseType = this.BaseType;
+                if (baseType != null)
+                {
+                    foreach (var method in baseType.GetMethods(bindingFlags))
+                    {
+                        yield return method;
+                    }
+                }
+            }
         }
     }
 }

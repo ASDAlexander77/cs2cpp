@@ -25,7 +25,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiInfoName(this IType type)
         {
-            return string.Concat(type.FullName, " Info");
+            return string.Concat("_RTTI_", type.FullName, " Info").CleanUpName();
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiStringName(this IType type)
         {
-            return string.Concat(type.FullName, " String Name");
+            return string.Concat("_RTTI_", type.FullName, " String Name").CleanUpName();
         }
 
         /// <summary>
@@ -62,9 +62,9 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine("; RTTI class");
+            writer.WriteLine("// RTTI class");
             type.WriteRttiClassDefinition(cWriter);
-            writer.WriteLine("; RTTI pointer");
+            writer.WriteLine("// RTTI pointer");
             type.WriteRttiPointerClassDefinition(writer);
         }
 
@@ -92,10 +92,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("@\"{0}\" = linkonce_odr constant ", type.GetRttiInfoName());
             type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write(' ');
+            writer.Write(" ");
+            writer.Write(type.GetRttiInfoName());
+            writer.Write(" = ");
             type.WriteRttiClassInfoDefinition(cWriter);
+            writer.Write(";");
         }
 
         /// <summary>
@@ -181,11 +183,10 @@ namespace Il2Native.Logic.Gencode
         public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"{2}{1}\\00\"",
+                "const char* {0} = \"{2}{1}\\00\";",
                 type.GetRttiStringName(),
                 type.FullName,
-                type.FullName.Length,
-                type.StringLength());
+                type.FullName.Length);
         }
     }
 }

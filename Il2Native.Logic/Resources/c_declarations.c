@@ -42,3 +42,14 @@ typedef Int32 (*anyFn)(...);
 
 extern "C" void* calloc(Int);
 extern "C" void* __dynamic_cast(Void*, Void*, Void*, Int32);
+
+// RTTI externals
+extern "C" Byte** _ZTVN10__cxxabiv116__enum_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv117__array_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv117__class_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv119__pointer_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv120__si_class_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv120__function_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv121__vmi_class_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv123__fundamental_type_infoE;
+extern "C" Byte** _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;

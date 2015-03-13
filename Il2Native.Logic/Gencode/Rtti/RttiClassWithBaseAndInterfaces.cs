@@ -25,16 +25,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassInfoDeclaration(IType type, IndentedTextWriter writer)
         {
-            writer.Write("{ i8*, i8*, i32, i32");
+            writer.Write("struct { Byte* f1; Byte* f2; Int32 f3; Int32 f4");
 
             if (type.BaseType != null)
             {
-                writer.Write(", i8*, i32");
+                writer.Write("; Byte* f5; Int32 f6");
             }
 
+            var index = 7;
             foreach (var @interface in type.GetInterfaces())
             {
-                writer.Write(", i8*, i32");
+                writer.Write("; Byte* f{0}; Int32 f{0}", index++);
             }
 
             writer.Write(" }");
@@ -55,24 +56,20 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv121__vmi_class_type_infoE, i32 2) to i8*),");
-            writer.WriteLine(
-                "i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),",
-                type.GetRttiStringName(),
-                type.StringLength());
-            writer.WriteLine("i32 0,");
-            writer.WriteLine("i32 {0}", @interfaces.Count() + (type.BaseType != null ? 1 : 0));
+                "(Byte*)_ZTVN10__cxxabiv121__vmi_class_type_infoE[2],");
+            writer.WriteLine("(Byte*){0},", type.GetRttiStringName());
+            writer.WriteLine("0,");
+            writer.WriteLine("{0}", @interfaces.Count() + (type.BaseType != null ? 1 : 0));
 
             var nextFlag = 2;
 
             if (type.BaseType != null)
             {
-                writer.Write(",i8* bitcast (");
-                type.BaseType.WriteRttiClassInfoDeclaration(writer);
-                writer.WriteLine("* @\"{0}\" to i8*),", type.BaseType.GetRttiInfoName());
+                writer.Write(",");
+                writer.WriteLine("(Byte*){0},", type.BaseType.GetRttiInfoName());
 
                 // if class does not have any virtual method then next value should be 0, else 2 (and next class should be +1024)
-                writer.WriteLine("i32 {0}", nextFlag);
+                writer.WriteLine("{0}", nextFlag);
 
                 // apply fields shift + base item
                 // nextFlag += 1024 * (type.BaseType.GetFieldsShift() + 1);
@@ -81,10 +78,9 @@ namespace Il2Native.Logic.Gencode
 
             foreach (var @interface in type.GetInterfaces())
             {
-                writer.Write(",i8* bitcast (");
-                @interface.WriteRttiClassInfoDeclaration(writer);
-                writer.WriteLine("* @\"{0}\" to i8*),", @interface.GetRttiInfoName());
-                writer.WriteLine("i32 {0}", nextFlag);
+                writer.Write(",");
+                writer.WriteLine("(Byte*){0},", @interface.GetRttiInfoName());
+                writer.WriteLine("{0}", nextFlag);
                 nextFlag += 1024;
             }
 

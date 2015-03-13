@@ -24,7 +24,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiPointerInfoName(this IType type)
         {
-            return string.Concat(type.FullName, " Pointer Info");
+            return string.Concat("_RTTI_", type.FullName, " Pointer Info").CleanUpName();
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static string GetRttiPointerStringName(this IType type)
         {
-            return string.Concat(type.FullName, " Pointer String Name");
+            return string.Concat("_RTTI_", type.FullName, " Pointer String Name").CleanUpName();
         }
 
         /// <summary>
@@ -70,10 +70,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("@\"{0}\" = linkonce_odr constant ", type.GetRttiPointerInfoName());
             type.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.Write(' ');
+            writer.Write(" ");
+            writer.Write(type.GetRttiPointerInfoName());
+            writer.Write(" = ");
             type.WriteRttiPointerClassInfoDefinition(writer);
+            writer.WriteLine(";");
         }
 
         /// <summary>
@@ -84,7 +86,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassInfoDeclaration(this IType type, IndentedTextWriter writer)
         {
-            writer.Write("{ i8*, i8*, i32, i8* }");
+            writer.Write("struct { Byte* f1; Byte* f2; Int32 f3; Byte* f4 }");
         }
 
         /// <summary>
@@ -98,17 +100,12 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "i8* bitcast (i8** getelementptr inbounds (i8** @_ZTVN10__cxxabiv119__pointer_type_infoE, i32 2) to i8*),");
-            writer.WriteLine(
-                "i8* getelementptr inbounds ([{1} x i8]* @\"{0}\", i32 0, i32 0),",
-                type.GetRttiPointerStringName(),
-                type.StringLength(1));
-            writer.WriteLine("i32 0,");
-            writer.Write("i8* bitcast (");
-            type.WriteRttiClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*)", type.GetRttiInfoName());
+                "(Byte*)_ZTVN10__cxxabiv119__pointer_type_infoE[2],");
+            writer.WriteLine("(Byte*){0},", type.GetRttiPointerStringName());
+            writer.WriteLine("0,");
+            writer.WriteLine("(Byte*){0}", type.GetRttiInfoName());
             writer.Indent--;
-            writer.WriteLine("}");
+            writer.Write("}");
         }
 
         /// <summary>
@@ -132,11 +129,10 @@ namespace Il2Native.Logic.Gencode
         public static void WriteRttiPointerClassName(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "@\"{0}\" = linkonce_odr constant [{3} x i8] c\"P{2}{1}\\00\"",
+                "const char* {0} = \"P{2}{1}\\00\";",
                 type.GetRttiPointerStringName(),
                 type.FullName,
-                type.FullName.Length,
-                type.StringLength(1));
+                type.FullName.Length);
         }
     }
 }
