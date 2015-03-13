@@ -34,3 +34,4 @@ typedef uint64_t u64;
 typedef i32 (*anyFn)(...);
 
 extern "C" void* calloc(u32);
+extern "C" void* __dynamic_cast(void*, void*, void*, i32);

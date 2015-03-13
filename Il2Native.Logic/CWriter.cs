@@ -2801,7 +2801,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="writer">
         /// </param>
-        /// <param name="opCodeTypePart">
+        /// <param name="opCodePart">
         /// </param>
         /// <param name="fromType">
         /// </param>
@@ -2813,21 +2813,16 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteDynamicCast(
             CIndentedTextWriter writer,
-            OpCodePart opCodeTypePart,
+            OpCodePart opCodePart,
             OpCodePart opCodeOperand,
             IType toType,
             bool checkNull = false,
             bool throwExceptionIfNull = false)
         {
-            // TODO: finish it
-            FullyDefinedReference fromType = null;
-
-            var effectiveFromType = fromType.Type.UseAsClass
-                ? fromType.ToDereferencedType().ToClassType()
-                : fromType.ToDereferencedType();
-            if (effectiveFromType.Type.TypeEquals(toType))
+            var fromType = this.EstimatedResultOf(opCodeOperand);
+            fromType = fromType.Type.IsPointer || fromType.Type.IsByRef ? new ReturnResult(fromType.Type.GetElementType()) : fromType;
+            if (fromType.Type.TypeEquals(toType))
             {
-                opCodeTypePart.Result = fromType;
                 return;
             }
 
@@ -2838,89 +2833,93 @@ namespace Il2Native.Logic
 
             if (checkNull)
             {
-                var testNullResultNumber = this.SetResultNumber(opCodeTypePart, this.System.System_Boolean);
-                writer.Write("icmp eq ");
-                fromType.Type.WriteTypePrefix(this);
-                writer.WriteLine(" {0}, null", fromType);
+                //var testNullResultNumber = this.SetResultNumber(opCodePart, this.System.System_Boolean);
+                //writer.Write("icmp eq ");
+                //fromType.Type.WriteTypePrefix(this);
+                //writer.WriteLine(" {0}, null", fromType);
 
-                writer.WriteLine(
-                    "br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}",
-                    testNullResultNumber,
-                    opCodeTypePart.AddressStart);
+                //writer.WriteLine(
+                //    "br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}",
+                //    testNullResultNumber,
+                //    opCodePart.AddressStart);
 
-                writer.Indent--;
-                writer.WriteLine(".dynamic_cast_not_null{0}:", opCodeTypePart.AddressStart);
-                writer.Indent++;
+                //writer.Indent--;
+                //writer.WriteLine(".dynamic_cast_not_null{0}:", opCodePart.AddressStart);
+                //writer.Indent++;
             }
 
-            this.WriteCCast(opCodeTypePart, fromType, this.System.System_Byte);
-            writer.WriteLine(string.Empty);
+            //this.WriteCCast(opCodePart, this.System.System_Byte);
+            //writer.WriteLine(string.Empty);
 
-            var firstCastToBytesResult = opCodeTypePart.Result;
+            var firstCastToBytesResult = opCodePart.Result;
 
             var dynamicCastResultNumber = this.SetResultNumber(
-                opCodeTypePart,
+                opCodePart,
                this.System.System_Byte.ToPointerType());
 
-            writer.Write("call i8* @__dynamic_cast(i8* {0}, i8* bitcast (", firstCastToBytesResult);
-            effectiveFromType.Type.WriteRttiClassInfoDeclaration(writer);
-            writer.Write("* @\"{0}\" to i8*), i8* bitcast (", effectiveFromType.Type.GetRttiInfoName());
-            toType.WriteRttiClassInfoDeclaration(writer);
-            writer.WriteLine(
-                "* @\"{0}\" to i8*), i32 {1})",
-                toType.GetRttiInfoName(),
-                CalculateDynamicCastInterfaceIndex(effectiveFromType.Type, toType));
-            writer.WriteLine(string.Empty);
+            writer.Write("(");
+            toType.WriteTypePrefix(this);
+            writer.Write(") __dynamic_cast(");
+
+            this.WriteResultOrActualWrite(writer, opCodeOperand);
+
+            //fromType.Type.WriteRttiClassInfoDeclaration(writer);
+            //writer.Write(", {0}", fromType.Type.GetRttiInfoName());
+            writer.Write(", 0");
+            //toType.WriteRttiClassInfoDeclaration(writer);
+            //writer.WriteLine(", {0}", toType.GetRttiInfoName());
+            writer.Write(", 0");
+            writer.Write(", {0})", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             if (throwExceptionIfNull)
             {
-                this.WriteTestNullValueAndThrowException(
-                    writer,
-                    opCodeTypePart,
-                    dynamicCastResultNumber,
-                    "System.InvalidCastException",
-                    "dynamic_cast");
+                //this.WriteTestNullValueAndThrowException(
+                //    writer,
+                //    opCodePart,
+                //    dynamicCastResultNumber,
+                //    "System.InvalidCastException",
+                //    "dynamic_cast");
             }
 
-            var toClassType = toType.ToClass();
-            this.WriteCCast(opCodeTypePart, dynamicCastResultNumber, toClassType);
+            //var toClassType = toType.ToClass();
+            //this.WriteCCast(opCodePart, dynamicCastResultNumber, toClassType);
 
-            var dynamicCastResult = opCodeTypePart.Result;
+            //var dynamicCastResult = opCodePart.Result;
 
             if (checkNull)
             {
-                writer.WriteLine(string.Empty);
+                //writer.WriteLine(string.Empty);
 
-                writer.WriteLine("br label %.dynamic_cast_end{0}", opCodeTypePart.AddressStart);
+                //writer.WriteLine("br label %.dynamic_cast_end{0}", opCodePart.AddressStart);
 
-                writer.Indent--;
-                writer.WriteLine(".dynamic_cast_null{0}:", opCodeTypePart.AddressStart);
-                writer.Indent++;
+                //writer.Indent--;
+                //writer.WriteLine(".dynamic_cast_null{0}:", opCodePart.AddressStart);
+                //writer.Indent++;
 
-                writer.WriteLine("br label %.dynamic_cast_end{0}", opCodeTypePart.AddressStart);
+                //writer.WriteLine("br label %.dynamic_cast_end{0}", opCodePart.AddressStart);
 
-                var label = string.Concat("dynamic_cast_end", opCodeTypePart.AddressStart);
+                //var label = string.Concat("dynamic_cast_end", opCodePart.AddressStart);
 
-                writer.Indent--;
-                writer.WriteLine(".{0}:", label);
-                writer.Indent++;
+                //writer.Indent--;
+                //writer.WriteLine(".{0}:", label);
+                //writer.Indent++;
 
-                var testNullResultNumber = this.SetResultNumber(opCodeTypePart, toClassType);
-                writer.Write("phi ");
-                toClassType.WriteTypePrefix(this, true);
-                writer.Write(
-                    " [ {0}, {1} ], [ null, {2} ]",
-                    dynamicCastResult,
-                    string.Format(
-                        "%.{1}{0}",
-                        opCodeTypePart.AddressStart,
-                        throwExceptionIfNull ? "dynamic_cast_result_not_null" : "dynamic_cast_not_null"),
-                    string.Format("%.dynamic_cast_null{0}", opCodeTypePart.AddressStart));
+                //var testNullResultNumber = this.SetResultNumber(opCodePart, toClassType);
+                //writer.Write("phi ");
+                //toClassType.WriteTypePrefix(this, true);
+                //writer.Write(
+                //    " [ {0}, {1} ], [ null, {2} ]",
+                //    dynamicCastResult,
+                //    string.Format(
+                //        "%.{1}{0}",
+                //        opCodePart.AddressStart,
+                //        throwExceptionIfNull ? "dynamic_cast_result_not_null" : "dynamic_cast_not_null"),
+                //    string.Format("%.dynamic_cast_null{0}", opCodePart.AddressStart));
 
-                CHelpersGen.SetCustomLabel(opCodeTypePart, label);
+                //CHelpersGen.SetCustomLabel(opCodePart, label);
             }
 
-            this.AddRequiredRttiDeclaration(effectiveFromType.Type);
+            this.AddRequiredRttiDeclaration(fromType.Type);
             this.AddRequiredRttiDeclaration(toType);
         }
 
