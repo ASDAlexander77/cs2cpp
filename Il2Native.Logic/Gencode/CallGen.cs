@@ -492,24 +492,8 @@ namespace Il2Native.Logic.Gencode
             OpCodePart operand,
             IParameter parameter)
         {
-            var castOpened = false;
-            var dynamicCastRequired = false;
-            if (parameter.ParameterType.IsClassCastRequired(cWriter, operand, out dynamicCastRequired))
-            {
-                castOpened = true;
-                cWriter.WriteStartCCast(operand, parameter.ParameterType);
-            }
-
-            // TODO: review next 2 lines
-            operand.RequiredIncomingType = parameter.ParameterType;
-            cWriter.AdjustOperandResultTypeToIncomingType(operand);
-
+            cWriter.AdjustToType(operand, parameter.ParameterType);
             cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
-
-            if (castOpened)
-            {
-                cWriter.WriteEndCCast(operand, parameter.ParameterType);
-            }
         }
 
         private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)

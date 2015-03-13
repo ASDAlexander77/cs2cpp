@@ -547,7 +547,7 @@ namespace Il2Native.Logic.Gencode
             else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
                      (toType.IsPointer || toType.IsByRef))
             {
-                WriteCCastOperand(cWriter, opCode, 0, toType);
+                WriteCCast(cWriter, opCodeOperand, toType);
                 cWriter.SetResultNumber(opCode, toType);
             }
             else if (estimatedOperandResultOf.Type.IsArray
@@ -558,7 +558,7 @@ namespace Il2Native.Logic.Gencode
                      || bareType.IsDerivedFrom(toType) 
                      || resultIsConst)
             {
-                WriteCCastOperand(cWriter, opCode, 0, toType);
+                WriteCCast(cWriter, opCodeOperand, toType);
                 cWriter.SetResultNumber(opCode, toType);
             }
             else

@@ -2184,7 +2184,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public void AdjustOperandResultTypeToIncomingType(OpCodePart opCode)
+        public void AdjustToType(OpCodePart opCode)
         {
             AdjustToType(opCode, opCode.RequiredIncomingType);
         }
@@ -2195,29 +2195,27 @@ namespace Il2Native.Logic
         {
             // cast result if required
             var estimatedResult = this.EstimatedResultOf(opCode);
-            if (typeDest != null && estimatedResult != null &&
-                typeDest.TypeNotEquals(estimatedResult.Type)
-                && !(estimatedResult.IsConst))
+            if (typeDest == null || estimatedResult == null || !typeDest.TypeNotEquals(estimatedResult.Type) || estimatedResult.IsConst)
             {
-                bool castRequired;
-                bool intAdjustmentRequired;
-                this.DetectConversion(
-                    estimatedResult.Type,
-                    typeDest,
-                    out castRequired,
-                    out intAdjustmentRequired);
+                return;
+            }
 
-                if (castRequired)
-                {
-                    this.Output.WriteLine(string.Empty);
-                    this.WriteCast(opCode, opCode, typeDest);
-                }
+            bool castRequired;
+            bool intAdjustmentRequired;
+            this.DetectConversion(
+                estimatedResult.Type,
+                typeDest,
+                out castRequired,
+                out intAdjustmentRequired);
 
-                if (intAdjustmentRequired)
-                {
-                    this.Output.WriteLine(string.Empty);
-                    this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
-                }
+            if (castRequired)
+            {
+                this.WriteCast(opCode, opCode, typeDest);
+            }
+
+            if (intAdjustmentRequired)
+            {
+                this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
             }
         }
 
@@ -3790,6 +3788,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
+        [Obsolete]
         public IncrementalResult SetResultNumber(OpCodePart opCode, IType type)
         {
             var llvmResult = new IncrementalResult(++this.resultNumberIncremental, type);
@@ -4409,8 +4408,8 @@ namespace Il2Native.Logic
                         {
                             opCode.OpCodeOperands[operand1].RequiredIncomingType = requiredType;
                             opCode.OpCodeOperands[operand2].RequiredIncomingType = requiredType;
-                            this.AdjustOperandResultTypeToIncomingType(opCode.OpCodeOperands[operand1]);
-                            this.AdjustOperandResultTypeToIncomingType(opCode.OpCodeOperands[operand2]);
+                            this.AdjustToType(opCode.OpCodeOperands[operand1]);
+                            this.AdjustToType(opCode.OpCodeOperands[operand2]);
 
                             effectiveType = requiredType;
                         }
