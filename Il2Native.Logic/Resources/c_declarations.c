@@ -41,7 +41,12 @@ typedef UInt32 UInt;
 typedef Int32 (*anyFn)(...);
 
 extern "C" Byte* calloc(Int);
-extern "C" void* __dynamic_cast(Void*, Void*, Void*, Int32);
+extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
+extern "C" Void* __cxa_allocate_exception(Int32);
+extern "C" Void __cxa_throw(Byte*, Byte*, Byte*);
+extern "C" Int32 __gxx_personality_v0(...);
+extern "C" Void* __cxa_begin_catch(Byte*)
+extern "C" Void __cxa_end_catch();
 
 // RTTI externals
 extern "C" void* _ZTVN10__cxxabiv117__class_type_infoE;

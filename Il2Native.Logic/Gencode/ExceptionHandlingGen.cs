@@ -620,13 +620,7 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCode,
             CatchOfFinallyClause exceptionHandlingClause)
         {
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; Throw");
-
-            var exceptionPointerType = exceptionHandlingClause != null
-                ? WriteThrowInvoke(cWriter, opCode, exceptionHandlingClause)
-                : WriteThrowCall(cWriter, opCode);
+            WriteThrowInvoke(cWriter, opCode, exceptionHandlingClause);
         }
 
         /// <summary>
@@ -715,32 +709,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <returns>
-        /// </returns>
-        private static IType WriteThrowCall(CWriter cWriter, OpCodePart opCode)
-        {
-            var writer = cWriter.Output;
-
-            var errorAllocationResultNumber = cWriter.WriteAllocateException(opCode);
-
-            var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
-            writer.Write("call void @__cxa_throw(i8* {0}, i8* bitcast (", errorAllocationResultNumber);
-            exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.Write("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
-
-            writer.WriteLine(string.Empty);
-
-            writer.WriteLine("unreachable");
-
-            return exceptionPointerType;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="exceptionHandlingClause">
         /// </param>
         /// <returns>
@@ -752,26 +720,14 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var errorAllocationResultNumber = cWriter.WriteAllocateException(opCode);
-
             var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
-            writer.Write("invoke void @__cxa_throw(i8* {0}, i8* bitcast (", errorAllocationResultNumber);
-            exceptionPointerType.WriteRttiPointerClassInfoDeclaration(writer);
-            writer.WriteLine("* @\"{0}\" to i8*), i8* null)", exceptionPointerType.GetRttiPointerInfoName());
-            writer.Indent++;
-            if (exceptionHandlingClause != null)
-            {
-                writer.Write("to label %.unreachable unwind label %.catch{0}", exceptionHandlingClause.Offset);
-            }
-            else
-            {
-                writer.Write("to label %.unreachable unwind label %.unwind_exception");
-                cWriter.needToWriteUnwindException = true;
-            }
+            writer.Write("__cxa_throw((Byte*)");
+           
+            cWriter.WriteAllocateException(opCode);
 
-            writer.WriteLine(string.Empty);
+            writer.Write("(Byte*) &{0}, (Byte*) 0)", exceptionPointerType.GetRttiPointerInfoName());
 
-            writer.Indent--;
+            cWriter.needToWriteUnwindException = true;
             cWriter.needToWriteUnreachable = true;
 
             return exceptionPointerType;
