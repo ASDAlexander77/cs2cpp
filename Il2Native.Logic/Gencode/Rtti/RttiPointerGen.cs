@@ -58,7 +58,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiPointerClassDefinition(this IType type, IndentedTextWriter writer)
         {
-            type.WriteRttiPointerClassName(writer);
             type.WriteRttiPointerClassInfo(writer);
         }
 
@@ -101,9 +100,10 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*)&_ZTVN10__cxxabiv119__pointer_type_infoE.f2,");
-            writer.WriteLine("(Byte*)&{0},", type.GetRttiPointerStringName());
-            writer.WriteLine("0,");
+                "(Byte*)(&_ZTVN10__cxxabiv119__pointer_type_infoE + 2),");
+            writer.Write("(Byte*)");
+            type.WriteRttiPointerNameString(writer);
+            writer.WriteLine(",0,");
             writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName());
             writer.Indent--;
             writer.Write("}");
@@ -121,17 +121,10 @@ namespace Il2Native.Logic.Gencode
             type.WriteRttiPointerClassInfoDeclaration(writer);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassName(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiPointerNameString(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "const char* {0} = \"P{2}{1}\\00\";",
-                type.GetRttiPointerStringName(),
+                "\"P{1}{0}\"",
                 type.FullName,
                 type.FullName.Length);
         }

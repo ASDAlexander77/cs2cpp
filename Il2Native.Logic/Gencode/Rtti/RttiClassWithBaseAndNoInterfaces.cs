@@ -40,9 +40,10 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*)&_ZTVN10__cxxabiv120__si_class_type_infoE.f2,");
-            writer.WriteLine("(Byte*)&{0},", type.GetRttiStringName());
-            writer.WriteLine("(Byte*)&{0}", type.BaseType.GetRttiInfoName());
+                "(Byte*)(&_ZTVN10__cxxabiv120__si_class_type_infoE + 2),");
+            writer.Write("(Byte*)");
+            type.WriteRttiClassNameString(writer);
+            writer.WriteLine(",(Byte*)&{0}", type.BaseType.GetRttiInfoName());
             writer.Indent--;
             writer.Write("}");
         }

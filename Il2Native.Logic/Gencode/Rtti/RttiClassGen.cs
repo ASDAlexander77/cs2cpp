@@ -106,9 +106,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRttiClassDefinition(this IType type, CWriter cWriter)
         {
-            var writer = cWriter.Output;
-
-            type.WriteRttiClassName(writer);
             type.WriteRttiClassInfo(cWriter);
         }
 
@@ -195,17 +192,10 @@ namespace Il2Native.Logic.Gencode
             RttiClassWithBaseAndNoInterfaces.WriteRttiClassInfoDefinition(type, cWriter);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiClassName(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiClassNameString(this IType type, IndentedTextWriter writer)
         {
             writer.WriteLine(
-                "const char* {0} = \"{2}{1}\\00\";",
-                type.GetRttiStringName(),
+                "\"{1}{0}\"",
                 type.FullName,
                 type.FullName.Length);
         }

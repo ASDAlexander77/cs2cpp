@@ -56,9 +56,10 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
-                "(Byte*)&_ZTVN10__cxxabiv121__vmi_class_type_infoE.f2,");
-            writer.WriteLine("(Byte*)&{0},", type.GetRttiStringName());
-            writer.WriteLine("0,");
+                "(Byte*)(&_ZTVN10__cxxabiv121__vmi_class_type_infoE + 2),");
+            writer.Write("(Byte*)");
+            type.WriteRttiClassNameString(writer);
+            writer.WriteLine(",0,");
             writer.WriteLine("{0}", @interfaces.Count() + (type.BaseType != null ? 1 : 0));
 
             var nextFlag = 2;
