@@ -107,7 +107,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
             // TODO: finish it
 
-            //cWriter.WriteLlvmLoad(
+            //cWriter.WriteLoad(
             //    opCode,
             //    operandType,
             //    new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
@@ -184,7 +184,7 @@ namespace Il2Native.Logic.Gencode
 
             //        // load again
             //        opCode.Result = null;
-            //        cWriter.WriteLlvmLoad(
+            //        cWriter.WriteLoad(
             //            opCode,
             //            operandType,
             //            new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));

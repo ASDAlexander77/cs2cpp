@@ -379,7 +379,7 @@ namespace Il2Native.Logic.Gencode
             var memberAccessResultNumber = opCode.Result;
 
             opCode.Result = null;
-            cWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
+            cWriter.WriteLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
             writer.WriteLine(string.Empty);
 
             if (opCode.Result.Type.IntTypeBitSize() != cWriter.System.System_Int32.IntTypeBitSize())
@@ -407,7 +407,7 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
             cWriter.WriteMethodStart(method, null);
-            cWriter.WriteLlvmLoad(
+            cWriter.WriteLoad(
                 opCode,
                 type.ToClass(),
                 new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
@@ -486,20 +486,11 @@ namespace Il2Native.Logic.Gencode
             {
                 cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0].Result);
                 writer.WriteLine(string.Empty);
-
-                if (declaringTypeNormal.IsStructureType())
-                {
-                    // init now
-                    opCodePart.Result = objectSource;
-
-                    declaringTypeClass.WriteCallInitObjectMethod(cWriter, opCodePart);
-                    writer.WriteLine(";");
-                }
             }
             else
             {
                 // this is type reference, initialize it with null
-                writer.WriteLine("*((i8*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
+                writer.WriteLine("*((Byte*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
             }
 
             writer.Write("// end");
@@ -626,7 +617,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             cWriter.WriteMethodStart(method, null);
-            cWriter.WriteLlvmLoad(
+            cWriter.WriteLoad(
                 opCode,
                 type.ToClass(),
                 new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
@@ -713,7 +704,7 @@ namespace Il2Native.Logic.Gencode
                 opCode.Result = null;
             }
 
-            cWriter.WriteLlvmLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
+            cWriter.WriteLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
 
             writer.WriteLine(string.Empty);
             writer.WriteLine("; End of Copy data");

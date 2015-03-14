@@ -388,23 +388,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="thisTypeString">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int GetIntSizeBits(this string thisTypeString)
-        {
-            if (string.IsNullOrWhiteSpace(thisTypeString) || thisTypeString[0] != 'i')
-            {
-                return 0;
-            }
-
-            int size;
-            return int.TryParse(thisTypeString.Substring(1), out size) ? size : 0;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCode">
         /// </param>
         /// <param name="baseWriter">
@@ -471,10 +454,30 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public static int IntTypeBitSize(this IType thisType, bool isPointer = false)
+        public static int IntTypeBitSize(this IType thisType)
         {
-            var thisTypeString = thisType.TypeToCType(isPointer);
-            return GetIntSizeBits(thisTypeString);
+            switch (thisType.FullName)
+            {
+                case "System.Boolean":
+                    return 1;
+                case "System.SByte":
+                case "System.Byte":
+                    return 8;
+                case "System.Char":
+                case "System.Int16":
+                case "System.UInt16":
+                    return 16;
+                case "System.Int32":
+                case "System.UInt32":
+                case "System.IntPtr":
+                case "System.UIntPtr":
+                    return 32;
+                case "System.Int64":
+                case "System.UInt64":
+                    return 64;
+            }
+
+            return 0;
         }
 
         /// <summary>
@@ -585,11 +588,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsIntValueTypeExtCastRequired(this IType thisType, IType type)
         {
-            var thisTypeString = thisType.TypeToCType();
-            var typeString = type.TypeToCType();
-
-            var thisTypeSize = GetIntSizeBits(thisTypeString);
-            var typeSize = GetIntSizeBits(typeString);
+            var thisTypeSize = thisType.IntTypeBitSize();
+            var typeSize = type.IntTypeBitSize();
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -609,11 +609,8 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsIntValueTypeTruncCastRequired(this IType thisType, IType type)
         {
-            var thisTypeString = thisType.TypeToCType();
-            var typeString = type.TypeToCType();
-
-            var thisTypeSize = GetIntSizeBits(thisTypeString);
-            var typeSize = GetIntSizeBits(typeString);
+            var thisTypeSize = thisType.IntTypeBitSize();
+            var typeSize = type.IntTypeBitSize();
 
             if (thisTypeSize == 0 || typeSize == 0)
             {
@@ -835,8 +832,7 @@ namespace Il2Native.Logic
 
         public static bool IsSkipped(this IMethod method)
         {
-            return method.IsUnmanaged && !method.IsUnmanagedMethodReference
-                   && (method.Name == "llvm_memcpy_p0i8_p0i8_i32" || method.Name == "llvm_memset_p0i8_i32");
+            return false;
         }
 
         /// <summary>

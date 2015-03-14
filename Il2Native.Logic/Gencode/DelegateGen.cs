@@ -305,7 +305,7 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             // load 'this' variable
-            cWriter.WriteLlvmLoad(
+            cWriter.WriteLoad(
                 opCode,
                 method.DeclaringType,
                 new FullyDefinedReference(cWriter.GetThisName(), method.DeclaringType));
@@ -388,7 +388,7 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             // load 'this' variable
-            cWriter.WriteLlvmLoad(
+            cWriter.WriteLoad(
                 opCode,
                 method.DeclaringType,
                 new FullyDefinedReference(cWriter.GetThisName(), method.DeclaringType));
@@ -414,7 +414,7 @@ namespace Il2Native.Logic.Gencode
 
                 // load value 1
                 opCode.Result = null;
-                cWriter.WriteLlvmLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
+                cWriter.WriteLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
                 writer.WriteLine(string.Empty);
 
                 var objectResultNumber = opCode.Result;
@@ -438,7 +438,7 @@ namespace Il2Native.Logic.Gencode
 
                 // load value 1
                 opCode.Result = null;
-                cWriter.WriteLlvmLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
+                cWriter.WriteLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
                 writer.WriteLine(string.Empty);
 
                 var methodResultNumber = opCode.Result;

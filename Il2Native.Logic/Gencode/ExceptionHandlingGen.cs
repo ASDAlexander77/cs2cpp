@@ -170,7 +170,7 @@ namespace Il2Native.Logic.Gencode
                     string.Concat("%.finally_jump", exceptionHandlingClause.Offset),
                     cWriter.System.System_Int32);
 
-                cWriter.WriteLlvmLoad(opCodeNope, cWriter.System.System_Int32, fullyDefinedRef);
+                cWriter.WriteLoad(opCodeNope, cWriter.System.System_Int32, fullyDefinedRef);
                 writer.WriteLine(string.Empty);
                 writer.WriteLine(
                     "switch i32 {1}, label %.finally_exit{0} [",

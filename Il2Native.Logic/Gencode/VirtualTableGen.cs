@@ -397,7 +397,8 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("static struct ");
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("const struct ");
             VirtualTableDeclaration(virtualTable, cWriter);
             cWriter.Output.Write(" ");
             if (interfaceType == null)

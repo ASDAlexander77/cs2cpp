@@ -256,8 +256,8 @@ namespace Il2Native.Logic.Gencode
                 case "CompareExchange":
                     opCodeMethodInfo.InterlockBase(
                         "cmpxchg ",
-                        cWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
-                        !cWriter.IsLlvm35 && !cWriter.IsLlvm34OrLower,
+                        " acq_rel monotonic",
+                        true,
                         cWriter,
                         new[] { 0, 2, 1 });
                     break;

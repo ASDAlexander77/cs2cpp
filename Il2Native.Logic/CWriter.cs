@@ -151,10 +151,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public string DataLayout { get; private set; }
-
-        /// <summary>
-        /// </summary>
         public bool Gc { get; private set; }
 
         /// <summary>
@@ -170,22 +166,6 @@ namespace Il2Native.Logic
                 return this.IlReader.IsCoreLib;
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public bool IsLlvm34OrLower { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool IsLlvm35 { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool IsLlvm36 { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public bool IsLlvm37 { get; private set; }
 
         public IDictionary<int, IMethod> MethodsByToken
         {
@@ -402,7 +382,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCode.Result = new ConstValue(string.Concat(opCodeSingle.Operand, "f"), this.System.System_Single);
+                        opCode.Result = new ConstValue(string.Concat(Convert.ToDouble(opCodeSingle.Operand).ToString("F"), "f"), this.System.System_Single);
                     }
 
                     break;
@@ -418,7 +398,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCode.Result = new ConstValue(opCodeDouble.Operand, this.System.System_Double);
+                        opCode.Result = new ConstValue(Convert.ToDouble(opCodeDouble.Operand).ToString("F"), this.System.System_Double);
                     }
 
                     break;
@@ -489,7 +469,7 @@ namespace Il2Native.Logic
                     {
                         var memberAccessResultNumber = opCode.Result;
                         opCode.Result = null;
-                        this.WriteLlvmLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
+                        this.WriteLoad(opCode, memberAccessResultNumber.Type, memberAccessResultNumber);
                     }
 
                     break;
@@ -521,7 +501,7 @@ namespace Il2Native.Logic
 
                     var destinationName = opCodeFieldInfoPart.Operand.GetFullName().CleanUpName();
                     var reference = new FullyDefinedReference(destinationName, opCodeFieldInfoPart.Operand.FieldType);
-                    this.WriteLlvmLoad(opCode, operandType, reference);
+                    this.WriteLoad(opCode, operandType, reference);
 
                     break;
                 case Code.Ldsflda:
@@ -544,7 +524,7 @@ namespace Il2Native.Logic
                     operandType = opCodeFieldInfoPart.Operand.FieldType;
                     reference = new FullyDefinedReference(destinationName, operandType);
 
-                    this.WriteLlvmSave(opCode, operandType, 0, reference);
+                    this.WriteSave(opCode, operandType, 0, reference);
 
                     break;
 
@@ -792,7 +772,7 @@ namespace Il2Native.Logic
                     var localType = this.LocalInfo[index].LocalType;
 
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
-                    this.WriteLlvmSave(opCode, localType, 0, destination);
+                    this.WriteSave(opCode, localType, 0, destination);
 
                     break;
                 case Code.Ldloc:
@@ -817,7 +797,7 @@ namespace Il2Native.Logic
                     var definedReference = new FullyDefinedReference(destinationName, localType);
                     if (!localType.IsStructureType() || localType.IsByRef)
                     {
-                        this.WriteLlvmLoad(opCode, localType, definedReference);
+                        this.WriteLoad(opCode, localType, definedReference);
                     }
                     else
                     {
@@ -853,7 +833,7 @@ namespace Il2Native.Logic
                     if (this.HasMethodThis && index == 0)
                     {
                         var thisTypeAsClass = this.ThisType.ToClass();
-                        this.WriteLlvmLoad(opCode, thisTypeAsClass, new FullyDefinedReference(this.GetThisName(), thisTypeAsClass), true, true);
+                        this.WriteLoad(opCode, thisTypeAsClass, new FullyDefinedReference(this.GetThisName(), thisTypeAsClass), true, true);
                     }
                     else
                     {
@@ -864,7 +844,7 @@ namespace Il2Native.Logic
                         var fullyDefinedReference = new FullyDefinedReference(destinationName, parameter.ParameterType);
                         if (!parameter.ParameterType.IsStructureType())
                         {
-                            this.WriteLlvmLoad(opCode, parameter.ParameterType, fullyDefinedReference);
+                            this.WriteLoad(opCode, parameter.ParameterType, fullyDefinedReference);
                         }
                         else
                         {
@@ -912,12 +892,12 @@ namespace Il2Native.Logic
                         else
                         {
                             opCode.Result = destination;
-                            this.WriteLlvmLoad(opCode, argType, firstOpCodeOperand.Result);
+                            this.WriteLoad(opCode, argType, firstOpCodeOperand.Result);
                         }
                     }
                     else
                     {
-                        this.WriteLlvmSave(opCode, argType, 0, destination);
+                        this.WriteSave(opCode, argType, 0, destination);
                     }
 
                     break;
@@ -1340,7 +1320,7 @@ namespace Il2Native.Logic
                     {
                         var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
                         nextOp.OpCodeOperands[0].Result = null;
-                        this.WriteLlvmLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
+                        this.WriteLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
                     }
 
                     var firstOperandResult = nextOp.OpCodeOperands[0].Result;
@@ -1426,7 +1406,7 @@ namespace Il2Native.Logic
                     writer.WriteLine(string.Empty);
                     this.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
                     writer.WriteLine(string.Empty);
-                    this.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
+                    this.WriteLoad(opCode, opCode.Result.Type, opCode.Result);
                     writer.WriteLine(string.Empty);
 
                     break;
@@ -1868,7 +1848,7 @@ namespace Il2Native.Logic
                 opCode.Result = null;
             }
 
-            this.WriteLlvmLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
+            this.WriteLoad(opCode, type, accessIndexResultNumber2, indirect: indirect);
         }
 
         public void ReadParameters(string[] args)
@@ -1878,12 +1858,7 @@ namespace Il2Native.Logic
             this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = args == null || !args.Contains("gctors-");
-            this.IsLlvm37 = args != null && args.Contains("llvm37");
 
-            // this.IsLlvm36 = !this.IsLlvm37 && args != null && args.Contains("llvm36");
-            this.IsLlvm35 = !this.IsLlvm36 && args != null && args.Contains("llvm35");
-            this.IsLlvm34OrLower = !this.IsLlvm35 && args != null && args.Contains("llvm34");
-            this.IsLlvm36 = !this.IsLlvm37 && !this.IsLlvm35 && !this.IsLlvm34OrLower;
             this.Stubs = args != null && args.Contains("stubs");
 
             // prefefined settings
@@ -1892,22 +1867,12 @@ namespace Il2Native.Logic
                 this.Target = this.Target ?? "armv7-none-linux-androideabi";
                 this.Gctors = false;
                 this.ByValAlign = Math.Max(PointerSize, 8);
-
-                ////this.IsLlvm35 = false;
-                ////this.IsLlvm34OrLower = false;
             }
             else if (args != null && args.Contains("emscripten"))
             {
                 this.Target = this.Target ?? "asmjs-unknown-emscripten";
                 this.Gc = false;
-                this.IsLlvm35 = false;
-                this.IsLlvm34OrLower = true;
-
-                this.DataLayout = @"e-p:32:32-i64:64-v128:32:128-n32-S128";
             }
-
-            this.DataLayout = this.DataLayout
-                              ?? @"e-p:32:32:32-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-f80:128:128-v64:64:64-v128:128:128-a0:0:64-f80:32:32-n8:16:32-S32";
             this.Target = this.Target ?? "i686-w64-mingw32";
         }
 
@@ -1928,7 +1893,7 @@ namespace Il2Native.Logic
 
             if (fieldType.IsStructureType())
             {
-                this.WriteLlvmLoad(opCodePart, fieldType, opCodePart.OpCodeOperands[valueOperand].Result);
+                this.WriteLoad(opCodePart, fieldType, opCodePart.OpCodeOperands[valueOperand].Result);
             }
             else
             {
@@ -2401,7 +2366,11 @@ namespace Il2Native.Logic
 
         public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            this.WriteResult(opCode);
+            if (!(opCode.Result is IncrementalResult))
+            {
+                this.WriteResult(opCode);
+            }
+
             opCode.Result = new FullyDefinedReference("_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, opCode.Result.Type);
         }
 
@@ -3714,14 +3683,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            // TODO: review it
-            if (sourceType.TypeEquals(this.System.System_Boolean) && requiredType.TypeEquals(this.System.System_Byte))
-            {
-                return;
-            }
-
-            // TODO: review it
-            if (sourceType.TypeEquals(this.System.System_Int32) && requiredType.TypeEquals(this.System.System_Boolean))
+            if (sourceType.IntTypeBitSize() > 0 && requiredType.IntTypeBitSize() > 0)
             {
                 return;
             }
@@ -4179,7 +4141,7 @@ namespace Il2Native.Logic
             ////if (opCode.OpCodeOperands[1].Result.Type.IsStructureType())
             ////{
             ////    // load index from struct type
-            ////    this.WriteLlvmLoadPrimitiveFromStructure(opCode.OpCodeOperands[1], opCode.OpCodeOperands[1].Result);
+            ////    this.WriteLoadPrimitiveFromStructure(opCode.OpCodeOperands[1], opCode.OpCodeOperands[1].Result);
             ////    this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[1], this.GetIntTypeByByteSize(PointerSize));
             ////}
             this.LoadElement(writer, opCode, "data", type, opCode.OpCodeOperands[1], actualLoad);
@@ -4193,7 +4155,7 @@ namespace Il2Native.Logic
             var loadValueFromAddress = !opCodeTypePart.Operand.IsStructureType();
             if (loadValueFromAddress)
             {
-                this.WriteLlvmLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
+                this.WriteLoad(opCode, opCodeTypePart.Operand, resultOfOp0);
             }
             else
             {
@@ -4373,7 +4335,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[1].Result);
+                this.WriteLoad(opCode, type, opCode.OpCodeOperands[1].Result);
             }
         }
 
@@ -4388,7 +4350,7 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodePart opCode, int operandIndex, int destinationIndex, bool destinationIsIndirect = false)
         {
             var operandResult = this.EstimatedResultOf(opCode.OpCodeOperands[operandIndex]);
-            this.WriteLlvmSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result, destinationIsIndirect);
+            this.WriteSave(opCode, operandResult.Type, operandIndex, opCode.OpCodeOperands[destinationIndex].Result, destinationIsIndirect);
         }
 
         /// <summary>
@@ -4404,7 +4366,7 @@ namespace Il2Native.Logic
         private void SaveStructElement(CIndentedTextWriter writer, OpCodePart opCode, int operandIndex, IType type)
         {
             // copy struct
-            this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[operandIndex].Result);
+            this.WriteLoad(opCode, type, opCode.OpCodeOperands[operandIndex].Result);
         }
 
         private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
@@ -4716,7 +4678,7 @@ namespace Il2Native.Logic
             writer.WriteLine(", i32 -{0}", ObjectInfrastructure.FunctionsOffsetInVirtualTable);
 
             opCode.Result = null;
-            this.WriteLlvmLoad(opCode, this.System.System_Int32, offsetResult);
+            this.WriteLoad(opCode, this.System.System_Int32, offsetResult);
         }
 
         /// <summary>
@@ -4902,7 +4864,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.Output.Write("{0}i32 main(i32 value_0, char** value_1)", this.declarationPrefix);
+                this.Output.Write("{0}Int32 main(Int32 value_0, char** value_1)", this.declarationPrefix);
             }
 
             this.Output.WriteLine(" {");

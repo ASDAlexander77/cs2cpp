@@ -230,7 +230,7 @@ namespace Il2Native.Logic.Gencode
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
                     var firstOperandResult = opCodeFirstOperand.Result;
                     opCodeFirstOperand.Result = null;
-                    cWriter.WriteLlvmLoad(
+                    cWriter.WriteLoad(
                         opCodeFirstOperand,
                         firstOperandResult.Type.ToDereferencedType(),
                         firstOperandResult);

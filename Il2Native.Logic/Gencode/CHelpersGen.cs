@@ -584,7 +584,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="structAsRef">
         /// </param>
-        public static void WriteLlvmLoad(
+        public static void WriteLoad(
             this CWriter cWriter,
             OpCodePart opCode,
             IType typeToLoad,
@@ -592,7 +592,7 @@ namespace Il2Native.Logic.Gencode
             bool appendReference = true,
             bool structAsRef = false)
         {
-            cWriter.WriteLlvmLoad(
+            cWriter.WriteLoad(
                 opCode,
                 typeToLoad,
                 new FullyDefinedReference(source.ToString(), source.Type),
@@ -616,7 +616,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="indirect">
         /// </param>
-        public static void WriteLlvmLoad(
+        public static void WriteLoad(
             this CWriter cWriter,
             OpCodePart opCode,
             IType typeToLoad,
@@ -653,7 +653,7 @@ namespace Il2Native.Logic.Gencode
             opCode.Result = effectiveSource;
         }
 
-        public static void WriteLlvmLoadPrimitiveFromStructure(
+        public static void WriteLoadPrimitiveFromStructure(
             this CWriter cWriter,
             OpCodePart opCode,
             FullyDefinedReference source)
@@ -663,42 +663,15 @@ namespace Il2Native.Logic.Gencode
             // write access to a field
             if (!cWriter.WriteFieldAccess(opCode, source.Type, source.Type, 0, source))
             {
-                writer.WriteLine("; No data");
+                writer.WriteLine("// No data");
                 return;
             }
 
             writer.WriteLine(string.Empty);
 
-            cWriter.WriteLlvmLoad(opCode, opCode.Result.Type, opCode.Result);
+            cWriter.WriteLoad(opCode, opCode.Result.Type, opCode.Result);
 
             writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="index">
-        /// </param>
-        /// <param name="asReference">
-        /// </param>
-        public static void WriteLlvmLocalVarAccess(this CWriter cWriter, int index, bool asReference = false)
-        {
-            var writer = cWriter.Output;
-
-            var localType = cWriter.LocalInfo[index].LocalType;
-
-            localType.WriteTypePrefix(cWriter, false);
-            if (asReference)
-            {
-                writer.Write('*');
-            }
-
-            writer.Write(' ');
-            writer.Write(cWriter.GetLocalVarName(index));
-
-            // TODO: optional do we need to calculate it propertly?
-            writer.Write(", align " + CWriter.PointerSize);
         }
 
         /// <summary>
@@ -713,7 +686,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="destination">
         /// </param>
-        public static void WriteLlvmSave(
+        public static void WriteSave(
             this CWriter cWriter,
             OpCodePart opCode,
             IType typeToSave,
@@ -828,7 +801,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((i8*) ({0}), 0, sizeof(", op1);
+            writer.Write("memset((Byte*) ({0}), 0, sizeof(", op1);
             type.WriteTypePrefix(cWriter);
             writer.Write("));");
         }
@@ -837,7 +810,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((i8*) ({0}), 0, ({1}))", op1, size);
+            writer.Write("memset((Byte*) ({0}), 0, ({1}))", op1, size);
         }
 
         public static void WriteMemSet(
@@ -847,42 +820,13 @@ namespace Il2Native.Logic.Gencode
             OpCodePart size)
         {
             var writer = cWriter.Output;
-            writer.Write("memset((i8*) (");
+            writer.Write("memset((Byte*) (");
             cWriter.WriteResultOrActualWrite(writer, reference);
             writer.Write("), ");
             cWriter.WriteResultOrActualWrite(writer, init);
             writer.Write(", (");
             cWriter.WriteResultOrActualWrite(writer, size);
             writer.Write("))");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public static void WritePtrToInt(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            FullyDefinedReference source,
-            IType toType)
-        {
-            var writer = cWriter.Output;
-
-            Debug.Assert(!toType.IsPointer);
-
-            cWriter.SetResultNumber(opCode, toType);
-            writer.Write("ptrtoint ");
-            source.Type.WriteTypePrefix(cWriter, true);
-            writer.Write(" ");
-            cWriter.WriteResult(source);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(cWriter);
         }
     }
 }
