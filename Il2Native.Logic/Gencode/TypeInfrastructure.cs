@@ -80,10 +80,10 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteMethodStart(method, null, true);
             cWriter.WriteGetOrCreateRuntimeTypeStaticObject(opCode, classType, systemType);
 
-            writer.Write("ret ");
-            systemType.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            cWriter.WriteResult(opCode.Result);
+            writer.Write("ret 0");
+            //systemType.WriteTypePrefix(cWriter);
+            //writer.Write(" ");
+            //cWriter.WriteResult(opCode.Result);
 
             cWriter.WriteMethodEnd(method, null);
         }
@@ -105,98 +105,99 @@ namespace Il2Native.Logic.Gencode
             IType operandType)
         {
             var writer = cWriter.Output;
+            // TODO: finish it
 
-            cWriter.WriteLlvmLoad(
-                opCode,
-                operandType,
-                new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
-            writer.WriteLine(string.Empty);
+            //cWriter.WriteLlvmLoad(
+            //    opCode,
+            //    operandType,
+            //    new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
+            //writer.WriteLine(string.Empty);
 
-            var result = opCode.Result;
+            //var result = opCode.Result;
 
-            var testNullResultNumber = cWriter.WriteTestNull(writer, opCode, opCode.Result);
+            //var testNullResultNumber = cWriter.WriteTestNull(writer, opCode, opCode.Result);
 
-            cWriter.WriteBranchSwitchToExecute(
-                writer,
-                opCode,
-                testNullResultNumber,
-                operandType.FullName,
-                "gettype",
-                "new",
-                () =>
-                {
-                    // TODO: here send predifined byte array data with info for Type
-                    IType runtimeType = null;
-                    try
-                    {
-                        runtimeType = cWriter.System.System_RuntimeType;
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        opCode.Result = new ConstValue(null, cWriter.System.System_Type);
-                        writer.Write("ret ");
-                        cWriter.System.System_Type.WriteTypePrefix(cWriter);
-                        writer.WriteLine(" null");
-                        return;
-                    }
+            //cWriter.WriteBranchSwitchToExecute(
+            //    writer,
+            //    opCode,
+            //    testNullResultNumber,
+            //    operandType.FullName,
+            //    "gettype",
+            //    "new",
+            //    () =>
+            //    {
+            //        // TODO: here send predifined byte array data with info for Type
+            //        IType runtimeType = null;
+            //        try
+            //        {
+            //            runtimeType = cWriter.System.System_RuntimeType;
+            //        }
+            //        catch (KeyNotFoundException)
+            //        {
+            //            opCode.Result = new ConstValue(null, cWriter.System.System_Type);
+            //            writer.Write("ret ");
+            //            cWriter.System.System_Type.WriteTypePrefix(cWriter);
+            //            writer.WriteLine(" null");
+            //            return;
+            //        }
 
-                    var byteType = cWriter.System.System_Byte;
-                    var byteArrayType = byteType.ToArrayType(1);
-                    var bytes = type.GenerateTypeInfoBytes(cWriter);
-                    var bytesIndex = cWriter.GetBytesIndex(bytes);
-                    var firstParameterValue =
-                        new FullyDefinedReference(
-                            cWriter.GetArrayTypeReference(
-                                string.Format("@.bytes{0}", bytesIndex),
-                                byteType,
-                                bytes.Length),
-                            byteArrayType);
+            //        var byteType = cWriter.System.System_Byte;
+            //        var byteArrayType = byteType.ToArrayType(1);
+            //        var bytes = type.GenerateTypeInfoBytes(cWriter);
+            //        var bytesIndex = cWriter.GetBytesIndex(bytes);
+            //        var firstParameterValue =
+            //            new FullyDefinedReference(
+            //                cWriter.GetArrayTypeReference(
+            //                    string.Format("@.bytes{0}", bytesIndex),
+            //                    byteType,
+            //                    bytes.Length),
+            //                byteArrayType);
 
-                    opCode.Result = null;
-                    var newObjectResult = cWriter.WriteNewWithCallingConstructor(
-                        opCode,
-                        runtimeType,
-                        byteArrayType,
-                        firstParameterValue);
-                    writer.WriteLine(string.Empty);
+            //        opCode.Result = null;
+            //        var newObjectResult = cWriter.WriteNewWithCallingConstructor(
+            //            opCode,
+            //            runtimeType,
+            //            byteArrayType,
+            //            firstParameterValue);
+            //        writer.WriteLine(string.Empty);
 
-                    // call cmp exchnage
-                    var noOpCmpXchg = OpCodePart.CreateNop;
-                    noOpCmpXchg.OpCodeOperands = new[]
-                    {
-                        OpCodePart.CreateNop,
-                        OpCodePart.CreateNop,
-                        OpCodePart.CreateNop
-                    };
-                    noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(
-                        type.GetTypeStaticFieldName(),
-                        operandType.ToPointerType());
-                    noOpCmpXchg.OpCodeOperands[1].Result = newObjectResult;
-                    noOpCmpXchg.OpCodeOperands[2].Result = new ConstValue(null, operandType);
-                    noOpCmpXchg.InterlockBase(
-                        "cmpxchg ",
-                        cWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
-                        !cWriter.IsLlvm35 && !cWriter.IsLlvm34OrLower,
-                        cWriter,
-                        new[] { 0, 2, 1 });
-                    writer.WriteLine(string.Empty);
+            //        // call cmp exchnage
+            //        var noOpCmpXchg = OpCodePart.CreateNop;
+            //        noOpCmpXchg.OpCodeOperands = new[]
+            //        {
+            //            OpCodePart.CreateNop,
+            //            OpCodePart.CreateNop,
+            //            OpCodePart.CreateNop
+            //        };
+            //        noOpCmpXchg.OpCodeOperands[0].Result = new FullyDefinedReference(
+            //            type.GetTypeStaticFieldName(),
+            //            operandType.ToPointerType());
+            //        noOpCmpXchg.OpCodeOperands[1].Result = newObjectResult;
+            //        noOpCmpXchg.OpCodeOperands[2].Result = new ConstValue(null, operandType);
+            //        noOpCmpXchg.InterlockBase(
+            //            "cmpxchg ",
+            //            cWriter.IsLlvm34OrLower ? " acq_rel" : " acq_rel monotonic",
+            //            !cWriter.IsLlvm35 && !cWriter.IsLlvm34OrLower,
+            //            cWriter,
+            //            new[] { 0, 2, 1 });
+            //        writer.WriteLine(string.Empty);
 
-                    // load again
-                    opCode.Result = null;
-                    cWriter.WriteLlvmLoad(
-                        opCode,
-                        operandType,
-                        new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
-                    writer.WriteLine(string.Empty);
+            //        // load again
+            //        opCode.Result = null;
+            //        cWriter.WriteLlvmLoad(
+            //            opCode,
+            //            operandType,
+            //            new FullyDefinedReference(type.GetTypeStaticFieldName(), operandType));
+            //        writer.WriteLine(string.Empty);
 
-                    writer.Write("ret ");
-                    opCode.Result.Type.WriteTypePrefix(cWriter);
-                    writer.Write(" ");
-                    cWriter.WriteResult(opCode.Result);
-                    writer.WriteLine(string.Empty);
-                });
+            //        writer.Write("ret ");
+            //        opCode.Result.Type.WriteTypePrefix(cWriter);
+            //        writer.Write(" ");
+            //        cWriter.WriteResult(opCode.Result);
+            //        writer.WriteLine(string.Empty);
+            //    });
 
-            opCode.Result = result;
+            //opCode.Result = result;
         }
 
         /// <summary>

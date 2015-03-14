@@ -796,7 +796,7 @@ namespace Il2Native.Logic.Gencode
             /// </exception>
             public string ToString(IType ownerOfExplicitInterface, bool shortName = false)
             {
-                throw new NotImplementedException();
+                return this.ToString();
             }
 
             /// <summary>

@@ -44,10 +44,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteRttiClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiPointerClassDefinition(this IType type, CWriter cWriter)
         {
-            writer.Write("@\"{0}\" = external global ", type.GetRttiInfoName());
-            type.WriteRttiClassInfoDeclaration(writer);
+            type.WriteRttiPointerClassInfo(cWriter);
         }
 
         /// <summary>
@@ -56,20 +55,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteRttiPointerClassDefinition(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiPointerClassInfo(this IType type, CWriter cWriter)
         {
-            type.WriteRttiPointerClassInfo(writer);
-        }
+            var writer = cWriter.Output;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassInfo(this IType type, IndentedTextWriter writer)
-        {
-            writer.Write("static struct ");
+            writer.Write(cWriter.declarationPrefix);
+            writer.Write("const struct ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiPointerInfoName());
@@ -107,18 +98,6 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName());
             writer.Indent--;
             writer.Write("}");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="writer">
-        /// </param>
-        public static void WriteRttiPointerClassInfoExternalDeclaration(this IType type, IndentedTextWriter writer)
-        {
-            writer.Write("@\"{0}\" = external global ", type.GetRttiPointerInfoName());
-            type.WriteRttiPointerClassInfoDeclaration(writer);
         }
 
         public static void WriteRttiPointerNameString(this IType type, IndentedTextWriter writer)

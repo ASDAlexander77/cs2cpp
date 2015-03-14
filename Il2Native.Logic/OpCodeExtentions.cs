@@ -1290,7 +1290,8 @@ namespace Il2Native.Logic
             var parameters = method.GetParameters();
             var otherParameters = overridingMethod.GetParameters();
 
-            if ((object)parameters == (object)otherParameters)
+            if ((parameters != null ? parameters.Count() : 0) == 0 ||
+                (otherParameters != null ? otherParameters.Count() : 0) == 0)
             {
                 return true;
             }

@@ -1466,7 +1466,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            var sourceType = opCode.RequiredOutgoingType;
+            var sourceType = opCode.RequiredOutgoingType ?? EstimatedResultOf(opCode).Type;
             if (!destType.IsPointer && !sourceType.IsPointer && destType.IsIntValueTypeExtCastRequired(sourceType))
             {
                 this.WriteCCast(opCode, destType);
@@ -1859,6 +1859,7 @@ namespace Il2Native.Logic
             }
             else
             {
+                this.WriteOperandResultOrActualWrite(writer, opCode, 0);
                 accessIndexResultNumber2 = opCode.OpCodeOperands[0].Result;
             }
 
@@ -3719,6 +3720,12 @@ namespace Il2Native.Logic
                 return;
             }
 
+            // TODO: review it
+            if (sourceType.TypeEquals(this.System.System_Int32) && requiredType.TypeEquals(this.System.System_Boolean))
+            {
+                return;
+            }
+
             castRequired = true;
         }
 
@@ -4332,12 +4339,12 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
-            var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
+            var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
             var destinationType = resultOfOperand0.Type;
             if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteCCast(opCode, resultOfOperand0, type);
+                this.WriteCCast(opCode, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
@@ -4350,7 +4357,7 @@ namespace Il2Native.Logic
             if (!destinationType.IsPointer && !resultOfOperand0.Type.IsPointer && !resultOfOperand0.Type.IsByRef)
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteIntToPtr(opCode, resultOfOperand0, type);
+                this.WriteCCast(opCode, type);
                 opCode.OpCodeOperands[0].Result = opCode.Result;
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
@@ -4366,7 +4373,6 @@ namespace Il2Native.Logic
             }
             else
             {
-                opCode.Result = resultOfOperand0;
                 this.WriteLlvmLoad(opCode, type, opCode.OpCodeOperands[1].Result);
             }
         }
@@ -4617,7 +4623,7 @@ namespace Il2Native.Logic
             var intPtrOper = this.IntTypeRequired(opCode);
             var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
 
-            this.WriteCCast(opCode, nativeIntType);
+            this.WriteCCastOperand(opCode, 0, nativeIntType);
         }
 
         /// <summary>

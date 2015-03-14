@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             type.WriteRttiClassDefinition(cWriter);
-            type.WriteRttiPointerClassDefinition(writer);
+            type.WriteRttiPointerClassDefinition(cWriter);
         }
 
         public static void WriteRttiDeclaration(this IType type, CWriter cWriter)
@@ -84,14 +84,14 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write(cWriter.declarationPrefix);
-            writer.Write("struct ");
+            writer.Write("const struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiInfoName());
             writer.WriteLine(";");
 
             writer.Write(cWriter.declarationPrefix);
-            writer.Write("struct ");
+            writer.Write("const struct ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiPointerInfoName());

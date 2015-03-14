@@ -576,35 +576,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="opCode">
         /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="toType">
-        /// </param>
-        public static void WriteIntToPtr(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            FullyDefinedReference source,
-            IType toType)
-        {
-            var writer = cWriter.Output;
-
-            Debug.Assert(!source.Type.IsPointer && !source.Type.IsByRef);
-
-            cWriter.SetResultNumber(opCode, toType);
-            writer.Write("inttoptr ");
-            source.Type.WriteTypePrefix(cWriter);
-            writer.Write(" ");
-            cWriter.WriteResult(source);
-            writer.Write(" to ");
-            toType.WriteTypePrefix(cWriter, true);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         /// <param name="typeToLoad">
         /// </param>
         /// <param name="source">
@@ -674,7 +645,7 @@ namespace Il2Native.Logic.Gencode
             if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
             {
                 // check if you need cast here
-                cWriter.WriteIntToPtr(opCode, source, typeToLoad);
+                cWriter.WriteCCast(opCode, source, typeToLoad);
                 writer.WriteLine(string.Empty);
                 effectiveSource = opCode.Result;
             }

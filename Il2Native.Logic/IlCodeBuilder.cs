@@ -636,5 +636,10 @@
 
             public bool IsChanged { get; private set; }
         }
+
+        public void EmptyParameters()
+        {
+            this._parameters = new List<IParameter>();
+        }
     }
 }

@@ -255,6 +255,11 @@ namespace Il2Native.Logic
                     var method in
                         IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                 {
+                    if (VerboseOutput)
+                    {
+                        Trace.WriteLine(string.Format("writing method {0}", method));
+                    }
+
                     if (!method.IsGenericMethodDefinition && !processGenericMethodsOnly)
                     {
                         var genericMethodContext = method.IsGenericMethod
@@ -286,10 +291,10 @@ namespace Il2Native.Logic
 
                                 codeWriter.WriteMethodStart(methodSpec, genericMethodContext);
 
-                                //foreach (var ilCode in ilReader.OpCodes(methodDefinition ?? method, genericMethodContext))
-                                //{
-                                //    codeWriter.Write(ilCode);
-                                //}
+                                foreach (var ilCode in ilReader.OpCodes(methodDefinition ?? method, genericMethodContext))
+                                {
+                                    codeWriter.Write(ilCode);
+                                }
 
                                 codeWriter.WriteMethodEnd(methodSpec, genericMethodContext);
                             }
@@ -306,11 +311,7 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
-                // TODO: remove next if when all is done
-                if (type.AssemblyQualifiedName != null && type.AssemblyQualifiedName.StartsWith("test-"))
-                {
-                    codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
-                }
+                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
             }
         }
 

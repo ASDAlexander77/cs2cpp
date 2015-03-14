@@ -511,8 +511,8 @@ namespace Ll2NativeTests
                 CompilerHelper.GetConverterArgs(false));
 
             CompilerHelper.ExecCmd(
-                "llc",
-                string.Format("{1}-filetype=obj -mtriple={0} CoreLib.ll", CompilerHelper.Target, CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty));
+                "g++",
+                string.Format("{1}-o CoreLib.obj -c CoreLib.cpp", CompilerHelper.Target, CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty));
         }
 
 

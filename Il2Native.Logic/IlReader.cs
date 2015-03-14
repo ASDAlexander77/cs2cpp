@@ -756,11 +756,11 @@ namespace Il2Native.Logic
 
                 // append C# native compiler infrastructure methods
                 yield return new SynthesizedGetSizeMethod(type, typeResolver);
+                yield return new SynthesizedGetTypeMethod(type, typeResolver);
+                yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
             }
 
-            // TODO: remove comment when finish
             // append internal methods
-            // yield return new SynthesizedGetTypeMethod(type, typeResolver);
             if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
             {
                 yield return new SynthesizedBoxMethod(type, typeResolver);

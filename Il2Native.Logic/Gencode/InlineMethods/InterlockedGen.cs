@@ -85,104 +85,111 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter,
             int[] operands)
         {
+            // TODO: finish it
             var writer = cWriter.Output;
 
-            writer.WriteLine("; {0} start", oper);
+            ////writer.WriteLine("; {0} start", oper);
 
-            IType intType = null;
-            IType originalType = null;
-            var first = opCodeMethodInfo.OpCodeOperands.First();
-            var operType = first.Result.Type.ToDereferencedType();
+            ////IType intType = null;
+            ////IType originalType = null;
+            ////var first = opCodeMethodInfo.OpCodeOperands.First();
+            ////var operType = first.Result.Type.ToDereferencedType();
 
-            // TODO: fix issue with to change value for IntPtr/UIntPtr
+            ////// TODO: fix issue with to change value for IntPtr/UIntPtr
 
-            bool realExchange = false;
-            var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(cWriter.System.System_IntPtr) || operType.TypeEquals(cWriter.System.System_UIntPtr);
-            if (pointerExchange)
-            {
-                intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
+            ////bool realExchange = false;
+            ////var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(cWriter.System.System_IntPtr) || operType.TypeEquals(cWriter.System.System_UIntPtr);
+            ////if (pointerExchange)
+            ////{
+            ////    intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
 
-                cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
-                writer.WriteLine(string.Empty);
+            ////    cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
+            ////    writer.WriteLine(string.Empty);
 
-                foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
-                {
-                    if (originalType == null)
-                    {
-                        originalType = operand.Result.Type;
-                    }
+            ////    foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
+            ////    {
+            ////        if (originalType == null)
+            ////        {
+            ////            originalType = operand.Result.Type;
+            ////        }
 
-                    cWriter.WritePtrToInt(operand, operand.Result, intType);
-                    writer.WriteLine(string.Empty);
-                }
-            }
-            else if (operType.IsReal())
-            {
-                realExchange = true;
-                intType = cWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : CWriter.PointerSize);
+            ////        cWriter.WritePtrToInt(operand, operand.Result, intType);
+            ////        writer.WriteLine(string.Empty);
+            ////    }
+            ////}
+            ////else if (operType.IsReal())
+            ////{
+            ////    realExchange = true;
+            ////    intType = cWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : CWriter.PointerSize);
 
-                // bitcast float to i32 and double to i64
-                cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
-                writer.WriteLine(string.Empty);
+            ////    // bitcast float to i32 and double to i64
+            ////    cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
+            ////    writer.WriteLine(string.Empty);
 
-                foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
-                {
-                    if (originalType == null)
-                    {
-                        originalType = operand.Result.Type;
-                    }
+            ////    foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
+            ////    {
+            ////        if (originalType == null)
+            ////        {
+            ////            originalType = operand.Result.Type;
+            ////        }
 
-                    if (!(operand.Result is ConstValue))
-                    {
-                        cWriter.WriteCCast(operand, operand.Result, intType, false);
-                        writer.WriteLine(string.Empty);
-                    }
-                    else
-                    {
-                        operand.Result = new ConstValue(Convert.ToInt64(operand.Result.Name, 16), intType);
-                    }
-                }
-            } 
+            ////        if (!(operand.Result is ConstValue))
+            ////        {
+            ////            cWriter.WriteCCast(operand, operand.Result, intType, false);
+            ////            writer.WriteLine(string.Empty);
+            ////        }
+            ////        else
+            ////        {
+            ////            operand.Result = new ConstValue(Convert.ToInt64(operand.Result.Name, 16), intType);
+            ////        }
+            ////    }
+            ////} 
             
+            ////var opResult = cWriter.SetResultNumber(
+            ////    opCodeMethodInfo,
+            ////    intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+
+            ////writer.Write(oper);
+
+            ////var index = 0;
+            ////foreach (var operandNumber in operands)
+            ////{
+            ////    cWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
+            ////}
+
+            ////writer.WriteLine(attribs);
+
+            ////if (extractValue)
+            ////{
+            ////    cWriter.SetResultNumber(
+            ////        opCodeMethodInfo,
+            ////        intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
+            ////    writer.Write("extractvalue { ");
+            ////    opResult.Type.WriteTypePrefix(cWriter);
+            ////    writer.Write(", i1 } ");
+            ////    cWriter.WriteResult(opResult);
+            ////    writer.WriteLine(", 0");
+            ////}
+
+            ////if (pointerExchange)
+            ////{
+            ////    // cast back
+            ////    cWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
+            ////}
+            ////else if (realExchange)
+            ////{
+            ////    // cast back to float/double
+            ////    cWriter.WriteCCast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
+            ////}
+
+            ////writer.WriteLine(string.Empty);
+            ////writer.WriteLine("; {0} end", oper);
+
+            cWriter.WriteOperandResultOrActualWrite(writer, opCodeMethodInfo, 1);
+
             var opResult = cWriter.SetResultNumber(
                 opCodeMethodInfo,
-                intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
-
-            writer.Write(oper);
-
-            var index = 0;
-            foreach (var operandNumber in operands)
-            {
-                cWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
-            }
-
-            writer.WriteLine(attribs);
-
-            if (extractValue)
-            {
-                cWriter.SetResultNumber(
-                    opCodeMethodInfo,
-                    intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
-                writer.Write("extractvalue { ");
-                opResult.Type.WriteTypePrefix(cWriter);
-                writer.Write(", i1 } ");
-                cWriter.WriteResult(opResult);
-                writer.WriteLine(", 0");
-            }
-
-            if (pointerExchange)
-            {
-                // cast back
-                cWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
-            }
-            else if (realExchange)
-            {
-                // cast back to float/double
-                cWriter.WriteCCast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
-            }
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; {0} end", oper);
+                opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
         }
 
         /// <summary>
