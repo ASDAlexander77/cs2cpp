@@ -220,6 +220,8 @@ namespace Il2Native.Logic
                     WriteTypeDefinition(codeWriter, type, genericTypeContext);
                 }
 
+                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
+
                 codeWriter.WriteBeforeConstructors();
             }
 
@@ -307,11 +309,6 @@ namespace Il2Native.Logic
             {
                 codeWriter.WriteAfterMethods();
                 codeWriter.WriteTypeEnd(type);
-            }
-
-            if (mode == ConvertingMode.Definition)
-            {
-                codeWriter.WritePostDeclarationsAndInternalDefinitions(type);
             }
         }
 

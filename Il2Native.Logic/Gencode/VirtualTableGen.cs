@@ -409,7 +409,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write(type.GetVirtualInterfaceTableName(interfaceType, true));
             }
             cWriter.Output.Write(" = ");
-            VirtualTableDefinition(virtualTable, cWriter, interfaceIndex, baseTypeFieldsOffset);
+            VirtualTableDefinition(virtualTable, type, cWriter, interfaceIndex, baseTypeFieldsOffset);
             cWriter.Output.Write(";");
         }
 
@@ -450,7 +450,7 @@ namespace Il2Native.Logic.Gencode
         }
 
         private static void VirtualTableDefinition(
-            List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, int interfaceIndex, int baseTypeFieldsOffset)
+            List<CWriter.Pair<IMethod, IMethod>> virtualTable, IType type, CWriter cWriter, int interfaceIndex, int baseTypeFieldsOffset)
         {
             var writer = cWriter.Output;
 
@@ -464,8 +464,7 @@ namespace Il2Native.Logic.Gencode
                     : string.Format("-{0}", baseTypeFieldsOffset + ((interfaceIndex - 1) * CWriter.PointerSize)));
 
             // RTTI info class
-            //writer.Write("(i8*) &{0}", type.GetRttiInfoName().CleanUpName());
-            writer.Write("(Byte*) 0");
+            writer.Write("(Byte*) &{0}", type.GetRttiInfoName().CleanUpName());
 
             // define virtual table
             foreach (var virtualMethod in virtualTable)

@@ -2331,8 +2331,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
-            writer.Write(", &{0}", fromType.Type.GetRttiInfoName());
-            writer.Write(", &{0}", toType.GetRttiInfoName());
+            writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName());
+            writer.Write(", (Void*) &{0}", toType.GetRttiInfoName());
             writer.Write(", {0})", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             if (throwExceptionIfNull)

@@ -119,7 +119,8 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            cWriter.Write("static struct ");
+            writer.Write(cWriter.declarationPrefix);
+            cWriter.Write("const struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
             writer.Write(type.GetRttiInfoName());
