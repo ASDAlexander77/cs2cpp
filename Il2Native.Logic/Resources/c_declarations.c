@@ -44,10 +44,10 @@ extern "C" Byte* calloc(Int);
 extern "C" void* __dynamic_cast(Void*, Void*, Void*, Int32);
 
 // RTTI externals
-extern "C" struct { void* vt; void* f1; void* f2; } _ZTVN10__cxxabiv117__class_type_infoE;
-extern "C" struct { void* vt; void* f1; void* f2; } _ZTVN10__cxxabiv119__pointer_type_infoE;
-extern "C" struct { void* vt; void* f1; void* f2; } _ZTVN10__cxxabiv120__si_class_type_infoE;
-extern "C" struct { void* vt; void* f1; void* f2; } _ZTVN10__cxxabiv121__vmi_class_type_infoE;
-extern "C" struct { void* vt; void* f1; void* f2; } _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
+extern "C" struct { void* vt; } _ZTVN10__cxxabiv117__class_type_infoE;
+extern "C" struct { void* vt; } _ZTVN10__cxxabiv119__pointer_type_infoE;
+extern "C" struct { void* vt; } _ZTVN10__cxxabiv120__si_class_type_infoE;
+extern "C" struct { void* vt; } _ZTVN10__cxxabiv121__vmi_class_type_infoE;
+extern "C" struct { void* vt; } _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
 
 
