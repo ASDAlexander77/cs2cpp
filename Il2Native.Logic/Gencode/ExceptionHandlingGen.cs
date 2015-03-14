@@ -42,44 +42,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static IncrementalResult WriteAllocateException(this CWriter cWriter, OpCodePart opCode)
-        {
-            var writer = cWriter.Output;
-
-            writer.WriteLine("; Allocate exception");
-            var errorAllocationResultNumber = cWriter.SetResultNumber(
-                opCode,
-                cWriter.System.System_Byte.ToPointerType());
-            writer.Write("call i8* @__cxa_allocate_exception(i32 {0})", CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-
-            var newExceptionResult = opCode.OpCodeOperands[0].Result;
-
-            opCode.OpCodeOperands[0].Result = opCode.Result;
-
-            cWriter.WriteCCast(opCode, opCode.Result, newExceptionResult.Type);
-            writer.WriteLine("*");
-
-            opCode.OpCodeOperands[0].Result = newExceptionResult;
-
-            cWriter.UnaryOper(writer, opCode, "=");
-            writer.Write(", ");
-            opCode.OpCodeOperands[0].Result.Type.WriteTypePrefix(cWriter);
-            writer.Write("* ");
-            cWriter.WriteResult(opCode.Result);
-            writer.WriteLine(string.Empty);
-
-            return errorAllocationResultNumber;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="exceptionHandlingClause">
         /// </param>
         public static void WriteCatchBegin(this CWriter cWriter, CatchOfFinallyClause exceptionHandlingClause)
@@ -620,7 +582,18 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCode,
             CatchOfFinallyClause exceptionHandlingClause)
         {
-            WriteThrowInvoke(cWriter, opCode, exceptionHandlingClause);
+            var writer = cWriter.Output;
+
+            var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
+            writer.Write("__cxa_throw((Byte*)");
+
+            cWriter.UnaryOper(writer, opCode, string.Format("&(*__cxa_allocate_exception({0}) = ", CWriter.PointerSize));
+            writer.Write(")");
+
+            writer.Write(", (Byte*) &{0}, (Byte*) 0)", exceptionPointerType.GetRttiPointerInfoName());
+
+            cWriter.needToWriteUnwindException = true;
+            cWriter.needToWriteUnreachable = true;
         }
 
         /// <summary>
@@ -701,36 +674,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             cWriter.needToWriteUnreachable = true;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="exceptionHandlingClause">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static IType WriteThrowInvoke(
-            CWriter cWriter,
-            OpCodePart opCode,
-            CatchOfFinallyClause exceptionHandlingClause)
-        {
-            var writer = cWriter.Output;
-
-            var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
-            writer.Write("__cxa_throw((Byte*)");
-           
-            cWriter.WriteAllocateException(opCode);
-
-            writer.Write("(Byte*) &{0}, (Byte*) 0)", exceptionPointerType.GetRttiPointerInfoName());
-
-            cWriter.needToWriteUnwindException = true;
-            cWriter.needToWriteUnreachable = true;
-
-            return exceptionPointerType;
         }
     }
 }
