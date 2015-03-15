@@ -1495,6 +1495,92 @@ namespace Il2Native.Logic
                 return retType;
             }
 
+            if (opCodePart.Any(Code.Ldelem_I))
+            {
+                return System.System_Int32;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_I1))
+            {
+                return System.System_SByte;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_I2))
+            {
+                return System.System_Int16;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_I4))
+            {
+                return System.System_Int32;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_U1))
+            {
+                return System.System_Byte;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_U2))
+            {
+                return System.System_UInt16;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_U4))
+            {
+                return System.System_UInt32;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_R4))
+            {
+                return System.System_Single;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_R8))
+            {
+                return System.System_Double;
+            }
+
+            if (opCodePart.Any(Code.Ldelem_Ref))
+            {
+                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                return retType.GetElementType();
+            }
+
+            if (opCodePart.Any(Code.Ldind_I))
+            {
+                return System.System_Int32;
+            }
+
+            if (opCodePart.Any(Code.Ldind_I1))
+            {
+                return System.System_SByte;
+            }
+
+            if (opCodePart.Any(Code.Ldind_I2))
+            {
+                return System.System_Int16;
+            }
+
+            if (opCodePart.Any(Code.Ldind_I4))
+            {
+                return System.System_Int32;
+            }
+
+            if (opCodePart.Any(Code.Ldind_U1))
+            {
+                return System.System_Byte;
+            }
+
+            if (opCodePart.Any(Code.Ldind_U2))
+            {
+                return System.System_UInt16;
+            }
+
+            if (opCodePart.Any(Code.Ldind_U4))
+            {
+                return System.System_UInt32;
+            }
+
             if (opCodePart.Any(Code.Ldind_Ref))
             {
                 retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);

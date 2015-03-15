@@ -492,7 +492,7 @@ namespace Ll2NativeTests
             }
 
             // TODO: remove when corelib is ready
-            skip.AddRange(new[] { 12 });
+            skip.AddRange(new[] { 12, 18 });
 
             foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {

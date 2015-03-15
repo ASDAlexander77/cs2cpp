@@ -3696,6 +3696,12 @@ namespace Il2Native.Logic
                 return;
             }
 
+            if (sourceType.IntTypeBitSize() > 0 && (requiredType.IsEnum || requiredType.IsStructureType())
+                || requiredType.IntTypeBitSize() > 0 && (sourceType.IsEnum || sourceType.IsStructureType()))
+            {
+                return;
+            }
+
             castRequired = true;
         }
 
@@ -4314,8 +4320,7 @@ namespace Il2Native.Logic
             if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteCCast(opCode, type);
-                opCode.OpCodeOperands[0].Result = opCode.Result;
+                this.WriteCCastOperand(opCode, 0, type);
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
             }
@@ -4327,8 +4332,7 @@ namespace Il2Native.Logic
             if (!destinationType.IsPointer && !resultOfOperand0.Type.IsPointer && !resultOfOperand0.Type.IsByRef)
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteCCast(opCode, type);
-                opCode.OpCodeOperands[0].Result = opCode.Result;
+                this.WriteCCastOperand(opCode, 0, type);
                 destinationType = type.ToPointerType();
                 writer.WriteLine(string.Empty);
             }
