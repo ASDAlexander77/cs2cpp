@@ -307,12 +307,6 @@ namespace Il2Native.Logic
 
             this.ActualWriteOpCode(writer, opCode);
 
-            this.WriteCatchFinnallyEnd(writer, opCode);
-
-            this.WriteCatchFinnallyCleanUpEnd(opCode);
-            this.WriteTryEnds(writer, opCode);
-            this.WriteExceptionHandlersProlog(writer, opCode);
-
             if (opCode.UsedByAlternativeValues != null)
             {
                 this.WriteEndOfPhiValues(writer, opCode);
@@ -320,7 +314,18 @@ namespace Il2Native.Logic
 
             if (firstLevel)
             {
-                this.Output.WriteLine(";");
+                this.Output.Write(";");
+            }
+
+            this.WriteCatchFinnallyEnd(writer, opCode);
+
+            this.WriteCatchFinnallyCleanUpEnd(opCode);
+            this.WriteTryEnds(writer, opCode);
+            this.WriteExceptionHandlersProlog(writer, opCode);
+
+            if (firstLevel)
+            {
+                this.Output.WriteLine(string.Empty);
             }
         }
 
@@ -2259,17 +2264,17 @@ namespace Il2Native.Logic
         public void WriteDynamicCast(
             CIndentedTextWriter writer, OpCodePart opCodePart, OpCodePart opCodeOperand, IType toType, bool checkNull = false, bool throwExceptionIfNull = false)
         {
-            var fromType = this.EstimatedResultOf(opCodeOperand);
-            fromType = fromType.Type.IsPointer || fromType.Type.IsByRef ? new ReturnResult(fromType.Type.GetElementType()) : fromType;
+            var fromTypeOriginal = this.EstimatedResultOf(opCodeOperand);
+            var fromType = fromTypeOriginal.Type.IsPointer || fromTypeOriginal.Type.IsByRef ? new ReturnResult(fromTypeOriginal.Type.GetElementType()) : fromTypeOriginal;
             if (fromType.Type.TypeEquals(toType))
             {
                 return;
             }
 
-            Debug.Assert(!fromType.Type.IsVoid());
-            Debug.Assert(!(fromType is ConstValue));
-            Debug.Assert(!fromType.Type.IsPrimitiveType());
-            Debug.Assert(!fromType.Type.IsStructureType());
+            Debug.Assert(!fromTypeOriginal.Type.IsVoid());
+            Debug.Assert(!(fromTypeOriginal is ConstValue));
+            Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
+            Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
 
             if (checkNull)
             {
@@ -4488,11 +4493,8 @@ namespace Il2Native.Logic
 
             if (exceptionHandler.Flags == ExceptionHandlingClauseOptions.Clause)
             {
-                writer.WriteLine(string.Empty);
                 this.WriteCatchTest(exceptionHandler, exceptionHandler.Next);
             }
-
-            writer.WriteLine(string.Empty);
 
             this.WriteCatchBegin(exceptionHandler);
         }
@@ -4610,30 +4612,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="method">
-        /// </param>
-        private void WriteExceptionEnvironment(IMethod method)
-        {
-            if (this.needToWriteUnwindException)
-            {
-                this.needToWriteUnwindException = false;
-                this.WriteUnwindException();
-            }
-
-            if (this.needToWriteUnreachable)
-            {
-                this.needToWriteUnreachable = false;
-                this.WriteUnreachable();
-            }
-
-            if (method.GetMethodBody().ExceptionHandlingClauses.Any())
-            {
-                this.WriteResume();
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
@@ -4645,7 +4623,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            writer.WriteLine(string.Empty);
             this.WriteCatchProlog(opCode);
         }
 
@@ -4787,7 +4764,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteLeave(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            writer.WriteLine("; Leave ");
+            writer.WriteLine("// Leave ");
             if (this.tryScopes.Count > 0)
             {
                 var tryClause = this.tryScopes.Peek();
@@ -4799,12 +4776,12 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                    writer.Write(string.Concat("goto a", opCode.JumpAddress()));
                 }
             }
             else
             {
-                writer.Write(string.Concat("br label %.a", opCode.JumpAddress()));
+                writer.Write(string.Concat("goto a", opCode.JumpAddress()));
             }
         }
 
@@ -5318,8 +5295,6 @@ namespace Il2Native.Logic
 
             if (!this.NoBody)
             {
-                this.WriteExceptionEnvironment(method);
-
                 this.Output.Indent--;
                 this.Output.EndMethodBody();
 
@@ -5392,8 +5367,9 @@ namespace Il2Native.Logic
             Array.Sort(ehs);
             foreach (var eh in ehs.Reverse())
             {
-                writer.WriteLine("; Try, start of scope");
                 this.tryScopes.Push(eh);
+
+                writer.WriteTry();
             }
         }
 

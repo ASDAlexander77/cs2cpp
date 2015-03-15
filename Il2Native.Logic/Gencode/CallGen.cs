@@ -416,44 +416,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="tryClause">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteFunctionCallUnwind(
-            this TryClause tryClause,
-            OpCodePart opCodeMethodInfo,
-            CWriter cWriter)
-        {
-            if (tryClause == null)
-            {
-                return;
-            }
-
-            var writer = cWriter.Output;
-
-            var nextAddress = cWriter.GetBlockJumpAddress();
-
-            var label = string.Concat("next", nextAddress);
-
-            writer.WriteLine(string.Empty);
-            writer.Indent++;
-            writer.Write("to label %.{0} unwind label %.catch{1}", label, tryClause.Catches.First().Offset);
-            writer.Indent--;
-
-            writer.WriteLine(string.Empty);
-
-            writer.Indent--;
-            writer.WriteLine(".{0}:", label);
-            writer.Indent++;
-
-            CHelpersGen.SetCustomLabel(opCodeMethodInfo, label);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="methodInfo">
         /// </param>
         /// <param name="methodAddressResultNumber">

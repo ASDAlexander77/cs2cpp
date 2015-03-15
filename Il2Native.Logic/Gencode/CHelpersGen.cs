@@ -498,8 +498,6 @@ namespace Il2Native.Logic.Gencode
                     methodInfo != null ? methodInfo.ReturnType : null,
                     cWriter,
                     methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
-
-            tryClause.WriteFunctionCallUnwind(opCodeMethodInfo, cWriter);
         }
 
         /// <summary>

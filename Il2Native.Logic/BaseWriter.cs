@@ -611,14 +611,14 @@ namespace Il2Native.Logic
 
         protected void DiscoverAllForwardDeclarations(IEnumerable<OpCodePart> opCodes)
         {
-            foreach (var opCodePart in opCodes)
-            {
-                if (opCodePart.Any(Code.Throw))
-                {
-                    var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                    IlReader.AddRtti(estimatedResult.Type.ToRtti());
-                }
-            }
+            ////foreach (var opCodePart in opCodes)
+            ////{
+            ////    if (opCodePart.Any(Code.Throw))
+            ////    {
+            ////        var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+            ////        IlReader.AddRtti(estimatedResult.Type.ToRtti());
+            ////    }
+            ////}
         }
 
         /// <summary>
