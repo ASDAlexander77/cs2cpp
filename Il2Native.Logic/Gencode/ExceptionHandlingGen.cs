@@ -75,7 +75,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.WriteLine("eh{0}:", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
-            writer.WriteLine("// catch end");
+            if (exceptionHandlingClause.OwnerTry.Catches.Last().Equals(exceptionHandlingClause))
+            {
+                writer.WriteLine("throw;");
+                writer.Indent--;
+                writer.WriteLine("}");
+            }
         }
 
         /// <summary>
@@ -117,10 +122,17 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
             var opCodeOperand = OpCodePart.CreateNop;
-            opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object.ToPointerType());
-            cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, exceptionHandlingClause.Catch);
+            opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object);
+            cWriter.WriteDynamicCast(
+                writer,
+                opCode,
+                opCodeOperand,
+                (exceptionHandlingClause.Catch is object)
+                    ? cWriter.System.System_Exception
+                    : exceptionHandlingClause.Catch,
+                forceCast: true);
 
-            writer.WriteLine(" == 0) goto eh{0};", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            writer.Write(" == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
         }
 
         /// <summary>

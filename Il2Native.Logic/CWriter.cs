@@ -1312,6 +1312,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Pop:
+                    writer.Write("// pop");
                     break;
 
                 case Code.Constrained:
@@ -2262,11 +2263,11 @@ namespace Il2Native.Logic
         /// <param name="throwExceptionIfNull">
         /// </param>
         public void WriteDynamicCast(
-            CIndentedTextWriter writer, OpCodePart opCodePart, OpCodePart opCodeOperand, IType toType, bool checkNull = false, bool throwExceptionIfNull = false)
+            CIndentedTextWriter writer, OpCodePart opCodePart, OpCodePart opCodeOperand, IType toType, bool checkNull = false, bool throwExceptionIfNull = false, bool forceCast = false)
         {
             var fromTypeOriginal = this.EstimatedResultOf(opCodeOperand);
             var fromType = fromTypeOriginal.Type.IsPointer || fromTypeOriginal.Type.IsByRef ? new ReturnResult(fromTypeOriginal.Type.GetElementType()) : fromTypeOriginal;
-            if (fromType.Type.TypeEquals(toType))
+            if (fromType.Type.TypeEquals(toType) && !forceCast)
             {
                 return;
             }
