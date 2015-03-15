@@ -1305,10 +1305,11 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Endfilter:
+                    writer.Write("// Endfinally");
                     break;
 
                 case Code.Endfinally:
-                    this.WriteEndFinally(writer, opCode);
+                    writer.Write("// Endfinally");
                     break;
 
                 case Code.Pop:
@@ -4598,25 +4599,6 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteEndFinally(CIndentedTextWriter writer, OpCodePart opCode)
-        {
-            writer.WriteLine("; EndFinally ");
-            if (this.catchScopes.Count > 0)
-            {
-                var finallyClause = this.catchScopes.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
-                if (finallyClause != null)
-                {
-                    this.WriteEndFinally(finallyClause);
-                }
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
         private void WriteExceptionHandlersProlog(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.ExceptionHandlers == null)
@@ -4766,24 +4748,7 @@ namespace Il2Native.Logic
         private void WriteLeave(CIndentedTextWriter writer, OpCodePart opCode)
         {
             writer.WriteLine("// Leave ");
-            if (this.tryScopes.Count > 0)
-            {
-                var tryClause = this.tryScopes.Peek();
-                var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
-                if (finallyClause != null)
-                {
-                    finallyClause.FinallyJumps.Add(string.Concat(".a", opCode.JumpAddress()));
-                    this.WriteFinallyLeave(finallyClause);
-                }
-                else
-                {
-                    writer.Write(string.Concat("goto a", opCode.JumpAddress()));
-                }
-            }
-            else
-            {
-                writer.Write(string.Concat("goto a", opCode.JumpAddress()));
-            }
+            writer.Write(string.Concat("goto a", opCode.JumpAddress()));
         }
 
         private FullyDefinedReference WriteLoadingArgumentsForMain(IMethod currentMethod, IGenericContext currentGenericContext)
@@ -5068,11 +5033,11 @@ namespace Il2Native.Logic
 
             var any = false;
 
-            // structs
-            foreach (var requiredType in this.IlReader.UsedStructTypes)
+            // exceptions
+            foreach (var requiredType in method.GetMethodBody(null).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
             {
                 any = true;
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
             }
 
             if (any)
@@ -5080,7 +5045,12 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            any = false;
+            // structs
+            foreach (var requiredType in this.IlReader.UsedStructTypes)
+            {
+                any = true;
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+            }
 
             // arrays
             foreach (var requiredType in this.IlReader.UsedArrayTypes)
@@ -5153,6 +5123,12 @@ namespace Il2Native.Logic
             // rtti-s
             any = false;
             foreach (var type in this.IlReader.UsedRtti)
+            {
+                any |= WriteRttiDeclarationIfNotWrittenYet(type);
+            }
+
+            // exception rttis
+            foreach (var type in method.GetMethodBody(null).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
             {
                 any |= WriteRttiDeclarationIfNotWrittenYet(type);
             }

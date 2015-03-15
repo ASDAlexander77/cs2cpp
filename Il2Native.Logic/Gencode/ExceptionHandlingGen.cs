@@ -139,93 +139,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="finallyClause">
-        /// </param>
-        public static void WriteEndFinally(this CWriter cWriter, CatchOfFinallyClause finallyClause)
-        {
-            cWriter.WriteFinallyVariables(finallyClause);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="finallyClause">
-        /// </param>
-        public static void WriteFinallyLeave(this CWriter cWriter, CatchOfFinallyClause finallyClause)
-        {
-            var writer = cWriter.Output;
-
-            cWriter.WriteFinallyVariables(finallyClause);
-
-            writer.WriteLine(
-                "store i32 {0}, i32* %.finally_jump{1}",
-                finallyClause.FinallyJumps.Count,
-                finallyClause.Offset);
-            writer.WriteLine("br label %.finally_no_error_entry{0}", finallyClause.Offset);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="finallyClause">
-        /// </param>
-        public static void WriteFinallyVariables(this CWriter cWriter, CatchOfFinallyClause finallyClause)
-        {
-            if (finallyClause.FinallyVariablesAreWritten)
-            {
-                return;
-            }
-
-            finallyClause.FinallyVariablesAreWritten = true;
-
-            var writer = cWriter.Output;
-
-            writer.Write("%.finally_jump{0} = ", finallyClause.Offset);
-            writer.Write("alloca i32, align " + CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteLandingPadVariables(this CWriter cWriter)
-        {
-            if (cWriter.landingPadVariablesAreWritten)
-            {
-                return;
-            }
-
-            cWriter.landingPadVariablesAreWritten = true;
-
-            var writer = cWriter.Output;
-
-            writer.Write("%.error_object = ");
-            writer.Write("alloca i8*, align " + CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-
-            writer.Write("%.error_typeid = ");
-            writer.Write("alloca i32, align " + CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteResume(this CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            // TODO: finish it
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="exceptionHandlingClause">
@@ -239,7 +152,7 @@ namespace Il2Native.Logic.Gencode
             CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            writer.WriteLine("rethrow;");
+            writer.WriteLine("throw;");
         }
 
         /// <summary>
@@ -257,37 +170,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             cWriter.UnaryOper(writer, opCode, "throw (Void*) ");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteUnexpectedCall(this CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            writer.Indent--;
-            writer.WriteLine(".unexpected:");
-            writer.Indent++;
-            var result = cWriter.SetResultNumber(null, cWriter.System.System_Byte.ToPointerType());
-            writer.WriteLine("load i8** %.error_object");
-            writer.WriteLine("call void @__cxa_call_unexpected(i8* {0})", result);
-            writer.WriteLine("unreachable");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteUnreachable(this CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            writer.Indent--;
-            writer.WriteLine(".unreachable:");
-            writer.Indent++;
-            writer.WriteLine("unreachable");
         }
     }
 }
