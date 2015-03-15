@@ -1567,7 +1567,7 @@ namespace Il2Native.Logic
             this._usedVirtualTables.Add(type);
         }
 
-        private void AddRtti(IType type)
+        public void AddRtti(IType type)
         {
             if (this._usedRtti == null || type == null || !type.IsRtti || type.IsObject)
             {

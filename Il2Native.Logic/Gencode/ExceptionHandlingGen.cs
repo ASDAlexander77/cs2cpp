@@ -587,7 +587,9 @@ namespace Il2Native.Logic.Gencode
             var exceptionPointerType = opCode.OpCodeOperands[0].Result.Type;
             writer.Write("__cxa_throw((Byte*)");
 
-            cWriter.UnaryOper(writer, opCode, string.Format("&(*__cxa_allocate_exception({0}) = ", CWriter.PointerSize));
+            writer.Write("&(*(");
+            exceptionPointerType.WriteTypePrefix(cWriter);
+            cWriter.UnaryOper(writer, opCode, string.Format("*)__cxa_allocate_exception({0}) = ", CWriter.PointerSize));
             writer.Write(")");
 
             writer.Write(", (Byte*) &{0}, (Byte*) 0)", exceptionPointerType.GetRttiPointerInfoName());

@@ -2736,8 +2736,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodEnd(IMethod method, IGenericContext genericContext)
         {
+            var rest = this.PrepareWritingMethodBody();
             this.WriteMethodBeginning(method, genericContext);
-            this.WriteMethodBody(method);
+            this.WriteMethodBody(rest);
             this.WritePostMethodEnd(method);
         }
 
@@ -3191,7 +3192,7 @@ namespace Il2Native.Logic
 
         public bool WriteRttiDeclarationIfNotWrittenYet(IType type)
         {
-            if (this.forwardTypeRttiDeclarationWritten.Add(type))
+            if (this.forwardTypeRttiDeclarationWritten.Add(type.ToRtti()))
             {
                 type.WriteRttiDeclaration(this);
                 return true;
@@ -5036,10 +5037,8 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="endPart">
         /// </param>
-        private void WriteMethodBody(IMethod method)
+        private void WriteMethodBody(IEnumerable<OpCodePart> rest)
         {
-            var rest = this.PrepareWritingMethodBody();
-
             foreach (var opCodePart in rest)
             {
                 this.ActualWrite(this.Output, opCodePart, true);
@@ -5175,7 +5174,7 @@ namespace Il2Native.Logic
 
             // rtti-s
             any = false;
-            foreach (var type in this.IlReader.UsedRtti.Where(type => this.forwardTypeRttiDeclarationWritten.Add(type)))
+            foreach (var type in this.IlReader.UsedRtti)
             {
                 any |= WriteRttiDeclarationIfNotWrittenYet(type);
             }

@@ -177,6 +177,7 @@ namespace Il2Native.Logic
             this.ProcessAll(ops);
             this.CalculateRequiredTypesForAlternativeValues(ops);
             this.AssignExceptionsToOpCodes();
+            this.DiscoverAllForwardDeclarations(ops);
             return ops;
         }
 
@@ -608,11 +609,24 @@ namespace Il2Native.Logic
             }
         }
 
+        protected void DiscoverAllForwardDeclarations(IEnumerable<OpCodePart> opCodes)
+        {
+            foreach (var opCodePart in opCodes)
+            {
+                if (opCodePart.Any(Code.Throw))
+                {
+                    var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                    IlReader.AddRtti(estimatedResult.Type.ToRtti());
+                }
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodes">
         /// </param>
-        protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
+        protected
+        void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {

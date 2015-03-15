@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System.Collections.Generic;
+    using System.Security.Cryptography.X509Certificates;
     using PEAssemblyReader;
 
     public interface IIlReader
@@ -52,10 +53,14 @@
         IEnumerable<string> AllReferences();
 
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="source"></param>
         /// <returns></returns>
         IEnumerable<IType> CompileSourceWithRoslyn(params string[] source);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type"></param>
+        void AddRtti(IType type);
     }
 }
