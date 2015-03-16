@@ -19,6 +19,8 @@
 	typedef unsigned long long uint64_t;
 	extern void *__builtin_memset(void *,int32_t,uint32_t);
 	#define memset __builtin_memset
+	extern void *__builtin_memcpy(void *,const void *,uint32_t);
+	#define memcpy __builtin_memcpy
 #endif
 
 typedef void Void;

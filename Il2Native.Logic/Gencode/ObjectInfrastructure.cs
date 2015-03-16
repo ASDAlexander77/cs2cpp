@@ -52,6 +52,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
+            writer.Write("(Byte*) ");
             writer.Write(cWriter.GetAllocator());
             writer.Write("(");
             cWriter.WriteResult(size);
