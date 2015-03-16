@@ -211,8 +211,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(");
             cWriter.WriteResultOrActualWrite(writer, opCode);
             writer.Write(")");
-
-            cWriter.SetResultNumber(opCode, toType);
         }
 
         public static void WriteCCastOperand(this CWriter cWriter, OpCodePart opCode, int operand, IType toType)
@@ -226,8 +224,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(");
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operand);
             writer.Write(")");
-
-            cWriter.SetResultNumber(opCode, toType);
         }
 
         /// <summary>
@@ -328,7 +324,6 @@ namespace Il2Native.Logic.Gencode
         public static void WriteEndCCast(this CWriter cWriter, OpCodePart opCode, IType toType)
         {
             cWriter.Output.Write(")");
-            cWriter.SetResultNumber(opCode, toType);
         }
 
         public static void WriteStartCCast(this CWriter cWriter, OpCodePart opCode, IType toType, bool asReference = false)
@@ -338,58 +333,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(");
             toType.WriteTypePrefix(cWriter, asReference);
             writer.Write(") (");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="result">
-        /// </param>
-        public static void WriteBitcast(this CWriter cWriter, OpCodePart opCode, FullyDefinedReference result)
-        {
-            var writer = cWriter.Output;
-
-            cWriter.SetResultNumber(opCode, cWriter.System.System_Byte.ToPointerType());
-            writer.Write("bitcast ");
-            result.Type.WriteTypePrefix(cWriter, !result.Type.IsByRef && result.Type.IsValueType());
-            writer.Write(" ");
-            cWriter.WriteResult(result);
-            writer.Write(" to i8*");
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="fromType">
-        /// </param>
-        /// <param name="result">
-        /// </param>
-        /// <param name="custom">
-        /// </param>
-        public static void WriteBitcast(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            IType fromType,
-            IncrementalResult result,
-            string custom)
-        {
-            var writer = cWriter.Output;
-
-            cWriter.SetResultNumber(opCode, null);
-            writer.Write("bitcast ");
-            fromType.WriteTypePrefix(cWriter, true);
-            writer.Write(' ');
-            cWriter.WriteResult(result);
-            writer.Write(" to ");
-            writer.Write(custom);
-
-            writer.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -465,8 +408,6 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            var returnFullyDefinedReference = methodInfo.WriteFunctionCallResult(opCodeMethodInfo, cWriter);
-
             if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
                 cWriter.WriteMethodPointerType(writer, methodInfo);
@@ -494,11 +435,9 @@ namespace Il2Native.Logic.Gencode
                     isCtor,
                     thisResultNumber,
                     thisType,
-                    methodInfo != null ? methodInfo.ReturnType : null,
+                    methodInfo.ReturnType,
                     cWriter,
                     methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
-
-            opCodeMethodInfo.Result = returnFullyDefinedReference;
         }
 
         /// <summary>
@@ -547,7 +486,6 @@ namespace Il2Native.Logic.Gencode
                      (toType.IsPointer || toType.IsByRef))
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
-                cWriter.SetResultNumber(opCode, toType);
             }
             else if (estimatedOperandResultOf.Type.IsArray
                      || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
@@ -558,7 +496,6 @@ namespace Il2Native.Logic.Gencode
                      || resultIsConst)
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
-                cWriter.SetResultNumber(opCode, toType);
             }
             else
             {
@@ -567,110 +504,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="typeToLoad">
-        /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        public static void WriteLoad(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            IType typeToLoad,
-            IncrementalResult source,
-            bool appendReference = true,
-            bool structAsRef = false)
-        {
-            cWriter.WriteLoad(
-                opCode,
-                typeToLoad,
-                new FullyDefinedReference(source.ToString(), source.Type),
-                appendReference,
-                structAsRef);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="typeToLoad">
-        /// </param>
-        /// <param name="source">
-        /// </param>
-        /// <param name="appendReference">
-        /// </param>
-        /// <param name="structAsRef">
-        /// </param>
-        /// <param name="indirect">
-        /// </param>
-        public static void WriteLoad(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            IType typeToLoad,
-            FullyDefinedReference source,
-            bool appendReference = true,
-            bool structAsRef = false,
-            bool indirect = false)
-        {
-            // TODO: review the whole proc.
-            var writer = cWriter.Output;
-
-            ////Debug.Assert(source.Type.IsPointer);
-            var dereferencedType = source.Type.IsPointer ? source.Type.GetElementType() : null;
-
-            var effectiveSource = source;
-
-            // check if you need bitcast pointer type
-            if (!typeToLoad.IsPointer && dereferencedType != null && typeToLoad.TypeNotEquals(dereferencedType))
-            {
-                // check if you need cast here
-                cWriter.WriteCCast(opCode, source, typeToLoad);
-                writer.WriteLine(string.Empty);
-                effectiveSource = opCode.Result;
-            }
-
-            if (indirect && !source.Type.IsPointer && !source.Type.IsByRef && source.Type.IntTypeBitSize() > 0)
-            {
-                // check if you need cast here
-                cWriter.WriteCCast(opCode, source, typeToLoad);
-                writer.WriteLine(string.Empty);
-                effectiveSource = opCode.Result;
-            }
-
-            opCode.Result = effectiveSource;
-        }
-
-        public static void WriteLoadPrimitiveFromStructure(
-            this CWriter cWriter,
-            OpCodePart opCode,
-            FullyDefinedReference source)
-        {
-            var writer = cWriter.Output;
-
-            // write access to a field
-            if (!cWriter.WriteFieldAccess(opCode, source.Type, source.Type, 0, source))
-            {
-                writer.WriteLine("// No data");
-                return;
-            }
-
-            writer.WriteLine(string.Empty);
-
-            cWriter.WriteLoad(opCode, opCode.Result.Type, opCode.Result);
-
-            writer.WriteLine(string.Empty);
         }
 
         /// <summary>

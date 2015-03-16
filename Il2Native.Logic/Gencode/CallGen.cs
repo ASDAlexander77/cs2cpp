@@ -162,19 +162,7 @@ namespace Il2Native.Logic.Gencode
 
             var writer = cWriter.Output;
 
-            // if this is external method reference we need to load reference first
-            // %4 = load i32 ()** @__glewCreateProgram, align 4
-            // load pointer
-            cWriter.SetResultNumber(
-                opCodeMethodInfo,
-                cWriter.System.System_Byte.ToPointerType().ToPointerType());
-            writer.Write("load ");
-            cWriter.WriteMethodPointerType(writer, methodInfo, thisType);
-            writer.Write("* ");
-            cWriter.WriteMethodDefinitionName(writer, methodInfo);
-            writer.Write(", align {0}", CWriter.PointerSize);
-            writer.WriteLine(string.Empty);
-            methodAddressResultNumber = opCodeMethodInfo.Result;
+            // TODO: finish it
         }
 
         /// <summary>
@@ -223,8 +211,6 @@ namespace Il2Native.Logic.Gencode
                 {
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
                     cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
-                    var firstOperandResult = opCodeFirstOperand.Result;
-                    cWriter.WriteLoad(opCodeFirstOperand, primitiveType, firstOperandResult);
                 }
                 else
                 {
@@ -247,11 +233,9 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 // convert value to object
-                opCodeMethodInfo.Result = null;
                 var opCodeNone = OpCodePart.CreateNop;
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
-                opCodeFirstOperand.Result = opCodeNone.Result;
 
                 if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
@@ -339,30 +323,6 @@ namespace Il2Native.Logic.Gencode
             {
                 thisType = methodInfo.DeclaringType;
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static FullyDefinedReference WriteFunctionCallResult(
-            this IMethod methodInfo,
-            OpCodePart opCodeMethodInfo,
-            CWriter cWriter)
-        {
-            var isReturnVoidType = methodInfo != null && methodInfo.ReturnType.IsVoid();
-            if (!isReturnVoidType)
-            {
-                cWriter.SetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
-            }
-
-            return opCodeMethodInfo.Result;
         }
 
         /// <summary>

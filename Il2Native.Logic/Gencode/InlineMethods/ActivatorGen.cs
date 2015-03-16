@@ -75,7 +75,6 @@ namespace Il2Native.Logic.Gencode
                     ////{
                     ////    llvmWriter.WriteInit(opCodeMethodInfo, type, opCodeMethodInfo.Destination);
                     ////}
-                    opCodeMethodInfo.Result = new ConstValue(null, type);
 
                     break;
 

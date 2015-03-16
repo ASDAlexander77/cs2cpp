@@ -436,59 +436,5 @@ namespace Il2Native.Logic.Gencode
 
             writer.WriteLine(string.Empty);
         }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="dataType">
-        /// </param>
-        /// <param name="dataIndex">
-        /// </param>
-        /// <param name="secondIndex">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static IncrementalResult GetArrayDataAddressHelper(
-            CWriter cWriter,
-            OpCodePart opCode,
-            IType dataType,
-            int dataIndex,
-            int secondIndex = -1)
-        {
-            // TODO: is obsolete
-            var writer = cWriter.Output;
-
-            var arrayInstanceResult = opCode.OpCodeOperands[0].Result;
-            if (!arrayInstanceResult.Type.IsArray)
-            {
-                // this is Array instance
-                var opCodeNope = OpCodePart.CreateNop;
-                cWriter.WriteCCast(
-                    opCodeNope,
-                    arrayInstanceResult,
-                    cWriter.System.System_Byte.ToArrayType(1));
-                arrayInstanceResult = opCodeNope.Result;
-
-                writer.WriteLine(string.Empty);
-            }
-
-            var result = cWriter.SetResultNumber(opCode, dataType);
-            writer.Write("getelementptr ");
-            arrayInstanceResult.Type.WriteTypePrefix(cWriter, true);
-            writer.Write(" ");
-
-            cWriter.WriteResult(arrayInstanceResult);
-            writer.Write(", i32 0, i32 {0}", dataIndex);
-            if (secondIndex != -1)
-            {
-                writer.Write(", i32 {0}", secondIndex);
-            }
-
-            writer.WriteLine(string.Empty);
-            return result;
-        }
     }
 }

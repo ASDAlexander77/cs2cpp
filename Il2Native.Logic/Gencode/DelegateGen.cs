@@ -197,28 +197,9 @@ namespace Il2Native.Logic.Gencode
 
             foreach (var generatedOperand in opCodeNope.OpCodeOperands)
             {
-                cWriter.ActualWrite(writer, generatedOperand);
+                cWriter.WriteResultOrActualWrite(writer, generatedOperand);
             }
 
-            writer.WriteLine(string.Empty);
-
-            // bitcast object to method
-            var opCodeNopeForBitCast = OpCodePart.CreateNop;
-            opCodeNopeForBitCast.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            opCodeNopeForBitCast.OpCodeOperands[0].Result = methodResult;
-
-            cWriter.UnaryOper(
-                writer,
-                opCodeNopeForBitCast,
-                "bitcast",
-                methodResult.Type);
-            writer.Write(" to ");
-            cWriter.WriteMethodPointerType(writer, method);
-            writer.WriteLine(string.Empty);
-
-            method.MethodResult = opCodeNopeForBitCast.Result;
-
-            // actual call
             cWriter.WriteCall(
                 opCodeNope,
                 method,
@@ -227,7 +208,6 @@ namespace Il2Native.Logic.Gencode
                 false,
                 objectResult,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-            writer.WriteLine(string.Empty);
 
             return opCodeNope.Result;
         }
@@ -305,12 +285,6 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             // load 'this' variable
-            cWriter.WriteLoad(
-                opCode,
-                method.DeclaringType,
-                new FullyDefinedReference(cWriter.GetThisName(), method.DeclaringType));
-            writer.WriteLine(string.Empty);
-
             var thisResult = opCode.Result;
 
             var delegateType = cWriter.System.System_Delegate;
@@ -387,13 +361,6 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
 
-            // load 'this' variable
-            cWriter.WriteLoad(
-                opCode,
-                method.DeclaringType,
-                new FullyDefinedReference(cWriter.GetThisName(), method.DeclaringType));
-            writer.WriteLine(string.Empty);
-
             var thisResult = opCode.Result;
 
             var delegateType = cWriter.System.System_Delegate;
@@ -408,13 +375,6 @@ namespace Il2Native.Logic.Gencode
                     delegateType,
                     _targetFieldIndex,
                     thisResult);
-                writer.WriteLine(string.Empty);
-
-                var objectMemberAccessResultNumber = opCode.Result;
-
-                // load value 1
-                opCode.Result = null;
-                cWriter.WriteLoad(opCode, objectMemberAccessResultNumber.Type, objectMemberAccessResultNumber);
                 writer.WriteLine(string.Empty);
 
                 var objectResultNumber = opCode.Result;
@@ -433,31 +393,23 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
                 writer.WriteLine(string.Empty);
 
-                // load value 2
-                var methodMemberAccessResultNumber = opCode.Result;
-
-                // load value 1
-                opCode.Result = null;
-                cWriter.WriteLoad(opCode, methodMemberAccessResultNumber.Type, methodMemberAccessResultNumber);
-                writer.WriteLine(string.Empty);
-
                 var methodResultNumber = opCode.Result;
 
+                // TODO: finish it
                 // switch code if method is static
-                var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
-                writer.Write("icmp ne ");
-                objectResultNumber.Type.WriteTypePrefix(cWriter);
-                writer.Write(" ");
-                writer.Write(objectResultNumber);
-                writer.WriteLine(", null");
-                cWriter.WriteCondBranch(writer, compareResult, "normal", "static");
+                ////var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
+                ////writer.Write("icmp ne ");
+                ////objectResultNumber.Type.WriteTypePrefix(cWriter);
+                ////writer.Write(" ");
+                ////writer.Write(objectResultNumber);
+                ////writer.WriteLine(", null");
+                ////cWriter.WriteCondBranch(writer, compareResult, "normal", "static");
 
                 // normal brunch
                 var callResult = cWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
 
                 var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
                 returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                returnNormal.OpCodeOperands[0].Result = callResult;
                 cWriter.WriteReturn(writer, returnNormal, method.ReturnType);
                 writer.WriteLine(string.Empty);
 
@@ -472,7 +424,6 @@ namespace Il2Native.Logic.Gencode
 
                 var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
                 returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                returnStatic.OpCodeOperands[0].Result = callStaticResult;
                 cWriter.WriteReturn(writer, returnStatic, method.ReturnType);
                 writer.WriteLine(string.Empty);
             }

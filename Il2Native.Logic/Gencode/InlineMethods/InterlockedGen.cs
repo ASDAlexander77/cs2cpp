@@ -40,8 +40,6 @@ namespace Il2Native.Logic.Gencode
             var first = opCodeMethodInfo.OpCodeOperands.First();
             var resultType = first.Result.Type.ToDereferencedType();
 
-            cWriter.SetResultNumber(opCodeMethodInfo, resultType);
-
             writer.Write(oper);
 
             // i32* %ptr, i32 %cmp, i32 %squared 
@@ -186,10 +184,6 @@ namespace Il2Native.Logic.Gencode
             ////writer.WriteLine("; {0} end", oper);
 
             cWriter.WriteOperandResultOrActualWrite(writer, opCodeMethodInfo, 1);
-
-            var opResult = cWriter.SetResultNumber(
-                opCodeMethodInfo,
-                opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
         }
 
         /// <summary>

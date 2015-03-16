@@ -52,9 +52,6 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var mallocResult = cWriter.SetResultNumber(
-                opCodePart,
-                cWriter.System.System_Byte.ToPointerType());
             writer.Write(cWriter.GetAllocator());
             writer.WriteLine("(");
             cWriter.WriteResult(size);
@@ -171,7 +168,6 @@ namespace Il2Native.Logic.Gencode
                 false,
                 null,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-            opCode.Result = opCode.Result.ToClassType();
         }
 
         /// <summary>
@@ -201,7 +197,6 @@ namespace Il2Native.Logic.Gencode
             IConstructor methodBase)
         {
             var resAlloc = opCodePart.Result;
-            opCodePart.Result = null;
             cWriter.WriteCall(
                 opCodePart,
                 methodBase,
@@ -210,7 +205,6 @@ namespace Il2Native.Logic.Gencode
                 true,
                 resAlloc,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-            opCodePart.Result = resAlloc;
         }
 
         /// <summary>
@@ -234,7 +228,6 @@ namespace Il2Native.Logic.Gencode
                 false,
                 opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-            opCode.Result = opCodeNope.Result;
         }
 
         /// <summary>
@@ -282,7 +275,6 @@ namespace Il2Native.Logic.Gencode
                 false,
                 opCode.Result,
                 cWriter.tryScopes.Count > 0 ? cWriter.tryScopes.Peek() : null);
-            opCode.Result = opCodeNope.Result;
 
             cWriter.Output.WriteLine(";");
         }
@@ -336,40 +328,22 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (
-                    !cWriter.WriteFieldAccess(
+                if (!cWriter.WriteFieldAccess(
                         opCode,
                         declaringType.ToClass(),
                         declaringType.ToClass(),
                         0,
                         opCode.Result))
                 {
-                    writer.WriteLine("; No data");
+                    writer.WriteLine("// No data");
                     return;
                 }
-
-                writer.WriteLine(string.Empty);
             }
             else
             {
                 Debug.Fail("Not implemented yet");
                 throw new NotImplementedException();
             }
-
-            // load value from field
-            var memberAccessResultNumber = opCode.Result;
-
-            opCode.Result = null;
-            cWriter.WriteLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
-            writer.WriteLine(string.Empty);
-
-            if (opCode.Result.Type.IntTypeBitSize() != cWriter.System.System_Int32.IntTypeBitSize())
-            {
-                cWriter.AdjustIntConvertableTypes(writer, opCode, cWriter.System.System_Int32);
-                writer.WriteLine(string.Empty);
-            }
-
-            writer.WriteLine("; End of Getting data");
         }
 
         /// <summary>
@@ -388,13 +362,6 @@ namespace Il2Native.Logic.Gencode
 
             var opCode = OpCodePart.CreateNop;
             cWriter.WriteMethodStart(method, null);
-            cWriter.WriteLoad(
-                opCode,
-                type.ToClass(),
-                new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
-                true,
-                true);
-            writer.WriteLine(string.Empty);
 
             var normalType = type.ToNormal();
 
@@ -591,50 +558,24 @@ namespace Il2Native.Logic.Gencode
             var opCode = OpCodePart.CreateNop;
 
             var normalType = type.ToNormal();
-            var isStruct = normalType.IsStructureType();
-            if (isStruct)
-            {
-                opCode.Result = new FullyDefinedReference("%agg.result", normalType);
-            }
 
             cWriter.WriteMethodStart(method, null);
-            cWriter.WriteLoad(
-                opCode,
-                type.ToClass(),
-                new FullyDefinedReference(cWriter.GetThisName(), cWriter.ThisType),
-                true,
-                true);
-            writer.WriteLine(string.Empty);
 
             var resultPresents = cWriter.WriteUnboxObject(opCode, normalType);
 
             writer.Write("ret ");
-            if (!isStruct)
+            if (normalType.IsEnum)
             {
-                if (normalType.IsEnum)
-                {
-                    normalType.GetEnumUnderlyingType().WriteTypePrefix(cWriter);
-                }
-                else
-                {
-                    normalType.WriteTypePrefix(cWriter);
-                }
-
-                writer.Write(" ");
-
-                if (resultPresents)
-                {
-                    cWriter.WriteResult(opCode.Result);
-                }
-                else
-                {
-                    writer.WriteLine(" undef");
-                }
+                normalType.GetEnumUnderlyingType().WriteTypePrefix(cWriter);
             }
             else
             {
-                writer.WriteLine(" void");
+                normalType.WriteTypePrefix(cWriter);
             }
+
+            writer.Write(" ");
+
+            cWriter.WriteResult(opCode.Result);
 
             cWriter.WriteMethodEnd(method, null);
         }
@@ -655,11 +596,6 @@ namespace Il2Native.Logic.Gencode
 
             var isStruct = declaringType.IsStructureType();
 
-            writer.WriteLine("; Unboxing");
-            writer.WriteLine(string.Empty);
-
-            writer.WriteLine("; Copy data");
-
             if (!isStruct)
             {
                 // write access to a field
@@ -670,25 +606,10 @@ namespace Il2Native.Logic.Gencode
                     0,
                     opCode.Result))
                 {
-                    writer.WriteLine("; No data");
+                    writer.WriteLine("// No data");
                     return false;
                 }
-
-                writer.WriteLine(string.Empty);
             }
-
-            // load value from field
-            var memberAccessResultNumber = opCode.Result;
-
-            if (!isStruct)
-            {
-                opCode.Result = null;
-            }
-
-            cWriter.WriteLoad(opCode, memberAccessResultNumber.Type.ToNormal(), memberAccessResultNumber);
-
-            writer.WriteLine(string.Empty);
-            writer.WriteLine("; End of Copy data");
 
             return true;
         }
