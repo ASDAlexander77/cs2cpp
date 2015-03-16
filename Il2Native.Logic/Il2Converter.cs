@@ -963,7 +963,34 @@ namespace Il2Native.Logic
 
             Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
 
-            return usedTypes;
+            var typesArray = usedTypes.ToArray();
+            ////Array.Sort(typesArray, IsDerived);
+            return typesArray;
+        }
+
+        private static int IsDerived(IType type, IType other)
+        {
+            if (type.IsDerivedFrom(other))
+            {
+                return 1;
+            }
+
+            if (other.IsDerivedFrom(type))
+            {
+                return -1;
+            }
+
+            if (type.IsInterface && other.GetAllInterfaces().Contains(type))
+            {
+                return 1;
+            }
+
+            if (other.IsInterface && type.GetAllInterfaces().Contains(other))
+            {
+                return -1;
+            }
+
+            return 0;
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)

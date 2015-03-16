@@ -98,6 +98,14 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly ISet<IType> typeVTableDefinitionWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        public readonly ISet<IType> typeRttiDeclarationWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
 
         /// <summary>
@@ -3188,7 +3196,15 @@ namespace Il2Native.Logic
         {
             if (this.forwardTypeRttiDeclarationWritten.Add(type.ToRtti()))
             {
-                type.WriteRttiDeclaration(this);
+                if (type.AssemblyQualifiedName == AssemblyQualifiedName)
+                {
+                    type.WriteRtti(this);
+                }
+                else
+                {
+                    type.WriteRttiDeclaration(this);
+                }
+
                 return true;
             }
 
@@ -3352,6 +3368,11 @@ namespace Il2Native.Logic
 
         public void WriteVirtualTableDefinition(IType type)
         {
+            if (!this.typeVTableDefinitionWritten.Add(type))
+            {
+                return;
+            }
+
             var virtualTable = type.GetVirtualTable(this);
 
             // forward declarations

@@ -61,7 +61,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteRtti(this IType type, CWriter cWriter)
         {
-            cWriter.forwardTypeRttiDeclarationWritten.Add(type.ToRtti());
+            var rtti = type.ToRtti();
+            if (!cWriter.typeRttiDeclarationWritten.Add(rtti))
+            {
+                return;
+            }
+
+            cWriter.forwardTypeRttiDeclarationWritten.Add(rtti);
 
             if (type.BaseType != null)
             {
