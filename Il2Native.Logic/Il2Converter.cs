@@ -123,7 +123,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="codeWriter">
         /// </param>
-        /// <param name="newListOfITypes">
+        /// <param name="types">
         /// </param>
         /// <param name="genDefinitionsByMetadataName">
         /// </param>
@@ -136,12 +136,12 @@ namespace Il2Native.Logic
         private static void ConvertAllTypes(
             IlReader ilReader,
             ICodeWriter codeWriter,
-            IList<IType> newListOfITypes,
+            IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genMethodSpec,
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            foreach (var type in newListOfITypes)
+            foreach (var type in types)
             {
                 Debug.Assert(type != null);
                 if (type == null)
@@ -582,12 +582,10 @@ namespace Il2Native.Logic
             cachedRequiredDefinitionTypes.Clear();
             cachedRequiredDeclarationTypes.Clear();
 
-            IList<IType> sortedListOfTypes;
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
-            ReadingTypes(
+            IEnumerable<IType> sortedListOfTypes = ReadingTypes(
                 ilReader,
                 filter,
-                out sortedListOfTypes,
                 out genericMethodSpecializationsSorted);
 
             Writing(
@@ -938,10 +936,9 @@ namespace Il2Native.Logic
             requiredTypesByType.Add(type);
         }
 
-        private static void ReadingTypes(
+        private static IEnumerable<IType> ReadingTypes(
             IlReader ilReader,
             string[] filter,
-            out IList<IType> usedTypes,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // clean it as you are using IlReader
@@ -960,11 +957,13 @@ namespace Il2Native.Logic
             // TODO: temp hack to initialize ThisType for TypeResolver
             _codeWriter.Initialize(allTypes.First());
 
-            usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext);
+            var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
 
             Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
+
+            return usedTypes;
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
@@ -1069,7 +1068,7 @@ namespace Il2Native.Logic
         private static void Writing(
             IlReader ilReader,
             ICodeWriter codeWriter,
-            IList<IType> types,
+            IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
             // writing

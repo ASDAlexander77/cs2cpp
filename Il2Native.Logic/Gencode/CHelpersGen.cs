@@ -762,13 +762,10 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                "memcpy({0}, {1}, {2})",
                 op1,
                 op2,
-                type.GetTypeSize(cWriter),
-                CWriter.PointerSize
-
-                /*Align*/);
+                type.GetTypeSize(cWriter));
         }
 
         public static void WriteMemCopy(
@@ -780,12 +777,10 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.WriteLine(
-                "call void @llvm.memcpy.p0i8.p0i8.i32(i8* {0}, i8* {1}, i32 {2}, i32 {3}, i1 false)",
+                "memcpy({0}, {1}, {2})",
                 op1,
                 op2,
-                size,
-                CWriter.PointerSize
-                /*Align*/);
+                size);
         }
 
         /// <summary>

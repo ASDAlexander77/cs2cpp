@@ -212,7 +212,6 @@ namespace Il2Native.Logic.Gencode
 
             if (dynamicCastRequired)
             {
-                writer.WriteLine("; Dynamic Cast of 'This' parameter");
                 cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
                 writer.WriteLine(string.Empty);
             }
@@ -229,7 +228,6 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    writer.WriteLine("; Box Primitive type(void*) for 'This' parameter");
                     var intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
                     var uintType = cWriter.GetUIntTypeByByteSize(CWriter.PointerSize);
                     if (intType.TypeEquals(primitiveType) || uintType.TypeEquals(primitiveType))
@@ -258,7 +256,6 @@ namespace Il2Native.Logic.Gencode
 
                 if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
-                    writer.WriteLine("; Cast of 'Boxed' 'This' parameter");
                     cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
                     writer.WriteLine(string.Empty);
                 }

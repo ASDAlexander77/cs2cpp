@@ -44,24 +44,6 @@ namespace Il2Native.Logic.Gencode
                 FunctionsOffsetInVirtualTable);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="declaringType">
-        /// </param>
-        /// <param name="interface">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetVirtualTableReference(this IType declaringType, IType @interface, ITypeResolver typeResolver)
-        {
-            var virtualInterfaceTable = declaringType.GetVirtualInterfaceTable(@interface, typeResolver);
-            return string.Format(
-                "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
-                virtualInterfaceTable.GetVirtualTableSize(),
-                declaringType.GetVirtualInterfaceTableName(@interface),
-                FunctionsOffsetInVirtualTable);
-        }
-
         public static void WriteAllocateMemory(
             this CWriter cWriter,
             OpCodePart opCodePart,
@@ -73,20 +55,19 @@ namespace Il2Native.Logic.Gencode
             var mallocResult = cWriter.SetResultNumber(
                 opCodePart,
                 cWriter.System.System_Byte.ToPointerType());
-            writer.Write("call i8* @{0}(", cWriter.GetAllocator());
-            size.Type.WriteTypePrefix(cWriter);
-            writer.Write(" ");
+            writer.Write(cWriter.GetAllocator());
+            writer.WriteLine("(");
             cWriter.WriteResult(size);
             writer.WriteLine(")");
 
             if (!doNotTestNullValue)
             {
-                cWriter.WriteTestNullValueAndThrowException(
-                    writer,
-                    opCodePart,
-                    mallocResult,
-                    "System.OutOfMemoryException",
-                    "new_obj");
+                ////cWriter.WriteTestNullValueAndThrowException(
+                ////    writer,
+                ////    opCodePart,
+                ////    mallocResult,
+                ////    "System.OutOfMemoryException",
+                ////    "new_obj");
             }
         }
 
