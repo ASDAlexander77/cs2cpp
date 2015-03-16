@@ -35,16 +35,11 @@
             0,
             0,
             Code.Ldloc_1,
+            Code.Cpblk,
 
-            // call copy
-            Code.Call,
-            4,
-            0,
-            0,
-            0,
             Code.Ldloc_0,
             Code.Castclass,
-            5,
+            4,
             0,
             0,
             0,
@@ -69,21 +64,7 @@
                     typeResolver.System.System_Byte.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter() },
                     (llvmWriter, opCode) => llvmWriter.WriteAllocateMemory(opCode, opCode.OpCodeOperands[0].Result, false)));
-            tokenResolutions.Add(
-                new SynthesizedStaticMethod(
-                    string.Empty,
-                    typeResolver.System.System_Object,
-                    typeResolver.System.System_Void,
-                    new[]
-                        {
-                            typeResolver.System.System_Byte.ToPointerType().ToParameter(),
-                            typeResolver.System.System_Byte.ToPointerType().ToParameter(),
-                            typeResolver.System.System_Int32.ToParameter()
-                        },
-                    (llvmWriter, opCode) => llvmWriter.WriteMemCopy(
-                        opCode.OpCodeOperands[0].Result,
-                        opCode.OpCodeOperands[1].Result,
-                        opCode.OpCodeOperands[2].Result)));
+            
             tokenResolutions.Add(typeResolver.System.System_Object);
 
             var locals = new List<IType>();

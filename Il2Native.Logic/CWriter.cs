@@ -448,15 +448,14 @@ namespace Il2Native.Logic
                     break;
                 case Code.Localloc:
 
-                    // TODO: finish it
+                    var varName = string.Format("_alloc{0} ", opCode.AddressStart);
+                    writer.WriteLine("Byte* {0};", varName);
+                    this.UnaryOper(writer, opCode, string.Format("{0} = alloca(", varName));
 
-                    writer.Write("alloca i8, ");
-                    this.UnaryOper(writer, opCode, "alloca i8, ", this.GetIntTypeByByteSize(PointerSize));
-                    writer.Write(", align 1");
+                    // do not remove, otherwise stackoverflow
+                    opCode.Result = new FullyDefinedReference(varName, null);
 
-                    writer.WriteLine(string.Empty);
-
-                    this.WriteMemSet(opCode.Result, firstOpCodeOperand.Result);
+                    this.WriteMemSet(opCode, firstOpCodeOperand);
 
                     break;
                 case Code.Ldfld:
@@ -1004,12 +1003,16 @@ namespace Il2Native.Logic
                             break;
                     }
 
+                    writer.Write("if ");
+
                     this.BinaryOper(
                         writer,
                         opCode,
                         oper,
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
                         this.System.System_Boolean);
+
+                    writer.Write(string.Concat(" goto a", opCode.JumpAddress()));
 
                     break;
                 case Code.Brtrue:
@@ -1345,12 +1348,18 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Initblk:
-
-                    this.WriteMemSet(opCode.OpCodeOperands[0].Result, opCode.OpCodeOperands[1].Result);
-
+                    this.WriteMemSet(opCode.OpCodeOperands[0], opCode.OpCodeOperands[1]);
                     break;
+
                 case Code.Cpblk:
+                    this.WriteMemCopy(opCode.OpCodeOperands[0], opCode.OpCodeOperands[1], opCode.OpCodeOperands[2]);
+                    break;
+
                 case Code.Jmp:
+                    opCodeInt32 = opCode as OpCodeInt32Part;
+                    writer.Write("goto a{0}", opCodeInt32.Operand);
+                    break;
+
                 case Code.Ckfinite:
                     throw new NotImplementedException();
             }
@@ -3857,9 +3866,9 @@ namespace Il2Native.Logic
                 this.WriteCCastOperand(opCode, 0, type);
             }
 
-            this.UnaryOper(writer, opCode, 1, "=", type);
-
-            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+            this.UnaryOper(writer, opCode, 0, "*(", type);
+            writer.Write(") = ");
+            this.WriteOperandResultOrActualWrite(writer, opCode, 1);
         }
 
         /// <summary>

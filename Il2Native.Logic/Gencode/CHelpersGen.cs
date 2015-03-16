@@ -604,17 +604,19 @@ namespace Il2Native.Logic.Gencode
 
         public static void WriteMemCopy(
             this CWriter cWriter,
-            FullyDefinedReference op1,
-            FullyDefinedReference op2,
-            FullyDefinedReference size)
+            OpCodePart op1,
+            OpCodePart op2,
+            OpCodePart size)
         {
             var writer = cWriter.Output;
 
-            writer.WriteLine(
-                "memcpy({0}, {1}, {2})",
-                op1,
-                op2,
-                size);
+            writer.Write("memcpy(");
+            cWriter.WriteResultOrActualWrite(writer, op1);
+            writer.Write(", ");
+            cWriter.WriteResultOrActualWrite(writer, op2);
+            writer.Write(", ");
+            cWriter.WriteResultOrActualWrite(writer, size);
+            writer.Write(");");
         }
 
         /// <summary>
@@ -634,11 +636,15 @@ namespace Il2Native.Logic.Gencode
             writer.Write("));");
         }
 
-        public static void WriteMemSet(this CWriter cWriter, FullyDefinedReference op1, FullyDefinedReference size)
+        public static void WriteMemSet(this CWriter cWriter, OpCodePart op1, OpCodePart size)
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((Byte*) ({0}), 0, ({1}))", op1, size);
+            writer.Write("memset((Byte*) (");
+            cWriter.WriteResultOrActualWrite(writer, op1);
+            writer.Write("), 0, (");
+            cWriter.WriteResultOrActualWrite(writer, size);
+            writer.Write("))");
         }
 
         public static void WriteMemSet(

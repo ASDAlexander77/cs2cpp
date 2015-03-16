@@ -85,9 +85,9 @@
                     (llvmWriter, opCode) =>
                     {
                         // copy data
-                        var firstByteOfSourceArray = opCode.OpCodeOperands[0].Result;
-                        var firstByteOfDestArray = opCode.OpCodeOperands[1].Result;
-                        var len = opCode.OpCodeOperands[2].Result;
+                        var firstByteOfSourceArray = opCode.OpCodeOperands[0];
+                        var firstByteOfDestArray = opCode.OpCodeOperands[1];
+                        var len = opCode.OpCodeOperands[2];
                         llvmWriter.WriteMemCopy(firstByteOfSourceArray, firstByteOfDestArray, len);
                     }));
             tokenResolutions.Add(typeResolver.System.System_Byte);

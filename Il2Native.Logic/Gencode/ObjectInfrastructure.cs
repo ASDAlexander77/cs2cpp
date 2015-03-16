@@ -53,9 +53,9 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write(cWriter.GetAllocator());
-            writer.WriteLine("(");
+            writer.Write("(");
             cWriter.WriteResult(size);
-            writer.WriteLine(")");
+            writer.Write(")");
 
             if (!doNotTestNullValue)
             {
