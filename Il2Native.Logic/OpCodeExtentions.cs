@@ -36,6 +36,10 @@ namespace Il2Native.Logic
             typeBaseName = typeBaseName.Replace('&', 'R');
             typeBaseName = typeBaseName.Replace('(', 'F');
             typeBaseName = typeBaseName.Replace(')', 'N');
+            typeBaseName = typeBaseName.Replace('{', 'C');
+            typeBaseName = typeBaseName.Replace('}', 'Y');
+            typeBaseName = typeBaseName.Replace('$', 'D');
+            typeBaseName = typeBaseName.Replace('=', 'E');
             return typeBaseName;
         }
 

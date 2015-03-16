@@ -251,6 +251,8 @@ namespace Il2Native.Logic
         /// </returns>
         public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false)
         {
+            // TODO: remove duplication from RequiredOutgoingType (use RequiredOutgoingType as first)
+
             if (!doNotUseCachedResult && opCode.HasResult)
             {
                 return new ReturnResult(opCode.Result);
@@ -360,7 +362,7 @@ namespace Il2Native.Logic
                             this.Parameters[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)]
                                 .ParameterType);
                 case Code.Ldarg_0:
-                    return new ReturnResult(this.HasMethodThis ? this.ThisType : this.Parameters[0].ParameterType);
+                    return new ReturnResult(this.HasMethodThis ? this.ThisType.ToClass() : this.Parameters[0].ParameterType);
                 case Code.Ldarg_1:
                     return new ReturnResult(this.Parameters[this.HasMethodThis ? 0 : 1].ParameterType);
                 case Code.Ldarg_2:
@@ -1463,6 +1465,11 @@ namespace Il2Native.Logic
                 return this.System.System_String;
             }
 
+            if (opCodePart.Any(Code.Ldnull))
+            {
+                return this.System.System_Void.ToPointerType();
+            }
+
             if (opCodePart.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
             {
                 retType = opCodePart.GetLocalType(this);
@@ -1474,7 +1481,7 @@ namespace Il2Native.Logic
                 var index = opCodePart.GetArgIndex();
                 if (this.HasMethodThis && index == 0)
                 {
-                    retType = this.ThisType;
+                    retType = this.ThisType.ToClass();
                     return retType;
                 }
 
@@ -1542,7 +1549,8 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldelem_Ref))
             {
-                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                Debug.Assert(retType != null);
                 return retType.GetElementType();
             }
 
@@ -1583,7 +1591,8 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldind_Ref))
             {
-                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
+                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                Debug.Assert(retType != null);
                 return retType;
             }
 

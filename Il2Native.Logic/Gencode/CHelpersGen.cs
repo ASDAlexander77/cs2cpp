@@ -494,10 +494,11 @@ namespace Il2Native.Logic.Gencode
                     isCtor,
                     thisResultNumber,
                     thisType,
-                    returnFullyDefinedReference,
                     methodInfo != null ? methodInfo.ReturnType : null,
                     cWriter,
                     methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs));
+
+            opCodeMethodInfo.Result = returnFullyDefinedReference;
         }
 
         /// <summary>

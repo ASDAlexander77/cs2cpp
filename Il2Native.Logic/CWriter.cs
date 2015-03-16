@@ -491,6 +491,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        this.WriteOperandResultOrActualWrite(this.Output, opCodeFieldInfoPart, 0);
                         opCodeFieldInfoPart.Result = opCodeFieldInfoPart.OpCodeOperands[0].Result.ToType(opCodeFieldInfoPart.Operand.FieldType.ToPointerType());
                     }
 
@@ -888,17 +889,10 @@ namespace Il2Native.Logic
 
                     var argType = this.GetArgType(index);
                     destination = new FullyDefinedReference(this.GetArgVarName(actualIndex, index), this.GetArgType(index));
-                    if (argType.IsStructureType() && !argType.IsByRef)
+                    var estResult = this.EstimatedResultOf(firstOpCodeOperand);
+                    if (argType.IsStructureType() && !argType.IsByRef && estResult.Type.IsPrimitiveType())
                     {
-                        if (firstOpCodeOperand.Result.Type.IsPrimitiveType())
-                        {
-                            this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
-                        }
-                        else
-                        {
-                            opCode.Result = destination;
-                            this.WriteLoad(opCode, argType, firstOpCodeOperand.Result);
-                        }
+                        this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                     }
                     else
                     {
@@ -1319,25 +1313,13 @@ namespace Il2Native.Logic
                 case Code.Constrained:
 
                     // to solve the problem with referencing ValueType and Class type in Generic type
-                    opCodeTypePart = opCode as OpCodeTypePart;
                     var nextOp = opCode.Next;
 
-                    // if this is Struct we already have an address in LLVM
-                    if (!opCodeTypePart.Operand.IsStructureType())
-                    {
-                        var fullyDefinedReference = nextOp.OpCodeOperands[0].Result;
-                        nextOp.OpCodeOperands[0].Result = null;
-                        this.WriteLoad(nextOp.OpCodeOperands[0], opCodeTypePart.Operand, fullyDefinedReference);
-                    }
-
-                    var firstOperandResult = nextOp.OpCodeOperands[0].Result;
+                    var firstOperandResult = this.EstimatedResultOf(nextOp.OpCodeOperands[0]);
                     var isPrimitive = firstOperandResult.Type.IsPrimitiveTypeOrEnum();
-
                     if (isPrimitive)
                     {
                         // box it
-                        writer.WriteLine("; Constrained: Box Primitive type for 'This' parameter");
-
                         // convert value to object
                         var opCodeMethodInfo = opCode.Next as OpCodeMethodInfoPart;
                         opCodeMethodInfo.Result = null;
@@ -1345,7 +1327,6 @@ namespace Il2Native.Logic
                         opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                         firstOperandResult.Type.ToClass().WriteCallBoxObjectMethod(this, opCodeNone);
                         nextOp.OpCodeOperands[0].Result = opCodeNone.Result;
-                        writer.WriteLine(string.Empty);
                     }
 
                     break;
@@ -1898,15 +1879,8 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (fieldType.IsStructureType())
-            {
-                this.WriteLoad(opCodePart, fieldType, opCodePart.OpCodeOperands[valueOperand].Result);
-            }
-            else
-            {
-                var writer = this.Output;
-                this.UnaryOper(writer, opCodePart, valueOperand, " = ", fieldType);
-            }
+            var writer = this.Output;
+            this.UnaryOper(writer, opCodePart, valueOperand, " = ", fieldType);
         }
 
         /// <summary>
@@ -1945,6 +1919,7 @@ namespace Il2Native.Logic
         {
             writer.Write(op);
             this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+            Debug.Assert(opCode.OpCodeOperands[0].Result != null);
             this.SetResultNumber(opCode, opCode.OpCodeOperands[0].Result.Type);
         }
 
@@ -2440,11 +2415,11 @@ namespace Il2Native.Logic
         public void WriteFieldAccess(CIndentedTextWriter writer, OpCodePart opCodePart, IField field, OpCodePart fixedArrayElementIndex = null)
         {
             var operand = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-            var classType = operand.Type.ToClass();
+            var classType = operand.Type.IsPointer || operand.Type.IsByRef ? operand.Type.GetElementType().ToClass() : operand.Type.ToClass();
 
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
             writer.Write("->");
-            if (field.DeclaringType.IsInterface && !classType.IsInterface)
+            if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
             }
@@ -3237,7 +3212,7 @@ namespace Il2Native.Logic
         {
             if (opCode == opCode.UsedByAlternativeValues.Values[0])
             {
-                opCode.RequiredOutgoingType.WriteTypePrefix(this);
+                (opCode.RequiredOutgoingType ?? opCode.RequiredIncomingType).WriteTypePrefix(this);
                 this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
 
@@ -4163,6 +4138,8 @@ namespace Il2Native.Logic
 
         private void LoadObject(OpCodePart opCode, int operandIndex)
         {
+            this.WriteOperandResultOrActualWrite(this.Output, opCode, operandIndex);
+
             OpCodeTypePart opCodeTypePart;
             opCodeTypePart = opCode as OpCodeTypePart;
             var resultOfOp0 = opCode.OpCodeOperands[operandIndex].Result;

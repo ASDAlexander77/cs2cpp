@@ -36,8 +36,6 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="thisType">
         /// </param>
-        /// <param name="resultNumberForReturn">
-        /// </param>
         /// <param name="returnType">
         /// </param>
         /// <param name="cWriter">
@@ -51,7 +49,6 @@ namespace Il2Native.Logic.Gencode
             bool isCtor,
             FullyDefinedReference resultNumberForThis,
             IType thisType,
-            FullyDefinedReference resultNumberForReturn,
             IType returnType,
             CWriter cWriter,
             bool varArg)
@@ -225,15 +222,10 @@ namespace Il2Native.Logic.Gencode
                 var primitiveType = resultOfFirstOperand.Type;
                 if (isPrimitivePointer)
                 {
-                    writer.WriteLine("; Box Primitive pointer type for 'This' parameter");
-
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
+                    cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
                     var firstOperandResult = opCodeFirstOperand.Result;
-                    opCodeFirstOperand.Result = null;
-                    cWriter.WriteLoad(
-                        opCodeFirstOperand,
-                        firstOperandResult.Type.ToDereferencedType(),
-                        firstOperandResult);
+                    cWriter.WriteLoad(opCodeFirstOperand, primitiveType, firstOperandResult);
                 }
                 else
                 {
@@ -369,23 +361,8 @@ namespace Il2Native.Logic.Gencode
             OpCodePart opCodeMethodInfo,
             CWriter cWriter)
         {
-            var writer = cWriter.Output;
-
-            var isReturnStructType = methodInfo != null && methodInfo.ReturnType.IsStructureType();
             var isReturnVoidType = methodInfo != null && methodInfo.ReturnType.IsVoid();
-
-            // allocate space for structure if return type is structure
-            if (isReturnStructType)
-            {
-                // TODO: for optimization, when it is used by Code.Stfld etc you can optimaze sending reference to a structure without allocating it in stack
-                // todo so you need to request a destination reference as you did before
-
-                // we need to store temp result of struct in stack to be used by "Ldfld, Ldflda"
-                cWriter.SetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
-                //cWriter.WriteAlloca(methodInfo.ReturnType);
-                writer.WriteLine(string.Empty);
-            }
-            else if (!isReturnVoidType)
+            if (!isReturnVoidType)
             {
                 cWriter.SetResultNumber(opCodeMethodInfo, methodInfo.ReturnType);
             }
