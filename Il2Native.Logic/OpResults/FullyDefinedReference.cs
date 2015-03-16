@@ -36,11 +36,6 @@ namespace Il2Native.Logic
                 throw new ArgumentException("name");
             }
 
-            if (type == null)
-            {
-                throw new ArgumentNullException("type");
-            }
-
             this.Name = name;
         }
 

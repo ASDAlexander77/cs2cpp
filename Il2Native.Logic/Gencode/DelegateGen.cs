@@ -306,8 +306,10 @@ namespace Il2Native.Logic.Gencode
                 cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
                 writer.WriteLine(string.Empty);
 
+                var estimatedResult1 = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
+
                 // save value 1
-                cWriter.SaveToField(opCode, opCode.Result.Type, 0);
+                cWriter.SaveToField(opCode, estimatedResult1.Type, 0);
                 writer.WriteLine(string.Empty);
 
                 // write access to a field 2
@@ -325,8 +327,10 @@ namespace Il2Native.Logic.Gencode
                 cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
                 writer.WriteLine(string.Empty);
 
+                var estimatedResult2 = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
+
                 // save value 2
-                cWriter.SaveToField(opCode, opCode.Result.Type, 0);
+                cWriter.SaveToField(opCode, estimatedResult2.Type, 0);
                 writer.WriteLine(string.Empty);
             }
             catch (KeyNotFoundException)
@@ -353,90 +357,88 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            if (!disableCurlyBrakets)
-            {
-                writer.WriteLine(" {");
-                writer.Indent++;
-            }
+            // TODO: finish it
 
-            var opCode = OpCodePart.CreateNop;
+            ////if (!disableCurlyBrakets)
+            ////{
+            ////    writer.WriteLine(" {");
+            ////    writer.Indent++;
+            ////}
 
-            var thisResult = opCode.Result;
+            ////var opCode = OpCodePart.CreateNop;
 
-            var delegateType = cWriter.System.System_Delegate;
+            ////var thisResult = opCode.Result;
 
-            // write access to a field 1
-            try
-            {
-                var _targetFieldIndex = cWriter.GetFieldIndex(delegateType, "_target");
-                cWriter.WriteFieldAccess(
-                    opCode,
-                    method.DeclaringType,
-                    delegateType,
-                    _targetFieldIndex,
-                    thisResult);
-                writer.WriteLine(string.Empty);
+            ////var delegateType = cWriter.System.System_Delegate;
 
-                var objectResultNumber = opCode.Result;
+            ////// write access to a field 1
+            ////try
+            ////{
+            ////    var _targetFieldIndex = cWriter.GetFieldIndex(delegateType, "_target");
+            ////    cWriter.WriteFieldAccess(
+            ////        opCode,
+            ////        method.DeclaringType,
+            ////        delegateType,
+            ////        _targetFieldIndex,
+            ////        thisResult);
+            ////    writer.WriteLine(string.Empty);
 
-                // write access to a field 2
-                var _methodPtrFieldIndex = cWriter.GetFieldIndex(delegateType, "_methodPtr");
-                cWriter.WriteFieldAccess(
-                    opCode,
-                    method.DeclaringType,
-                    delegateType,
-                    _methodPtrFieldIndex,
-                    thisResult);
-                writer.WriteLine(string.Empty);
+            ////    var objectResultNumber = opCode.Result;
 
-                // additional step to extract value from IntPtr structure
-                cWriter.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
-                writer.WriteLine(string.Empty);
+            ////    // write access to a field 2
+            ////    var _methodPtrFieldIndex = cWriter.GetFieldIndex(delegateType, "_methodPtr");
+            ////    var _methodPtrField = cWriter.WriteFieldAccess(
+            ////        opCode,
+            ////        method.DeclaringType,
+            ////        delegateType,
+            ////        _methodPtrFieldIndex,
+            ////        thisResult);
+            ////    writer.WriteLine(string.Empty);
 
-                var methodResultNumber = opCode.Result;
+            ////    // additional step to extract value from IntPtr structure
+            ////    cWriter.WriteFieldAccess(opCode, _methodPtrField.FieldType, _methodPtrField.FieldType, 0, opCode.Result);
+            ////    // TODO: finish it
+            ////    // switch code if method is static
+            ////    ////var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
+            ////    ////writer.Write("icmp ne ");
+            ////    ////objectResultNumber.Type.WriteTypePrefix(cWriter);
+            ////    ////writer.Write(" ");
+            ////    ////writer.Write(objectResultNumber);
+            ////    ////writer.WriteLine(", null");
+            ////    ////cWriter.WriteCondBranch(writer, compareResult, "normal", "static");
 
-                // TODO: finish it
-                // switch code if method is static
-                ////var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
-                ////writer.Write("icmp ne ");
-                ////objectResultNumber.Type.WriteTypePrefix(cWriter);
-                ////writer.Write(" ");
-                ////writer.Write(objectResultNumber);
-                ////writer.WriteLine(", null");
-                ////cWriter.WriteCondBranch(writer, compareResult, "normal", "static");
+            ////    // normal brunch
+            ////    var callResult = cWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
 
-                // normal brunch
-                var callResult = cWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
+            ////    var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+            ////    returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
+            ////    cWriter.WriteReturn(writer, returnNormal, method.ReturnType);
+            ////    writer.WriteLine(string.Empty);
 
-                var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-                returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                cWriter.WriteReturn(writer, returnNormal, method.ReturnType);
-                writer.WriteLine(string.Empty);
+            ////    // static brunch
+            ////    cWriter.WriteLabel(writer, "static");
 
-                // static brunch
-                cWriter.WriteLabel(writer, "static");
+            ////    var callStaticResult = cWriter.WriteCallInvokeMethod(
+            ////        objectResultNumber,
+            ////        methodResultNumber,
+            ////        method,
+            ////        true);
 
-                var callStaticResult = cWriter.WriteCallInvokeMethod(
-                    objectResultNumber,
-                    methodResultNumber,
-                    method,
-                    true);
+            ////    var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
+            ////    returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
+            ////    cWriter.WriteReturn(writer, returnStatic, method.ReturnType);
+            ////    writer.WriteLine(string.Empty);
+            ////}
+            ////catch (KeyNotFoundException)
+            ////{
+            ////    writer.WriteLine("unreachable");
+            ////}
 
-                var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-                returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
-                cWriter.WriteReturn(writer, returnStatic, method.ReturnType);
-                writer.WriteLine(string.Empty);
-            }
-            catch (KeyNotFoundException)
-            {
-                writer.WriteLine("unreachable");
-            }
-
-            if (!disableCurlyBrakets)
-            {
-                writer.Indent--;
-                writer.WriteLine("}");
-            }
+            ////if (!disableCurlyBrakets)
+            ////{
+            ////    writer.Indent--;
+            ////    writer.WriteLine("}");
+            ////}
         }
 
         /// <summary>

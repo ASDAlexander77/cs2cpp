@@ -541,9 +541,10 @@ namespace Il2Native.Logic.Gencode
 
             writer.Write(" = ");
 
-            cWriter.AdjustToType(opCode.OpCodeOperands[operandIndex], typeToSave);
-
-            cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            if (!cWriter.AdjustToType(opCode.OpCodeOperands[operandIndex], typeToSave))
+            {
+                cWriter.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            }
         }
 
         public static void WriteLlvmSavePrimitiveIntoStructure(
@@ -557,12 +558,12 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("; Copy primitive data into a structure");
 
             // write access to a field
-            if (!cWriter.WriteFieldAccess(
+            if (cWriter.WriteFieldAccess(
                 opCode,
                 destination.Type.ToClass(),
                 destination.Type.ToClass(),
                 0,
-                destination))
+                destination) == null)
             {
                 writer.WriteLine("; No data");
                 return;

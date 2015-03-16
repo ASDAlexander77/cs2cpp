@@ -328,12 +328,12 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!cWriter.WriteFieldAccess(
+                if (cWriter.WriteFieldAccess(
                         opCode,
                         declaringType.ToClass(),
                         declaringType.ToClass(),
                         0,
-                        opCode.Result))
+                        opCode.Result) == null)
                 {
                     writer.WriteLine("// No data");
                     return;
@@ -599,12 +599,12 @@ namespace Il2Native.Logic.Gencode
             if (!isStruct)
             {
                 // write access to a field
-                if (!cWriter.WriteFieldAccess(
+                if (cWriter.WriteFieldAccess(
                     opCode,
                     declaringType.ToClass(),
                     declaringType.ToClass(),
                     0,
-                    opCode.Result))
+                    opCode.Result) == null)
                 {
                     writer.WriteLine("// No data");
                     return false;

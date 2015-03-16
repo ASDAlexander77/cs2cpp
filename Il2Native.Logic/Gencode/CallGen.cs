@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
                 {
                     cWriter.WriteResult(resultNumberForThis);
                 }
-                else if (used != null && used.Length > 0)
+                else if (!isCtor && used != null && used.Length > 0)
                 {
                     // this expression
                     opCodeMethodInfo.WriteFunctionCallThisExpression(
@@ -77,8 +77,6 @@ namespace Il2Native.Logic.Gencode
                         used[0],
                         resultOfFirstOperand,
                         cWriter);
-
-                    cWriter.WriteResultOrActualWrite(writer, used[0]);
 
                     if (thisType.IsInterface)
                     {
@@ -196,12 +194,13 @@ namespace Il2Native.Logic.Gencode
                 thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
                 cWriter.WriteCCast(opCodeFirstOperand, thisType);
+                return;
             }
 
             if (dynamicCastRequired)
             {
                 cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
-                writer.WriteLine(string.Empty);
+                return;
             }
 
             if (isPrimitive || isPrimitivePointer)
@@ -218,8 +217,14 @@ namespace Il2Native.Logic.Gencode
                     var uintType = cWriter.GetUIntTypeByByteSize(CWriter.PointerSize);
                     if (intType.TypeEquals(primitiveType) || uintType.TypeEquals(primitiveType))
                     {
-                        var declType = (opCodeMethodInfo as OpCodeMethodInfoPart).Operand.DeclaringType;
-                        Debug.Assert(declType.IsStructureType(), "only Struct type can be used");
+                        IType declType = null;
+                        var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
+                        if (opCodeMethodInfoPart != null)
+                        {
+                            declType = opCodeMethodInfoPart.Operand.DeclaringType;
+                        }
+
+                        Debug.Assert(declType != null && declType.IsStructureType(), "only Struct type can be used");
                         primitiveType = declType.ToClass();
                         cWriter.AdjustIntConvertableTypes(
                             writer,
@@ -241,7 +246,11 @@ namespace Il2Native.Logic.Gencode
                 {
                     cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
                 }
+
+                return;
             }
+
+            cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
         }
 
         /// <summary>
@@ -386,8 +395,10 @@ namespace Il2Native.Logic.Gencode
             OpCodePart operand,
             IParameter parameter)
         {
-            cWriter.AdjustToType(operand, parameter.ParameterType);
-            cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
+            if (!cWriter.AdjustToType(operand, parameter.ParameterType))
+            {
+                cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
+            }
         }
 
         private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)

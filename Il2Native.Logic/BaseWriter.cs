@@ -253,7 +253,7 @@ namespace Il2Native.Logic
         {
             // TODO: remove duplication from RequiredOutgoingType (use RequiredOutgoingType as first)
 
-            if (!doNotUseCachedResult && opCode.HasResult)
+            if (!doNotUseCachedResult && opCode.HasResult && opCode.Result.Type != null)
             {
                 return new ReturnResult(opCode.Result);
             }
@@ -1549,8 +1549,14 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldelem_Ref))
             {
-                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                Debug.Assert(retType != null);
+                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
+                if (retType != null)
+                {
+                    return retType;
+                }
+
+                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                Debug.Assert(retType.HasElementType);
                 return retType.GetElementType();
             }
 

@@ -695,10 +695,9 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(string.Concat(" ", dupVar, ";"));
                     this.Output.Write(string.Concat(dupVar, " = "));
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
-                    opCode.Result = new FullyDefinedReference(dupVar, firstOpCodeOperand.Result.Type);
 
                     // do not remove next live, it contains _dup variable
-                    firstOpCodeOperand.Result = opCode.Result;
+                    opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, estimatedResult.Type);
 
                     break;
 
@@ -1284,11 +1283,13 @@ namespace Il2Native.Logic
 
                 case Code.Switch:
 
+                    // TODO: finish it
+
                     var opCodeLabels = opCode as OpCodeLabelsPart;
 
                     this.UnaryOper(writer, opCode, "switch");
 
-                    var switchValueType = opCodeLabels.OpCodeOperands[0].Result.Type;
+                    var switchValueType = this.EstimatedResultOf(opCodeLabels.OpCodeOperands[0]).Type;
 
                     index = 0;
                     writer.Write(", label %.a{0} [ ", opCode.GroupAddressEnd);
@@ -1411,20 +1412,20 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public void AdjustToType(OpCodePart opCode)
+        public bool AdjustToType(OpCodePart opCode)
         {
-            this.AdjustToType(opCode, opCode.RequiredIncomingType);
+            return this.AdjustToType(opCode, opCode.RequiredIncomingType);
         }
 
         /// <summary>
         /// </summary>
-        public void AdjustToType(OpCodePart opCode, IType typeDest)
+        public bool AdjustToType(OpCodePart opCode, IType typeDest)
         {
             // cast result if required
             var estimatedResult = this.EstimatedResultOf(opCode);
             if (typeDest == null || estimatedResult == null || !typeDest.TypeNotEquals(estimatedResult.Type) || estimatedResult.IsConst)
             {
-                return;
+                return false;
             }
 
             bool castRequired;
@@ -1434,12 +1435,16 @@ namespace Il2Native.Logic
             if (castRequired)
             {
                 this.WriteCast(opCode, opCode, typeDest);
+                return true;
             }
 
             if (intAdjustmentRequired)
             {
                 this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
+                return true;
             }
+
+            return false;
         }
 
         /// <summary>
@@ -2181,12 +2186,7 @@ namespace Il2Native.Logic
 
         public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (!(opCode.Result is IncrementalResult))
-            {
-                this.WriteResult(opCode);
-            }
-
-            opCode.Result = new FullyDefinedReference("_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, opCode.Result.Type);
+            opCode.Result = new FullyDefinedReference("_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, null);
         }
 
         /// <summary>
@@ -2283,21 +2283,21 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public bool WriteFieldAccess(OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
+        public IField WriteFieldAccess(OpCodePart opCodePart, IType classType, IType fieldContainerType, int index, FullyDefinedReference valueReference)
         {
             var writer = this.Output;
 
             var field = fieldContainerType.GetFieldByFieldNumber(index, this);
             if (field == null)
             {
-                return false;
+                return null;
             }
 
             writer.Write(valueReference);
             writer.Write("->");
             this.WriteFieldIndex(writer, classType, fieldContainerType, field, index);
 
-            return true;
+            return field;
         }
 
         /// <summary>
@@ -3399,6 +3399,8 @@ namespace Il2Native.Logic
         /// </param>
         private void DetectConversion(IType sourceType, IType requiredType, out bool castRequired, out bool intAdjustmentRequired)
         {
+            Debug.Assert(sourceType != null);
+
             castRequired = false;
             intAdjustmentRequired = false;
             if (sourceType.TypeEquals(requiredType))
@@ -3462,216 +3464,6 @@ namespace Il2Native.Logic
             }
 
             castRequired = true;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="requiredType">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        /// <param name="castFrom">
-        /// </param>
-        /// <param name="intAdjustment">
-        /// </param>
-        /// <param name="intAdjustSecondOperand">
-        /// </param>
-        /// <param name="operand1">
-        /// </param>
-        /// <param name="operand2">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        [Obsolete]
-        private IType DetectTypePrefix(
-            OpCodePart opCode,
-            IType requiredType,
-            OperandOptions options,
-            out IType castFrom,
-            out IType intAdjustment,
-            out bool intAdjustSecondOperand,
-            int operand1 = 0,
-            int operand2 = 1)
-        {
-            castFrom = null;
-            intAdjustment = null;
-            intAdjustSecondOperand = false;
-
-            var res1 = options.HasFlag(OperandOptions.TypeIsInOperator)
-                           ? this.EstimatedResultOf(opCode)
-                           : opCode.OpCodeOperands != null && operand1 >= 0 && opCode.OpCodeOperands.Length > operand1
-                                 ? this.EstimatedResultOf(opCode.OpCodeOperands[operand1])
-                                 : null;
-
-            var res2 = opCode.OpCodeOperands != null && operand2 >= 0 && opCode.OpCodeOperands.Length > operand2
-                           ? this.EstimatedResultOf(opCode.OpCodeOperands[operand2])
-                           : null;
-
-            // write type
-            IType effectiveType = null;
-
-            var res1Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res1 != null && res1.IsPointerAccessRequired;
-            var res2Pointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && res2 != null && res2.IsPointerAccessRequired;
-            var requiredTypePointer = options.HasFlag(OperandOptions.CastPointersToBytePointer) && requiredType != null
-                                      && (requiredType.IsPointer || requiredType.IsByRef);
-
-            if (res1Pointer && (res2Pointer || requiredTypePointer))
-            {
-                if (res2 != null && (!res2.IsConst || res1.IsConst))
-                {
-                    castFrom = res1.Type;
-                    effectiveType = res2.Type;
-                }
-                else
-                {
-                    castFrom = res1.Type;
-                    effectiveType = requiredTypePointer ? requiredType : res1.Type;
-                }
-
-                if (effectiveType.TypeEquals(castFrom))
-                {
-                    castFrom = null;
-                }
-            }
-            else if (requiredType != null)
-            {
-                if (options.HasFlag(OperandOptions.AdjustIntTypes) && res1 != null && res1.Type != null && res2 != null && res2.Type != null
-                    && res1.Type.TypeEquals(res2.Type) && res1.Type.TypeNotEquals(requiredType) && res1.Type.TypeEquals(this.System.System_Boolean)
-                    && requiredType.TypeEquals(this.System.System_Byte))
-                {
-                    effectiveType = res1.Type;
-                }
-                else
-                {
-                    effectiveType = requiredType;
-                }
-            }
-            else if (options.HasFlag(OperandOptions.TypeIsInOperator) || opCode.OpCodeOperands != null && opCode.OpCodeOperands.Length > operand1)
-            {
-                if (!(res1 == null || res1.IsConst) || res2 == null || res2.IsConst)
-                {
-                    effectiveType = res1.Type;
-                }
-                else
-                {
-                    effectiveType = res2.Type;
-                }
-            }
-
-            if (res1 != null && res1.Type.TypeNotEquals(effectiveType)
-                && (res1.Type.IsClass || res1.Type.IsArray || res1.Type.IsInterface || res1.Type.IsDelegate) && effectiveType.IsAssignableFrom(res1.Type))
-            {
-                castFrom = res1.Type;
-            }
-
-            if (options.HasFlag(OperandOptions.AdjustIntTypes))
-            {
-                var firstType = res1 != null && res1.Type != null && !res1.IsConst
-                                    ? res1.Type
-                                    : res2 != null && res2.Type != null && !res2.IsConst ? res2.Type : null;
-                if (firstType != null)
-                {
-                    IType secondType = null;
-                    if (res2 != null && res2.Type != null && !res2.IsConst)
-                    {
-                        secondType = res2.Type;
-                    }
-
-                    if (requiredType != null)
-                    {
-                        secondType = requiredType;
-                    }
-
-                    if (secondType != null)
-                    {
-                        if (firstType.IsIntValueTypeExtCastRequired(secondType))
-                        {
-                            intAdjustSecondOperand = true;
-                            intAdjustment = firstType;
-                        }
-
-                        if (secondType.IsIntValueTypeExtCastRequired(firstType))
-                        {
-                            intAdjustSecondOperand = false;
-                            intAdjustment = secondType;
-                        }
-
-                        // pointer to int, int to pointer
-                        if (!firstType.IsByRef && !firstType.IsPointer && firstType.IntTypeBitSize() > 0 && secondType.IsPointer)
-                        {
-                            intAdjustSecondOperand = true;
-                            intAdjustment = firstType;
-
-                            if (requiredType != null && requiredType.IsPointer)
-                            {
-                                intAdjustment = secondType;
-                            }
-                        }
-
-                        if (!secondType.IsByRef && !secondType.IsPointer && secondType.IntTypeBitSize() > 0 && firstType.IsPointer)
-                        {
-                            intAdjustSecondOperand = false;
-                            intAdjustment = secondType;
-
-                            if (requiredType != null && requiredType.IsPointer)
-                            {
-                                intAdjustment = firstType;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (options.HasFlag(OperandOptions.DetectAndWriteTypeInSecondOperand) && res2.IsConst)
-                        {
-                            intAdjustment = res1.Type;
-                            intAdjustSecondOperand = true;
-                        }
-
-                        // if it is pointer operation with integer adjust it to integer
-                        if (res1.Type.IsPointer && res2.IsConst)
-                        {
-                            intAdjustment = res2.Type;
-                            intAdjustSecondOperand = false;
-                        }
-
-                        if (res2.Type.IsPointer && res1.IsConst)
-                        {
-                            intAdjustment = res1.Type;
-                            intAdjustSecondOperand = true;
-                        }
-                    }
-
-                    if (this.IsPointerArithmetic(opCode))
-                    {
-                        requiredType = this.GetIntTypeByByteSize(PointerSize);
-                        if (res1.Type.IsPointer && res2.IsConst)
-                        {
-                            intAdjustment = requiredType;
-                            intAdjustSecondOperand = false;
-                        }
-
-                        if (res2.Type.IsPointer && res1.IsConst)
-                        {
-                            intAdjustment = requiredType;
-                            intAdjustSecondOperand = true;
-                        }
-
-                        if (res1.Type.IsPointer && res2.Type.IsPointer)
-                        {
-                            opCode.OpCodeOperands[operand1].RequiredIncomingType = requiredType;
-                            opCode.OpCodeOperands[operand2].RequiredIncomingType = requiredType;
-                            this.AdjustToType(opCode.OpCodeOperands[operand1]);
-                            this.AdjustToType(opCode.OpCodeOperands[operand2]);
-
-                            effectiveType = requiredType;
-                        }
-                    }
-                }
-            }
-
-            return effectiveType;
         }
 
         /// <summary>
