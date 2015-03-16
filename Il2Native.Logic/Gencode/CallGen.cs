@@ -252,12 +252,10 @@ namespace Il2Native.Logic.Gencode
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
                 opCodeFirstOperand.Result = opCodeNone.Result;
-                writer.WriteLine(string.Empty);
 
                 if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
                     cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
-                    writer.WriteLine(string.Empty);
                 }
             }
         }

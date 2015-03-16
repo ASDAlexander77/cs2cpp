@@ -2588,7 +2588,7 @@ namespace Il2Native.Logic
                 writer.Write("base.");
             }
 
-            writer.Write(fieldInfo.Name);
+            writer.Write(fieldInfo.Name.CleanUpName());
         }
 
         /// <summary>
