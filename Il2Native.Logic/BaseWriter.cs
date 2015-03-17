@@ -302,7 +302,13 @@ namespace Il2Native.Logic
                 case Code.Or:
                 case Code.Xor:
                     var op1 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    return !op1.IsConst ? op1 : this.EstimatedResultOf(opCode.OpCodeOperands[1]);
+                    var op2 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
+                    if (op1.Type.TypeEquals(op2.Type) || op1.Type.IsPointer || op1.Type.IsByRef || op1.Type.IntTypeBitSize() > op2.Type.IntTypeBitSize())
+                    {
+                        return op1;
+                    }
+
+                    return op2;
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Beq:
@@ -1897,6 +1903,7 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
+            [Obsolete]
             public bool IsConst { get; set; }
 
             /// <summary>

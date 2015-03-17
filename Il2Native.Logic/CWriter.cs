@@ -4410,6 +4410,13 @@ namespace Il2Native.Logic
 
             var any = false;
 
+            // locals
+            foreach (var requiredType in method.GetMethodBody(null).LocalVariables.Select(ec => ec.LocalType))
+            {
+                any = true;
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
+            }
+
             // exceptions
             foreach (var requiredType in method.GetMethodBody(null).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
             {
