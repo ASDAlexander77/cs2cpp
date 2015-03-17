@@ -9,8 +9,6 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Collections.Generic;
-
     using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
 
     using PEAssemblyReader;

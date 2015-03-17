@@ -473,6 +473,11 @@ namespace PEAssemblyReader
             }
         }
 
+        public bool IsPrivateImplementationDetails
+        {
+            get { return this.FullName.StartsWith("<PrivateImplementationDetails>{"); }
+        }
+
         /// <summary>
         /// </summary>
         public bool IsVirtualTableImplementation
@@ -1071,14 +1076,14 @@ namespace PEAssemblyReader
             return
                 new MetadataFieldAdapter(
                     new SynthesizedFieldSymbol(
-                        containingTypeSymbol as NamedTypeSymbol, 
-                        isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef, 
-                        name, 
-                        isPublic, 
-                        isReadOnly, 
-                        isStatic), 
-                    containingTypeSymbol, 
-                    isFixed ? this.ToPointerType() : this, 
+                        containingTypeSymbol as NamedTypeSymbol,
+                        isFixed ? new PointerTypeSymbol(this.typeDef) : this.typeDef,
+                        name,
+                        isPublic,
+                        isReadOnly,
+                        isStatic),
+                    containingTypeSymbol,
+                    isFixed ? this.ToPointerType() : this,
                     isFixed);
         }
 

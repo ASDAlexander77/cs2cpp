@@ -138,7 +138,10 @@ namespace Il2Native.Logic.Gencode
             {
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
-                ilCodeBuilder.LoadArgumentAddress(0);
+                ////ilCodeBuilder.LoadArgumentAddress(0);
+                ////ilCodeBuilder.CopyObject(declaringClassType);
+                ilCodeBuilder.LoadArgument(0);
+                ////ilCodeBuilder.SaveObject(declaringClassType);
                 ilCodeBuilder.CopyObject(declaringClassType);
             }
 

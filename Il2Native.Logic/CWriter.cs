@@ -418,13 +418,13 @@ namespace Il2Native.Logic
                     this.Output.Write("({1}) &_s{0}_", stringToken, strType);
                     break;
                 case Code.Ldnull:
-                    this.Output.Write("0");
+                    this.Output.Write("0/*null*/");
                     break;
 
                 case Code.Arglist:
 
                     // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
-                    this.Output.Write("undef");
+                    this.Output.Write("0/*undef*/");
                     break;
 
                 case Code.Ldtoken:
@@ -446,7 +446,7 @@ namespace Il2Native.Logic
                         }
                         else
                         {
-                            this.Output.Write("undef");
+                            this.Output.Write("0/*undef*/");
                         }
                     }
 
@@ -529,6 +529,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Cpobj:
+                    // TODO: finish it properly
                     this.SaveObject(opCode, 1, 0, true);
                     break;
 
@@ -834,6 +835,8 @@ namespace Il2Native.Logic
 
                     opCodeInt32 = opCode as OpCodeInt32Part;
                     index = opCodeInt32.Operand;
+
+                    writer.Write("&");
 
                     if (this.HasMethodThis && index == 0)
                     {
@@ -1220,7 +1223,7 @@ namespace Il2Native.Logic
                             operands.AddRange(opCodeConstructorInfoPart.OpCodeOperands);
 
                             var opCodeThis = OpCodePart.CreateNop;
-                            opCodeThis.Result = new ConstValue(null, this.System.System_String);
+                            opCodeThis.Result = new ConstValue("0/*null*/", this.System.System_String);
                             operands.Insert(0, opCodeThis);
 
                             opCodeNope.OpCodeOperands = operands.ToArray();
@@ -1380,33 +1383,33 @@ namespace Il2Native.Logic
             var sourceType = opCode.RequiredOutgoingType ?? EstimatedResultOf(opCode).Type;
             if (!destType.IsPointer && !sourceType.IsPointer && destType.IsIntValueTypeExtCastRequired(sourceType))
             {
-                this.WriteCCast(opCode, destType);
+                this.WriteCCastOnly(destType);
                 return true;
             }
 
             if (!destType.IsPointer && !sourceType.IsPointer && destType.IsIntValueTypeTruncCastRequired(sourceType))
             {
-                this.WriteCCast(opCode, destType);
+                this.WriteCCastOnly(destType);
                 return true;
             }
 
             // pointer to int, int to pointerf
             if (destType.IntTypeBitSize() > 0 && !destType.IsPointer && !destType.IsByRef && (sourceType.IsPointer || sourceType.IsByRef))
             {
-                this.WriteCCast(opCode, destType);
+                this.WriteCCastOnly(destType);
                 return true;
             }
 
             if (sourceType.IntTypeBitSize() > 0 && (destType.IsPointer || destType.IsByRef) && !sourceType.IsPointer && !sourceType.IsByRef)
             {
-                this.WriteCCast(opCode, destType);
+                this.WriteCCastOnly(destType);
                 return true;
             }
 
             if ((sourceType.IsPointer || sourceType.IsByRef) && (destType.IsPointer || destType.IsByRef)
                 && sourceType.GetElementType().TypeNotEquals(destType.GetElementType()))
             {
-                this.WriteCCast(opCode, destType);
+                this.WriteCCastOnly(destType);
                 return true;
             }
 
@@ -1444,7 +1447,6 @@ namespace Il2Native.Logic
             if (intAdjustmentRequired)
             {
                 this.AdjustIntConvertableTypes(this.Output, opCode, typeDest);
-                return true;
             }
 
             return false;
@@ -1750,14 +1752,16 @@ namespace Il2Native.Logic
                 resultOfOperand0 = resultOfOperand0.ToNormalType();
             }
 
-            writer.Write("*(");
+            writer.Write("*((");
+            type.ToPointerType().WriteTypePrefix(this);
+            writer.Write(")");
 
             var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
             if (isValueType && (isUsedAsClass || resultOfOperand0.Type.IsStructureType()))
             {
                 // write first field access
+                writer.Write("&");
                 this.WriteFieldAccess(writer, opCode, resultOfOperand0.Type.GetFieldByFieldNumber(0, this));
-                writer.WriteLine(string.Empty);
             }
             else
             {
@@ -3707,10 +3711,8 @@ namespace Il2Native.Logic
 
             var operandIndex = 2;
 
-            // TODO: review next line
-            this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
-
             writer.Write(" = ");
+            this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
             this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
         }
 

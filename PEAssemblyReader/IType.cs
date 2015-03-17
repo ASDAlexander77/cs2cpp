@@ -137,6 +137,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsPrivateImplementationDetails { get; }
+
+        /// <summary>
+        /// </summary>
         IModule Module { get; }
 
         /// <summary>

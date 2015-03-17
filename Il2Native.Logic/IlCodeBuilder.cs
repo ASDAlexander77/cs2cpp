@@ -264,6 +264,12 @@
             this.Add(Code.Cpobj, (int)TokenResolutions.Count);
         }
 
+        public void SaveObject(IType type)
+        {
+            TokenResolutions.Add(type);
+            this.Add(Code.Stobj, (int)TokenResolutions.Count);
+        }
+
         // helpers
         public void LoadConstant(int @const)
         {

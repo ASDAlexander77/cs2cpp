@@ -61,6 +61,11 @@
         /// <summary>
         /// </summary>
         /// <param name="type"></param>
+        void AddArrayType(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type"></param>
         void AddRtti(IType type);
     }
 }
