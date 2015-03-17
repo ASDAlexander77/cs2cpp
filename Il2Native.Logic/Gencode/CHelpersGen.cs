@@ -78,7 +78,8 @@ namespace Il2Native.Logic.Gencode
             }
 
             writer.Write(")->");
-            writer.Write(methodInfo.ToString(null, true).CleanUpName());
+            var methodName = methodInfo.ToString(null, true).CleanUpName();
+            writer.Write(methodName);
             writer.Write(")");
         }
 
@@ -377,7 +378,7 @@ namespace Il2Native.Logic.Gencode
             bool isIndirectMethodCall;
             IType ownerOfExplicitInterface;
             IType requiredType;
-            methodInfo.WriteFunctionCallProlog(
+            methodInfo.FunctionCallProlog(
                 opCodeMethodInfo,
                 isVirtual,
                 hasThis,

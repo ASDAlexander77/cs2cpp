@@ -606,12 +606,8 @@ namespace Il2Native.Logic
 
                     if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
                     {
-                        this.ActualWrite(writer, opCodeMethodInfoPart.OpCodeOperands[0]);
-
-                        // if we call constructor on struct we need to initialize object before
-                        methodBase.DeclaringType.WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
-
-                        // TODO: maybe here we need use ','?
+                        // convert value to object
+                        methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
                         this.Output.WriteLine(";");
                     }
 
@@ -908,7 +904,7 @@ namespace Il2Native.Logic
                     bool isIndirectMethodCall;
                     IType ownerOfExplicitInterface;
                     IType requiredType;
-                    methodInfo.WriteFunctionCallProlog(
+                    methodInfo.FunctionCallProlog(
                         opCodeMethodInfoPart,
                         true,
                         true,
@@ -1294,32 +1290,22 @@ namespace Il2Native.Logic
 
                 case Code.Switch:
 
-                    // TODO: finish it
-
                     var opCodeLabels = opCode as OpCodeLabelsPart;
 
-                    this.UnaryOper(writer, opCode, "switch");
-
-                    var switchValueType = this.EstimatedResultOf(opCodeLabels.OpCodeOperands[0]).Type;
-
-                    index = 0;
-                    writer.Write(", label %.a{0} [ ", opCode.GroupAddressEnd);
-
-                    foreach (var label in opCodeLabels.Operand)
-                    {
-                        switchValueType.WriteTypePrefix(this);
-                        writer.Write(" {0}, label %.a{1} ", index, opCodeLabels.JumpAddress(index++));
-                    }
-
-                    writer.WriteLine("]");
-
+                    this.UnaryOper(writer, opCode, "switch (");
+                    writer.WriteLine(")");
+                    writer.Write("{");
+                    writer.Indent++;
                     writer.WriteLine(string.Empty);
 
-                    writer.Indent--;
-                    writer.WriteLine(string.Concat(".a", opCode.GroupAddressEnd, ':'));
-                    writer.Indent++;
+                    index = 0;
+                    foreach (var label in opCodeLabels.Operand)
+                    {
+                        writer.WriteLine("case {0}: goto a{1};", index, opCodeLabels.JumpAddress(index++));
+                    }
 
-                    opCode.Next.JumpProcessed = true;
+                    writer.Indent--;
+                    writer.Write("}");
 
                     break;
 
@@ -2432,7 +2418,7 @@ namespace Il2Native.Logic
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = classType;
-                    this.WriteCCast(operand, effectiveType.ToPointerType());
+                    this.WriteCCastOnly(effectiveType.ToPointerType());
                 }
                 else if (!effectiveType.IsByRef)
                 {
@@ -2442,13 +2428,13 @@ namespace Il2Native.Logic
             else if (effectiveType.IsPointer)
             {
                 effectiveType = classType;
-                this.WriteCCast(operand, effectiveType.ToPointerType());
+                this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
             this.WriteResultOrActualWrite(writer, operand);
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            this.WriteInterfacePath(effectiveType, interfaceType, null);
+            this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName("vtable", this)*/);
         }
 
         /// <summary>
@@ -3785,21 +3771,9 @@ namespace Il2Native.Logic
 
             var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
             var destinationType = resultOfOperand0.Type;
-            if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
-            {
-                // adjust destination type, cast pointer to pointer of type
-                this.WriteCCastOnly(type);
-                destinationType = type.ToPointerType();
-            }
-            else if (destinationType.IsByRef && destinationType.GetElementType().TypeNotEquals(type))
+            if (destinationType.IsByRef && destinationType.GetElementType().TypeNotEquals(type))
             {
                 type = destinationType.GetElementType();
-            }
-
-            if (!destinationType.IsPointer && !resultOfOperand0.Type.IsPointer && !resultOfOperand0.Type.IsByRef)
-            {
-                // adjust destination type, cast pointer to pointer of type
-                this.WriteCCastOnly(type);
             }
 
             this.UnaryOper(writer, opCode, 0, string.Empty);
@@ -4089,38 +4063,36 @@ namespace Il2Native.Logic
         /// </exception>
         /// <returns>
         /// </returns>
-        private bool WriteInterfacePath(IType classType, IType @interface, IField fieldInfo)
+        private void WriteInterfacePath(IType classType, IType @interface, IField fieldInfo)
         {
             var writer = this.Output;
 
             var type = classType;
-            if (!type.GetAllInterfaces().Contains(@interface))
+            if (type.GetAllInterfaces().Contains(@interface))
             {
-                return false;
-            }
-
-            while (!type.GetInterfacesExcludingBaseAllInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
-            {
-                type = type.BaseType;
-                if (type == null)
+                while (!type.GetInterfacesExcludingBaseAllInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
                 {
-                    // throw new IndexOutOfRangeException("Could not find an type");
-                    break;
+                    type = type.BaseType;
+                    if (type == null)
+                    {
+                        // throw new IndexOutOfRangeException("Could not find an type");
+                        break;
+                    }
+
+                    // first index is base type index
+                    writer.Write("base.");
                 }
 
-                // first index is base type index
-                writer.Write("base.");
-            }
+                var path = FindInterfacePath(type, @interface);
 
-            var path = FindInterfacePath(type, @interface);
-
-            for (var i = 0; i < path.Count; i++)
-            {
-                writer.Write(path[i]);
-
-                if (fieldInfo != null || i < path.Count - 1)
+                for (var i = 0; i < path.Count; i++)
                 {
-                    writer.Write(".");
+                    writer.Write(path[i]);
+
+                    if (fieldInfo != null || i < path.Count - 1)
+                    {
+                        writer.Write(".");
+                    }
                 }
             }
 
@@ -4128,8 +4100,6 @@ namespace Il2Native.Logic
             {
                 writer.Write(fieldInfo.Name);
             }
-
-            return true;
         }
 
         /// <summary>
@@ -4142,10 +4112,7 @@ namespace Il2Native.Logic
         {
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
-                if (!opCode.JumpProcessed)
-                {
-                    this.WriteLabel(writer, string.Concat("a", opCode.AddressStart));
-                }
+                this.WriteLabel(writer, string.Concat("a", opCode.AddressStart));
             }
         }
 

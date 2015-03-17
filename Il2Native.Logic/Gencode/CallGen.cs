@@ -74,6 +74,7 @@ namespace Il2Native.Logic.Gencode
                     // this expression
                     opCodeMethodInfo.WriteFunctionCallThisExpression(
                         thisType,
+                        isCtor,
                         used[0],
                         resultOfFirstOperand,
                         cWriter);
@@ -178,6 +179,7 @@ namespace Il2Native.Logic.Gencode
         public static void WriteFunctionCallThisExpression(
             this OpCodePart opCodeMethodInfo,
             IType thisType,
+            bool isCtor,
             OpCodePart opCodeFirstOperand,
             BaseWriter.ReturnResult resultOfFirstOperand,
             CWriter cWriter)
@@ -203,6 +205,7 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
+            var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
             if (isPrimitive || isPrimitivePointer)
             {
                 var primitiveType = resultOfFirstOperand.Type;
@@ -217,13 +220,7 @@ namespace Il2Native.Logic.Gencode
                     var uintType = cWriter.GetUIntTypeByByteSize(CWriter.PointerSize);
                     if (intType.TypeEquals(primitiveType) || uintType.TypeEquals(primitiveType))
                     {
-                        IType declType = null;
-                        var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
-                        if (opCodeMethodInfoPart != null)
-                        {
-                            declType = opCodeMethodInfoPart.Operand.DeclaringType;
-                        }
-
+                        var declType = opCodeMethodInfoPart.Operand.DeclaringType;
                         Debug.Assert(declType != null && declType.IsStructureType(), "only Struct type can be used");
                         primitiveType = declType.ToClass();
                         cWriter.AdjustIntConvertableTypes(
@@ -241,6 +238,7 @@ namespace Il2Native.Logic.Gencode
                 var opCodeNone = OpCodePart.CreateNop;
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
+                cWriter.Output.WriteLine(";");
 
                 if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
                 {
@@ -279,7 +277,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="requiredType">
         /// </param>
-        public static void WriteFunctionCallProlog(
+        public static void FunctionCallProlog(
             this IMethod methodInfo,
             OpCodePart opCodeMethodInfo,
             bool isVirtual,
@@ -304,14 +302,9 @@ namespace Il2Native.Logic.Gencode
             resultOfFirstOperand = opCodeFirstOperand != null ? cWriter.EstimatedResultOf(opCodeFirstOperand) : null;
 
             isIndirectMethodCall = isVirtual
-                                   &&
-                                   (methodInfo.IsAbstract || methodInfo.IsVirtual ||
-                                    (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
+                                   && (methodInfo.IsAbstract || methodInfo.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
 
-            ownerOfExplicitInterface = isVirtual && thisType.IsInterface &&
-                                       thisType.TypeNotEquals(resultOfFirstOperand.Type)
-                ? resultOfFirstOperand.Type
-                : null;
+            ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.Type) ? resultOfFirstOperand.Type : null;
 
             var rollbackType = false;
             requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;

@@ -220,6 +220,7 @@ namespace Il2Native.Logic.Gencode
         {
             var method = new SynthesizedGetTypeStaticMethod(type, cWriter);
             var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             cWriter.WriteCall(
                 opCodeNope,
@@ -243,6 +244,7 @@ namespace Il2Native.Logic.Gencode
         {
             var method = new SynthesizedInitMethod(type, cWriter);
             var opCodeNope = OpCodePart.CreateNop;
+            opCodeNope.OpCodeOperands = opCode.OpCodeOperands;
             opCodeNope.UsedBy = new UsedByInfo(opCode);
             cWriter.WriteCall(
                 opCodeNope,
