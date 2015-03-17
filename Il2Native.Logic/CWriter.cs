@@ -106,6 +106,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly ISet<int> stringTokenDefinitionWritten = new HashSet<int>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
 
         /// <summary>
@@ -291,23 +295,24 @@ namespace Il2Native.Logic
                 this.WriteLabels(writer, opCode);
             }
 
-            if (opCode.UsedByAlternativeValues != null)
-            {
-                this.WriteStartOfPhiValues(writer, opCode);
-            }
-
             if (opCode.Result != null)
-            {
-                return;
-            }
-
-            if (firstLevel && !opCode.Any(Code.Newobj, Code.Newarr, Code.Dup) && opCode.UsedBy != null && opCode.UsedByAlternativeValues == null)
             {
                 return;
             }
 
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
+
+            if (opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteStartOfPhiValues(writer, opCode);
+            }
+
+            if (firstLevel && !opCode.Any(Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Dup) && opCode.UsedBy != null
+                && opCode.UsedByAlternativeValues == null)
+            {
+                return;
+            }
 
             this.ActualWriteOpCode(writer, opCode);
 
@@ -471,11 +476,14 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
                     if (!opCodeFieldInfoPart.Operand.HasFixedElementField)
                     {
+                        this.Output.Write("&");
                         this.WriteFieldAccess(opCodeFieldInfoPart);
                     }
                     else
                     {
+                        this.Output.Write("&(");
                         this.WriteOperandResultOrActualWrite(this.Output, opCodeFieldInfoPart, 0);
+                        this.Output.Write(")");
                     }
 
                     break;
@@ -873,13 +881,14 @@ namespace Il2Native.Logic
                     var convertString = this.WriteToString(
                         () =>
                         {
-                            this.Output.Write("bitcast (");
-                            this.WriteMethodPointerType(this.Output, opCodeMethodInfoPart.Operand);
-                            this.Output.Write(" ");
+                            this.Output.Write("(Byte*) &");
                             this.Output.Write(opCodeMethodInfoPart.Operand.GetFullMethodName());
-                            this.Output.Write(" to i8*)");
                         });
+                        
                     var value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
+
+                    var objectReference = this.WriteVariableForNew(opCodeMethodInfoPart, intPtrType);
+                    opCode.Result = objectReference;
 
                     this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
@@ -1024,7 +1033,7 @@ namespace Il2Native.Logic
                     var resultOf = this.EstimatedResultOf(firstOpCodeOperand);
 
                     var opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
-                    this.UnaryOper(writer, opCode, "if (" + oper, this.System.System_Boolean);
+                    this.UnaryOper(writer, opCode, "if (" + oper);
 
                     writer.Write(string.Concat(") goto a", opCode.JumpAddress()));
 
@@ -1232,8 +1241,6 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Initobj:
-
-                    this.ActualWrite(writer, opCode.OpCodeOperands[0]);
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.WriteInit(opCode, opCodeTypePart.Operand);
@@ -1830,14 +1837,16 @@ namespace Il2Native.Logic
 
         public void UnaryOper(CIndentedTextWriter writer, OpCodePart opCode, string op, IType resultType = null)
         {
-            writer.Write(op);
-            this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+            UnaryOper(writer, opCode, 0, op, resultType);
         }
 
         public void UnaryOper(CIndentedTextWriter writer, OpCodePart opCode, int operand, string op, IType resultType = null)
         {
             writer.Write(op);
-            this.WriteOperandResultOrActualWrite(writer, opCode, operand);
+            if (resultType == null || !this.AdjustToType(opCode.OpCodeOperands[operand], resultType))
+            {
+                this.WriteOperandResultOrActualWrite(writer, opCode, operand);
+            }
         }
 
         /// <summary>
@@ -1922,95 +1931,11 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="testValueResultNumber">
-        /// </param>
-        /// <param name="exceptionName">
-        /// </param>
-        /// <param name="labelPrefix">
-        /// </param>
-        /// <param name="labelSuffix">
-        /// </param>
-        /// <param name="action">
-        /// </param>
-        public void WriteBranchSwitchToExecute(
-            CIndentedTextWriter writer,
-            OpCodePart opCodePart,
-            FullyDefinedReference testValueResultNumber,
-            string exceptionName,
-            string labelPrefix,
-            string labelSuffix,
-            Action action)
-        {
-            writer.WriteLine(
-                "br i1 {0}, label %.{2}_result_{3}{1}, label %.{2}_result_not_{3}{1}", testValueResultNumber, opCodePart.AddressStart, labelPrefix, labelSuffix);
-
-            writer.WriteLine(string.Empty);
-
-            writer.Indent--;
-            writer.WriteLine(".{1}_result_{2}{0}:", opCodePart.AddressStart, labelPrefix, labelSuffix);
-            writer.Indent++;
-
-            action();
-
-            var label = string.Concat(labelPrefix, "_result_not_", labelSuffix, opCodePart.AddressStart);
-
-            writer.Indent--;
-            writer.WriteLine(".{0}:", label);
-            writer.Indent++;
-
-            CHelpersGen.SetCustomLabel(opCodePart, label);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="testValueResultNumber">
-        /// </param>
-        /// <param name="exceptionName">
-        /// </param>
-        /// <param name="labelPrefix">
-        /// </param>
-        /// <param name="labelSuffix">
-        /// </param>
-        public void WriteBranchSwitchToThrowOrPass(
-            CWriter cWriter, OpCodePart opCodePart, FullyDefinedReference testValueResultNumber, string exceptionName, string labelPrefix, string labelSuffix)
-        {
-            var writer = cWriter.Output;
-
-            this.WriteBranchSwitchToExecute(
-                writer, opCodePart, testValueResultNumber, exceptionName, labelPrefix, labelSuffix, () => this.WriteThrowException(cWriter, exceptionName));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="compareResult">
-        /// </param>
-        /// <param name="trueLabel">
-        /// </param>
-        /// <param name="falseLabel">
-        /// </param>
-        public void WriteCondBranch(CIndentedTextWriter writer, IncrementalResult compareResult, string trueLabel, string falseLabel)
-        {
-            writer.WriteLine("br i1 {0}, label %{1}, label %{2}", compareResult, trueLabel, falseLabel);
-            this.WriteLabel(writer, trueLabel);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="ctor">
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void WriteConstructorEnd(IConstructor ctor, IGenericContext genericContext)
+        public void WriteConstructorEnd(IMethod ctor, IGenericContext genericContext)
         {
             this.WriteMethodEnd(ctor, genericContext);
         }
@@ -2021,7 +1946,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        public void WriteConstructorStart(IConstructor ctor, IGenericContext genericContext)
+        public void WriteConstructorStart(IMethod ctor, IGenericContext genericContext)
         {
             this.WriteMethodStart(ctor, genericContext);
         }
@@ -2212,6 +2137,9 @@ namespace Il2Native.Logic
             var operandResultCalc = this.EstimatedResultOf(operand);
             var operandType = operandResultCalc.Type;
             var effectiveType = operandType;
+
+            writer.Write("(");
+
             if (effectiveType.IsValueType)
             {
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
@@ -2231,7 +2159,9 @@ namespace Il2Native.Logic
             }
 
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
-            writer.Write("->");
+            
+            writer.Write(")->");
+
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
             if (opCodeFieldInfoPart.Operand.DeclaringType.IsInterface)
             {
@@ -2257,8 +2187,9 @@ namespace Il2Native.Logic
             var operand = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
             var classType = operand.Type.IsPointer || operand.Type.IsByRef ? operand.Type.GetElementType().ToClass() : operand.Type.ToClass();
 
+            writer.Write("(");
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
-            writer.Write("->");
+            writer.Write(")->");
             if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
@@ -2304,7 +2235,7 @@ namespace Il2Native.Logic
 
             writer.Write(valueReference);
             writer.Write("->");
-            this.WriteFieldIndex(writer, classType, fieldContainerType, field, index);
+            this.WriteFieldPath(classType, field);
 
             return field;
         }
@@ -2665,7 +2596,7 @@ namespace Il2Native.Logic
                 writer.Write("void");
             }
 
-            writer.Write(" (");
+            writer.Write("(*)(");
 
             if (isStructureType)
             {
@@ -2720,7 +2651,7 @@ namespace Il2Native.Logic
                 writer.Write("...");
             }
 
-            writer.Write(")*");
+            writer.Write(")");
         }
 
         /// <summary>
@@ -2880,8 +2811,9 @@ namespace Il2Native.Logic
             ////Debug.Assert(constructorInfo != null, "Could not find required constructor");
             type.WriteCallNewObjectMethod(this, opCode);
 
-            var dummyOpCodeWithStringIndex = OpCodePart.CreateNop;
-            opCode.OpCodeOperands = new[] { dummyOpCodeWithStringIndex };
+            var opCodeOperandWithFunctionRef = OpCodePart.CreateNop;
+            opCodeOperandWithFunctionRef.Result = firstParameterValue;
+            opCode.OpCodeOperands = new[] { opCodeOperandWithFunctionRef };
 
             if (constructorInfo != null)
             {
@@ -4652,15 +4584,23 @@ namespace Il2Native.Logic
         {
             var arrayType = opCodeTypePart.Operand.ToArrayType(1);
 
+            var objectReference = this.WriteVariableForNew(opCodeTypePart, arrayType, "_newarr");
+
+            this.WriteNewWithCallingConstructor(opCodeTypePart, arrayType, this.System.System_Int32, opCodeTypePart.OpCodeOperands[0], objectReference);
+        }
+
+        public FullyDefinedReference WriteVariableForNew(OpCodePart opCodePart, IType type, string name = "_new")
+        {
             // temp var
-            arrayType.WriteTypePrefix(this);
-            var newVar = string.Format("_newarr{0}", opCodeTypePart.AddressStart);
+            type.WriteTypePrefix(this);
+            var newVar = string.Format("{1}{0}", opCodePart.AddressStart, name);
             this.Output.WriteLine(" {0};", newVar);
 
             this.Output.Write("{0} = ", newVar);
 
-            var objectReference = new FullyDefinedReference(newVar, arrayType);
-            this.WriteNewWithCallingConstructor(opCodeTypePart, arrayType, this.System.System_Int32, opCodeTypePart.OpCodeOperands[0], objectReference);
+            var objectReference = new FullyDefinedReference(newVar, type);
+            opCodePart.Result = objectReference;
+            return objectReference;
         }
 
         /// <summary>
@@ -4854,6 +4794,11 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteUnicodeString(KeyValuePair<int, string> pair)
         {
+            if (!this.stringTokenDefinitionWritten.Add(pair.Key))
+            {
+                return;
+            }
+
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
                 "const struct {1} _s{0}_ = {3} {2}",

@@ -484,7 +484,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (method == null || virtualMethod.Value.IsAbstract)
                 {
-                    writer.Write("&__cxa_pure_virtual()");
+                    writer.Write("&__cxa_pure_virtual");
                 }
                 else
                 {

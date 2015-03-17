@@ -1,11 +1,5 @@
 ﻿namespace Il2Native.Logic.Gencode.InternalMethods
 {
-    using System.Collections.Generic;
-
-    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
-
-    using PEAssemblyReader;
-    using SynthesizedMethods;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     public static class FastAllocateStringGen
@@ -16,13 +10,13 @@
         {
             var codeBuilder = typeResolver.GetNewMethod(typeResolver.System.System_String, enableStringFastAllocation: true);
 
+            // string length parameter
             codeBuilder.Parameters.Add(typeResolver.System.System_Int32.ToParameter());
 
-            codeBuilder.TokenResolutions.Add(typeResolver.System.System_String.GetFieldByName("m_stringLength", typeResolver));
-            
+            // additional code
             codeBuilder.Add(Code.Dup);
             codeBuilder.LoadArgument(0);
-            codeBuilder.Add(Code.Stfld, codeBuilder.TokenResolutions.Count);
+            codeBuilder.SaveField(typeResolver.System.System_String.GetFieldByName("m_stringLength", typeResolver));
             codeBuilder.Add(Code.Ret);
 
             codeBuilder.Register(Name);

@@ -63,6 +63,11 @@
             MethodBodyBank.Register(fullMethodName, this.GetCode(), _tokenResolutions, _locals, _parameters);
         }
 
+        public IMethod GetMethod(IMethod originalMethod)
+        {
+            return MethodBodyBank.GetMethodDecorator(originalMethod, this.GetCode(), _tokenResolutions, _locals, _parameters);
+        }
+
         public IMethodBody GetMethodBody(IMethodBody originalOpt = null)
         {
             return new SynthesizedMethodBodyDecorator(originalOpt, _locals, this.GetCode());

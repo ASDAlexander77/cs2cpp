@@ -402,47 +402,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="declaringTypeIn">
         /// </param>
-        public static void WriteInit(this CWriter cWriter, OpCodePart opCodePart, IType declaringTypeIn)
-        {
-            cWriter.WriteInit(opCodePart, declaringTypeIn, opCodePart.OpCodeOperands[0].Result);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <param name="declaringTypeIn">
-        /// </param>
-        /// <param name="objectSource">
-        /// </param>
         public static void WriteInit(
             this CWriter cWriter,
             OpCodePart opCodePart,
-            IType declaringTypeIn,
-            FullyDefinedReference objectSource)
+            IType declaringTypeIn)
         {
             var writer = cWriter.Output;
 
             var declaringTypeNormal = declaringTypeIn.ToNormal();
-            var declaringTypeClass = declaringTypeIn.IsValueType ? declaringTypeIn.ToClass() : declaringTypeIn;
-
-            writer.WriteLine("// Init obj");
-
-            cWriter.ActualWrite(writer, opCodePart.OpCodeOperands[0]);
             if (declaringTypeNormal.IsValueType)
             {
-                cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0].Result);
-                writer.WriteLine(string.Empty);
+                cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0]);
             }
             else
             {
                 // this is type reference, initialize it with null
-                writer.WriteLine("*((Byte*) ({0})) = 0;", opCodePart.OpCodeOperands[0].Result);
+                cWriter.UnaryOper(writer, opCodePart, 0, string.Empty);
+                writer.Write(" = 0");
             }
-
-            writer.Write("// end");
         }
 
         public static IlCodeBuilder GetInitMethod(this ITypeResolver typeResolver, IType declaringType)
@@ -486,16 +463,11 @@ namespace Il2Native.Logic.Gencode
             OpCodeConstructorInfoPart opCodeConstructorInfoPart,
             IType declaringType)
         {
-            // temp var
-            declaringType.WriteTypePrefix(cWriter);
-            var newVar = string.Format("_new{0}", opCodeConstructorInfoPart.AddressStart);
-            cWriter.Output.WriteLine(" {0};", newVar);
-
-            cWriter.Output.Write("{0} = ", newVar);
+            var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, declaringType);
 
             declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
 
-            opCodeConstructorInfoPart.Result = new FullyDefinedReference(newVar, declaringType);
+            opCodeConstructorInfoPart.Result = objectReference;
             cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
@@ -528,7 +500,10 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
             }
 
-            ilCodeBuilder.Add(Code.Ret);
+            if (!enableStringFastAllocation)
+            {
+                ilCodeBuilder.Add(Code.Ret);
+            }
 
             return ilCodeBuilder;
         }

@@ -44,6 +44,7 @@ typedef Int32 (*anyFn)(...);
 
 extern "C" Byte* calloc(Int);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
+extern "C" Void __cxa_pure_virtual();
 
 // RTTI externals
 extern "C" void* _ZTVN10__cxxabiv117__class_type_infoE;

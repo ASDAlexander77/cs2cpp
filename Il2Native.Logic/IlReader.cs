@@ -639,7 +639,6 @@ namespace Il2Native.Logic
                 yield return constructor;
             }
 
-            // append methods or MultiArray
             if (type.IsMultiArray)
             {
                 yield return new SynthesizedMultiDimArrayCtorMethod(type, typeResolver);
@@ -1112,15 +1111,13 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(method.DeclaringType);
-                        if (code == Code.Call)
+                        this.AddCalledMethod(method);
+                        if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
                         {
-                            this.AddCalledMethod(method);
-                            if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
-                            {
-                                this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
-                            }
+                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                         }
-                        else
+
+                        if (code == Code.Callvirt)
                         {
                             // vtable used
                             this.AddVirtualTable(method.DeclaringType.ToVirtualTable());
@@ -1139,6 +1136,8 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedMethod(method, stackCall);
 
                         this.AddUsedType(method.DeclaringType);
+
+                        this.AddCalledMethod(method);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;

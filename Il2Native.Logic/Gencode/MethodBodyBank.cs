@@ -40,22 +40,22 @@
             }
 
             // dynamiclly generated method for MulticastDelegate
-            if (method.IsDelegateFunctionBody()
-                && (method.Name == "Invoke")
-                && (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate"))
+            if (method.IsDelegateFunctionBody())
             {
-                byte[] code;
-                IList<object> tokenResolutions;
-                IList<IType> locals;
-                IList<IParameter> parameters;
-                DelegateGen.GetMulticastDelegateInvoke(
-                    method,
-                    typeResolver,
-                    out code,
-                    out tokenResolutions,
-                    out locals,
-                    out parameters);
-                return GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
+                if (method.Name == ".ctor" && method.DeclaringType.FullName != "System.Delegate")
+                {
+                    return DelegateGen.GetDelegateConstructorMethod(typeResolver, method.DeclaringType).GetMethod(method);
+                }
+
+                if (method.Name == "Invoke" && method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
+                {
+                    byte[] code;
+                    IList<object> tokenResolutions;
+                    IList<IType> locals;
+                    IList<IParameter> parameters;
+                    DelegateGen.GetMulticastDelegateInvoke(method, typeResolver, out code, out tokenResolutions, out locals, out parameters);
+                    return GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
+                }
             }
 
             return method;

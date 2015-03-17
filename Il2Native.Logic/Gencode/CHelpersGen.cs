@@ -627,11 +627,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="op1">
         /// </param>
-        public static void WriteMemSet(this CWriter cWriter, IType type, FullyDefinedReference op1)
+        public static void WriteMemSet(this CWriter cWriter, IType type, OpCodePart op1)
         {
             var writer = cWriter.Output;
 
-            writer.Write("memset((Byte*) ({0}), 0, sizeof(", op1);
+            writer.Write("memset((Byte*) (");
+            cWriter.WriteResultOrActualWrite(writer, op1);
+            writer.Write("), 0, sizeof(");
             type.WriteTypePrefix(cWriter);
             writer.Write("));");
         }

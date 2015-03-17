@@ -79,7 +79,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        void WriteConstructorEnd(IConstructor ctor, IGenericContext genericContext);
+        void WriteConstructorEnd(IMethod ctor, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>
@@ -87,7 +87,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        void WriteConstructorStart(IConstructor ctor, IGenericContext genericContext);
+        void WriteConstructorStart(IMethod ctor, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>

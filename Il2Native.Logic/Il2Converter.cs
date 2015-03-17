@@ -230,7 +230,7 @@ namespace Il2Native.Logic
                 if (!processGenericMethodsOnly)
                 {
                     // pre process step to get all used undefined structures
-                    foreach (var ctor in IlReader.Constructors(type, codeWriter))
+                    foreach (var ctor in IlReader.Constructors(type, codeWriter).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                     {
                         codeWriter.WriteConstructorStart(ctor, genericTypeContext);
 

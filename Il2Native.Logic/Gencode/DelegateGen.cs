@@ -220,11 +220,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteDelegateFunctionBody(this CWriter cWriter, IMethod method)
         {
-            if (method.Name == ".ctor")
-            {
-                cWriter.WriteDelegateConstructor(method);
-            }
-            else if (method.Name == "Invoke")
+            if (method.Name == "Invoke")
             {
                 cWriter.WriteDelegateInvoke(method);
             }
@@ -250,97 +246,40 @@ namespace Il2Native.Logic.Gencode
                 writer.Indent++;
             }
 
-            writer.Write("ret ");
+            writer.Write("return ");
 
-            if (method.ReturnType.IsVoid() || method.ReturnType.IsStructureType())
+            if (!method.ReturnType.IsVoid())
             {
-                writer.WriteLine("void");
-            }
-            else
-            {
+                writer.Write("(");
                 method.ReturnType.WriteTypePrefix(cWriter);
-                writer.WriteLine(" undef");
+                writer.Write(")0");
             }
 
             if (!disableCurlyBrakets)
             {
+                writer.WriteLine(";");
                 writer.Indent--;
                 writer.WriteLine("}");
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="method">
-        /// </param>
-        private static void WriteDelegateConstructor(this CWriter cWriter, IMethod method)
+        public static IlCodeBuilder GetDelegateConstructorMethod(this ITypeResolver typeResolver, IType declaringType)
         {
-            var writer = cWriter.Output;
+            var codeBuilder = new IlCodeBuilder();
 
-            writer.WriteLine(" {");
-            writer.Indent++;
+            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
+            codeBuilder.Parameters.Add(typeResolver.System.System_IntPtr.ToParameter(name: "method"));
 
-            var opCode = OpCodePart.CreateNop;
+            codeBuilder.LoadArgument(0);
+            codeBuilder.LoadArgument(1);
+            codeBuilder.SaveField(declaringType.GetFieldByName("_target", typeResolver, true));
+            codeBuilder.LoadArgument(0);
+            codeBuilder.LoadArgument(2);
+            codeBuilder.SaveField(declaringType.GetFieldByName("_methodPtr", typeResolver, true));
 
-            // load 'this' variable
-            var thisResult = opCode.Result;
+            codeBuilder.Add(Code.Ret);
 
-            var delegateType = cWriter.System.System_Delegate;
-
-            // write access to a field 1
-            try
-            {
-                var _targetFieldIndex = cWriter.GetFieldIndex(delegateType, "_target");
-                cWriter.WriteFieldAccess(
-                    opCode,
-                    method.DeclaringType,
-                    delegateType,
-                    _targetFieldIndex,
-                    thisResult);
-                writer.WriteLine(string.Empty);
-
-                // load value 1
-                opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_1, 0, 0) };
-                cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                writer.WriteLine(string.Empty);
-
-                var estimatedResult1 = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
-
-                // save value 1
-                cWriter.SaveToField(opCode, estimatedResult1.Type, 0);
-                writer.WriteLine(string.Empty);
-
-                // write access to a field 2
-                var _methodPtrFieldIndex = cWriter.GetFieldIndex(delegateType, "_methodPtr");
-                cWriter.WriteFieldAccess(
-                    opCode,
-                    method.DeclaringType,
-                    delegateType,
-                    _methodPtrFieldIndex,
-                    thisResult);
-                writer.WriteLine(string.Empty);
-
-                // load value 2
-                opCode.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_2, 0, 0) };
-                cWriter.ActualWrite(writer, opCode.OpCodeOperands[0]);
-                writer.WriteLine(string.Empty);
-
-                var estimatedResult2 = cWriter.EstimatedResultOf(opCode.OpCodeOperands[0]);
-
-                // save value 2
-                cWriter.SaveToField(opCode, estimatedResult2.Type, 0);
-                writer.WriteLine(string.Empty);
-            }
-            catch (KeyNotFoundException)
-            {
-            }
-
-            writer.WriteLine("ret void");
-
-            writer.Indent--;
-            writer.WriteLine("}");
+            return codeBuilder;
         }
 
         /// <summary>

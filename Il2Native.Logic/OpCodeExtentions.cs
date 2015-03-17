@@ -316,12 +316,30 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
-        public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver)
+        public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver, bool searchInBase = false)
         {
             var normalType = classType.ToNormal();
-            var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
-            Debug.Assert(field != null, string.Format("Field {0} could not be found", fieldName));
-            return field;
+            if (!searchInBase)
+            {
+                var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
+                Debug.Assert(field != null, string.Format("Field {0} could not be found", fieldName));
+                return field;
+            }
+
+            while (normalType != null)
+            {
+                var field = IlReader.Fields(normalType, typeResolver).FirstOrDefault(f => f.Name == fieldName);
+                if (field != null)
+                {
+                    return field;
+                }
+
+                normalType = normalType.BaseType;
+            }
+
+            Debug.Assert(false, string.Format("Field {0} could not be found", fieldName));
+
+            return null;
         }
 
         public static IMethod GetMethodByName(this IType classType, string methodName, ITypeResolver typeResolver)
