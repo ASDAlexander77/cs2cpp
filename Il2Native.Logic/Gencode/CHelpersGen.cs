@@ -204,9 +204,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("(");
-            toType.WriteTypePrefix(cWriter);
-            writer.Write(") ");
+            cWriter.WriteCCastOnly(toType);
 
             writer.Write("(");
             cWriter.WriteResultOrActualWrite(writer, opCode);
@@ -217,13 +215,20 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("(");
-            toType.WriteTypePrefix(cWriter);
-            writer.Write(") ");
+            cWriter.WriteCCastOnly(toType);
 
             writer.Write("(");
             cWriter.WriteOperandResultOrActualWrite(writer, opCode, operand);
             writer.Write(")");
+        }
+
+        public static void WriteCCastOnly(this CWriter cWriter, IType toType)
+        {
+            var writer = cWriter.Output;
+
+            writer.Write("(");
+            toType.WriteTypePrefix(cWriter);
+            writer.Write(") ");
         }
 
         /// <summary>

@@ -308,7 +308,7 @@ namespace Il2Native.Logic
                 this.WriteStartOfPhiValues(writer, opCode);
             }
 
-            if (firstLevel && !opCode.Any(Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Dup) && opCode.UsedBy != null
+            if (firstLevel && !opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc) && opCode.UsedBy != null
                 && opCode.UsedByAlternativeValues == null)
             {
                 return;
@@ -453,12 +453,13 @@ namespace Il2Native.Logic
                     break;
                 case Code.Localloc:
 
-                    var varName = string.Format("_alloc{0} ", opCode.AddressStart);
-                    writer.WriteLine("Byte* {0};", varName);
+                    var varName = string.Format("_alloc{0}", opCode.AddressStart);
+                    writer.WriteLine("Void* {0};", varName);
                     this.UnaryOper(writer, opCode, string.Format("{0} = alloca(", varName));
+                    writer.WriteLine(");");
 
                     // do not remove, otherwise stackoverflow
-                    opCode.Result = new FullyDefinedReference(varName, null);
+                    opCode.Result = new FullyDefinedReference(varName, System.System_Void.ToPointerType());
 
                     this.WriteMemSet(opCode, firstOpCodeOperand);
 
@@ -2145,7 +2146,7 @@ namespace Il2Native.Logic
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                    this.WriteCCast(operand, effectiveType.ToPointerType());
+                    this.WriteCCastOnly(effectiveType.ToPointerType());
                 }
                 else if (!effectiveType.IsByRef)
                 {
@@ -2155,7 +2156,7 @@ namespace Il2Native.Logic
             else if (effectiveType.IsPointer)
             {
                 effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
-                this.WriteCCast(operand, effectiveType.ToPointerType());
+                this.WriteCCastOnly(effectiveType.ToPointerType());
             }
 
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
@@ -3778,14 +3779,17 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
+            writer.Write("*(");
+
+            this.WriteCCastOnly(type.ToPointerType());
+
             var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
             var destinationType = resultOfOperand0.Type;
             if (destinationType.IsPointer && destinationType.GetElementType().TypeNotEquals(type))
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteCCastOperand(opCode, 0, type);
+                this.WriteCCastOnly(type);
                 destinationType = type.ToPointerType();
-                writer.WriteLine(string.Empty);
             }
             else if (destinationType.IsByRef && destinationType.GetElementType().TypeNotEquals(type))
             {
@@ -3795,12 +3799,11 @@ namespace Il2Native.Logic
             if (!destinationType.IsPointer && !resultOfOperand0.Type.IsPointer && !resultOfOperand0.Type.IsByRef)
             {
                 // adjust destination type, cast pointer to pointer of type
-                this.WriteCCastOperand(opCode, 0, type);
+                this.WriteCCastOnly(type);
             }
 
-            this.UnaryOper(writer, opCode, 0, "*(", type);
-            writer.Write(") = ");
-            this.WriteOperandResultOrActualWrite(writer, opCode, 1);
+            this.UnaryOper(writer, opCode, 0, string.Empty);
+            this.UnaryOper(writer, opCode, 1, ") = ", type);
         }
 
         /// <summary>

@@ -42,7 +42,8 @@ typedef UInt32 UInt;
 
 typedef Int32 (*anyFn)(...);
 
-extern "C" Byte* calloc(Int);
+extern "C" Void* alloca(UInt);
+extern "C" Byte* calloc(UInt);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();
 

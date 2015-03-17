@@ -1581,6 +1581,11 @@ namespace Il2Native.Logic
                 return System.System_Int32;
             }
 
+            if (opCodePart.Any(Code.Ldind_I8))
+            {
+                return System.System_Int64;
+            }
+
             if (opCodePart.Any(Code.Ldind_U1))
             {
                 return System.System_Byte;
