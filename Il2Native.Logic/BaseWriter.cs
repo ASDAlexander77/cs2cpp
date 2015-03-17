@@ -1860,7 +1860,7 @@ namespace Il2Native.Logic
 
             var uintRequired = opCodePart.Any(Code.Shl, Code.Shr, Code.Shr_Un);
 
-            if (this.IsFloatingPointOp(opCodePart))
+            if (this.IsFloatingPointOp(opCodePart) || this.IsPointerArithmetic(opCodePart))
             {
                 return null;
             }
