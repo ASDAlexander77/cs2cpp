@@ -67,5 +67,9 @@
         /// </summary>
         /// <param name="type"></param>
         void AddRtti(IType type);
+
+        /// <summary>
+        /// </summary>
+        void AddCalledMethod(IMethod method);
     }
 }

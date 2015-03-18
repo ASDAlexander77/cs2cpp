@@ -644,6 +644,18 @@ namespace Il2Native.Logic
                     var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                     IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
                 }
+
+                if (opCodePart.Any(Code.Newobj))
+                {
+                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                    if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    {
+                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                            this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+
+                        IlReader.AddCalledMethod(stringCtorMethodBase);
+                    }
+                }
             }
         }
 

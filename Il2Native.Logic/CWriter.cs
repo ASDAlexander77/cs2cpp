@@ -367,7 +367,16 @@ namespace Il2Native.Logic
                     break;
                 case Code.Ldc_I4:
                     var opCodeInt32 = opCode as OpCodeInt32Part;
-                    this.Output.Write(opCodeInt32.Operand);
+                    if (opCodeInt32.Operand > int.MaxValue || opCodeInt32.Operand < int.MinValue)
+                    {
+                        this.Output.Write(opCodeInt32.Operand);
+                        this.Output.Write("L");
+                    }
+                    else
+                    {
+                        this.Output.Write(opCodeInt32.Operand);
+                    }
+
                     break;
                 case Code.Ldc_I4_S:
                     opCodeInt32 = opCode as OpCodeInt32Part;
@@ -376,6 +385,7 @@ namespace Il2Native.Logic
                 case Code.Ldc_I8:
                     var opCodeInt64 = opCode as OpCodeInt64Part;
                     this.Output.Write(opCodeInt64.Operand);
+                    this.Output.Write("L");
                     break;
                 case Code.Ldc_R4:
                     var opCodeSingle = opCode as OpCodeSinglePart;
