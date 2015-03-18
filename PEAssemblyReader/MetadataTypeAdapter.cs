@@ -475,7 +475,7 @@ namespace PEAssemblyReader
 
         public bool IsPrivateImplementationDetails
         {
-            get { return this.FullName.StartsWith("<PrivateImplementationDetails>{"); }
+            get { return this.FullName.StartsWith("<PrivateImplementationDetails>"); }
         }
 
         /// <summary>

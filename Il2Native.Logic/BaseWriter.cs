@@ -18,6 +18,9 @@ namespace Il2Native.Logic
     using CodeParts;
     using Exceptions;
     using Gencode;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using PEAssemblyReader;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
@@ -621,40 +624,48 @@ namespace Il2Native.Logic
         {
             foreach (var opCodePart in opCodes)
             {
-                ////if (opCodePart.Any(Code.Throw))
-                ////{
-                ////    var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                ////    IlReader.AddRtti(estimatedResult.Type.ToRtti());
-                ////}
-
-                if (opCodePart.Any(
-                    Code.Ldelem,
-                    Code.Ldelem_I,
-                    Code.Ldelem_I1,
-                    Code.Ldelem_I2,
-                    Code.Ldelem_I4,
-                    Code.Ldelem_I8,
-                    Code.Ldelem_R4,
-                    Code.Ldelem_R8,
-                    Code.Ldelem_Ref,
-                    Code.Ldelem_U1,
-                    Code.Ldelem_U2,
-                    Code.Ldelem_U4))
+                switch (opCodePart.ToCode())
                 {
-                    var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                    IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
-                }
+                    case Code.Ldelem:
+                    case Code.Ldelem_I:
+                    case Code.Ldelem_I1:
+                    case Code.Ldelem_I2:
+                    case Code.Ldelem_I4:
+                    case Code.Ldelem_I8:
+                    case Code.Ldelem_R4:
+                    case Code.Ldelem_R8:
+                    case Code.Ldelem_Ref:
+                    case Code.Ldelem_U1:
+                    case Code.Ldelem_U2:
+                    case Code.Ldelem_U4:
+                        var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
+                        break;
 
-                if (opCodePart.Any(Code.Newobj))
-                {
-                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                    if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
-                    {
-                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
-                            this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+                    case Code.Newobj:
+                        var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                        if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                        {
+                            var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                                this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
 
-                        IlReader.AddCalledMethod(stringCtorMethodBase);
-                    }
+                            IlReader.AddCalledMethod(stringCtorMethodBase);
+                        }
+                        break;
+
+                    case Code.Ldtoken:
+
+                        var opCodeTypePart = opCodePart as OpCodeTypePart;
+                        if (opCodeTypePart != null)
+                        {
+                            var tokenType = opCodeTypePart.Operand;
+                            if (!tokenType.IsVirtualTableImplementation)
+                            {
+                                IlReader.AddCalledMethod(tokenType.GetMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
+                            }
+                        }
+
+                        break;
                 }
             }
         }

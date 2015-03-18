@@ -257,8 +257,6 @@ namespace Il2Native.Logic
                     var method in
                         IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                 {
-                    Debug.Assert(!type.FullName.Contains("PrivateImplementationDetails"));
-
                     if (VerboseOutput)
                     {
                         Trace.WriteLine(string.Format("writing method {0}", method));

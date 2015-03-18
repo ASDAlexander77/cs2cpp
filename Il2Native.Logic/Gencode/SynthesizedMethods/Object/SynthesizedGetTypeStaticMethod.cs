@@ -15,6 +15,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedGetTypeStaticMethod : SynthesizedMethodTypeBase
     {
+        public const string Name = ".sgettype";
+
         /// <summary>
         /// </summary>
         private readonly IType systemType;
@@ -26,7 +28,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetTypeStaticMethod(IType type, ITypeResolver typeResolver)
-            : base(type, ".sgettype")
+            : base(type, Name)
         {
             this.systemType = typeResolver.System.System_Type;
         }

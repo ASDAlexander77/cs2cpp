@@ -16,7 +16,6 @@ namespace Il2Native.Logic
     using System.Linq;
     using System.Reflection;
     using System.Reflection.Emit;
-    using System.Runtime;
 
     using Il2Native.Logic.CodeParts;
     using Il2Native.Logic.Gencode;
@@ -370,8 +369,6 @@ namespace Il2Native.Logic
             {
                 this.SourceFilePath = Path.GetFullPath(this.FirstSource);
             }
-
-            this.GenerateInMemory = true;
         }
 
         /// <summary>
@@ -599,13 +596,10 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        protected bool UsingRoslyn { get; set; }
 
         /// <summary>
         /// </summary>
-        protected bool GenerateInMemory { get; set; }
+        protected bool UsingRoslyn { get; set; }
 
         /// <summary>
         /// </summary>
@@ -767,8 +761,9 @@ namespace Il2Native.Logic
                 // append C# native compiler infrastructure methods
                 yield return new SynthesizedGetSizeMethod(type, typeResolver);
                 yield return new SynthesizedGetTypeMethod(type, typeResolver);
-                yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
             }
+
+            yield return new SynthesizedGetTypeStaticMethod(type, typeResolver);
 
             // append internal methods
             if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
@@ -1639,7 +1634,7 @@ namespace Il2Native.Logic
 
             var parameters = CodeDomProvider.GetCompilerInfo(language).CreateDefaultCompilerParameters();
             parameters.GenerateExecutable = false;
-            parameters.GenerateInMemory = false/*this.GenerateInMemory*/;
+            parameters.GenerateInMemory = false;
             parameters.CompilerOptions =
                 string.Concat(
                     string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty), 
@@ -1693,9 +1688,9 @@ namespace Il2Native.Logic
 
             var compilation = CSharpCompilation.Create(nameDll, syntaxTrees, new[] { coreLibRefAssembly }, options);
 
-            using (var dllStream = this.GenerateInMemory ? (Stream)new MemoryStream() : (Stream)new FileStream(outDll, FileMode.OpenOrCreate))
+            using (var dllStream = new FileStream(outDll, FileMode.OpenOrCreate))
             {
-                using (var pdbStream = this.GenerateInMemory ? (Stream)new MemoryStream() : (Stream)new FileStream(outPdb, FileMode.OpenOrCreate))
+                using (var pdbStream = new FileStream(outPdb, FileMode.OpenOrCreate))
                 {
                     var result = compilation.Emit(peStream: dllStream, pdbFilePath: outPdb, pdbStream: pdbStream);
 
@@ -1708,14 +1703,13 @@ namespace Il2Native.Logic
                         }
                     }
                 }
-
-                this.DllFilePath = outDll;
-                this.PdbFilePath = outPdb;
-
-                // Successful Compile
-                dllStream.Position = 0;
-                return AssemblyMetadata.CreateFromImageStream(dllStream);
             }
+
+            this.DllFilePath = outDll;
+            this.PdbFilePath = outPdb;
+
+            // Successful Compile
+            return AssemblyMetadata.CreateFromImageStream(new FileStream(outDll, FileMode.Open, FileAccess.Read));
         }
 
         /// <summary>

@@ -459,6 +459,10 @@ namespace Il2Native.Logic
                             this.Output.Write("0/*undef*/");
                         }
                     }
+                    else
+                    {
+                        this.Output.Write("System_RuntimeFieldHandle()/*undef*/");
+                    }
 
                     break;
                 case Code.Localloc:
@@ -1180,27 +1184,13 @@ namespace Il2Native.Logic
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-
                     this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true);
                     break;
 
                 case Code.Isinst:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-
-                    var toType = opCodeTypePart.Operand;
-
-                    var dynamicCastRequired = false;
-                    var castRequired = toType.IsClassCastRequired(this, opCodeTypePart.OpCodeOperands[0], out dynamicCastRequired);
-                    if (dynamicCastRequired || !castRequired)
-                    {
-                        this.WriteDynamicCast(writer, opCodeTypePart, opCodeTypePart.OpCodeOperands[0], toType, true);
-                    }
-                    else
-                    {
-                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], toType);
-                    }
-
+                    this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass());
                     break;
 
                 case Code.Newobj:
