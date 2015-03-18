@@ -171,7 +171,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="readStaticFields">
         /// </param>
-        public static void DiscoverMethod(this IMethod method, ISet<IType> structTypes, ISet<IMethod> calledMethods, ISet<IField> readStaticFields)
+        public static void DiscoverMethod(this IMethod method, ISet<IType> structTypes, ISet<MethodKey> calledMethods, ISet<IField> readStaticFields)
         {
             // read method body to extract all types
             var reader = new IlReader();

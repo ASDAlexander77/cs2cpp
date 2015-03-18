@@ -463,13 +463,14 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var estimatedOperandResultOf = cWriter.EstimatedResultOf(opCodeOperand);
-            var resultIsConst = estimatedOperandResultOf.IsConst;
 
             var bareType = !estimatedOperandResultOf.Type.IsArray
                 ? estimatedOperandResultOf.Type.ToBareType()
                 : estimatedOperandResultOf.Type;
 
-            if (toType.IsInterface && !resultIsConst)
+            var isNull = estimatedOperandResultOf.Type.IsPointer && estimatedOperandResultOf.Type.GetElementType().IsVoid();
+
+            if (toType.IsInterface && !isNull)
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
@@ -491,8 +492,7 @@ namespace Il2Native.Logic.Gencode
                      || toType.IsArray 
                      || toType.IsPointer 
                      || toType.IsByRef 
-                     || bareType.IsDerivedFrom(toType) 
-                     || resultIsConst)
+                     || bareType.IsDerivedFrom(toType))
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
             }

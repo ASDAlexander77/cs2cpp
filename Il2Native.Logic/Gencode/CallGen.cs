@@ -13,8 +13,8 @@ namespace Il2Native.Logic.Gencode
     using System.Diagnostics;
     using System.Linq;
     using CodeParts;
-    using Exceptions;
     using PEAssemblyReader;
+    using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
     /// <summary>
     /// </summary>
@@ -209,12 +209,7 @@ namespace Il2Native.Logic.Gencode
             if (isPrimitive || isPrimitivePointer)
             {
                 var primitiveType = resultOfFirstOperand.Type;
-                if (isPrimitivePointer)
-                {
-                    primitiveType = resultOfFirstOperand.Type.GetElementType();
-                    cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
-                }
-                else
+                if (!isPrimitivePointer)
                 {
                     var intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
                     var uintType = cWriter.GetUIntTypeByByteSize(CWriter.PointerSize);
@@ -223,27 +218,22 @@ namespace Il2Native.Logic.Gencode
                         var declType = opCodeMethodInfoPart.Operand.DeclaringType;
                         Debug.Assert(declType != null && declType.IsStructureType(), "only Struct type can be used");
                         primitiveType = declType.ToClass();
-                        cWriter.AdjustIntConvertableTypes(
-                            writer,
-                            opCodeMethodInfo.OpCodeOperands[0],
-                            declType.ToPointerType());
+                        cWriter.AdjustIntConvertableTypes(writer, opCodeMethodInfo.OpCodeOperands[0], declType.ToPointerType());
                     }
                     else
                     {
                         Debug.Assert(false, "only Int type allowed");
                     }
                 }
+                else
+                {
+                    primitiveType = resultOfFirstOperand.Type.GetElementType();
+                }
 
                 // convert value to object
                 var opCodeNone = OpCodePart.CreateNop;
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
-                cWriter.Output.WriteLine(";");
-
-                if (thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
-                {
-                    cWriter.WriteCast(opCodeFirstOperand, opCodeFirstOperand, thisType);
-                }
 
                 return;
             }
@@ -263,7 +253,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="thisType">
+        /// <param name="methodDeclaringType">
         /// </param>
         /// <param name="hasThisArgument">
         /// </param>
@@ -283,7 +273,7 @@ namespace Il2Native.Logic.Gencode
             bool isVirtual,
             bool hasThis,
             CWriter cWriter,
-            out IType thisType,
+            out IType methodDeclaringType,
             out bool hasThisArgument,
             out OpCodePart opCodeFirstOperand,
             out BaseWriter.ReturnResult resultOfFirstOperand,
@@ -291,7 +281,7 @@ namespace Il2Native.Logic.Gencode
             out IType ownerOfExplicitInterface,
             out IType requiredType)
         {
-            thisType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
+            methodDeclaringType = methodInfo.DeclaringType != null ? methodInfo.DeclaringType.ToClass() : null;
 
             var parameters = methodInfo.GetParameters();
             hasThisArgument = hasThis && opCodeMethodInfo.OpCodeOperands != null
@@ -302,29 +292,34 @@ namespace Il2Native.Logic.Gencode
             resultOfFirstOperand = opCodeFirstOperand != null ? cWriter.EstimatedResultOf(opCodeFirstOperand) : null;
 
             isIndirectMethodCall = isVirtual
-                                   && (methodInfo.IsAbstract || methodInfo.IsVirtual || (thisType.IsInterface && thisType.TypeEquals(resultOfFirstOperand.Type)));
+                                   && (methodInfo.IsAbstract || methodInfo.IsVirtual || (methodDeclaringType.IsInterface && methodDeclaringType.TypeEquals(resultOfFirstOperand.Type)));
 
-            ownerOfExplicitInterface = isVirtual && thisType.IsInterface && thisType.TypeNotEquals(resultOfFirstOperand.Type) ? resultOfFirstOperand.Type : null;
+            ownerOfExplicitInterface = isVirtual ? GetOwnerOfExplicitInterface(methodDeclaringType, resultOfFirstOperand.Type) : null;
 
             var rollbackType = false;
             requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;
             if (requiredType != null)
             {
-                thisType = requiredType;
+                methodDeclaringType = requiredType;
                 rollbackType = true;
             }
 
-            if (isIndirectMethodCall && methodInfo.DeclaringType.TypeNotEquals(thisType) &&
-                methodInfo.DeclaringType.IsInterface && !thisType.IsInterface
-                && thisType.HasExplicitInterfaceMethodOverride(methodInfo))
+            if (isIndirectMethodCall && methodInfo.DeclaringType.TypeNotEquals(methodDeclaringType) &&
+                methodInfo.DeclaringType.IsInterface && !methodDeclaringType.IsInterface
+                && methodDeclaringType.HasExplicitInterfaceMethodOverride(methodInfo))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;
             }
             else if (rollbackType)
             {
-                thisType = methodInfo.DeclaringType;
+                methodDeclaringType = methodInfo.DeclaringType;
             }
+        }
+
+        public static IType GetOwnerOfExplicitInterface(IType methodDeclaringType, IType argument0)
+        {
+            return methodDeclaringType.IsInterface && methodDeclaringType.TypeNotEquals(argument0) ? argument0 : null;
         }
 
         /// <summary>

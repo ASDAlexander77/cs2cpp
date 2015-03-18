@@ -48,7 +48,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IMethod> _calledMethods;
+        private ISet<MethodKey> _calledMethods;
 
         /// <summary>
         /// </summary>
@@ -393,7 +393,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IMethod> CalledMethods
+        public ISet<MethodKey> CalledMethods
         {
             get
             {
@@ -1117,16 +1117,25 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(method.DeclaringType);
-                        this.AddCalledMethod(method);
-                        if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
+                        if (code == Code.Call)
                         {
-                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
+                            this.AddCalledMethod(method);
                         }
 
                         if (code == Code.Callvirt)
                         {
                             // vtable used
                             this.AddVirtualTable(method.DeclaringType.ToVirtualTable());
+                        }
+
+                        if (this.TypeResolver != null && method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
+                        {
+                            this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.TypeResolver));
+                        }
+
+                        if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
+                        {
+                            this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                         }
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
@@ -1442,14 +1451,14 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="method">
         /// </param>
-        public void AddCalledMethod(IMethod method)
+        public void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null)
         {
             if (this._calledMethods == null || method == null || method.DeclaringType == null || string.IsNullOrEmpty(method.Name))
             {
                 return;
             }
 
-            this._calledMethods.Add(method);
+            this._calledMethods.Add(new MethodKey(method, ownerOfExplicitInterface));
         }
 
         /// <summary>

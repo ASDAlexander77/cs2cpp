@@ -651,6 +651,7 @@ namespace Il2Native.Logic
 
                             IlReader.AddCalledMethod(stringCtorMethodBase);
                         }
+
                         break;
 
                     case Code.Ldtoken:
@@ -663,6 +664,18 @@ namespace Il2Native.Logic
                             {
                                 IlReader.AddCalledMethod(tokenType.GetMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
                             }
+                        }
+
+                        break;
+
+                    case Code.Callvirt:
+
+                        var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
+                        if (opCodeMethodInfoPart != null)
+                        {
+                            estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
+                            IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
                         }
 
                         break;
@@ -874,7 +887,7 @@ namespace Il2Native.Logic
         {
             var op1ReturnResult = this.EstimatedResultOf(opCode);
 
-            if (op1ReturnResult == null || op1ReturnResult.Type == null || op1ReturnResult.IsConst)
+            if (op1ReturnResult == null || op1ReturnResult.Type == null)
             {
                 return 0;
             }
@@ -1515,6 +1528,11 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldnull))
             {
+                if (opCodePart.UsedBy != null)
+                {
+                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+                }
+
                 return this.System.System_Void.ToPointerType();
             }
 
@@ -1631,6 +1649,16 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ldind_I8))
             {
                 return System.System_Int64;
+            }
+
+            if (opCodePart.Any(Code.Ldind_R4))
+            {
+                return System.System_Single;
+            }
+
+            if (opCodePart.Any(Code.Ldind_R8))
+            {
+                return System.System_Double;
             }
 
             if (opCodePart.Any(Code.Ldind_U1))
@@ -1920,8 +1948,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        //// TODO: you need to get rid of using it
-        public class ReturnResult : IEquatable<ReturnResult>
+        public class ReturnResult
         {
             /// <summary>
             /// </summary>
@@ -1930,7 +1957,6 @@ namespace Il2Native.Logic
             public ReturnResult(FullyDefinedReference result)
             {
                 this.Type = result.Type;
-                this.IsConst = result is ConstValue;
             }
 
             /// <summary>
@@ -1944,16 +1970,11 @@ namespace Il2Native.Logic
 
             /// <summary>
             /// </summary>
-            [Obsolete]
-            public bool IsConst { get; set; }
-
-            /// <summary>
-            /// </summary>
-            public bool IsPointerAccessRequired
+            public bool IsReference
             {
                 get
                 {
-                    if (this.Type.IsPointer || this.Type.UseAsClass)
+                    if (this.Type.IsPointer || this.Type.IsByRef || this.Type.UseAsClass)
                     {
                         return true;
                     }
@@ -1970,33 +1991,6 @@ namespace Il2Native.Logic
             /// <summary>
             /// </summary>
             public IType Type { get; set; }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="other">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public bool Equals(ReturnResult other)
-            {
-                return this.Type.TypeEquals(other.Type) && this.IsConst == other.IsConst;
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            public bool IsTypeOf(IType type)
-            {
-                if (this.Type == null || type == null)
-                {
-                    return false;
-                }
-
-                return this.Type.TypeEquals(type);
-            }
         }
     }
 }

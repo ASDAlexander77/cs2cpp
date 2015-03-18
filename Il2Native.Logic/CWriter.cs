@@ -898,7 +898,7 @@ namespace Il2Native.Logic
                             this.Output.Write("(Byte*) &");
                             this.Output.Write(opCodeMethodInfoPart.Operand.GetFullMethodName());
                         });
-                        
+
                     var value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
 
                     var objectReference = this.WriteVariableForNew(opCodeMethodInfoPart, intPtrType);
@@ -1321,13 +1321,13 @@ namespace Il2Native.Logic
 
                 case Code.Mkrefany:
 
-                    writer.WriteLine("// TODO: Mkrefany");   
+                    writer.WriteLine("// TODO: Mkrefany");
 
                     break;
 
                 case Code.Refanytype:
 
-                    writer.WriteLine("// TODO: refany");   
+                    writer.WriteLine("// TODO: refany");
 
                     break;
 
@@ -1431,10 +1431,28 @@ namespace Il2Native.Logic
             var estimatedResult = this.EstimatedResultOf(opCode);
 
             if (typeDest == null || estimatedResult == null
-                || (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass == estimatedResult.Type.IsClass) || estimatedResult.IsConst)
+                || (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass == estimatedResult.Type.IsClass))
             {
                 return false;
-            }          
+            }
+
+            // when you send class as value (high priority)
+            if (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
+            {
+                var opCodeNope = OpCodePart.CreateNop;
+                opCodeNope.OpCodeOperands = new[] { opCode };
+                this.LoadIndirect(this.Output, opCodeNope, typeDest);
+                return true;
+            }
+
+            // when you send pointer when value should be (high priority)
+            if (estimatedResult.Type.IsPointer && typeDest.TypeEquals(estimatedResult.Type.GetElementType()))
+            {
+                var opCodeNope = OpCodePart.CreateNop;
+                opCodeNope.OpCodeOperands = new[] { opCode };
+                this.LoadIndirect(this.Output, opCodeNope, typeDest);
+                return true;
+            }
 
             bool castRequired;
             bool intAdjustmentRequired;
@@ -1443,12 +1461,6 @@ namespace Il2Native.Logic
             if (castRequired)
             {
                 this.WriteCast(opCode, opCode, typeDest);
-                return true;
-            }
-
-            if (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
-            {
-                this.LoadIndirect(this.Output, opCode, typeDest);
                 return true;
             }
 
@@ -1476,6 +1488,22 @@ namespace Il2Native.Logic
         /// </param>
         public void BinaryOper(CIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null)
         {
+            if (options.HasFlag(OperandOptions.CastPointersToBytePointer))
+            {
+                var estimatedResultOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+                var estimatedResultOperand1 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
+                if (estimatedResultOperand0.IsReference && estimatedResultOperand1.IsReference)
+                {
+                    writer.Write("((Byte*)");
+                    this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                    writer.Write(op);
+                    writer.Write("(Byte*)");
+                    this.WriteOperandResultOrActualWrite(writer, opCode, 1);
+                    writer.Write(")");
+                    return;
+                }
+            }
+
             writer.Write("(");
             this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             writer.Write(op);
@@ -2015,14 +2043,16 @@ namespace Il2Native.Logic
             CIndentedTextWriter writer, OpCodePart opCodePart, OpCodePart opCodeOperand, IType toType, bool checkNull = false, bool throwExceptionIfNull = false, bool forceCast = false)
         {
             var fromTypeOriginal = this.EstimatedResultOf(opCodeOperand);
-            var fromType = fromTypeOriginal.Type.IsPointer || fromTypeOriginal.Type.IsByRef ? new ReturnResult(fromTypeOriginal.Type.GetElementType()) : fromTypeOriginal;
+            var fromType = fromTypeOriginal.Type.IsPointer || fromTypeOriginal.Type.IsByRef
+                               ? new ReturnResult(fromTypeOriginal.Type.GetElementType())
+                               : fromTypeOriginal;
             if (fromType.Type.TypeEquals(toType) && !forceCast)
             {
                 return;
             }
 
             Debug.Assert(!fromTypeOriginal.Type.IsVoid());
-            Debug.Assert(!(fromTypeOriginal is ConstValue));
+            Debug.Assert(!fromType.Type.IsVoid());
             Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
 
@@ -2159,7 +2189,7 @@ namespace Il2Native.Logic
             }
 
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
-            
+
             writer.Write(")->");
 
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
@@ -2708,7 +2738,7 @@ namespace Il2Native.Logic
 
             // to gather all info about method which we need
             this.IlReader.UsedStrings = new SortedDictionary<int, string>();
-            this.IlReader.CalledMethods = new NamespaceContainer<IMethod>();
+            this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
             this.IlReader.UsedStructTypes = new NamespaceContainer<IType>();
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
@@ -4183,9 +4213,9 @@ namespace Il2Native.Logic
                 var environmentType = this.ResolveType("System.Environment");
                 var setExitCode = environmentType.GetMethodByName("set_ExitCode", this);
                 var getExitCode = environmentType.GetMethodByName("get_ExitCode", this);
-                this.WriteMethodForwardDeclaration(setExitCode, null);
+                this.WriteMethodForwardDeclarationIfNotWrittenyet(setExitCode, null);
                 this.Output.WriteLine(";");
-                this.WriteMethodForwardDeclaration(getExitCode, null);
+                this.WriteMethodForwardDeclarationIfNotWrittenyet(getExitCode, null);
                 this.Output.WriteLine(";");
                 this.Output.WriteLine(string.Empty);
             }
@@ -4376,11 +4406,21 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodForwardDeclaration(IMethod methodDecl, IType ownerOfExplicitInterface)
+        private void WriteMethodForwardDeclarationIfNotWrittenyet(IMethod methodDecl, IType ownerOfExplicitInterface)
         {
-            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(methodDecl);
+            this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface));
+        }
 
-            var ctor = methodDecl as IConstructor;
+        private void WriteMethodForwardDeclarationIfNotWrittenYet(MethodKey methodKey)
+        {
+            if (!this.forwardMethodDeclarationWritten.Add(methodKey))
+            {
+                return;
+            }
+
+            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(methodKey.Method);
+
+            var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
             {
                 this.ReadMethodInfo(ctor, null);
@@ -4393,7 +4433,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var method = methodDecl;
+            var method = methodKey.Method;
             if (method != null)
             {
                 this.ReadMethodInfo(method, null);
@@ -4401,8 +4441,8 @@ namespace Il2Native.Logic
                 // extern "c"
                 this.Output.Write(this.declarationPrefix);
                 this.WriteMethodReturnType(this.Output, method);
-                this.WriteMethodDefinitionName(this.Output, method, ownerOfExplicitInterface);
-                this.WriteMethodParamsDef(this.Output, method, this.HasMethodThis, ownerOfExplicitInterface ?? this.ThisType, method.ReturnType);
+                this.WriteMethodDefinitionName(this.Output, method, methodKey.OwnerOfExplicitInterface);
+                this.WriteMethodParamsDef(this.Output, method, this.HasMethodThis, methodKey.OwnerOfExplicitInterface ?? this.ThisType, method.ReturnType);
             }
         }
 
@@ -4465,12 +4505,10 @@ namespace Il2Native.Logic
             any = false;
 
             // methods
-            foreach (var requiredDeclarationMethod in
-                this.IlReader.CalledMethods.Where(
-                    requiredMethodDeclaration => this.forwardMethodDeclarationWritten.Add(new MethodKey(requiredMethodDeclaration, null))))
+            foreach (var requiredDeclarationMethod in this.IlReader.CalledMethods)
             {
                 any = true;
-                this.WriteMethodForwardDeclaration(requiredDeclarationMethod, null);
+                this.WriteMethodForwardDeclarationIfNotWrittenYet(requiredDeclarationMethod);
                 this.Output.WriteLine(";");
             }
 
@@ -4839,10 +4877,9 @@ namespace Il2Native.Logic
                 var virtualTable = type.GetVirtualTable(this);
 
                 // forward declarations
-                foreach (var method in
-                    virtualTable.Where(m => m.Value != null).Select(m => m.Value).Where(m => this.forwardMethodDeclarationWritten.Add(new MethodKey(m, null))))
+                foreach (var method in virtualTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
-                    this.WriteMethodForwardDeclaration(method, null);
+                    this.WriteMethodForwardDeclarationIfNotWrittenyet(method, null);
                     this.Output.WriteLine(";");
                 }
 
@@ -4867,12 +4904,9 @@ namespace Il2Native.Logic
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
 
                 // forward declarations
-                foreach (var method in
-                    virtualInterfaceTable.Where(m => m.Value != null)
-                                         .Select(m => m.Value)
-                                         .Where(m => this.forwardMethodDeclarationWritten.Add(new MethodKey(m, null))))
+                foreach (var method in virtualInterfaceTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
-                    this.WriteMethodForwardDeclaration(method, null);
+                    this.WriteMethodForwardDeclarationIfNotWrittenyet(method, null);
                     this.Output.WriteLine(";");
                 }
 

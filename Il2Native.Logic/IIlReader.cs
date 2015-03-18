@@ -20,7 +20,7 @@
 
         /// <summary>
         /// </summary>
-        ISet<IMethod> CalledMethods { get; set; }
+        ISet<MethodKey> CalledMethods { get; set; }
 
         /// <summary>
         /// </summary>
@@ -70,6 +70,6 @@
 
         /// <summary>
         /// </summary>
-        void AddCalledMethod(IMethod method);
+        void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null);
     }
 }
