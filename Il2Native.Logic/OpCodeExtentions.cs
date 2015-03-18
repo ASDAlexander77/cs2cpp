@@ -586,7 +586,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static bool IsExternalLibraryMethod(this IMethod method)
         {
-            return method.IsUnmanaged && !method.IsUnmanagedMethodReference && !method.Name.StartsWith("llvm_");
+            return method.IsUnmanaged;
         }
 
         /// <summary>

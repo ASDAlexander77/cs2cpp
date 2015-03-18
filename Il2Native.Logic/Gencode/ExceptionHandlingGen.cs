@@ -118,7 +118,18 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            writer.Write("if (");
+            var exceptionType = exceptionHandlingClause.Catch ?? cWriter.System.System_Exception;
+
+            var variable = GetExceptionCaseVariable(exceptionHandlingClause);
+
+            exceptionType.WriteTypePrefix(cWriter);
+            writer.Write(" ");
+            writer.Write(variable);
+            writer.WriteLine(";");
+
+            writer.Write("if ((");
+            writer.Write(variable);
+            writer.Write(" = ");
 
             var opCode = OpCodePart.CreateNop;
             var opCodeOperand = OpCodePart.CreateNop;
@@ -127,12 +138,15 @@ namespace Il2Native.Logic.Gencode
                 writer,
                 opCode,
                 opCodeOperand,
-                (exceptionHandlingClause.Catch is object)
-                    ? cWriter.System.System_Exception
-                    : exceptionHandlingClause.Catch,
+                exceptionType,
                 forceCast: true);
 
-            writer.Write(" == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            writer.Write(") == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+        }
+
+        public static string GetExceptionCaseVariable(CatchOfFinallyClause exceptionHandlingClause)
+        {
+            return string.Format("_case{0}", exceptionHandlingClause.Offset);
         }
 
         /// <summary>
