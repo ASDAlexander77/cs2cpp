@@ -1315,7 +1315,7 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.Output.Write("sizeof(");
-                    opCodeTypePart.Operand.WriteTypePrefix(this);
+                    opCodeTypePart.Operand.WriteTypeWithoutModifiers(this);
                     this.Output.Write(")");
                     break;
 
@@ -1429,10 +1429,12 @@ namespace Il2Native.Logic
         {
             // cast result if required
             var estimatedResult = this.EstimatedResultOf(opCode);
-            if (typeDest == null || estimatedResult == null || !typeDest.TypeNotEquals(estimatedResult.Type) || estimatedResult.IsConst)
+
+            if (typeDest == null || estimatedResult == null
+                || (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass == estimatedResult.Type.IsClass) || estimatedResult.IsConst)
             {
                 return false;
-            }
+            }          
 
             bool castRequired;
             bool intAdjustmentRequired;
@@ -1441,6 +1443,12 @@ namespace Il2Native.Logic
             if (castRequired)
             {
                 this.WriteCast(opCode, opCode, typeDest);
+                return true;
+            }
+
+            if (typeDest.TypeEquals(estimatedResult.Type) && typeDest.IsClass != estimatedResult.Type.IsClass && estimatedResult.Type.IsClass)
+            {
+                this.LoadIndirect(this.Output, opCode, typeDest);
                 return true;
             }
 
@@ -2111,7 +2119,8 @@ namespace Il2Native.Logic
 
         public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            opCode.Result = new FullyDefinedReference("_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, null);
+            opCode.Result = new FullyDefinedReference(
+                "_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, this.EstimatedResultOf(opCode.UsedByAlternativeValues.Values[0]).Type);
         }
 
         /// <summary>

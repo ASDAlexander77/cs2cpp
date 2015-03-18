@@ -25,7 +25,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="writer">
         /// </param>
         public SynthesizedNewMethod(IType type, ITypeResolver typeResolver)
-            : base(typeResolver.GetNewMethod(type), ".new", type, type)
+            : base(typeResolver.GetNewMethod(type), ".new", type, type.ToClass())
         {
             Type = type.ToClass();
             this.typeResolver = typeResolver;

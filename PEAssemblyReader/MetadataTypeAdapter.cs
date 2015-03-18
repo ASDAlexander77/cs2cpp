@@ -1030,7 +1030,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToClass()
         {
-            if (this.UseAsClass)
+            if (this.UseAsClass || !this.IsValueType)
             {
                 return this;
             }

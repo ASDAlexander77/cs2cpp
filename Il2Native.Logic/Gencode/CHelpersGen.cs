@@ -419,13 +419,6 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteMethodPointerType(writer, methodInfo);
                 writer.Write(" ");
             }
-            else
-            {
-                if (methodInfo.IsExternalLibraryMethod())
-                {
-                    writer.Write("(...)* ");
-                }
-            }
 
             if (!isIndirectMethodCall)
             {
@@ -641,7 +634,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteResultOrActualWrite(writer, op1);
             writer.Write("), 0, sizeof(");
             type.WriteTypePrefix(cWriter);
-            writer.Write("));");
+            writer.Write("))");
         }
 
         public static void WriteMemSet(this CWriter cWriter, OpCodePart op1, OpCodePart size)

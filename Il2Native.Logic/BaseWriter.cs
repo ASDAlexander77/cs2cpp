@@ -1676,7 +1676,7 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Newobj))
             {
                 var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                return opCodeConstructorInfoPart == null ? opCodePart.ReadExceptionFromStackType : opCodeConstructorInfoPart.Operand.DeclaringType;
+                return opCodeConstructorInfoPart == null ? opCodePart.ReadExceptionFromStackType.ToClass() : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
             }
 
             if (opCodePart.Any(Code.Newarr))
