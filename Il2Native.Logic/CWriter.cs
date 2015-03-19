@@ -605,7 +605,7 @@ namespace Il2Native.Logic
                 case Code.Cpobj:
                     // TODO: finish it properly
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    SaveObject(opCodeTypePart, 1);
+                    this.SaveIndirect(this.Output, opCodeTypePart, opCodeTypePart.Operand);
                     break;
 
                 case Code.Ldlen:

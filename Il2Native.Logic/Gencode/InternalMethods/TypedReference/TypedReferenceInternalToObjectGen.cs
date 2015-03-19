@@ -180,6 +180,7 @@
             codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
             codeList.Add(Code.Ldfld, 3);
+            // to load structure
             codeList.Add(Code.Box, 18);
             codeList.Add(Code.Ret);
 
@@ -189,7 +190,8 @@
             codeList.LoadArgument(0);
             codeList.Add(Code.Ldflda, 1);
             // IntPtr.m_value
-            codeList.Add(Code.Ldfld, 3);
+            codeList.Add(Code.Ldfld, 3); 
+            // to load structure
             codeList.Add(Code.Box, 19);
             codeList.Add(Code.Ret);
 

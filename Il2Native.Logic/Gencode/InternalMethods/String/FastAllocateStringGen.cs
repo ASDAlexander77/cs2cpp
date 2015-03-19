@@ -10,9 +10,6 @@
         {
             var codeBuilder = typeResolver.GetNewMethod(typeResolver.System.System_String, enableStringFastAllocation: true);
 
-            // string length parameter
-            codeBuilder.Parameters.Add(typeResolver.System.System_Int32.ToParameter());
-
             // additional code
             codeBuilder.Add(Code.Dup);
             codeBuilder.LoadArgument(0);
