@@ -599,22 +599,16 @@ namespace Il2Native.Logic
 
                 case Code.Stobj:
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    Debug.Assert(opCodeTypePart != null);
-                    if (opCodeTypePart != null)
-                    {
-                        this.SaveObject(opCodeTypePart, 1, 0);
-                    }
+                    this.UnaryOper(writer, opCodeTypePart, 0, string.Empty, opCodeTypePart.Operand);
+                    this.UnaryOper(writer, opCodeTypePart, 1, " = ", opCodeTypePart.Operand);
 
                     break;
 
                 case Code.Cpobj:
                     // TODO: finish it properly
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    Debug.Assert(opCodeTypePart != null);
-                    if (opCodeTypePart != null)
-                    {
-                        this.SaveObject(opCodeTypePart, 1, 0, true);
-                    }
+                    this.UnaryOper(writer, opCodeTypePart, 0, "*(", opCodeTypePart.Operand);
+                    this.UnaryOper(writer, opCodeTypePart, 1, ") = ", opCodeTypePart.Operand);
 
                     break;
 
@@ -1216,8 +1210,7 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-
-                    this.WriteConvertToNativeInt(writer, opCode);
+                    this.WriteConvertToNativeInt(opCode);
                     break;
 
                 case Code.Conv_I4:
@@ -1229,9 +1222,7 @@ namespace Il2Native.Logic
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
-                    var intPtrOper = this.IntTypeRequired(opCode);
-                    var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
-                    this.WriteCCastOperand(opCode, 0, nativeIntType);
+                    this.WriteConvertToNativeInt(opCode);
                     break;
 
                 case Code.Conv_U4:
@@ -3085,7 +3076,8 @@ namespace Il2Native.Logic
         {
             if (opCode == opCode.UsedByAlternativeValues.Values[0])
             {
-                (opCode.RequiredOutgoingType ?? opCode.RequiredIncomingType).WriteTypePrefix(this);
+                var type = opCode.RequiredOutgoingType ?? opCode.RequiredIncomingType;
+                type.WriteTypePrefix(this);
                 this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
 
@@ -3636,59 +3628,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private bool IntTypeRequired(OpCodePart opCode)
-        {
-            if (opCode == null || opCode.UsedBy == null)
-            {
-                return false;
-            }
-
-            if (opCode.UsedBy.Any(
-                Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un))
-            {
-                return true;
-            }
-
-            if (opCode.UsedBy.Any(Code.And, Code.Xor, Code.Or))
-            {
-                return true;
-            }
-
-            if (opCode.UsedBy.OperandPosition == 1
-                && opCode.UsedBy.Any(
-                    Code.Ldelem,
-                    Code.Ldelem_I,
-                    Code.Ldelem_I1,
-                    Code.Ldelem_I2,
-                    Code.Ldelem_I4,
-                    Code.Ldelem_I8,
-                    Code.Ldelem_R4,
-                    Code.Ldelem_R8,
-                    Code.Ldelem_Ref,
-                    Code.Ldelem_U1,
-                    Code.Ldelem_U2,
-                    Code.Ldelem_U4,
-                    Code.Ldelema))
-            {
-                return true;
-            }
-
-            if (opCode.UsedBy.OperandPosition == 1
-                && opCode.UsedBy.Any(
-                    Code.Stelem, Code.Stelem_I, Code.Stelem_I1, Code.Stelem_I2, Code.Stelem_I4, Code.Stelem_I8, Code.Stelem_R4, Code.Stelem_R8, Code.Stelem_Ref))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="writer">
         /// </param>
         /// <param name="opCode">
@@ -3915,20 +3854,6 @@ namespace Il2Native.Logic
             this.UnaryOper(writer, opCode, 1, ") = ", type);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="operandIndex">
-        /// </param>
-        /// <param name="destinationIndex">
-        /// </param>
-        private void SaveObject(OpCodeTypePart opCodeTypePart, int operandIndex, int destinationIndex, bool destinationIsIndirect = false)
-        {
-            var operandResult = this.EstimatedResultOf(opCodeTypePart.OpCodeOperands[operandIndex]);
-            this.WriteSave(opCodeTypePart, operandResult.Type, operandIndex, opCodeTypePart.OpCodeOperands[destinationIndex].Result, destinationIsIndirect);
-        }
-
         private void SetSettings(string fileName, string sourceFilePath, string pdbFilePath, string[] args)
         {
             var extension = Path.GetExtension(fileName);
@@ -4137,9 +4062,9 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteConvertToNativeInt(CIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteConvertToNativeInt(OpCodePart opCode)
         {
-            var intPtrOper = this.IntTypeRequired(opCode);
+            var intPtrOper = IntTypeRequired(opCode);
             var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
 
             this.WriteCCastOperand(opCode, 0, nativeIntType);

@@ -725,23 +725,18 @@ namespace Il2Native.Logic
                     else
                     {
                         requiredType = this.RequiredOutgoingType(firstOpCode)
-                                       ??
-                                       alternativeValues.Values.Select(this.RequiredOutgoingType)
-                                           .FirstOrDefault(v => v != null)
-                                       ??
-                                       alternativeValues.Values.Select(v => v.RequiredOutgoingType)
-                                           .FirstOrDefault(v => v != null);
-                        if (requiredType != null &&
-                            alternativeValues.Values.Any(
-                                v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
+                                       ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                                       ?? alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                        if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                         {
                             // find base type, for example if first value is IDictionary and second is Object then required type should be Object
-                            foreach (
-                                var requiredItem in
-                                    alternativeValues.Values.Select(this.RequiredOutgoingType)
-                                                     .Where(t => t != null)
-                                                     .Where(requiredItem => requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem)
-                                                         || requiredItem.IsObject))
+                            foreach (var requiredItem in
+                                alternativeValues.Values.Select(this.RequiredOutgoingType)
+                                                 .Where(t => t != null)
+                                                 .Where(
+                                                     requiredItem =>
+                                                     requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem)
+                                                     || requiredItem.IsObject))
                             {
                                 requiredType = requiredItem;
                             }
@@ -1745,7 +1740,9 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I_Un))
             {
-                return this.System.System_Void.ToPointerType();
+                var intPtrOper = IntTypeRequired(opCodePart);
+                var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                return nativeIntType;
             }
 
             if (opCodePart.Any(Code.Conv_U8, Code.Conv_Ovf_U8, Code.Conv_Ovf_U8_Un))
@@ -1770,7 +1767,9 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un))
             {
-                return this.System.System_Void.ToPointerType();
+                var intPtrOper = IntTypeRequired(opCodePart);
+                var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                return nativeIntType;
             }
 
             if (opCodePart.Any(Code.Conv_R4))
@@ -1846,6 +1845,59 @@ namespace Il2Native.Logic
 
             last = opCodePartBefore;
             return last;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="opCode">
+        /// </param>
+        /// <returns>
+        /// </returns>
+        protected static bool IntTypeRequired(OpCodePart opCode)
+        {
+            if (opCode == null || opCode.UsedBy == null)
+            {
+                return false;
+            }
+
+            if (opCode.UsedBy.Any(
+                Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un, Code.Mul, Code.Mul_Ovf, Code.Mul_Ovf_Un, Code.Div, Code.Div_Un))
+            {
+                return true;
+            }
+
+            if (opCode.UsedBy.Any(Code.And, Code.Xor, Code.Or))
+            {
+                return true;
+            }
+
+            if (opCode.UsedBy.OperandPosition == 1
+                && opCode.UsedBy.Any(
+                    Code.Ldelem,
+                    Code.Ldelem_I,
+                    Code.Ldelem_I1,
+                    Code.Ldelem_I2,
+                    Code.Ldelem_I4,
+                    Code.Ldelem_I8,
+                    Code.Ldelem_R4,
+                    Code.Ldelem_R8,
+                    Code.Ldelem_Ref,
+                    Code.Ldelem_U1,
+                    Code.Ldelem_U2,
+                    Code.Ldelem_U4,
+                    Code.Ldelema))
+            {
+                return true;
+            }
+
+            if (opCode.UsedBy.OperandPosition == 1
+                && opCode.UsedBy.Any(
+                    Code.Stelem, Code.Stelem_I, Code.Stelem_I1, Code.Stelem_I2, Code.Stelem_I4, Code.Stelem_I8, Code.Stelem_R4, Code.Stelem_R8, Code.Stelem_Ref))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>

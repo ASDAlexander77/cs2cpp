@@ -64,7 +64,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool UsingRoslyn = true;
+        public const bool UsingRoslyn = false;
 
         /// <summary>
         /// </summary>
@@ -76,7 +76,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = true;
+        public const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>
