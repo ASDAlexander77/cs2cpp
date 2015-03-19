@@ -746,7 +746,16 @@ namespace Il2Native.Logic
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
-                    this.BinaryOper(writer, opCode, " % ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    if (this.IsFloatingPointOp(opCode))
+                    {
+                        writer.Write("fmod");
+                        this.BinaryOper(writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    }
+                    else
+                    {
+                        this.BinaryOper(writer, opCode, " % ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    }
+
                     break;
                 case Code.And:
                     this.BinaryOper(writer, opCode, " & ", OperandOptions.AdjustIntTypes);
@@ -1381,7 +1390,15 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.Output.Write("sizeof(");
-                    opCodeTypePart.Operand.ToClass().WriteTypeWithoutModifiers(this);
+                    if (!opCodeTypePart.Operand.IsPointer)
+                    {
+                        opCodeTypePart.Operand.ToClass().WriteTypeWithoutModifiers(this);
+                    }
+                    else
+                    {
+                        opCodeTypePart.Operand.WriteTypePrefix(this);
+                    }
+
                     this.Output.Write(")");
                     break;
 

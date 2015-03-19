@@ -309,14 +309,29 @@ namespace Il2Native.Logic
                 case Code.And:
                 case Code.Or:
                 case Code.Xor:
-                    var op1 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    var op2 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
-                    if (op1.Type.TypeEquals(op2.Type) || op1.Type.IsPointer || op1.Type.IsByRef || op1.Type.IntTypeBitSize() > op2.Type.IntTypeBitSize())
+
+                    var opArithmetic = this.RequiredArithmeticIncomingType(opCode);
+                    if (opArithmetic != null)
                     {
-                        return op1;
+                        return new ReturnResult(opArithmetic); 
                     }
 
-                    return op2;
+                    var op1 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+                    var op2 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
+                    var returnOp = op1.Type.TypeEquals(op2.Type) || op1.Type.IsPointer || op1.Type.IsByRef
+                                   || op1.Type.IntTypeBitSize() > op2.Type.IntTypeBitSize()
+                                       ? op1
+                                       : op2;
+
+                    // in case of Pointer operations
+                    if (returnOp.Type.IsPointer && returnOp.Type.GetElementType().IsVoid()
+                        && (IntTypeRequired(opCode.OpCodeOperands[0]) || IntTypeRequired(opCode.OpCodeOperands[1])))
+                    {
+                        return new ReturnResult(System.System_Int32);
+                    }
+
+                    return returnOp;
+
                 case Code.Isinst:
                     return new ReturnResult((opCode as OpCodeTypePart).Operand);
                 case Code.Beq:
@@ -901,11 +916,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        [Obsolete]
         protected bool IsFloatingPointOp(OpCodePart opCode)
         {
-            return opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0])
-                   || opCode.OpCodeOperands.Length > 1 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[1]);
+            return (opCode.OpCodeOperands.Length > 0 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[0]))
+                   || (opCode.OpCodeOperands.Length > 1 && this.IsFloatingPointOpOperand(opCode.OpCodeOperands[1]));
         }
 
         /// <summary>
