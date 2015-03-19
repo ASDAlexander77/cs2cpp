@@ -252,45 +252,9 @@ namespace Il2Native.Logic.Gencode
         public static string GetArrayTypeHeader(this CWriter cWriter, IType elementType, int length)
         {
             var typeString = cWriter.WriteToString(
-                () =>
-                {
-                    elementType.WriteTypePrefix(cWriter);
-                });
+                () => elementType.WriteTypePrefix(cWriter));
 
             return "{ " + GetSingleDimArrayPrefixDataType(cWriter) + ", [" + length + " x " + typeString + "] }";
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="name">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetArrayTypeReference(
-            this CWriter cWriter,
-            string name,
-            IType elementType,
-            int length)
-        {
-            var convertString = cWriter.WriteToString(
-                () =>
-                {
-                    var writer = cWriter.Output;
-
-                    var array = elementType.ToArrayType(1);
-                    writer.Write("bitcast (");
-                    writer.Write("{1}* {0} to ", name, cWriter.GetArrayTypeHeader(elementType, length));
-                    array.WriteTypePrefix(cWriter);
-                    writer.Write(")");
-                });
-
-            return convertString;
         }
 
         /// <summary>

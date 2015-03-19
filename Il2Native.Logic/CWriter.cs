@@ -1390,7 +1390,7 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.Output.Write("sizeof(");
-                    opCodeTypePart.Operand.WriteTypeWithoutModifiers(this);
+                    opCodeTypePart.Operand.ToClass().WriteTypeWithoutModifiers(this);
                     this.Output.Write(")");
                     break;
 
@@ -2017,7 +2017,7 @@ namespace Il2Native.Logic
             foreach (var @interface in this.ThisType.GetInterfacesExcludingBaseAllInterfaces())
             {
                 @interface.WriteTypeWithoutModifiers(this);
-                this.Output.Write(" ");
+                this.Output.Write(" ifce_");
                 @interface.WriteTypeName(this.Output, false);
                 this.Output.WriteLine(";");
                 index++;
@@ -3653,6 +3653,11 @@ namespace Il2Native.Logic
                 return true;
             }
 
+            if (opCode.UsedBy.Any(Code.And, Code.Xor, Code.Or))
+            {
+                return true;
+            }
+
             if (opCode.UsedBy.OperandPosition == 1
                 && opCode.UsedBy.Any(
                     Code.Ldelem,
@@ -4217,6 +4222,7 @@ namespace Il2Native.Logic
 
                 for (var i = 0; i < path.Count; i++)
                 {
+                    writer.Write("ifce_");
                     writer.Write(path[i]);
 
                     if (fieldInfo != null || i < path.Count - 1)

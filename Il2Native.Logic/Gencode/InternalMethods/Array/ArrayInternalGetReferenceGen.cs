@@ -70,8 +70,14 @@
             // size + align - 1
             codeList.Add(Code.Add);
 
+            // to allow arithmetic operation on address
+            codeList.Add(Code.Conv_I);
+
             // size &= ~(align - 1)
             codeList.LoadLocal(0);
+
+            // to allow arithmetic operation on address
+            codeList.Add(Code.Conv_I);
             codeList.LoadConstant(-1);
             codeList.Add(Code.Xor);
             codeList.Add(Code.And);
@@ -174,6 +180,7 @@
             codeList.LoadArgument(0);
             codeList.Add(Code.Castclass, 9);
             codeList.LoadLocal(1);
+
             // load address of an element
             codeList.Add(Code.Ldelema, 7);
 
@@ -191,8 +198,14 @@
             // size + align - 1
             codeList.Add(Code.Add);
 
+            // to allow arithmetic operation on address
+            codeList.Add(Code.Conv_I);
+
             // size &= ~(align - 1)
             codeList.LoadLocal(2);
+
+            // to allow arithmetic operation on address
+            codeList.Add(Code.Conv_I);
             codeList.LoadConstant(-1);
             codeList.Add(Code.Xor);
             codeList.Add(Code.And);
