@@ -468,9 +468,10 @@ namespace Il2Native.Logic.Gencode
             OpCodeConstructorInfoPart opCodeConstructorInfoPart,
             IType declaringType)
         {
-            var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, declaringType.ToClass());
+            var @class = declaringType.ToClass();
+            var objectReference = cWriter.WriteVariableForNew(opCodeConstructorInfoPart, @class);
 
-            declaringType.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
+            @class.WriteCallNewObjectMethod(cWriter, opCodeConstructorInfoPart);
 
             opCodeConstructorInfoPart.Result = objectReference;
             cWriter.WriteCallConstructor(opCodeConstructorInfoPart);

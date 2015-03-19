@@ -303,11 +303,6 @@ namespace Il2Native.Logic
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(writer, opCode);
 
-            if (opCode.UsedByAlternativeValues != null)
-            {
-                this.WriteStartOfPhiValues(writer, opCode);
-            }
-
             if (firstLevel && !ProcessAsSeparateStatement(opCode))
             {
                 return;
@@ -316,6 +311,11 @@ namespace Il2Native.Logic
             if (opCode.Result != null)
             {
                 this.WriteTemporaryExpressionResult(opCode);
+            }
+
+            if (opCode.UsedByAlternativeValues != null)
+            {
+                this.WriteStartOfPhiValues(writer, opCode);
             }
 
             this.ActualWriteOpCode(writer, opCode);
@@ -960,7 +960,7 @@ namespace Il2Native.Logic
 
                     opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
 
-                    var intPtrType = this.System.System_IntPtr;
+                    var intPtrType = this.System.System_IntPtr.ToClass();
                     var voidPtrType = this.System.System_Void.ToPointerType();
                     var convertString = this.WriteToString(
                         () =>

@@ -181,6 +181,7 @@
             // IntPtr.m_value
             codeList.Add(Code.Ldfld, 3);
             // to load structure
+            codeList.Add(Code.Ldobj, 18);
             codeList.Add(Code.Box, 18);
             codeList.Add(Code.Ret);
 
@@ -192,6 +193,7 @@
             // IntPtr.m_value
             codeList.Add(Code.Ldfld, 3); 
             // to load structure
+            codeList.Add(Code.Ldobj, 19);
             codeList.Add(Code.Box, 19);
             codeList.Add(Code.Ret);
 
