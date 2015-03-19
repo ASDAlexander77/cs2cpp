@@ -2237,15 +2237,15 @@ namespace Il2Native.Logic
             var writer = this.Output;
 
             var operand = opCodeFieldInfoPart.OpCodeOperands[0];
-            var operandResultCalc = this.EstimatedResultOf(operand);
-            var operandType = operandResultCalc.Type;
+            var operandEstimatedResultOf = this.EstimatedResultOf(operand);
+            var operandType = operandEstimatedResultOf.Type;
             var effectiveType = operandType;
 
             writer.Write("(");
 
             if (effectiveType.IsValueType)
             {
-                if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
+                if (operandEstimatedResultOf.Type.IntTypeBitSize() == PointerSize * 8)
                 {
                     effectiveType = opCodeFieldInfoPart.Operand.DeclaringType;
                     this.WriteCCastOnly(effectiveType.ToPointerType());
@@ -2263,7 +2263,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeFieldInfoPart.OpCodeOperands[0]);
 
-            writer.Write(")->");
+            writer.Write(")");
+            writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
             if (opCodeFieldInfoPart.Operand.DeclaringType.IsInterface)
@@ -2287,12 +2288,14 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldAccess(CIndentedTextWriter writer, OpCodePart opCodePart, IField field, OpCodePart fixedArrayElementIndex = null)
         {
-            var operand = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-            var classType = operand.Type.IsPointer || operand.Type.IsByRef ? operand.Type.GetElementType().ToClass() : operand.Type.ToClass();
+            var operandEstimatedResultOf = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+            var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef ? operandEstimatedResultOf.Type.GetElementType().ToClass() : operandEstimatedResultOf.Type.ToClass();
 
             writer.Write("(");
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
-            writer.Write(")->");
+            writer.Write(")");
+            writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
+
             if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
@@ -2353,62 +2356,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteFieldEnd(IField field, int number, int count)
         {
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="classType">
-        /// </param>
-        /// <param name="fieldContainerType">
-        /// </param>
-        /// <param name="fieldIndex">
-        /// </param>
-        public void WriteFieldIndex(
-            CIndentedTextWriter writer,
-            IType classType,
-            IType fieldContainerType,
-            IField field,
-            int fieldIndex,
-            FullyDefinedReference fixedArrayElementIndex = null)
-        {
-            var targetType = fieldContainerType;
-            var type = classType;
-
-            // first element for pointer (IType* + 0)
-            writer.Write(", i32 0");
-
-            while (type.TypeNotEquals(targetType))
-            {
-                type = type.BaseType;
-                if (type == null)
-                {
-                    break;
-                }
-
-                // first index is base type index
-                writer.Write(", i32 0");
-            }
-
-            // find index
-            writer.Write(", i32 ");
-            writer.Write(fieldIndex + this.CalculateFirstFieldPositionInType(fieldContainerType));
-
-            // if we loading fixed data we need to convert [ 0 x Ty ]* into Ty*
-            if (field.IsFixed)
-            {
-                if (fixedArrayElementIndex != null)
-                {
-                    writer.Write(", ");
-                    fixedArrayElementIndex.Type.WriteTypePrefix(this);
-                    writer.Write(" {0}", fixedArrayElementIndex);
-                }
-                else
-                {
-                    writer.Write(", i32 0");
-                }
-            }
         }
 
         /// <summary>
