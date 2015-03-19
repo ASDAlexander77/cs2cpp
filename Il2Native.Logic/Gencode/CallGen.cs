@@ -72,7 +72,7 @@ namespace Il2Native.Logic.Gencode
                 else if (!isCtor && used != null && used.Length > 0)
                 {
                     // this expression
-                    opCodeMethodInfo.WriteFunctionCallThisExpression(
+                    var closeRequired = opCodeMethodInfo.WriteFunctionCallThisExpression(
                         thisType,
                         isCtor,
                         used[0],
@@ -82,6 +82,10 @@ namespace Il2Native.Logic.Gencode
                     if (thisType.IsInterface)
                     {
                         cWriter.WriteGetThisPointerFromInterfacePointer(used[0]);
+                        if (closeRequired)
+                        {
+                            writer.Write(")");
+                        }
                     }
                 }
 
@@ -176,7 +180,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static void WriteFunctionCallThisExpression(
+        public static bool WriteFunctionCallThisExpression(
             this OpCodePart opCodeMethodInfo,
             IType thisType,
             bool isCtor,
@@ -185,6 +189,8 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter)
         {
             var writer = cWriter.Output;
+
+            var result = false;
 
             // check if you need to cast this parameter
             var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
@@ -195,14 +201,20 @@ namespace Il2Native.Logic.Gencode
             if (!isPrimitive && !isPrimitivePointer &&
                 thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
-                cWriter.WriteCCast(opCodeFirstOperand, thisType);
-                return;
+                cWriter.WriteCCastOnly(thisType);
+
+                if (thisType.IsInterface)
+                {
+                    writer.Write("(");
+                }
+
+                result = true;
             }
 
             if (dynamicCastRequired)
             {
                 cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
-                return;
+                return result;
             }
 
             var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
@@ -235,10 +247,12 @@ namespace Il2Native.Logic.Gencode
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
 
-                return;
+                return result;
             }
 
             cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
+
+            return result;
         }
 
         /// <summary>

@@ -315,7 +315,7 @@ namespace Il2Native.Logic
 
             if (opCode.Result != null)
             {
-                WriteTemporaryExpressionResult(opCode);
+                this.WriteTemporaryExpressionResult(opCode);
             }
 
             this.ActualWriteOpCode(writer, opCode);
@@ -347,6 +347,8 @@ namespace Il2Native.Logic
             opCode.Result.Type.WriteTypePrefix(this);
             this.Output.Write(" ");
             WriteResult(opCode.Result);
+            this.Output.WriteLine(";");
+            WriteResult(opCode.Result);
             this.Output.Write(" = ");
         }
 
@@ -369,7 +371,12 @@ namespace Il2Native.Logic
 
             if (IsVirtualCallThisExpression(opCode))
             {
-                opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, this.EstimatedResultOf(opCode).Type);
+                var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
+                if (methodDeclarationType.IsInterface)
+                {
+                    opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, methodDeclarationType);
+                }
+
                 return true;
             }
 
