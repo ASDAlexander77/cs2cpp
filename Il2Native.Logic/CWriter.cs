@@ -599,17 +599,13 @@ namespace Il2Native.Logic
 
                 case Code.Stobj:
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.UnaryOper(writer, opCodeTypePart, 0, string.Empty, opCodeTypePart.Operand);
-                    this.UnaryOper(writer, opCodeTypePart, 1, " = ", opCodeTypePart.Operand);
-
+                    SaveObject(opCodeTypePart, 1);
                     break;
 
                 case Code.Cpobj:
                     // TODO: finish it properly
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.UnaryOper(writer, opCodeTypePart, 0, "*(", opCodeTypePart.Operand);
-                    this.UnaryOper(writer, opCodeTypePart, 1, ") = ", opCodeTypePart.Operand);
-
+                    SaveObject(opCodeTypePart, 1);
                     break;
 
                 case Code.Ldlen:
@@ -3685,6 +3681,19 @@ namespace Il2Native.Logic
             this.WriteOperandResultOrActualWrite(this.Output, opCodeType, operandIndex);
         }
 
+        private void SaveObject(OpCodeTypePart opCodeTypePart, int operandIndex)
+        {
+            var estimatedResult = EstimatedResultOf(opCodeTypePart.OpCodeOperands[0]);
+            if (estimatedResult.IsReference && opCodeTypePart.Operand.IsValueType())
+            {
+                this.SaveIndirect(this.Output, opCodeTypePart, opCodeTypePart.Operand);
+                return;
+            }
+
+            this.UnaryOper(this.Output, opCodeTypePart, 0, string.Empty, opCodeTypePart.Operand);
+            this.UnaryOper(this.Output, opCodeTypePart, operandIndex, " = ", opCodeTypePart.Operand);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="writer">
@@ -3801,13 +3810,18 @@ namespace Il2Native.Logic
                     break;
             }
 
+            this.SaveIndirect(writer, opCode, type);
+        }
+
+        private void SaveIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type)
+        {
             Debug.Assert(!type.IsVoid());
 
             writer.Write("*(");
 
             this.WriteCCastOnly(type.ToPointerType());
 
-            var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
+            var resultOfOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
             var destinationType = resultOfOperand0.Type;
             if (destinationType.IsByRef && destinationType.GetElementType().TypeNotEquals(type))
             {
