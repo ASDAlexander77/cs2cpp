@@ -308,10 +308,14 @@ namespace Il2Native.Logic
                 this.WriteStartOfPhiValues(writer, opCode);
             }
 
-            if (firstLevel && !opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc) && opCode.UsedBy != null
-                && opCode.UsedByAlternativeValues == null)
+            if (firstLevel && !ProcessAsSeparateStatement(opCode))
             {
                 return;
+            }
+
+            if (opCode.Result != null)
+            {
+                WriteTemporaryExpressionResult(opCode);
             }
 
             this.ActualWriteOpCode(writer, opCode);
@@ -336,6 +340,40 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
             }
+        }
+
+        private void WriteTemporaryExpressionResult(OpCodePart opCode)
+        {
+            opCode.Result.Type.WriteTypePrefix(this);
+            this.Output.Write(" ");
+            WriteResult(opCode.Result);
+            this.Output.Write(" = ");
+        }
+
+        private bool ProcessAsSeparateStatement(OpCodePart opCode)
+        {
+            if (opCode.UsedBy == null)
+            {
+                return true;
+            }
+
+            if (opCode.UsedByAlternativeValues != null)
+            {
+                return true;
+            }
+
+            if (opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc))
+            {
+                return true;
+            }
+
+            if (IsVirtualCallThisExpression(opCode))
+            {
+                opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, this.EstimatedResultOf(opCode).Type);
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -392,11 +430,15 @@ namespace Il2Native.Logic
 
                     if (float.IsPositiveInfinity(opCodeSingle.Operand))
                     {
-                        this.Output.Write("0x7FF0000000000000");
+                        this.Output.Write("0x7F800000");
                     }
                     else if (float.IsNegativeInfinity(opCodeSingle.Operand))
                     {
-                        this.Output.Write("0xFFF0000000000000");
+                        this.Output.Write("0xFF800000");
+                    }
+                    else if (float.IsNaN(opCodeSingle.Operand))
+                    {
+                        this.Output.Write("0xFFC00000");
                     }
                     else
                     {
@@ -408,11 +450,15 @@ namespace Il2Native.Logic
                     var opCodeDouble = opCode as OpCodeDoublePart;
                     if (double.IsPositiveInfinity(opCodeDouble.Operand))
                     {
-                        this.Output.Write("0x7FF0000000000000");
+                        this.Output.Write("0x7F80000000000000");
                     }
                     else if (double.IsNegativeInfinity(opCodeDouble.Operand))
                     {
-                        this.Output.Write("0xFFF0000000000000");
+                        this.Output.Write("0xFF80000000000000");
+                    }
+                    else if (double.IsNaN(opCodeDouble.Operand))
+                    {
+                        this.Output.Write("0xFFC0000000000000");
                     }
                     else
                     {
@@ -496,6 +542,9 @@ namespace Il2Native.Logic
                     }
                     else
                     {
+                        this.Output.Write("(");
+                        opCodeFieldInfoPart.Operand.FieldType.ToPointerType().WriteTypePrefix(this);
+                        this.Output.Write(")");
                         this.WriteOperandResultOrActualWrite(this.Output, opCodeFieldInfoPart, 0);
                     }
 
@@ -4601,7 +4650,7 @@ namespace Il2Native.Logic
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(method.DeclaringType);
             }
 
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsValueType)
+            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsPrimitiveType())
             {
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(method.ReturnType);
             }
@@ -4610,7 +4659,7 @@ namespace Il2Native.Logic
             if (parameters != null)
             {
                 foreach (var parameter in
-                    parameters.Where(parameter => !parameter.ParameterType.IsValueType))
+                    parameters.Where(parameter => !parameter.ParameterType.IsPrimitiveType()))
                 {
                     this.WriteTypeForwardDeclarationIfNotWrittenYet(parameter.ParameterType);
                 }
@@ -4820,7 +4869,6 @@ namespace Il2Native.Logic
                 Il2Converter.GetRequiredDeclarationTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredDeclarationType);
-                this.Output.WriteLine(";");
             }
 
             foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))

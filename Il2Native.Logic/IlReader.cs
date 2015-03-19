@@ -64,7 +64,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> _usedStructTypes;
+        private ISet<IType> _usedTypeDefinitions;
 
         /// <summary>
         /// </summary>
@@ -110,7 +110,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> usedTypes;
+        private ISet<IType> usedDeclarationTypes;
 
         /// <summary>
         /// </summary>
@@ -542,27 +542,27 @@ namespace Il2Native.Logic
         {
             get
             {
-                return this._usedStructTypes;
+                return this._usedTypeDefinitions;
             }
 
             set
             {
-                this._usedStructTypes = value;
+                this._usedTypeDefinitions = value;
             }
         }
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedTypes
+        public ISet<IType> UsedDeclarationTypes
         {
             get
             {
-                return this.usedTypes;
+                return this.usedDeclarationTypes;
             }
 
             set
             {
-                this.usedTypes = value;
+                this.usedDeclarationTypes = value;
             }
         }
 
@@ -1542,12 +1542,12 @@ namespace Il2Native.Logic
         /// </param>
         private void AddStructType(IType type)
         {
-            if (this._usedStructTypes == null || type == null || !type.IsStructureType())
+            if (this._usedTypeDefinitions == null || type == null || !type.IsStructureType())
             {
                 return;
             }
 
-            this._usedStructTypes.Add(type);
+            this._usedTypeDefinitions.Add(type);
         }
 
         /// <summary>
@@ -1564,19 +1564,29 @@ namespace Il2Native.Logic
             this.usedStaticFieldsToRead.Add(field);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        private void AddUsedType(IType type)
+        public void AddUsedTypeDefinition(IType type)
         {
-            this.AddArrayType(type);
-            if (this.usedTypes == null || type == null)
+            if (this._usedTypeDefinitions == null || type == null)
             {
                 return;
             }
 
-            this.usedTypes.Add(type);
+            this._usedTypeDefinitions.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void AddUsedType(IType type)
+        {
+            this.AddArrayType(type);
+            if (this.usedDeclarationTypes == null || type == null)
+            {
+                return;
+            }
+
+            this.usedDeclarationTypes.Add(type);
         }
 
         private void AddVirtualTable(IType type)

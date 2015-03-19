@@ -71,5 +71,9 @@
         /// <summary>
         /// </summary>
         void AddCalledMethod(IMethod method, IType ownerOfExplicitInterface = null);
+
+        /// <summary>
+        /// </summary>
+        void AddUsedTypeDefinition(IType type);
     }
 }

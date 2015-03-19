@@ -134,10 +134,15 @@ namespace Il2Native.Logic
         /// </summary>
         protected List<IConstructor> StaticConstructors { get; set; }
 
+        public static bool IsVirtualCallThisExpression(OpCodePart opCode)
+        {
+            return opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0;
+        }
+
         public void Initialize(IType type)
         {
 
-            ReadTypeInfo(type);
+            this.ReadTypeInfo(type);
             this.System = new SystemTypes(this.ThisType.Module);
             StringGen.ResetClass();
         }
@@ -638,8 +643,8 @@ namespace Il2Native.Logic
                     case Code.Ldelem_U1:
                     case Code.Ldelem_U2:
                     case Code.Ldelem_U4:
-                        var estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                        IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
+                        var estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        this.IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
                         break;
 
                     case Code.Newobj:
@@ -649,7 +654,7 @@ namespace Il2Native.Logic
                             var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
                                 this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
 
-                            IlReader.AddCalledMethod(stringCtorMethodBase);
+                            this.IlReader.AddCalledMethod(stringCtorMethodBase);
                         }
 
                         break;
@@ -662,7 +667,7 @@ namespace Il2Native.Logic
                             var tokenType = opCodeTypePart.Operand;
                             if (!tokenType.IsVirtualTableImplementation)
                             {
-                                IlReader.AddCalledMethod(tokenType.GetMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
+                                this.IlReader.AddCalledMethod(tokenType.GetMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
                             }
                         }
 
@@ -673,9 +678,10 @@ namespace Il2Native.Logic
                         var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
                         if (opCodeMethodInfoPart != null)
                         {
-                            estimatedResult = EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                             var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
-                            IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
+                            this.IlReader.AddUsedTypeDefinition(opCodeMethodInfoPart.Operand.DeclaringType);
+                            this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
                         }
 
                         break;
@@ -687,8 +693,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCodes">
         /// </param>
-        protected
-        void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
+        protected void CalculateRequiredTypesForAlternativeValues(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -870,7 +875,7 @@ namespace Il2Native.Logic
                 yield break;
             }
 
-            var opCodeNope = new OpCodePart(OpCodesEmit.Newobj, opCode.AddressStart, opCode.AddressStart);
+            var opCodeNope = new OpCodePart(OpCodes.Newobj, opCode.AddressStart, opCode.AddressStart);
             opCodeNope.ReadExceptionFromStack = true;
             opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
             yield return opCodeNope;
@@ -1570,47 +1575,47 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldelem_I))
             {
-                return System.System_Int32;
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Ldelem_I1))
             {
-                return System.System_SByte;
+                return this.System.System_SByte;
             }
 
             if (opCodePart.Any(Code.Ldelem_I2))
             {
-                return System.System_Int16;
+                return this.System.System_Int16;
             }
 
             if (opCodePart.Any(Code.Ldelem_I4))
             {
-                return System.System_Int32;
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Ldelem_U1))
             {
-                return System.System_Byte;
+                return this.System.System_Byte;
             }
 
             if (opCodePart.Any(Code.Ldelem_U2))
             {
-                return System.System_UInt16;
+                return this.System.System_UInt16;
             }
 
             if (opCodePart.Any(Code.Ldelem_U4))
             {
-                return System.System_UInt32;
+                return this.System.System_UInt32;
             }
 
             if (opCodePart.Any(Code.Ldelem_R4))
             {
-                return System.System_Single;
+                return this.System.System_Single;
             }
 
             if (opCodePart.Any(Code.Ldelem_R8))
             {
-                return System.System_Double;
+                return this.System.System_Double;
             }
 
             if (opCodePart.Any(Code.Ldelem_Ref))
@@ -1628,52 +1633,52 @@ namespace Il2Native.Logic
 
             if (opCodePart.Any(Code.Ldind_I))
             {
-                return System.System_Int32;
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Ldind_I1))
             {
-                return System.System_SByte;
+                return this.System.System_SByte;
             }
 
             if (opCodePart.Any(Code.Ldind_I2))
             {
-                return System.System_Int16;
+                return this.System.System_Int16;
             }
 
             if (opCodePart.Any(Code.Ldind_I4))
             {
-                return System.System_Int32;
+                return this.System.System_Int32;
             }
 
             if (opCodePart.Any(Code.Ldind_I8))
             {
-                return System.System_Int64;
+                return this.System.System_Int64;
             }
 
             if (opCodePart.Any(Code.Ldind_R4))
             {
-                return System.System_Single;
+                return this.System.System_Single;
             }
 
             if (opCodePart.Any(Code.Ldind_R8))
             {
-                return System.System_Double;
+                return this.System.System_Double;
             }
 
             if (opCodePart.Any(Code.Ldind_U1))
             {
-                return System.System_Byte;
+                return this.System.System_Byte;
             }
 
             if (opCodePart.Any(Code.Ldind_U2))
             {
-                return System.System_UInt16;
+                return this.System.System_UInt16;
             }
 
             if (opCodePart.Any(Code.Ldind_U4))
             {
-                return System.System_UInt32;
+                return this.System.System_UInt32;
             }
 
             if (opCodePart.Any(Code.Ldind_Ref))
