@@ -3019,7 +3019,7 @@ namespace Il2Native.Logic
         {
             if (this.forwardTypeRttiDeclarationWritten.Add(type.ToRtti()))
             {
-                if (type.AssemblyQualifiedName == AssemblyQualifiedName)
+                if (type.AssemblyQualifiedName == AssemblyQualifiedName || type.IsArray || type.IsGenericType)
                 {
                     type.WriteRtti(this);
                 }
@@ -4909,7 +4909,6 @@ namespace Il2Native.Logic
                 foreach (var method in virtualInterfaceTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
                     this.WriteMethodForwardDeclarationIfNotWrittenyet(method, null);
-                    this.Output.WriteLine(";");
                 }
 
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface, @interface);
