@@ -414,12 +414,6 @@ namespace Il2Native.Logic.Gencode
                 return;
             }
 
-            if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
-            {
-                cWriter.WriteMethodPointerType(writer, methodInfo);
-                writer.Write(" ");
-            }
-
             if (!isIndirectMethodCall)
             {
                 methodInfo.WriteFunctionNameExpression(methodAddressResultNumber, ownerOfExplicitInterface, cWriter);

@@ -129,7 +129,7 @@ namespace Il2Native.Logic.Gencode
                         writer.Write(", ");
                     }
 
-                    cWriter.WriteFunctionCallVarArgument(usedItem, usedItem.Result.Type);
+                    cWriter.WriteFunctionCallParameterArgument(usedItem);
 
                     comaRequired = true;
                     index++;
@@ -394,6 +394,13 @@ namespace Il2Native.Logic.Gencode
 
         private static void WriteFunctionCallParameterArgument(
             this CWriter cWriter,
+            OpCodePart operand)
+        {
+            cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
+        }
+
+        private static void WriteFunctionCallParameterArgument(
+            this CWriter cWriter,
             OpCodePart operand,
             IParameter parameter)
         {
@@ -401,20 +408,6 @@ namespace Il2Native.Logic.Gencode
             {
                 cWriter.WriteResultOrActualWrite(cWriter.Output, operand);
             }
-        }
-
-        private static void WriteFunctionCallVarArgument(this CWriter cWriter, OpCodePart opArg, IType type)
-        {
-            var writer = cWriter.Output;
-
-            type.WriteTypePrefix(cWriter, type.IsStructureType());
-            if (type.IsStructureType())
-            {
-                writer.Write(" byval align " + cWriter.ByValAlign);
-            }
-
-            writer.Write(' ');
-            cWriter.WriteResult(opArg);
         }
     }
 }
