@@ -136,7 +136,7 @@ namespace Il2Native.Logic
 
         public static bool IsVirtualCallThisExpression(OpCodePart opCode)
         {
-            return opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0;
+            return opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0;
         }
 
         public void Initialize(IType type)
@@ -1693,8 +1693,8 @@ namespace Il2Native.Logic
             if (opCodePart.Any(Code.Ldind_Ref))
             {
                 retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                Debug.Assert(retType != null);
-                return retType;
+                Debug.Assert(retType != null && retType.GetElementType() != null);
+                return retType.GetElementType();
             }
 
             if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))

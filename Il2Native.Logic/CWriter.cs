@@ -364,6 +364,25 @@ namespace Il2Native.Logic
                 return true;
             }
 
+            if (this.OpCodeWithVariableDeclaration(opCode))
+            {
+                if (IsVirtualCallThisExpression(opCode))
+                {
+                    var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
+                    if (methodDeclarationType.IsInterface)
+                    {
+                        opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, methodDeclarationType);
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
+        {
             if (opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc))
             {
                 return true;
@@ -371,12 +390,6 @@ namespace Il2Native.Logic
 
             if (IsVirtualCallThisExpression(opCode))
             {
-                var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
-                if (methodDeclarationType.IsInterface)
-                {
-                    opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, methodDeclarationType);
-                }
-
                 return true;
             }
 
@@ -2235,6 +2248,13 @@ namespace Il2Native.Logic
 
         public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
         {
+            if (opCode.Result != null)
+            {
+                this.Output.WriteLine(";");
+                this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+                WriteResult(opCode.Result);
+            }
+
             opCode.Result = new FullyDefinedReference(
                 "_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, this.EstimatedResultOf(opCode.UsedByAlternativeValues.Values[0]).Type);
         }
@@ -3041,7 +3061,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
 
-            if (opCode.Result == null)
+            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode))
             {
                 this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }

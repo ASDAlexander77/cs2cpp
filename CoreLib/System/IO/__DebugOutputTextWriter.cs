@@ -6,27 +6,18 @@ namespace System.IO
 
     internal class __DebugOutputTextWriter : TextWriter
     {
-        private static string NewLine = "\r\n";
-        private static string PrintString = "%.*s";
-        private static string PrintDouble = "%f";
-        private static string PrintLong = "%lld";
-        private static string PrintInt = "%ld";
-        private static string PrintChar = "%c";
+        private const string NewLine = "\r\n";
+        private const string PrintString = "%.*s";
+        private const string PrintDouble = "%f";
+        private const string PrintLong = "%lld";
+        private const string PrintInt = "%ld";
+        private const string PrintChar = "%c";
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* chars);
 
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, int length, char* chars);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, double d);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, int t);
-
-        [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* format, long t);
+        [MethodImpl(MethodImplOptions.Unmanaged)]
+        public unsafe static extern int wprintf(char* format, __arglist);
 
         internal __DebugOutputTextWriter()
             : base()
@@ -64,7 +55,7 @@ namespace System.IO
                 fixed (char* pc = PrintChar)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pc, value);
+                    wprintf(pc, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -78,7 +69,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 fixed (char* b = buffer)
                 {
-                    wprintf(ps, buffer.Length, b);
+                    wprintf(ps, __arglist(buffer.Length, b));
                     wprintf(nl);
                 }
             }
@@ -101,7 +92,7 @@ namespace System.IO
                 fixed (char* pd = PrintDouble)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pd, value);
+                    wprintf(pd, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -114,7 +105,7 @@ namespace System.IO
                 fixed (char* pd = PrintDouble)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pd, value);
+                    wprintf(pd, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -127,7 +118,7 @@ namespace System.IO
                 fixed (char* pi = PrintInt)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -141,7 +132,7 @@ namespace System.IO
                 fixed (char* pi = PrintInt)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -154,7 +145,7 @@ namespace System.IO
                 fixed (char* pi = PrintLong)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -168,7 +159,7 @@ namespace System.IO
                 fixed (char* pi = PrintLong)
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                     wprintf(nl);
                 }
             }
@@ -188,7 +179,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 fixed (char* c = chars)
                 {
-                    wprintf(ps, chars.Length, c);
+                    wprintf(ps, __arglist(chars.Length, c));
                     wprintf(nl);
                 }
             }
@@ -261,7 +252,7 @@ namespace System.IO
             {
                 fixed (char* pc = PrintChar)
                 {
-                    wprintf(pc, value);
+                    wprintf(pc, __arglist(value));
                 }
             }
         }
@@ -288,7 +279,7 @@ namespace System.IO
             {
                 fixed (char* pd = PrintDouble)
                 {
-                    wprintf(pd, value);
+                    wprintf(pd, __arglist(value));
                 }
             }
         }
@@ -304,7 +295,7 @@ namespace System.IO
             {
                 fixed (char* pd = PrintDouble)
                 {
-                    wprintf(pd, value);
+                    wprintf(pd, __arglist(value));
                 }
             }
         }
@@ -315,7 +306,7 @@ namespace System.IO
             {
                 fixed (char* pi = PrintInt)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                 }
             }
         }
@@ -327,7 +318,7 @@ namespace System.IO
             {
                 fixed (char* pi = PrintInt)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                 }
             }
         }
@@ -338,7 +329,7 @@ namespace System.IO
             {
                 fixed (char* pi = PrintLong)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                 }
             }
         }
@@ -350,7 +341,7 @@ namespace System.IO
             {
                 fixed (char* pi = PrintLong)
                 {
-                    wprintf(pi, value);
+                    wprintf(pi, __arglist(value));
                 }
             }
         }
