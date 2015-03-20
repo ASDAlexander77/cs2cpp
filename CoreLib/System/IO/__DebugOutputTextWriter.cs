@@ -6,12 +6,18 @@ namespace System.IO
 
     internal class __DebugOutputTextWriter : TextWriter
     {
-        private const string NewLine = "\r\n";
         private const string PrintString = "%.*s";
         private const string PrintDouble = "%f";
         private const string PrintLong = "%lld";
         private const string PrintInt = "%ld";
         private const string PrintChar = "%c";
+
+        private const string NewLine = "\r\n";
+        private const string PrintStringNewLine = "%.*s\r\n";
+        private const string PrintDoubleNewLine = "%f\r\n";
+        private const string PrintLongNewLine = "%lld\r\n";
+        private const string PrintIntNewLine = "%ld\r\n";
+        private const string PrintCharNewLine = "%c\r\n";
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* format, __arglist);
@@ -44,11 +50,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pc = PrintChar)
-                fixed (char* nl = NewLine)
+                fixed (char* pc = PrintCharNewLine)
                 {
                     wprintf(pc, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -57,12 +61,10 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* ps = PrintString)
-                fixed (char* nl = NewLine)
+                fixed (char* ps = PrintStringNewLine)
                 fixed (char* b = buffer)
                 {
                     wprintf(ps, __arglist(buffer.Length, b));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -81,11 +83,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = PrintDouble)
-                fixed (char* nl = NewLine)
+                fixed (char* pd = PrintDoubleNewLine)
                 {
                     wprintf(pd, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -94,11 +94,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pd = PrintDouble)
-                fixed (char* nl = NewLine)
+                fixed (char* pd = PrintDoubleNewLine)
                 {
                     wprintf(pd, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -107,11 +105,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = PrintInt)
-                fixed (char* nl = NewLine)
+                fixed (char* pi = PrintIntNewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -121,11 +117,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = PrintInt)
-                fixed (char* nl = NewLine)
+                fixed (char* pi = PrintIntNewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -134,11 +128,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = PrintLong)
-                fixed (char* nl = NewLine)
+                fixed (char* pi = PrintLongNewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -148,11 +140,9 @@ namespace System.IO
         {
             unsafe
             {
-                fixed (char* pi = PrintLong)
-                fixed (char* nl = NewLine)
+                fixed (char* pi = PrintLongNewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -167,12 +157,10 @@ namespace System.IO
             var chars = value.ToCharArray();
             unsafe
             {
-                fixed (char* ps = PrintString)
-                fixed (char* nl = NewLine)
+                fixed (char* ps = PrintStringNewLine)
                 fixed (char* c = chars)
                 {
                     wprintf(ps, __arglist(chars.Length, c));
-                    wprintf(nl, __arglist());
                 }
             }
         }
