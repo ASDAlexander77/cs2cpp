@@ -9,27 +9,19 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System.Reflection;
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedUnboxMethod : SynthesizedMethodTypeBase
+    public class SynthesizedUnboxMethod : SynthesizedIlCodeBuilderThisMethod
     {
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        public SynthesizedUnboxMethod(IType type)
-            : base(type, ".unbox")
+        public SynthesizedUnboxMethod(IType type, ITypeResolver typeResolver)
+            : base(typeResolver.GetUnboxMethod(type), ".unbox", type, type)
         {
-        }
-
-        /// <summary>
-        /// </summary>
-        public override CallingConventions CallingConvention
-        {
-            get { return CallingConventions.HasThis; }
         }
     }
 }

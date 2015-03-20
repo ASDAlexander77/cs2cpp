@@ -203,11 +203,11 @@
         }
 
         [MethodImplAttribute(MethodImplOptions.Unmanaged)]
-        internal extern unsafe static void llvm_memcpy_p0i8_p0i8_i32(byte* dst, byte* src, int len, int align, bool isVolotile);
+        internal extern unsafe static void* memcpy(void* dst, void* src, uint len);
 
         internal unsafe static void Memcpy(byte* dest, byte* src, int len)
         {
-            llvm_memcpy_p0i8_p0i8_i32(dest, src, len, 4, false);
+            memcpy(dest, src, (uint)len);
         }
     }
 }

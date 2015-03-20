@@ -354,7 +354,6 @@ namespace Il2Native.Logic
         {
             var normalType = classType.ToNormal();
             var field = IlReader.Fields(normalType, typeResolver).Where(t => !t.IsStatic).Skip(number).FirstOrDefault();
-            Debug.Assert(field != null);
             if (field == null)
             {
                 return null;

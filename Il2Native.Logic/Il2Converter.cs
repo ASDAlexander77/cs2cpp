@@ -353,7 +353,7 @@ namespace Il2Native.Logic
             // I even belive that you need to take only array which used in Code.Newarr code. and the same is for Generics
 
             Debug.Assert(typeSource != null, "Type is null");
-            if (typeSource == null || typeSource.IsValueType)
+            if (typeSource == null)
             {
                 return;
             }
@@ -364,19 +364,19 @@ namespace Il2Native.Logic
                 return;
             }
 
-            var additionalTypesToProcess = readingTypesContext.AdditionalTypesToProcess;
-            var genericSpecializations = readingTypesContext.GenericTypeSpecializations;
-            var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
+            ////var additionalTypesToProcess = readingTypesContext.AdditionalTypesToProcess;
+            ////var genericSpecializations = readingTypesContext.GenericTypeSpecializations;
+            ////var genericMethodSpecializations = readingTypesContext.GenericMethodSpecializations;
 
             ////if (additionalTypesToProcess != null && !type.IsGenericTypeDefinition && type.IsArray)
             ////{
             ////    additionalTypesToProcess.Add(type);
             ////}
 
-            if (genericSpecializations == null && genericMethodSpecializations == null)
-            {
-                return;
-            }
+            ////if (genericSpecializations == null && genericMethodSpecializations == null)
+            ////{
+            ////    return;
+            ////}
 
             ////var isGenericToDiscover = type.IsGenericType && !type.IsGenericTypeDefinition && !TypeHasGenericParameter(type)
             ////                          && !TypeHasGenericParameterInGenericArguments(type);

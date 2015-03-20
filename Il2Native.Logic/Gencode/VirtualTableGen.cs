@@ -9,13 +9,11 @@
 
 namespace Il2Native.Logic.Gencode
 {
-    using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using PEAssemblyReader;
-    using SynthesizedMethods;
 
     /// <summary>
     /// </summary>

@@ -153,6 +153,36 @@ namespace Il2Native.Logic.Gencode
             return ilCodeBuilder;
         }
 
+        public static IlCodeBuilder GetUnboxMethod(this ITypeResolver typeResolver, IType type)
+        {
+            var declaringClassType = type.ToClass();
+
+            var ilCodeBuilder = new IlCodeBuilder();
+
+            if (!type.IsStructureType())
+            {
+                var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
+                if (firstField != null)
+                {
+                    ilCodeBuilder.LoadArgument(0);
+                    ilCodeBuilder.LoadField(firstField);
+                }
+                else
+                {
+                    ilCodeBuilder.LoadConstant(0);
+                }
+            }
+            else
+            {
+                ilCodeBuilder.LoadArgument(0);
+                ilCodeBuilder.LoadObject(type);
+            }
+
+            ilCodeBuilder.Add(Code.Ret);
+
+            return ilCodeBuilder;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -297,7 +327,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var method = new SynthesizedUnboxMethod(type);
+            var method = new SynthesizedUnboxMethod(type, cWriter);
             writer.WriteLine(string.Empty);
             cWriter.WriteCall(
                 opCode,
@@ -522,78 +552,6 @@ namespace Il2Native.Logic.Gencode
             ilCodeBuilder.SizeOf(type.ToClass());
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteUnboxMethod(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            var method = new SynthesizedUnboxMethod(type);
-            writer.WriteLine("; Unbox method");
-
-            var opCode = OpCodePart.CreateNop;
-
-            var normalType = type.ToNormal();
-
-            cWriter.WriteMethodStart(method, null);
-
-            var resultPresents = cWriter.WriteUnboxObject(opCode, normalType);
-
-            writer.Write("ret ");
-            if (normalType.IsEnum)
-            {
-                normalType.GetEnumUnderlyingType().WriteTypePrefix(cWriter);
-            }
-            else
-            {
-                normalType.WriteTypePrefix(cWriter);
-            }
-
-            writer.Write(" ");
-
-            cWriter.WriteResult(opCode.Result);
-
-            cWriter.WriteMethodEnd(method, null);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool WriteUnboxObject(this CWriter cWriter, OpCodePart opCode, IType declaringType)
-        {
-            var writer = cWriter.Output;
-
-            var isStruct = declaringType.IsStructureType();
-
-            if (!isStruct)
-            {
-                // write access to a field
-                if (cWriter.WriteFieldAccess(
-                    opCode,
-                    declaringType.ToClass(),
-                    declaringType.ToClass(),
-                    0,
-                    opCode.Result) == null)
-                {
-                    writer.WriteLine("// No data");
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }

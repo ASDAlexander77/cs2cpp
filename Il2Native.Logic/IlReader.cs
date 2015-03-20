@@ -769,6 +769,7 @@ namespace Il2Native.Logic
             if ((normal.IsValueType && !normal.IsVoid()) || normal.IsEnum)
             {
                 yield return new SynthesizedBoxMethod(type, typeResolver);
+                yield return new SynthesizedUnboxMethod(type, typeResolver);
             }
 
             if (normal.IsEnum)
@@ -1253,9 +1254,9 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        if (code == Code.Unbox || code == Code.Unbox_Any)
+                        if (this.TypeResolver != null && (code == Code.Unbox || code == Code.Unbox_Any))
                         {
-                            this.AddCalledMethod(new SynthesizedUnboxMethod(type));
+                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.TypeResolver));
                         }
 
                         if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
