@@ -14,15 +14,7 @@ namespace System.IO
         private const string PrintChar = "%c";
 
         [MethodImpl(MethodImplOptions.Unmanaged)]
-        public unsafe static extern int wprintf(char* chars);
-
-        [MethodImpl(MethodImplOptions.Unmanaged)]
         public unsafe static extern int wprintf(char* format, __arglist);
-
-        internal __DebugOutputTextWriter()
-            : base()
-        {
-        }
 
         public override Encoding Encoding
         {
@@ -38,7 +30,7 @@ namespace System.IO
             {
                 fixed (char* nl = NewLine)
                 {
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -56,7 +48,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pc, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -70,7 +62,7 @@ namespace System.IO
                 fixed (char* b = buffer)
                 {
                     wprintf(ps, __arglist(buffer.Length, b));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -93,7 +85,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pd, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -106,7 +98,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pd, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -119,7 +111,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -133,7 +125,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -146,7 +138,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -160,7 +152,7 @@ namespace System.IO
                 fixed (char* nl = NewLine)
                 {
                     wprintf(pi, __arglist(value));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -180,7 +172,7 @@ namespace System.IO
                 fixed (char* c = chars)
                 {
                     wprintf(ps, __arglist(chars.Length, c));
-                    wprintf(nl);
+                    wprintf(nl, __arglist());
                 }
             }
         }
@@ -263,7 +255,7 @@ namespace System.IO
             {
                 fixed (char* b = buffer)
                 {
-                    wprintf(b);
+                    wprintf(b, __arglist());
                 }
             }
         }
@@ -357,7 +349,7 @@ namespace System.IO
             {
                 fixed (char* p = value)
                 {
-                    wprintf(p);
+                    wprintf(p, __arglist());
                 }
             }
         }
