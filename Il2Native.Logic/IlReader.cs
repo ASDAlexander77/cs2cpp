@@ -1247,7 +1247,7 @@ namespace Il2Native.Logic
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
-                            if (this.TypeResolver != null)
+                            if (this.TypeResolver != null && type.IsValueType)
                             {
                                 this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
                             }
@@ -1439,7 +1439,7 @@ namespace Il2Native.Logic
         /// </param>
         public void AddArrayType(IType type)
         {
-            if (this._usedArrayTypes == null || type == null || !type.IsArray)
+            if (this._usedArrayTypes == null || type == null || !type.IsArray || type.SpecialUsage())
             {
                 return;
             }
@@ -1547,7 +1547,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this._usedTypeDefinitions.Add(type);
+            this._usedTypeDefinitions.Add(type.ToNormal());
         }
 
         /// <summary>
@@ -1571,7 +1571,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this._usedTypeDefinitions.Add(type);
+            this._usedTypeDefinitions.Add(type.ToNormal());
         }
 
         /// <summary>
@@ -1581,12 +1581,12 @@ namespace Il2Native.Logic
         public void AddUsedType(IType type)
         {
             this.AddArrayType(type);
-            if (this.usedDeclarationTypes == null || type == null)
+            if (this.usedDeclarationTypes == null || type == null || type.SpecialUsage())
             {
                 return;
             }
 
-            this.usedDeclarationTypes.Add(type);
+            this.usedDeclarationTypes.Add(type.ToNormal());
         }
 
         private void AddVirtualTable(IType type)

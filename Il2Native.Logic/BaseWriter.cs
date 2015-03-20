@@ -2050,7 +2050,7 @@ namespace Il2Native.Logic
                         return true;
                     }
 
-                    if (this.Type.IsValueType())
+                    if (this.Type.IsValueType)
                     {
                         return false;
                     }

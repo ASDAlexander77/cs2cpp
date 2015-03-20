@@ -937,6 +937,16 @@ namespace Il2Native.Logic
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
+        public static bool NotSpecialUsage(this IType type)
+        {
+            return type != null && !type.UseAsRtti && !type.UseAsVirtualTable && !type.UseAsVirtualTableImplementation;
+        }
+
+        public static bool SpecialUsage(this IType type)
+        {
+            return type != null && (type.UseAsRtti || type.UseAsVirtualTable || type.UseAsVirtualTableImplementation);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">

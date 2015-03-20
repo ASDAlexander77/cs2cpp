@@ -807,7 +807,7 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     var type = opCodeTypePart.Operand;
-                    if (type.IsValueType())
+                    if (type.IsValueType)
                     {
                         type.WriteCallBoxObjectMethod(this, opCode);
                     }
@@ -823,7 +823,7 @@ namespace Il2Native.Logic
 
                     opCodeTypePart = opCode as OpCodeTypePart;
                     type = opCodeTypePart.Operand;
-                    if (type.IsValueType() || type.IsStructureType())
+                    if (type.IsValueType || type.IsStructureType())
                     {
                         type.WriteCallUnboxObjectMethod(this, opCode);
                     }
@@ -1757,7 +1757,7 @@ namespace Il2Native.Logic
         /// </returns>
         public bool IsTypeDefinitionWritten(IType type)
         {
-            return this.processedTypes.Contains(type);
+            return this.processedTypes.Contains(type.ToNormal());
         }
 
         public void LoadElement(
@@ -3692,7 +3692,7 @@ namespace Il2Native.Logic
         private void LoadObject(OpCodeTypePart opCodeType, int operandIndex)
         {
             var estimatedResult = EstimatedResultOf(opCodeType.OpCodeOperands[0]);
-            if (estimatedResult.IsReference && opCodeType.Operand.IsValueType())
+            if (estimatedResult.IsReference && opCodeType.Operand.IsValueType)
             {
                 this.LoadIndirect(this.Output, opCodeType, opCodeType.Operand);
                 return;
@@ -3704,7 +3704,7 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodeTypePart opCodeTypePart, int operandIndex)
         {
             var estimatedResult = EstimatedResultOf(opCodeTypePart.OpCodeOperands[0]);
-            if (estimatedResult.IsReference && opCodeTypePart.Operand.IsValueType())
+            if (estimatedResult.IsReference && opCodeTypePart.Operand.IsValueType)
             {
                 this.SaveIndirect(this.Output, opCodeTypePart, opCodeTypePart.Operand);
                 return;

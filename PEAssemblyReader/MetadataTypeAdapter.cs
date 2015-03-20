@@ -575,7 +575,6 @@ namespace PEAssemblyReader
         public IType AsRtti()
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsClass = true;
             typeAdapter.UseAsRtti = true;
             return typeAdapter;
         }
@@ -587,7 +586,6 @@ namespace PEAssemblyReader
         public IType AsVirtualTable()
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsClass = true;
             typeAdapter.UseAsVirtualTable = true;
             return typeAdapter;
         }
@@ -601,7 +599,6 @@ namespace PEAssemblyReader
         public IType AsVirtualTableImplementation(IType interfaceOwner = null)
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsClass = true;
             typeAdapter.UseAsVirtualTableImplementation = true;
             typeAdapter.InterfaceOwner = interfaceOwner;
             return typeAdapter;

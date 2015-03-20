@@ -153,6 +153,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool UseAsRtti { get; }
+
+        /// <summary>
+        /// </summary>
+        bool UseAsVirtualTable { get; }
+
+        /// <summary>
+        /// </summary>
+        bool UseAsVirtualTableImplementation { get; }
+
+        /// <summary>
+        /// </summary>
         /// <param name="setUseAsClass">
         /// </param>
         /// <param name="value">
