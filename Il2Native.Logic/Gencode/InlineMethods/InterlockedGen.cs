@@ -31,36 +31,12 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void IncDecInterlockBase(
             this OpCodePart opCodeMethodInfo,
-            string oper,
-            string attribs,
             CWriter cWriter)
         {
             var writer = cWriter.Output;
-
-            var first = opCodeMethodInfo.OpCodeOperands.First();
-            var resultType = first.Result.Type.ToDereferencedType();
-
-            writer.Write(oper);
-
-            // i32* %ptr, i32 %cmp, i32 %squared 
-            var index = 0;
-            foreach (var operand in opCodeMethodInfo.OpCodeOperands)
-            {
-                if (index++ > 0)
-                {
-                    writer.Write(", ");
-                }
-
-                operand.Result.Type.WriteTypePrefix(cWriter);
-                writer.Write(' ');
-                cWriter.WriteResult(operand.Result);
-            }
-
-            writer.Write(", ");
-            resultType.WriteTypePrefix(cWriter);
-            writer.Write(" 1");
-
-            writer.WriteLine(attribs);
+            
+            // TODO: finish ATOMIC +/-
+            writer.Write("// TODO: finish ATOMIC +/-");
         }
 
         /// <summary>
@@ -75,115 +51,17 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static void InterlockBase(
+        public static void CompareExchange(
             this OpCodePart opCodeMethodInfo,
-            string oper,
-            string attribs,
-            bool extractValue,
             CWriter cWriter,
             int[] operands)
         {
-            // TODO: finish it
             var writer = cWriter.Output;
-
-            ////writer.WriteLine("; {0} start", oper);
-
-            ////IType intType = null;
-            ////IType originalType = null;
-            ////var first = opCodeMethodInfo.OpCodeOperands.First();
-            ////var operType = first.Result.Type.ToDereferencedType();
-
-            ////// TODO: fix issue with to change value for IntPtr/UIntPtr
-
-            ////bool realExchange = false;
-            ////var pointerExchange = operType.IsClass || operType.IsDelegate || operType.IsPointer || operType.IsArray || operType.TypeEquals(cWriter.System.System_IntPtr) || operType.TypeEquals(cWriter.System.System_UIntPtr);
-            ////if (pointerExchange)
-            ////{
-            ////    intType = cWriter.GetIntTypeByByteSize(CWriter.PointerSize);
-
-            ////    cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
-            ////    writer.WriteLine(string.Empty);
-
-            ////    foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
-            ////    {
-            ////        if (originalType == null)
-            ////        {
-            ////            originalType = operand.Result.Type;
-            ////        }
-
-            ////        cWriter.WritePtrToInt(operand, operand.Result, intType);
-            ////        writer.WriteLine(string.Empty);
-            ////    }
-            ////}
-            ////else if (operType.IsReal())
-            ////{
-            ////    realExchange = true;
-            ////    intType = cWriter.GetIntTypeByByteSize(operType.Name == "Double" ? 8 : operType.Name == "Single" ? 4 : CWriter.PointerSize);
-
-            ////    // bitcast float to i32 and double to i64
-            ////    cWriter.WriteCCast(first, first.Result, intType.ToPointerType());
-            ////    writer.WriteLine(string.Empty);
-
-            ////    foreach (var operand in opCodeMethodInfo.OpCodeOperands.Skip(1))
-            ////    {
-            ////        if (originalType == null)
-            ////        {
-            ////            originalType = operand.Result.Type;
-            ////        }
-
-            ////        if (!(operand.Result is ConstValue))
-            ////        {
-            ////            cWriter.WriteCCast(operand, operand.Result, intType, false);
-            ////            writer.WriteLine(string.Empty);
-            ////        }
-            ////        else
-            ////        {
-            ////            operand.Result = new ConstValue(Convert.ToInt64(operand.Result.Name, 16), intType);
-            ////        }
-            ////    }
-            ////} 
-            
-            ////var opResult = cWriter.SetResultNumber(
-            ////    opCodeMethodInfo,
-            ////    intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
-
-            ////writer.Write(oper);
-
-            ////var index = 0;
-            ////foreach (var operandNumber in operands)
-            ////{
-            ////    cWriter.WriteParameter(index++, opCodeMethodInfo.OpCodeOperands[operandNumber]);
-            ////}
-
-            ////writer.WriteLine(attribs);
-
-            ////if (extractValue)
-            ////{
-            ////    cWriter.SetResultNumber(
-            ////        opCodeMethodInfo,
-            ////        intType ?? opCodeMethodInfo.OpCodeOperands.Skip(1).First().Result.Type);
-            ////    writer.Write("extractvalue { ");
-            ////    opResult.Type.WriteTypePrefix(cWriter);
-            ////    writer.Write(", i1 } ");
-            ////    cWriter.WriteResult(opResult);
-            ////    writer.WriteLine(", 0");
-            ////}
-
-            ////if (pointerExchange)
-            ////{
-            ////    // cast back
-            ////    cWriter.WriteIntToPtr(opCodeMethodInfo, opCodeMethodInfo.Result, originalType);
-            ////}
-            ////else if (realExchange)
-            ////{
-            ////    // cast back to float/double
-            ////    cWriter.WriteCCast(opCodeMethodInfo, opCodeMethodInfo.Result, originalType, false);
-            ////}
-
-            ////writer.WriteLine(string.Empty);
-            ////writer.WriteLine("; {0} end", oper);
-
-            cWriter.WriteOperandResultOrActualWrite(writer, opCodeMethodInfo, 1);
+            var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[operands[2]]);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[0], "compare_and_swap(", estimatedResult.Type.ToPointerType());
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[1], ", ", estimatedResult.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[2], ", ", estimatedResult.Type);
+            writer.Write(")");
         }
 
         /// <summary>
@@ -234,43 +112,23 @@ namespace Il2Native.Logic.Gencode
             switch (method.MetadataName)
             {
                 case "Increment":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw add ", " acquire", cWriter);
+                    opCodeMethodInfo.IncDecInterlockBase(cWriter);
                     break;
 
                 case "Decrement":
-                    opCodeMethodInfo.IncDecInterlockBase("atomicrmw sub ", " acquire", cWriter);
+                    opCodeMethodInfo.IncDecInterlockBase(cWriter);
                     break;
 
                 case "Exchange`1":
                 case "Exchange":
-                    opCodeMethodInfo.InterlockBase("atomicrmw xchg ", " acquire", false, cWriter, new[] { 0, 1 });
+                    ////opCodeMethodInfo.CompareExchange(cWriter, new[] { 0, 1 });
                     break;
 
                 case "CompareExchange`1":
                 case "CompareExchange":
-                    opCodeMethodInfo.InterlockBase(
-                        "cmpxchg ",
-                        " acq_rel monotonic",
-                        true,
-                        cWriter,
-                        new[] { 0, 2, 1 });
+                    opCodeMethodInfo.CompareExchange(cWriter, new[] { 0, 2, 1 }); 
                     break;
             }
-        }
-
-        private static int WriteParameter(this CWriter cWriter, int index, OpCodePart operand)
-        {
-            var writer = cWriter.Output;
-
-            if (index++ > 0)
-            {
-                writer.Write(", ");
-            }
-
-            operand.Result.Type.WriteTypePrefix(cWriter);
-            writer.Write(' ');
-            cWriter.WriteResult(operand.Result);
-            return index;
         }
     }
 }

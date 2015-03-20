@@ -815,6 +815,10 @@ namespace Il2Native.Logic
                     {
                         this.System.System_Int32.WriteCallBoxObjectMethod(this, opCode);
                     }
+                    else
+                    {
+                        UnaryOper(writer, opCode, 0, string.Empty, type);                        
+                    }
 
                     break;
 
@@ -1353,7 +1357,8 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Pop:
-                    writer.Write("// pop");
+                    writer.WriteLine("// pop");
+                    this.UnaryOper(writer, opCode, 0, string.Empty);
                     break;
 
                 case Code.Constrained:
@@ -3679,20 +3684,13 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
-            // TODO: finish it
-            ////if (opCode.OpCodeOperands[1].Result.Type.IsStructureType())
-            ////{
-            ////    // load index from struct type
-            ////    this.WriteLoadPrimitiveFromStructure(opCode.OpCodeOperands[1], opCode.OpCodeOperands[1].Result);
-            ////    this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[1], this.GetIntTypeByByteSize(PointerSize));
-            ////}
             this.LoadElement(writer, opCode, "data", type, opCode.OpCodeOperands[1], actualLoad);
         }
 
         private void LoadObject(OpCodeTypePart opCodeType, int operandIndex)
         {
             var estimatedResult = EstimatedResultOf(opCodeType.OpCodeOperands[0]);
-            if (estimatedResult.IsReference && opCodeType.Operand.IsValueType)
+            if (estimatedResult.IsReference)
             {
                 this.LoadIndirect(this.Output, opCodeType, opCodeType.Operand);
                 return;
@@ -3704,7 +3702,7 @@ namespace Il2Native.Logic
         private void SaveObject(OpCodeTypePart opCodeTypePart, int operandIndex)
         {
             var estimatedResult = EstimatedResultOf(opCodeTypePart.OpCodeOperands[0]);
-            if (estimatedResult.IsReference && opCodeTypePart.Operand.IsValueType)
+            if (estimatedResult.IsReference)
             {
                 this.SaveIndirect(this.Output, opCodeTypePart, opCodeTypePart.Operand);
                 return;

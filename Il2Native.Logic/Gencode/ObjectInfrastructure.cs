@@ -422,7 +422,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 // this is type reference, initialize it with null
-                cWriter.UnaryOper(writer, opCodePart, 0, string.Empty);
+                cWriter.LoadIndirect(writer, opCodePart, declaringTypeNormal);
                 writer.Write(" = 0");
             }
         }
