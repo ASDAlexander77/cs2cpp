@@ -55,4 +55,12 @@ extern "C" void* _ZTVN10__cxxabiv120__si_class_type_infoE;
 extern "C" void* _ZTVN10__cxxabiv121__vmi_class_type_infoE;
 extern "C" void* _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
 
+inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
+{
+	if (!src)
+	{
+		return 0;
+	}
 
+	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
+}

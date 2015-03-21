@@ -1298,15 +1298,14 @@ namespace Il2Native.Logic
 
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
-
                     case Code.Ldlen:
                         if (this.TypeResolver != null)
                         {
                             this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
                         }
 
+                        yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
-
                     default:
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;

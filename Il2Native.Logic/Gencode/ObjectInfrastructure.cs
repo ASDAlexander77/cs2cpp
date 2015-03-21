@@ -25,25 +25,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         public const int FunctionsOffsetInVirtualTable = 2;
 
-        /// <summary>
-        /// </summary>
-        /// <param name="declaringType">
-        /// </param>
-        /// <param name="typeResolver">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetVirtualTableReference(this IType declaringType, CWriter cWriter)
-        {
-            var virtualTable = declaringType.GetVirtualTable(cWriter);
-
-            return string.Format(
-                "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
-                virtualTable.GetVirtualTableSize(),
-                declaringType.GetVirtualTableName(cWriter),
-                FunctionsOffsetInVirtualTable);
-        }
-
         public static void WriteAllocateMemory(
             this CWriter cWriter,
             OpCodePart opCodePart,

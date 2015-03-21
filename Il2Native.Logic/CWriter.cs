@@ -96,7 +96,15 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly ISet<IType> typeVTableDefinitionWritten = new NamespaceContainer<IType>();
+        public readonly ISet<IType> virtualTableImplementationsWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        public readonly ISet<IType> virtualTableImplementationDeclarationsWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
+        public readonly ISet<IType> virtualTableDeclarationsWritten = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -2189,7 +2197,7 @@ namespace Il2Native.Logic
 
             writer.Write("(");
             toType.WriteTypePrefix(this);
-            writer.Write(") __dynamic_cast(");
+            writer.Write(") __dynamic_cast_null_test(");
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
@@ -3184,9 +3192,9 @@ namespace Il2Native.Logic
             this.WriteTypeDeclarationStart(type);
         }
 
-        public void WriteVirtualTableDefinition(IType type)
+        public void WriteVirtualTableDeclaration(IType type)
         {
-            if (!this.typeVTableDefinitionWritten.Add(type))
+            if (!this.virtualTableDeclarationsWritten.Add(type))
             {
                 return;
             }
@@ -3199,7 +3207,7 @@ namespace Il2Native.Logic
                 this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
             }
 
-            virtualTable.WriteTableOfMethodsAsDefinition(this, type);
+            virtualTable.WriteTableOfMethodsAsDeclaration(this, type);
             this.Output.WriteLine(string.Empty);
         }
 
@@ -4581,7 +4589,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteVirtualTableDefinition(vtableType);
+                    this.WriteVirtualTableDeclaration(vtableType);
                 }
             }
 
@@ -4842,7 +4850,7 @@ namespace Il2Native.Logic
             {
                 if (requiredType.IsVirtualTable)
                 {
-                    this.WriteVirtualTableDefinition(requiredType);
+                    this.WriteVirtualTableDeclaration(requiredType);
                     continue;
                 }
 
@@ -4859,6 +4867,18 @@ namespace Il2Native.Logic
             if (!this.stringTokenDefinitionWritten.Add(pair.Key))
             {
                 return;
+            }
+
+            if (this.virtualTableImplementationDeclarationsWritten.Add(System.System_String))
+            {
+                if (this.AssemblyQualifiedName == System.System_String.AssemblyQualifiedName)
+                {
+                    this.WriteVirtualTableImplementations(System.System_String);
+                }
+                else
+                {
+                    System.System_String.WriteVirtualTableEmptyImplementationDeclarations(this);
+                }
             }
 
             this.Output.Write(this.declarationPrefix);
@@ -4901,6 +4921,11 @@ namespace Il2Native.Logic
         {
             // write VirtualTable
             if (type.IsInterface)
+            {
+                return;
+            }
+
+            if (!this.virtualTableImplementationsWritten.Add(type.ToVirtualTableImplementation()))
             {
                 return;
             }

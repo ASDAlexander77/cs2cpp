@@ -15,8 +15,6 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
     using System.Text;
 
-    using Il2Native.Logic.CodeParts;
-
     using PEAssemblyReader;
 
     /// <summary>
@@ -135,9 +133,7 @@ namespace Il2Native.Logic.Gencode
             
             sb.AppendLine(string.Empty);
             sb.Append("(Byte*) ");
-            // TODO: finish it
-            //sb.Append(stringSystemType.GetVirtualTableReference(typeResolver));
-            sb.Append("0");
+            sb.Append(stringSystemType.GetVirtualTableNameReference(cWriter));
 
             foreach (var @interface in stringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
             {
@@ -147,9 +143,7 @@ namespace Il2Native.Logic.Gencode
                 }
 
                 sb.Append("(Byte*) ");
-                // TODO: finish it
-                //sb.Append(stringSystemType.GetVirtualTableReference(@interface, typeResolver));
-                sb.Append("0");                
+                sb.Append(stringSystemType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
             }
 
             sb.AppendLine(string.Empty);
