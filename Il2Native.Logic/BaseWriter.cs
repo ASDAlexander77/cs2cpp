@@ -136,7 +136,8 @@ namespace Il2Native.Logic
 
         public static bool IsVirtualCallThisExpression(OpCodePart opCode)
         {
-            return opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0;
+            return opCode.UsedBy != null && opCode.UsedBy.Any(Code.Callvirt) && opCode.UsedBy.OperandPosition == 0 &&
+                   !opCode.UsedBy.OpCode.Previous.Any(Code.Constrained);
         }
 
         public void Initialize(IType type)
@@ -697,6 +698,16 @@ namespace Il2Native.Logic
                             var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
                             this.IlReader.AddUsedTypeDefinition(opCodeMethodInfoPart.Operand.DeclaringType);
                             this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
+                        }
+
+                        break;
+
+                    case Code.Constrained:
+
+                        opCodeTypePart = opCodePart as OpCodeTypePart;
+                        if (opCodeTypePart != null && opCodeTypePart.Operand.IsValueType())
+                        {
+                            this.IlReader.AddCalledMethod(new SynthesizedBoxMethod(opCodeTypePart.Operand, this));
                         }
 
                         break;

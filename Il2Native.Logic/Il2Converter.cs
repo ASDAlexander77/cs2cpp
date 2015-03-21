@@ -196,12 +196,6 @@ namespace Il2Native.Logic
             ConvertingMode mode,
             bool processGenericMethodsOnly = false)
         {
-            // TODO: remove it when finish
-            if (mode == ConvertingMode.Definition && type.IsGenericType)
-            {
-                return;
-            }
-
             if (VerboseOutput)
             {
                 Trace.WriteLine(string.Format("Converting {0}, Mode: {1}", type, mode));

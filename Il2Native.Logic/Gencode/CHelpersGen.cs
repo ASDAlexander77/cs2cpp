@@ -369,8 +369,6 @@ namespace Il2Native.Logic.Gencode
             FullyDefinedReference thisResultNumber,
             TryClause tryClause)
         {
-            var writer = cWriter.Output;
-
             IType thisType;
             bool hasThisArgument;
             OpCodePart opCodeFirstOperand;

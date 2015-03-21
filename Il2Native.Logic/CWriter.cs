@@ -792,10 +792,7 @@ namespace Il2Native.Logic
                 case Code.Dup:
 
                     var estimatedResult = this.EstimatedResultOf(firstOpCodeOperand);
-                    var dupVar = string.Format("_dup{0}", opCode.AddressStart);
-                    estimatedResult.Type.WriteTypePrefix(this);
-                    this.Output.WriteLine(string.Concat(" ", dupVar, ";"));
-                    this.Output.Write(string.Concat(dupVar, " = "));
+                    var dupVar = this.WriteVariable(opCode, estimatedResult.Type, "_dup");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
 
                     // do not remove next live, it contains _dup variable
@@ -1362,21 +1359,34 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Constrained:
+                    opCodeTypePart = opCode as OpCodeTypePart;
 
-                    // to solve the problem with referencing ValueType and Class type in Generic type
-                    var nextOp = opCode.Next;
+                    var @class = opCodeTypePart.Operand.ToClass();
+                    var constrVar = this.WriteVariable(opCode, @class, "_constr");
 
-                    var firstOperandResult = this.EstimatedResultOf(nextOp.OpCodeOperands[0]);
-                    var isPrimitive = firstOperandResult.Type.IsPrimitiveTypeOrEnum();
-                    if (isPrimitive)
+                    var opCodeNone = OpCodePart.CreateNop;
+                    if (opCodeTypePart.Operand.IsValueType())
                     {
-                        // box it
-                        // convert value to object
-                        var opCodeMethodInfo = opCode.Next as OpCodeMethodInfoPart;
-                        var opCodeNone = OpCodePart.CreateNop;
-                        opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
-                        firstOperandResult.Type.ToClass().WriteCallBoxObjectMethod(this, opCodeNone);
+                        opCodeNone.OpCodeOperands = new[]
+                        {
+                            new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, opCodeTypePart.Operand)
+                            {
+                                OpCodeOperands = new[]
+                                {
+                                    opCode.Next.OpCodeOperands[0]
+                                }
+                            },
+                        };
+
+                        @class.WriteCallBoxObjectMethod(this, opCodeNone);
                     }
+                    else
+                    {
+                        opCodeNone.OpCodeOperands = new[] { opCode.Next.OpCodeOperands[0] };
+                        LoadIndirect(writer, opCodeNone, opCodeTypePart.Operand);
+                    }
+
+                    opCode.Next.OpCodeOperands[0].Result = new FullyDefinedReference(constrVar, @class);
 
                     break;
 
@@ -1457,6 +1467,15 @@ namespace Il2Native.Logic
                 case Code.Ckfinite:
                     throw new NotImplementedException();
             }
+        }
+
+        private string WriteVariable(OpCodePart opCode, IType type, string name)
+        {
+            var variable = string.Format("{0}{1}", name, opCode.AddressStart);
+            type.WriteTypePrefix(this);
+            this.Output.WriteLine(string.Concat(" ", variable, ";"));
+            this.Output.Write(string.Concat(variable, " = "));
+            return variable;
         }
 
         /// <summary>
