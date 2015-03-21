@@ -65,7 +65,7 @@ namespace Il2Native.Logic.Gencode
             effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
 
             writer.Write("(*(");
-            writer.Write("({0}*)", thisType.GetVirtualTableName());
+            writer.Write("({0}*)", thisType.GetVirtualTableName(cWriter));
 
             if (requiredInterface != null)
             {

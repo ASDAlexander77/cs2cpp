@@ -46,7 +46,7 @@ namespace Il2Native.Logic.Gencode
             type.WriteRttiClassNameString(writer);
             var singleInheritanceType = type.GetInterfaces().First();
             writer.Write(",(Byte*)&");
-            writer.Write(singleInheritanceType.GetRttiInfoName());
+            writer.Write(singleInheritanceType.GetRttiInfoName(cWriter));
             writer.Indent--;
             writer.Write("}");
         }

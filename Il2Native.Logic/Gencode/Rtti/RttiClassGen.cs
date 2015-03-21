@@ -24,33 +24,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetRttiInfoName(this IType type)
+        public static string GetRttiInfoName(this IType type, CWriter cWriter)
         {
-            return string.Concat("_RTTI_", type.FullName, " Info").CleanUpName();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetRttiStringName(this IType type)
-        {
-            return string.Concat("_RTTI_", type.FullName, " String Name").CleanUpName();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="additional">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static int StringLength(this IType type, int additional = 0)
-        {
-            return type.FullName.Length + 1 + type.FullName.Length.ToString().Length + additional;
+            return string.Concat("_RTTI_", cWriter.GetAssemblyPrefix(type), type.FullName, " Info").CleanUpName();
         }
 
         /// <summary>
@@ -91,14 +67,14 @@ namespace Il2Native.Logic.Gencode
             writer.Write("const struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
-            writer.Write(type.GetRttiInfoName());
+            writer.Write(type.GetRttiInfoName(cWriter));
             writer.WriteLine(";");
 
             writer.Write(cWriter.declarationPrefix);
             writer.Write("const struct ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(" ");
-            writer.Write(type.GetRttiPointerInfoName());
+            writer.Write(type.GetRttiPointerInfoName(cWriter));
             writer.WriteLine(";");
         }
 
@@ -127,7 +103,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.Write("const struct ");
             type.WriteRttiClassInfoDeclaration(writer);
             writer.Write(" ");
-            writer.Write(type.GetRttiInfoName());
+            writer.Write(type.GetRttiInfoName(cWriter));
             writer.Write(" = ");
             type.WriteRttiClassInfoDefinition(cWriter);
             writer.WriteLine(";");

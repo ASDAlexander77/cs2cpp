@@ -22,20 +22,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetRttiPointerInfoName(this IType type)
+        public static string GetRttiPointerInfoName(this IType type, CWriter cWriter)
         {
-            return string.Concat("_RTTI_", type.FullName, " Pointer Info").CleanUpName();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static string GetRttiPointerStringName(this IType type)
-        {
-            return string.Concat("_RTTI_", type.FullName, " Pointer String Name").CleanUpName();
+            return string.Concat("_RTTI_", cWriter.GetAssemblyPrefix(type), type.FullName, " Pointer Info").CleanUpName();
         }
 
         /// <summary>
@@ -63,9 +52,9 @@ namespace Il2Native.Logic.Gencode
             writer.Write("const struct ");
             type.WriteRttiPointerClassInfoDeclaration(writer);
             writer.Write(" ");
-            writer.Write(type.GetRttiPointerInfoName());
+            writer.Write(type.GetRttiPointerInfoName(cWriter));
             writer.Write(" = ");
-            type.WriteRttiPointerClassInfoDefinition(writer);
+            type.WriteRttiPointerClassInfoDefinition(cWriter);
             writer.WriteLine(";");
         }
 
@@ -86,8 +75,10 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="writer">
         /// </param>
-        public static void WriteRttiPointerClassInfoDefinition(this IType type, IndentedTextWriter writer)
+        public static void WriteRttiPointerClassInfoDefinition(this IType type, CWriter cWriter)
         {
+            var writer = cWriter.Output;
+
             writer.WriteLine("{");
             writer.Indent++;
             writer.WriteLine(
@@ -95,7 +86,7 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(Byte*)");
             type.WriteRttiPointerNameString(writer);
             writer.WriteLine(",0,");
-            writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName());
+            writer.WriteLine("(Byte*)&{0}", type.GetRttiInfoName(cWriter));
             writer.Indent--;
             writer.Write("}");
         }

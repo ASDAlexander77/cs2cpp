@@ -67,7 +67,7 @@ namespace Il2Native.Logic.Gencode
             if (type.BaseType != null)
             {
                 writer.Write(",");
-                writer.WriteLine("(Byte*)&{0},", type.BaseType.GetRttiInfoName());
+                writer.WriteLine("(Byte*)&{0},", type.BaseType.GetRttiInfoName(cWriter));
 
                 // if class does not have any virtual method then next value should be 0, else 2 (and next class should be +1024)
                 writer.WriteLine("{0}", nextFlag);
@@ -80,7 +80,7 @@ namespace Il2Native.Logic.Gencode
             foreach (var @interface in type.GetInterfaces())
             {
                 writer.Write(",");
-                writer.WriteLine("(Byte*)&{0},", @interface.GetRttiInfoName());
+                writer.WriteLine("(Byte*)&{0},", @interface.GetRttiInfoName(cWriter));
                 writer.WriteLine("{0}", nextFlag);
                 nextFlag += 1024;
             }

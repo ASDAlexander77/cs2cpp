@@ -33,14 +33,14 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string GetVirtualTableReference(this IType declaringType, ITypeResolver typeResolver)
+        public static string GetVirtualTableReference(this IType declaringType, CWriter cWriter)
         {
-            var virtualTable = declaringType.GetVirtualTable(typeResolver);
+            var virtualTable = declaringType.GetVirtualTable(cWriter);
 
             return string.Format(
                 "getelementptr inbounds ([{0} x i8*]* {1}, i32 0, i32 {2})",
                 virtualTable.GetVirtualTableSize(),
-                declaringType.GetVirtualTableName(),
+                declaringType.GetVirtualTableName(cWriter),
                 FunctionsOffsetInVirtualTable);
         }
 

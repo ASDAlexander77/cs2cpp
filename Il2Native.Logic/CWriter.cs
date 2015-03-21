@@ -491,7 +491,7 @@ namespace Il2Native.Logic
                     var stringType = this.System.System_String;
                     var stringToken = opCodeString.Operand.Key;
                     var strType = this.WriteToString(() => stringType.WriteTypePrefix(this));
-                    this.Output.Write("({1}) &_s{0}_", stringToken, strType);
+                    this.Output.Write("({1}) &_s{0}{2}_", stringToken, strType, this.GetAssemblyPrefix());
                     break;
                 case Code.Ldnull:
                     this.Output.Write("0/*null*/");
@@ -517,8 +517,8 @@ namespace Il2Native.Logic
                         {
                             this.Output.Write(
                                 tokenType.InterfaceOwner != null
-                                    ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType)
-                                    : tokenType.GetVirtualTableNameReference());
+                                    ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
+                                    : tokenType.GetVirtualTableNameReference(this));
                         }
                         else
                         {
@@ -814,7 +814,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        UnaryOper(writer, opCode, 0, string.Empty, type);                        
+                        UnaryOper(writer, opCode, 0, string.Empty, type);
                     }
 
                     break;
@@ -2200,8 +2200,8 @@ namespace Il2Native.Logic
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
-            writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName());
-            writer.Write(", (Void*) &{0}", toType.GetRttiInfoName());
+            writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName(this));
+            writer.Write(", (Void*) &{0}", toType.GetRttiInfoName(this));
             writer.Write(", {0})", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             if (throwExceptionIfNull)
@@ -2483,7 +2483,7 @@ namespace Il2Native.Logic
 
             if (fieldType.IsVirtualTable)
             {
-                this.Output.Write(fieldType.GetVirtualTableName());
+                this.Output.Write(fieldType.GetVirtualTableName(this));
                 this.Output.Write("*");
             }
             else
@@ -2588,12 +2588,24 @@ namespace Il2Native.Logic
                 (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray ||
                  (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)))
             {
-                writer.Write("A");
-                writer.Write(this.AssemblyQualifiedName.Substring(0, this.AssemblyQualifiedName.Length - 4));
-                writer.Write("_");
+                writer.Write(this.GetAssemblyPrefix());
             }
 
             writer.Write(name);
+        }
+
+        public string GetAssemblyPrefix(IType type = null)
+        {
+            if (type != null && !(type.IsArray || type.IsGenericType))
+            {
+                return string.Empty;
+            }
+
+            var length = this.AssemblyQualifiedName.Length >= 4 &&
+                         this.AssemblyQualifiedName[this.AssemblyQualifiedName.Length - 4] == '.'
+                ? this.AssemblyQualifiedName.Length - 4
+                : this.AssemblyQualifiedName.Length;
+            return string.Concat("A", this.AssemblyQualifiedName.Substring(0, length), "_");
         }
 
         /// <summary>
@@ -4862,11 +4874,12 @@ namespace Il2Native.Logic
 
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "const struct {1} _s{0}_ = {3} {2}",
+                "const struct {1} _s{0}{4}_ = {3} {2}",
                 pair.Key,
                 this.GetStringTypeHeader(pair.Value.Length + 1),
                 this.GetStringValuesHeader(pair.Value.Length + 1, pair.Value.Length),
-                "{");
+                "{",
+                this.GetAssemblyPrefix());
 
             this.Output.Write("{ ");
 
