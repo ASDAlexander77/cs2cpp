@@ -2580,7 +2580,20 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            writer.Write(shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface));
+            var name = shortName
+                ? methodBase.GetMethodName(ownerOfExplicitInterface)
+                : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+
+            if (!shortName &&
+                (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray ||
+                 (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)))
+            {
+                writer.Write("A");
+                writer.Write(this.AssemblyQualifiedName.Substring(0, this.AssemblyQualifiedName.Length - 4));
+                writer.Write("_");
+            }
+
+            writer.Write(name);
         }
 
         /// <summary>
