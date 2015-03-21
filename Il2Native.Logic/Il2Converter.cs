@@ -1083,37 +1083,6 @@ namespace Il2Native.Logic
             return usedTypes;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static bool TypeHasGenericParameter(IType type)
-        {
-            return type.IsGenericParameter
-                   || type.GenericTypeArguments.Any(
-                       t =>
-                           t.IsGenericParameter ||
-                           t.IsGenericType && (t.IsGenericTypeDefinition || TypeHasGenericParameter(t))
-                           || t.HasElementType && TypeHasGenericParameter(t.GetElementType()));
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private static bool TypeHasGenericParameterInGenericArguments(IType type)
-        {
-            return type.IsGenericParameter
-                   || type.GenericTypeArguments.Any(
-                       t =>
-                       t.IsGenericParameter || t.ContainsGenericParameters && TypeHasGenericParameterInGenericArguments(t)
-                       || t.HasElementType && TypeHasGenericParameterInGenericArguments(t.GetElementType()));
-        }
-
         private static void Writing(
             IlReader ilReader,
             ICodeWriter codeWriter,

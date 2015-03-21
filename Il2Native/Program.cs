@@ -179,18 +179,17 @@ namespace Il2Native
 
             // you need to get target
             var llvmDummyWriter = new CWriter(string.Empty, string.Empty, string.Empty, processedArgs);
-            var target = llvmDummyWriter.Target;
 
             // next step compile CoreLib
             Console.Write("Compiling LLVM IR file for CoreLib...");
             var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
-            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", coreLibNameNoExt, target));
+            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", coreLibNameNoExt, ""));
             Console.WriteLine("Done.");
             
             // compile generated dll
             Console.Write("Compiling LLVM IR file...");
             var targetFileNameNoExt = Path.GetFileNameWithoutExtension(sources.First());
-            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", targetFileNameNoExt, target));
+            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", targetFileNameNoExt, ""));
             Console.WriteLine("Done.");
 
             // detect OBJ extention

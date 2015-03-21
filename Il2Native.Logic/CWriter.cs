@@ -37,8 +37,6 @@ namespace Il2Native.Logic
         /// </summary>
         public static int PointerSize = 4;
 
-        public int ByValAlign = PointerSize;
-
         /// <summary>
         /// </summary>
         public Stack<CatchOfFinallyClause> catchScopes = new Stack<CatchOfFinallyClause>();
@@ -190,10 +188,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool Stubs { get; private set; }
-
-        /// <summary>
-        /// </summary>
-        public string Target { get; private set; }
 
         public ISet<IType> TypeTokenRequired
         {
@@ -1925,26 +1919,20 @@ namespace Il2Native.Logic
         public void ReadParameters(string[] args)
         {
             // custom settings
-            var targetArg = args != null ? args.FirstOrDefault(a => a.StartsWith("target:")) : null;
-            this.Target = targetArg != null ? targetArg.Substring("target:".Length) : null;
             this.Gc = args == null || !args.Contains("gc-");
-            this.Gctors = args == null || !args.Contains("gctors-");
+            this.Gctors = false;
 
             this.Stubs = args != null && args.Contains("stubs");
 
             // prefefined settings
             if (args != null && args.Contains("android"))
             {
-                this.Target = this.Target ?? "armv7-none-linux-androideabi";
                 this.Gctors = false;
-                this.ByValAlign = Math.Max(PointerSize, 8);
             }
             else if (args != null && args.Contains("emscripten"))
             {
-                this.Target = this.Target ?? "asmjs-unknown-emscripten";
                 this.Gc = false;
             }
-            this.Target = this.Target ?? "i686-w64-mingw32";
         }
 
         /// <summary>
@@ -2090,6 +2078,11 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteConstructorStart(IMethod ctor, IGenericContext genericContext)
         {
+            if (ctor.IsStatic)
+            {
+                this.StaticConstructors.Add(ctor);
+            }
+
             this.WriteMethodStart(ctor, genericContext);
         }
 
@@ -2254,17 +2247,17 @@ namespace Il2Native.Logic
         /// </summary>
         public void WriteEnd()
         {
-            if (this.MainMethod != null)
-            {
-                this.WriteMainFunction();
-            }
-
             this.WriteGlobalConstructors();
 
             if (this.MainMethod != null && !this.Gctors)
             {
                 this.Output.WriteLine(string.Empty);
-                this.WriteCallGctorsDeclarations();
+                this.WriteCallGctors(true);
+            }
+
+            if (this.MainMethod != null)
+            {
+                this.WriteMainFunction();
             }
 
             this.Output.Close();
@@ -3641,7 +3634,7 @@ namespace Il2Native.Logic
         /// </returns>
         private string GetGlobalConstructorsFunctionName()
         {
-            return this.GetGlobalConstructorsFunctionName(Path.GetFileNameWithoutExtension(this.AssemblyQualifiedName));
+            return this.GetGlobalConstructorsFunctionName(this.AssemblyQualifiedName);
         }
 
         /// <summary>
@@ -3906,7 +3899,7 @@ namespace Il2Native.Logic
         /// </summary>
         private void SortStaticConstructorsByUsage()
         {
-            var staticConstructors = new Dictionary<IConstructor, ISet<IType>>();
+            var staticConstructors = new Dictionary<IMethod, ISet<IType>>();
             foreach (var staticCtor in this.StaticConstructors)
             {
                 var methodWalker = new MethodsWalker(staticCtor);
@@ -3915,7 +3908,7 @@ namespace Il2Native.Logic
             }
 
             // rebuild order
-            var newStaticConstructors = new List<IConstructor>();
+            var newStaticConstructors = new List<IMethod>();
 
             var countBefore = 0;
             do
@@ -3973,22 +3966,17 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private void WriteCallGctors()
+        private void WriteCallGctors(bool declaration)
         {
             // get all references
-            foreach (var reference in this.AllReferences.Reverse().Distinct())
+            foreach (var reference in this.AllReferences.Skip(declaration ? 1 : 0).Reverse().Distinct())
             {
-                this.Output.WriteLine(this.GetGlobalConstructorsFunctionName(reference) + "();");
-            }
-        }
+                if (declaration)
+                {
+                    this.Output.Write(this.declarationPrefix);
+                    this.Output.Write(" void ");
+                }
 
-        /// <summary>
-        /// </summary>
-        private void WriteCallGctorsDeclarations()
-        {
-            // get all references
-            foreach (var reference in this.AllReferences.Skip(1).Reverse().Distinct())
-            {
                 this.Output.WriteLine(this.GetGlobalConstructorsFunctionName(reference) + "();");
             }
         }
@@ -4144,7 +4132,8 @@ namespace Il2Native.Logic
 
             foreach (var staticCtor in this.StaticConstructors)
             {
-                this.Output.WriteLine("{0}();", staticCtor.GetFullMethodName());
+                WriteMethodDefinitionName(this.Output, staticCtor);
+                this.Output.WriteLine("();");
             }
 
             this.Output.Indent--;
@@ -4302,7 +4291,7 @@ namespace Il2Native.Logic
 
             if (!this.Gctors)
             {
-                this.WriteCallGctors();
+                this.WriteCallGctors(false);
             }
 
             ////var result = hasParameters ? this.WriteLoadingArgumentsForMain(MainMethod, null) : null;
