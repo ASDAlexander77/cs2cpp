@@ -753,13 +753,16 @@ namespace Il2Native.Logic
                         opCodeOperand1 = opCodePart.OpCodeOperands[1];
                         op1 = EstimatedResultOf(opCodeOperand0);
                         op2 = EstimatedResultOf(opCodeOperand1);
-                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
+
+                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)) &&
+                            op1.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand1))
                         {
-                            ReplaceOperand(opCodePart.UsedBy.OpCode, opCodeOperand0);
+                            ReplaceOperand(opCodePart, opCodeOperand0);
                         }
-                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
+                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)) &&
+                                 op2.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand0))
                         {
-                            ReplaceOperand(opCodePart.UsedBy.OpCode, opCodeOperand1);
+                            ReplaceOperand(opCodePart, opCodeOperand1);
                         }
 
                         break;
