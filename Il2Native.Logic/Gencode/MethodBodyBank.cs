@@ -44,7 +44,7 @@
             {
                 if (method.Name == ".ctor" && method.DeclaringType.FullName != "System.Delegate")
                 {
-                    return DelegateGen.GetDelegateConstructorMethod(typeResolver, method.DeclaringType).GetMethod(method);
+                    return typeResolver.GetDelegateConstructorMethod(method.DeclaringType).GetMethod(method);
                 }
 
                 if (method.Name == "Invoke" && method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
