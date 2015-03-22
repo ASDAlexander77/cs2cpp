@@ -1902,19 +1902,19 @@ namespace Il2Native.Logic
         public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type)
         {
             // next code fixing issue with using Code.Ldind to load first value in value types
-            var resultOfOperand0 = opCode.OpCodeOperands[0].Result;
-            var isUsedAsClass = resultOfOperand0 != null && resultOfOperand0.Type.UseAsClass;
+            var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
+            var isUsedAsClass = resultOfOperand0.Type.IsClass;
             if (isUsedAsClass)
             {
-                resultOfOperand0 = resultOfOperand0.ToNormalType();
+                resultOfOperand0 = new ReturnResult(resultOfOperand0.Type.ToNormal());
             }
 
             writer.Write("*((");
             type.ToPointerType().WriteTypePrefix(this);
             writer.Write(")");
 
-            var isValueType = resultOfOperand0 != null && resultOfOperand0.Type.IsValueType;
-            if (isValueType && (isUsedAsClass || resultOfOperand0.Type.IsStructureType()))
+            var isValueType = resultOfOperand0.Type.IsValueType;
+            if (isValueType && isUsedAsClass && !resultOfOperand0.Type.IsStructureType())
             {
                 // write first field access
                 writer.Write("&");
