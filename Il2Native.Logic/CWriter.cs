@@ -375,6 +375,10 @@ namespace Il2Native.Logic
                     {
                         opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, methodDeclarationType);
                     }
+                    else
+                    {
+                        return false;
+                    }
                 }
 
                 return true;
