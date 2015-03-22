@@ -723,7 +723,11 @@ namespace Il2Native.Logic
                 switch (opCodePart.ToCode())
                 {
                     case Code.Add:
+                    case Code.Add_Ovf:
+                    case Code.Add_Ovf_Un:
                     case Code.Sub:
+                    case Code.Sub_Ovf:
+                    case Code.Sub_Ovf_Un:
 
                         var opCodeOperand0 = opCodePart.OpCodeOperands[0];
                         var opCodeOperand1 = opCodePart.OpCodeOperands[1];
@@ -764,7 +768,7 @@ namespace Il2Native.Logic
                     var opCodeOperand1 = index.OpCodeOperands[1];
 
                     var op0Size = GetIntegerValueFromOpCode(opCodeOperand0);
-                    var op1Size = GetIntegerValueFromOpCode(opCodeOperand0); 
+                    var op1Size = GetIntegerValueFromOpCode(opCodeOperand1); 
 
                     // case '* sizepf'
                     if (opCodeOperand0.Any(Code.Sizeof) && (opCodeOperand0 as OpCodeTypePart).Operand.Equals(type))
@@ -1092,7 +1096,7 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (opCode.Any(Code.Add, Code.Sub))
+            if (opCode.Any(Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un))
             {
                 return true;
             }
