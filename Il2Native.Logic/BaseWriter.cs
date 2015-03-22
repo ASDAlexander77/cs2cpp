@@ -729,22 +729,48 @@ namespace Il2Native.Logic
                     case Code.Sub_Ovf:
                     case Code.Sub_Ovf_Un:
 
+                        // TO FIX pointer operations;
+
                         var opCodeOperand0 = opCodePart.OpCodeOperands[0];
                         var opCodeOperand1 = opCodePart.OpCodeOperands[1];
                         var op1 = EstimatedResultOf(opCodeOperand0);
                         var op2 = EstimatedResultOf(opCodeOperand1);
-                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || opCodeOperand1.Any(Code.Conv_I, Code.Conv_U)))
+                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
                             FixPointerOperation(opCodeOperand0, opCodeOperand1, op1.Type.GetElementType());
                         }
-                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || opCodeOperand0.Any(Code.Conv_I, Code.Conv_U)))
+                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
                             FixPointerOperation(opCodeOperand1, opCodeOperand0, op2.Type.GetElementType());
                         }
 
                         break;
+
+                    case Code.Div:
+                    case Code.Div_Un:
+
+                        opCodeOperand0 = opCodePart.OpCodeOperands[0];
+                        opCodeOperand1 = opCodePart.OpCodeOperands[1];
+                        op1 = EstimatedResultOf(opCodeOperand0);
+                        op2 = EstimatedResultOf(opCodeOperand1);
+                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
+                        {
+                            ReplaceOperand(opCodePart.UsedBy.OpCode, opCodeOperand0);
+                        }
+                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
+                        {
+                            ReplaceOperand(opCodePart.UsedBy.OpCode, opCodeOperand1);
+                        }
+
+                        break;
+
                 }
             }
+        }
+
+        private static bool IsPointerConvert(OpCodePart opCodeOperand1)
+        {
+            return opCodeOperand1.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I, Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un);
         }
 
         private void FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
@@ -753,7 +779,11 @@ namespace Il2Native.Logic
             switch (index.ToCode())
             {
                 case Code.Conv_I:
+                case Code.Conv_Ovf_I:
+                case Code.Conv_Ovf_I_Un:
                 case Code.Conv_U:
+                case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U_Un:
 
                     var value = GetIntegerValueFromOpCode(index.OpCodeOperands[0]);
                     if (value > 0 && value % typeSize == 0)
@@ -768,7 +798,7 @@ namespace Il2Native.Logic
                     var opCodeOperand1 = index.OpCodeOperands[1];
 
                     var op0Size = GetIntegerValueFromOpCode(opCodeOperand0);
-                    var op1Size = GetIntegerValueFromOpCode(opCodeOperand1); 
+                    var op1Size = GetIntegerValueFromOpCode(opCodeOperand1);
 
                     // case '* sizepf'
                     if (opCodeOperand0.Any(Code.Sizeof) && (opCodeOperand0 as OpCodeTypePart).Operand.Equals(type))
@@ -1091,15 +1121,15 @@ namespace Il2Native.Logic
                 return false;
             }
 
-            if (!opCode.OpCodeOperands.Any(o => this.EstimatedResultOf(o).Type.IsPointer))
-            {
-                return false;
-            }
-
-            if (opCode.Any(Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un))
+            if (opCode.OpCodeOperands.Any(o => this.EstimatedResultOf(o).Type.IsPointer))
             {
                 return true;
             }
+
+            ////if (opCode.Any(Code.Add, Code.Add_Ovf, Code.Add_Ovf_Un, Code.Sub, Code.Sub_Ovf, Code.Sub_Ovf_Un))
+            ////{
+            ////    return true;
+            ////}
 
             return false;
         }
