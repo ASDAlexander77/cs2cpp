@@ -729,11 +729,11 @@ namespace Il2Native.Logic
                         var opCodeOperand1 = opCodePart.OpCodeOperands[1];
                         var op1 = EstimatedResultOf(opCodeOperand0);
                         var op2 = EstimatedResultOf(opCodeOperand1);
-                        if (op1.Type.IsPointer && !op2.Type.IsPointer)
+                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || opCodeOperand1.Any(Code.Conv_I, Code.Conv_U)))
                         {
                             FixPointerOperation(opCodeOperand0, opCodeOperand1, op1.Type.GetElementType());
                         }
-                        else if (op2.Type.IsPointer && !op1.Type.IsPointer)
+                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || opCodeOperand0.Any(Code.Conv_I, Code.Conv_U)))
                         {
                             FixPointerOperation(opCodeOperand1, opCodeOperand0, op2.Type.GetElementType());
                         }
@@ -748,27 +748,23 @@ namespace Il2Native.Logic
             var typeSize = type.GetTypeSize(this, true);
             switch (index.ToCode())
             {
-                case Code.Ldc_I4_0:
-                case Code.Ldc_I4_1:
-                case Code.Ldc_I4_2:
-                case Code.Ldc_I4_3:
-                case Code.Ldc_I4_4:
-                case Code.Ldc_I4_5:
-                case Code.Ldc_I4_6:
-                case Code.Ldc_I4_7:
-                case Code.Ldc_I4_8:
-                case Code.Ldc_I4_M1:
-                case Code.Ldc_I4:
-                case Code.Ldc_I4_S:
-                case Code.Ldc_I8:
+                case Code.Conv_I:
+                case Code.Conv_U:
 
-                    var value = GetIntegerValueFromOpCode(index);
+                    var value = GetIntegerValueFromOpCode(index.OpCodeOperands[0]);
+                    if (value > 0 && value % typeSize == 0)
+                    {
+                        ReplaceOperand(index.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
+                    }
 
                     break;
 
                 case Code.Mul:
                     var opCodeOperand0 = index.OpCodeOperands[0];
                     var opCodeOperand1 = index.OpCodeOperands[1];
+
+                    var op0Size = GetIntegerValueFromOpCode(opCodeOperand0);
+                    var op1Size = GetIntegerValueFromOpCode(opCodeOperand0); 
 
                     // case '* sizepf'
                     if (opCodeOperand0.Any(Code.Sizeof) && (opCodeOperand0 as OpCodeTypePart).Operand.Equals(type))
@@ -784,31 +780,22 @@ namespace Il2Native.Logic
                         ReplaceOperand(index, opCodeOperand0);
                     }
 
+                    // case '* sizepf'
+                    if (op0Size > 0 && typeSize == op0Size)
+                    {
+                        // disable which mul
+                        ReplaceOperand(index, opCodeOperand1);
+                    }
+
+                    // case '* sizepf'
+                    if (op1Size > 0 && typeSize == op1Size)
+                    {
+                        // disable which mul
+                        ReplaceOperand(index, opCodeOperand0);
+                    }
+
                     break;
             }
-        }
-
-        private bool IsIntegerConstOpCode(OpCodePart opCodePart)
-        {
-            switch (opCodePart.ToCode())
-            {
-                case Code.Ldc_I4_0:
-                case Code.Ldc_I4_1:
-                case Code.Ldc_I4_2:
-                case Code.Ldc_I4_3:
-                case Code.Ldc_I4_4:
-                case Code.Ldc_I4_5:
-                case Code.Ldc_I4_6:
-                case Code.Ldc_I4_7:
-                case Code.Ldc_I4_8:
-                case Code.Ldc_I4_M1:
-                case Code.Ldc_I4:
-                case Code.Ldc_I4_S:
-                case Code.Ldc_I8:
-                    return true;
-            }
-
-            return false;
         }
 
         private long GetIntegerValueFromOpCode(OpCodePart opCodePart)
@@ -839,7 +826,7 @@ namespace Il2Native.Logic
                     return opCodeInt64.Operand;
             }
 
-            throw new NotSupportedException();
+            return -2;
         }
 
         private void ReplaceOperand(OpCodePart oldOperand, OpCodePart newOperand)
