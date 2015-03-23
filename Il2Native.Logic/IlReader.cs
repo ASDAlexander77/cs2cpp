@@ -649,6 +649,12 @@ namespace Il2Native.Logic
             }
         }
 
+        public static IConstructor FindConstructor(IType type, IType firstParameterType, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Constructors(type, typeResolver)
+                        .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">
@@ -1155,6 +1161,14 @@ namespace Il2Native.Logic
 
                         this.AddCalledMethod(method);
 
+                        if (this.TypeResolver != null)
+                        {
+                            var intPtrConstructor = Logic.IlReader.FindConstructor(
+                                this.TypeResolver.System.System_IntPtr, this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
+                            this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.TypeResolver));
+                            this.AddCalledMethod(intPtrConstructor);
+                        }
+
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
                     case Code.Stfld:
@@ -1656,7 +1670,7 @@ namespace Il2Native.Logic
             parameters.GenerateInMemory = false;
             parameters.CompilerOptions =
                 string.Concat(
-                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty), 
+                    string.Format("/optimize{0} /unsafe+{1}", this.DebugInfo ? "-" : "+", this.DebugInfo ? " /debug:full" : string.Empty),
                     string.IsNullOrWhiteSpace(this.CoreLibPath) ? string.Empty : string.Format(" /nostdlib+ /r:\"{0}\"", this.CoreLibPath));
             parameters.OutputAssembly = outDll;
 

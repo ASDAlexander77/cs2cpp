@@ -2941,9 +2941,7 @@ namespace Il2Native.Logic
             OpCodePart opCode, IType type, IType firstParameterType, FullyDefinedReference firstParameterValue)
         {
             // find constructor
-            var constructorInfo =
-                Logic.IlReader.Constructors(type, this)
-                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+            var constructorInfo = Logic.IlReader.FindConstructor(type, firstParameterType, this);
 
             ////Debug.Assert(constructorInfo != null, "Could not find required constructor");
             type.WriteCallNewObjectMethod(this, opCode);
