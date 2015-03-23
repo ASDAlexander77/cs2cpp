@@ -390,7 +390,7 @@ namespace Il2Native.Logic.Gencode
             
             writer.Write(type.GetVirtualTableName(cWriter));
             writer.Write(" ");
-            VirtualTableDeclaration(virtualTable, cWriter, true);
+            VirtualTableDeclaration(virtualTable, cWriter, true, type);
             cWriter.Output.Write(";");
         }
 
@@ -463,7 +463,7 @@ namespace Il2Native.Logic.Gencode
             }
         }
 
-        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, bool methodsOnly = false)
+        private static void VirtualTableDeclaration(List<CWriter.Pair<IMethod, IMethod>> virtualTable, CWriter cWriter, bool methodsOnly = false, IType declarationType = null)
         {
             var writer = cWriter.Output;
 
@@ -488,7 +488,7 @@ namespace Il2Native.Logic.Gencode
                 writer.Write("(*");
                 cWriter.WriteMethodDefinitionName(writer, method, shortName: methodsOnly);
                 writer.Write(")");
-                cWriter.WriteMethodParamsDef(writer, method, true, method.DeclaringType, method.ReturnType, true);
+                cWriter.WriteMethodParamsDef(writer, method, true, declarationType ?? method.DeclaringType, method.ReturnType, true);
 
                 // write method pointer
                 writer.WriteLine(";");
