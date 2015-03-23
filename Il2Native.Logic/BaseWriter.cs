@@ -736,6 +736,32 @@ namespace Il2Native.Logic
                         }
 
                         break;
+
+                    case Code.Unbox:
+                    case Code.Unbox_Any:
+
+                        opCodeTypePart = opCodePart as OpCodeTypePart;
+                        if (opCodeTypePart != null)
+                        {
+                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            var type = estimatedResult.Type;
+                            if (type.IsPointer || type.IsByRef)
+                            {
+                                type = type.GetElementType();
+                                if (type.IsVoid())
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (!type.IsDerivedFrom(opCodeTypePart.Operand))
+                            {
+                                this.IlReader.AddRtti(opCodeTypePart.Operand.ToRtti());
+                            }
+                        }
+
+                        break;
+
                 }
             }
         }

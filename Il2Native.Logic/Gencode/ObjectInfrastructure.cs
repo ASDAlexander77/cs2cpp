@@ -306,10 +306,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void WriteCallUnboxObjectMethod(this IType type, CWriter cWriter, OpCodePart opCode)
         {
-            var writer = cWriter.Output;
-
             var method = new SynthesizedUnboxMethod(type, cWriter);
-            writer.WriteLine(string.Empty);
             cWriter.WriteCall(
                 opCode,
                 method,
