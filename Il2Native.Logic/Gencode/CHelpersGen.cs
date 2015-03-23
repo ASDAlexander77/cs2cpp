@@ -67,14 +67,13 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(*(");
             writer.Write("({0}*)", thisType.GetVirtualTableName(cWriter));
 
-            if (requiredInterface != null)
+            if (requiredInterface != null || effectiveType.IsInterface)
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, requiredInterface.GetFieldByName("vtable", cWriter));
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
             }
             else
             {
-                cWriter.WriteFieldAccess(
-                    writer, opCodeMethodInfo, (effectiveType.IsInterface ? effectiveType : cWriter.System.System_Object).GetFieldByName("vtable", cWriter));
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
             }
 
             writer.Write(")->");

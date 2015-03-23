@@ -3306,7 +3306,7 @@ namespace Il2Native.Logic
             while (currentType.BaseType != null && currentType.BaseType.GetAllInterfaces().Contains(@interface))
             {
                 // add base index;
-                indexes.Add("base.");
+                indexes.Add("base");
                 baseCount++;
                 currentType = currentType.BaseType;
             }
@@ -4166,7 +4166,11 @@ namespace Il2Native.Logic
 
                 for (var i = 0; i < path.Count; i++)
                 {
-                    writer.Write("ifce_");
+                    if (path[i] != "base")
+                    {
+                        writer.Write("ifce_");
+                    }
+
                     writer.Write(path[i]);
 
                     if (fieldInfo != null || i < path.Count - 1)
