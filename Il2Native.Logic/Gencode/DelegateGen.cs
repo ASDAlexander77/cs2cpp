@@ -44,6 +44,8 @@ namespace Il2Native.Logic.Gencode
 
             AddDelegateInvokeBody(codeList, method, typeResolver);
 
+            codeList.Add(Code.Ret);
+
             codeList.Add(jumpForBrtrue_S);
 
             codeList.LoadConstant(0);
