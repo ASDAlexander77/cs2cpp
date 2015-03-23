@@ -31,7 +31,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            if (method.DeclaringType.FullName != "System.Activator")
+            if (method.DeclaringType == null || method.DeclaringType.FullName != "System.Activator")
             {
                 return false;
             }

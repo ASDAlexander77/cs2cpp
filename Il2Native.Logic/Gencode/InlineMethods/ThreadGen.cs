@@ -29,7 +29,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            if (method.DeclaringType.FullName != "System.Threading.Thread")
+            if (method.DeclaringType == null || method.DeclaringType.FullName != "System.Threading.Thread")
             {
                 return false;
             }

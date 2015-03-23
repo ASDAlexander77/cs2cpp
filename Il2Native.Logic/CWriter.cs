@@ -2720,12 +2720,12 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
+        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false)
         {
             var methodInfo = methodBase;
             this.WriteMethodReturnType(writer, methodBase);
             writer.Write("(*)(");
-            var hasThis = !methodInfo.IsStatic;
+            var hasThis = !methodInfo.IsStatic && !asStatic;
             if (hasThis)
             {
                 (thisType ?? methodInfo.DeclaringType.ToClass()).WriteTypePrefix(this);

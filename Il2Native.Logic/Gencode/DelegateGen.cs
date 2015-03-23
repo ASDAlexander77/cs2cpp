@@ -256,16 +256,35 @@ namespace Il2Native.Logic.Gencode
         private static void AddDelegateInvokeBody(IlCodeBuilder codeBuilder, IMethod method, ITypeResolver typeResolver)
         {
             var delegateType = typeResolver.System.System_Delegate;
+
+            codeBuilder.LoadArgument(0);
+            var targetField = delegateType.GetFieldByName("_target", typeResolver, true);
+            codeBuilder.LoadField(targetField);
+
+            var jumpToThisCall = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+
+            codeBuilder.Call(GetInvokeCallMethod(method, typeResolver, true));
+
+            var jumpToSkipThisCall =  codeBuilder.Branch(Code.Br, Code.Br_S);
+
+            codeBuilder.Add(jumpToThisCall);
+
+            codeBuilder.Call(GetInvokeCallMethod(method, typeResolver, false));
+
+            codeBuilder.Add(jumpToSkipThisCall);
+        }
+
+        private static SynthesizedInlinedTextMethod GetInvokeCallMethod(IMethod method, ITypeResolver typeResolver, bool isStatic)
+        {
+            var delegateType = typeResolver.System.System_Delegate;
             var intPtrType = typeResolver.System.System_IntPtr;
 
-            // TODO: add test for static call 
-            codeBuilder.Call(
-                new SynthesizedInlinedTextMethod(
-                    string.Empty,
-                    delegateType,
-                    method.ReturnType,
-                    new IParameter[0],
-                    (cWriter, opCodePart) =>
+            return new SynthesizedInlinedTextMethod(
+                string.Empty,
+                delegateType,
+                method.ReturnType,
+                new IParameter[0],
+                (cWriter, opCodePart) =>
                     {
                         var opCodeTarget = OpCodePart.CreateNop;
                         opCodeTarget.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
@@ -281,28 +300,28 @@ namespace Il2Native.Logic.Gencode
                         var objRef =
                             cWriter.WriteToString(
                                 () =>
-                                {
-                                    cWriter.WriteCCastOnly(method.DeclaringType);
-                                    cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
-                                });
+                                    {
+                                        cWriter.WriteCCastOnly(method.DeclaringType);
+                                        cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
+                                    });
 
                         var methodRef = cWriter.WriteToString(
                             () =>
-                            {
-                                cWriter.Output.Write("(*((");
-                                cWriter.WriteMethodPointerType(cWriter.Output, method);
-                                cWriter.Output.Write(")");
-                                cWriter.ActualWriteOpCode(cWriter.Output, opCodeFieldIntPtrValue);
-                                cWriter.Output.Write("))");
-                            });
+                                {
+                                    cWriter.Output.Write("(*((");
+                                    cWriter.WriteMethodPointerType(cWriter.Output, method, asStatic: isStatic);
+                                    cWriter.Output.Write(")");
+                                    cWriter.ActualWriteOpCode(cWriter.Output, opCodeFieldIntPtrValue);
+                                    cWriter.Output.Write("))");
+                                });
 
                         WriteCallInvokeMethod(
                             cWriter,
                             new FullyDefinedReference(objRef, typeResolver.System.System_Object),
                             new FullyDefinedReference(methodRef, null),
                             method,
-                            false);
-                    }));
+                            isStatic);
+                    });
         }
 
         /// <summary>
@@ -612,28 +631,6 @@ namespace Il2Native.Logic.Gencode
             public override int GetHashCode()
             {
                 return this.ToString().GetHashCode();
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <returns>
-            /// </returns>
-            public byte[] GetILAsByteArray()
-            {
-                return new byte[0];
-            }
-
-            /// <summary>
-            /// </summary>
-            /// <param name="type">
-            /// </param>
-            /// <returns>
-            /// </returns>
-            /// <exception cref="NotImplementedException">
-            /// </exception>
-            public IType ResolveTypeParameter(IType type)
-            {
-                throw new NotImplementedException();
             }
 
             /// <summary>

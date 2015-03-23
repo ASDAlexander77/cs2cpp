@@ -77,7 +77,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            if (method.DeclaringType.FullName != "System.Threading.Interlocked")
+            if (method.DeclaringType == null || method.DeclaringType.FullName != "System.Threading.Interlocked")
             {
                 return false;
             }
