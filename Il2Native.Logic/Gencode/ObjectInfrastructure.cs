@@ -458,7 +458,7 @@ namespace Il2Native.Logic.Gencode
                 // set virtual table
                 codeBuilder.LoadArgument(0);
                 codeBuilder.LoadToken(@interface.ToVirtualTableImplementation(declaringType));
-                codeBuilder.SaveField(@interface.GetFieldByName("vtable", typeResolver));
+                codeBuilder.SaveField(declaringType.GetInterfaceVTable(@interface, typeResolver));
             }
 
             codeBuilder.Add(Code.Ret);

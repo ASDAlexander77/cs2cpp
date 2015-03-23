@@ -316,6 +316,22 @@ namespace Il2Native.Logic
             return parameterType;
         }
 
+        public static IField GetInterfaceVTable(this IType classType, IType @interface, ITypeResolver typeResolver)
+        {
+            var type = classType;
+            while (!type.GetInterfacesExcludingBaseAllInterfaces().Any(i => i.TypeEquals(@interface) || i.GetAllInterfaces().Contains(@interface)))
+            {
+                if (type.BaseType == null)
+                {
+                    return GetFieldByName(type.BaseType, "vtable", typeResolver, false);
+                }
+
+                type = type.BaseType;
+            }
+
+            throw new Exception("VTable Could not be found");
+        }
+
         public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver, bool searchInBase = false)
         {
             var normalType = classType.ToNormal();
