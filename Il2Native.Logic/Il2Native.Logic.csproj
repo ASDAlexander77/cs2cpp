@@ -73,7 +73,7 @@
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderInlinedTextMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
@@ -123,7 +123,7 @@
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedLocalVariable.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodBase.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodStringAdapter.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedStaticMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedInlinedTextMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodBodyDecorator.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethodTypeBase.cs" />

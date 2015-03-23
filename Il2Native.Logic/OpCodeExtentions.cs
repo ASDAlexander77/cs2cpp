@@ -477,6 +477,7 @@ namespace Il2Native.Logic
         /// </returns>
         public static int IntTypeBitSize(this IType thisType)
         {
+            // Do not include "System.IntPtr", "System.UIntPtr", they are structures not native types
             switch (thisType.FullName)
             {
                 case "System.Boolean":
@@ -490,8 +491,6 @@ namespace Il2Native.Logic
                     return 16;
                 case "System.Int32":
                 case "System.UInt32":
-                case "System.IntPtr":
-                case "System.UIntPtr":
                     return 32;
                 case "System.Int64":
                 case "System.UInt64":

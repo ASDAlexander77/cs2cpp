@@ -58,7 +58,7 @@
                     true));
             tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
             tokenResolutions.Add(
-                new SynthesizedStaticMethod(
+                new SynthesizedInlinedTextMethod(
                     string.Empty,
                     typeResolver.System.System_Object,
                     typeResolver.System.System_Byte.ToPointerType(),

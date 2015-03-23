@@ -39,7 +39,10 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </summary>
         public override IType DeclaringType
         {
-            get { return this.Type.Clone(); }
+            get
+            {
+                return this.Type;
+            }
         }
 
         /// <summary>

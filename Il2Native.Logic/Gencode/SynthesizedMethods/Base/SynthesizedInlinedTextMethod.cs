@@ -19,7 +19,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedStaticMethod : SynthesizedMethodTypeBase, IMethodBodyCustomAction
+    // TODO: review usage, prefer using accoring OpCode instead of Inline func.
+    public class SynthesizedInlinedTextMethod : SynthesizedMethodTypeBase, IMethodBodyCustomAction
     {
         private readonly Action<CWriter, OpCodePart> action;
         private readonly IEnumerable<IParameter> parameters;
@@ -31,7 +32,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedStaticMethod(
+        public SynthesizedInlinedTextMethod(
             string name,
             IType declaringType,
             IType returnType)
@@ -46,7 +47,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <param name="writer">
         /// </param>
-        public SynthesizedStaticMethod(
+        public SynthesizedInlinedTextMethod(
             string name,
             IType declaringType,
             IType returnType,
@@ -56,7 +57,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.parameters = parameters.ToList();
         }
 
-        public SynthesizedStaticMethod(
+        public SynthesizedInlinedTextMethod(
             string name,
             IType declaringType,
             IType returnType,

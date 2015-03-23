@@ -2723,31 +2723,11 @@ namespace Il2Native.Logic
         public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null)
         {
             var methodInfo = methodBase;
-            var isStructureType = methodInfo.ReturnType.IsStructureType();
-            if (!isStructureType)
-            {
-                methodInfo.ReturnType.WriteTypePrefix(this);
-            }
-            else
-            {
-                writer.Write("void");
-            }
-
+            this.WriteMethodReturnType(writer, methodBase);
             writer.Write("(*)(");
-
-            if (isStructureType)
-            {
-                methodInfo.ReturnType.WriteTypePrefix(this, true);
-            }
-
             var hasThis = !methodInfo.IsStatic;
             if (hasThis)
             {
-                if (isStructureType)
-                {
-                    writer.Write(", ");
-                }
-
                 (thisType ?? methodInfo.DeclaringType.ToClass()).WriteTypePrefix(this);
             }
 
@@ -2761,7 +2741,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (index > 0 || hasThis || isStructureType)
+                if (index > 0 || hasThis)
                 {
                     writer.Write(", ");
                 }
@@ -2780,7 +2760,7 @@ namespace Il2Native.Logic
 
             if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
             {
-                if (index > 0 || hasThis || isStructureType)
+                if (index > 0 || hasThis)
                 {
                     writer.Write(", ");
                 }
@@ -2806,7 +2786,7 @@ namespace Il2Native.Logic
             }
             else
             {
-                this.Output.Write("void ");
+                this.Output.Write("Void ");
             }
         }
 
@@ -4236,7 +4216,7 @@ namespace Il2Native.Logic
             IList<IParameter> parameters;
             MainGen.GetLoadingArgumentsMethodBody(this.MainMethod.ReturnType.IsVoid(), this, out code, out tokenResolutions, out locals, out parameters);
 
-            var mainEntry = new SynthesizedStaticMethod("main", this.MainMethod.DeclaringType, this.MainMethod.ReturnType, this.MainMethod.GetParameters());
+            var mainEntry = new SynthesizedInlinedTextMethod("main", this.MainMethod.DeclaringType, this.MainMethod.ReturnType, this.MainMethod.GetParameters());
 
             var constructedMethod = MethodBodyBank.GetMethodDecorator(mainEntry, code, tokenResolutions, locals, parameters);
 
@@ -4434,7 +4414,7 @@ namespace Il2Native.Logic
             {
                 if (isDelegateBodyFunctions)
                 {
-                    this.WriteDelegateFunctionBody(method);
+                    this.WriteDelegateStubFunctionBody(method);
                     this.Output.WriteLine(string.Empty);
                 }
                 else

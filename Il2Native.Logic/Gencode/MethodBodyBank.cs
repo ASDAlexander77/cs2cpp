@@ -47,14 +47,17 @@
                     return typeResolver.GetDelegateConstructorMethod(method.DeclaringType).GetMethod(method);
                 }
 
-                if (method.Name == "Invoke" && method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
+                if (method.Name == "Invoke")
                 {
-                    byte[] code;
-                    IList<object> tokenResolutions;
-                    IList<IType> locals;
-                    IList<IParameter> parameters;
-                    DelegateGen.GetMulticastDelegateInvoke(method, typeResolver, out code, out tokenResolutions, out locals, out parameters);
-                    return GetMethodDecorator(method, code, tokenResolutions, locals, parameters);
+                    if (method.DeclaringType.BaseType.FullName == "System.Delegate")
+                    {
+                        return typeResolver.GetDelegateInvokeMethod(method).GetMethod(method);
+                    }
+
+                    if (method.DeclaringType.BaseType.FullName == "System.MulticastDelegate")
+                    {
+                        return typeResolver.GetMulticastDelegateInvoke(method).GetMethod(method);
+                    }
                 }
             }
 

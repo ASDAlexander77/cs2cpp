@@ -7,7 +7,7 @@
 
     /// <summary>
     /// </summary>
-    public class SynthesizedCtorSBytePtrStartLengthEncodingMethod : SynthesizedStaticMethod
+    public class SynthesizedCtorSBytePtrStartLengthEncodingMethod : SynthesizedInlinedTextMethod
     {
         private readonly IMethodBody _methodBody;
 

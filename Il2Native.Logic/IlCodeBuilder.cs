@@ -231,7 +231,7 @@
         public void Call(IMethod method)
         {
             TokenResolutions.Add(method);
-            this.Add(Code.Call, (int)TokenResolutions.Count);
+            this.Add(method.IsVirtual ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
         }
 
         public void Castclass(IType type)
@@ -244,6 +244,12 @@
         {
             TokenResolutions.Add(field);
             this.Add(field.IsStatic ? Code.Ldsfld : Code.Ldfld, (int)TokenResolutions.Count);
+        }
+
+        public void LoadFieldAddress(IField field)
+        {
+            TokenResolutions.Add(field);
+            this.Add(field.IsStatic ? Code.Ldsflda : Code.Ldflda, (int)TokenResolutions.Count);
         }
 
         public void SaveField(IField field)

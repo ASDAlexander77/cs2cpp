@@ -7,7 +7,7 @@
 
     /// <summary>
     /// </summary>
-    public class SynthesizedCtorSBytePtrMethod : SynthesizedStaticMethod
+    public class SynthesizedCtorSBytePtrMethod : SynthesizedInlinedTextMethod
     {
         private readonly IMethodBody _methodBody;
 

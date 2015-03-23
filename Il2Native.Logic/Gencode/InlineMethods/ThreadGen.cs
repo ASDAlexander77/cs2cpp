@@ -61,7 +61,7 @@ namespace Il2Native.Logic.Gencode
             switch (method.MetadataName)
             {
                 case "MemoryBarrier":
-                    writer.WriteLine("__sync_synchronize()");
+                    writer.WriteLine("sync_synchronize()");
                     break;
             }
         }

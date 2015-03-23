@@ -22,6 +22,7 @@
 	extern void *__builtin_memcpy(void *,void *,uint32_t);
 	#define memcpy __builtin_memcpy
 	#define compare_and_swap __sync_val_compare_and_swap 
+	#define sync_synchronize __sync_synchronize
 #endif
 
 typedef void Void;

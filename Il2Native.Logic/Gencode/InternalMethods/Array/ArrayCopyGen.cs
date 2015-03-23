@@ -72,7 +72,7 @@
             tokenResolutions.Add(typeResolver.System.System_Byte.ToPointerType());
             tokenResolutions.Add(arrayType.GetFieldByName("elementSize", typeResolver));
             tokenResolutions.Add(
-                new SynthesizedStaticMethod(
+                new SynthesizedInlinedTextMethod(
                     string.Empty,
                     typeResolver.System.System_Array,
                     typeResolver.System.System_Void,

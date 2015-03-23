@@ -5,7 +5,7 @@
 
     /// <summary>
     /// </summary>
-    public class SynthesizedIlCodeBuilderStaticMethod : SynthesizedStaticMethod
+    public class SynthesizedIlCodeBuilderInlinedTextMethod : SynthesizedInlinedTextMethod
     {
         private readonly IMethodBody _methodBody;
 
@@ -15,7 +15,7 @@
 
         /// <summary>
         /// </summary>
-        public SynthesizedIlCodeBuilderStaticMethod(IlCodeBuilder codeBuilder, string name, IType declaringType, IType returningType)
+        public SynthesizedIlCodeBuilderInlinedTextMethod(IlCodeBuilder codeBuilder, string name, IType declaringType, IType returningType)
             : base(name, declaringType, returningType)
         {
             this._methodBody = codeBuilder.GetMethodBody();

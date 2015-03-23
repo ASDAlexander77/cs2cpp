@@ -5,7 +5,7 @@
 
     /// <summary>
     /// </summary>
-    public class SynthesizedStrLenMethod : SynthesizedStaticMethod
+    public class SynthesizedStrLenMethod : SynthesizedInlinedTextMethod
     {
         private readonly IMethodBody _methodBody;
 

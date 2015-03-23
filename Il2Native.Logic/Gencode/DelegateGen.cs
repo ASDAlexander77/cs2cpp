@@ -23,20 +23,17 @@ namespace Il2Native.Logic.Gencode
     /// </summary>
     public static class DelegateGen
     {
-        public static void GetMulticastDelegateInvoke(
-            IMethod method,
-            ITypeResolver typeResolver,
-            out byte[] code,
-            out IList<object> tokenResolutions,
-            out IList<IType> locals,
-            out IList<IParameter> parameters)
+        public static IlCodeBuilder GetMulticastDelegateInvoke(
+            this ITypeResolver typeResolver,
+            IMethod method)
         {
-            parameters = method.GetParameters().ToList();
-
             var codeList = new IlCodeBuilder();
 
-            codeList.Add(Code.Ldarg_0);
-            codeList.Add(Code.Ldfld, 1);
+            codeList.Parameters.AddRange(method.GetParameters());
+
+            codeList.LoadArgument(0);
+            var invocationCountField = method.DeclaringType.BaseType.GetFieldByName("_invocationCount", typeResolver);
+            codeList.LoadField(invocationCountField);
 
 #if MSCORLIB
             // to load value from IntPtr
@@ -44,39 +41,41 @@ namespace Il2Native.Logic.Gencode
 #endif
 
             var jumpForBrtrue_S = codeList.Branch(Code.Brtrue, Code.Brtrue_S);
-            codeList.Add(Code.Call, 2);
+
+            AddDelegateInvokeBody(codeList, method, typeResolver);
+
             codeList.Add(jumpForBrtrue_S);
 
-            codeList.Add(Code.Ldc_I4_0);
-            codeList.Add(Code.Stloc_0);
+            codeList.LoadConstant(0);
+            codeList.SaveLocal(0);
 
             var labelForFirstJump = codeList.Branch(Code.Br, Code.Br_S);
 
             // label
             var labelForConditionLoop = codeList.CreateLabel();
 
-            codeList.Add(Code.Ldarg_0);
-            codeList.Add(Code.Ldfld, 3);
+            codeList.LoadArgument(0);
+            codeList.LoadField(method.DeclaringType.BaseType.GetFieldByName("_invocationList", typeResolver));
 
 #if MSCORLIB
-            codeList.Add(Code.Castclass, 5);
+            codeList.Castclass(typeResolver.System.System_Object.ToArrayType(1));
 #endif
 
-            codeList.Add(Code.Ldloc_0);
+            codeList.LoadLocal(0);
             codeList.Add(Code.Ldelem_Ref);
 
             var index = 1;
-            foreach (var parameter in parameters)
-            {   
+            foreach (var parameter in method.GetParameters())
+            {
                 codeList.LoadArgument(index);
                 index++;
             }
 
-            codeList.Add(Code.Callvirt, 4);
+            codeList.Call(IlReader.Methods(method.DeclaringType, typeResolver).First(m => m.Name == "Invoke"));
 
             if (!method.ReturnType.IsVoid())
             {
-                codeList.Add(Code.Stloc_1);
+                codeList.SaveLocal(1);
             }
 
             codeList.LoadLocal(0);
@@ -90,7 +89,7 @@ namespace Il2Native.Logic.Gencode
             // for test
             codeList.LoadLocal(0);
             codeList.LoadArgument(0);
-            codeList.Add(Code.Ldfld, 1);
+            codeList.LoadField(invocationCountField);
 
 #if MSCORLIB
             // to load value from IntPtr
@@ -101,50 +100,19 @@ namespace Il2Native.Logic.Gencode
 
             if (!method.ReturnType.IsVoid())
             {
-                codeList.Add(Code.Ldloc_1);
+                codeList.LoadLocal(1);
             }
 
             codeList.Add(Code.Ret);
 
-            code = codeList.GetCode();
-
-            locals = new List<IType>();
-            locals.Add(typeResolver.System.System_Int32);
+            // Locals
+            codeList.Locals.Add(typeResolver.System.System_Int32);
             if (!method.ReturnType.IsVoid())
             {
-                locals.Add(method.ReturnType);
+                codeList.Locals.Add(method.ReturnType);
             }
 
-            tokenResolutions = new List<object>();
-
-            // 1
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationCount", typeResolver));
-
-            // call Delegate.Invoke
-            // 2
-            tokenResolutions.Add(
-                new SynthesizedStaticMethod(
-                    string.Empty,
-                    method.DeclaringType,
-                    typeResolver.System.System_Void,
-                    new List<IParameter>(),
-                    (llvmWriter, opCode) =>
-                    {
-                        // get element size
-                        llvmWriter.WriteDelegateInvoke(method, true, true);
-                    }));
-
-            // 3
-            tokenResolutions.Add(method.DeclaringType.BaseType.GetFieldByName("_invocationList", typeResolver));
-
-            // call Default stub for now - "ret undef";
-            // 4
-            tokenResolutions.Add(IlReader.Methods(method.DeclaringType, typeResolver).First(m => m.Name == "Invoke"));
-
-#if MSCORLIB
-            // 5, to case Object to Object[]
-            tokenResolutions.Add(typeResolver.System.System_Object.ToArrayType(1));
-#endif
+            return codeList;
         }
 
         /// <summary>
@@ -160,8 +128,7 @@ namespace Il2Native.Logic.Gencode
                 return false;
             }
 
-            return method.Name == ".ctor" || method.Name == "Invoke" || method.Name == "BeginInvoke" ||
-                   method.Name == "EndInvoke";
+            return method.Name == ".ctor" || method.Name == "Invoke" || method.Name == "BeginInvoke" || method.Name == "EndInvoke";
         }
 
         /// <summary>
@@ -185,20 +152,13 @@ namespace Il2Native.Logic.Gencode
             IMethod invokeMethod,
             bool isStatic)
         {
-            var writer = cWriter.Output;
-
-            var method = new SynthesizedInvokeMethod(cWriter, objectResult, methodResult, invokeMethod, isStatic);
+            var method = new SynthesizedInvokeMethod(methodResult, invokeMethod, isStatic);
             var opCodeNope = OpCodePart.CreateNop;
 
             opCodeNope.OpCodeOperands =
                 Enumerable.Range(0, invokeMethod.GetParameters().Count())
                     .Select(p => new OpCodeInt32Part(OpCodesEmit.Ldarg, 0, 0, p + 1))
                     .ToArray();
-
-            foreach (var generatedOperand in opCodeNope.OpCodeOperands)
-            {
-                cWriter.WriteResultOrActualWrite(writer, generatedOperand);
-            }
 
             cWriter.WriteCall(
                 opCodeNope,
@@ -218,16 +178,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="method">
         /// </param>
-        public static void WriteDelegateFunctionBody(this CWriter cWriter, IMethod method)
+        public static void WriteDelegateStubFunctionBody(this CWriter cWriter, IMethod method)
         {
-            if (method.Name == "Invoke")
-            {
-                cWriter.WriteDelegateInvoke(method);
-            }
-            else
-            {
-                cWriter.DefaultStub(method);
-            }
+            cWriter.DefaultStub(method);
         }
 
         /// <summary>
@@ -282,102 +235,72 @@ namespace Il2Native.Logic.Gencode
             return codeBuilder;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="method">
-        /// </param>
-        private static void WriteDelegateInvoke(
-            this CWriter cWriter,
-            IMethod method,
-            bool disableCurlyBrakets = false,
-            bool disableLoadingParams = false)
+        public static IlCodeBuilder GetDelegateInvokeMethod(this ITypeResolver typeResolver, IMethod method)
         {
-            var writer = cWriter.Output;
+            var intPtrType = typeResolver.System.System_IntPtr;
 
-            // TODO: finish it
+            var codeBuilder = new IlCodeBuilder();
 
-            ////if (!disableCurlyBrakets)
-            ////{
-            ////    writer.WriteLine(" {");
-            ////    writer.Indent++;
-            ////}
+            codeBuilder.Parameters.Add(typeResolver.System.System_Object.ToParameter(name: "object"));
+            codeBuilder.Parameters.Add(intPtrType.ToParameter(name: "method"));
 
-            ////var opCode = OpCodePart.CreateNop;
+            AddDelegateInvokeBody(codeBuilder, method, typeResolver);
 
-            ////var thisResult = opCode.Result;
+            codeBuilder.Add(Code.Ret);
 
-            ////var delegateType = cWriter.System.System_Delegate;
+            return codeBuilder;
+        }
 
-            ////// write access to a field 1
-            ////try
-            ////{
-            ////    var _targetFieldIndex = cWriter.GetFieldIndex(delegateType, "_target");
-            ////    cWriter.WriteFieldAccess(
-            ////        opCode,
-            ////        method.DeclaringType,
-            ////        delegateType,
-            ////        _targetFieldIndex,
-            ////        thisResult);
-            ////    writer.WriteLine(string.Empty);
+        private static void AddDelegateInvokeBody(IlCodeBuilder codeBuilder, IMethod method, ITypeResolver typeResolver)
+        {
+            var delegateType = typeResolver.System.System_Delegate;
+            var intPtrType = typeResolver.System.System_IntPtr;
 
-            ////    var objectResultNumber = opCode.Result;
+            // TODO: add test for static call 
+            codeBuilder.Call(
+                new SynthesizedInlinedTextMethod(
+                    string.Empty,
+                    delegateType,
+                    method.ReturnType,
+                    new IParameter[0],
+                    (cWriter, opCodePart) =>
+                    {
+                        var opCodeTarget = OpCodePart.CreateNop;
+                        opCodeTarget.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-            ////    // write access to a field 2
-            ////    var _methodPtrFieldIndex = cWriter.GetFieldIndex(delegateType, "_methodPtr");
-            ////    var _methodPtrField = cWriter.WriteFieldAccess(
-            ////        opCode,
-            ////        method.DeclaringType,
-            ////        delegateType,
-            ////        _methodPtrFieldIndex,
-            ////        thisResult);
-            ////    writer.WriteLine(string.Empty);
+                        var field = delegateType.GetFieldByName("_methodPtr", typeResolver, true);
+                        var opCodeMethodPtr = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
+                        opCodeMethodPtr.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-            ////    // additional step to extract value from IntPtr structure
-            ////    cWriter.WriteFieldAccess(opCode, _methodPtrField.FieldType, _methodPtrField.FieldType, 0, opCode.Result);
-            ////    // TODO: finish it
-            ////    // switch code if method is static
-            ////    ////var compareResult = cWriter.SetResultNumber(opCode, cWriter.System.System_Boolean);
-            ////    ////writer.Write("icmp ne ");
-            ////    ////objectResultNumber.Type.WriteTypePrefix(cWriter);
-            ////    ////writer.Write(" ");
-            ////    ////writer.Write(objectResultNumber);
-            ////    ////writer.WriteLine(", null");
-            ////    ////cWriter.WriteCondBranch(writer, compareResult, "normal", "static");
+                        var fieldIntPtrValue = intPtrType.GetFieldByFieldNumber(0, typeResolver);
+                        var opCodeFieldIntPtrValue = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, fieldIntPtrValue);
+                        opCodeFieldIntPtrValue.OpCodeOperands = new[] { opCodeMethodPtr };
 
-            ////    // normal brunch
-            ////    var callResult = cWriter.WriteCallInvokeMethod(objectResultNumber, methodResultNumber, method, false);
+                        var objRef =
+                            cWriter.WriteToString(
+                                () =>
+                                {
+                                    cWriter.WriteCCastOnly(method.DeclaringType);
+                                    cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
+                                });
 
-            ////    var returnNormal = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-            ////    returnNormal.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            ////    cWriter.WriteReturn(writer, returnNormal, method.ReturnType);
-            ////    writer.WriteLine(string.Empty);
+                        var methodRef = cWriter.WriteToString(
+                            () =>
+                            {
+                                cWriter.Output.Write("(*((");
+                                cWriter.WriteMethodPointerType(cWriter.Output, method);
+                                cWriter.Output.Write(")");
+                                cWriter.ActualWriteOpCode(cWriter.Output, opCodeFieldIntPtrValue);
+                                cWriter.Output.Write("))");
+                            });
 
-            ////    // static brunch
-            ////    cWriter.WriteLabel(writer, "static");
-
-            ////    var callStaticResult = cWriter.WriteCallInvokeMethod(
-            ////        objectResultNumber,
-            ////        methodResultNumber,
-            ////        method,
-            ////        true);
-
-            ////    var returnStatic = new OpCodePart(OpCodesEmit.Ret, 0, 0);
-            ////    returnStatic.OpCodeOperands = new[] { OpCodePart.CreateNop };
-            ////    cWriter.WriteReturn(writer, returnStatic, method.ReturnType);
-            ////    writer.WriteLine(string.Empty);
-            ////}
-            ////catch (KeyNotFoundException)
-            ////{
-            ////    writer.WriteLine("unreachable");
-            ////}
-
-            ////if (!disableCurlyBrakets)
-            ////{
-            ////    writer.Indent--;
-            ////    writer.WriteLine("}");
-            ////}
+                        WriteCallInvokeMethod(
+                            cWriter,
+                            new FullyDefinedReference(objRef, typeResolver.System.System_Object),
+                            new FullyDefinedReference(methodRef, null),
+                            method,
+                            false);
+                    }));
         }
 
         /// <summary>
@@ -394,14 +317,6 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
-            private readonly FullyDefinedReference objectResult;
-
-            /// <summary>
-            /// </summary>
-            private readonly CWriter writer;
-
-            /// <summary>
-            /// </summary>
             /// <param name="writer">
             /// </param>
             /// <param name="objectResult">
@@ -413,31 +328,13 @@ namespace Il2Native.Logic.Gencode
             /// <param name="isStatic">
             /// </param>
             public SynthesizedInvokeMethod(
-                CWriter writer,
-                FullyDefinedReference objectResult,
                 FullyDefinedReference methodResult,
                 IMethod invokeMethod,
                 bool isStatic)
             {
-                this.writer = writer;
-                this.objectResult = objectResult;
                 this.MethodResult = methodResult;
                 this.invokeMethod = invokeMethod;
                 this.isStatic = isStatic;
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<IExceptionHandlingClause> ExceptionHandlingClauses
-            {
-                get { return new IExceptionHandlingClause[0]; }
-            }
-
-            /// <summary>
-            /// </summary>
-            public IEnumerable<ILocalVariable> LocalVariables
-            {
-                get { return new ILocalVariable[0]; }
             }
 
             /// <summary>
@@ -463,7 +360,11 @@ namespace Il2Native.Logic.Gencode
             /// </summary>
             public IType DeclaringType
             {
-                get { return this.objectResult.Type; }
+                get
+                {
+                    // it should be NULL to write name without using MethodName
+                    return null;
+                }
             }
 
             /// <summary>
