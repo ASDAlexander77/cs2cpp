@@ -7,7 +7,7 @@
     {
         public RuntimeTypeConstBytes(IType type)
         {
-            this.Reference = string.Concat(type.FullName.CleanUpName(), "_type_data_", type.AssemblyQualifiedName.CleanUpName());
+            this.Reference = string.Concat(type.FullName.CleanUpName(), "_type_data_");
             this.Data = Encoding.ASCII.GetBytes(type.FullName);
         }
 

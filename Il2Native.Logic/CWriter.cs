@@ -518,7 +518,7 @@ namespace Il2Native.Logic
                         if (constBytes != null)
                         {
                             var typeString = this.WriteToString(() => System.System_Byte.ToArrayType(1).WriteTypePrefix(this));
-                            this.Output.Write("({1}) &{0}", constBytes.Reference, typeString);
+                            this.Output.Write("({1}) &{0}{2}", constBytes.Reference, typeString, this.GetAssemblyPrefix());
                             break;
                         }
 
@@ -567,16 +567,14 @@ namespace Il2Native.Logic
                 case Code.Ldsfld:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-
-                    var destinationName = opCodeFieldInfoPart.Operand.GetFullName().CleanUpName();
-
-                    this.Output.Write(destinationName);
+                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Ldsflda:
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    this.Output.Write("&" + opCodeFieldInfoPart.Operand.GetFullName().CleanUpName());
+                    this.Output.Write("&");
+                    this.WriteStaticFieldName(opCodeFieldInfoPart.Operand);
 
                     break;
                 case Code.Stfld:
@@ -588,7 +586,8 @@ namespace Il2Native.Logic
 
                     opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
 
-                    destinationName = opCodeFieldInfoPart.Operand.GetFullName().CleanUpName();
+                    var destinationName = string.Concat(this.GetAssemblyPrefix(opCodeFieldInfoPart.Operand.DeclaringType), opCodeFieldInfoPart.Operand.GetFullName().CleanUpName());
+
                     var operandType = opCodeFieldInfoPart.Operand.FieldType;
                     var reference = new FullyDefinedReference(destinationName, operandType);
 
@@ -3912,11 +3911,12 @@ namespace Il2Native.Logic
 
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "const struct {1} {0} = {3} {2}",
+                "const struct {1} {0}{4} = {3} {2}",
                 constBytes.Reference,
                 this.GetArrayTypeHeader(this.System.System_Byte, bytes.Length),
                 this.GetArrayValuesHeader(this.System.System_Byte, bytes.Length, bytes.Length),
-                "{");
+                "{",
+                this.GetAssemblyPrefix());
 
             this.Output.Write("{ ");
 
@@ -4680,13 +4680,31 @@ namespace Il2Native.Logic
 
             field.FieldType.WriteTypePrefix(this, false);
 
-            // TODO: do not forget static generic
             this.Output.Write(" ");
-            this.Output.Write(field.GetFullName().CleanUpName());
+            this.WriteStaticFieldName(field);
+            if (!externalRef)
+            {
+                if (field.FieldType.IsStructureType())
+                {
+                    this.Output.Write(" = ");
+                    field.FieldType.ToClass().WriteTypeWithoutModifiers(this);
+                    this.Output.Write("()/*undef*/");
+                }
+                else
+                {
+                    this.Output.Write(" = 0/*undef*/");
+                }
+            }
 
             this.Output.WriteLine(";");
 
             return true;
+        }
+
+        private void WriteStaticFieldName(IField field)
+        {
+            this.Output.Write(this.GetAssemblyPrefix(field.DeclaringType));
+            this.Output.Write(field.GetFullName().CleanUpName());
         }
 
         /// <summary>
@@ -4695,14 +4713,7 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteStaticFieldDeclarations(IType type)
         {
-            if (type.IsEnum)
-            {
-                return;
-            }
-
-            foreach (var field in
-                Logic.IlReader.Fields(type, this)
-                    .Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
+            foreach (var field in Logic.IlReader.Fields(type, this).Where(f => f.IsStatic && (!f.IsConst || f.FieldType.IsStructureType())))
             {
                 this.WriteStaticFieldDeclaration(field);
             }
