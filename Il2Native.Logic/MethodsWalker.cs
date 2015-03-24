@@ -22,11 +22,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private readonly ITypeResolver typeResolver;
+
+        /// <summary>
+        /// </summary>
         /// <param name="startMethod">
         /// </param>
-        public MethodsWalker(IMethod startMethod)
+        public MethodsWalker(IMethod startMethod, ITypeResolver typeResolver)
         {
             this.startMethod = startMethod;
+            this.typeResolver = typeResolver;
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace Il2Native.Logic
         private void WalkMethod(IMethod method, ISet<MethodKey> allCalledMethods, ISet<IField> allReadStaticFields)
         {
             var calledMethods = new NamespaceContainer<MethodKey>();
-            method.DiscoverMethod(null, calledMethods, allReadStaticFields);
+            method.DiscoverMethod(null, calledMethods, allReadStaticFields, typeResolver);
 
             foreach (var nextMethod in calledMethods)
             {

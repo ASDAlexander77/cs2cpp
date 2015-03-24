@@ -3859,7 +3859,7 @@ namespace Il2Native.Logic
             var staticConstructors = new Dictionary<IMethod, ISet<IType>>();
             foreach (var staticCtor in this.StaticConstructors)
             {
-                var methodWalker = new MethodsWalker(staticCtor);
+                var methodWalker = new MethodsWalker(staticCtor, this);
                 var reaquiredTypesWithStaticFields = methodWalker.DiscoverAllStaticFieldsDependencies();
                 staticConstructors.Add(staticCtor, reaquiredTypesWithStaticFields);
             }
