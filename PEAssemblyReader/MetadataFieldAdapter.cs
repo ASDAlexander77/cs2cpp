@@ -245,6 +245,14 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsConstByteArray { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public string ConstByteArrayReference { get; set; }
+
+        /// <summary>
+        /// </summary>
         public string MetadataFullName
         {
             get

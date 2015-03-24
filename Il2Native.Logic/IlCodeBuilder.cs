@@ -270,6 +270,18 @@
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
 
+        public void LoadToken(IConstBytes constBytes)
+        {
+            TokenResolutions.Add(constBytes);
+            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
+        public void LoadToken(IField field)
+        {
+            TokenResolutions.Add(field);
+            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
         public void CopyObject(IType type)
         {
             TokenResolutions.Add(type);

@@ -14,6 +14,9 @@ namespace Il2Native.Logic.Gencode
     using System.Linq;
     using System.Reflection.Emit;
     using CodeParts;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
+
     using PEAssemblyReader;
     using SynthesizedMethods;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
@@ -415,7 +418,7 @@ namespace Il2Native.Logic.Gencode
             var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
             codeBuilder.LoadFieldAddress(typeStorageType);
-            codeBuilder.LoadNull();
+            codeBuilder.LoadToken(new SynthesizedConstBytesField(new RuntimeTypeConstBytes(declaringType)));
             codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver.System.System_Byte.ToArrayType(1), typeResolver));
             codeBuilder.LoadNull();
 

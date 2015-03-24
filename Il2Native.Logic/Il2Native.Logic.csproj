@@ -73,6 +73,7 @@
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedConstBytesField.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
@@ -91,6 +92,7 @@
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthEncodingMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedCtorSBytePtrStartLengthMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedStrLenMethod.cs" />
+    <Compile Include="IConstBytes.cs" />
     <Compile Include="IIlReader.cs" />
     <Compile Include="IlCodeBuilder.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
@@ -163,6 +165,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RuntimeTypeConstBytes.cs" />
     <Compile Include="StackBranches.cs" />
     <Compile Include="NamespaceContainerAssoc.cs" />
     <Compile Include="SystemTypes.cs" />

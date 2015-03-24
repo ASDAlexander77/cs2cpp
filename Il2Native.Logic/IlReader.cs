@@ -64,6 +64,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private IList<IConstBytes> _usedConstBytes;
+
+        /// <summary>
+        /// </summary>
         private ISet<IType> _usedTypeDefinitions;
 
         /// <summary>
@@ -533,6 +537,21 @@ namespace Il2Native.Logic
             set
             {
                 this._usedStrings = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IList<IConstBytes> UsedConstBytes
+        {
+            get
+            {
+                return this._usedConstBytes;
+            }
+
+            set
+            {
+                this._usedConstBytes = value;
             }
         }
 
@@ -1226,7 +1245,16 @@ namespace Il2Native.Logic
                         var fieldMember = resolvedToken as IField;
                         if (fieldMember != null)
                         {
-                            this.AddUsedType(fieldMember.DeclaringType);
+                            // special case
+                            var constBytes = fieldMember.ConstantValue as IConstBytes;
+                            if (constBytes != null)
+                            {
+                                this.AddConstBytes(constBytes);
+                            }
+                            else
+                            {
+                                this.AddUsedType(fieldMember.DeclaringType);
+                            }
 
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
                             continue;
@@ -1556,6 +1584,16 @@ namespace Il2Native.Logic
             }
 
             this._usedStrings[token] = usedString;
+        }
+
+        private void AddConstBytes(IConstBytes constByteField)
+        {
+            if (this._usedConstBytes == null || constByteField == null)
+            {
+                return;
+            }
+
+            this._usedConstBytes.Add(constByteField);
         }
 
         /// <summary>

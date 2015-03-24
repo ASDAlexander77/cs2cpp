@@ -68,18 +68,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private int blockJumpAddressIncremental;
-
-        /// <summary>
-        /// </summary>
-        private int bytesIndexIncremental;
-
-        /// <summary>
-        /// </summary>
-        private readonly IDictionary<int, byte[]> bytesStorage = new SortedDictionary<int, byte[]>();
-
-        /// <summary>
-        /// </summary>
         private readonly ISet<MethodKey> forwardMethodDeclarationWritten = new NamespaceContainer<MethodKey>();
 
         /// <summary>
@@ -116,6 +104,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly ISet<string> constBytesDefinitionWritten = new HashSet<string>();
+
+        /// <summary>
+        /// </summary>
         private readonly IDictionary<string, int> indexByFieldInfo = new SortedDictionary<string, int>();
 
         /// <summary>
@@ -137,10 +129,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
-        private readonly ISet<IType> typeTokenRequired = new NamespaceContainer<IType>();
 
         /// <summary>
         /// </summary>
@@ -196,14 +184,6 @@ namespace Il2Native.Logic
         /// <summary>
         /// </summary>
         public bool Stubs { get; private set; }
-
-        public ISet<IType> TypeTokenRequired
-        {
-            get
-            {
-                return this.typeTokenRequired;
-            }
-        }
 
         /// <summary>
         /// </summary>
@@ -516,7 +496,6 @@ namespace Il2Native.Logic
                     if (opCodeTypePart != null)
                     {
                         var tokenType = opCodeTypePart.Operand;
-                        this.typeTokenRequired.Add(tokenType);
 
                         // special case
                         if (tokenType.IsVirtualTableImplementation)
@@ -525,14 +504,23 @@ namespace Il2Native.Logic
                                 tokenType.InterfaceOwner != null
                                     ? tokenType.InterfaceOwner.GetVirtualInterfaceTableNameReference(tokenType, this)
                                     : tokenType.GetVirtualTableNameReference(this));
+
+                            break;
                         }
-                        else
-                        {
-                            this.Output.Write("0/*undef*/");
-                        }
+
+                        this.Output.Write("0/*undef*/");
                     }
-                    else
+
+                    var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
+                    if (opCodeFieldInfoPartToken != null)
                     {
+                        var constBytes = opCodeFieldInfoPartToken.Operand.ConstantValue as IConstBytes;
+                        if (constBytes != null)
+                        {
+                            this.Output.Write(constBytes.Reference);
+                            break;
+                        }
+
                         this.Output.Write("System_RuntimeFieldHandle()/*undef*/");
                     }
 
@@ -1694,28 +1682,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public int GetBlockJumpAddress()
-        {
-            return ++this.blockJumpAddressIncremental;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="data">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public int GetBytesIndex(byte[] data)
-        {
-            var idx = ++this.bytesIndexIncremental;
-            this.bytesStorage[idx] = data;
-            return idx;
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodePart">
         /// </param>
         /// <returns>
@@ -1971,7 +1937,6 @@ namespace Il2Native.Logic
         public override void StartProcess()
         {
             base.StartProcess();
-            this.blockJumpAddressIncremental = 0;
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
             this.needToWriteUnreachable = false;
@@ -2825,6 +2790,7 @@ namespace Il2Native.Logic
 
             // to gather all info about method which we need
             this.IlReader.UsedStrings = new SortedDictionary<int, string>();
+            this.IlReader.UsedConstBytes = new List<IConstBytes>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
             this.IlReader.UsedStructTypes = new NamespaceContainer<IType>();
@@ -3926,32 +3892,57 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="pair">
-        /// </param>
-        private void WriteBytesData(KeyValuePair<int, byte[]> pair)
+        private void WriteConstBytes(IConstBytes constBytes)
         {
+            if (!this.constBytesDefinitionWritten.Add(constBytes.Reference))
+            {
+                return;
+            }
+
+            var type = System.System_Byte.ToArrayType(1);
+
+            if (this.virtualTableImplementationDeclarationsWritten.Add(type))
+            {
+                if (this.AssemblyQualifiedName == type.AssemblyQualifiedName)
+                {
+                    this.WriteVirtualTableImplementations(type);
+                }
+                else
+                {
+                    type.WriteVirtualTableEmptyImplementationDeclarations(this);
+                }
+            }
+
+            var bytes = constBytes.Data;
+
+            this.Output.Write(this.declarationPrefix);
             this.Output.Write(
-                "@.bytes{0} = private unnamed_addr constant {1} {3} {2}",
-                pair.Key,
-                this.GetArrayTypeHeader(this.System.System_Byte, pair.Value.Length),
-                this.GetArrayValuesHeader(this.System.System_Byte, pair.Value.Length, pair.Value.Length),
+                "const struct {1} {0} = {3} {2}",
+                constBytes.Reference,
+                this.GetArrayTypeHeader(this.System.System_Byte, bytes.Length),
+                this.GetArrayValuesHeader(this.System.System_Byte, bytes.Length, bytes.Length),
                 "{");
 
-            this.Output.Write(" [");
+            this.Output.Write("{ ");
 
             var index = 0;
-            foreach (var b in pair.Value)
+            foreach (var b in bytes)
             {
                 if (index > 0)
                 {
                     this.Output.Write(", ");
                 }
 
-                this.Output.Write("i8 {0}", b);
+                this.Output.Write("{0}", (int)b);
                 index++;
             }
 
-            this.Output.WriteLine("] {0}, align 1", '}');
+            if (index > 0)
+            {
+                this.Output.Write(", ");
+            }
+
+            this.Output.WriteLine("0 {0} {0};", '}');
         }
 
         /// <summary>
@@ -4060,23 +4051,6 @@ namespace Il2Native.Logic
             if (opCode.Next != null)
             {
                 opCode.Next.JumpProcessed = true;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        private void WriteConstData()
-        {
-            // write set of array data
-            foreach (var pair in this.bytesStorage)
-            {
-                this.WriteBytesData(pair);
-            }
-
-            if (this.bytesStorage.Count > 0)
-            {
-                this.Output.WriteLine(string.Empty);
-                this.bytesStorage.Clear();
             }
         }
 
@@ -4497,6 +4471,17 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
+            // const bytes
+            foreach (var usedConstBytes in this.IlReader.UsedConstBytes)
+            {
+                this.WriteConstBytes(usedConstBytes);
+            }
+
+            if (this.IlReader.UsedConstBytes.Count > 0)
+            {
+                this.Output.WriteLine(string.Empty);
+            }
+
             // locals
             foreach (var requiredType in method.GetMethodBody(null).LocalVariables.Select(ec => ec.LocalType))
             {
@@ -4679,10 +4664,6 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine("}");
             }
-
-            this.Output.WriteLine(string.Empty);
-
-            this.WriteConstData();
         }
 
         /// <summary>

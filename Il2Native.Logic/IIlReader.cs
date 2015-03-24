@@ -48,6 +48,10 @@
 
         /// <summary>
         /// </summary>
+        IList<IConstBytes> UsedConstBytes { get; set; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         IEnumerable<string> AllReferences();
