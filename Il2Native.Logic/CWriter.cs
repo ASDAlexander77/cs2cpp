@@ -3768,8 +3768,11 @@ namespace Il2Native.Logic
             var operandIndex = 2;
 
             writer.Write(" = ");
-            this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[operandIndex], type);
-            this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+
+            if (!AdjustToType(opCode.OpCodeOperands[operandIndex], type))
+            {
+                this.WriteOperandResultOrActualWrite(writer, opCode, operandIndex);
+            }
         }
 
         /// <summary>
