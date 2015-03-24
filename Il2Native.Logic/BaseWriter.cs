@@ -142,10 +142,10 @@ namespace Il2Native.Logic
 
         public void Initialize(IType type)
         {
-
             this.ReadTypeInfo(type);
             this.System = new SystemTypes(this.ThisType.Module);
             StringGen.ResetClass();
+            ArraySingleDimensionGen.ResetClass();
         }
 
         public virtual string GetAllocator()

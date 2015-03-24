@@ -30,16 +30,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         private static string _singleDimArrayPrefixNullConstData;
 
-        /*
-        public ArraySingleDimensionGen_Ctor()
-        {
-            this.rank = 0; //?
-            this.typeCode = type.GetElementType().TypeCode;
-            this.elementSize = type.GetSize();
-            this.length = dim1;
-        }
-         */
-
         public static IEnumerable<IField> GetFields(IType arrayType, ITypeResolver typeResolver)
         {
             Debug.Assert(arrayType.IsArray && !arrayType.IsMultiArray, "This is for multi arrays only");
@@ -152,6 +142,15 @@ namespace Il2Native.Logic.Gencode
 
             // parameters
             parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
+        }
+
+        /// <summary>
+        /// resetting cahced values to force calling AddRequiredVirtualTablesDeclaration(stringType) and AddRequiredRttiDeclaration(stringType)
+        /// </summary>
+        public static void ResetClass()
+        {
+            _singleDimArrayPrefixDataType = null;
+            _singleDimArrayPrefixNullConstData = null;
         }
 
         public static string GetSingleDimArrayPrefixDataType(ITypeResolver typeResolver)
