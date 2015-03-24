@@ -24,25 +24,72 @@ namespace Il2Native.Logic
     {
         public static string CleanUpName(this string typeBaseName)
         {
-            typeBaseName = typeBaseName.Replace(' ', '_');
-            typeBaseName = typeBaseName.Replace('.', '_');
-            typeBaseName = typeBaseName.Replace('<', 'G');
-            typeBaseName = typeBaseName.Replace('>', 'C');
-            typeBaseName = typeBaseName.Replace('-', '_');
-            typeBaseName = typeBaseName.Replace(',', '_');
-            typeBaseName = typeBaseName.Replace('*', 'P');
-            typeBaseName = typeBaseName.Replace('[', 'A');
-            typeBaseName = typeBaseName.Replace(']', 'Y');
-            typeBaseName = typeBaseName.Replace('&', 'R');
-            typeBaseName = typeBaseName.Replace('(', 'F');
-            typeBaseName = typeBaseName.Replace(')', 'N');
-            typeBaseName = typeBaseName.Replace('{', 'C');
-            typeBaseName = typeBaseName.Replace('}', 'Y');
-            typeBaseName = typeBaseName.Replace('$', 'D');
-            typeBaseName = typeBaseName.Replace('=', 'E');
-            return typeBaseName;
-        }
+            var s = new char[typeBaseName.Length];
 
+            var n = ' ';
+            for (var i = 0; i < typeBaseName.Length; i++)
+            {
+                var c = typeBaseName[i];
+                switch (c)
+                {
+                    case ' ':
+                        n = '_';
+                        break;
+                    case '.':
+                        n = '_';
+                        break;
+                    case '<':
+                        n = 'G';
+                        break;
+                    case '>':
+                        n = 'C';
+                        break;
+                    case '-':
+                        n = '_';
+                        break;
+                    case ',':
+                        n = '_';
+                        break;
+                    case '*':
+                        n = 'P';
+                        break;
+                    case '[':
+                        n = 'A';
+                        break;
+                    case ']':
+                        n = 'Y';
+                        break;
+                    case '&':
+                        n = 'R';
+                        break;
+                    case '(':
+                        n = 'F';
+                        break;
+                    case ')':
+                        n = 'N';
+                        break;
+                    case '{':
+                        n = 'C';
+                        break;
+                    case '}':
+                        n = 'Y';
+                        break;
+                    case '$':
+                        n = 'D';
+                        break;
+                    case '=':
+                        n = 'E';
+                        break;
+                    default:
+                        n = c;
+                        break;
+                }
+
+                s[i] = n;
+            }
+
+            return new string(s);
+        }
 
         public static int Align(this int unalign, int alignSize)
         {
@@ -83,7 +130,7 @@ namespace Il2Native.Logic
             Debug.Assert((codeList.Count() - label) < SByte.MaxValue);
 
             // +2, op code + address code, as backward jump start from first byte of the end of branch command with address
-            var address = (byte) -(codeList.Count() - label + 2);
+            var address = (byte)-(codeList.Count() - label + 2);
             codeList.Add(op);
             codeList.Add(address);
         }
@@ -201,10 +248,10 @@ namespace Il2Native.Logic
         /// </param>
         public static void DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
             this IMethod method,
-            ISet<IType> genericTypeSpecializations, 
+            ISet<IType> genericTypeSpecializations,
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> structTypes,
-            ISet<IType> arrayTypes, 
+            ISet<IType> arrayTypes,
             Queue<IMethod> stackCall,
             ITypeResolver typeResolver)
         {
