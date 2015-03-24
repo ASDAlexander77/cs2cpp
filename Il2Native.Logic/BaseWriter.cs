@@ -684,7 +684,7 @@ namespace Il2Native.Logic
                             var tokenType = opCodeTypePart.Operand;
                             if (!tokenType.IsVirtualTableImplementation)
                             {
-                                this.IlReader.AddCalledMethod(tokenType.GetMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
+                                this.IlReader.AddCalledMethod(tokenType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
                             }
                         }
 

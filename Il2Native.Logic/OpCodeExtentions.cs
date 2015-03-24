@@ -353,12 +353,18 @@ namespace Il2Native.Logic
             return null;
         }
 
-        public static IMethod GetMethodByName(this IType classType, string methodName, ITypeResolver typeResolver)
+        public static IMethod GetFirstMethodByName(this IType classType, string methodName, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();
             var method = IlReader.Methods(normalType, typeResolver).FirstOrDefault(f => f.Name == methodName);
             Debug.Assert(method != null, string.Format("Method {0} could not be found", methodName));
             return method;
+        }
+
+        public static IEnumerable<IMethod> GetMethodsByName(this IType classType, string methodName, ITypeResolver typeResolver)
+        {
+            var normalType = classType.ToNormal();
+            return IlReader.Methods(normalType, typeResolver).Where(f => f.Name == methodName);
         }
 
         public static IField GetFieldByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)

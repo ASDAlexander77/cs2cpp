@@ -649,10 +649,15 @@ namespace Il2Native.Logic
             }
         }
 
+        public static IConstructor FindConstructor(IType type, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Constructors(type, typeResolver).FirstOrDefault(c => !c.GetParameters().Any());
+        }
+
         public static IConstructor FindConstructor(IType type, IType firstParameterType, ITypeResolver typeResolver)
         {
             return Logic.IlReader.Constructors(type, typeResolver)
-                        .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
+                     .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
         }
 
         /// <summary>
@@ -712,6 +717,9 @@ namespace Il2Native.Logic
             {
                 yield return typeResolver.System.System_Void.ToPointerType().ToField(type, "vtable");
             }
+
+            // special static field to store created type
+            yield return typeResolver.System.System_Type.ToField(type, ".type", isStatic: true);
         }
 
         /// <summary>

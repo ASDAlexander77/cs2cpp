@@ -73,7 +73,7 @@
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />
     <Compile Include="Gencode\StringGen.cs" />
-    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderInlinedTextMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderStaticMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedIlCodeBuilderThisMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
@@ -93,7 +93,6 @@
     <Compile Include="Gencode\SynthesizedMethods\String\SynthesizedStrLenMethod.cs" />
     <Compile Include="IIlReader.cs" />
     <Compile Include="IlCodeBuilder.cs" />
-    <Compile Include="Metadata\Model\MDLocation.cs" />
     <Compile Include="Gencode\InlineMethods\ActivatorGen.cs" />
     <Compile Include="Gencode\CallGen.cs" />
     <Compile Include="Gencode\InlineMethods\InterlockedGen.cs" />
@@ -133,10 +132,6 @@
     <Compile Include="Gencode\SynthesizedMethods\Object\SynthesizedUnboxMethod.cs" />
     <Compile Include="Gencode\TypeInfrastructure.cs" />
     <Compile Include="ITypeResolver.cs" />
-    <Compile Include="Metadata\Model\CollectionMetadata.cs" />
-    <Compile Include="Metadata\Model\Metadata.cs" />
-    <Compile Include="Metadata\Model\NamedMetadata.cs" />
-    <Compile Include="Metadata\Model\PlainTextMetadata.cs" />
     <Compile Include="MethodKey.cs" />
     <Compile Include="MethodsWalker.cs" />
     <Compile Include="NamespaceContainer.cs" />

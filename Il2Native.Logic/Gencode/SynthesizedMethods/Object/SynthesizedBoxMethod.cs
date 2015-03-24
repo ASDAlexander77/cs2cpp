@@ -15,7 +15,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedBoxMethod : SynthesizedIlCodeBuilderInlinedTextMethod
+    public class SynthesizedBoxMethod : SynthesizedIlCodeBuilderStaticMethod
     {
         /// <summary>
         /// </summary>

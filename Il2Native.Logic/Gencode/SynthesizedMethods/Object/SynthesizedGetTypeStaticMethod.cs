@@ -9,17 +9,15 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
+
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetTypeStaticMethod : SynthesizedMethodTypeBase
+    public class SynthesizedGetTypeStaticMethod : SynthesizedIlCodeBuilderStaticMethod
     {
         public const string Name = ".sgettype";
-
-        /// <summary>
-        /// </summary>
-        private readonly IType systemType;
 
         /// <summary>
         /// </summary>
@@ -28,16 +26,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// <param name="typeResolver">
         /// </param>
         public SynthesizedGetTypeStaticMethod(IType type, ITypeResolver typeResolver)
-            : base(type, Name)
+            : base(typeResolver.GetGetTypeStaticMethod(type), Name, type, typeResolver.System.System_Type)
         {
-            this.systemType = typeResolver.System.System_Type;
-        }
-
-        /// <summary>
-        /// </summary>
-        public override IType ReturnType
-        {
-            get { return this.systemType; }
         }
     }
 }

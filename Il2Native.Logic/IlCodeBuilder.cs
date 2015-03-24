@@ -222,6 +222,12 @@
             }
         }
 
+        public void New(IConstructor @constructor)
+        {
+            TokenResolutions.Add(@constructor);
+            this.Add(Code.Newobj, (int)TokenResolutions.Count);
+        }
+
         public void SizeOf(IType type)
         {
             TokenResolutions.Add(type);
@@ -283,6 +289,11 @@
         }
 
         // helpers
+        public void LoadNull()
+        {
+            this.Add(Code.Ldnull);
+        }
+
         public void LoadConstant(int @const)
         {
             switch (@const)

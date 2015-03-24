@@ -11,6 +11,7 @@ namespace Il2Native.Logic.Gencode
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Reflection.Emit;
     using CodeParts;
     using PEAssemblyReader;
@@ -28,8 +29,7 @@ namespace Il2Native.Logic.Gencode
         public static void WriteAllocateMemory(
             this CWriter cWriter,
             OpCodePart opCodePart,
-            FullyDefinedReference size,
-            bool doNotTestNullValue)
+            FullyDefinedReference size)
         {
             var writer = cWriter.Output;
 
@@ -38,16 +38,6 @@ namespace Il2Native.Logic.Gencode
             writer.Write("(");
             cWriter.WriteResult(size);
             writer.Write(")");
-
-            if (!doNotTestNullValue)
-            {
-                ////cWriter.WriteTestNullValueAndThrowException(
-                ////    writer,
-                ////    opCodePart,
-                ////    mallocResult,
-                ////    "System.OutOfMemoryException",
-                ////    "new_obj");
-            }
         }
 
         public static IlCodeBuilder GetAllocateMemoryCodeForObject(
@@ -77,16 +67,6 @@ namespace Il2Native.Logic.Gencode
                     typeResolver.GetAllocator(),
                     typeResolver.System.System_Void.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter() }));
-
-            if (!doNotTestNullValue)
-            {
-                //cWriter.WriteTestNullValueAndThrowException(
-                //    writer,
-                //    opCodePart,
-                //    mallocResult,
-                //    "System.OutOfMemoryException",
-                //    "new_obj");
-            }
 
             newAlloc.Castclass(declaringClassType);
 
@@ -127,7 +107,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             ilCodeBuilder.Add(Code.Dup);
-            ilCodeBuilder.Call(declaringClassType.GetMethodByName(SynthesizedInitMethod.Name, typeResolver));
+            ilCodeBuilder.Call(declaringClassType.GetFirstMethodByName(SynthesizedInitMethod.Name, typeResolver));
 
             ilCodeBuilder.Add(Code.Ret);
 
@@ -362,53 +342,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="type">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteInternalGetTypeMethod(this IType type, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            var method = new SynthesizedGetTypeMethod(type, cWriter);
-
-            var systemType = cWriter.System.System_Type;
-
-            var opCode = OpCodePart.CreateNop;
-            cWriter.WriteMethodStart(method, null);
-
-            var normalType = type.ToNormal();
-
-            cWriter.TypeTokenRequired.Add(normalType);
-
-            cWriter.WriteGetTypeObject(opCode, normalType);
-
-            writer.Write("ret ");
-            systemType.WriteTypePrefix(cWriter);
-
-            writer.Write(" ");
-            cWriter.WriteResult(opCode.Result);
-
-            cWriter.WriteMethodEnd(method, null);
-
-            cWriter.methodsHaveDefinition.Add(method);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="declaringType">
-        /// </param>
-        public static void WriteGetTypeObject(this CWriter cWriter, OpCodePart opCode, IType declaringType)
-        {
-            declaringType.WriteCallGetTypeObjectMethod(cWriter, opCode);
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="cWriter">
         /// </param>
         /// <param name="opCodePart">
@@ -458,6 +391,44 @@ namespace Il2Native.Logic.Gencode
                 codeBuilder.SaveField(@interface.GetInterfaceVTable(typeResolver));
             }
 
+            codeBuilder.Add(Code.Ret);
+
+            return codeBuilder;
+        }
+
+        public static IlCodeBuilder GetGetTypeMethod(this ITypeResolver typeResolver, IType declaringType)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            codeBuilder.Call(declaringType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, typeResolver));
+            codeBuilder.Add(Code.Ret);
+
+            return codeBuilder;
+        }
+
+        public static IlCodeBuilder GetGetTypeStaticMethod(this ITypeResolver typeResolver, IType declaringType)
+        {
+            var codeBuilder = new IlCodeBuilder();
+
+            var typeStorageType = declaringType.GetFieldByName(".type", typeResolver);
+            codeBuilder.LoadField(typeStorageType);
+            var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+
+            codeBuilder.LoadFieldAddress(typeStorageType);
+            codeBuilder.LoadNull();
+            codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver.System.System_Byte.ToArrayType(1), typeResolver));
+            codeBuilder.LoadNull();
+
+            codeBuilder.Call(
+                typeResolver.ResolveType("System.Threading.Interlocked")
+                            .GetMethodsByName("CompareExchange", typeResolver)
+                            .First(m => m.GetParameters().First().ParameterType.TypeEquals(typeResolver.System.System_Object.ToByRefType())));
+
+            codeBuilder.Add(Code.Pop);
+
+            codeBuilder.Add(jumpIfNotNull);
+
+            codeBuilder.LoadField(typeStorageType);
             codeBuilder.Add(Code.Ret);
 
             return codeBuilder;

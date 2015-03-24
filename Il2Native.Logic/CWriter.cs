@@ -4254,8 +4254,8 @@ namespace Il2Native.Logic
             if (isVoid)
             {
                 var environmentType = this.ResolveType("System.Environment");
-                var setExitCode = environmentType.GetMethodByName("set_ExitCode", this);
-                var getExitCode = environmentType.GetMethodByName("get_ExitCode", this);
+                var setExitCode = environmentType.GetFirstMethodByName("set_ExitCode", this);
+                var getExitCode = environmentType.GetFirstMethodByName("get_ExitCode", this);
                 this.WriteMethodForwardDeclarationIfNotWrittenyet(setExitCode, null);
                 this.WriteMethodForwardDeclarationIfNotWrittenyet(getExitCode, null);
                 this.Output.WriteLine(string.Empty);

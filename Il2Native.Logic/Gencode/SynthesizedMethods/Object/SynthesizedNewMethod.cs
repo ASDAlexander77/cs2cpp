@@ -14,7 +14,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
     /// <summary>
     /// </summary>
-    public class SynthesizedNewMethod : SynthesizedIlCodeBuilderInlinedTextMethod
+    public class SynthesizedNewMethod : SynthesizedIlCodeBuilderStaticMethod
     {
         private readonly ITypeResolver typeResolver;
 

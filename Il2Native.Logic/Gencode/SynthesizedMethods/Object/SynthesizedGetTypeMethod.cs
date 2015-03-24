@@ -9,26 +9,29 @@
 
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
-    using System;
     using System.Linq;
-    using System.Reflection;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods.Base;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedGetTypeMethod : SynthesizedThisMethod
+    public class SynthesizedGetTypeMethod : SynthesizedIlCodeBuilderThisMethod
     {
         public const string Name = ".gettype";
+
+        private ITypeResolver _typeResolver;
 
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
-        /// <param name="typeResolver">
+        /// <param name="writer">
         /// </param>
         public SynthesizedGetTypeMethod(IType type, ITypeResolver typeResolver)
-            : base(Name, type, typeResolver.System.System_Type)
+            : base(null, Name, type, typeResolver.System.System_Type)
         {
+            this._typeResolver = typeResolver;
             if (type.IsObject || (type.IsInterface && !type.GetInterfaces().Any()))
             {
                 IsVirtual = true;
@@ -37,6 +40,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             {
                 IsOverride = true;
             }
+        }
+
+        protected override IlCodeBuilder GetIlCodeBuilder()
+        {
+            return this._typeResolver.GetGetTypeMethod(Type);
         }
     }
 }

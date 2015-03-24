@@ -223,7 +223,7 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
@@ -253,8 +253,8 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetMethodByName("get_ASCII", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
@@ -283,9 +283,9 @@ namespace Il2Native.Logic.Gencode
             locals = new List<IType>();
 
             tokenResolutions = new List<object>();
-            tokenResolutions.Add(systemString.GetMethodByName("CreateStringFromEncoding", typeResolver));
-            tokenResolutions.Add(systemString.GetMethodByName("strlen", typeResolver));
-            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetMethodByName("get_ASCII", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
+            tokenResolutions.Add(systemString.GetFirstMethodByName("strlen", typeResolver));
+            tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
             parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
