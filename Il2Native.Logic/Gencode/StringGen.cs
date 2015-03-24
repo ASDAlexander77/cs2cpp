@@ -105,7 +105,7 @@ namespace Il2Native.Logic.Gencode
                     sb.Append("; ");
                 }
 
-                sb.Append("Byte* ifce" + index);
+                sb.Append("Byte* ifce" + index++);
             }
 
             sb.Append("; Int32 len");

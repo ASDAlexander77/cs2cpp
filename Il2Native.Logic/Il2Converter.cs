@@ -496,7 +496,8 @@ namespace Il2Native.Logic
                         readingTypesContext.GenericMethodSpecializations,
                         null,
                         readingTypesContext.AdditionalTypesToProcess,
-                        new Queue<IMethod>());
+                        new Queue<IMethod>(),
+                        _codeWriter);
 
                 }
             }
@@ -547,7 +548,8 @@ namespace Il2Native.Logic
                     readingTypesContext.GenericMethodSpecializations,
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
-                    new Queue<IMethod>());
+                    new Queue<IMethod>(),
+                    _codeWriter);
             }
         }
 
@@ -774,7 +776,8 @@ namespace Il2Native.Logic
                     readingTypesContext.GenericMethodSpecializations,
                     null,
                     readingTypesContext.AdditionalTypesToProcess,
-                    new Queue<IMethod>());
+                    new Queue<IMethod>(),
+                    _codeWriter);
             }
         }
 
@@ -798,8 +801,8 @@ namespace Il2Native.Logic
                 }
 
                 var usedStructTypes = new NamespaceContainer<IType>();
-                methodWithCustomBodyOrDefault.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                    null, null, usedStructTypes, null, new Queue<IMethod>());
+                methodWithCustomBodyOrDefault
+                    .DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(null, null, usedStructTypes, null, new Queue<IMethod>(), _codeWriter);
                 foreach (var usedStructType in usedStructTypes)
                 {
                     yield return usedStructType;

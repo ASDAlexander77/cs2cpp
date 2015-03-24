@@ -12,6 +12,7 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Linq;
     using System.Text;
     using CodeParts;
 
@@ -153,138 +154,87 @@ namespace Il2Native.Logic.Gencode
             parameters = ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver);
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        [Obsolete]
         public static string GetSingleDimArrayPrefixDataType(ITypeResolver typeResolver)
         {
-            // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()
-            //return "i8*, i8*, i8*, i32, i32";
             if (_singleDimArrayPrefixDataType != null)
             {
                 return _singleDimArrayPrefixDataType;
             }
 
-            var arraySystemType = typeResolver.System.System_Byte.ToArrayType(1);
+            var bytesArrayType = typeResolver.System.System_Byte.ToArrayType(1);
 
             var sb = new StringBuilder();
-            foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
-            {
-                if (memberLocationInfo.Size == 0)
-                {
-                    break;
-                }
 
+            sb.Append("Byte* vtable");
+
+            var index = 0;
+            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            {
                 if (sb.Length > 0)
                 {
-                    sb.Append(", ");
+                    sb.Append("; ");
                 }
 
-                if (memberLocationInfo.MemberType == MemberTypes.Root || memberLocationInfo.MemberType == MemberTypes.Interface)
-                {
-                    sb.Append("i8*");
-                }
-                else
-                {
-                    if (memberLocationInfo.Size == 0)
-                    {
-                        break;
-                    }
-
-                    sb.Append("i" + (memberLocationInfo.Size * 8));
-                }
+                sb.Append("Byte* ifce" + index++);
             }
+
+            sb.Append("; Int16 rank");
+            sb.Append("; Int16 typeCode");
+            sb.Append("; Int32 elementSize");
+            sb.Append("; Int32 length");
 
             _singleDimArrayPrefixDataType = sb.ToString();
             return _singleDimArrayPrefixDataType;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        [Obsolete]
-        public static string GetSingleDimArrayPrefixNullConstData(ITypeResolver typeResolver)
+        public static string GetSingleDimArrayPrefixNullConstData(CWriter cWriter)
         {
-            // TODO: fix it as you did in StringGen with using tringSystemType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct()
-
             if (_singleDimArrayPrefixNullConstData != null)
             {
                 return _singleDimArrayPrefixNullConstData;
             }
 
-            var arraySystemType = typeResolver.System.System_Byte.ToArrayType(1);
+            ITypeResolver typeResolver = cWriter;
+
+            var bytesArrayType = typeResolver.System.System_Byte.ToArrayType(1);
 
             var sb = new StringBuilder();
-            foreach (var memberLocationInfo in arraySystemType.GetTypeSizes(typeResolver))
-            {
-                if (memberLocationInfo.MemberType == MemberTypes.Root || memberLocationInfo.MemberType == MemberTypes.Interface)
-                {
-                    if (sb.Length > 0)
-                    {
-                        sb.Append(", ");
-                    }
 
-                    sb.Append("i8* null");
-                }
-                else
+            sb.AppendLine(string.Empty);
+            sb.Append("(Byte*) ");
+            sb.Append(bytesArrayType.GetVirtualTableNameReference(cWriter));
+
+            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            {
+                if (sb.Length > 0)
                 {
-                    break;
+                    sb.AppendLine(", ");
                 }
+
+                sb.Append("(Byte*) ");
+                sb.Append(bytesArrayType.GetVirtualInterfaceTableNameReference(@interface, cWriter));
             }
+
+            sb.AppendLine(string.Empty);
 
             _singleDimArrayPrefixNullConstData = sb.ToString();
             return _singleDimArrayPrefixNullConstData;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static string GetArrayTypeHeader(this CWriter cWriter, IType elementType, int length)
         {
-            var typeString = cWriter.WriteToString(
-                () => elementType.WriteTypePrefix(cWriter));
+            var typeString = cWriter.WriteToString(() => elementType.WriteTypePrefix(cWriter));
 
-            return "{ " + GetSingleDimArrayPrefixDataType(cWriter) + ", [" + length + " x " + typeString + "] }";
+            return "{ " + GetSingleDimArrayPrefixDataType(cWriter) + "; " + typeString + " data[" + length + "]; }";
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
-        /// <param name="elementType">
-        /// </param>
-        /// <param name="length">
-        /// </param>
-        /// <param name="storeLength">
-        /// </param>
-        /// <returns>
-        /// </returns>
         public static string GetArrayValuesHeader(
             this CWriter cWriter,
             IType elementType,
             int length,
             int storeLength)
         {
-            var typeString = cWriter.WriteToString(
-                () =>
-                {
-                    var writer = cWriter.Output;
-                    elementType.WriteTypePrefix(cWriter);
-                });
-
-            return GetSingleDimArrayPrefixNullConstData(cWriter) + ", i16 0, i16 " + elementType.GetTypeCode() +
-                   ", i32 " + elementType.GetTypeSize(cWriter, true) + ", i32 " + storeLength + ", [" +
-                   length + " x " + typeString + "]";
+            return GetSingleDimArrayPrefixNullConstData(cWriter) + ", 0, " + elementType.GetTypeCode() + ", " + elementType.GetTypeSize(cWriter, true) + ", " + storeLength + ", ";
         }
 
         /// <summary>

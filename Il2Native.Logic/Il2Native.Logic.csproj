@@ -165,7 +165,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="RuntimeTypeConstBytes.cs" />
+    <Compile Include="Gencode\RuntimeTypeConstBytes.cs" />
     <Compile Include="StackBranches.cs" />
     <Compile Include="NamespaceContainerAssoc.cs" />
     <Compile Include="SystemTypes.cs" />

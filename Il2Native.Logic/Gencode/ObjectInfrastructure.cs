@@ -411,6 +411,8 @@ namespace Il2Native.Logic.Gencode
 
         public static IlCodeBuilder GetGetTypeStaticMethod(this ITypeResolver typeResolver, IType declaringType)
         {
+            var bytesArrayType = typeResolver.System.System_Byte.ToArrayType(1);
+
             var codeBuilder = new IlCodeBuilder();
 
             var typeStorageType = declaringType.GetFieldByName(".type", typeResolver);
@@ -419,7 +421,7 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.LoadFieldAddress(typeStorageType);
             codeBuilder.LoadToken(new SynthesizedConstBytesField(new RuntimeTypeConstBytes(declaringType)));
-            codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver.System.System_Byte.ToArrayType(1), typeResolver));
+            codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, bytesArrayType, typeResolver));
             codeBuilder.LoadNull();
 
             codeBuilder.Call(

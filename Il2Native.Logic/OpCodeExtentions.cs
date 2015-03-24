@@ -204,7 +204,8 @@ namespace Il2Native.Logic
             ISet<IMethod> genericMethodSpecializations,
             ISet<IType> structTypes,
             ISet<IType> arrayTypes, 
-            Queue<IMethod> stackCall)
+            Queue<IMethod> stackCall,
+            ITypeResolver typeResolver)
         {
             if (Il2Converter.VerboseOutput)
             {
@@ -218,6 +219,7 @@ namespace Il2Native.Logic
             reader.UsedArrayTypes = arrayTypes;
             reader.UsedGenericSpecialiazedTypes = genericTypeSpecializations;
             reader.UsedGenericSpecialiazedMethods = genericMethodSpecializations;
+            reader.TypeResolver = typeResolver;
 
             var genericContext = MetadataGenericContext.DiscoverFrom(method, false); // true
             foreach (var op in reader.OpCodes(method, genericContext, stackCall))
@@ -1100,6 +1102,14 @@ namespace Il2Native.Logic
         /// </returns>
         public static IEnumerable<IType> SelectAllTopAndAllNotFirstChildrenInterfaces(this IType type)
         {
+            if (type.BaseType != null)
+            {
+                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
+                {
+                    yield return baseInterface;
+                }
+            }
+
             foreach (var topInterface in type.GetInterfacesExcludingBaseAllInterfaces())
             {
                 yield return topInterface;
@@ -1108,14 +1118,6 @@ namespace Il2Native.Logic
                 foreach (var notFirstChild in topInterface.SelectAllNestedChildrenExceptFirstInterfaces())
                 {
                     yield return notFirstChild;
-                }
-            }
-
-            if (type.BaseType != null)
-            {
-                foreach (var baseInterface in type.BaseType.SelectAllTopAndAllNotFirstChildrenInterfaces())
-                {
-                    yield return baseInterface;
                 }
             }
         }

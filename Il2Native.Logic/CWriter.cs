@@ -517,7 +517,8 @@ namespace Il2Native.Logic
                         var constBytes = opCodeFieldInfoPartToken.Operand.ConstantValue as IConstBytes;
                         if (constBytes != null)
                         {
-                            this.Output.Write(constBytes.Reference);
+                            var typeString = this.WriteToString(() => System.System_Byte.ToArrayType(1).WriteTypePrefix(this));
+                            this.Output.Write("({1}) &{0}", constBytes.Reference, typeString);
                             break;
                         }
 
@@ -3903,14 +3904,8 @@ namespace Il2Native.Logic
 
             if (this.virtualTableImplementationDeclarationsWritten.Add(type))
             {
-                if (this.AssemblyQualifiedName == type.AssemblyQualifiedName)
-                {
-                    this.WriteVirtualTableImplementations(type);
-                }
-                else
-                {
-                    type.WriteVirtualTableEmptyImplementationDeclarations(this);
-                }
+                // as type is Array (as generic) it will be defined in current assembly
+                this.WriteVirtualTableImplementations(type);
             }
 
             var bytes = constBytes.Data;
@@ -3937,12 +3932,7 @@ namespace Il2Native.Logic
                 index++;
             }
 
-            if (index > 0)
-            {
-                this.Output.Write(", ");
-            }
-
-            this.Output.WriteLine("0 {0} {0};", '}');
+            this.Output.WriteLine(" {0} {0};", '}');
         }
 
         /// <summary>

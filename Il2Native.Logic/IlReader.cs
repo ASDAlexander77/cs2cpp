@@ -1119,11 +1119,7 @@ namespace Il2Native.Logic
                         }
 
                         this.AddUsedType(constructor.DeclaringType);
-                        if (this.TypeResolver != null)
-                        {
-                            this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
-                        }
-
+                        this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
                         this.AddCalledMethod(constructor);
 
                         yield return new OpCodeConstructorInfoPart(opCode, startAddress, currentAddress, constructor);
@@ -1162,12 +1158,12 @@ namespace Il2Native.Logic
                             this.AddVirtualTable(method.DeclaringType.ToVirtualTable());
                         }
 
-                        if (this.TypeResolver != null && method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
+                        if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
                         {
                             this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.TypeResolver));
                         }
 
-                        if (this.TypeResolver != null && method.DeclaringType.IsStructureType() && method.IsConstructor)
+                        if (method.DeclaringType.IsStructureType() && method.IsConstructor)
                         {
                             this.AddCalledMethod(new SynthesizedInitMethod(method.DeclaringType, this.TypeResolver));
                         }
@@ -1188,13 +1184,10 @@ namespace Il2Native.Logic
 
                         this.AddCalledMethod(method);
 
-                        if (this.TypeResolver != null)
-                        {
-                            var intPtrConstructor = Logic.IlReader.FindConstructor(
-                                this.TypeResolver.System.System_IntPtr, this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
-                            this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.TypeResolver));
-                            this.AddCalledMethod(intPtrConstructor);
-                        }
+                        var intPtrConstructor = Logic.IlReader.FindConstructor(
+                            this.TypeResolver.System.System_IntPtr, this.TypeResolver.System.System_Void.ToPointerType(), this.TypeResolver);
+                        this.AddCalledMethod(new SynthesizedNewMethod(intPtrConstructor.DeclaringType, this.TypeResolver));
+                        this.AddCalledMethod(intPtrConstructor);
 
                         yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, method);
                         continue;
@@ -1250,6 +1243,7 @@ namespace Il2Native.Logic
                             if (constBytes != null)
                             {
                                 this.AddConstBytes(constBytes);
+                                this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
                             }
                             else
                             {
@@ -1298,13 +1292,13 @@ namespace Il2Native.Logic
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
-                            if (this.TypeResolver != null && type.IsValueType)
+                            if (type.IsValueType)
                             {
                                 this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
                             }
                         }
 
-                        if (this.TypeResolver != null && (code == Code.Unbox || code == Code.Unbox_Any))
+                        if (code == Code.Unbox || code == Code.Unbox_Any)
                         {
                             this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.TypeResolver));
                         }
@@ -1316,17 +1310,14 @@ namespace Il2Native.Logic
 
                             if (code == Code.Newarr)
                             {
-                                if (this.TypeResolver != null)
-                                {
-                                    this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.TypeResolver));
-                                    var constructorInfo =
-                                        Constructors(arrayType, this.TypeResolver)
-                                            .FirstOrDefault(
-                                                c =>
-                                                c.GetParameters().Count() == 1
-                                                && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
-                                    this.AddCalledMethod(constructorInfo);
-                                }
+                                this.AddCalledMethod(new SynthesizedNewMethod(arrayType, this.TypeResolver));
+                                var constructorInfo =
+                                    Constructors(arrayType, this.TypeResolver)
+                                        .FirstOrDefault(
+                                            c =>
+                                            c.GetParameters().Count() == 1
+                                            && c.GetParameters().First().ParameterType.TypeEquals(this.TypeResolver.System.System_Int32));
+                                this.AddCalledMethod(constructorInfo);
                             }
                         }
 
@@ -1349,10 +1340,8 @@ namespace Il2Native.Logic
                         yield return new OpCodeLabelsPart(opCode, startAddress, currentAddress, ints.ToArray());
                         continue;
                     case Code.Ldlen:
-                        if (this.TypeResolver != null)
-                        {
-                            this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
-                        }
+                        
+                        this.AddArrayType(this.TypeResolver.System.System_Byte.ToArrayType(1));
 
                         yield return new OpCodePart(opCode, startAddress, currentAddress);
                         continue;
@@ -1816,7 +1805,7 @@ namespace Il2Native.Logic
 
             // disover it again in specialized method
             method.DiscoverStructsArraysSpecializedTypesAndMethodsInMethodBody(
-                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, stackCall);
+                this.usedGenericSpecialiazedTypes, this.usedGenericSpecialiazedMethods, null, this._usedArrayTypes, stackCall, this.TypeResolver);
 
             stackCall.Dequeue();
         }
