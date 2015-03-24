@@ -786,11 +786,17 @@ namespace Il2Native.Logic
                 case Code.Dup:
 
                     var estimatedResult = this.EstimatedResultOf(firstOpCodeOperand);
-                    var dupVar = this.WriteVariable(opCode, estimatedResult.Type, "_dup");
+                    var dupVar = this.WriteVariable(opCode, "_dup");
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
 
                     // do not remove next live, it contains _dup variable
                     opCode.Result = firstOpCodeOperand.Result = new FullyDefinedReference(dupVar, estimatedResult.Type);
+
+                    // TEMP HACK
+                    if (opCode.UsedBy.Any(Code.Call, Code.Callvirt, Code.Newobj, Code.Newarr))
+                    {
+                        opCode.Result = null;
+                    }
 
                     break;
 
@@ -1356,7 +1362,8 @@ namespace Il2Native.Logic
                     opCodeTypePart = opCode as OpCodeTypePart;
 
                     var @class = opCodeTypePart.Operand.ToClass();
-                    var constrVar = this.WriteVariable(opCode, @class, "_constr");
+                    this.WriteVariableDeclare(opCode, @class, "_constr");
+                    var constrVar = this.WriteVariable(opCode, "_constr");
 
                     var opCodeNone = OpCodePart.CreateNop;
                     if (opCodeTypePart.Operand.IsValueType())
@@ -1463,11 +1470,16 @@ namespace Il2Native.Logic
             }
         }
 
-        private string WriteVariable(OpCodePart opCode, IType type, string name)
+        private void WriteVariableDeclare(OpCodePart opCode, IType type, string name)
         {
             var variable = string.Format("{0}{1}", name, opCode.AddressStart);
             type.WriteTypePrefix(this);
             this.Output.WriteLine(string.Concat(" ", variable, ";"));
+        }
+
+        private string WriteVariable(OpCodePart opCode, string name)
+        {
+            var variable = string.Format("{0}{1}", name, opCode.AddressStart);
             this.Output.Write(string.Concat(variable, " = "));
             return variable;
         }
@@ -1678,25 +1690,6 @@ namespace Il2Native.Logic
         public string GetArgVarName(string name, int index)
         {
             return string.Format("{0}_{1}", name, index);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCodePart">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public string GetDirectName(OpCodePart opCodePart)
-        {
-            var output = this.Output;
-
-            var sb = new StringBuilder();
-            this.Output = new CIndentedTextWriter(new StringWriter(sb));
-
-            this.ActualWrite(this.Output, opCodePart);
-
-            this.Output = output;
-            return sb.ToString();
         }
 
         public int GetFieldIndex(IType type, string fieldName)
@@ -4401,6 +4394,13 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteMethodBody(IEnumerable<OpCodePart> rest)
         {
+            // Temp hack to delcare all temp variables;
+            foreach (var opCodePart in rest.Where(opCodePart => opCodePart.Any(Code.Dup)))
+            {
+                var estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                this.WriteVariableDeclare(opCodePart, estimatedResult.Type, "_dup");
+            }
+
             foreach (var opCodePart in rest)
             {
                 this.ActualWrite(this.Output, opCodePart, true);

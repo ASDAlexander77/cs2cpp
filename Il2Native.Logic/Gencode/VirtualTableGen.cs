@@ -562,8 +562,8 @@ namespace Il2Native.Logic.Gencode
             IEnumerable<IMethod> allPublic,
             ITypeResolver typeResolver)
         {
-            var allInterfaces = @interface.GetInterfaces();
-            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
+            var baseInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
             if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
@@ -600,9 +600,16 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         private static void AddMethodsToVirtualInterfaceTableLayout(this List<IMethod> virtualTable, IType @interface, ITypeResolver typeResolver)
         {
-            var allInterfaces = @interface.GetInterfaces();
-            var firstChildInterface = allInterfaces != null ? allInterfaces.FirstOrDefault() : null;
-            if (firstChildInterface != null)
+            var baseInterfaces = @interface.GetInterfaces();
+            var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
+            if (firstChildInterface == null)
+            {
+                // add Object virtual methods to simulate inheritance from Object type
+                virtualTable.AddRange(
+                    IlReader.Methods(typeResolver.System.System_Object, typeResolver)
+                        .Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride));
+            }
+            else
             {
                 // get all virtual methods in current type and replace or append
                 virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface, typeResolver);
