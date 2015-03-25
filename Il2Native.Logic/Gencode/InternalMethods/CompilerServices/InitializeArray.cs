@@ -17,6 +17,7 @@
             ilCodeBuilder.LoadFieldAddress(arrayType.GetFieldByName("data", typeResolver));
             ilCodeBuilder.LoadArgument(1);
             ilCodeBuilder.LoadField(typeResolver.System.System_RuntimeFieldHandle.GetFieldByName("vtable", typeResolver, true));
+            ilCodeBuilder.Castclass(typeResolver.System.System_Byte.ToPointerType().ToPointerType());
             ilCodeBuilder.LoadConstant(1);
             ilCodeBuilder.Add(Code.Add);
             ilCodeBuilder.LoadArgument(1);
