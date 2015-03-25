@@ -606,7 +606,7 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteResultOrActualWrite(writer, op2);
             writer.Write(", ");
             cWriter.WriteResultOrActualWrite(writer, size);
-            writer.Write(");");
+            writer.Write(")");
         }
 
         /// <summary>

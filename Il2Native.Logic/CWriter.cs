@@ -530,12 +530,20 @@ namespace Il2Native.Logic
 
                         if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
                         {
+                            // TODO: can be repeated (improve it, reduce using opCode.AddressStart here) 
                             System.System_RuntimeFieldHandle.WriteTypePrefix(this);
-                            var tokenVar = string.Format("_token{0}", opCodeFieldInfoPartToken.Operand.FieldType.Token);
-                            this.Output.Write(" {0} = ", tokenVar);
-                            this.Output.Write("{ &");
+                            var tokenVar = string.Format("_token{0}{1}", opCodeFieldInfoPartToken.Operand.FieldType.Token, opCode.AddressStart);
+                            this.Output.WriteLine(" {0};", tokenVar);
+                            this.Output.Write("{0}.", tokenVar);
+                            this.WriteFieldAccessLeftExpression(
+                                this.Output,
+                                System.System_RuntimeFieldHandle,
+                                System.System_RuntimeFieldHandle.GetFieldByName("vtable", this, true),
+                                null,
+                                false);
+                            this.Output.Write(" = ");
+                            this.Output.Write("&");
                             this.WriteStaticFieldName(opCodeFieldInfoPartToken.Operand);
-                            this.Output.Write(" }");
 
                             opCode.Result = new FullyDefinedReference(tokenVar, System.System_RuntimeFieldHandle);
 
@@ -2355,13 +2363,18 @@ namespace Il2Native.Logic
             writer.Write(")");
             writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
+            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex, isUsingObjectOnInterface);
+        }
+
+        private void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex, bool isUsingObjectOnInterface)
+        {
             if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
             }
             else if (isUsingObjectOnInterface)
             {
-                this.WriteFieldPath(System.System_Object, field);
+                this.WriteFieldPath(this.System.System_Object, field);
             }
             else
             {
