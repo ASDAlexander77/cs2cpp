@@ -20,27 +20,27 @@
         public SynthesizedIlCodeBuilderThisMethod(IlCodeBuilder codeBuilder, string name, IType declaringType, IType returningType, bool isVirtual = false, bool isOverride = false)
             : base(name, declaringType, returningType, isVirtual, isOverride)
         {
-            _codeBuilder = codeBuilder;
+            this._codeBuilder = codeBuilder;
         }
 
         public override IModule Module
         {
             get
             {
-                this.EnsureCreated(GetIlCodeBuilder());
+                this.EnsureCreated();
                 return new SynthesizedModuleResolver(null, this._tokenResolutions);
             }
         }
 
         public override IEnumerable<IParameter> GetParameters()
         {
-            this.EnsureCreated(GetIlCodeBuilder());
+            this.EnsureCreated();
             return this._parameters;
         }
 
         public override IMethodBody GetMethodBody(IGenericContext genericContext = null)
         {
-            this.EnsureCreated(GetIlCodeBuilder());
+            this.EnsureCreated();
             return this._methodBody;
         }
 
@@ -49,12 +49,14 @@
             return _codeBuilder;
         }
 
-        private void EnsureCreated(IlCodeBuilder codeBuilder)
+        private void EnsureCreated()
         {
-            if (codeBuilder == null || this._methodBody != null)
+            if (this._methodBody != null || this._parameters != null || this._tokenResolutions != null)
             {
                 return;
             }
+
+            var codeBuilder = GetIlCodeBuilder();
 
             this._methodBody = codeBuilder.GetMethodBody();
             this._parameters = codeBuilder.GetParameters();

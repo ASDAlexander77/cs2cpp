@@ -79,5 +79,7 @@
         /// <summary>
         /// </summary>
         void AddUsedTypeDefinition(IType type);
+
+        void AddVirtualTable(IType type);
     }
 }

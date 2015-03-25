@@ -72,6 +72,10 @@ namespace Il2Native.Logic.Gencode
             {
                 virtualTable.BuildVirtualTable(thisType.BaseType, typeResolver);
             }
+            else if (thisType.IsInterface)
+            {
+                virtualTable.BuildVirtualTable(typeResolver.System.System_Object, typeResolver);
+            }
 
             // get all virtual methods in current type and replace or append
             foreach (
@@ -563,6 +567,18 @@ namespace Il2Native.Logic.Gencode
             ITypeResolver typeResolver)
         {
             var baseInterfaces = @interface.GetInterfaces();
+            if (!baseInterfaces.Any() && @interface.BaseType == null)
+            {
+                // add method from Object to simulate inheritence from Object
+#if DEBUG
+                var objectInterfaceMethods = IlReader.Methods(typeResolver.System.System_Object, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride).ToList();
+#else
+                var objectInterfaceMethods = IlReader.Methods(typeResolver.System.System_Object, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride);
+#endif
+
+                ResolveAndAppendInterfaceMethods(virtualTable, objectInterfaceMethods, objectInterfaceMethods);
+            }
+
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
             if (firstChildInterface != null)
             {
@@ -572,17 +588,23 @@ namespace Il2Native.Logic.Gencode
 
             // get all virtual methods in current type and replace or append
 #if DEBUG
-            var interfaceMethods = IlReader.Methods(@interface, typeResolver).ToList();
+            var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic).ToList();
 #else
-            var interfaceMethods = IlReader.Methods(@interface, typeResolver);
+            var interfaceMethods = IlReader.Methods(@interface, typeResolver).Where(m => !m.IsStatic);
 #endif
+            ResolveAndAppendInterfaceMethods(virtualTable, allPublic, interfaceMethods);
+        }
+
+        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allPublic, List<IMethod> interfaceMethods)
+        {
             var list =
                 interfaceMethods.Select(
                     interfaceMember =>
                     new CWriter.Pair<IMethod, IMethod>
                         {
                             Key = interfaceMember,
-                            Value = allPublic.Where(interfaceMember.IsMatchingInterfaceOverride)
+                            Value =
+                                allPublic.Where(interfaceMember.IsMatchingInterfaceOverride)
                                          .OrderByDescending(x => x.IsExplicitInterfaceImplementation)
                                          .FirstOrDefault()
                         }).ToList();
