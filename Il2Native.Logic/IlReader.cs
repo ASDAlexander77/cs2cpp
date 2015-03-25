@@ -737,8 +737,16 @@ namespace Il2Native.Logic
                 yield return typeResolver.System.System_Void.ToPointerType().ToField(type, "vtable");
             }
 
-            // special static field to store created type
-            yield return typeResolver.System.System_Type.ToField(type, ".type", isStatic: true);
+            if (!type.IsPrivateImplementationDetails)
+            {
+                // special static field to store created type
+                yield return typeResolver.System.System_Type.ToField(type, ".type", isStatic: true);
+            }
+
+            if (type.IsStaticArrayInit)
+            {
+                yield return typeResolver.System.System_Byte.ToField(type, "data", isFixed: true, fixedSize: type.GetStaticArrayInitSize());
+            }
         }
 
         /// <summary>

@@ -379,6 +379,12 @@ namespace Il2Native.Logic
                 return true;
             }
 
+            if (opCode.Any(Code.Ldtoken))
+            {
+                var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null && opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit;
+            }
+
             return false;
         }
 
@@ -522,6 +528,20 @@ namespace Il2Native.Logic
                             break;
                         }
 
+                        if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
+                        {
+                            System.System_RuntimeFieldHandle.WriteTypePrefix(this);
+                            var tokenVar = string.Format("_token{0}", opCodeFieldInfoPartToken.Operand.FieldType.Token);
+                            this.Output.Write(" {0} = ", tokenVar);
+                            this.Output.Write("{ &");
+                            this.WriteStaticFieldName(opCodeFieldInfoPartToken.Operand);
+                            this.Output.Write(" }");
+
+                            opCode.Result = new FullyDefinedReference(tokenVar, System.System_RuntimeFieldHandle);
+
+                            break;
+                        }
+
                         this.Output.Write("System_RuntimeFieldHandle()/*undef*/");
                     }
 
@@ -616,7 +636,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Ldlen:
-                    this.WriteArrayGetLength(opCode);
+                    this.LoadElement(writer, opCode, "length");
                     break;
 
                 case Code.Ldelem:
@@ -680,12 +700,6 @@ namespace Il2Native.Logic
                 case Code.Callvirt:
                     var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
                     var methodBase = opCodeMethodInfoPart.Operand;
-
-                    // check if it is InitializeArray call
-                    if (code == Code.Call && methodBase.IsItArrayInitialization())
-                    {
-                        this.WriteArrayInit(opCode);
-                    }
 
                     if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
                     {
@@ -786,7 +800,14 @@ namespace Il2Native.Logic
                 case Code.Dup:
 
                     var estimatedResult = this.EstimatedResultOf(firstOpCodeOperand);
-                    var dupVar = this.WriteVariable(opCode, "_dup");
+                    var dupVar = string.Concat("_dup", opCode.AddressStart);
+
+                    // TEMP HACK
+                    if (opCode.OpCodeOperands[0].Result == null || opCode.OpCodeOperands[0].Result.Name != dupVar)
+                    {
+                        this.WriteVariable(opCode, "_dup");
+                    }
+
                     this.WriteOperandResultOrActualWrite(writer, opCode, 0);
 
                     // do not remove next live, it contains _dup variable
@@ -2961,7 +2982,10 @@ namespace Il2Native.Logic
                 return;
             }
 
-            type.WriteRtti(this);
+            if (!type.IsPrivateImplementationDetails)
+            {
+                type.WriteRtti(this);
+            }
         }
 
         /// <summary>
@@ -4712,8 +4736,31 @@ namespace Il2Native.Logic
                 if (field.FieldType.IsStructureType())
                 {
                     this.Output.Write(" = ");
-                    field.FieldType.ToClass().WriteTypeWithoutModifiers(this);
-                    this.Output.Write("()/*undef*/");
+                    if (field.FieldType.IsStaticArrayInit)
+                    {
+                        this.Output.Write("{ ");
+                        this.Output.Write(field.FixedSize);
+                        this.Output.Write(", { ");
+                        var data = field.GetFieldRVAData();
+                        var index = 0;
+                        var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
+                        foreach (var b in data.Take(staticArrayInitSize))
+                        {
+                            if (index++ > 0)
+                            {
+                                this.Output.Write(", ");
+                            }
+
+                            this.Output.Write(b);
+                        }
+
+                        this.Output.Write("} }");
+                    }
+                    else
+                    {
+                        field.FieldType.ToClass().WriteTypeWithoutModifiers(this);
+                        this.Output.Write("()/*undef*/");
+                    }
                 }
                 else
                 {

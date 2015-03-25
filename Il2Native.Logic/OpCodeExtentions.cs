@@ -91,6 +91,13 @@ namespace Il2Native.Logic
             return new string(s);
         }
 
+        public static int GetStaticArrayInitSize(this IType fieldType)
+        {
+            var pos = fieldType.Name.IndexOf("=");
+            Debug.Assert(pos >= 0, "Could not find size");
+            return int.Parse(fieldType.Name.Substring(pos + 1));
+        }
+
         public static int Align(this int unalign, int alignSize)
         {
             var alignMinusOne = alignSize - 1;

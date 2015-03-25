@@ -475,7 +475,18 @@ namespace PEAssemblyReader
 
         public bool IsPrivateImplementationDetails
         {
-            get { return this.FullName.StartsWith("<PrivateImplementationDetails>"); }
+            get
+            {
+                return this.FullName.StartsWith("<PrivateImplementationDetails>");
+            }
+        }
+
+        public bool IsStaticArrayInit
+        {
+            get
+            {
+                return this.Name.StartsWith("__StaticArrayInitTypeSize");
+            }
         }
 
         /// <summary>
@@ -1061,7 +1072,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IField ToField(
-            IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false)
+            IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0)
         {
             TypeSymbol containingTypeSymbol = null;
             var metadataTypeAdapter = containingType as MetadataTypeAdapter;
@@ -1081,7 +1092,8 @@ namespace PEAssemblyReader
                         isStatic),
                     containingTypeSymbol,
                     isFixed ? this.ToPointerType() : this,
-                    isFixed);
+                    isFixed,
+                    fixedSize);
         }
 
         /// <summary>

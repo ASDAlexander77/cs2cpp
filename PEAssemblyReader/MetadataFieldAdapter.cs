@@ -29,15 +29,15 @@ namespace PEAssemblyReader
 
         private readonly bool? _isFixed;
 
+        private readonly int? _fixedSize;
+
         private readonly TypeSymbol _contaningType;
 
         private readonly IType _fieldType;
 
         /// <summary>
         /// </summary>
-        /// <param name="fieldDef">
-        /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, bool isFixed = false, int fixedSize = 0)
         {
             Debug.Assert(!isFixed || fieldDef.Type.IsPointerType());
 
@@ -46,17 +46,14 @@ namespace PEAssemblyReader
             if (isFixed)
             {
                 _isFixed = true;
+                _fixedSize = fixedSize;
             }
         }
 
         /// <summary>
         /// </summary>
-        /// <param name="fieldDef">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, bool isFixed = false)
-            : this(fieldDef, isFixed)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, bool isFixed = false, int fixedSize = 0)
+            : this(fieldDef, isFixed, fixedSize)
         {
             this._contaningType = contaningType;
         }
@@ -67,8 +64,8 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false)
-            : this(fieldDef, contaningType, isFixed)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false, int fixedSize = 0)
+            : this(fieldDef, contaningType, isFixed, fixedSize)
         {
             this._fieldType = fieldType;
         }
@@ -209,6 +206,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (_fixedSize.HasValue)
+                {
+                    return _fixedSize.Value;
+                }
+
                 return this.fieldDef.FixedSize;
             }
         }
@@ -217,10 +219,10 @@ namespace PEAssemblyReader
         {
             get
             {
-                var peNamedTypeSymbol = this.fieldDef.ContainingType as PENamedTypeSymbol;
-                if (peNamedTypeSymbol != null)
+                var namedTypeSymbol = this.fieldDef.ContainingType as PENamedTypeSymbol;
+                if (namedTypeSymbol != null)
                 {
-                    return peNamedTypeSymbol.FixedElementField != null;
+                    return namedTypeSymbol.FixedElementField != null;
                 }
 
                 return false;

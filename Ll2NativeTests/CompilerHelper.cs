@@ -95,7 +95,6 @@
         /// </summary>
         public const bool Mscorlib = false;
 
-
         /// <summary>
         /// </summary>
         /// <param name="includeCoreLib">
@@ -376,7 +375,7 @@
         {
             Trace.WriteLine(string.Empty);
             Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("Generating C for " + fileName);
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
@@ -390,7 +389,7 @@
         {
             Trace.WriteLine(string.Empty);
             Trace.WriteLine("==========================================================================");
-            Trace.WriteLine("Generating LLVM BC(ll) for " + fileName);
+            Trace.WriteLine("Generating C for " + fileName);
             Trace.WriteLine("==========================================================================");
             Trace.WriteLine(string.Empty);
 
