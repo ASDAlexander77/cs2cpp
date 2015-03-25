@@ -346,9 +346,10 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (this.OpCodeWithVariableDeclaration(opCode))
+            bool isVirtualCall;
+            if (this.OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
             {
-                if (IsVirtualCallThisExpression(opCode))
+                if (isVirtualCall)
                 {
                     var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
                     if (methodDeclarationType.IsInterface)
@@ -367,8 +368,10 @@ namespace Il2Native.Logic
             return false;
         }
 
-        private bool OpCodeWithVariableDeclaration(OpCodePart opCode)
+        private bool OpCodeWithVariableDeclaration(OpCodePart opCode, out bool isVirtualCall)
         {
+            isVirtualCall = false;
+
             if (opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc))
             {
                 return true;
@@ -376,6 +379,7 @@ namespace Il2Native.Logic
 
             if (IsVirtualCallThisExpression(opCode))
             {
+                isVirtualCall = true;
                 return true;
             }
 
@@ -1747,7 +1751,7 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetArgVarName(string name, int index)
         {
-            return string.Format("{0}_{1}", name, index);
+            return string.Format("{0}_{1}", name.CleanUpName(), index);
         }
 
         public int GetFieldIndex(IType type, string fieldName)
@@ -3140,7 +3144,8 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
 
-            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode))
+            bool isVirtualCall;
+            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
             {
                 this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
@@ -4394,18 +4399,9 @@ namespace Il2Native.Logic
             var isDelegateBodyFunctions = method.IsDelegateFunctionBody();
             if ((method.IsAbstract || (this.NoBody && !this.Stubs)) && !isDelegateBodyFunctions)
             {
-                if (!method.IsUnmanagedMethodReference)
+                if (!method.IsUnmanagedMethodReference && this.methodsHaveDefinition.Contains(method))
                 {
-                    if (this.methodsHaveDefinition.Contains(method))
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    this.WriteMethodDefinitionName(this.Output, method);
-                    Debug.Assert(false, "Investigate");
-                    this.Output.Write(" = ");
+                    return;
                 }
 
                 if (method.IsUnmanagedDllImport)
