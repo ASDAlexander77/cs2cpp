@@ -68,7 +68,8 @@
     <Compile Include="Gencode\InternalMethods\Array\ArrayGetUpperBoundGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayInternalGetReferenceGen.cs" />
     <Compile Include="Gencode\InternalMethods\Array\ArrayInternalSetValueGen.cs" />
-    <Compile Include="Gencode\InternalMethods\CompilerServices\OffsetToStringData.cs" />
+    <Compile Include="Gencode\InternalMethods\CompilerServices\InitializeArray.cs" />
+    <Compile Include="Gencode\InternalMethods\CompilerServices\OffsetToStringDataGen.cs" />
     <Compile Include="Gencode\InternalMethods\Object\ObjectGetTypeGen.cs" />
     <Compile Include="Gencode\InternalMethods\String\FastAllocateStringGen.cs" />
     <Compile Include="Gencode\InternalMethods\TypedReference\TypedReferenceInternalToObjectGen.cs" />

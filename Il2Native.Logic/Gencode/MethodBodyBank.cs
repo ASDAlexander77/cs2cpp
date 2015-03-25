@@ -147,7 +147,8 @@
             UnsafeCastToStackPointerGen.Register(typeResolver);
 
             // Runtime helpers
-            OffsetToStringData.Register(typeResolver);
+            OffsetToStringDataGen.Register(typeResolver);
+            InitializeArrayGen.Register(typeResolver);
         }
 
         [Obsolete]

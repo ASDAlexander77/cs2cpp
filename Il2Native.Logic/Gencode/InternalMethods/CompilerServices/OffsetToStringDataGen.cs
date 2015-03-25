@@ -7,7 +7,7 @@
     using SynthesizedMethods;
     using OpCodesEmit = System.Reflection.Emit.OpCodes;
 
-    public static class OffsetToStringData
+    public static class OffsetToStringDataGen
     {
         public static readonly string Name = "Int32 System.Runtime.CompilerServices.RuntimeHelpers.get_OffsetToStringData()";
 
