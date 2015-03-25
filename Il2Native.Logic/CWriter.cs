@@ -382,7 +382,9 @@ namespace Il2Native.Logic
             if (opCode.Any(Code.Ldtoken))
             {
                 var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null && opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit;
+                return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
+                       (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
+                        opCodeFieldInfoPart.Operand.GetFieldRVAData() != null);
             }
 
             return false;
@@ -528,7 +530,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
+                        if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit || opCodeFieldInfoPartToken.Operand.GetFieldRVAData() != null)
                         {
                             // TODO: can be repeated (improve it, reduce using opCode.AddressStart here) 
                             System.System_RuntimeFieldHandle.WriteTypePrefix(this);
@@ -538,12 +540,39 @@ namespace Il2Native.Logic
                             this.WriteFieldAccessLeftExpression(
                                 this.Output,
                                 System.System_RuntimeFieldHandle,
-                                System.System_RuntimeFieldHandle.GetFieldByName("vtable", this, true),
+                                System.System_RuntimeFieldHandle.GetFieldByName("fieldAddress", this, true),
+                                null,
+                                false);
+                            this.Output.Write(" = (");
+                            System.System_Byte.ToPointerType().WriteTypePrefix(this);
+                            this.Output.Write(") &");
+                            this.WriteStaticFieldName(opCodeFieldInfoPartToken.Operand);
+
+                            if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
+                            {
+                                this.Output.Write(" + sizeof(Void*)");
+                            }
+
+                            this.Output.WriteLine(";");
+
+                            this.Output.Write("{0}.", tokenVar);
+                            this.WriteFieldAccessLeftExpression(
+                                this.Output,
+                                System.System_RuntimeFieldHandle,
+                                System.System_RuntimeFieldHandle.GetFieldByName("fieldSize", this, true),
                                 null,
                                 false);
                             this.Output.Write(" = ");
-                            this.Output.Write("&");
-                            this.WriteStaticFieldName(opCodeFieldInfoPartToken.Operand);
+                            if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
+                            {
+                                this.Output.Write(opCodeFieldInfoPartToken.Operand.FieldType.GetStaticArrayInitSize());
+                            }
+                            else
+                            {
+                                this.Output.Write("sizeof(");
+                                opCodeFieldInfoPartToken.Operand.FieldType.WriteTypePrefix(this);
+                                this.Output.Write(")");
+                            }
 
                             opCode.Result = new FullyDefinedReference(tokenVar, System.System_RuntimeFieldHandle);
 
