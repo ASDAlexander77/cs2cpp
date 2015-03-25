@@ -4752,8 +4752,7 @@ namespace Il2Native.Logic
                     if (field.FieldType.IsStaticArrayInit)
                     {
                         var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
-                        this.Output.Write("{ (Void*) ");
-                        this.Output.Write(staticArrayInitSize);
+                        this.Output.Write("{ (Void*) 0");
                         this.Output.Write(", { ");
                         var data = field.GetFieldRVAData();
                         var index = 0;
@@ -4773,6 +4772,26 @@ namespace Il2Native.Logic
                     {
                         field.FieldType.ToClass().WriteTypeWithoutModifiers(this);
                         this.Output.Write("()/*undef*/");
+                    }
+                }
+                else if (field.FieldType.IsValueType() && field.GetFieldRVAData() != null)
+                {
+                    var data = field.GetFieldRVAData();
+                    this.Output.Write(" = ");
+                    switch (field.FieldType.IntTypeBitSize())
+                    {
+                        case 8:
+                            this.Output.Write(data[0]);
+                            break;
+                        case 16:
+                            this.Output.Write(BitConverter.ToInt16(data, 0));
+                            break;
+                        case 32:
+                            this.Output.Write(BitConverter.ToInt32(data, 0));
+                            break;
+                        case 64:
+                            this.Output.Write(BitConverter.ToInt64(data, 0));
+                            break;
                     }
                 }
                 else
