@@ -2311,14 +2311,36 @@ namespace Il2Native.Logic
             var operandEstimatedResultOf = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
             var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef ? operandEstimatedResultOf.Type.GetElementType().ToClass() : operandEstimatedResultOf.Type.ToClass();
 
+            var isUsingObjectOnInterface = classType.IsInterface && field.DeclaringType.IsObject;
+
             writer.Write("(");
+
+            if (isUsingObjectOnInterface)
+            {
+                writer.Write("(");
+                System.System_Object.WriteTypePrefix(this);
+                writer.Write(")(");
+            }
+
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
+
+            // special case when calling Object methods on interface
+            if (classType.IsInterface && field.DeclaringType.IsObject)
+            {
+                this.WriteGetThisPointerFromInterfacePointer(opCodePart.OpCodeOperands[0]);
+                writer.Write(")");
+            }
+
             writer.Write(")");
             writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
             if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
+            }
+            else if (isUsingObjectOnInterface)
+            {
+                this.WriteFieldPath(System.System_Object, field);
             }
             else
             {
@@ -2483,7 +2505,7 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            writer.Write(" += (*(((int*)*(int**)(");
+            writer.Write(" + (*(((int*)*(int**)(");
             this.WriteResultOrActualWrite(writer, opCodeThis);
             writer.Write("))-2) >> 2)");
         }

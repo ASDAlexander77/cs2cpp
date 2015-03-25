@@ -313,12 +313,6 @@ namespace Il2Native.Logic.Gencode
             var rollbackType = false;
             requiredType = ownerOfExplicitInterface != null ? resultOfFirstOperand.Type : null;
             
-            // in case when Object.Equals (etc) is used on interface
-            if (requiredType == null && resultOfFirstOperand != null && resultOfFirstOperand.Type.IsInterface && methodDeclaringType.IsObject)
-            {
-                methodDeclaringType = resultOfFirstOperand.Type;
-            }
-
             if (requiredType != null)
             {
                 methodDeclaringType = requiredType;

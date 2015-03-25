@@ -697,17 +697,7 @@ namespace Il2Native.Logic
                         {
                             estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                             var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
-
-                            // in case when Object.Equals (etc) called on interface
-                            if (estimatedResult.Type.IsInterface && opCodeMethodInfoPart.Operand.DeclaringType.IsObject)
-                            {
-                                this.IlReader.AddVirtualTable(estimatedResult.Type.ToVirtualTable());
-                            }
-                            else
-                            {
-                                this.IlReader.AddUsedTypeDefinition(opCodeMethodInfoPart.Operand.DeclaringType);
-                            }
-
+                            this.IlReader.AddUsedTypeDefinition(opCodeMethodInfoPart.Operand.DeclaringType);
                             this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
                         }
 

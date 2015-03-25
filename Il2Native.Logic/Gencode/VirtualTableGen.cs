@@ -576,7 +576,7 @@ namespace Il2Native.Logic.Gencode
                 var objectInterfaceMethods = IlReader.Methods(typeResolver.System.System_Object, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride);
 #endif
 
-                ResolveAndAppendInterfaceMethods(virtualTable, objectInterfaceMethods, objectInterfaceMethods);
+                ResolveAndAppendInterfaceMethods(virtualTable, allPublic, objectInterfaceMethods);
             }
 
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
