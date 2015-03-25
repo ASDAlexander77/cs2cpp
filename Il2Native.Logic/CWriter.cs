@@ -4738,12 +4738,12 @@ namespace Il2Native.Logic
                     this.Output.Write(" = ");
                     if (field.FieldType.IsStaticArrayInit)
                     {
-                        this.Output.Write("{ ");
-                        this.Output.Write(field.FixedSize);
+                        var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
+                        this.Output.Write("{ (Void*) ");
+                        this.Output.Write(staticArrayInitSize);
                         this.Output.Write(", { ");
                         var data = field.GetFieldRVAData();
                         var index = 0;
-                        var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
                         foreach (var b in data.Take(staticArrayInitSize))
                         {
                             if (index++ > 0)
