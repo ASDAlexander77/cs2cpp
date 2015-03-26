@@ -3103,7 +3103,8 @@ namespace Il2Native.Logic
                     }
                     else if (estimatedResult.Type.GetAllInterfaces().Contains(type))
                     {
-                        Debug.Assert(false, "finish casting object to interface");  
+                        writer.Write("&");
+                        this.WriteInterfaceAccess(opCode, estimatedResult.Type, type);
                     }
                     else 
                     {
