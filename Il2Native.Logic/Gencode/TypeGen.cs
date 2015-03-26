@@ -607,6 +607,8 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = codeWriter.Output;
 
+            Debug.Assert(type != null, "Type can't be null to write");
+
             type.WriteTypeWithoutModifiers(codeWriter);
             type.WriteTypeModifiers(writer, asReference);
         }

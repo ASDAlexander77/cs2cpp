@@ -3095,7 +3095,9 @@ namespace Il2Native.Logic
                 this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
                 if (estimatedResult.Type.TypeNotEquals(type))
                 {
-                    if (estimatedResult.Type.IsDerivedFrom(type))
+                    if (estimatedResult.Type.IsDerivedFrom(type) || (estimatedResult.Type.IntTypeBitSize() > 0 && type.IntTypeBitSize() > 0)
+                        || ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) && (type.IsPointer || type.IsByRef))
+                        || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference))
                     {
                         this.WriteCCastOnly(type);
                     }

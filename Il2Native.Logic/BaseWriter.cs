@@ -940,16 +940,15 @@ namespace Il2Native.Logic
                 {
                     // detect required types in alternative values
                     var firstOpCode =
-                        alternativeValues.Values.FirstOrDefault(v => v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
-                    if (firstOpCode == null)
-                    {
-                        // TODO: find out why it happens here (test-154.cs)
-                        continue;
-                    }
+                        alternativeValues.Values.FirstOrDefault(v => v != null && !(v.UsedBy != null && v.UsedBy.Any(Code.Pop)));
+
+                    Debug.Assert(firstOpCode != null, "Operand could not be found for Phi Nodes");
 
                     var requiredType = this.RequiredOutgoingType(firstOpCode)
                                    ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                   ?? alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                                   ?? alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                                   ?? this.EstimatedResultOf(firstOpCode).Type;
+
                     if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {
                         // find base type, for example if first value is IDictionary and second is Object then required type should be Object
@@ -960,9 +959,10 @@ namespace Il2Native.Logic
                         {
                             requiredType = requiredItem;
                         }
-
-                        alternativeValues.RequiredOutgoingType = requiredType;
                     }
+
+                    Debug.Assert(requiredType != null, "Required Type for Phi nodes can't be calculated");
+                    alternativeValues.RequiredOutgoingType = requiredType;
                 }
             }
         }
@@ -1497,181 +1497,162 @@ namespace Il2Native.Logic
             int operandPosition = -1,
             bool forArithmeticOperations = false)
         {
-            // TODO: need a good review of required types etc
             IType retType = null;
-            if (opCodePart.Any(Code.Ret))
+            switch (opCodePart.ToCode())
             {
-                retType = this.MethodReturnType;
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Stloc, Code.Stloc_0, Code.Stloc_1, Code.Stloc_2, Code.Stloc_3, Code.Stloc_S))
-            {
-                retType = opCodePart.GetLocalType(this);
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Starg, Code.Starg_S))
-            {
-                var index = opCodePart.GetArgIndex();
-                if (this.HasMethodThis && index == 0)
-                {
-                    retType = this.ThisType;
+                case Code.Ret:
+                    retType = this.MethodReturnType;
                     return retType;
-                }
 
-                retType = this.GetArgType(index);
-                return retType;
-            }
+                case Code.Stloc:
+                case Code.Stloc_0:
+                case Code.Stloc_1:
+                case Code.Stloc_2:
+                case Code.Stloc_3:
+                case Code.Stloc_S:
+                    retType = opCodePart.GetLocalType(this);
+                    return retType;
 
-            if (opCodePart.Any(Code.Stfld, Code.Stsfld))
-            {
-                retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Stobj))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Stind_Ref))
-            {
-                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                if (retType == null)
-                {
-                    retType = this.System.System_Void.ToPointerType();
-                }
-                else if (retType.IsByRef)
-                {
-                    retType = retType.GetElementType();
-                }
-
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Stind_I))
-            {
-                return this.System.System_Void.ToPointerType();
-            }
-
-            if (opCodePart.Any(Code.Stind_I1))
-            {
-                var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                if (type.IsVoid() || type.IntTypeBitSize() > 8)
-                {
-                    type = this.System.System_SByte;
-                }
-
-                return type;
-            }
-
-            if (opCodePart.Any(Code.Stind_I2))
-            {
-                return this.System.System_Int16;
-            }
-
-            if (opCodePart.Any(Code.Stind_I4))
-            {
-                return this.System.System_Int32;
-            }
-
-            if (opCodePart.Any(Code.Stind_I8))
-            {
-                return this.System.System_Int64;
-            }
-
-            if (opCodePart.Any(Code.Stind_R4))
-            {
-                return this.System.System_Single;
-            }
-
-            if (opCodePart.Any(Code.Stind_R8))
-            {
-                return this.System.System_Double;
-            }
-
-            if (opCodePart.Any(Code.Stelem_Ref))
-            {
-                retType = this.GetTypeOfReference(opCodePart);
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Stelem_I))
-            {
-                return this.System.System_Void.ToPointerType();
-            }
-
-            if (opCodePart.Any(Code.Stelem_I1))
-            {
-                var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                var type = result.Type.GetElementType();
-                if (type.IsVoid() || type.IntTypeBitSize() > 8)
-                {
-                    type = this.System.System_SByte;
-                }
-
-                return type;
-            }
-
-            if (opCodePart.Any(Code.Stelem_I2))
-            {
-                return this.System.System_Int16;
-            }
-
-            if (opCodePart.Any(Code.Stelem_I4))
-            {
-                return this.System.System_Int32;
-            }
-
-            if (opCodePart.Any(Code.Stelem_I8))
-            {
-                return this.System.System_Int64;
-            }
-
-            if (opCodePart.Any(Code.Stelem_R4))
-            {
-                return this.System.System_Single;
-            }
-
-            if (opCodePart.Any(Code.Stelem_R8))
-            {
-                return this.System.System_Double;
-            }
-
-            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
-            }
-
-            if (opCodePart.Any(Code.Box))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType.UseAsClass ? retType.ToNormal() : retType;
-            }
-
-            if (opCodePart.Any(Code.Call, Code.Callvirt))
-            {
-                var effectiveoperandPosition = operandPosition;
-                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                if (opCodePart.Any(Code.Callvirt) ||
-                    opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
-                {
-                    if (operandPosition == 0)
+                case Code.Starg:
+                case Code.Starg_S:
+                    var index = opCodePart.GetArgIndex();
+                    if (this.HasMethodThis && index == 0)
                     {
-                        return opCodePartMethod.Operand.DeclaringType;
+                        retType = this.ThisType;
+                        return retType;
                     }
 
-                    effectiveoperandPosition--;
-                }
+                    retType = this.GetArgType(index);
+                    return retType;
 
-                var parameters = opCodePartMethod.Operand.GetParameters();
-                var index = 0;
-                if (parameters != null)
-                {
+                case Code.Stfld:
+                case Code.Stsfld:
+                    retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                    return retType;
+
+                case Code.Stobj:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType;
+
+                case Code.Stind_Ref:
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    if (retType == null)
+                    {
+                        retType = this.System.System_Void.ToPointerType();
+                    }
+                    else if (retType.IsByRef)
+                    {
+                        retType = retType.GetElementType();
+                    }
+
+                    return retType;
+
+                case Code.Stind_I:
+                    return this.System.System_Void.ToPointerType();
+
+                case Code.Stind_I1:
+                    var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                    var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.System.System_SByte;
+                    }
+
+                    return type;
+
+                case Code.Stind_I2:
+                    return this.System.System_Int16;
+
+                case Code.Stind_I4:
+                    return this.System.System_Int32;
+
+                case Code.Stind_I8:
+                    return this.System.System_Int64;
+
+                case Code.Stind_R4:
+                    return this.System.System_Single;
+
+                case Code.Stind_R8:
+                    return this.System.System_Double;
+
+                case Code.Stelem_Ref:
+                    retType = this.GetTypeOfReference(opCodePart);
+                    return retType;
+
+                case Code.Stelem_I:
+                    return this.System.System_Void.ToPointerType();
+
+                case Code.Stelem_I1:
+                    result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                    type = result.Type.GetElementType();
+                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    {
+                        type = this.System.System_SByte;
+                    }
+
+                    return type;
+
+                case Code.Stelem_I2:
+                    return this.System.System_Int16;
+
+                case Code.Stelem_I4:
+                    return this.System.System_Int32;
+
+                case Code.Stelem_I8:
+                    return this.System.System_Int64;
+
+                case Code.Stelem_R4:
+                    return this.System.System_Single;
+
+                case Code.Stelem_R8:
+                    return this.System.System_Double;
+
+                case Code.Unbox:
+                case Code.Unbox_Any:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+
+                case Code.Box:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType.UseAsClass ? retType.ToNormal() : retType;
+
+                case Code.Call:
+                case Code.Callvirt:
+                    var effectiveoperandPosition = operandPosition;
+                    var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                    if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
+                    {
+                        if (operandPosition == 0)
+                        {
+                            return opCodePartMethod.Operand.DeclaringType;
+                        }
+
+                        effectiveoperandPosition--;
+                    }
+
+                    var parameters = opCodePartMethod.Operand.GetParameters();
+                    index = 0;
+                    if (parameters != null)
+                    {
+                        foreach (var parameter in parameters)
+                        {
+                            if (index == effectiveoperandPosition)
+                            {
+                                retType = parameter.ParameterType;
+                                break;
+                            }
+
+                            index++;
+                        }
+                    }
+
+                    break;
+
+                case Code.Newobj:
+                    effectiveoperandPosition = operandPosition;
+                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                    parameters = opCodeConstructorInfoPart.Operand.GetParameters();
+                    index = 0;
                     foreach (var parameter in parameters)
                     {
                         if (index == effectiveoperandPosition)
@@ -1682,25 +1663,8 @@ namespace Il2Native.Logic
 
                         index++;
                     }
-                }
-            }
 
-            if (opCodePart.Any(Code.Newobj))
-            {
-                var effectiveoperandPosition = operandPosition;
-                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                var parameters = opCodeConstructorInfoPart.Operand.GetParameters();
-                var index = 0;
-                foreach (var parameter in parameters)
-                {
-                    if (index == effectiveoperandPosition)
-                    {
-                        retType = parameter.ParameterType;
-                        break;
-                    }
-
-                    index++;
-                }
+                    break;
             }
 
             if (forArithmeticOperations)
@@ -1721,313 +1685,251 @@ namespace Il2Native.Logic
         {
             // TODO: need a good review of required types etc
             IType retType = null;
-            if (opCodePart.Any(Code.Ret))
+            switch (opCodePart.ToCode())
             {
-                retType = this.MethodReturnType;
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Ldstr))
-            {
-                return this.System.System_String;
-            }
-
-            if (opCodePart.Any(Code.Ldnull))
-            {
-                if (opCodePart.UsedBy != null)
-                {
-                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
-                }
-
-                return this.System.System_Void.ToPointerType();
-            }
-
-            if (opCodePart.Any(Code.Ldloc, Code.Ldloc_0, Code.Ldloc_1, Code.Ldloc_2, Code.Ldloc_3, Code.Ldloc_S))
-            {
-                retType = opCodePart.GetLocalType(this);
-                return retType;
-            }
-
-            if (opCodePart.Any(Code.Ldarg, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3, Code.Ldarg_S))
-            {
-                var index = opCodePart.GetArgIndex();
-                if (this.HasMethodThis && index == 0)
-                {
-                    retType = this.ThisType.ToClass();
+                case Code.Ret:
+                    retType = this.MethodReturnType;
                     return retType;
-                }
 
-                retType = this.GetArgType(index);
-                return retType;
-            }
+                case Code.Ldstr:
+                    return this.System.System_String;
 
-            if (opCodePart.Any(Code.Ldfld, Code.Ldsfld))
-            {
-                var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                retType = operand.FieldType;
-                return retType;
-            }
+                case Code.Ldnull:
+                    if (opCodePart.UsedBy != null)
+                    {
+                        return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+                    }
 
-            if (opCodePart.Any(Code.Ldobj))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType;
-            }
+                    return this.System.System_Void.ToPointerType();
 
-            if (opCodePart.Any(Code.Ldelem_I))
-            {
-                return this.System.System_Int32;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_I1))
-            {
-                return this.System.System_SByte;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_I2))
-            {
-                return this.System.System_Int16;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_I4))
-            {
-                return this.System.System_Int32;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_U1))
-            {
-                return this.System.System_Byte;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_U2))
-            {
-                return this.System.System_UInt16;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_U4))
-            {
-                return this.System.System_UInt32;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_R4))
-            {
-                return this.System.System_Single;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_R8))
-            {
-                return this.System.System_Double;
-            }
-
-            if (opCodePart.Any(Code.Ldelem_Ref))
-            {
-                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
-                if (retType != null)
-                {
+                case Code.Ldloc:
+                case Code.Ldloc_0:
+                case Code.Ldloc_1:
+                case Code.Ldloc_2:
+                case Code.Ldloc_3:
+                case Code.Ldloc_S:
+                    retType = opCodePart.GetLocalType(this);
                     return retType;
-                }
 
-                retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                Debug.Assert(retType.HasElementType);
-                return retType.GetElementType();
-            }
+                case Code.Ldarg:
+                case Code.Ldarg_0:
+                case Code.Ldarg_1:
+                case Code.Ldarg_2:
+                case Code.Ldarg_3:
+                case Code.Ldarg_S:
+                    var index = opCodePart.GetArgIndex();
+                    if (this.HasMethodThis && index == 0)
+                    {
+                        retType = this.ThisType.ToClass();
+                        return retType;
+                    }
 
-            if (opCodePart.Any(Code.Ldind_I))
-            {
-                return this.System.System_Int32;
-            }
+                    retType = this.GetArgType(index);
+                    return retType;
 
-            if (opCodePart.Any(Code.Ldind_I1))
-            {
-                return this.System.System_SByte;
-            }
+                case Code.Ldfld:
+                case Code.Ldsfld:
+                    var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                    retType = operand.FieldType;
+                    return retType;
 
-            if (opCodePart.Any(Code.Ldind_I2))
-            {
-                return this.System.System_Int16;
-            }
+                case Code.Ldobj:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType;
 
-            if (opCodePart.Any(Code.Ldind_I4))
-            {
-                return this.System.System_Int32;
-            }
+                case Code.Ldelem_I:
+                    return this.System.System_Int32;
 
-            if (opCodePart.Any(Code.Ldind_I8))
-            {
-                return this.System.System_Int64;
-            }
+                case Code.Ldelem_I1:
+                    return this.System.System_SByte;
 
-            if (opCodePart.Any(Code.Ldind_R4))
-            {
-                return this.System.System_Single;
-            }
+                case Code.Ldelem_I2:
+                    return this.System.System_Int16;
 
-            if (opCodePart.Any(Code.Ldind_R8))
-            {
-                return this.System.System_Double;
-            }
+                case Code.Ldelem_I4:
+                    return this.System.System_Int32;
 
-            if (opCodePart.Any(Code.Ldind_U1))
-            {
-                return this.System.System_Byte;
-            }
+                case Code.Ldelem_U1:
+                    return this.System.System_Byte;
 
-            if (opCodePart.Any(Code.Ldind_U2))
-            {
-                return this.System.System_UInt16;
-            }
+                case Code.Ldelem_U2:
+                    return this.System.System_UInt16;
 
-            if (opCodePart.Any(Code.Ldind_U4))
-            {
-                return this.System.System_UInt32;
-            }
+                case Code.Ldelem_U4:
+                    return this.System.System_UInt32;
 
-            if (opCodePart.Any(Code.Ldind_Ref))
-            {
-                retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                Debug.Assert(retType != null && retType.GetElementType() != null);
-                return retType.GetElementType();
-            }
+                case Code.Ldelem_R4:
+                    return this.System.System_Single;
 
-            if (opCodePart.Any(Code.Unbox, Code.Unbox_Any))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType.UseAsClass ? retType.ToNormal() : retType;
-            }
+                case Code.Ldelem_R8:
+                    return this.System.System_Double;
 
-            if (opCodePart.Any(Code.Box))
-            {
-                retType = ((OpCodeTypePart)opCodePart).Operand;
-                return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
-            }
+                case Code.Ldelem_Ref:
+                    retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
+                    if (retType != null)
+                    {
+                        return retType;
+                    }
 
-            if (opCodePart.Any(Code.Call, Code.Callvirt))
-            {
-                var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
-                return opCodePartMethod.Operand.ReturnType;
-            }
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    Debug.Assert(retType.HasElementType);
+                    return retType.GetElementType();
 
-            if (opCodePart.Any(Code.Newobj))
-            {
-                var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                return opCodeConstructorInfoPart == null ? opCodePart.ReadExceptionFromStackType.ToClass() : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
-            }
+                case Code.Ldind_I:
+                    return this.System.System_Int32;
 
-            if (opCodePart.Any(Code.Newarr))
-            {
-                var opCodeTypePart = opCodePart as OpCodeTypePart;
-                return opCodeTypePart.Operand.ToArrayType(1);
-            }
+                case Code.Ldind_I1:
+                    return this.System.System_SByte;
 
-            if (opCodePart.Any(Code.Castclass))
-            {
-                return ((OpCodeTypePart)opCodePart).Operand;
-            }
+                case Code.Ldind_I2:
+                    return this.System.System_Int16;
 
-            if (opCodePart.Any(Code.Conv_I8, Code.Conv_Ovf_I8, Code.Conv_Ovf_I8_Un))
-            {
-                return this.System.System_Int64;
-            }
+                case Code.Ldind_I4:
+                    return this.System.System_Int32;
 
-            if (opCodePart.Any(Code.Conv_I4, Code.Conv_Ovf_I4, Code.Conv_Ovf_I4_Un))
-            {
-                return this.System.System_Int32;
-            }
+                case Code.Ldind_I8:
+                    return this.System.System_Int64;
 
-            if (opCodePart.Any(Code.Conv_I2, Code.Conv_Ovf_I2, Code.Conv_Ovf_I2_Un))
-            {
-                return this.System.System_Int16;
-            }
+                case Code.Ldind_R4:
+                    return this.System.System_Single;
 
-            if (opCodePart.Any(Code.Conv_I1, Code.Conv_Ovf_I1, Code.Conv_Ovf_I1_Un))
-            {
-                return this.System.System_SByte;
-            }
+                case Code.Ldind_R8:
+                    return this.System.System_Double;
 
-            if (opCodePart.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I_Un))
-            {
-                var intPtrOper = IntTypeRequired(opCodePart);
-                var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
-                return nativeIntType;
-            }
+                case Code.Ldind_U1:
+                    return this.System.System_Byte;
 
-            if (opCodePart.Any(Code.Conv_U8, Code.Conv_Ovf_U8, Code.Conv_Ovf_U8_Un))
-            {
-                return this.System.System_UInt64;
-            }
+                case Code.Ldind_U2:
+                    return this.System.System_UInt16;
 
-            if (opCodePart.Any(Code.Conv_U4, Code.Conv_Ovf_U4, Code.Conv_Ovf_U4_Un))
-            {
-                return this.System.System_UInt32;
-            }
+                case Code.Ldind_U4:
+                    return this.System.System_UInt32;
 
-            if (opCodePart.Any(Code.Conv_U2, Code.Conv_Ovf_U2, Code.Conv_Ovf_U2_Un))
-            {
-                return this.System.System_UInt16;
-            }
+                case Code.Ldind_Ref:
+                    retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    Debug.Assert(retType != null && retType.GetElementType() != null);
+                    return retType.GetElementType();
 
-            if (opCodePart.Any(Code.Conv_U1, Code.Conv_Ovf_U1, Code.Conv_Ovf_U1_Un))
-            {
-                return this.System.System_Byte;
-            }
+                case Code.Unbox:
+                case Code.Unbox_Any:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType.UseAsClass ? retType.ToNormal() : retType;
 
-            if (opCodePart.Any(Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un))
-            {
-                var intPtrOper = IntTypeRequired(opCodePart);
-                var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
-                return nativeIntType;
-            }
+                case Code.Box:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
 
-            if (opCodePart.Any(Code.Conv_R4))
-            {
-                return this.System.System_Single;
-            }
+                case Code.Call:
+                case Code.Callvirt:
+                    var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
+                    return opCodePartMethod.Operand.ReturnType;
 
-            if (opCodePart.Any(Code.Conv_R8))
-            {
-                return this.System.System_Double;
-            }
+                case Code.Newobj:
+                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                    return opCodeConstructorInfoPart == null
+                               ? opCodePart.ReadExceptionFromStackType.ToClass()
+                               : opCodeConstructorInfoPart.Operand.DeclaringType.ToClass();
 
-            if (opCodePart.Any(
-                Code.Ldc_I4,
-                Code.Ldc_I4_0,
-                Code.Ldc_I4_1,
-                Code.Ldc_I4_2,
-                Code.Ldc_I4_3,
-                Code.Ldc_I4_4,
-                Code.Ldc_I4_5,
-                Code.Ldc_I4_6,
-                Code.Ldc_I4_7,
-                Code.Ldc_I4_8,
-                Code.Ldc_I4_M1,
-                Code.Ldc_I4_S))
-            {
-                return this.System.System_Int32;
-            }
+                case Code.Newarr:
+                    var opCodeTypePart = opCodePart as OpCodeTypePart;
+                    return opCodeTypePart.Operand.ToArrayType(1);
 
-            if (opCodePart.Any(Code.Ldc_I8))
-            {
-                return this.System.System_Int64;
-            }
+                case Code.Castclass:
+                    return ((OpCodeTypePart)opCodePart).Operand;
 
-            if (opCodePart.Any(Code.Ldc_R4))
-            {
-                return this.System.System_Single;
-            }
+                case Code.Conv_I8:
+                case Code.Conv_Ovf_I8:
+                case Code.Conv_Ovf_I8_Un:
+                    return this.System.System_Int64;
 
-            if (opCodePart.Any(Code.Ldc_R8))
-            {
-                return this.System.System_Double;
-            }
+                case Code.Conv_I4:
+                case Code.Conv_Ovf_I4:
+                case Code.Conv_Ovf_I4_Un:
+                    return this.System.System_Int32;
 
-            if (opCodePart.Any(Code.Ceq, Code.Cgt, Code.Cgt_Un, Code.Clt, Code.Clt_Un))
-            {
-                return this.System.System_Boolean;
-            }
+                case Code.Conv_I2:
+                case Code.Conv_Ovf_I2:
+                case Code.Conv_Ovf_I2_Un:
+                    return this.System.System_Int16;
 
-            if (opCodePart.Any(Code.Ldlen, Code.Sizeof))
-            {
-                return this.System.System_Int32;
+                case Code.Conv_I1:
+                case Code.Conv_Ovf_I1:
+                case Code.Conv_Ovf_I1_Un:
+                    return this.System.System_SByte;
+
+                case Code.Conv_I:
+                case Code.Conv_Ovf_I:
+                case Code.Conv_Ovf_I_Un:
+                    var intPtrOper = IntTypeRequired(opCodePart);
+                    var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                    return nativeIntType;
+
+                case Code.Conv_U8:
+                case Code.Conv_Ovf_U8:
+                case Code.Conv_Ovf_U8_Un:
+                    return this.System.System_UInt64;
+
+                case Code.Conv_U4:
+                case Code.Conv_Ovf_U4:
+                case Code.Conv_Ovf_U4_Un:
+                    return this.System.System_UInt32;
+
+                case Code.Conv_U2:
+                case Code.Conv_Ovf_U2:
+                case Code.Conv_Ovf_U2_Un:
+                    return this.System.System_UInt16;
+
+                case Code.Conv_U1:
+                case Code.Conv_Ovf_U1:
+                case Code.Conv_Ovf_U1_Un:
+                    return this.System.System_Byte;
+
+                case Code.Conv_U:
+                case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U_Un:
+                    intPtrOper = IntTypeRequired(opCodePart);
+                    nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                    return nativeIntType;
+
+                case Code.Conv_R4:
+                    return this.System.System_Single;
+
+                case Code.Conv_R8:
+                    return this.System.System_Double;
+
+                case Code.Ldc_I4:
+                case Code.Ldc_I4_0:
+                case Code.Ldc_I4_1:
+                case Code.Ldc_I4_2:
+                case Code.Ldc_I4_3:
+                case Code.Ldc_I4_4:
+                case Code.Ldc_I4_5:
+                case Code.Ldc_I4_6:
+                case Code.Ldc_I4_7:
+                case Code.Ldc_I4_8:
+                case Code.Ldc_I4_M1:
+                case Code.Ldc_I4_S:
+                    return this.System.System_Int32;
+
+                case Code.Ldc_I8:
+                    return this.System.System_Int64;
+
+                case Code.Ldc_R4:
+                    return this.System.System_Single;
+
+                case Code.Ldc_R8:
+                    return this.System.System_Double;
+
+                case Code.Ceq:
+                case Code.Cgt:
+                case Code.Cgt_Un:
+                case Code.Clt:
+                case Code.Clt_Un:
+                    return this.System.System_Boolean;
+
+                case Code.Ldlen:
+                case Code.Sizeof:
+                    return this.System.System_Int32;
             }
 
             return retType;
