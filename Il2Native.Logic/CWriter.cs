@@ -3101,7 +3101,11 @@ namespace Il2Native.Logic
                     {
                         this.WriteCCastOnly(type);
                     }
-                    else
+                    else if (estimatedResult.Type.GetAllInterfaces().Contains(type))
+                    {
+                        Debug.Assert(false, "finish casting object to interface");  
+                    }
+                    else 
                     {
                         Debug.Assert(false, "finish casting");
                     }
