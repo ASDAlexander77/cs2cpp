@@ -690,6 +690,33 @@ namespace Il2Native.Logic
 
                         break;
 
+                    case Code.Stfld:
+                    case Code.Ldfld:
+                    case Code.Ldflda:
+                    
+                        var opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
+                        if (opCodeFieldInfoPart != null)
+                        {
+                            this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
+
+                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                            this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
+                        }
+
+                        break;
+
+                    case Code.Stsfld:
+                    case Code.Ldsfld:
+                    case Code.Ldsflda:
+
+                        opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
+                        if (opCodeFieldInfoPart != null)
+                        {
+                            this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
+                        }
+
+                        break;
+
                     case Code.Callvirt:
 
                         var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
@@ -952,12 +979,17 @@ namespace Il2Native.Logic
                     if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {
                         // find base type, for example if first value is IDictionary and second is Object then required type should be Object
-                        foreach (var requiredItem in
+                        foreach (var alternateValueOutgoingType in
                             alternativeValues.Values.Select(this.RequiredOutgoingType)
-                                             .Where(t => t != null)
-                                             .Where(requiredItem => requiredType.TypeNotEquals(requiredItem) && requiredType.IsDerivedFrom(requiredItem) || requiredItem.IsObject))
+                                .Where(t => t != null)
+                                .Where(
+                                    alternateValueOutgoingType =>
+                                        requiredType.TypeNotEquals(alternateValueOutgoingType) &&
+                                        (requiredType.IsDerivedFrom(alternateValueOutgoingType) ||
+                                         requiredType.GetAllInterfaces().Contains(alternateValueOutgoingType)) ||
+                                        alternateValueOutgoingType.IsObject))
                         {
-                            requiredType = requiredItem;
+                            requiredType = alternateValueOutgoingType;
                         }
                     }
 

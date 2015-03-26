@@ -297,12 +297,12 @@ namespace Il2Native.Logic
 
             if (opCode.UsedByAlternativeValues != null)
             {
-                this.WriteStartOfPhiValues(writer, opCode);
+                this.WriteStartOfPhiValues(writer, opCode, firstLevel);
             }
 
             this.ActualWriteOpCode(writer, opCode);
 
-            if (opCode.UsedByAlternativeValues != null)
+            if (firstLevel && opCode.UsedByAlternativeValues != null)
             {
                 this.WriteEndOfPhiValues(writer, opCode);
             }
@@ -3079,7 +3079,7 @@ namespace Il2Native.Logic
             TypeGen.Clear();
         }
 
-        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
+        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
             if (opCode == opCode.UsedByAlternativeValues.Values[0])
             {
@@ -3088,7 +3088,7 @@ namespace Il2Native.Logic
             }
 
             bool isVirtualCall;
-            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
+            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall) && firstLevel)
             {
                 var type = opCode.UsedByAlternativeValues.RequiredOutgoingType;
                 var estimatedResult = this.EstimatedResultOf(opCode);
@@ -4376,11 +4376,6 @@ namespace Il2Native.Logic
                     this.Output.Write("extern ");
                 }
 
-                if (method.IsUnmanagedMethodReference)
-                {
-                    this.Output.Write("global ");
-                }
-
                 if (!method.IsUnmanagedMethodReference && method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
                 {
                     this.Output.Write("__stdcall ");
@@ -4391,10 +4386,7 @@ namespace Il2Native.Logic
             this.WriteMethodReturnType(this.Output, method);
 
             // name
-            if (!method.IsUnmanagedMethodReference)
-            {
-                this.WriteMethodDefinitionName(this.Output, method);
-            }
+            this.WriteMethodDefinitionName(this.Output, method);
 
             this.WriteMethodParamsDef(
                 this.Output,
@@ -4404,11 +4396,6 @@ namespace Il2Native.Logic
                 method.ReturnType,
                 method.IsUnmanagedMethodReference,
                 method.CallingConvention.HasFlag(CallingConventions.VarArgs));
-
-            if (method.IsUnmanagedMethodReference)
-            {
-                this.Output.Write("*");
-            }
 
             // write local declarations
             var methodBodyBytes = method.ResolveMethodBody(genericContext);

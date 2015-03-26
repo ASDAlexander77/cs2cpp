@@ -114,7 +114,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private ISet<IType> usedDeclarationTypes;
+        private ISet<IType> usedTypeDeclarations;
 
         /// <summary>
         /// </summary>
@@ -572,16 +572,16 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedDeclarationTypes
+        public ISet<IType> UsedTypeDeclarations
         {
             get
             {
-                return this.usedDeclarationTypes;
+                return this.usedTypeDeclarations;
             }
 
             set
             {
-                this.usedDeclarationTypes = value;
+                this.usedTypeDeclarations = value;
             }
         }
 
@@ -1132,7 +1132,7 @@ namespace Il2Native.Logic
                             this.AddStructType(methodParameter.ParameterType);
                         }
 
-                        this.AddUsedType(constructor.DeclaringType);
+                        this.AddUsedTypeDeclaration(constructor.DeclaringType);
                         this.AddCalledMethod(new SynthesizedNewMethod(constructor.DeclaringType, this.TypeResolver));
                         this.AddCalledMethod(constructor);
 
@@ -1160,7 +1160,7 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        this.AddUsedType(method.DeclaringType);
+                        this.AddUsedTypeDeclaration(method.DeclaringType);
                         if (code == Code.Call)
                         {
                             this.AddCalledMethod(method);
@@ -1194,7 +1194,7 @@ namespace Il2Native.Logic
                         this.AddGenericSpecializedType(method.DeclaringType);
                         this.AddGenericSpecializedMethod(method, stackCall);
 
-                        this.AddUsedType(method.DeclaringType);
+                        this.AddUsedTypeDeclaration(method.DeclaringType);
 
                         this.AddCalledMethod(method);
 
@@ -1218,8 +1218,8 @@ namespace Il2Native.Logic
                         Debug.Assert(field != null);
                         this.AddGenericSpecializedType(field.FieldType);
                         this.AddGenericSpecializedType(field.DeclaringType);
-                        this.AddUsedType(field.FieldType);
-                        this.AddUsedType(field.DeclaringType);
+                        this.AddUsedTypeDeclaration(field.FieldType);
+                        this.AddUsedTypeDeclaration(field.DeclaringType);
 
                         if (code == Code.Ldsfld || code == Code.Ldsflda)
                         {
@@ -1242,7 +1242,7 @@ namespace Il2Native.Logic
                         var typeToken = resolvedToken as IType;
                         if (typeToken != null)
                         {
-                            this.AddUsedType(typeToken);
+                            this.AddUsedTypeDeclaration(typeToken);
                             this.AddVirtualTable(typeToken);
 
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
@@ -1261,7 +1261,7 @@ namespace Il2Native.Logic
                             }
                             else
                             {
-                                this.AddUsedType(fieldMember.DeclaringType);
+                                this.AddUsedTypeDeclaration(fieldMember.DeclaringType);
                             }
 
                             yield return new OpCodeFieldInfoPart(opCode, startAddress, currentAddress, fieldMember);
@@ -1271,7 +1271,7 @@ namespace Il2Native.Logic
                         var methodMember = resolvedToken as IMethod;
                         if (methodMember != null)
                         {
-                            this.AddUsedType(methodMember.DeclaringType);
+                            this.AddUsedTypeDeclaration(methodMember.DeclaringType);
 
                             yield return new OpCodeMethodInfoPart(opCode, startAddress, currentAddress, methodMember);
                             continue;
@@ -1302,7 +1302,7 @@ namespace Il2Native.Logic
                         var type = module.ResolveType(token, genericContext);
 
                         this.AddGenericSpecializedType(type);
-                        this.AddUsedType(type);
+                        this.AddUsedTypeDeclaration(type);
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);
@@ -1641,15 +1641,15 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        public void AddUsedType(IType type)
+        public void AddUsedTypeDeclaration(IType type)
         {
             this.AddArrayType(type);
-            if (this.usedDeclarationTypes == null || type == null || type.SpecialUsage())
+            if (this.usedTypeDeclarations == null || type == null || type.SpecialUsage())
             {
                 return;
             }
 
-            this.usedDeclarationTypes.Add(type.ToNormal());
+            this.usedTypeDeclarations.Add(type.ToNormal());
         }
 
         public void AddVirtualTable(IType type)
