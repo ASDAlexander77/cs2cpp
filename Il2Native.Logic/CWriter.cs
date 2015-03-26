@@ -460,7 +460,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.Write(string.Concat(Convert.ToDouble(opCodeSingle.Operand).ToString("F"), "f"));
+                        this.Output.Write(string.Concat(Convert.ToDouble(opCodeSingle.Operand).ToString("G"), "f"));
                     }
 
                     break;
@@ -480,7 +480,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.Write(Convert.ToDouble(opCodeDouble.Operand).ToString("F"));
+                        this.Output.Write(Convert.ToDouble(opCodeDouble.Operand).ToString("G"));
                     }
 
                     break;
@@ -4366,7 +4366,7 @@ namespace Il2Native.Logic
                 {
                     this.Output.Write("__declspec( dllimport ) ");
                 }
-                else if (method.IsUnmanagedMethodReference)
+                else if (method.IsUnmanagedMethodReference && string.IsNullOrEmpty(this.declarationPrefix))
                 {
                     this.Output.Write("extern ");
                 }
