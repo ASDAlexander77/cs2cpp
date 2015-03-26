@@ -2257,7 +2257,7 @@ namespace Il2Native.Logic
             }
 
             opCode.Result = new FullyDefinedReference(
-                "_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, this.EstimatedResultOf(opCode.UsedByAlternativeValues.Values[0]).Type);
+                "_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, opCode.UsedByAlternativeValues.RequiredOutgoingType);
         }
 
         /// <summary>
@@ -3083,15 +3083,27 @@ namespace Il2Native.Logic
         {
             if (opCode == opCode.UsedByAlternativeValues.Values[0])
             {
-                var type = opCode.RequiredOutgoingType ?? opCode.RequiredIncomingType;
-                type.WriteTypePrefix(this);
+                opCode.UsedByAlternativeValues.RequiredOutgoingType.WriteTypePrefix(this);
                 this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
             }
 
             bool isVirtualCall;
             if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
             {
+                var type = opCode.UsedByAlternativeValues.RequiredOutgoingType;
+                var estimatedResult = this.EstimatedResultOf(opCode);
                 this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+                if (estimatedResult.Type.TypeNotEquals(type))
+                {
+                    if (estimatedResult.Type.IsDerivedFrom(type))
+                    {
+                        this.WriteCCastOnly(type);
+                    }
+                    else
+                    {
+                        Debug.Assert(false, "finish casting");
+                    }
+                }
             }
         }
 

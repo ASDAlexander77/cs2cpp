@@ -11,6 +11,8 @@ namespace Il2Native.Logic.CodeParts
 {
     using System.Collections.Generic;
 
+    using PEAssemblyReader;
+
     /// <summary>
     /// </summary>
     public class PhiNodes
@@ -22,6 +24,8 @@ namespace Il2Native.Logic.CodeParts
             this.Values = new List<OpCodePart>();
             this.Labels = new List<int>();
         }
+
+        public IType RequiredOutgoingType { get; set; }
 
         /// <summary>
         /// </summary>
