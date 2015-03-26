@@ -205,9 +205,17 @@ namespace Il2Native.Logic.Gencode
 
             if (!method.ReturnType.IsVoid())
             {
-                writer.Write("(");
-                method.ReturnType.WriteTypePrefix(cWriter);
-                writer.Write(")0");
+                if (method.ReturnType.IsStructureType())
+                {
+                    method.ReturnType.WriteTypePrefix(cWriter);
+                    writer.Write("()");
+                }
+                else
+                {
+                    writer.Write("(");
+                    method.ReturnType.WriteTypePrefix(cWriter);
+                    writer.Write(")0");
+                }
             }
 
             if (!disableCurlyBrakets)
@@ -265,7 +273,7 @@ namespace Il2Native.Logic.Gencode
 
             codeBuilder.Call(GetInvokeCallMethod(method, typeResolver, true));
 
-            var jumpToSkipThisCall =  codeBuilder.Branch(Code.Br, Code.Br_S);
+            var jumpToSkipThisCall = codeBuilder.Branch(Code.Br, Code.Br_S);
 
             codeBuilder.Add(jumpToThisCall);
 
@@ -285,43 +293,43 @@ namespace Il2Native.Logic.Gencode
                 method.ReturnType,
                 new IParameter[0],
                 (cWriter, opCodePart) =>
-                    {
-                        var opCodeTarget = OpCodePart.CreateNop;
-                        opCodeTarget.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
+                {
+                    var opCodeTarget = OpCodePart.CreateNop;
+                    opCodeTarget.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-                        var field = delegateType.GetFieldByName("_methodPtr", typeResolver, true);
-                        var opCodeMethodPtr = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
-                        opCodeMethodPtr.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
+                    var field = delegateType.GetFieldByName("_methodPtr", typeResolver, true);
+                    var opCodeMethodPtr = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
+                    opCodeMethodPtr.OpCodeOperands = new[] { new OpCodePart(OpCodesEmit.Ldarg_0, 0, 0) };
 
-                        var fieldIntPtrValue = intPtrType.GetFieldByFieldNumber(0, typeResolver);
-                        var opCodeFieldIntPtrValue = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, fieldIntPtrValue);
-                        opCodeFieldIntPtrValue.OpCodeOperands = new[] { opCodeMethodPtr };
+                    var fieldIntPtrValue = intPtrType.GetFieldByFieldNumber(0, typeResolver);
+                    var opCodeFieldIntPtrValue = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, fieldIntPtrValue);
+                    opCodeFieldIntPtrValue.OpCodeOperands = new[] { opCodeMethodPtr };
 
-                        var objRef =
-                            cWriter.WriteToString(
-                                () =>
-                                    {
-                                        cWriter.WriteCCastOnly(method.DeclaringType);
-                                        cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
-                                    });
-
-                        var methodRef = cWriter.WriteToString(
+                    var objRef =
+                        cWriter.WriteToString(
                             () =>
-                                {
-                                    cWriter.Output.Write("(*((");
-                                    cWriter.WriteMethodPointerType(cWriter.Output, method, asStatic: isStatic);
-                                    cWriter.Output.Write(")");
-                                    cWriter.ActualWriteOpCode(cWriter.Output, opCodeFieldIntPtrValue);
-                                    cWriter.Output.Write("))");
-                                });
+                            {
+                                cWriter.WriteCCastOnly(method.DeclaringType);
+                                cWriter.WriteFieldAccess(cWriter.Output, opCodeTarget, delegateType.GetFieldByName("_target", typeResolver, true));
+                            });
 
-                        WriteCallInvokeMethod(
-                            cWriter,
-                            new FullyDefinedReference(objRef, typeResolver.System.System_Object),
-                            new FullyDefinedReference(methodRef, null),
-                            method,
-                            isStatic);
-                    });
+                    var methodRef = cWriter.WriteToString(
+                        () =>
+                        {
+                            cWriter.Output.Write("(*((");
+                            cWriter.WriteMethodPointerType(cWriter.Output, method, asStatic: isStatic);
+                            cWriter.Output.Write(")");
+                            cWriter.ActualWriteOpCode(cWriter.Output, opCodeFieldIntPtrValue);
+                            cWriter.Output.Write("))");
+                        });
+
+                    WriteCallInvokeMethod(
+                        cWriter,
+                        new FullyDefinedReference(objRef, typeResolver.System.System_Object),
+                        new FullyDefinedReference(methodRef, null),
+                        method,
+                        isStatic);
+                });
         }
 
         /// <summary>

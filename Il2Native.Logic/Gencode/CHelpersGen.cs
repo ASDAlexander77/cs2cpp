@@ -470,7 +470,7 @@ namespace Il2Native.Logic.Gencode
                 }
                 else
                 {
-                    return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, true, throwExceptionIfNull);
+                    return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
                 }
             }
             else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
@@ -490,7 +490,7 @@ namespace Il2Native.Logic.Gencode
             else
             {
                 Debug.Assert(estimatedOperandResultOf.Type.IntTypeBitSize() == 0);
-                return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, true, throwExceptionIfNull);
+                return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
             }
 
             return true;

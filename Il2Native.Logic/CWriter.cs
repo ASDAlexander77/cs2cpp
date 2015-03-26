@@ -896,7 +896,10 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true);
+                        if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
+                        {
+                            this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                        }
                     }
 
                     break;
@@ -1042,7 +1045,7 @@ namespace Il2Native.Logic
                         () =>
                         {
                             this.Output.Write("(Byte*) &");
-                            this.Output.Write(opCodeMethodInfoPart.Operand.GetFullMethodName());
+                            this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPart.Operand);
                         });
 
                     var value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
@@ -1190,9 +1193,7 @@ namespace Il2Native.Logic
                 case Code.Brfalse_S:
 
                     oper = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? string.Empty : "!";
-                    var resultOf = this.EstimatedResultOf(firstOpCodeOperand);
-
-                    var opts = OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer;
+                    
                     this.UnaryOper(writer, opCode, "if (" + oper);
 
                     writer.Write(string.Concat(") goto a", opCode.JumpAddress()));
@@ -1327,13 +1328,21 @@ namespace Il2Native.Logic
                 case Code.Castclass:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true);
+                    if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
+                    {
+                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                    }
+
                     break;
 
                 case Code.Isinst:
 
                     opCodeTypePart = opCode as OpCodeTypePart;
-                    this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass());
+                    if (!this.WriteDynamicCast(writer, opCode, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand.ToClass()))
+                    {
+                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
+                    }
+
                     break;
 
                 case Code.Newobj:
@@ -2171,22 +2180,15 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCodePart">
         /// </param>
-        /// <param name="fromType">
-        /// </param>
+        /// <param name="opCodeOperand"></param>
         /// <param name="toType">
-        /// </param>
-        /// <param name="checkNull">
         /// </param>
         /// <param name="throwExceptionIfNull">
         /// </param>
-        public bool WriteDynamicCast(
-            CIndentedTextWriter writer,
-            OpCodePart opCodePart,
-            OpCodePart opCodeOperand,
-            IType toType,
-            bool checkNull = false,
-            bool throwExceptionIfNull = false,
-            bool forceCast = false)
+        /// <param name="forceCast"></param>
+        /// <param name="fromType">
+        /// </param>
+        public bool WriteDynamicCast(CIndentedTextWriter writer, OpCodePart opCodePart, OpCodePart opCodeOperand, IType toType, bool throwExceptionIfNull = false, bool forceCast = false)
         {
             var fromTypeOriginal = this.EstimatedResultOf(opCodeOperand);
             var fromType = fromTypeOriginal.Type.IsPointer || fromTypeOriginal.Type.IsByRef
@@ -2201,23 +2203,6 @@ namespace Il2Native.Logic
             Debug.Assert(!fromType.Type.IsVoid());
             Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
-
-            if (checkNull)
-            {
-                // var testNullResultNumber = this.SetResultNumber(opCodePart, this.System.System_Boolean);
-                // writer.Write("icmp eq ");
-                // fromType.Type.WriteTypePrefix(this);
-                // writer.WriteLine(" {0}, null", fromType);
-
-                // writer.WriteLine(
-                // "br i1 {0}, label %.dynamic_cast_null{1}, label %.dynamic_cast_not_null{1}",
-                // testNullResultNumber,
-                // opCodePart.AddressStart);
-
-                // writer.Indent--;
-                // writer.WriteLine(".dynamic_cast_not_null{0}:", opCodePart.AddressStart);
-                // writer.Indent++;
-            }
 
             writer.Write("(");
             toType.WriteTypePrefix(this);
@@ -2238,40 +2223,7 @@ namespace Il2Native.Logic
                 // "System.InvalidCastException",
                 // "dynamic_cast");
             }
-
-            if (checkNull)
-            {
-                // writer.WriteLine(string.Empty);
-
-                // writer.WriteLine("br label %.dynamic_cast_end{0}", opCodePart.AddressStart);
-
-                // writer.Indent--;
-                // writer.WriteLine(".dynamic_cast_null{0}:", opCodePart.AddressStart);
-                // writer.Indent++;
-
-                // writer.WriteLine("br label %.dynamic_cast_end{0}", opCodePart.AddressStart);
-
-                // var label = string.Concat("dynamic_cast_end", opCodePart.AddressStart);
-
-                // writer.Indent--;
-                // writer.WriteLine(".{0}:", label);
-                // writer.Indent++;
-
-                // var testNullResultNumber = this.SetResultNumber(opCodePart, toClassType);
-                // writer.Write("phi ");
-                // toClassType.WriteTypePrefix(this, true);
-                // writer.Write(
-                // " [ {0}, {1} ], [ null, {2} ]",
-                // dynamicCastResult,
-                // string.Format(
-                // "%.{1}{0}",
-                // opCodePart.AddressStart,
-                // throwExceptionIfNull ? "dynamic_cast_result_not_null" : "dynamic_cast_not_null"),
-                // string.Format("%.dynamic_cast_null{0}", opCodePart.AddressStart));
-
-                // CHelpersGen.SetCustomLabel(opCodePart, label);
-            }
-
+            
             return true;
         }
 
@@ -2793,15 +2745,7 @@ namespace Il2Native.Logic
                     writer.Write(", ");
                 }
 
-                if (!parameter.ParameterType.IsStructureType())
-                {
-                    parameter.ParameterType.WriteTypePrefix(this);
-                }
-                else
-                {
-                    parameter.ParameterType.ToClass().WriteTypePrefix(this);
-                }
-
+                parameter.ParameterType.WriteTypePrefix(this);
                 index++;
             }
 
