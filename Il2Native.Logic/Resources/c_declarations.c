@@ -10,6 +10,21 @@ typedef unsigned __int64 uint64_t;
 
 extern "C" void* alloca(uint32_t);
 
+extern "C" void* memcpy(void* dst, void* src, int32_t size);
+extern "C" void* memset(void *,int32_t,uint32_t);
+
+template<typename T> T compare_and_swap(T* reg, T oldval, T newval)
+{
+  int old_reg_val = *reg;
+  if (old_reg_val == oldval)
+     *reg = newval;
+  return old_reg_val;
+};
+
+void sync_synchronize()
+{
+}
+
 #elif __GNUC__ >= 3
 typedef signed char int8_t;
 typedef short int16_t;

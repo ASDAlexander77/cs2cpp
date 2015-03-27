@@ -176,7 +176,7 @@ namespace Il2Native.Logic.Gencode
 
                 if (thisType.IsInterface)
                 {
-                    writer.Write("(");
+                    writer.Write("((Byte*)");
                 }
 
                 result = true;

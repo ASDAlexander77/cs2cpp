@@ -2538,9 +2538,9 @@ namespace Il2Native.Logic
         {
             var writer = this.Output;
 
-            writer.Write(" + (*(((int*)*(int**)(");
+            writer.Write(" + *(((int*)*(int**)(");
             this.WriteResultOrActualWrite(writer, opCodeThis);
-            writer.Write("))-2) >> 2)");
+            writer.Write("))-2)");
         }
 
         // TODO: doNotEstimateResult is hack
@@ -4923,7 +4923,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
+                this.WriteTypeDefinitionIfNotWrittenYet(requiredType.NormalizeType());
             }
         }
 
