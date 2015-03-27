@@ -615,7 +615,8 @@ namespace Il2Native.Logic.Gencode
             }
 
             // get all virtual methods in current type and replace or append
-            virtualTable.AddRange(IlReader.Methods(@interface, typeResolver));
+            // if you have internal methods or fields you need to bypass it so for code protection with need to filter all methods by IsAbstract
+            virtualTable.AddRange(IlReader.Methods(@interface, typeResolver).Where(m => m.IsAbstract));
         }
     }
 }
