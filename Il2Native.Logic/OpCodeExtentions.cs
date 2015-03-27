@@ -1011,12 +1011,12 @@ namespace Il2Native.Logic
 
         public static bool NotSpecialUsage(this IType type)
         {
-            return type != null && !type.UseAsRtti && !type.UseAsVirtualTable && !type.UseAsVirtualTableImplementation;
+            return type != null && !type.UseAsRtti && !type.UseAsVirtualTableImplementation;
         }
 
         public static bool SpecialUsage(this IType type)
         {
-            return type != null && (type.UseAsRtti || type.UseAsVirtualTable || type.UseAsVirtualTableImplementation);
+            return type != null && (type.UseAsRtti || type.UseAsVirtualTableImplementation);
         }
 
         /// <summary>

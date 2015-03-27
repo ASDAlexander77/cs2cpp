@@ -463,15 +463,6 @@ namespace PEAssemblyReader
             }
         }
 
-        /// <summary>
-        /// </summary>
-        public bool IsVirtualTable
-        {
-            get
-            {
-                return this.UseAsVirtualTable;
-            }
-        }
 
         public bool IsPrivateImplementationDetails
         {
@@ -563,10 +554,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool UseAsVirtualTable { get; set; }
-
-        /// <summary>
-        /// </summary>
         public bool UseAsVirtualTableImplementation { get; set; }
 
         /// <summary>
@@ -587,17 +574,6 @@ namespace PEAssemblyReader
         {
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
             typeAdapter.UseAsRtti = true;
-            return typeAdapter;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType AsVirtualTable()
-        {
-            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
-            typeAdapter.UseAsVirtualTable = true;
             return typeAdapter;
         }
 
@@ -711,12 +687,6 @@ namespace PEAssemblyReader
             }
 
             cmp = this.IsByRef.CompareTo(type.IsByRef);
-            if (cmp != 0)
-            {
-                return cmp;
-            }
-
-            cmp = this.IsVirtualTable.CompareTo(type.IsVirtualTable);
             if (cmp != 0)
             {
                 return cmp;
@@ -1177,20 +1147,6 @@ namespace PEAssemblyReader
         public override string ToString()
         {
             return this.lazyToString.Value;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToVirtualTable()
-        {
-            if (this.UseAsVirtualTable)
-            {
-                return this;
-            }
-
-            return this.AsVirtualTable();
         }
 
         /// <summary>

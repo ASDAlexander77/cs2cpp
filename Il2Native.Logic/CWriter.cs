@@ -92,10 +92,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public readonly ISet<IType> virtualTableDeclarationsWritten = new NamespaceContainer<IType>();
-
-        /// <summary>
-        /// </summary>
         public readonly ISet<IType> typeRttiDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
@@ -2499,15 +2495,7 @@ namespace Il2Native.Logic
         {
             Debug.Assert(!fieldType.IsGenericParameter);
 
-            if (fieldType.IsVirtualTable)
-            {
-                this.Output.Write(fieldType.GetVirtualTableName(this));
-                this.Output.Write("*");
-            }
-            else
-            {
-                fieldType.WriteTypePrefix(this);
-            }
+            fieldType.WriteTypePrefix(this);
         }
 
         public void WriteFieldType(IField field)
@@ -3207,25 +3195,6 @@ namespace Il2Native.Logic
             this.ReadTypeInfo(type);
 
             this.WriteTypeDeclarationStart(type);
-        }
-
-        public void WriteVirtualTableDeclaration(IType type)
-        {
-            if (!this.virtualTableDeclarationsWritten.Add(type))
-            {
-                return;
-            }
-
-            var virtualTable = type.GetVirtualTable(this);
-
-            // forward declarations
-            foreach (var method in virtualTable.Where(m => m.Value != null).Select(m => m.Value))
-            {
-                this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
-            }
-
-            virtualTable.WriteTableOfMethodsAsDeclaration(this, type);
-            this.Output.WriteLine(string.Empty);
         }
 
         /// <summary>
@@ -4607,7 +4576,7 @@ namespace Il2Native.Logic
                 }
                 else
                 {
-                    this.WriteVirtualTableDeclaration(vtableType);
+                    Debug.Assert(false, "this is not virtual table implementation");
                 }
             }
 
@@ -4883,7 +4852,6 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
-            Debug.Assert(!type.IsVirtualTable, "you can't use virtual table here");
             Debug.Assert(!type.IsByRef, "you can't use type byref here");
             Debug.Assert(!type.IsPointer, "you can't use pointer type");
 
@@ -4917,12 +4885,6 @@ namespace Il2Native.Logic
 
             foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
-                if (requiredType.IsVirtualTable)
-                {
-                    this.WriteVirtualTableDeclaration(requiredType);
-                    continue;
-                }
-
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType.NormalizeType());
             }
         }

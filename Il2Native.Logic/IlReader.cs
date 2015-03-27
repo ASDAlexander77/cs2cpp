@@ -1166,12 +1166,6 @@ namespace Il2Native.Logic
                             this.AddCalledMethod(method);
                         }
 
-                        if (code == Code.Callvirt)
-                        {
-                            // vtable used
-                            this.AddVirtualTable(method.DeclaringType.ToVirtualTable());
-                        }
-
                         if (method.DeclaringType.IsValueType() && !method.DeclaringType.IsVoid() && !method.IsStatic)
                         {
                             this.AddCalledMethod(new SynthesizedBoxMethod(method.DeclaringType, this.TypeResolver));
@@ -1654,7 +1648,7 @@ namespace Il2Native.Logic
 
         public void AddVirtualTable(IType type)
         {
-            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTable && !type.IsVirtualTableImplementation)
+            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTableImplementation)
             {
                 return;
             }

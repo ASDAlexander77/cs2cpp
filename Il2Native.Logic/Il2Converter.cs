@@ -696,7 +696,7 @@ namespace Il2Native.Logic
 
             var fields = IlReader.Fields(
                 type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var field in fields.Where(field => (field.FieldType.IsStructureType() && !field.FieldType.IsPointer) || field.FieldType.IsVirtualTable))
+            foreach (var field in fields.Where(field => (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)))
             {
                 yield return field.FieldType;
             }
@@ -730,7 +730,7 @@ namespace Il2Native.Logic
                 fields.Select(field => !field.FieldType.IsArray ? field.FieldType.ToBareType() : field.FieldType)
                       .Where(
                           effectiveType =>
-                          !effectiveType.IsVoid() && !effectiveType.IsValueType && type.TypeNotEquals(effectiveType) && !effectiveType.IsVirtualTable))
+                          !effectiveType.IsVoid() && !effectiveType.IsValueType && type.TypeNotEquals(effectiveType)))
             {
                 yield return effectiveType;
             }

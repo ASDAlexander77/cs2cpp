@@ -375,6 +375,8 @@ namespace Il2Native.Logic.Gencode
         {
             var codeBuilder = new IlCodeBuilder();
 
+            Debug.Assert(declaringType.MetadataName != "Dictionary`1");
+
             if (declaringType.HasAnyVirtualMethod(typeResolver))
             {
                 // set virtual table
@@ -386,8 +388,6 @@ namespace Il2Native.Logic.Gencode
             // init all interfaces
             foreach (var @interface in declaringType.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
-                //cWriter.WriteInterfaceAccess(writer, opCode, thisType, @interface);
-
                 // set virtual table
                 codeBuilder.LoadArgument(0);
                 codeBuilder.LoadToken(@interface.ToVirtualTableImplementation(declaringType));
