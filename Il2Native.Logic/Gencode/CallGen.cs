@@ -141,35 +141,6 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="methodAddressResultNumber">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteFunctionCallLoadFunctionAddress(
-            this IMethod methodInfo,
-            OpCodePart opCodeMethodInfo,
-            IType thisType,
-            ref FullyDefinedReference methodAddressResultNumber,
-            CWriter cWriter)
-        {
-            if (!methodInfo.IsUnmanagedMethodReference)
-            {
-                return;
-            }
-
-            var writer = cWriter.Output;
-
-            // TODO: finish it
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="opCodeMethodInfo">
         /// </param>
         /// <param name="thisType">
@@ -377,7 +348,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var isIndirectMethodCall = methodAddressResultNumber != null;
-            if (isIndirectMethodCall || methodInfo.IsUnmanagedMethodReference)
+            if (isIndirectMethodCall)
             {
                 cWriter.WriteResult(methodAddressResultNumber);
             }

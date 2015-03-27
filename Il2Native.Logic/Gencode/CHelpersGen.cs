@@ -400,12 +400,6 @@ namespace Il2Native.Logic.Gencode
                     ref requiredType);
             }
 
-            methodInfo.WriteFunctionCallLoadFunctionAddress(
-                opCodeMethodInfo,
-                thisType,
-                ref methodAddressResultNumber,
-                cWriter);
-
             if (cWriter.ProcessPluggableMethodCall(opCodeMethodInfo, methodInfo))
             {
                 return;

@@ -295,12 +295,16 @@ namespace Il2Native.Logic
                 this.WriteTemporaryExpressionResult(opCode);
             }
 
+            var processed = false;
             if (opCode.UsedByAlternativeValues != null)
             {
-                this.WriteStartOfPhiValues(writer, opCode, firstLevel);
+                processed = this.WriteStartOfPhiValues(writer, opCode, firstLevel);
             }
 
-            this.ActualWriteOpCode(writer, opCode);
+            if (!processed)
+            {
+                this.ActualWriteOpCode(writer, opCode);
+            }
 
             if (firstLevel && opCode.UsedByAlternativeValues != null)
             {
@@ -2588,9 +2592,9 @@ namespace Il2Native.Logic
                 ? methodBase.GetMethodName(ownerOfExplicitInterface)
                 : methodBase.GetFullMethodName(ownerOfExplicitInterface);
 
-            if (!shortName &&
-                (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray ||
-                 (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)))
+            if (!shortName
+                && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
+                    || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)))
             {
                 writer.Write(this.GetAssemblyPrefix());
             }
@@ -3079,7 +3083,7 @@ namespace Il2Native.Logic
             TypeGen.Clear();
         }
 
-        public void WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
+        public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
             if (opCode == opCode.UsedByAlternativeValues.Values[0])
             {
@@ -3105,6 +3109,7 @@ namespace Il2Native.Logic
                     {
                         writer.Write("&");
                         this.WriteInterfaceAccess(opCode, estimatedResult.Type, type);
+                        return true;
                     }
                     else 
                     {
@@ -3112,6 +3117,8 @@ namespace Il2Native.Logic
                     }
                 }
             }
+
+            return false;
         }
 
         /// <summary>
