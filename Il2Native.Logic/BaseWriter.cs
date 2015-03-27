@@ -268,6 +268,11 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.Result);
             }
 
+            if (opCode.UsedByAlternativeValues != null && opCode.UsedByAlternativeValues.RequiredOutgoingType != null)
+            {
+                return new ReturnResult(opCode.UsedByAlternativeValues.RequiredOutgoingType);
+            }
+
             if (opCode.RequiredOutgoingType != null)
             {
                 return new ReturnResult(opCode.RequiredOutgoingType);
@@ -972,9 +977,8 @@ namespace Il2Native.Logic
                     Debug.Assert(firstOpCode != null, "Operand could not be found for Phi Nodes");
 
                     var requiredType = this.RequiredOutgoingType(firstOpCode)
-                                   ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                   ?? alternativeValues.Values.Select(v => v.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                   ?? this.EstimatedResultOf(firstOpCode).Type;
+                                       ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                                       ?? this.EstimatedResultOf(firstOpCode).Type;
 
                     if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {

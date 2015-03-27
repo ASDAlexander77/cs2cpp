@@ -1566,7 +1566,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.usedGenericSpecialiazedTypes.Add(type.ToBareType().ToNormal());
+            this.usedGenericSpecialiazedTypes.Add(type.NormalizeType());
         }
 
         private void AddStaticField(IField field)
@@ -1610,7 +1610,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this._usedTypeDefinitions.Add(type.ToNormal());
+            this._usedTypeDefinitions.Add(type.NormalizeType());
         }
 
         /// <summary>
@@ -1634,7 +1634,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this._usedTypeDefinitions.Add(type.ToNormal());
+            this._usedTypeDefinitions.Add(type.NormalizeType());
         }
 
         /// <summary>
@@ -1649,7 +1649,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.usedTypeDeclarations.Add(type.ToNormal());
+            this.usedTypeDeclarations.Add(type.NormalizeType());
         }
 
         public void AddVirtualTable(IType type)

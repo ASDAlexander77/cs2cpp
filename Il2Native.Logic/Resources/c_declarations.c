@@ -8,6 +8,8 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 
+extern "C" void* alloca(uint32_t);
+
 #elif __GNUC__ >= 3
 typedef signed char int8_t;
 typedef short int16_t;
@@ -22,6 +24,7 @@ extern void *__builtin_memset(void *,int32_t,uint32_t);
 extern void *__builtin_memcpy(void *,const void *,uint32_t);
 #define compare_and_swap __sync_val_compare_and_swap 
 #define sync_synchronize __sync_synchronize
+#define alloca __builtin_alloca
 
 inline void* memcpy(void* dst, void* src, int32_t size)
 {
@@ -49,7 +52,6 @@ typedef UInt32 UInt;
 
 typedef Int32 (*anyFn)(...);
 
-extern "C" Void* alloca(UInt);
 extern "C" Byte* calloc(UInt);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();

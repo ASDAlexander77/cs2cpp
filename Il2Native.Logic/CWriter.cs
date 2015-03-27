@@ -464,7 +464,13 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.Write(string.Concat(Convert.ToDouble(opCodeSingle.Operand).ToString("G"), "f"));
+                        this.Output.Write(opCodeSingle.Operand);
+                        if (Math.Floor(opCodeSingle.Operand) == opCodeSingle.Operand && !opCodeSingle.Operand.ToString().Contains("E"))
+                        {
+                            this.Output.Write(".0");
+                        }
+
+                        this.Output.Write("f");
                     }
 
                     break;
@@ -484,7 +490,11 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.Write(Convert.ToDouble(opCodeDouble.Operand).ToString("G"));
+                        this.Output.Write(opCodeDouble.Operand);
+                        if (Math.Floor(opCodeDouble.Operand) == opCodeDouble.Operand && !opCodeDouble.Operand.ToString().Contains("E"))
+                        {
+                            this.Output.Write(".0");
+                        }
                     }
 
                     break;
@@ -3101,7 +3111,9 @@ namespace Il2Native.Logic
                 {
                     if (estimatedResult.Type.IsDerivedFrom(type) || (estimatedResult.Type.IntTypeBitSize() > 0 && type.IntTypeBitSize() > 0)
                         || ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) && (type.IsPointer || type.IsByRef))
-                        || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference))
+                        || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference)
+                        || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && !type.IsValueType)
+                        || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && type.IntTypeBitSize() > 0))
                     {
                         this.WriteCCastOnly(type);
                     }
@@ -4871,6 +4883,8 @@ namespace Il2Native.Logic
         private void WriteTypeDefinitionIfNotWrittenYet(IType type)
         {
             Debug.Assert(!type.IsVirtualTable, "you can't use virtual table here");
+            Debug.Assert(!type.IsByRef, "you can't use type byref here");
+            Debug.Assert(!type.IsPointer, "you can't use pointer type");
 
             if (this.IsTypeDefinitionWritten(type))
             {
