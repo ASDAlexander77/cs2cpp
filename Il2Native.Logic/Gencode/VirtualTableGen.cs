@@ -72,10 +72,6 @@ namespace Il2Native.Logic.Gencode
             {
                 virtualTable.BuildVirtualTable(thisType.BaseType, typeResolver);
             }
-            else if (thisType.IsInterface)
-            {
-                virtualTable.BuildVirtualTable(typeResolver.System.System_Object, typeResolver);
-            }
 
             // get all virtual methods in current type and replace or append
             foreach (
@@ -193,7 +189,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualInterfaceTableNameReference(this IType type, IType @interface, CWriter cWriter)
         {
-            return string.Concat("(Byte*) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) (((Byte**) &", GetVirtualInterfaceTableName(type, @interface, cWriter, true), ") + 2)");
         }
 
         public static void WriteVirtualInterfaceTableNameReferenceDeclaration(this IType type, IType @interface, CWriter cWriter)
@@ -323,7 +319,7 @@ namespace Il2Native.Logic.Gencode
 
         public static string GetVirtualTableNameReference(this IType type, CWriter cWriter)
         {
-            return string.Concat("(Byte*) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
+            return string.Concat("(Void**) (((Byte**) &", GetVirtualTableName(type, cWriter, true), ") + 2)");
         }
 
         public static void WriteVirtualTableEmptyImplementationDeclarations(this IType type, CWriter cWriter)
@@ -567,18 +563,6 @@ namespace Il2Native.Logic.Gencode
             ITypeResolver typeResolver)
         {
             var baseInterfaces = @interface.GetInterfaces();
-            if (!baseInterfaces.Any() && @interface.BaseType == null)
-            {
-                // add method from Object to simulate inheritence from Object
-#if DEBUG
-                var objectInterfaceMethods = IlReader.Methods(typeResolver.System.System_Object, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride).ToList();
-#else
-                var objectInterfaceMethods = IlReader.Methods(typeResolver.System.System_Object, typeResolver).Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride);
-#endif
-
-                ResolveAndAppendInterfaceMethods(virtualTable, allPublic, objectInterfaceMethods);
-            }
-
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
             if (firstChildInterface != null)
             {
@@ -624,14 +608,7 @@ namespace Il2Native.Logic.Gencode
         {
             var baseInterfaces = @interface.GetInterfaces();
             var firstChildInterface = baseInterfaces != null ? baseInterfaces.FirstOrDefault() : null;
-            if (firstChildInterface == null)
-            {
-                // add Object virtual methods to simulate inheritance from Object type
-                virtualTable.AddRange(
-                    IlReader.Methods(typeResolver.System.System_Object, typeResolver)
-                        .Where(m => m.IsVirtual || m.IsAbstract || m.IsOverride));
-            }
-            else
+            if (firstChildInterface != null)
             {
                 // get all virtual methods in current type and replace or append
                 virtualTable.AddMethodsToVirtualInterfaceTableLayout(firstChildInterface, typeResolver);

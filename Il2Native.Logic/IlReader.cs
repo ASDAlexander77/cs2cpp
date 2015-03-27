@@ -734,7 +734,7 @@ namespace Il2Native.Logic
             }
             else if (type.IsObject || (type.IsInterface && type.BaseType == null && !type.GetInterfaces().Any()))
             {
-                yield return typeResolver.System.System_Void.ToPointerType().ToField(type, "vtable");
+                yield return typeResolver.System.System_Void.ToPointerType().ToPointerType().ToField(type, "vtable");
             }
 
             if (!type.IsPrivateImplementationDetails)

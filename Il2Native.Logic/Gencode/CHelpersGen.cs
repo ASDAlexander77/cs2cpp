@@ -62,11 +62,12 @@ namespace Il2Native.Logic.Gencode
             // 1) get pointer to virtual table
             IType requiredInterface;
             var effectiveType = requiredType ?? thisType;
-            effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
+            var methodIndex = effectiveType.GetVirtualMethodIndexAndRequiredInterface(methodInfo, cWriter, out requiredInterface);
 
             writer.Write("(*(");
-            writer.Write("({0}*)", thisType.GetVirtualTableName(cWriter));
-
+            // method pointer
+            cWriter.WriteMethodPointerType(writer, methodInfo);
+            writer.Write(")");
             if (requiredInterface != null || effectiveType.IsInterface)
             {
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, (requiredInterface ?? effectiveType).GetInterfaceVTable(cWriter));
@@ -76,10 +77,7 @@ namespace Il2Native.Logic.Gencode
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
             }
 
-            writer.Write(")->");
-            var methodName = methodInfo.ToString(null, true).CleanUpName();
-            writer.Write(methodName);
-            writer.Write(")");
+            writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
         }
 
         public static IType GetIntTypeByBitSize(this BaseWriter llvmWriter, int bitSize)

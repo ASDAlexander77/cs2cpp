@@ -4747,7 +4747,7 @@ namespace Il2Native.Logic
                     if (field.FieldType.IsStaticArrayInit)
                     {
                         var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
-                        this.Output.Write("{ (Void*) 0");
+                        this.Output.Write("{ (Void**) 0");
                         this.Output.Write(", { ");
                         var data = field.GetFieldRVAData();
                         var index = 0;
