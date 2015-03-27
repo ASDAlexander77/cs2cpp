@@ -259,7 +259,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false)
+        public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false, bool ignoreAlternativeValues = false)
         {
             // TODO: remove duplication from RequiredOutgoingType (use RequiredOutgoingType as first)
 
@@ -268,7 +268,7 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.Result);
             }
 
-            if (opCode.UsedByAlternativeValues != null && opCode.UsedByAlternativeValues.RequiredOutgoingType != null)
+            if (!ignoreAlternativeValues && opCode.UsedByAlternativeValues != null && opCode.UsedByAlternativeValues.RequiredOutgoingType != null)
             {
                 return new ReturnResult(opCode.UsedByAlternativeValues.RequiredOutgoingType);
             }

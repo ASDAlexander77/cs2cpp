@@ -2543,14 +2543,15 @@ namespace Il2Native.Logic
             writer.Write("))-2) >> 2)");
         }
 
-        public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType)
+        // TODO: doNotEstimateResult is hack
+        public void WriteInterfaceAccess(OpCodePart opCodePart, IType classType, IType interfaceType, bool doNotEstimateResult = false)
         {
             var writer = this.Output;
 
             var operand = opCodePart;
             var operandResultCalc = this.EstimatedResultOf(operand);
             var operandType = operandResultCalc.Type;
-            var effectiveType = operandType;
+            var effectiveType = !doNotEstimateResult ? operandType : classType;
             if (effectiveType.IsValueType)
             {
                 if (operandResultCalc.Type.IntTypeBitSize() == PointerSize * 8)
@@ -3105,7 +3106,7 @@ namespace Il2Native.Logic
             if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall) && firstLevel)
             {
                 var type = opCode.UsedByAlternativeValues.RequiredOutgoingType;
-                var estimatedResult = this.EstimatedResultOf(opCode);
+                var estimatedResult = this.EstimatedResultOf(opCode, ignoreAlternativeValues: true);
                 this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
                 if (estimatedResult.Type.TypeNotEquals(type))
                 {
@@ -3120,7 +3121,7 @@ namespace Il2Native.Logic
                     else if (estimatedResult.Type.GetAllInterfaces().Contains(type))
                     {
                         writer.Write("&");
-                        this.WriteInterfaceAccess(opCode, estimatedResult.Type, type);
+                        this.WriteInterfaceAccess(opCode, estimatedResult.Type, type, doNotEstimateResult: true);
                         return true;
                     }
                     else 
