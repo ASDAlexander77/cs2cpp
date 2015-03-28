@@ -4366,7 +4366,7 @@ namespace Il2Native.Logic
                     this.Output.Write("extern ");
                 }
 
-                if (!method.IsUnmanagedMethodReference && method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
+                if (method.DllImportData != null && method.DllImportData.CallingConvention == CallingConvention.StdCall)
                 {
                     this.Output.Write("__stdcall ");
                 }

@@ -353,18 +353,8 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                if (methodInfo.IsUnmanagedMethodReference)
-                {
-                    cWriter.Output.Write("(*(");
-                }
-
                 // default method name
                 cWriter.WriteMethodDefinitionName(writer, methodInfo, ownerOfExplicitInterface);
-
-                if (methodInfo.IsUnmanagedMethodReference)
-                {
-                    cWriter.Output.Write("))");
-                }
             }
         }
 
