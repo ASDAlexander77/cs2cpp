@@ -71,8 +71,16 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (!isCtor && used != null && used.Length > 0)
                 {
+
+                    if (thisType.IsInterface)
+                    {
+                        writer.Write("(");
+                        cWriter.WriteCCastOnly(thisType);
+                        writer.Write("((Byte*)");
+                    }
+
                     // this expression
-                    var closeRequired = opCodeMethodInfo.WriteFunctionCallThisExpression(
+                    opCodeMethodInfo.WriteFunctionCallThisExpression(
                         thisType,
                         isCtor,
                         used[0],
@@ -82,10 +90,7 @@ namespace Il2Native.Logic.Gencode
                     if (thisType.IsInterface)
                     {
                         cWriter.WriteGetThisPointerFromInterfacePointer(used[0]);
-                        if (closeRequired)
-                        {
-                            writer.Write(")");
-                        }
+                        writer.Write("))");
                     }
                 }
 
@@ -151,7 +156,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="cWriter">
         /// </param>
-        public static bool WriteFunctionCallThisExpression(
+        public static void WriteFunctionCallThisExpression(
             this OpCodePart opCodeMethodInfo,
             IType thisType,
             bool isCtor,
@@ -160,8 +165,6 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter)
         {
             var writer = cWriter.Output;
-
-            var result = false;
 
             // check if you need to cast this parameter
             var isPrimitive = resultOfFirstOperand.Type.IsPrimitiveTypeOrEnum();
@@ -173,19 +176,12 @@ namespace Il2Native.Logic.Gencode
                 thisType.IsClassCastRequired(cWriter, opCodeFirstOperand, out dynamicCastRequired))
             {
                 cWriter.WriteCCastOnly(thisType);
-
-                if (thisType.IsInterface)
-                {
-                    writer.Write("((Byte*)");
-                }
-
-                result = true;
             }
 
             if (dynamicCastRequired)
             {
                 cWriter.WriteDynamicCast(writer, opCodeFirstOperand, opCodeFirstOperand, thisType);
-                return result;
+                return;
             }
 
             var opCodeMethodInfoPart = opCodeMethodInfo as OpCodeMethodInfoPart;
@@ -218,12 +214,10 @@ namespace Il2Native.Logic.Gencode
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
 
-                return result;
+                return;
             }
 
             cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
-
-            return result;
         }
 
         /// <summary>
@@ -359,8 +353,18 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
+                if (methodInfo.IsUnmanagedMethodReference)
+                {
+                    cWriter.Output.Write("(*(");
+                }
+
                 // default method name
                 cWriter.WriteMethodDefinitionName(writer, methodInfo, ownerOfExplicitInterface);
+
+                if (methodInfo.IsUnmanagedMethodReference)
+                {
+                    cWriter.Output.Write("))");
+                }
             }
         }
 

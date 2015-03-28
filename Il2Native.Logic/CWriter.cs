@@ -2351,6 +2351,7 @@ namespace Il2Native.Logic
             // special case when calling Object methods on interface
             if (classType.IsInterface && field.DeclaringType.IsObject)
             {
+                // TODO: this is hack remove it
                 this.WriteGetThisPointerFromInterfacePointer(opCodePart.OpCodeOperands[0]);
                 writer.Write(")");
             }
@@ -4374,8 +4375,18 @@ namespace Il2Native.Logic
             // return type
             this.WriteMethodReturnType(this.Output, method);
 
+            if (method.IsUnmanagedMethodReference)
+            {
+                this.Output.Write("(*");
+            }
+
             // name
             this.WriteMethodDefinitionName(this.Output, method);
+
+            if (method.IsUnmanagedMethodReference)
+            {
+                this.Output.Write(")");
+            }
 
             this.WriteMethodParamsDef(
                 this.Output,
