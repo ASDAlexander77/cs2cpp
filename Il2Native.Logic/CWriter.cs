@@ -2613,7 +2613,7 @@ namespace Il2Native.Logic
                          this.AssemblyQualifiedName[this.AssemblyQualifiedName.Length - 4] == '.'
                 ? this.AssemblyQualifiedName.Length - 4
                 : this.AssemblyQualifiedName.Length;
-            return string.Concat("A", this.AssemblyQualifiedName.Substring(0, length), "_");
+            return string.Concat("A", this.AssemblyQualifiedName.Substring(0, length).CleanUpName(), "_");
         }
 
         /// <summary>

@@ -449,6 +449,9 @@ namespace Il2Native.Logic
 
                 case Code.Localloc:
                     return new ReturnResult(this.System.System_Byte.ToPointerType());
+
+                default:
+                    return new ReturnResult(this.RequiredOutgoingType(opCode));
             }
 
             return null;
@@ -815,15 +818,24 @@ namespace Il2Native.Logic
 
                         var opCodeOperand0 = opCodePart.OpCodeOperands[0];
                         var opCodeOperand1 = opCodePart.OpCodeOperands[1];
-                        var op1 = EstimatedResultOf(opCodeOperand0);
-                        var op2 = EstimatedResultOf(opCodeOperand1);
-                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
+                        var op0 = EstimatedResultOf(opCodeOperand0);
+                        var op1 = EstimatedResultOf(opCodeOperand1);
+                        var pointerOpFixed = false;
+                        if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
-                            FixPointerOperation(opCodeOperand0, opCodeOperand1, op1.Type.GetElementType());
+                            pointerOpFixed = FixPointerOperation(opCodeOperand0, opCodeOperand1, op0.Type.GetElementType());
+                            if (!pointerOpFixed && GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
+                            {
+                                InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Byte.ToPointerType()));
+                            }
                         }
-                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
+                        else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
-                            FixPointerOperation(opCodeOperand1, opCodeOperand0, op2.Type.GetElementType());
+                            pointerOpFixed = FixPointerOperation(opCodeOperand1, opCodeOperand0, op1.Type.GetElementType());
+                            if (!pointerOpFixed && GetIntegerValueFromOpCode(opCodeOperand1) <= 0 && !op0.Type.IsPointer)
+                            {
+                                InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Byte.ToPointerType()));
+                            }
                         }
 
                         break;
@@ -833,16 +845,16 @@ namespace Il2Native.Logic
 
                         opCodeOperand0 = opCodePart.OpCodeOperands[0];
                         opCodeOperand1 = opCodePart.OpCodeOperands[1];
-                        op1 = EstimatedResultOf(opCodeOperand0);
-                        op2 = EstimatedResultOf(opCodeOperand1);
+                        op0 = EstimatedResultOf(opCodeOperand0);
+                        op1 = EstimatedResultOf(opCodeOperand1);
 
-                        if (op1.Type.IsPointer && (!op2.Type.IsPointer || IsPointerConvert(opCodeOperand1)) &&
-                            op1.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand1))
+                        if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)) &&
+                            op0.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand1))
                         {
                             ReplaceOperand(opCodePart, opCodeOperand0);
                         }
-                        else if (op2.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand0)) &&
-                                 op2.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand0))
+                        else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)) &&
+                                 op1.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand0))
                         {
                             ReplaceOperand(opCodePart, opCodeOperand1);
                         }
@@ -858,7 +870,7 @@ namespace Il2Native.Logic
             return opCodeOperand1.Any(Code.Conv_I, Code.Conv_Ovf_I, Code.Conv_Ovf_I, Code.Conv_U, Code.Conv_Ovf_U, Code.Conv_Ovf_U_Un);
         }
 
-        private void FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
+        private bool FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
         {
             var typeSize = type.GetTypeSize(this, true);
             switch (index.ToCode())
@@ -874,6 +886,7 @@ namespace Il2Native.Logic
                     if (value > 0 && value % typeSize == 0)
                     {
                         ReplaceOperand(index.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
+                        return true;
                     }
 
                     break;
@@ -890,6 +903,7 @@ namespace Il2Native.Logic
                     {
                         // disable which mul
                         ReplaceOperand(index, opCodeOperand1);
+                        return true;
                     }
 
                     // case '* sizepf'
@@ -897,6 +911,7 @@ namespace Il2Native.Logic
                     {
                         // disable which mul
                         ReplaceOperand(index, opCodeOperand0);
+                        return true;
                     }
 
                     // case '* sizepf'
@@ -904,6 +919,7 @@ namespace Il2Native.Logic
                     {
                         // disable which mul
                         ReplaceOperand(index, opCodeOperand1);
+                        return true;
                     }
 
                     // case '* sizepf'
@@ -911,10 +927,13 @@ namespace Il2Native.Logic
                     {
                         // disable which mul
                         ReplaceOperand(index, opCodeOperand0);
+                        return true;
                     }
 
                     break;
             }
+
+            return false;
         }
 
         private long GetIntegerValueFromOpCode(OpCodePart opCodePart)
@@ -943,6 +962,15 @@ namespace Il2Native.Logic
                 case Code.Ldc_I8:
                     var opCodeInt64 = opCodePart as OpCodeInt64Part;
                     return opCodeInt64.Operand;
+                case Code.Castclass:
+                    return this.GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
+                case Code.Conv_I:
+                case Code.Conv_Ovf_I:
+                case Code.Conv_Ovf_I_Un:
+                case Code.Conv_U:
+                case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U_Un:
+                    return this.GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
             }
 
             return -2;
@@ -953,6 +981,14 @@ namespace Il2Native.Logic
             OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
             opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
+        }
+
+        private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
+        {
+            OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
+            opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
+            newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
+            newOperand.OpCodeOperands = new [] { oldOperand };
         }
 
         /// <summary>
@@ -1812,6 +1848,13 @@ namespace Il2Native.Logic
                     return retType.GetElementType();
 
                 case Code.Ldind_I:
+
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    if (retType.IsByRef)
+                    {
+                        return retType.GetElementType();
+                    }
+
                     return this.System.System_Int32;
 
                 case Code.Ldind_I1:
@@ -1966,6 +2009,12 @@ namespace Il2Native.Logic
                 case Code.Ldlen:
                 case Code.Sizeof:
                     return this.System.System_Int32;
+
+                case Code.Dup:
+                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+
+                case Code.Ldtoken:
+                    return this.System.System_Void.ToPointerType();
             }
 
             return retType;
@@ -2157,6 +2206,8 @@ namespace Il2Native.Logic
             /// </param>
             public ReturnResult(FullyDefinedReference result)
             {
+                Debug.Assert(result != null, "result can't be null");
+
                 this.Type = result.Type;
             }
 
@@ -2166,6 +2217,8 @@ namespace Il2Native.Logic
             /// </param>
             public ReturnResult(IType type)
             {
+                Debug.Assert(type != null, "type can't be null");
+
                 this.Type = type;
             }
 

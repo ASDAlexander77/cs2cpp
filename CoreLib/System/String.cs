@@ -1067,7 +1067,7 @@ namespace System
         public int LastIndexOf(String value)
         {
             var source = this;
-            var startIndex = 0;
+            var startIndex = value.Length - 1;
             var count = value.Length;
 
             // If value is Empty, the return value is startIndex
