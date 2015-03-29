@@ -873,7 +873,8 @@ namespace Il2Native.Logic
         private bool FixPointerOperation(OpCodePart pointer, OpCodePart index, IType type)
         {
             var typeSize = type.GetTypeSize(this, true);
-            switch (index.ToCode())
+            var opCodePart = index;
+            switch (opCodePart.ToCode())
             {
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
@@ -882,18 +883,24 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
 
-                    var value = GetIntegerValueFromOpCode(index.OpCodeOperands[0]);
+                    if (opCodePart.OpCodeOperands[0].Any(Code.Mul))
+                    {
+                        opCodePart = opCodePart.OpCodeOperands[0];
+                        goto case Code.Mul;
+                    }
+
+                    var value = GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
                     if (value > 0 && value % typeSize == 0)
                     {
-                        ReplaceOperand(index.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
+                        ReplaceOperand(opCodePart.OpCodeOperands[0], new OpCodeInt32Part(OpCodesEmit.Ldc_I4, 0, 0, (int)value / typeSize));
                         return true;
                     }
 
                     break;
 
                 case Code.Mul:
-                    var opCodeOperand0 = index.OpCodeOperands[0];
-                    var opCodeOperand1 = index.OpCodeOperands[1];
+                    var opCodeOperand0 = opCodePart.OpCodeOperands[0];
+                    var opCodeOperand1 = opCodePart.OpCodeOperands[1];
 
                     var op0Size = GetIntegerValueFromOpCode(opCodeOperand0);
                     var op1Size = GetIntegerValueFromOpCode(opCodeOperand1);
@@ -902,7 +909,7 @@ namespace Il2Native.Logic
                     if (opCodeOperand0.Any(Code.Sizeof) && (opCodeOperand0 as OpCodeTypePart).Operand.Equals(type))
                     {
                         // disable which mul
-                        ReplaceOperand(index, opCodeOperand1);
+                        ReplaceOperand(opCodePart, opCodeOperand1);
                         return true;
                     }
 
@@ -910,7 +917,7 @@ namespace Il2Native.Logic
                     if (opCodeOperand1.Any(Code.Sizeof) && (opCodeOperand1 as OpCodeTypePart).Operand.Equals(type))
                     {
                         // disable which mul
-                        ReplaceOperand(index, opCodeOperand0);
+                        ReplaceOperand(opCodePart, opCodeOperand0);
                         return true;
                     }
 
@@ -918,7 +925,7 @@ namespace Il2Native.Logic
                     if (op0Size > 0 && typeSize == op0Size)
                     {
                         // disable which mul
-                        ReplaceOperand(index, opCodeOperand1);
+                        ReplaceOperand(opCodePart, opCodeOperand1);
                         return true;
                     }
 
@@ -926,7 +933,7 @@ namespace Il2Native.Logic
                     if (op1Size > 0 && typeSize == op1Size)
                     {
                         // disable which mul
-                        ReplaceOperand(index, opCodeOperand0);
+                        ReplaceOperand(opCodePart, opCodeOperand0);
                         return true;
                     }
 
@@ -965,10 +972,29 @@ namespace Il2Native.Logic
                 case Code.Castclass:
                     return this.GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
                 case Code.Conv_I:
+                case Code.Conv_I1:
+                case Code.Conv_I2:
+                case Code.Conv_I4:
+                case Code.Conv_I8:
                 case Code.Conv_Ovf_I:
+                case Code.Conv_Ovf_I1:
+                case Code.Conv_Ovf_I1_Un:
+                case Code.Conv_Ovf_I2:
+                case Code.Conv_Ovf_I2_Un:
+                case Code.Conv_Ovf_I4:
+                case Code.Conv_Ovf_I4_Un:
+                case Code.Conv_Ovf_I8:
+                case Code.Conv_Ovf_I8_Un:
                 case Code.Conv_Ovf_I_Un:
-                case Code.Conv_U:
                 case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U1:
+                case Code.Conv_Ovf_U1_Un:
+                case Code.Conv_Ovf_U2:
+                case Code.Conv_Ovf_U2_Un:
+                case Code.Conv_Ovf_U4:
+                case Code.Conv_Ovf_U4_Un:
+                case Code.Conv_Ovf_U8:
+                case Code.Conv_Ovf_U8_Un:
                 case Code.Conv_Ovf_U_Un:
                     return this.GetIntegerValueFromOpCode(opCodePart.OpCodeOperands[0]);
             }
