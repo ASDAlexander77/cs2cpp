@@ -712,7 +712,7 @@ namespace System
 
             int c;
             if (count == -1)
-                if ((c = *((int*)((char*)strBChars + diff)) - *((int*)strBChars)) != 0)
+                if ((c = *((short*)((char*)strBChars + diff)) - *((short*)strBChars)) != 0)
                     return c;
 
             return countA - countB;
@@ -994,7 +994,28 @@ namespace System
 
         public int IndexOf(String value)
         {
-            throw new NotImplementedException();
+            var source = this;
+            var startIndex = 0;
+            var count = source.Length - value.Length + 1;
+
+            // If value is Empty, the return value is startIndex
+            if (value.Length == 0)
+            {
+                return startIndex;
+            }
+
+            int maxIndex = count - 1;
+
+            for (startIndex = 0; startIndex <= maxIndex; startIndex++)
+            {
+                if (CompareOrdinal(source, startIndex, value, 0, value.Length) == 0)
+                {
+                    return startIndex;
+                }
+            }
+
+            // Not found
+            return -1;
         }
 
         public static bool IsNullOrEmpty(String value)
@@ -1067,8 +1088,8 @@ namespace System
         public int LastIndexOf(String value)
         {
             var source = this;
-            var startIndex = value.Length - 1;
-            var count = value.Length;
+            var startIndex = source.Length - value.Length;
+            var count = source.Length - value.Length + 1;
 
             // If value is Empty, the return value is startIndex
             if (value.Length == 0)
