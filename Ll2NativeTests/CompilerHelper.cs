@@ -23,8 +23,6 @@
         public const string AndroidPath = @"C:\Dev\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
         public const string SscliSourcePath = @"C:\Temp\sscli20\tests\bcl\system\";
 
-        public const bool Llvm35Support = false;
-        public const bool Llvm34Support = false;
         public const string OutputObjectFileExt = "obj";
         public const string Target = "i686-w64-mingw32";
 #endif
@@ -41,15 +39,13 @@
             @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonNativeCsLibraryForIl\bin\Release\BabylonNativeCsLibraryForIl.dll";
 
         public const string OpenGlExePath =
-            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Debug\BabylonGlut.dll";
+            @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonGlut\bin\Release\BabylonGlut.dll";
 
         public const string AndroidPath =
             @"D:\Developing\BabylonNative\BabylonNativeCs\BabylonAndroid\bin\Android - Release\BabylonAndroid.dll";
 
         public const string SscliSourcePath = @"D:\Temp\CSharpTranspilerExt\sscli20\tests\bcl\system\";
 
-        public const bool Llvm35Support = false;
-        public const bool Llvm34Support = false;
         public const string OutputObjectFileExt = "obj";
         public const string Target = "i686-w64-mingw32";
 #endif
@@ -64,7 +60,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool UsingRoslyn = false;
+        public const bool UsingRoslyn = true;
 
         /// <summary>
         /// </summary>
@@ -85,7 +81,7 @@
         /// <summary>
         ///     ex. llc -O2 'file'.ll
         /// </summary>
-        public const bool CompileWithOptimization = false;
+        public const bool CompileWithOptimization = true;
 
         /// <summary>
         /// </summary>
@@ -108,8 +104,6 @@
             bool roslyn = UsingRoslyn,
             bool gc = GcEnabled,
             bool gctors = GctorsEnabled,
-            bool llvm35Support = Llvm35Support,
-            bool llvm34Support = Llvm34Support,
             bool debugInfo = DebugInfo,
             bool stubs = false)
         {
@@ -139,15 +133,6 @@
             if (!gctors)
             {
                 args.Add("gctors-");
-            }
-
-            if (llvm35Support)
-            {
-                args.Add("llvm35");
-            }
-            else if (llvm34Support)
-            {
-                args.Add("llvm34");
             }
 
             if (debugInfo)

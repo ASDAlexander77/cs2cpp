@@ -243,16 +243,21 @@ namespace Il2Native.Logic.Gencode
             {
                 var virtualTable = thisType.GetVirtualInterfaceTableLayout(cWriter);
 
-                var index = 0;
+                var index = -1;
                 foreach (var virtualMethod in virtualTable)
                 {
+                    index++;
+
+                    if (virtualMethod.DeclaringType.TypeNotEquals(methodInfo.DeclaringType))
+                    {
+                        continue;
+                    }
+
                     if (virtualMethod.IsMatchingOverride(methodInfo))
                     {
                         // + RTTI info shift
                         return index;
                     }
-
-                    index++;
                 }
 
                 // try to find a method in all interfaces
@@ -260,9 +265,16 @@ namespace Il2Native.Logic.Gencode
                 {
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(cWriter);
 
-                    index = 0;
+                    index = -1;
                     foreach (var virtualMethod in virtualTableOfSecondaryInterface)
                     {
+                        index++;
+
+                        if (virtualMethod.DeclaringType.TypeNotEquals(methodInfo.DeclaringType))
+                        {
+                            continue;
+                        }
+
                         if (virtualMethod.IsMatchingOverride(methodInfo))
                         {
                             requiredInterface = @interface;
@@ -270,8 +282,6 @@ namespace Il2Native.Logic.Gencode
                             // + RTTI info shift
                             return index;
                         }
-
-                        index++;
                     }
                 }
 

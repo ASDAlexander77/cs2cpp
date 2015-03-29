@@ -1066,7 +1066,37 @@ namespace System
 
         public int LastIndexOf(String value)
         {
-            throw new NotImplementedException();
+            var source = this;
+            var startIndex = 0;
+            var count = value.Length;
+
+            // If value is Empty, the return value is startIndex
+            if (value.Length == 0)
+            {
+                return startIndex;
+            }
+
+            // the search space within [source] ends at offset [startIndex] inclusive
+            // and includes [count] characters 
+            // minIndex is the first included character and is at index [startIndex - count + 1]
+            int minIndex = startIndex - count + 1;
+
+            // First place we can find it is start index - (value.length -1)
+            if (value.Length > 0)
+            {
+                startIndex -= (value.Length - 1);
+            }
+
+            for (; startIndex >= minIndex; startIndex--)
+            {
+                if (CompareOrdinal(source, startIndex, value, 0, value.Length) == 0)
+                {
+                    return startIndex;
+                }
+            }
+
+            // Not found
+            return -1;
         }
 
         public String ToLower()

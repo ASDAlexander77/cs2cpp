@@ -29,9 +29,9 @@ namespace Il2Native
             if (args.Length == 0)
             {
                 Console.WriteLine("C# Native, https://csnative.codeplex.com/");
-                Console.WriteLine("MSIL to LLVM ByteCode compiler");
+                Console.WriteLine("MSIL to C transpiler");
                 Console.WriteLine(string.Empty);
-                Console.WriteLine("Usage: Il2Bc [options] file");
+                Console.WriteLine("Usage: Il2C [options] file");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("file:                     Specifies the file or files to be compiled");
                 Console.WriteLine("  .cs                     C# source file");
@@ -41,23 +41,19 @@ namespace Il2Native
                 Console.WriteLine("  /exe                    Output file");
                 Console.WriteLine("  /corelib:<file>         Reference standard library (CoreLib.dll)");
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
-                Console.WriteLine(
-                    "  /target:<target>        LLVM target, ex: i686-pc-win32, armv7-none-linux-androideabi, asmjs-unknown-emscripten");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
-                Console.WriteLine("  /llvm35                 Enable support LLVM 3.5 (otherwise 3.6)");
-                Console.WriteLine("  /llvm34                 Enable support LLVM 3.4 or lower version (otherwise 3.6)");
-                Console.WriteLine("  /debug                  Generate debug information, can be combined with /llvm37");
+                Console.WriteLine("  /debug                  Generate debug information");
                 Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine("  /emscripten             Set recommended settings for Emscripten platform");
                 Console.WriteLine(string.Empty);
                 Console.WriteLine("Example:");
-                Console.WriteLine("  Il2Bc file1.cs          Compiles one C# file");
-                Console.WriteLine("  Il2Bc /roslyn file1.cs file2.cs");
+                Console.WriteLine("  Il2C file1.cs          Compiles one C# file");
+                Console.WriteLine("  Il2C /roslyn file1.cs file2.cs");
                 Console.WriteLine("                          Compiles two C# files using Roslyn compiler");
-                Console.WriteLine("  Il2Bc file1.dll         Converts one DLL file");
+                Console.WriteLine("  Il2C file1.dll         Converts one DLL file");
                 return 0;
             }
 
@@ -82,13 +78,7 @@ namespace Il2Native
                 return 1;
             }
 
-            // if version is not provided, detect it your self
-            if (isCompilingTargetExe && !processedArgs.Any(p => p.StartsWith("llvm")))
-            {
-                processedArgs = AppendLlvmVersionToParams(processedArgs);
-            }
-
-            Console.Write("Generating LLVM IR file...");
+            Console.Write("Generating C file...");
             Il2Converter.Convert(sources, Environment.CurrentDirectory, processedArgs);
             Console.WriteLine("Done.");
 
@@ -127,38 +117,6 @@ namespace Il2Native
             return output;
         }
 
-        private static string[] AppendLlvmVersionToParams(string[] processedArgs)
-        {
-            // append llvm version
-            var version = GetLlvmVersion();
-            var newProcessedArgs = new List<string>(processedArgs);
-            newProcessedArgs.Add(string.Concat("llvm", version));
-            processedArgs = newProcessedArgs.ToArray();
-            return processedArgs;
-        }
-
-        private static string GetLlvmVersion()
-        {
-            var output = ExecCmd("llc", "--version", readOutput:true);
-            if (output.Contains("LLVM version 3.6"))
-            {
-                return "36";
-            }
-
-            if (output.Contains("LLVM version 3.5"))
-            {
-                return "35";
-            }
-
-            if (output.Contains("LLVM version 3.4"))
-            {
-                return "34";
-            }
-
-            // default;
-            return "36";
-        }
-
         private static void CompileExeTarget(string[] sources, string[] processedArgs)
         {
             var corelibSwitch = "corelib:";
@@ -169,7 +127,7 @@ namespace Il2Native
                 return;
             }
 
-            Console.Write("Generating LLVM IR file for CoreLib...");
+            Console.Write("Generating C file for CoreLib...");
             var coreLib = findCoreLibSwitch.Substring(corelibSwitch.Length);
             Il2Converter.Convert(
                 new[] { coreLib },
@@ -177,19 +135,16 @@ namespace Il2Native
                 processedArgs.Where(p => !p.StartsWith(corelibSwitch)).ToArray());
             Console.WriteLine("Done.");
 
-            // you need to get target
-            var llvmDummyWriter = new CWriter(string.Empty, string.Empty, string.Empty, processedArgs);
-
             // next step compile CoreLib
-            Console.Write("Compiling LLVM IR file for CoreLib...");
+            Console.Write("Compiling C file for CoreLib...");
             var coreLibNameNoExt = Path.GetFileNameWithoutExtension(coreLib);
-            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", coreLibNameNoExt, ""));
+            ExecCmd("g++", string.Format("-filetype=obj {0}.cpp", coreLibNameNoExt));
             Console.WriteLine("Done.");
             
             // compile generated dll
-            Console.Write("Compiling LLVM IR file...");
+            Console.Write("Compiling C file...");
             var targetFileNameNoExt = Path.GetFileNameWithoutExtension(sources.First());
-            ExecCmd("llc", string.Format("-filetype=obj -mtriple={1} {0}.ll", targetFileNameNoExt, ""));
+            ExecCmd("g++", string.Format("-filetype=obj {0}.cpp", targetFileNameNoExt));
             Console.WriteLine("Done.");
 
             // detect OBJ extention
