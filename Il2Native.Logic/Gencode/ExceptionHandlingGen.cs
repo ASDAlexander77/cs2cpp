@@ -119,6 +119,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var exceptionType = exceptionHandlingClause.Catch ?? cWriter.System.System_Exception;
+            exceptionType = exceptionType.IsObject ? cWriter.System.System_Exception : exceptionType;
 
             var variable = GetExceptionCaseVariable(exceptionHandlingClause);
 
@@ -166,7 +167,7 @@ namespace Il2Native.Logic.Gencode
             CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            writer.WriteLine("throw;");
+            writer.Write("throw");
         }
 
         /// <summary>
