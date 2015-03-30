@@ -613,12 +613,7 @@ namespace System
                     return length;
                 }
 
-                if (*a > *b)
-                {
-                    return 1;
-                }
-
-                return -1;
+                return *a - *b;
             }
         }
 
@@ -1181,7 +1176,51 @@ namespace System
 
         public String Trim()
         {
-            throw new NotImplementedException();
+            return TrimHelper(TrimBoth);  
+        }
+
+        private String TrimHelper(int trimType)
+        {
+            //end will point to the first non-trimmed character on the right
+            //start will point to the first non-trimmed character on the Left
+            int end = this.Length - 1;
+            int start = 0;
+
+            //Trim specified characters.
+            if (trimType != TrimTail)
+            {
+                for (start = 0; start < this.Length; start++)
+                {
+                    if (!Char.IsWhiteSpace(this[start])) break;
+                }
+            }
+
+            if (trimType != TrimHead)
+            {
+                for (end = Length - 1; end >= start; end--)
+                {
+                    if (!Char.IsWhiteSpace(this[end])) break;
+                }
+            }
+
+            return CreateTrimmedString(start, end);
+        }
+
+        private String CreateTrimmedString(int start, int end)
+        {
+            //Create a new STRINGREF and initialize it from the range determined above.
+            int len = end - start + 1;
+            if (len == this.Length)
+            {
+                // Don't allocate a new string as the trimmed string has not changed.
+                return this;
+            }
+
+            if (len == 0)
+            {
+                return String.Empty;
+            }
+            return InternalSubString(start, len);
         }
 
         ////// This method contains the same functionality as StringBuilder Replace. The only difference is that
