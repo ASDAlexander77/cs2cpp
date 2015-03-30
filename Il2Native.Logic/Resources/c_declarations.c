@@ -15,7 +15,7 @@ extern "C" void* memset(void *,int32_t,uint32_t);
 
 template<typename T> T compare_and_swap(T* reg, T oldval, T newval)
 {
-  int old_reg_val = *reg;
+  T old_reg_val = *reg;
   if (old_reg_val == oldval)
      *reg = newval;
   return old_reg_val;
