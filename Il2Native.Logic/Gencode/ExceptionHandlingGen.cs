@@ -119,7 +119,6 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             var exceptionType = exceptionHandlingClause.Catch ?? cWriter.System.System_Exception;
-            exceptionType = exceptionType.IsObject ? cWriter.System.System_Exception : exceptionType;
 
             var variable = GetExceptionCaseVariable(exceptionHandlingClause);
 
@@ -128,21 +127,26 @@ namespace Il2Native.Logic.Gencode
             writer.Write(variable);
             writer.WriteLine(";");
 
-            writer.Write("if ((");
-            writer.Write(variable);
-            writer.Write(" = ");
+            if (!exceptionType.IsObject)
+            {
+                writer.Write("if ((");
+                writer.Write(variable);
+                writer.Write(" = ");
 
-            var opCode = OpCodePart.CreateNop;
-            var opCodeOperand = OpCodePart.CreateNop;
-            opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object);
-            cWriter.WriteDynamicCast(
-                writer,
-                opCode,
-                opCodeOperand,
-                exceptionType,
-                forceCast: true);
+                var opCode = OpCodePart.CreateNop;
+                var opCodeOperand = OpCodePart.CreateNop;
+                opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object);
+                cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, exceptionType, forceCast: true);
 
-            writer.Write(") == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+                writer.Write(") == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            }
+            else
+            {
+                writer.Write(variable);
+                writer.Write(" = (");
+                cWriter.System.System_Object.WriteTypePrefix(cWriter);
+                writer.Write(") _ex{0}", exceptionHandlingClause.OwnerTry.Offset);
+            }
         }
 
         public static string GetExceptionCaseVariable(CatchOfFinallyClause exceptionHandlingClause)
