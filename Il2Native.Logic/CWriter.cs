@@ -4983,7 +4983,7 @@ namespace Il2Native.Logic
                 "const struct {1} _s{0}{4}_ = {3} {2}",
                 pair.Key,
                 this.GetStringTypeHeader(pair.Value.Length + 1),
-                this.GetStringValuesHeader(pair.Value.Length + 1, pair.Value.Length),
+                this.GetStringValuesHeader(pair.Value.Length + 2, pair.Value.Length),
                 "{",
                 this.GetAssemblyPrefix());
 

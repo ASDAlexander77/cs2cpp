@@ -613,7 +613,7 @@ namespace System
                     return length;
                 }
 
-                return *a - *b;
+                return *(int*)a - *(int*)b;
             }
         }
 

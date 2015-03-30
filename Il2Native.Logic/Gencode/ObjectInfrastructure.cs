@@ -57,7 +57,7 @@ namespace Il2Native.Logic.Gencode
             }
             else if (enableStringFastAllocation && declaringClassType.IsString)
             {
-                newAlloc = StringGen.StringAllocationSizeMethodBody(typeResolver, declaringClassType, typeResolver.System.System_Char);
+                newAlloc = StringGen.StringAllocationSizeMethodBody(typeResolver, declaringClassType, typeResolver.System.System_Char, true);
             }
             else
             {

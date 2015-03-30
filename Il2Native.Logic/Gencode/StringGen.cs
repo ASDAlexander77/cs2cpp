@@ -32,7 +32,8 @@ namespace Il2Native.Logic.Gencode
         public static IlCodeBuilder StringAllocationSizeMethodBody(
             ITypeResolver typeResolver,
             IType stringType,
-            IType charType)
+            IType charType,
+            bool increaseSizeByOne = false)
         {
             var codeList = new IlCodeBuilder();
 
@@ -42,6 +43,13 @@ namespace Il2Native.Logic.Gencode
 
             // load length
             codeList.LoadArgument(0);
+
+            if (increaseSizeByOne)
+            {
+                codeList.LoadConstant(1);
+                codeList.Add(Code.Add);
+            }
+
             codeList.Add(Code.Mul);
 
             codeList.SizeOf(stringType);
