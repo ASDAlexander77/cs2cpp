@@ -466,15 +466,15 @@ namespace Il2Native.Logic
 
                     if (float.IsPositiveInfinity(opCodeSingle.Operand))
                     {
-                        this.Output.Write("0x7F800000");
+                        this.Output.Write("1.0f/0.0f");
                     }
                     else if (float.IsNegativeInfinity(opCodeSingle.Operand))
                     {
-                        this.Output.Write("0xFF800000");
+                        this.Output.Write("-1.0f/0.0f");
                     }
                     else if (float.IsNaN(opCodeSingle.Operand))
                     {
-                        this.Output.Write("0xFFC00000");
+                        this.Output.Write("0.0f/0.0f");
                     }
                     else
                     {
@@ -492,15 +492,15 @@ namespace Il2Native.Logic
                     var opCodeDouble = opCode as OpCodeDoublePart;
                     if (double.IsPositiveInfinity(opCodeDouble.Operand))
                     {
-                        this.Output.Write("0x7F80000000000000");
+                        this.Output.Write("1.0/0.0");
                     }
                     else if (double.IsNegativeInfinity(opCodeDouble.Operand))
                     {
-                        this.Output.Write("0xFF80000000000000");
+                        this.Output.Write("-1.0/0.0");
                     }
                     else if (double.IsNaN(opCodeDouble.Operand))
                     {
-                        this.Output.Write("0xFFC0000000000000");
+                        this.Output.Write("0.0/0.0");
                     }
                     else
                     {
