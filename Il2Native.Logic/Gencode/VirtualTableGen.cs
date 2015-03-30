@@ -589,7 +589,7 @@ namespace Il2Native.Logic.Gencode
             ResolveAndAppendInterfaceMethods(virtualTable, allPublic, interfaceMethods);
         }
 
-        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allPublic, List<IMethod> interfaceMethods)
+        private static void ResolveAndAppendInterfaceMethods(List<CWriter.Pair<IMethod, IMethod>> virtualTable, IEnumerable<IMethod> allPublic, IEnumerable<IMethod> interfaceMethods)
         {
             var list =
                 interfaceMethods.Select(
