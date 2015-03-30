@@ -602,18 +602,22 @@ namespace System
                 // always zero terminated and that the terminating zero is not included
                 // in the length. For odd string sizes, the last compare will include
                 // the zero terminator.
-                while (length > 0)
+                while (length > 1)
                 {
-                    if (*(int*)a != *(int*)b) break;
+                    if (*(int*)a != *(int*)b)
+                    {
+                        return *(int*)a - *(int*)b;
+                    }
+                    ;
                     a += 2; b += 2; length -= 2;
                 }
 
                 if (length == 0)
                 {
-                    return length;
+                    return 0;
                 }
 
-                return *(int*)a - *(int*)b;
+                return *a - *b;
             }
         }
 

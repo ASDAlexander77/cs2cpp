@@ -4978,12 +4978,14 @@ namespace Il2Native.Logic
                 }
             }
 
+            var align = pair.Value.Length % 2 == 0;
+
             this.Output.Write(this.declarationPrefix);
             this.Output.Write(
                 "const struct {1} _s{0}{4}_ = {3} {2}",
                 pair.Key,
-                this.GetStringTypeHeader(pair.Value.Length + 1),
-                this.GetStringValuesHeader(pair.Value.Length + 2, pair.Value.Length),
+                this.GetStringTypeHeader(pair.Value.Length + (align ? 2 : 1)),
+                this.GetStringValuesHeader(pair.Value.Length + (align ? 3 : 2), pair.Value.Length),
                 "{",
                 this.GetAssemblyPrefix());
 
@@ -5004,6 +5006,11 @@ namespace Il2Native.Logic
             if (index > 0)
             {
                 this.Output.Write(", ");
+            }
+
+            if (align)
+            {
+                this.Output.Write("0, ");
             }
 
             this.Output.WriteLine("0 {0} {0};", '}');
