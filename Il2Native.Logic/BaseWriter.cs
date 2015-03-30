@@ -820,22 +820,13 @@ namespace Il2Native.Logic
                         var opCodeOperand1 = opCodePart.OpCodeOperands[1];
                         var op0 = EstimatedResultOf(opCodeOperand0);
                         var op1 = EstimatedResultOf(opCodeOperand1);
-                        var pointerOpFixed = false;
                         if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
-                            pointerOpFixed = FixPointerOperation(opCodeOperand0, opCodeOperand1, op0.Type.GetElementType());
-                            if (!pointerOpFixed && GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
-                            {
-                                InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Byte.ToPointerType()));
-                            }
+                            this.FixAddSubPointerOperation(opCodeOperand0, opCodeOperand1, op0, op1);
                         }
                         else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
-                            pointerOpFixed = FixPointerOperation(opCodeOperand1, opCodeOperand0, op1.Type.GetElementType());
-                            if (!pointerOpFixed && GetIntegerValueFromOpCode(opCodeOperand1) <= 0 && !op0.Type.IsPointer)
-                            {
-                                InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, System.System_Byte.ToPointerType()));
-                            }
+                            this.FixAddSubPointerOperation(opCodeOperand1, opCodeOperand0, op1, op0);
                         }
 
                         break;
@@ -848,20 +839,56 @@ namespace Il2Native.Logic
                         op0 = EstimatedResultOf(opCodeOperand0);
                         op1 = EstimatedResultOf(opCodeOperand1);
 
-                        if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)) &&
-                            op0.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand1))
+                        if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
-                            ReplaceOperand(opCodePart, opCodeOperand0);
+                            this.FixDivPointerOperation(opCodePart, opCodeOperand0, op0, opCodeOperand1);
                         }
-                        else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)) &&
-                                 op1.Type.GetElementType().GetTypeSize(this, true) == GetIntegerValueFromOpCode(opCodeOperand0))
+                        else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
-                            ReplaceOperand(opCodePart, opCodeOperand1);
+                            this.FixDivPointerOperation(opCodePart, opCodeOperand1, op1, opCodeOperand0);
                         }
 
                         break;
 
                 }
+            }
+        }
+
+        private void FixAddSubPointerOperation(OpCodePart opCodeOperand0, OpCodePart opCodeOperand1, ReturnResult op0, ReturnResult op1)
+        {
+            var pointerOpFixed = this.FixPointerOperation(opCodeOperand0, opCodeOperand1, op0.Type.GetElementType());
+            if (!pointerOpFixed && this.GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
+            {
+                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+            }
+        }
+
+        private void FixDivPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand0, ReturnResult op0, OpCodePart opCodeOperand1)
+        {
+            if (op0.Type.GetElementType().GetTypeSize(this, true) == this.GetIntegerValueFromOpCode(opCodeOperand1))
+            {
+                this.ReplaceOperand(opCodePart, opCodeOperand0);
+            }
+            else if (1 == this.GetIntegerValueFromOpCode(opCodeOperand1))
+            {
+                // in case pointers casted to Byte*
+                switch (opCodeOperand0.ToCode())
+                {
+                    case Code.Add:
+                    case Code.Add_Ovf:
+                    case Code.Add_Ovf_Un:
+                    case Code.Sub:
+                    case Code.Sub_Ovf:
+                    case Code.Sub_Ovf_Un:
+                        this.InsertOperand(opCodeOperand0.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        this.InsertOperand(opCodeOperand0.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        break;
+                    default:
+                        this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        break;
+                }
+
+                this.ReplaceOperand(opCodePart, opCodeOperand0);
             }
         }
 

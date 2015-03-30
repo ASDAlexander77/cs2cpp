@@ -853,11 +853,11 @@ namespace Il2Native.Logic
                     this.BinaryOper(writer, opCode, " ^ ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Shl:
-                    this.BinaryOper(writer, opCode, " >> ", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " << ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
-                    this.BinaryOper(writer, opCode, " << ", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " >> ", OperandOptions.AdjustIntTypes);
                     break;
                 case Code.Not:
                     this.UnaryOper(writer, opCode, "~");
@@ -1994,7 +1994,8 @@ namespace Il2Native.Logic
 
             this.Stubs = args != null && args.Contains("stubs");
 
-            this.DebugInfo = args != null && args.Contains("debug");
+            // TODO: #line is not what I expected
+            ////this.DebugInfo = args != null && args.Contains("debug");
             if (this.DebugInfo)
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
