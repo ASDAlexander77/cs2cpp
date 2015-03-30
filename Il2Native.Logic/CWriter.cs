@@ -19,6 +19,7 @@ namespace Il2Native.Logic
     using System.Text;
 
     using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.DebugInfo;
     using Il2Native.Logic.Exceptions;
     using Il2Native.Logic.Gencode;
     using Il2Native.Logic.Gencode.InlineMethods;
@@ -126,6 +127,8 @@ namespace Il2Native.Logic
         /// </summary>
         private readonly ISet<IType> processedTypes = new NamespaceContainer<IType>();
 
+        public DebugInfoGenerator debugInfoGenerator;
+
         /// <summary>
         /// </summary>
         /// <param name="fileName">
@@ -146,6 +149,10 @@ namespace Il2Native.Logic
                 return this.IlReader.AllReferences();
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public bool DebugInfo { get; private set; }
 
         /// <summary>
         /// </summary>
@@ -270,6 +277,11 @@ namespace Il2Native.Logic
         {
             if (firstLevel)
             {
+                if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
+                {
+                    this.WriteDebugLine();
+                }
+
                 this.WriteLabels(writer, opCode);
             }
 
@@ -322,6 +334,12 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(string.Empty);
             }
+        }
+
+        private void WriteDebugLine()
+        {
+            this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.DefaultSourceFilePath);
+            this.debugInfoGenerator.CurrentDebugLineNew = false;
         }
 
         private void WriteTemporaryExpressionResult(OpCodePart opCode)
@@ -1968,13 +1986,19 @@ namespace Il2Native.Logic
             writer.Write(")");
         }
 
-        public void ReadParameters(string[] args)
+        public void ReadParameters(string sourceFilePath, string pdbFilePath, string[] args)
         {
             // custom settings
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = false;
 
             this.Stubs = args != null && args.Contains("stubs");
+
+            this.DebugInfo = args != null && args.Contains("debug");
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
+            }
 
             // prefefined settings
             if (args != null && args.Contains("android"))
@@ -3081,6 +3105,11 @@ namespace Il2Native.Logic
             this.StaticConstructors.Clear();
             VirtualTableGen.Clear();
             TypeGen.Clear();
+
+            if (this.DebugInfo && !this.debugInfoGenerator.StartGenerating())
+            {
+                this.DebugInfo = false;
+            }
         }
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
@@ -3890,7 +3919,7 @@ namespace Il2Native.Logic
             var extension = Path.GetExtension(fileName);
             this.outputFile = extension != null && extension.Equals(string.Empty) ? fileName + ".cpp" : fileName;
 
-            this.ReadParameters(args);
+            this.ReadParameters(sourceFilePath, pdbFilePath, args);
         }
 
         /// <summary>
@@ -4420,6 +4449,30 @@ namespace Il2Native.Logic
                     this.Output.WriteLine(";");
                 }
             }
+
+            if (this.DebugInfo)
+            {
+                if (method.Token.HasValue)
+                {
+                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
+                    // to find first debug line of method
+                    this.ReadDbgLine(OpCodePart.CreateNop);
+                }
+                else
+                {
+                    this.debugInfoGenerator.GenerateFunction(-1);
+                }
+            }
+        }
+
+        private void ReadDbgLine(OpCodePart opCode)
+        {
+            if (!this.DebugInfo)
+            {
+                return;
+            }
+
+            this.debugInfoGenerator.ReadAndSetCurrentDebugLine(opCode.AddressStart);
         }
 
         /// <summary>
@@ -4437,6 +4490,7 @@ namespace Il2Native.Logic
 
             foreach (var opCodePart in rest)
             {
+                this.ReadDbgLine(opCodePart);
                 this.ActualWrite(this.Output, opCodePart, true);
             }
         }
