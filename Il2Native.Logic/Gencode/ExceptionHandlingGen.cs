@@ -12,9 +12,9 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.Linq;
     using System.Reflection;
+
     using CodeParts;
     using Exceptions;
-    using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
@@ -50,17 +50,6 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="cWriter">
         /// </param>
-        /// <param name="exceptionHandlingClause">
-        /// </param>
-        public static void WriteCatchBegin(this CWriter cWriter, CatchOfFinallyClause exceptionHandlingClause)
-        {
-            // TODO: finish it to read casted exception
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="cWriter">
-        /// </param>
         /// <param name="opCode">
         /// </param>
         /// <param name="exceptionHandlingClause">
@@ -77,7 +66,24 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("eh{0}:", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
             if (exceptionHandlingClause.OwnerTry.Catches.Last().Equals(exceptionHandlingClause))
             {
+                if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+                {
+                    var tryOffset = exceptionHandlingClause.OwnerTry.Offset;
+
+                    writer.WriteLine("if (_ex{0} != (Void*) 0)", tryOffset);
+
+                    writer.WriteLine("{");
+                    writer.Indent++;
+                }
+
                 writer.WriteLine("throw;");
+
+                if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+                {
+                    writer.Indent--;
+                    writer.WriteLine("}");
+                }
+
                 writer.Indent--;
                 writer.WriteLine("}");
             }
@@ -189,6 +195,12 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             cWriter.UnaryOper(writer, opCode, "throw (Void*) ");
+        }
+
+        public static void WriteFinallyThrow(this CWriter cWriter)
+        {
+            var writer = cWriter.Output;
+            writer.Write("throw (Void*) 0");
         }
     }
 }

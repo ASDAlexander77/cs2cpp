@@ -291,7 +291,7 @@ namespace Il2Native.Logic
             }
 
             this.WriteTryBegins(writer, opCode);
-            this.WriteCatchBegins(writer, opCode);
+            this.WriteCatchBegins(opCode);
 
             if (firstLevel && !ProcessAsSeparateStatement(opCode))
             {
@@ -327,7 +327,7 @@ namespace Il2Native.Logic
             this.WriteCatchFinnallyEnd(writer, opCode);
 
             this.WriteCatchFinnallyCleanUpEnd(opCode);
-            this.WriteTryEnds(writer, opCode);
+            this.WriteTryEnds(opCode);
             this.WriteExceptionHandlersProlog(opCode);
 
             if (firstLevel)
@@ -1235,7 +1235,7 @@ namespace Il2Native.Logic
                 case Code.Leave:
                 case Code.Leave_S:
 
-                    this.WriteLeave(writer, opCode);
+                    this.WriteLeave(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
 
                     break;
                 case Code.Ceq:
@@ -4028,7 +4028,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchBegins(CIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCatchBegins(OpCodePart opCode)
         {
             if (opCode.CatchOrFinallyBegin == null)
             {
@@ -4043,8 +4043,6 @@ namespace Il2Native.Logic
             {
                 this.WriteCatchTest(exceptionHandler, exceptionHandler.Next);
             }
-
-            this.WriteCatchBegin(exceptionHandler);
         }
 
         /// <summary>
@@ -4240,10 +4238,19 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteLeave(CIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteLeave(OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
         {
+            var writer = this.Output;
+
             writer.WriteLine("// Leave ");
-            writer.Write(string.Concat("goto a", opCode.JumpAddress()));
+            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            {
+                this.WriteFinallyThrow();
+            }
+            else
+            {
+                writer.Write(string.Concat("goto a", opCode.JumpAddress()));
+            }
         }
 
         private FullyDefinedReference WriteLoadingArgumentsForMain(IMethod currentMethod, IGenericContext currentGenericContext)
@@ -4894,7 +4901,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteTryEnds(CIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteTryEnds(OpCodePart opCode)
         {
             if (opCode.TryEnd == null)
             {
@@ -4905,6 +4912,14 @@ namespace Il2Native.Logic
             opCode.TryEnd = null;
             var ehPopped = this.tryScopes.Pop();
             Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
+
+            var exceptionHandlingClause = this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null;
+            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            {
+                this.Output.WriteLine();
+                this.WriteFinallyThrow();
+                this.Output.WriteLine(";");
+            }
         }
 
         /// <summary>
