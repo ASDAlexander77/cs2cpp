@@ -32,6 +32,10 @@
 
         /// <summary>
         /// </summary>
+        ISet<IType> UsedTypeDeclarations { get; set; }
+
+        /// <summary>
+        /// </summary>
         ISet<IType> UsedArrayTypes { get; set; }
 
         /// <summary>

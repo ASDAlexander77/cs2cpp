@@ -1831,7 +1831,7 @@ namespace Il2Native.Logic
 
                 case Code.Call:
                 case Code.Callvirt:
-                    var effectiveoperandPosition = operandPosition;
+                    var effectiveOperandPosition = operandPosition;
                     var opCodePartMethod = opCodePart as OpCodeMethodInfoPart;
                     if (opCodePart.Any(Code.Callvirt) || opCodePartMethod.Operand.CallingConvention.HasFlag(CallingConventions.HasThis))
                     {
@@ -1840,7 +1840,7 @@ namespace Il2Native.Logic
                             return opCodePartMethod.Operand.DeclaringType;
                         }
 
-                        effectiveoperandPosition--;
+                        effectiveOperandPosition--;
                     }
 
                     var parameters = opCodePartMethod.Operand.GetParameters();
@@ -1849,7 +1849,7 @@ namespace Il2Native.Logic
                     {
                         foreach (var parameter in parameters)
                         {
-                            if (index == effectiveoperandPosition)
+                            if (index == effectiveOperandPosition)
                             {
                                 retType = parameter.ParameterType;
                                 break;
@@ -1862,13 +1862,20 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Newobj:
-                    effectiveoperandPosition = operandPosition;
+
+                    if (opCodePart.ReadExceptionFromStack)
+                    {
+                        retType = opCodePart.ReadExceptionFromStackType;
+                        break;
+                    }
+
+                    effectiveOperandPosition = operandPosition;
                     var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
                     parameters = opCodeConstructorInfoPart.Operand.GetParameters();
                     index = 0;
                     foreach (var parameter in parameters)
                     {
-                        if (index == effectiveoperandPosition)
+                        if (index == effectiveOperandPosition)
                         {
                             retType = parameter.ParameterType;
                             break;

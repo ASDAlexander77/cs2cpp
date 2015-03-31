@@ -1118,6 +1118,7 @@ namespace Il2Native.Logic
                         token = ReadInt32(enumerator, ref currentAddress);
                         var @string = module.ResolveString(token);
                         this.AddString(token, @string);
+                        this.AddUsedTypeDeclaration(this.TypeResolver.System.System_String);
                         yield return new OpCodeStringPart(opCode, startAddress, currentAddress, new KeyValuePair<int, string>(token, @string));
                         continue;
                     case Code.Newobj:

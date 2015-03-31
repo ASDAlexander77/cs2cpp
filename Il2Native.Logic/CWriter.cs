@@ -2845,6 +2845,7 @@ namespace Il2Native.Logic
             this.IlReader.UsedConstBytes = new List<IConstBytes>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
+            this.IlReader.UsedTypeDeclarations = new NamespaceContainer<IType>();
             this.IlReader.UsedTypeDefinitions = new NamespaceContainer<IType>();
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
             this.IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
@@ -4581,7 +4582,7 @@ namespace Il2Native.Logic
                 any = false;
             }
 
-            // structs
+            // type definitions
             foreach (var requiredType in this.IlReader.UsedTypeDefinitions)
             {
                 any = true;
@@ -4603,6 +4604,19 @@ namespace Il2Native.Logic
 
             // forward declarations
             this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
+
+            // forward declarations - type from method body
+            foreach (var requiredType in this.IlReader.UsedTypeDeclarations)
+            {
+                any = true;
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
+            }
+
+            if (any)
+            {
+                this.Output.WriteLine(string.Empty);
+                any = false;
+            }
 
             // methods
             foreach (var requiredDeclarationMethod in this.IlReader.CalledMethods)
