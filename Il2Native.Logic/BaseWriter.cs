@@ -1143,7 +1143,7 @@ namespace Il2Native.Logic
             OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
             opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
-            newOperand.OpCodeOperands = new [] { oldOperand };
+            newOperand.OpCodeOperands = new[] { oldOperand };
         }
 
         /// <summary>
@@ -2162,7 +2162,30 @@ namespace Il2Native.Logic
                     return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
 
                 case Code.Ldtoken:
+
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        return this.System.System_RuntimeTypeHandle;
+                    }
+
+                    var opCodeFieldInfoPartToken = opCodePart as OpCodeFieldInfoPart;
+                    if (opCodeFieldInfoPartToken != null)
+                    {
+                        return this.System.System_RuntimeFieldHandle;
+                    }
+
+                    var opCodeMethodInfoPartToken = opCodePart as OpCodeMethodInfoPart;
+                    if (opCodeMethodInfoPartToken != null)
+                    {
+                        return this.System.System_RuntimeMethodHandle;
+                    }
+
                     return this.System.System_Void.ToPointerType();
+
+                case Code.Ldftn:
+                case Code.Ldvirtftn:
+                    return this.System.System_IntPtr;
             }
 
             return retType;

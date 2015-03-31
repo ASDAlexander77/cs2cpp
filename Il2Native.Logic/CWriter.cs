@@ -1091,48 +1091,48 @@ namespace Il2Native.Logic
 
                     var methodInfo = opCodeMethodInfoPart.Operand;
 
-                    IType thisType;
-                    bool hasThisArgument;
-                    OpCodePart opCodeFirstOperand;
-                    ReturnResult resultOfFirstOperand;
-                    bool isIndirectMethodCall;
-                    IType ownerOfExplicitInterface;
-                    IType requiredType;
-                    methodInfo.FunctionCallProlog(
-                        opCodeMethodInfoPart,
-                        true,
-                        true,
-                        this,
-                        out thisType,
-                        out hasThisArgument,
-                        out opCodeFirstOperand,
-                        out resultOfFirstOperand,
-                        out isIndirectMethodCall,
-                        out ownerOfExplicitInterface,
-                        out requiredType);
-
-                    FullyDefinedReference methodAddressResultNumber = null;
-                    if (isIndirectMethodCall)
-                    {
-                        this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
-                    }
-
-                    // bitcast method function address to Byte*
-                    writer.Write("(");
-                    this.WriteMethodPointerType(writer, methodInfo, thisType);
-                    writer.Write(")");
-                    if (isIndirectMethodCall)
-                    {
-                        this.WriteResult(methodAddressResultNumber);
-                    }
-                    else
-                    {
-                        this.WriteMethodDefinitionName(writer, methodInfo);
-                    }
-
-                    intPtrType = this.System.System_IntPtr;
+                    intPtrType = this.System.System_IntPtr.ToClass();
                     voidPtrType = this.System.System_Void.ToPointerType();
-                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, methodAddressResultNumber);
+                    convertString = this.WriteToString(
+                        () =>
+                        {
+                            IType thisType;
+                            bool hasThisArgument;
+                            OpCodePart opCodeFirstOperand;
+                            ReturnResult resultOfFirstOperand;
+                            bool isIndirectMethodCall;
+                            IType ownerOfExplicitInterface;
+                            IType requiredType;
+                            methodInfo.FunctionCallProlog(
+                                opCodeMethodInfoPart,
+                                true,
+                                true,
+                                this,
+                                out thisType,
+                                out hasThisArgument,
+                                out opCodeFirstOperand,
+                                out resultOfFirstOperand,
+                                out isIndirectMethodCall,
+                                out ownerOfExplicitInterface,
+                                out requiredType);
+
+                            if (isIndirectMethodCall)
+                            {
+                                this.GenerateVirtualCall(opCodeMethodInfoPart, methodInfo, thisType, opCodeFirstOperand, resultOfFirstOperand, ref requiredType);
+                            }
+                            else
+                            {
+                                this.Output.Write("(Byte*) &");
+                                this.WriteMethodDefinitionName(writer, methodInfo);
+                            }
+                        });
+
+                    value = new FullyDefinedReference(convertString, this.System.System_Byte.ToPointerType());
+
+                    objectReference = this.WriteVariableForNew(opCodeMethodInfoPart, intPtrType);
+                    opCode.Result = objectReference;
+
+                    this.WriteNewWithCallingConstructor(opCode, intPtrType, voidPtrType, value);
 
                     break;
 
