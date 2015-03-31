@@ -724,15 +724,11 @@ namespace Il2Native.Logic
         {
             Debug.Assert(type != null, "Type is null");
 
-            var fields = IlReader.Fields(
-                type, IlReader.DefaultFlags, _codeWriter);
+            var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
             foreach (var effectiveType in
-                fields.Select(field => !field.FieldType.IsArray ? field.FieldType.ToBareType() : field.FieldType)
-                      .Where(
-                          effectiveType =>
-                          !effectiveType.IsVoid() && !effectiveType.IsValueType && type.TypeNotEquals(effectiveType)))
+                fields.Select(field => field.FieldType).Where(fieldType => !fieldType.IsVoid() && !fieldType.IsValueType && type.TypeNotEquals(fieldType)))
             {
-                yield return effectiveType;
+                yield return effectiveType.NormalizeType();
             }
         }
 

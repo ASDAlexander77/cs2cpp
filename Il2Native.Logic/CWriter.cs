@@ -3218,7 +3218,7 @@ namespace Il2Native.Logic
         {
             this.processedTypes.Add(type);
 
-            this.WriteTypeRequiredDefinitions(type);
+            this.WriteTypeRequiredDeclarationsAndDefinitions(type);
 
             this.ReadTypeInfo(type);
 
@@ -4116,7 +4116,15 @@ namespace Il2Native.Logic
             var intPtrOper = IntTypeRequired(opCode);
             var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
 
-            this.WriteCCastOperand(opCode, 0, nativeIntType);
+            var estimatedResultOfOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+            if (!estimatedResultOfOperand0.Type.IsPointer)
+            {
+                this.WriteCCastOperand(opCode, 0, nativeIntType);
+            }
+            else
+            {
+                this.WriteResultOrActualWrite(this.Output, opCode.OpCodeOperands[0]);
+            }
         }
 
         /// <summary>
@@ -4966,7 +4974,7 @@ namespace Il2Native.Logic
             this.Output.WriteLine(";");
         }
 
-        private void WriteTypeRequiredDefinitions(IType type)
+        private void WriteTypeRequiredDeclarationsAndDefinitions(IType type)
         {
             foreach (var requiredDeclarationType in
                 Il2Converter.GetRequiredDeclarationTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
