@@ -184,10 +184,11 @@ namespace Il2Native.Logic
             this.BuildAddressIndexes(ops);
             this.AssignJumpBlocks(ops);
             this.ProcessAll(ops);
-            this.CalculateRequiredTypesForAlternativeValues(ops);
             this.AssignExceptionsToOpCodes();
+            this.InsertMissingTypeCasts(ops);
+            this.CalculateRequiredTypesForAlternativeValues(ops);
             this.DiscoverAllForwardDeclarations(ops);
-            this.SanitizeCode(ops);
+            this.SanitizePointerOperations(ops);
             return ops;
         }
 
@@ -473,6 +474,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
+        [Obsolete("review it and remove and finish migration to RequiredOutgoingType/RequiredIncomingType")]
         protected void AdjustTypes(OpCodePart opCode)
         {
             // TODO: review this function, I think I need to get rid of it
@@ -652,156 +654,256 @@ namespace Il2Native.Logic
 
         protected void DiscoverAllForwardDeclarations(IEnumerable<OpCodePart> opCodes)
         {
+            // we need to iterate all opCodeOperands because we can insert some new to fix the issue with missing TypeCasts etc
             foreach (var opCodePart in opCodes)
             {
-                switch (opCodePart.ToCode())
+                if (opCodePart.OpCodeOperands != null)
                 {
-                    case Code.Ldelem:
-                    case Code.Ldelem_I:
-                    case Code.Ldelem_I1:
-                    case Code.Ldelem_I2:
-                    case Code.Ldelem_I4:
-                    case Code.Ldelem_I8:
-                    case Code.Ldelem_R4:
-                    case Code.Ldelem_R8:
-                    case Code.Ldelem_Ref:
-                    case Code.Ldelem_U1:
-                    case Code.Ldelem_U2:
-                    case Code.Ldelem_U4:
-                        var estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                        this.IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
-                        break;
+                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+                    {
+                        this.DiscoverAllForwardDeclarations(opCodeOperand);
+                    }
+                }
 
-                    case Code.Newobj:
-                        var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                        if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                this.DiscoverAllForwardDeclarations(opCodePart);
+            }
+        }
+
+        private void DiscoverAllForwardDeclarations(OpCodePart opCodePart)
+        {
+            if (opCodePart.Discovered)
+            {
+                // to prevent redundant detection
+                return;
+            }
+
+            opCodePart.Discovered = true;
+
+            switch (opCodePart.ToCode())
+            {
+                case Code.Ldelem:
+                case Code.Ldelem_I:
+                case Code.Ldelem_I1:
+                case Code.Ldelem_I2:
+                case Code.Ldelem_I4:
+                case Code.Ldelem_I8:
+                case Code.Ldelem_R4:
+                case Code.Ldelem_R8:
+                case Code.Ldelem_Ref:
+                case Code.Ldelem_U1:
+                case Code.Ldelem_U2:
+                case Code.Ldelem_U4:
+                    var estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                    this.IlReader.AddArrayType(estimatedResult.Type.ToArrayType(1));
+                    break;
+
+                case Code.Newobj:
+                    var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
+                    if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    {
+                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                            this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+
+                        this.IlReader.AddCalledMethod(stringCtorMethodBase);
+                    }
+
+                    break;
+
+                case Code.Ldtoken:
+
+                    var opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        var tokenType = opCodeTypePart.Operand;
+                        if (!tokenType.IsVirtualTableImplementation)
                         {
-                            var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
-                                this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
-
-                            this.IlReader.AddCalledMethod(stringCtorMethodBase);
+                            this.IlReader.AddCalledMethod(tokenType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
                         }
+                    }
 
-                        break;
+                    break;
 
-                    case Code.Ldtoken:
+                case Code.Stfld:
+                case Code.Ldfld:
+                case Code.Ldflda:
 
-                        var opCodeTypePart = opCodePart as OpCodeTypePart;
-                        if (opCodeTypePart != null)
+                    var opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
+                    if (opCodeFieldInfoPart != null)
+                    {
+                        this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
+
+                        estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
+                    }
+
+                    break;
+
+                case Code.Stsfld:
+                case Code.Ldsfld:
+                case Code.Ldsflda:
+
+                    opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
+                    if (opCodeFieldInfoPart != null)
+                    {
+                        this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
+                    }
+
+                    break;
+
+                case Code.Callvirt:
+
+                    var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
+                    if (opCodeMethodInfoPart != null)
+                    {
+                        estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
+                        this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
+                        this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
+                    }
+
+                    break;
+
+                case Code.Constrained:
+
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null && opCodeTypePart.Operand.IsValueType())
+                    {
+                        this.IlReader.AddCalledMethod(new SynthesizedBoxMethod(opCodeTypePart.Operand, this));
+                    }
+
+                    break;
+
+                case Code.Castclass:
+
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        var type = estimatedResult.Type;
+                        if (type.IsPointer || type.IsByRef)
                         {
-                            var tokenType = opCodeTypePart.Operand;
-                            if (!tokenType.IsVirtualTableImplementation)
+                            type = type.GetElementType();
+                            if (type.IsVoid())
                             {
-                                this.IlReader.AddCalledMethod(tokenType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
+                                break;
                             }
                         }
 
-                        break;
-
-                    case Code.Stfld:
-                    case Code.Ldfld:
-                    case Code.Ldflda:
-                    
-                        var opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
-                        if (opCodeFieldInfoPart != null)
+                        if (opCodeTypePart.Operand.IsInterface)
                         {
-                            this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
-
-                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                             this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
                         }
-
-                        break;
-
-                    case Code.Stsfld:
-                    case Code.Ldsfld:
-                    case Code.Ldsflda:
-
-                        opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
-                        if (opCodeFieldInfoPart != null)
+                        else
                         {
-                            this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
-                        }
-
-                        break;
-
-                    case Code.Callvirt:
-
-                        var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
-                        if (opCodeMethodInfoPart != null)
-                        {
-                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                            var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
-                            this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
-                            this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
-                        }
-
-                        break;
-
-                    case Code.Constrained:
-
-                        opCodeTypePart = opCodePart as OpCodeTypePart;
-                        if (opCodeTypePart != null && opCodeTypePart.Operand.IsValueType())
-                        {
-                            this.IlReader.AddCalledMethod(new SynthesizedBoxMethod(opCodeTypePart.Operand, this));
-                        }
-
-                        break;
-
-                    case Code.Castclass:
-
-                        opCodeTypePart = opCodePart as OpCodeTypePart;
-                        if (opCodeTypePart != null)
-                        {
-                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                            var type = estimatedResult.Type;
-                            if (type.IsPointer || type.IsByRef)
-                            {
-                                type = type.GetElementType();
-                                if (type.IsVoid())
-                                {
-                                    break;
-                                }
-                            }
-
                             if (!type.IsDerivedFrom(opCodeTypePart.Operand))
                             {
                                 this.IlReader.AddRtti(type.ToRtti());
                             }
                         }
+                    }
 
-                        break;
+                    break;
 
-                    case Code.Unbox:
-                    case Code.Unbox_Any:
+                case Code.Unbox:
+                case Code.Unbox_Any:
 
-                        opCodeTypePart = opCodePart as OpCodeTypePart;
-                        if (opCodeTypePart != null)
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        var type = estimatedResult.Type;
+                        if (type.IsPointer || type.IsByRef)
                         {
-                            estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                            var type = estimatedResult.Type;
-                            if (type.IsPointer || type.IsByRef)
+                            type = type.GetElementType();
+                            if (type.IsVoid())
                             {
-                                type = type.GetElementType();
-                                if (type.IsVoid())
-                                {
-                                    break;
-                                }
-                            }
-
-                            if (!type.IsDerivedFrom(opCodeTypePart.Operand))
-                            {
-                                this.IlReader.AddRtti(opCodeTypePart.Operand.ToRtti());
+                                break;
                             }
                         }
 
-                        break;
+                        if (!type.IsDerivedFrom(opCodeTypePart.Operand))
+                        {
+                            this.IlReader.AddRtti(opCodeTypePart.Operand.ToRtti());
+                        }
+                    }
 
+                    break;
+            }
+        }
+
+        public enum ConversionType
+        {
+            None,
+            BaseToDerived,
+            DerivedToBase,
+            ObjectToInterface,
+            InterfaceToObject,
+        }
+
+        protected void InsertMissingTypeCasts(IEnumerable<OpCodePart> opCodes)
+        {
+            foreach (var opCodePart in opCodes)
+            {
+                if (opCodePart.OpCodeOperands == null || opCodePart.OpCodeOperands.Length == 0)
+                {
+                    continue;
+                }
+
+                foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+                {
+                    IType destinationType;
+                    var conversionType = GetConversionType(opCodeOperand, out destinationType);
+                    if (IsCastConversion(conversionType))
+                    {
+                        var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
+                        this.InsertOperand(opCodeOperand, castOpCode);
+                    }
                 }
             }
         }
 
-        protected void SanitizeCode(IEnumerable<OpCodePart> opCodes)
+        private static bool IsCastConversion(ConversionType conversionType)
+        {
+            switch (conversionType)
+            {
+                case ConversionType.None:
+                    break;
+                case ConversionType.BaseToDerived:
+                case ConversionType.DerivedToBase:
+                case ConversionType.ObjectToInterface:
+                case ConversionType.InterfaceToObject:
+                    return true;
+            }
+
+            return false;
+        }
+
+        private ConversionType GetConversionType(OpCodePart opCodeOperand, out IType destinationType)
+        {
+            destinationType = null;
+
+            if (opCodeOperand.UsedBy == null)
+            {
+                return ConversionType.None;
+            }
+
+            var sourceType = opCodeOperand.RequiredOutgoingType;
+            destinationType = opCodeOperand.UsedBy.OpCode.RequiredIncomingType;
+            if (sourceType == null || destinationType == null)
+            {
+                return ConversionType.None;
+            }
+
+            // detect conversion
+            if (sourceType.GetAllInterfaces().Contains(destinationType))
+            {
+                return ConversionType.ObjectToInterface;
+            }
+
+            return ConversionType.None;
+        }
+
+        protected void SanitizePointerOperations(IEnumerable<OpCodePart> opCodes)
         {
             foreach (var opCodePart in opCodes)
             {
@@ -1185,22 +1287,11 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        protected virtual IEnumerable<OpCodePart> InsertAfterOpCode(OpCodePart opCode)
-        {
-            yield break;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        protected virtual IEnumerable<OpCodePart> InsertBeforeOpCode(OpCodePart opCode)
+        protected OpCodePart InsertBeforeOpCode(OpCodePart opCode)
         {
             if (this.ExceptionHandlingClauses == null)
             {
-                yield break;
+                return null;
             }
 
             // insert result of exception
@@ -1208,13 +1299,13 @@ namespace Il2Native.Logic
                 this.ExceptionHandlingClauses.FirstOrDefault(eh => eh.HandlerOffset == opCode.AddressStart);
             if (exceptionHandling == null || exceptionHandling.CatchType == null)
             {
-                yield break;
+                return null;
             }
 
             var opCodeNope = new OpCodePart(OpCodes.Newobj, opCode.AddressStart, opCode.AddressStart);
             opCodeNope.ReadExceptionFromStack = true;
             opCodeNope.ReadExceptionFromStackType = exceptionHandling.CatchType;
-            yield return opCodeNope;
+            return opCodeNope;
         }
 
         protected int IntOpBitSize(OpCodePart opCode)
@@ -1305,7 +1396,8 @@ namespace Il2Native.Logic
             OpCodePart last = null;
             foreach (var opCodePart in opCodes)
             {
-                foreach (var opCodePartBefore in this.InsertBeforeOpCode(opCodePart))
+                var opCodePartBefore = this.InsertBeforeOpCode(opCodePart);
+                if (opCodePartBefore != null)
                 {
                     last = BuildChain(last, opCodePartBefore);
                     yield return opCodePartBefore;
@@ -1313,12 +1405,6 @@ namespace Il2Native.Logic
 
                 last = BuildChain(last, opCodePart);
                 yield return opCodePart;
-
-                foreach (var opCodePartAfter in this.InsertAfterOpCode(opCodePart))
-                {
-                    last = BuildChain(last, opCodePartAfter);
-                    yield return opCodePartAfter;
-                }
             }
         }
 
@@ -1564,6 +1650,8 @@ namespace Il2Native.Logic
             this.BuildGroupIndex(opCode);
 
             this.Stacks.SaveBranchStackValue(opCode, this);
+
+            opCode.RequiredIncomingType = this.RequiredIncomingType(opCode);
 
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)

@@ -28,7 +28,7 @@
 
         /// <summary>
         /// </summary>
-        ISet<IType> UsedStructTypes { get; set; }
+        ISet<IType> UsedTypeDefinitions { get; set; }
 
         /// <summary>
         /// </summary>

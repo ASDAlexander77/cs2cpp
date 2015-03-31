@@ -557,7 +557,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        public ISet<IType> UsedStructTypes
+        public ISet<IType> UsedTypeDefinitions
         {
             get
             {

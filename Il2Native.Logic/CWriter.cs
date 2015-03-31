@@ -1639,6 +1639,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        [Obsolete("move all code into BaseWriter to use step MissingTypeCasts")]
         public bool AdjustToType(OpCodePart opCode)
         {
             return this.AdjustToType(opCode, opCode.RequiredIncomingType);
@@ -1646,6 +1647,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        [Obsolete("move all code into BaseWriter to use step MissingTypeCasts")]
         public bool AdjustToType(OpCodePart opCode, IType typeDest)
         {
             // cast result if required
@@ -1868,11 +1870,6 @@ namespace Il2Native.Logic
         /// </param>
         public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.Result != null)
-            {
-                return;
-            }
-
             IType type = null;
 
             switch (opCode.ToCode())
@@ -2848,7 +2845,7 @@ namespace Il2Native.Logic
             this.IlReader.UsedConstBytes = new List<IConstBytes>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
-            this.IlReader.UsedStructTypes = new NamespaceContainer<IType>();
+            this.IlReader.UsedTypeDefinitions = new NamespaceContainer<IType>();
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
             this.IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
             this.IlReader.UsedRtti = new NamespaceContainer<IType>();
@@ -4585,7 +4582,7 @@ namespace Il2Native.Logic
             }
 
             // structs
-            foreach (var requiredType in this.IlReader.UsedStructTypes)
+            foreach (var requiredType in this.IlReader.UsedTypeDefinitions)
             {
                 any = true;
                 this.WriteTypeDefinitionIfNotWrittenYet(requiredType);
