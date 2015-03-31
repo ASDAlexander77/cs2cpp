@@ -66,6 +66,8 @@
             // to allow arithmetic operation on address
             ilCodeBuilder.Add(Code.Conv_I);
 
+            ilCodeBuilder.Add(Code.Conv_I8);
+
             // size &= ~(align - 1)
             ilCodeBuilder.LoadLocal(0);
 

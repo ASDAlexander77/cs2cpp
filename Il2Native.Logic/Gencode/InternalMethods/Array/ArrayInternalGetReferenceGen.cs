@@ -73,6 +73,8 @@
             // to allow arithmetic operation on address
             codeList.Add(Code.Conv_I);
 
+            codeList.Add(Code.Conv_I8);
+
             // size &= ~(align - 1)
             codeList.LoadLocal(0);
 
@@ -200,6 +202,8 @@
 
             // to allow arithmetic operation on address
             codeList.Add(Code.Conv_I);
+
+            codeList.Add(Code.Conv_I8);
 
             // size &= ~(align - 1)
             codeList.LoadLocal(2);

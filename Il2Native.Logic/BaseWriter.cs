@@ -474,7 +474,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="opCode">
         /// </param>
-        [Obsolete("review it and remove and finish migration to RequiredOutgoingType/RequiredIncomingType")]
+        [Obsolete("review it and remove and finish migration to RequiredOutgoingType/RequiredIncomingTypes")]
         protected void AdjustTypes(OpCodePart opCode)
         {
             // TODO: review this function, I think I need to get rid of it
@@ -491,7 +491,7 @@ namespace Il2Native.Logic
             }
 
             // fix types
-            var requiredType = this.RequiredIncomingType(opCode);
+            var requiredType = this.RequiredIncomingType(opCode, 0);
             if (requiredType != null)
             {
                 if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U) &&
@@ -508,8 +508,6 @@ namespace Il2Native.Logic
                 {
                     opCodeOperand.RequiredOutgoingType = requiredType;
                 }
-
-                opCode.RequiredIncomingType = requiredType;
             }
         }
 
@@ -888,7 +886,7 @@ namespace Il2Native.Logic
             }
 
             var sourceType = opCodeOperand.RequiredOutgoingType;
-            destinationType = opCodeOperand.UsedBy.OpCode.RequiredIncomingType;
+            destinationType = opCodeOperand.UsedBy.OpCode.RequiredIncomingTypes[opCodeOperand.UsedBy.OperandPosition];
             if (sourceType == null || destinationType == null)
             {
                 return ConversionType.None;
@@ -1651,7 +1649,7 @@ namespace Il2Native.Logic
 
             this.Stacks.SaveBranchStackValue(opCode, this);
 
-            opCode.RequiredIncomingType = this.RequiredIncomingType(opCode);
+            this.RequiredIncomingTypes(opCode);
 
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
@@ -1697,6 +1695,21 @@ namespace Il2Native.Logic
             this.ThisType = type;
         }
 
+        protected void RequiredIncomingTypes(OpCodePart opCodePart)
+        {
+            if (opCodePart.OpCodeOperands == null)
+            {
+                return;
+            }
+
+            var index = 0;
+            opCodePart.RequiredIncomingTypes = new RequiredIncomingTypes(opCodePart.OpCodeOperands.Length);
+            foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+            {
+                opCodePart.RequiredIncomingTypes[index] = this.RequiredIncomingType(opCodePart, index++);
+            }
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodePart">
@@ -1707,10 +1720,12 @@ namespace Il2Native.Logic
         /// </returns>
         protected IType RequiredIncomingType(
             OpCodePart opCodePart,
-            int operandPosition = -1,
+            int operandPosition,
             bool forArithmeticOperations = false)
         {
             IType retType = null;
+            ReturnResult result = null;
+            IType type = null;
             switch (opCodePart.ToCode())
             {
                 case Code.Ret:
@@ -1740,95 +1755,126 @@ namespace Il2Native.Logic
 
                 case Code.Stfld:
                 case Code.Stsfld:
-                    retType = ((OpCodeFieldInfoPart)opCodePart).Operand.FieldType;
+                    var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                    retType = operandPosition == 0 ? operand.FieldType.DeclaringType : operand.FieldType;
                     return retType;
 
                 case Code.Stobj:
-                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    type = ((OpCodeTypePart)opCodePart).Operand;
+                    retType = operandPosition == 1 ? type : null;
                     return retType;
 
                 case Code.Stind_Ref:
-                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    if (retType == null)
+                    retType = null;
+                    if (operandPosition == 1)
                     {
-                        retType = this.System.System_Void.ToPointerType();
-                    }
-                    else if (retType.IsByRef)
-                    {
-                        retType = retType.GetElementType();
+                        retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                        if (retType == null)
+                        {
+                            retType = this.System.System_Void.ToPointerType();
+                        }
+                        else if (retType.IsByRef)
+                        {
+                            retType = retType.GetElementType();
+                        }
                     }
 
                     return retType;
 
                 case Code.Stind_I:
-                    return this.System.System_Void.ToPointerType();
+                    return operandPosition == 1 ? this.System.System_Void.ToPointerType() : null;
 
                 case Code.Stind_I1:
-                    var result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                    var type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                    if (operandPosition == 1)
                     {
-                        type = this.System.System_SByte;
-                    }
+                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
+                        if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                        {
+                            type = this.System.System_SByte;
+                        }
 
-                    return type;
+                        return type;
+                    }
+                    else
+                    {
+                        return null;
+                    }
 
                 case Code.Stind_I2:
-                    return this.System.System_Int16;
+                    return operandPosition == 1 ? this.System.System_Int16 : null;
 
                 case Code.Stind_I4:
-                    return this.System.System_Int32;
+                    return operandPosition == 1 ? this.System.System_Int32 : null;
 
                 case Code.Stind_I8:
-                    return this.System.System_Int64;
+                    return operandPosition == 1 ? this.System.System_Int64 : null;
 
                 case Code.Stind_R4:
-                    return this.System.System_Single;
+                    return operandPosition == 1 ? this.System.System_Single : null;
 
                 case Code.Stind_R8:
-                    return this.System.System_Double;
+                    return operandPosition == 1 ? this.System.System_Double : null;
 
                 case Code.Stelem_Ref:
-                    retType = this.GetTypeOfReference(opCodePart);
-                    return retType;
+                    return operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
 
                 case Code.Stelem_I:
-                    return this.System.System_Void.ToPointerType();
+                    return operandPosition == 2 ? this.System.System_Void.ToPointerType() : null;
 
                 case Code.Stelem_I1:
-                    result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                    type = result.Type.GetElementType();
-                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
+
+                    if (operandPosition == 2)
                     {
-                        type = this.System.System_SByte;
+                        result = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        type = result.Type.GetElementType();
+                        if (type.IsVoid() || type.IntTypeBitSize() > 8)
+                        {
+                            type = this.System.System_SByte;
+                        }
+
+                        return type;
+                    }
+                    else
+                    {
+                        return null;
                     }
 
-                    return type;
-
                 case Code.Stelem_I2:
-                    return this.System.System_Int16;
+                    return operandPosition == 2 ? this.System.System_Int16 : null;
 
                 case Code.Stelem_I4:
-                    return this.System.System_Int32;
+                    return operandPosition == 2 ? this.System.System_Int32 : null;
 
                 case Code.Stelem_I8:
-                    return this.System.System_Int64;
+                    return operandPosition == 2 ? this.System.System_Int64 : null;
 
                 case Code.Stelem_R4:
-                    return this.System.System_Single;
+                    return operandPosition == 2 ? this.System.System_Single : null;
 
                 case Code.Stelem_R8:
-                    return this.System.System_Double;
+                    return operandPosition == 2 ? this.System.System_Double : null;
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
-                    retType = ((OpCodeTypePart)opCodePart).Operand;
-                    return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+                    if (operandPosition == 0)
+                    {
+                        retType = ((OpCodeTypePart)opCodePart).Operand;
+                        return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+                    }
+
+                    return null;
 
                 case Code.Box:
-                    retType = ((OpCodeTypePart)opCodePart).Operand;
-                    return retType.UseAsClass ? retType.ToNormal() : retType;
 
+                    if (operandPosition == 0)
+                    {
+                        retType = ((OpCodeTypePart)opCodePart).Operand;
+                        return retType.UseAsClass ? retType.ToNormal() : retType;
+                    }
+
+                    return null;
+                
                 case Code.Call:
                 case Code.Callvirt:
                     var effectiveOperandPosition = operandPosition;
@@ -1985,7 +2031,7 @@ namespace Il2Native.Logic
                     return this.System.System_Double;
 
                 case Code.Ldelem_Ref:
-                    retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]);
+                    retType = opCodePart.RequiredIncomingTypes[0] ?? this.RequiredIncomingType(opCodePart, 0);
                     if (retType != null)
                     {
                         return retType;
@@ -2033,7 +2079,9 @@ namespace Il2Native.Logic
                     return this.System.System_UInt32;
 
                 case Code.Ldind_Ref:
-                    retType = this.RequiredIncomingType(opCodePart.OpCodeOperands[0]) ?? this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    retType = opCodePart.RequiredIncomingTypes[0] ??
+                              this.RequiredIncomingType(opCodePart, 0) ??
+                              this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
                     Debug.Assert(retType != null && retType.GetElementType() != null);
                     return retType.GetElementType();
 

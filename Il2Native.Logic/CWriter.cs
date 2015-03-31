@@ -1641,7 +1641,7 @@ namespace Il2Native.Logic
         [Obsolete("move all code into BaseWriter to use step MissingTypeCasts")]
         public bool AdjustToType(OpCodePart opCode)
         {
-            return this.AdjustToType(opCode, opCode.RequiredIncomingType);
+            return this.AdjustToType(opCode, opCode.RequiredIncomingTypes[0]);
         }
 
         /// <summary>

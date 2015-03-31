@@ -58,6 +58,7 @@
     <Compile Include="CodeParts\OpCodeStringPart.cs" />
     <Compile Include="CodeParts\OpCodeTypePart.cs" />
     <Compile Include="CodeParts\PhiNodes.cs" />
+    <Compile Include="CodeParts\RequiredIncomingTypes.cs" />
     <Compile Include="CodeParts\UsedByInfo.cs" />
     <Compile Include="DebugInfo\DebugInfoGenerator.cs" />
     <Compile Include="DebugInfo\DebugInfoSymbolWriter\DebugInfoCompileUnitEntry.cs" />

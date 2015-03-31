@@ -164,7 +164,7 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         ///     used to adjust operand type
         /// </summary>
-        public IType RequiredIncomingType { get; set; }
+        public RequiredIncomingTypes RequiredIncomingTypes { get; set; }
 
         /// <summary>
         ///     used to adjust result of OpCode type
