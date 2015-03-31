@@ -5,7 +5,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-//#define INLINE_RTTI_INFO
 namespace Il2Native.Logic
 {
     using System;
@@ -395,7 +394,7 @@ namespace Il2Native.Logic
                 return true;
             }
 
-            if (IsVirtualCallThisExpression(opCode))
+            if (opCode.UsedByAlternativeValues == null && IsVirtualCallThisExpression(opCode))
             {
                 isVirtualCall = true;
                 return true;
