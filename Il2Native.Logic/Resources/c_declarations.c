@@ -62,12 +62,7 @@ typedef uint64_t UInt64;
 typedef float Single;
 typedef double Double;
 
-typedef Int32 Int;
-typedef UInt32 UInt;
-
-typedef Int32 (*anyFn)(...);
-
-extern "C" Byte* calloc(UInt);
+extern "C" Byte* calloc(UInt32);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();
 
