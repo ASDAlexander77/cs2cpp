@@ -515,7 +515,6 @@ namespace Ll2NativeTests
                 string.Format("{1}-o CoreLib.obj -c CoreLib.cpp", CompilerHelper.Target, CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty));
         }
 
-
         /// <summary>
         /// </summary>
         [TestMethod]

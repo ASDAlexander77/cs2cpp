@@ -322,7 +322,7 @@ namespace Il2Native.Logic
                 this.Output.Write(";");
             }
 
-            this.WriteCatchFinnallyEnd(writer, opCode);
+            this.WriteCatchFinallyEnd(writer, opCode);
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(opCode);
             this.WriteExceptionHandlersProlog(opCode);
@@ -1259,7 +1259,8 @@ namespace Il2Native.Logic
                 case Code.Leave:
                 case Code.Leave_S:
 
-                    this.WriteLeave(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null);
+                    var upperLevelExceptionHandlingClause = this.GetUpperLevelExceptionHandlingClause();
+                    this.WriteLeave(opCode, this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null, upperLevelExceptionHandlingClause);
 
                     break;
                 case Code.Ceq:
@@ -4106,7 +4107,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="opCode">
         /// </param>
-        private void WriteCatchFinnallyEnd(CIndentedTextWriter writer, OpCodePart opCode)
+        private void WriteCatchFinallyEnd(CIndentedTextWriter writer, OpCodePart opCode)
         {
             if (opCode.CatchOrFinallyEnds == null)
             {
@@ -4118,14 +4119,29 @@ namespace Il2Native.Logic
             writer.WriteLine(string.Empty);
             foreach (var eh in ehs)
             {
-                var upperLevelExceptionHandlingClause = this.tryScopes.Count > 0
-                                                            ? this.tryScopes.Peek()
-                                                                  .Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
-                                                              ?? this.tryScopes.Peek()
-                                                                     .Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
-                                                            : null;
+                var upperLevelExceptionHandlingClause = this.GetCurrentLevelExceptionHandlingClause();
                 this.WriteCatchEnd(opCode, eh, upperLevelExceptionHandlingClause);
             }
+        }
+
+        private CatchOfFinallyClause GetCurrentLevelExceptionHandlingClause()
+        {
+            return this.tryScopes.Count > 0
+                ? this.tryScopes.Peek()
+                    .Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
+                  ?? this.tryScopes.Peek()
+                      .Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+                : null;
+        }
+
+        private CatchOfFinallyClause GetUpperLevelExceptionHandlingClause()
+        {
+            return this.tryScopes.Count > 1
+                ? this.tryScopes.Skip(1).First()
+                    .Catches.FirstOrDefault(c => c.Flags == ExceptionHandlingClauseOptions.Clause)
+                  ?? this.tryScopes.Skip(1).First()
+                      .Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+                : null;
         }
 
         private void WriteConvertToNativeInt(OpCodePart opCode)
@@ -4931,14 +4947,6 @@ namespace Il2Native.Logic
             opCode.TryEnd = null;
             var ehPopped = this.tryScopes.Pop();
             Debug.Assert(ehPopped == eh, "Mismatch of exception handlers");
-
-            var exceptionHandlingClause = this.tryScopes.Count > 0 ? this.tryScopes.Peek().Catches.First() : null;
-            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
-            {
-                this.Output.WriteLine();
-                this.WriteFinallyGoto(exceptionHandlingClause);
-                this.Output.Write(";");
-            }
         }
 
         /// <summary>

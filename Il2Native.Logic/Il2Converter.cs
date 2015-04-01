@@ -341,7 +341,7 @@ namespace Il2Native.Logic
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
-            codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true); 
+            codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true);
             ConvertMethod(ilReader, codeWriter, type, method);
         }
 
@@ -1175,7 +1175,7 @@ namespace Il2Native.Logic
             ConvertAllRuntimeTypes(
                 ilReader,
                 codeWriter,
-                ilReader.UsedTypeTokens.Where(k => !types.Contains(k)).ToList());
+                ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList());
 
             codeWriter.WriteEnd();
 

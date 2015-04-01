@@ -10,6 +10,8 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
 
@@ -45,6 +47,8 @@ namespace Il2Native.Logic.Gencode
             var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
             if (finallyClause != null)
             {
+                writer.WriteLine("int _finallyLeave{0};", finallyClause.Offset);
+                writer.WriteLine("_finallyLeave{0} = 0;", finallyClause.Offset);
                 writer.WriteLine("Void* _finallyEx{0};", finallyClause.Offset);
                 writer.WriteLine("_finallyEx{0} = (Void*) 0;", finallyClause.Offset);
             }
@@ -79,6 +83,20 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine(string.Empty);
                 if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                 {
+                    // leave jump table
+                    writer.WriteLine("switch (_finallyLeave{0})", exceptionHandlingClause.Offset);
+                    writer.WriteLine("{");
+                    writer.Indent++;
+
+                    var index = 0;
+                    foreach (var finallyJump in exceptionHandlingClause.FinallyJumps)
+                    {
+                        writer.WriteLine("case {0}: goto {1};", index++, finallyJump);
+                    }
+
+                    writer.Indent--;
+                    writer.WriteLine("}");
+
                     writer.WriteLine("if (_finallyEx{0} != (Void*) 0)", exceptionHandlingClause.Offset);
                     writer.WriteLine("{");
                     writer.Indent++;
@@ -123,7 +141,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("}");
 
                 writer.Indent--;
-                writer.Write("leave{0}:", exceptionHandlingClause.Offset);
+                writer.Write("finally{0}:", exceptionHandlingClause.Offset);
                 writer.Indent++;
             }
         }
@@ -218,24 +236,35 @@ namespace Il2Native.Logic.Gencode
 
         /// <summary>
         /// </summary>
-        public static void WriteLeave(this CWriter cWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
+        public static void WriteLeave(this CWriter cWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause, CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = cWriter.Output;
 
-            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            CatchOfFinallyClause effectiveExceptionHandlingClause = null;
+            if (exceptionHandlingClause != null &&
+                exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
             {
-                writer.Write(string.Concat("goto leave", exceptionHandlingClause.Offset));
+                effectiveExceptionHandlingClause = exceptionHandlingClause;
+            }
+            else if (upperLevelExceptionHandlingClause != null &&
+                upperLevelExceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            {
+                effectiveExceptionHandlingClause = upperLevelExceptionHandlingClause;
+            }
+
+            if (effectiveExceptionHandlingClause != null)
+            {
+                effectiveExceptionHandlingClause.FinallyJumps.Add(string.Concat("a", opCode.JumpAddress()));
+                writer.WriteLine(
+                    "_finallyLeave{0} = {1};",
+                    effectiveExceptionHandlingClause.Offset,
+                    effectiveExceptionHandlingClause.FinallyJumps.Count);
+                writer.Write(string.Concat("goto finally", effectiveExceptionHandlingClause.Offset));
             }
             else
             {
                 writer.Write(string.Concat("goto a", opCode.JumpAddress()));
             }
-        }
-
-        public static void WriteFinallyGoto(this CWriter cWriter, CatchOfFinallyClause exceptionHandlingClause)
-        {
-            var writer = cWriter.Output;
-            writer.Write(string.Concat("goto leave", exceptionHandlingClause.Offset));
         }
     }
 }
