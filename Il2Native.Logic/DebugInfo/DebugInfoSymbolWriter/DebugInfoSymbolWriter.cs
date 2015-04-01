@@ -15,7 +15,7 @@
 
         public ISourceFileEntry DefineDocument(string name)
         {
-            var effectiveName = string.IsNullOrWhiteSpace(name) ? this.debugInfoGenerator.DefaultSourceFilePath : name;
+            var effectiveName = string.IsNullOrWhiteSpace(name) ? this.debugInfoGenerator.SourceFilePath : name;
             var path = Path.GetDirectoryName(effectiveName);
             var filename = Path.GetFileName(effectiveName);
 

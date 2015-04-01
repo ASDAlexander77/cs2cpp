@@ -39,8 +39,16 @@ namespace Il2Native.Logic.Gencode
     public static class ExceptionHandlingGen
     {
         public static void WriteTry(
-            this CIndentedTextWriter writer)
+            this CIndentedTextWriter writer,
+            TryClause tryClause)
         {
+            var finallyClause = tryClause.Catches.FirstOrDefault(c => c.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally));
+            if (finallyClause != null)
+            {
+                writer.WriteLine("Void* _finallyEx{0};", finallyClause.Offset);
+                writer.WriteLine("_finallyEx{0} = (Void*) 0;", finallyClause.Offset);
+            }
+
             writer.WriteLine("try");
             writer.WriteLine("{");
             writer.Indent++;
@@ -68,24 +76,19 @@ namespace Il2Native.Logic.Gencode
             {
                 if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                 {
-                    var tryOffset = exceptionHandlingClause.OwnerTry.Offset;
-
-                    writer.WriteLine("if (_ex{0} != (Void*) 0)", tryOffset);
-
+                    writer.WriteLine("if (_finallyEx{0} != (Void*) 0)", exceptionHandlingClause.Offset);
                     writer.WriteLine("{");
                     writer.Indent++;
-                }
-
-                writer.WriteLine("throw;");
-
-                if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
-                {
+                    writer.WriteLine("throw _finallyEx{0};", exceptionHandlingClause.Offset);
                     writer.Indent--;
                     writer.WriteLine("}");
                 }
-
-                writer.Indent--;
-                writer.WriteLine("}");
+                else
+                {
+                    writer.WriteLine("throw;");
+                    writer.Indent--;
+                    writer.WriteLine("}");
+                }
             }
         }
 
@@ -99,7 +102,8 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            var tryOffset = opCode.ExceptionHandlers.First().OwnerTry.Offset;
+            var exceptionHandlingClause = opCode.ExceptionHandlers.First();
+            var tryOffset = exceptionHandlingClause.OwnerTry.Offset;
 
             writer.Indent--;
             writer.WriteLine(string.Empty);
@@ -107,6 +111,18 @@ namespace Il2Native.Logic.Gencode
             writer.WriteLine("catch (Void* _ex{0})", tryOffset);
             writer.Write("{");
             writer.Indent++;
+
+            if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            {
+                writer.WriteLine(string.Empty);
+                writer.WriteLine("_finallyEx{0} = _ex{1};", exceptionHandlingClause.Offset, tryOffset);
+                writer.Indent--;
+                writer.WriteLine("}");
+
+                writer.Indent--;
+                writer.WriteLine("leave{0}:", exceptionHandlingClause.Offset, tryOffset);
+                writer.Indent++;
+            }
         }
 
         /// <summary>
@@ -197,10 +213,26 @@ namespace Il2Native.Logic.Gencode
             cWriter.UnaryOper(writer, opCode, "throw (Void*) ");
         }
 
-        public static void WriteFinallyThrow(this CWriter cWriter)
+        /// <summary>
+        /// </summary>
+        public static void WriteLeave(this CWriter cWriter, OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            writer.Write("throw (Void*) 0");
+
+            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
+            {
+                writer.Write(string.Concat("goto leave", exceptionHandlingClause.Offset));
+            }
+            else
+            {
+                writer.Write(string.Concat("goto a", opCode.JumpAddress()));
+            }
+        }
+
+        public static void WriteFinallyGoto(this CWriter cWriter, CatchOfFinallyClause exceptionHandlingClause)
+        {
+            var writer = cWriter.Output;
+            writer.Write(string.Concat("goto leave", exceptionHandlingClause.Offset));
         }
     }
 }

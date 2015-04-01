@@ -16,7 +16,7 @@
     {
         private const string IdentityString = "C# Native compiler";
 
-        private readonly string defaultSourceFilePath;
+        private readonly string sourceFilePath;
 
         private readonly IDictionary<int, KeyValuePair<int, int>> indexByOffset = new SortedDictionary<int, KeyValuePair<int, int>>();
 
@@ -27,20 +27,26 @@
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
             this.pdbFileName = pdbFileName;
-            this.defaultSourceFilePath = defaultSourceFilePath.Replace('\\', '/');
+            if (!string.IsNullOrEmpty(defaultSourceFilePath))
+            {
+                this.sourceFilePath = defaultSourceFilePath.Replace('\\', '/');
+                SourceFilePathChanged = true;
+            }
         }
 
         public int? CurrentDebugLine { get; set; }
 
         public bool CurrentDebugLineNew { get; set; }
 
-        public string DefaultSourceFilePath
+        public string SourceFilePath
         {
             get
             {
-                return this.defaultSourceFilePath;
+                return this.sourceFilePath;
             }
         }
+
+        public bool SourceFilePathChanged { get; set; }
 
         public IConverter PdbConverter { get; set; }
 

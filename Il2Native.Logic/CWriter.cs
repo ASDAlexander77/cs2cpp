@@ -323,7 +323,6 @@ namespace Il2Native.Logic
             }
 
             this.WriteCatchFinnallyEnd(writer, opCode);
-
             this.WriteCatchFinnallyCleanUpEnd(opCode);
             this.WriteTryEnds(opCode);
             this.WriteExceptionHandlersProlog(opCode);
@@ -334,16 +333,24 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteDebugLine(bool includingFile = false)
+        private void WriteDebugLine()
         {
             if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
             {
                 return;
             }
 
-            if (includingFile)
+            if (this.debugInfoGenerator.SourceFilePathChanged)
             {
-                this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.DefaultSourceFilePath);
+                if (string.IsNullOrEmpty(this.debugInfoGenerator.SourceFilePath))
+                {
+                    Debug.Assert(false, "Source file is not provided");
+                    return;
+                }
+
+                this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.SourceFilePath);
+
+                this.debugInfoGenerator.SourceFilePathChanged = false;
             }
             else
             {
@@ -3111,7 +3118,10 @@ namespace Il2Native.Logic
                 this.DebugInfo = false;
             }
 
-            this.WriteDebugLine(true);
+            if (this.DebugInfo)
+            {
+                this.WriteDebugLine();
+            }
 
             // declarations
             this.Output.WriteLine(Resources.c_declarations);
@@ -4107,28 +4117,6 @@ namespace Il2Native.Logic
             }
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        private void WriteCondBranch(CIndentedTextWriter writer, OpCodePart opCode)
-        {
-            writer.Write("br i1 {0}, label %.a{1}, label %.a{2}", opCode.Result, opCode.JumpAddress(), opCode.AddressEnd);
-
-            writer.WriteLine(string.Empty);
-
-            writer.Indent--;
-            writer.WriteLine(string.Concat(".a", opCode.AddressEnd, ':'));
-            writer.Indent++;
-
-            if (opCode.Next != null)
-            {
-                opCode.Next.JumpProcessed = true;
-            }
-        }
-
         private void WriteConvertToNativeInt(OpCodePart opCode)
         {
             var intPtrOper = IntTypeRequired(opCode);
@@ -4254,27 +4242,6 @@ namespace Il2Native.Logic
             if (opCode.JumpDestination != null && opCode.JumpDestination.Count > 0 && !opCode.JumpProcessed)
             {
                 this.WriteLabel(writer, string.Concat("a", opCode.AddressStart));
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        private void WriteLeave(OpCodePart opCode, CatchOfFinallyClause exceptionHandlingClause)
-        {
-            var writer = this.Output;
-
-            writer.WriteLine("// Leave ");
-            if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
-            {
-                this.WriteFinallyThrow();
-            }
-            else
-            {
-                writer.Write(string.Concat("goto a", opCode.JumpAddress()));
             }
         }
 
@@ -4932,8 +4899,7 @@ namespace Il2Native.Logic
             foreach (var eh in ehs.Reverse())
             {
                 this.tryScopes.Push(eh);
-
-                writer.WriteTry();
+                writer.WriteTry(eh);
             }
         }
 
@@ -4959,7 +4925,7 @@ namespace Il2Native.Logic
             if (exceptionHandlingClause != null && exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
             {
                 this.Output.WriteLine();
-                this.WriteFinallyThrow();
+                this.WriteFinallyGoto(exceptionHandlingClause);
                 this.Output.WriteLine(";");
             }
         }
