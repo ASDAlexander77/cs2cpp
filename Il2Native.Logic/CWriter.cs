@@ -4926,7 +4926,7 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine();
                 this.WriteFinallyGoto(exceptionHandlingClause);
-                this.Output.WriteLine(";");
+                this.Output.Write(";");
             }
         }
 

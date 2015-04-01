@@ -71,9 +71,12 @@ namespace Il2Native.Logic.Gencode
             CatchOfFinallyClause upperLevelExceptionHandlingClause)
         {
             var writer = cWriter.Output;
-            writer.WriteLine("eh{0}:", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            writer.Indent--;
+            writer.Write("eh{0}:", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            writer.Indent++;
             if (exceptionHandlingClause.OwnerTry.Catches.Last().Equals(exceptionHandlingClause))
             {
+                writer.WriteLine(string.Empty);
                 if (exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
                 {
                     writer.WriteLine("if (_finallyEx{0} != (Void*) 0)", exceptionHandlingClause.Offset);
@@ -81,13 +84,13 @@ namespace Il2Native.Logic.Gencode
                     writer.Indent++;
                     writer.WriteLine("throw _finallyEx{0};", exceptionHandlingClause.Offset);
                     writer.Indent--;
-                    writer.WriteLine("}");
+                    writer.Write("}");
                 }
                 else
                 {
                     writer.WriteLine("throw;");
                     writer.Indent--;
-                    writer.WriteLine("}");
+                    writer.Write("}");
                 }
             }
         }
@@ -120,7 +123,7 @@ namespace Il2Native.Logic.Gencode
                 writer.WriteLine("}");
 
                 writer.Indent--;
-                writer.WriteLine("leave{0}:", exceptionHandlingClause.Offset, tryOffset);
+                writer.Write("leave{0}:", exceptionHandlingClause.Offset);
                 writer.Indent++;
             }
         }
