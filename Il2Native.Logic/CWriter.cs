@@ -408,23 +408,29 @@ namespace Il2Native.Logic
         {
             isVirtualCall = false;
 
-            if (opCode.Any(Code.Dup, Code.Newobj, Code.Newarr, Code.Ldftn, Code.Ldvirtftn, Code.Localloc))
+            switch (opCode.ToCode())
             {
-                return true;
+                case Code.Dup:
+                case Code.Newobj:
+                case Code.Newarr:
+                case Code.Ldftn:
+                case Code.Ldvirtftn:
+                case Code.Localloc:
+                    return true;
+                case Code.Ldtoken:
+                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
+                           (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
+                            opCodeFieldInfoPart.Operand.GetFieldRVAData() != null);
+                case Code.Call:
+                    var opCodeMethodInfoPart = opCode as OpCodeMethodInfoPart;
+                    return ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand);
             }
 
             if (opCode.UsedByAlternativeValues == null && IsVirtualCallThisExpression(opCode))
             {
                 isVirtualCall = true;
                 return true;
-            }
-
-            if (opCode.Any(Code.Ldtoken))
-            {
-                var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                return opCodeFieldInfoPart != null && opCodeFieldInfoPart.Operand.FieldType != null &&
-                       (opCodeFieldInfoPart.Operand.FieldType.IsStaticArrayInit ||
-                        opCodeFieldInfoPart.Operand.GetFieldRVAData() != null);
             }
 
             return false;
@@ -1239,7 +1245,7 @@ namespace Il2Native.Logic
                 case Code.Brfalse_S:
 
                     oper = opCode.Any(Code.Brtrue, Code.Brtrue_S) ? string.Empty : "!";
-                    
+
                     this.UnaryOper(writer, opCode, "if (" + oper);
 
                     writer.Write(string.Concat(") goto a", opCode.JumpAddress()));
@@ -2272,7 +2278,7 @@ namespace Il2Native.Logic
                 // "System.InvalidCastException",
                 // "dynamic_cast");
             }
-            
+
             return true;
         }
 
@@ -2860,6 +2866,7 @@ namespace Il2Native.Logic
             // to gather all info about method which we need
             this.IlReader.UsedStrings = new SortedDictionary<int, string>();
             this.IlReader.UsedConstBytes = new List<IConstBytes>();
+            this.IlReader.UsedTypeTokens = new NamespaceContainer<IType>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
             this.IlReader.UsedTypeDeclarations = new NamespaceContainer<IType>();
@@ -2896,12 +2903,14 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, IType typeToCreate)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, IType typeToCreate, bool noNewLines = false)
         {
             var writer = cWriter.Output;
 
-            // throw InvalidCast result
-            writer.WriteLine(string.Empty);
+            if (!noNewLines)
+            {
+                writer.WriteLine(string.Empty);
+            }
 
             // find constructor
             var constructorInfo = Logic.IlReader.Constructors(typeToCreate, cWriter).First(c => !c.GetParameters().Any());
@@ -2910,7 +2919,10 @@ namespace Il2Native.Logic
 
             this.WriteNewObject(opCodeNewInstance);
 
-            writer.WriteLine(string.Empty);
+            if (!noNewLines)
+            {
+                writer.WriteLine(string.Empty);
+            }
 
             return opCodeNewInstance.Result;
         }
@@ -3168,7 +3180,7 @@ namespace Il2Native.Logic
                         this.WriteInterfaceAccess(opCode, estimatedResult.Type, type, doNotEstimateResult: true);
                         return true;
                     }
-                    else 
+                    else
                     {
                         Debug.Assert(false, "finish casting");
                     }
@@ -4294,8 +4306,8 @@ namespace Il2Native.Logic
                 var environmentType = this.ResolveType("System.Environment");
                 var setExitCode = environmentType.GetFirstMethodByName("set_ExitCode", this);
                 var getExitCode = environmentType.GetFirstMethodByName("get_ExitCode", this);
-                this.WriteMethodForwardDeclarationIfNotWrittenyet(setExitCode, null);
-                this.WriteMethodForwardDeclarationIfNotWrittenyet(getExitCode, null);
+                this.WriteMethodForwardDeclarationIfNotWrittenYet(setExitCode, null);
+                this.WriteMethodForwardDeclarationIfNotWrittenYet(getExitCode, null);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -4510,7 +4522,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodForwardDeclarationIfNotWrittenyet(IMethod methodDecl, IType ownerOfExplicitInterface)
+        private void WriteMethodForwardDeclarationIfNotWrittenYet(IMethod methodDecl, IType ownerOfExplicitInterface)
         {
             this.WriteMethodForwardDeclarationIfNotWrittenYet(new MethodKey(methodDecl, ownerOfExplicitInterface));
         }
@@ -5079,7 +5091,7 @@ namespace Il2Native.Logic
                 // forward declarations
                 foreach (var method in virtualTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
-                    this.WriteMethodForwardDeclarationIfNotWrittenyet(method, null);
+                    this.WriteMethodForwardDeclarationIfNotWrittenYet(method, null);
                 }
 
                 virtualTable.WriteTableOfMethodsWithImplementation(this, type, 0, baseTypeSize);
@@ -5105,7 +5117,7 @@ namespace Il2Native.Logic
                 // forward declarations
                 foreach (var method in virtualInterfaceTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
-                    this.WriteMethodForwardDeclarationIfNotWrittenyet(method, null);
+                    this.WriteMethodForwardDeclarationIfNotWrittenYet(method, null);
                 }
 
                 virtualInterfaceTable.WriteTableOfMethodsWithImplementation(this, type, interfaceIndex, baseTypeSizeOfTypeContainingInterface, @interface);

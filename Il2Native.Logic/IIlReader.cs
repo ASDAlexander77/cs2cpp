@@ -1,7 +1,6 @@
 ﻿namespace Il2Native.Logic
 {
     using System.Collections.Generic;
-    using System.Security.Cryptography.X509Certificates;
     using PEAssemblyReader;
 
     public interface IIlReader
@@ -40,6 +39,10 @@
 
         /// <summary>
         /// </summary>
+        ISet<IType> UsedTypeTokens { get; set; }
+
+        /// <summary>
+        /// </summary>
         ISet<IType> UsedVirtualTables { get; set; }
 
         /// <summary>
@@ -70,6 +73,11 @@
         /// </summary>
         /// <param name="type"></param>
         void AddArrayType(IType type);
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type"></param>
+        void AddTypeToken(IType type);
 
         /// <summary>
         /// </summary>

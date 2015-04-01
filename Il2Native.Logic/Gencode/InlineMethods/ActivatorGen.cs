@@ -67,14 +67,14 @@ namespace Il2Native.Logic.Gencode
                     // this is dummy function which is not used now as using Boxing before calling CreateInstance is enough for us
                     var type = method.GetGenericArguments().First();
 
-                    ////if (!type.IsStructureType())
-                    ////{
-                    ////    opCodeMethodInfo.Result = llvmWriter.WriteNewCallingDefaultConstructor(llvmWriter.Output, type);
-                    ////}
-                    ////else
-                    ////{
-                    ////    llvmWriter.WriteInit(opCodeMethodInfo, type, opCodeMethodInfo.Destination);
-                    ////}
+                    if (!type.IsStructureType())
+                    {
+                        opCodeMethodInfo.Result = cWriter.WriteNewCallingDefaultConstructor(cWriter, type, true);
+                    }
+                    else
+                    {
+                        cWriter.WriteInit(opCodeMethodInfo, type);
+                    }
 
                     break;
 

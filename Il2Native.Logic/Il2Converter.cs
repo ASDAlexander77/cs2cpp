@@ -74,7 +74,7 @@ namespace Il2Native.Logic
             var ilReader = new IlReader(sources, args);
             ilReader.Load();
 
-            GenerateLlvm(
+            GenerateC(
                 ilReader,
                 fileNameWithoutExtension,
                 ilReader.SourceFilePath,
@@ -565,7 +565,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="filter">
         /// </param>
-        private static void GenerateLlvm(
+        private static void GenerateC(
             IlReader ilReader,
             string fileName,
             string sourceFilePath,
@@ -576,7 +576,7 @@ namespace Il2Native.Logic
         {
             concurrent = args != null && args.Any(a => a == "multi");
             VerboseOutput = args != null && args.Any(a => a == "verbose");
-            var codeWriter = GetLlvmWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
+            var codeWriter = GetCWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
             ilReader.TypeResolver = codeWriter;
             GenerateSource(ilReader, filter, codeWriter);
         }
@@ -816,7 +816,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        private static ICodeWriter GetLlvmWriter(
+        private static ICodeWriter GetCWriter(
             string fileName,
             string sourceFilePath,
             string pdbFilePath,

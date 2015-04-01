@@ -60,6 +60,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        private ISet<IType> _usedTypeTokens;
+
+        /// <summary>
+        /// </summary>
         private IDictionary<int, string> _usedStrings;
 
         /// <summary>
@@ -477,6 +481,21 @@ namespace Il2Native.Logic
             set
             {
                 this._usedArrayTypes = value;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public ISet<IType> UsedTypeTokens
+        {
+            get
+            {
+                return this._usedTypeTokens;
+            }
+
+            set
+            {
+                this._usedTypeTokens = value;
             }
         }
 
@@ -1239,6 +1258,7 @@ namespace Il2Native.Logic
                         {
                             this.AddUsedTypeDeclaration(typeToken);
                             this.AddVirtualTable(typeToken);
+                            this.AddTypeToken(typeToken);
 
                             yield return new OpCodeTypePart(opCode, startAddress, currentAddress, typeToken);
                             continue;
@@ -1493,6 +1513,20 @@ namespace Il2Native.Logic
             }
 
             this._usedArrayTypes.Add(type);
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <param name="type">
+        /// </param>
+        public void AddTypeToken(IType type)
+        {
+            if (this._usedTypeTokens == null || type == null || type.SpecialUsage())
+            {
+                return;
+            }
+
+            this._usedTypeTokens.Add(type);
         }
 
         /// <summary>
