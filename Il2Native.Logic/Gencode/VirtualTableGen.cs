@@ -48,10 +48,17 @@ namespace Il2Native.Logic.Gencode
             IType @interface,
             ITypeResolver typeResolver)
         {
+#if DEBUG
+            var allPublic = IlReader.Methods(
+                thisType,
+                BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
+                typeResolver).ToList();
+#else
             var allPublic = IlReader.Methods(
                 thisType,
                 BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance,
                 typeResolver);
+#endif
             virtualTable.AddMethodsToVirtualInterfaceTable(@interface, allPublic, typeResolver);
         }
 

@@ -1072,7 +1072,7 @@ namespace PEAssemblyReader
         /// </returns>
         public IType ToNormal()
         {
-            if (!this.UseAsClass)
+            if (!this.UseAsClass && !this.UseAsRtti && !this.UseAsVirtualTableImplementation)
             {
                 return this;
             }
