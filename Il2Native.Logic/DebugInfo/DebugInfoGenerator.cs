@@ -30,7 +30,7 @@
             this.defaultSourceFilePath = defaultSourceFilePath.Replace('\\', '/');
         }
 
-        public int? CurrentDebugLine { get; private set; }
+        public int? CurrentDebugLine { get; set; }
 
         public bool CurrentDebugLineNew { get; set; }
 
@@ -94,6 +94,9 @@
             {
                 return false;
             }
+
+            // to allow to write header with first line
+            this.CurrentDebugLine = 1;
 
             this.PdbConverter = Converter.GetConverter(this.pdbFileName, new DebugInfoSymbolWriter.DebugInfoSymbolWriter(this));
 

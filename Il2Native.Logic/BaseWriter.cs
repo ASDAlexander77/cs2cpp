@@ -120,6 +120,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        protected int MainDebugInfoStartLine { get; set; }
+
+        /// <summary>
+        /// </summary>
         protected IType MethodReturnType { get; private set; }
 
         /// <summary>

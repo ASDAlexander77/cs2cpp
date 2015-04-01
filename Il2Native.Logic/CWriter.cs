@@ -276,12 +276,11 @@ namespace Il2Native.Logic
         {
             if (firstLevel)
             {
+                this.WriteLabels(writer, opCode);
                 if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
                 {
                     this.WriteDebugLine();
                 }
-
-                this.WriteLabels(writer, opCode);
             }
 
             if (opCode.Result != null)
@@ -335,9 +334,22 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteDebugLine()
+        private void WriteDebugLine(bool includingFile = false)
         {
-            this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.DefaultSourceFilePath);
+            if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
+            {
+                return;
+            }
+
+            if (includingFile)
+            {
+                this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.DefaultSourceFilePath);
+            }
+            else
+            {
+                this.Output.WriteLine("#line {0}", this.debugInfoGenerator.CurrentDebugLine);
+            }
+
             this.debugInfoGenerator.CurrentDebugLineNew = false;
         }
 
@@ -1990,14 +2002,13 @@ namespace Il2Native.Logic
 
             this.Stubs = args != null && args.Contains("stubs");
 
-            // TODO: #line is not what I expected
-            ////this.DebugInfo = args != null && args.Contains("debug");
+            this.DebugInfo = args != null && args.Contains("debug");
             if (this.DebugInfo)
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
 
-            // prefefined settings
+            // predefined settings
             if (args != null && args.Contains("android"))
             {
                 this.Gctors = false;
@@ -2826,7 +2837,7 @@ namespace Il2Native.Logic
 
             this.ReadMethodInfo(method, genericContext);
 
-            var isMain = method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
+            var isMain = IsMain(method);
 
             // check if main
             if (isMain)
@@ -2849,6 +2860,11 @@ namespace Il2Native.Logic
             this.IlReader.UsedArrayTypes = new NamespaceContainer<IType>();
             this.IlReader.UsedVirtualTables = new NamespaceContainer<IType>();
             this.IlReader.UsedRtti = new NamespaceContainer<IType>();
+        }
+
+        private static bool IsMain(IMethod method)
+        {
+            return method.IsStatic && method.CallingConvention.HasFlag(CallingConventions.Standard) && method.Name.Equals("Main");
         }
 
         /// <summary>
@@ -3090,6 +3106,13 @@ namespace Il2Native.Logic
 
             this.IlReader = ilReader;
 
+            if (this.DebugInfo && !this.debugInfoGenerator.StartGenerating())
+            {
+                this.DebugInfo = false;
+            }
+
+            this.WriteDebugLine(true);
+
             // declarations
             this.Output.WriteLine(Resources.c_declarations);
             this.Output.WriteLine(string.Empty);
@@ -3103,11 +3126,6 @@ namespace Il2Native.Logic
             this.StaticConstructors.Clear();
             VirtualTableGen.Clear();
             TypeGen.Clear();
-
-            if (this.DebugInfo && !this.debugInfoGenerator.StartGenerating())
-            {
-                this.DebugInfo = false;
-            }
         }
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
@@ -4283,6 +4301,11 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteLocalVariableDeclarations(IEnumerable<ILocalVariable> locals)
         {
+            if (this.DebugInfo)
+            {
+                WriteDebugLine();
+            }
+
             foreach (var local in locals)
             {
                 this.GetEffectiveLocalType(local).WriteTypePrefix(this);
@@ -4321,6 +4344,12 @@ namespace Il2Native.Logic
             this.Output.WriteLine(" {");
 
             this.Output.Indent++;
+
+            if (this.DebugInfo)
+            {
+                this.debugInfoGenerator.CurrentDebugLine = MainDebugInfoStartLine;
+                this.WriteDebugLine();
+            }
 
             // create locals and args
             if (hasParameters)
@@ -4387,6 +4416,26 @@ namespace Il2Native.Logic
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             this.ReadMethodInfo(method, genericContext);
+
+            // debug info
+            if (this.DebugInfo)
+            {
+                if (method.Token.HasValue)
+                {
+                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
+                    // to find first debug line of method
+                    this.ReadDbgLine(OpCodePart.CreateNop);
+                }
+                else
+                {
+                    this.debugInfoGenerator.GenerateFunction(-1);
+                }
+
+                if (IsMain(method))
+                {
+                    this.MainDebugInfoStartLine = this.debugInfoGenerator.CurrentDebugLine ?? 1;
+                }
+            }
 
             // extern "c"
             this.Output.Write(this.declarationPrefix);
@@ -4460,20 +4509,6 @@ namespace Il2Native.Logic
                 else
                 {
                     this.Output.WriteLine(";");
-                }
-            }
-
-            if (this.DebugInfo)
-            {
-                if (method.Token.HasValue)
-                {
-                    this.debugInfoGenerator.GenerateFunction(method.Token.Value);
-                    // to find first debug line of method
-                    this.ReadDbgLine(OpCodePart.CreateNop);
-                }
-                else
-                {
-                    this.debugInfoGenerator.GenerateFunction(-1);
                 }
             }
         }
