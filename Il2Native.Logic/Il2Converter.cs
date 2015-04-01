@@ -17,6 +17,9 @@ namespace Il2Native.Logic
     using System.Reflection;
     using System.Threading.Tasks;
     using Gencode;
+
+    using Il2Native.Logic.Gencode.SynthesizedMethods;
+
     using PEAssemblyReader;
 
     /// <summary>
@@ -149,7 +152,7 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.IsGenericTypeDefinition)
+                if (!processGenericMethodsOnly && type.IsGenericTypeDefinition)
                 {
                     continue;
                 }
@@ -169,6 +172,31 @@ namespace Il2Native.Logic
                     genericMethodSpecializatonsForType,
                     mode,
                     processGenericMethodsOnly);
+            }
+        }
+
+        private static void ConvertAllRuntimeTypes(
+            IlReader ilReader,
+            ICodeWriter codeWriter,
+            IEnumerable<IType> types)
+        {
+            foreach (var type in types)
+            {
+                Debug.Assert(type != null);
+                if (type == null)
+                {
+                    continue;
+                }
+
+                if (type.FullName == "<Module>")
+                {
+                    continue;
+                }
+
+                ConvertRuntimeTypeInfo(
+                    ilReader,
+                    codeWriter,
+                    type);
             }
         }
 
@@ -278,21 +306,20 @@ namespace Il2Native.Logic
                         if (genericMethodSpecializatons != null)
                         {
                             var methodDefinition = method.GetMethodDefinition();
-                            foreach (
-                                var methodSpec in
-                                    genericMethodSpecializatons.Where(
-                                        methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
+                            foreach (var methodSpecialization in
+                                genericMethodSpecializatons.Where(
+                                    methodSpec => methodSpec.IsMatchingGeneric(methodDefinition) && (!methodSpec.Equals(method) || processGenericMethodsOnly)))
                             {
-                                var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, methodSpec);
+                                var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, methodSpecialization);
 
-                                codeWriter.WriteMethodStart(methodSpec, genericMethodContext);
+                                codeWriter.WriteMethodStart(methodSpecialization, genericMethodContext);
 
                                 foreach (var ilCode in ilReader.OpCodes(methodDefinition ?? method, genericMethodContext))
                                 {
                                     codeWriter.Write(ilCode);
                                 }
 
-                                codeWriter.WriteMethodEnd(methodSpec, genericMethodContext);
+                                codeWriter.WriteMethodEnd(methodSpecialization, genericMethodContext);
                             }
                         }
                     }
@@ -304,6 +331,35 @@ namespace Il2Native.Logic
                 codeWriter.WriteAfterMethods();
                 codeWriter.WriteTypeEnd(type);
             }
+        }
+
+        /// <summary>
+        /// to support using RuntimeType info to Generic Definitions and Pointers
+        /// </summary>
+        private static void ConvertRuntimeTypeInfo(IlReader ilReader, ICodeWriter codeWriter, IType type)
+        {
+            Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
+
+            var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
+            codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true); 
+            ConvertMethod(ilReader, codeWriter, type, method);
+        }
+
+        private static void ConvertMethod(IlReader ilReader, ICodeWriter codeWriter, IType type, IMethod method)
+        {
+            var typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
+            var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
+
+            var genericMethodContext = MetadataGenericContext.Create(typeDefinition, typeSpecialization, method, null);
+
+            codeWriter.WriteMethodStart(method, genericMethodContext);
+
+            foreach (var ilCode in ilReader.OpCodes(method, genericMethodContext))
+            {
+                codeWriter.Write(ilCode);
+            }
+
+            codeWriter.WriteMethodEnd(method, genericMethodContext);
         }
 
         private static void AddTypeIfSpecializedTypeOrAdditionalType(IType type, ReadingTypesContext readingTypesContext)
@@ -984,9 +1040,7 @@ namespace Il2Native.Logic
             Debug.Assert(usedTypes.All(t => !t.IsByRef), "Type is used with flag IsByRef");
             Debug.Assert(usedTypes.All(t => !t.IsPointer), "Type is used with flag IsPointer");
 
-            var typesArray = usedTypes.ToArray();
-            ////Array.Sort(typesArray, IsDerived);
-            return typesArray;
+            return usedTypes;
         }
 
         private static int IsDerived(IType type, IType other)
@@ -1088,6 +1142,9 @@ namespace Il2Native.Logic
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
+            // we need to generate sgettype for Generic definitions
+            ilReader.UsedTypeTokens = new NamespaceContainer<IType>();
+
             // writing
             codeWriter.WriteStart(ilReader);
 
@@ -1113,6 +1170,12 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Definition,
                 true);
+
+            // Append not generated sgettypes
+            ConvertAllRuntimeTypes(
+                ilReader,
+                codeWriter,
+                ilReader.UsedTypeTokens.Where(k => !types.Contains(k)).ToList());
 
             codeWriter.WriteEnd();
 

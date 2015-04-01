@@ -747,7 +747,7 @@ namespace Il2Native.Logic
                     opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
                     if (opCodeFieldInfoPart != null)
                     {
-                        this.IlReader.AddUsedTypeDefinition(opCodeFieldInfoPart.Operand.DeclaringType);
+                        this.IlReader.AddStaticField(opCodeFieldInfoPart.Operand);
                     }
 
                     break;

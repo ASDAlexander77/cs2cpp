@@ -1598,7 +1598,7 @@ namespace Il2Native.Logic
             this.usedGenericSpecialiazedTypes.Add(type.NormalizeType());
         }
 
-        private void AddStaticField(IField field)
+        public void AddStaticField(IField field)
         {
             if (this._staticFields == null || field == null)
             {

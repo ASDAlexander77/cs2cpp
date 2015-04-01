@@ -92,6 +92,12 @@
         /// </summary>
         void AddUsedTypeDefinition(IType type);
 
+        /// <summary>
+        /// </summary>
         void AddVirtualTable(IType type);
+
+        /// <summary>
+        /// </summary>
+        void AddStaticField(IField field);
     }
 }

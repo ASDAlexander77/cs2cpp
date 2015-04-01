@@ -2841,10 +2841,10 @@ namespace Il2Native.Logic
             this.StartProcess();
 
             Debug.Assert(!method.IsGenericMethodDefinition);
-            Debug.Assert(genericContext == null || !method.DeclaringType.IsGenericTypeDefinition);
 
             if (method.Token.HasValue)
             {
+                Debug.Assert(genericContext == null || !method.DeclaringType.IsGenericTypeDefinition);
                 this.methodsByToken[method.Token.Value] = method;
             }
 
@@ -2866,7 +2866,6 @@ namespace Il2Native.Logic
             // to gather all info about method which we need
             this.IlReader.UsedStrings = new SortedDictionary<int, string>();
             this.IlReader.UsedConstBytes = new List<IConstBytes>();
-            this.IlReader.UsedTypeTokens = new NamespaceContainer<IType>();
             this.IlReader.CalledMethods = new NamespaceContainer<MethodKey>();
             this.IlReader.StaticFields = new NamespaceContainer<IField>();
             this.IlReader.UsedTypeDeclarations = new NamespaceContainer<IType>();
