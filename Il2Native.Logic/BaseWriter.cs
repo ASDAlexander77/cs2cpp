@@ -1190,11 +1190,18 @@ namespace Il2Native.Logic
             OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
             usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, oldOperand.UsedBy.OperandPosition);
-            usedByOpCodePart.UsedBy = null;
+            // do not remove usedby to prevent it to be written at first level
+            ////usedByOpCodePart.UsedBy = null;
+
+            bool isNew = newOperand.Next == null || newOperand.Previous == null;
 
             newOperand.Next = oldOperand.Next;
+            if (isNew)
+            {
+                oldOperand.Previous.Next = newOperand;
+            }
+
             newOperand.Previous = oldOperand.Previous;
-            oldOperand.Previous.Next = newOperand;
         }
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
