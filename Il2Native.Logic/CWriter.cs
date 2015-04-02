@@ -2215,11 +2215,8 @@ namespace Il2Native.Logic
             }
 
             var rest = baseWriter.PrepareWritingMethodBody();
-            foreach (var opCodePart in rest)
-            {
-                this.ActualWrite(this.Output, opCodePart, true);
-                this.Output.WriteLine(string.Empty);
-            }
+
+            IterateMethodBodyOpCodes(rest);
 
             // restor important vars
             this.Parameters = parameters;
@@ -4530,10 +4527,18 @@ namespace Il2Native.Logic
                 this.WriteVariableDeclare(opCodePart, estimatedResult.Type, "_dup");
             }
 
-            foreach (var opCodePart in rest)
+            this.IterateMethodBodyOpCodes(rest);
+        }
+
+        private void IterateMethodBodyOpCodes(IEnumerable<OpCodePart> rest)
+        {
+            var item = rest.FirstOrDefault();
+            while (item != null)
             {
-                this.ReadDbgLine(opCodePart);
-                this.ActualWrite(this.Output, opCodePart, true);
+                this.ReadDbgLine(item);
+                this.ActualWrite(this.Output, item, true);
+
+                item = item.Next;
             }
         }
 

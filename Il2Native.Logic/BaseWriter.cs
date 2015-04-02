@@ -840,6 +840,9 @@ namespace Il2Native.Logic
             DerivedToBase,
             ObjectToInterface,
             InterfaceToObject,
+            PointerToValue,
+            ValueToPointer,
+            CCast
         }
 
         protected void InsertMissingTypeCasts(IEnumerable<OpCodePart> opCodes)
@@ -850,18 +853,49 @@ namespace Il2Native.Logic
                 {
                     continue;
                 }
-
-                foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+                
+                if (opCodePart.AlternativeValues != null)
                 {
-                    IType destinationType;
-                    var conversionType = GetConversionType(opCodeOperand, out destinationType);
-                    if (IsCastConversion(conversionType))
+                    foreach (var alternativeValue in opCodePart.AlternativeValues)
                     {
-                        var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
-                        this.InsertOperand(opCodeOperand, castOpCode);
+                        var index = 0;
+                        foreach (var opCodeOperand in alternativeValue.Values.ToArray())
+                        {
+                            var insertCastFixOperation = this.InsertCastFixOperation(opCodeOperand);
+                            opCodeOperand.UsedByAlternativeValues = null;
+                            alternativeValue.Values[index++] = insertCastFixOperation;
+                            insertCastFixOperation.UsedByAlternativeValues = alternativeValue;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+                    {
+                        this.InsertCastFixOperation(opCodeOperand);
                     }
                 }
             }
+        }
+
+        private OpCodePart InsertCastFixOperation(OpCodePart opCodeOperand)
+        {
+            IType destinationType;
+            var conversionType = this.GetConversionType(opCodeOperand, out destinationType);
+            if (IsCastConversion(conversionType))
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+            else if (IsLoadObjectConversion(conversionType))
+            {
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, destinationType);
+                this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+
+            return opCodeOperand;
         }
 
         private static bool IsCastConversion(ConversionType conversionType)
@@ -874,6 +908,18 @@ namespace Il2Native.Logic
                 case ConversionType.DerivedToBase:
                 case ConversionType.ObjectToInterface:
                 case ConversionType.InterfaceToObject:
+                case ConversionType.CCast:
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsLoadObjectConversion(ConversionType conversionType)
+        {
+            switch (conversionType)
+            {
+                case ConversionType.PointerToValue:
                     return true;
             }
 
@@ -900,6 +946,11 @@ namespace Il2Native.Logic
             if (sourceType.GetAllInterfaces().Contains(destinationType))
             {
                 return ConversionType.ObjectToInterface;
+            }
+
+            if (sourceType.UseAsClass && !destinationType.UseAsClass && sourceType.ToNormal().TypeEquals(destinationType))
+            {
+                return ConversionType.PointerToValue;
             }
 
             return ConversionType.None;
@@ -1138,6 +1189,13 @@ namespace Il2Native.Logic
             OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
             opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
+
+            newOperand.Next = oldOperand.Next;
+            newOperand.Previous = oldOperand;
+            oldOperand.Next = newOperand;
+
+            // to remove operand from chain
+            oldOperand.Previous.Next = newOperand;
         }
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
@@ -1146,6 +1204,10 @@ namespace Il2Native.Logic
             opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
             newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
             newOperand.OpCodeOperands = new[] { oldOperand };
+
+            newOperand.Next = oldOperand.Next;
+            newOperand.Previous = oldOperand;
+            oldOperand.Next = newOperand;
         }
 
         /// <summary>
@@ -1887,7 +1949,8 @@ namespace Il2Native.Logic
                     {
                         if (operandPosition == 0)
                         {
-                            return opCodePartMethod.Operand.DeclaringType;
+                            var requiredIncomingType = opCodePartMethod.Operand.DeclaringType;
+                            return requiredIncomingType.IsValueType() ? requiredIncomingType.ToClass() : requiredIncomingType;
                         }
 
                         effectiveOperandPosition--;
@@ -2149,7 +2212,7 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I_Un:
                     var intPtrOper = IntTypeRequired(opCodePart);
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    var nativeIntType = intPtrOper ? this.System.System_Int32 : retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
+                    var nativeIntType = intPtrOper ? this.System.System_Int32 : retType != null && retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
                     return nativeIntType;
 
                 case Code.Conv_U8:
@@ -2177,7 +2240,7 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U_Un:
                     intPtrOper = IntTypeRequired(opCodePart);
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    nativeIntType = intPtrOper ? this.System.System_Int32 : retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
+                    nativeIntType = intPtrOper ? this.System.System_Int32 : retType != null && retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
                     return nativeIntType;
 
                 case Code.Conv_R4:

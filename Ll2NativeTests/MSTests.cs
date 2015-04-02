@@ -385,6 +385,7 @@ namespace Ll2NativeTests
             // 414 - (12,28): error CS0507: 'BB.Data': cannot change access modifiers when overriding 'protected internal' inherited member 'AA.Data'
             // 418 - typeof (M3).Assembly.GetTypes
             // 419 - lib (which requires to compile DLL files)
+            // 420 - lib (which uses files from 419)
             // -----------
             // 32, 55, 74 - missing class
 
@@ -482,7 +483,8 @@ namespace Ll2NativeTests
                         399,
                         414,
                         418,
-                        419
+                        419,
+                        420
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -572,7 +574,6 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
-            // 40 - using T name in nested generic type which causes mess (not main concern now), Debug Trace: (46,19): warning CS0693: Type parameter 'T' has the same name as the type parameter from outer type 'Stack<T>'
             // 47 - not compilable
             // 51 - bug in execution (NotImplemented)
             // 56 - bug in execution (NotImplemented)
@@ -588,7 +589,7 @@ namespace Ll2NativeTests
             // 162 - GetType. findMember
             // 165 - BUG in compiling (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
             // 167 - Attribute.GetCustomAttributes
-            // 177 - cast IEnumerable<T> from Array
+            // 177 - cast IEnumerable<T> from Array !!! BUG needs fix
             // 180 - Attributes
             // 184 - Array.FindAll not implemented
             // 186 - Serialization, FileStream etc not implemented
@@ -624,7 +625,6 @@ namespace Ll2NativeTests
 
             var skip = new[]
             {
-                40,
                 51,
                 53,
                 56,
