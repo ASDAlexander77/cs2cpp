@@ -390,7 +390,8 @@ namespace Il2Native.Logic
                     var methodDeclarationType = this.EstimatedResultOf(opCode).Type;
                     if (methodDeclarationType.IsInterface)
                     {
-                        opCode.Result = new FullyDefinedReference("__expr" + opCode.AddressStart, methodDeclarationType);
+                        var address = opCode.AddressEnd != 0 ? opCode.AddressStart : opCode.OpCodeOperands != null ? opCode.OpCodeOperands[0].AddressStart : 0;
+                        opCode.Result = new FullyDefinedReference("__expr" + address, methodDeclarationType);
                     }
                     else
                     {

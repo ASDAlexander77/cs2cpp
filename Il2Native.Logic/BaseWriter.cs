@@ -936,7 +936,8 @@ namespace Il2Native.Logic
             }
 
             var sourceType = opCodeOperand.RequiredOutgoingType;
-            destinationType = opCodeOperand.UsedBy.OpCode.RequiredIncomingTypes[opCodeOperand.UsedBy.OperandPosition];
+            var requiredIncomingTypes = opCodeOperand.UsedBy.OpCode.RequiredIncomingTypes;
+            destinationType = requiredIncomingTypes != null ? requiredIncomingTypes[opCodeOperand.UsedBy.OperandPosition] : null;
             if (sourceType == null || destinationType == null)
             {
                 return ConversionType.None;
@@ -1186,9 +1187,10 @@ namespace Il2Native.Logic
 
         private void ReplaceOperand(OpCodePart oldOperand, OpCodePart newOperand)
         {
-            OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
-            opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
-            newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
+            OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
+            usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
+            newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, oldOperand.UsedBy.OperandPosition);
+            usedByOpCodePart.UsedBy = null;
 
             newOperand.Next = oldOperand.Next;
             newOperand.Previous = oldOperand;
@@ -1200,10 +1202,11 @@ namespace Il2Native.Logic
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
         {
-            OpCodePart opCodePart = oldOperand.UsedBy.OpCode;
-            opCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
-            newOperand.UsedBy = new UsedByInfo(opCodePart, oldOperand.UsedBy.OperandPosition);
+            OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
+            usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
+            newOperand.UsedBy = new UsedByInfo(usedByOpCodePart, oldOperand.UsedBy.OperandPosition);
             newOperand.OpCodeOperands = new[] { oldOperand };
+            oldOperand.UsedBy = new UsedByInfo(newOperand, 0);
 
             newOperand.Next = oldOperand.Next;
             newOperand.Previous = oldOperand;
