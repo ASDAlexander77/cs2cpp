@@ -642,12 +642,12 @@ namespace Il2Native.Logic
                 case Code.Localloc:
 
                     var varName = string.Format("_alloc{0}", opCode.AddressStart);
-                    writer.WriteLine("Void* {0};", varName);
-                    this.UnaryOper(writer, opCode, string.Format("{0} = alloca(", varName));
+                    writer.WriteLine("Byte* {0};", varName);
+                    this.UnaryOper(writer, opCode, string.Format("{0} = (Byte*) alloca(", varName));
                     writer.WriteLine(");");
 
                     // do not remove, otherwise stackoverflow
-                    opCode.Result = new FullyDefinedReference(varName, System.System_Void.ToPointerType());
+                    opCode.Result = new FullyDefinedReference(varName, System.System_Byte.ToPointerType());
 
                     this.WriteMemSet(opCode, firstOpCodeOperand);
 
@@ -1903,7 +1903,7 @@ namespace Il2Native.Logic
                     type = this.GetTypeOfReference(opCode);
                     if (type.IsVoid())
                     {
-                        // ignore Ldind.i load of Void type
+                        Debug.Assert(false, "you are loading void indirectly");
                         return;
                     }
 
@@ -4750,7 +4750,7 @@ namespace Il2Native.Logic
                 foreach (var parameter in
                     parameters.Where(parameter => !parameter.ParameterType.IsPrimitiveType()))
                 {
-                    if (method.ReturnType.IsStructureType())
+                    if (parameter.ParameterType.IsStructureType())
                     {
                         this.WriteTypeDefinitionIfNotWrittenYet(parameter.ParameterType);
                     }

@@ -1981,21 +1981,29 @@ namespace Il2Native.Logic
                     retType = opCodePart.GetLocalType(this);
                     return retType;
 
+                case Code.Ldloca:
+                case Code.Ldloca_S:
+                    retType = opCodePart.GetLocalType(this);
+                    return retType.ToPointerType();
+
                 case Code.Ldarg:
                 case Code.Ldarg_0:
                 case Code.Ldarg_1:
                 case Code.Ldarg_2:
                 case Code.Ldarg_3:
                 case Code.Ldarg_S:
+                case Code.Ldarga_S:
                     var index = opCodePart.GetArgIndex();
                     if (this.HasMethodThis && index == 0)
                     {
                         retType = this.ThisType.ToClass();
-                        return retType;
+                    }
+                    else
+                    {
+                        retType = this.GetArgType(index);
                     }
 
-                    retType = this.GetArgType(index);
-                    return retType;
+                    return opCodePart.ToCode() ==  Code.Ldarga_S ? retType.ToPointerType() : retType;
 
                 case Code.Ldfld:
                 case Code.Ldsfld:
@@ -2096,7 +2104,7 @@ namespace Il2Native.Logic
 
                 case Code.Box:
                     retType = ((OpCodeTypePart)opCodePart).Operand;
-                    return retType.IsPrimitiveType() || retType.IsStructureType() ? retType.ToClass() : retType;
+                    return retType.IsPrimitiveTypeOrEnum() || retType.IsStructureType() ? retType.ToClass() : retType;
 
                 case Code.Call:
                 case Code.Callvirt:
@@ -2140,7 +2148,8 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
                     var intPtrOper = IntTypeRequired(opCodePart);
-                    var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    var nativeIntType = intPtrOper ? this.System.System_Int32 : retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
                     return nativeIntType;
 
                 case Code.Conv_U8:
@@ -2167,7 +2176,8 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
                     intPtrOper = IntTypeRequired(opCodePart);
-                    nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    nativeIntType = intPtrOper ? this.System.System_Int32 : retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
                     return nativeIntType;
 
                 case Code.Conv_R4:
