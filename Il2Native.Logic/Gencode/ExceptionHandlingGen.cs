@@ -91,7 +91,7 @@ namespace Il2Native.Logic.Gencode
                     var index = 0;
                     foreach (var finallyJump in exceptionHandlingClause.FinallyJumps)
                     {
-                        writer.WriteLine("case {0}: goto {1};", index++, finallyJump);
+                        writer.WriteLine("case {0}: goto {1};", ++index, finallyJump);
                     }
 
                     writer.Indent--;
