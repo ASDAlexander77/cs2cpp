@@ -1193,12 +1193,16 @@ namespace Il2Native.Logic
             // do not remove usedby to prevent it to be written at first level
             ////usedByOpCodePart.UsedBy = null;
 
-            bool isNew = newOperand.Next == null || newOperand.Previous == null;
+            var isNew = newOperand.Next == null || newOperand.Previous == null;
 
             newOperand.Next = oldOperand.Next;
             if (isNew)
             {
                 oldOperand.Previous.Next = newOperand;
+            }
+            else
+            {
+                oldOperand.Previous.Next = oldOperand.Next;
             }
 
             newOperand.Previous = oldOperand.Previous;

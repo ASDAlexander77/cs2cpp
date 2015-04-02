@@ -274,13 +274,9 @@ namespace Il2Native.Logic
         /// </param>
         public void ActualWrite(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
-            if (firstLevel)
+            if (firstLevel && this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
             {
-                this.WriteLabels(writer, opCode);
-                if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
-                {
-                    this.WriteDebugLine();
-                }
+                this.WriteDebugLine();
             }
 
             if (opCode.Result != null)
@@ -2258,7 +2254,7 @@ namespace Il2Native.Logic
             Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
 
-            writer.Write("(");
+            writer.Write("((");
             toType.WriteTypePrefix(this);
             writer.Write(") __dynamic_cast_null_test(");
 
@@ -2266,7 +2262,7 @@ namespace Il2Native.Logic
 
             writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName(this));
             writer.Write(", (Void*) &{0}", toType.GetRttiInfoName(this));
-            writer.Write(", {0})", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
+            writer.Write(", {0}))", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
 
             if (throwExceptionIfNull)
             {
@@ -4533,9 +4529,31 @@ namespace Il2Native.Logic
 
         private void IterateMethodBodyOpCodes(IEnumerable<OpCodePart> rest)
         {
-            var item = rest.FirstOrDefault();
+            var enumerator = rest.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                return;
+            }
+
+            var item = enumerator.Current;
+            var currentAddress = -1; 
             while (item != null)
             {
+                // move next item, we need next code to write address lables properly
+                if (item.AddressEnd != 0)
+                {
+                    currentAddress = item.AddressStart;
+                }
+
+                while (currentAddress >= enumerator.Current.AddressStart)
+                {
+                    this.WriteLabels(this.Output, enumerator.Current);
+                    if (!enumerator.MoveNext())
+                    {
+                        break;
+                    }
+                }
+
                 this.ReadDbgLine(item);
                 this.ActualWrite(this.Output, item, true);
 
@@ -4543,6 +4561,7 @@ namespace Il2Native.Logic
                 Debug.Assert(
                     item.Next == null || item.AddressEnd == 0 || item.Next.AddressEnd == 0 || item.AddressStart <= item.Next.AddressStart,
                     "circular reference detected");
+                
                 item = item.Next;
             }
         }
