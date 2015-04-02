@@ -1990,7 +1990,7 @@ namespace Il2Native.Logic
                 resultOfOperand0 = new ReturnResult(resultOfOperand0.Type.ToNormal());
             }
 
-            writer.Write("*((");
+            writer.Write("(*((");
             type.ToPointerType().WriteTypePrefix(this);
             writer.Write(")");
 
@@ -2006,7 +2006,7 @@ namespace Il2Native.Logic
                 this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             }
 
-            writer.Write(")");
+            writer.Write("))");
         }
 
         public void ReadParameters(string sourceFilePath, string pdbFilePath, string[] args)
