@@ -4539,6 +4539,10 @@ namespace Il2Native.Logic
                 this.ReadDbgLine(item);
                 this.ActualWrite(this.Output, item, true);
 
+                Debug.Assert(item != item.Next, "cercular reference detected");
+                Debug.Assert(
+                    item.Next == null || item.AddressEnd == 0 || item.Next.AddressEnd == 0 || item.AddressStart < item.Next.AddressStart,
+                    "circular reference detected");
                 item = item.Next;
             }
         }

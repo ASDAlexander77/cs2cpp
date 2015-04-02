@@ -1193,11 +1193,7 @@ namespace Il2Native.Logic
             usedByOpCodePart.UsedBy = null;
 
             newOperand.Next = oldOperand.Next;
-            newOperand.Previous = oldOperand;
-            oldOperand.Next = newOperand;
-
-            // to remove operand from chain
-            oldOperand.Previous.Next = newOperand;
+            newOperand.Previous = oldOperand.Previous;
         }
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
@@ -2331,11 +2327,14 @@ namespace Il2Native.Logic
         {
             if (last != null)
             {
+                Debug.Assert(last.Next != opCodePartBefore, "circular reference detected");
                 last.Next = opCodePartBefore;
+                Debug.Assert(opCodePartBefore.Previous != last, "circular reference detected");
                 opCodePartBefore.Previous = last;
             }
 
             last = opCodePartBefore;
+
             return last;
         }
 
