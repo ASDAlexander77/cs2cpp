@@ -1194,6 +1194,7 @@ namespace Il2Native.Logic
 
             newOperand.Next = oldOperand.Next;
             newOperand.Previous = oldOperand.Previous;
+            oldOperand.Previous.Next = newOperand;
         }
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
