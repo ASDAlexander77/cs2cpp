@@ -4541,7 +4541,7 @@ namespace Il2Native.Logic
 
                 Debug.Assert(item != item.Next, "cercular reference detected");
                 Debug.Assert(
-                    item.Next == null || item.AddressEnd == 0 || item.Next.AddressEnd == 0 || item.AddressStart < item.Next.AddressStart,
+                    item.Next == null || item.AddressEnd == 0 || item.Next.AddressEnd == 0 || item.AddressStart <= item.Next.AddressStart,
                     "circular reference detected");
                 item = item.Next;
             }
