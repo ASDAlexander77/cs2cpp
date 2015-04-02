@@ -4549,7 +4549,7 @@ namespace Il2Native.Logic
                 return;
             }
 
-            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(methodKey.Method);
+            this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(methodKey.Method);
 
             var ctor = methodKey.Method as IConstructor;
             if (ctor != null)
@@ -4646,7 +4646,7 @@ namespace Il2Native.Logic
             }
 
             // forward declarations
-            this.WriteMethodRequiredForwardDeclarationsWithoutMethodBody(method);
+            this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
 
             // forward declarations - type from method body
             foreach (var requiredType in this.IlReader.UsedTypeDeclarations)
@@ -4725,7 +4725,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredForwardDeclarationsWithoutMethodBody(IMethod method)
+        private void WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(IMethod method)
         {
             if (!method.IsStatic)
             {
@@ -4734,7 +4734,14 @@ namespace Il2Native.Logic
 
             if (!method.ReturnType.IsVoid() && !method.ReturnType.IsPrimitiveType())
             {
-                this.WriteTypeForwardDeclarationIfNotWrittenYet(method.ReturnType);
+                if (method.ReturnType.IsStructureType())
+                {
+                    this.WriteTypeDefinitionIfNotWrittenYet(method.ReturnType);
+                }
+                else
+                {
+                    this.WriteTypeForwardDeclarationIfNotWrittenYet(method.ReturnType);
+                }
             }
 
             var parameters = method.GetParameters();
@@ -4743,7 +4750,14 @@ namespace Il2Native.Logic
                 foreach (var parameter in
                     parameters.Where(parameter => !parameter.ParameterType.IsPrimitiveType()))
                 {
-                    this.WriteTypeForwardDeclarationIfNotWrittenYet(parameter.ParameterType);
+                    if (method.ReturnType.IsStructureType())
+                    {
+                        this.WriteTypeDefinitionIfNotWrittenYet(parameter.ParameterType);
+                    }
+                    else
+                    {
+                        this.WriteTypeForwardDeclarationIfNotWrittenYet(parameter.ParameterType);
+                    }
                 }
             }
         }
