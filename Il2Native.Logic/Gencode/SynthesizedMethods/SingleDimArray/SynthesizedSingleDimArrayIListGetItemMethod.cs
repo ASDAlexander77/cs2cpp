@@ -39,7 +39,7 @@
                     codeList.GetCode());
 
             this._parameters = new List<IParameter>();
-            this._parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            this._parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
 
             this._tokenResolutions = new List<object>();
             this._tokenResolutions.Add(arrayType.GetElementType());

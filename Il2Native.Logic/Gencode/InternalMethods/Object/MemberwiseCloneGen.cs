@@ -62,7 +62,7 @@
                     string.Empty,
                     typeResolver.System.System_Object,
                     typeResolver.System.System_Byte.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter() },
+                    new[] { typeResolver.System.System_Int32.ToParameter("obj") },
                     (llvmWriter, opCode) => llvmWriter.WriteAllocateMemory(opCode, opCode.OpCodeOperands[0].Result)));
             
             tokenResolutions.Add(typeResolver.System.System_Object);

@@ -99,7 +99,7 @@
             locals.Add(typeResolver.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Object.ToParameter());
+            parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
 
             MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }

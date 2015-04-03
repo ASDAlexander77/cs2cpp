@@ -1042,7 +1042,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IField ToField(
-            IType containingType, string name = "value", bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0)
+            IType containingType, string name, bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0)
         {
             TypeSymbol containingTypeSymbol = null;
             var metadataTypeAdapter = containingType as MetadataTypeAdapter;
@@ -1082,16 +1082,18 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="name">
+        /// </param>
         /// <param name="isOut">
         /// </param>
         /// <param name="isRef">
         /// </param>
-        /// <param name="name">
-        /// </param>
         /// <returns>
         /// </returns>
-        public IParameter ToParameter(bool isOut = false, bool isRef = false, string name = "value")
+        public IParameter ToParameter(string name, bool isOut = false, bool isRef = false)
         {
+            Debug.Assert(name != "value");
+
             var refKind = RefKind.None;
             if (isOut)
             {

@@ -315,15 +315,15 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        /// <param name="name">
+        /// </param>
         /// <param name="isOut">
         /// </param>
         /// <param name="isRef">
         /// </param>
-        /// <param name="name">
-        /// </param>
         /// <returns>
         /// </returns>
-        IParameter ToParameter(bool isOut = false, bool isRef = false, string name = "value");
+        IParameter ToParameter(string name, bool isOut = false, bool isRef = false);
 
         /// <summary>
         /// </summary>

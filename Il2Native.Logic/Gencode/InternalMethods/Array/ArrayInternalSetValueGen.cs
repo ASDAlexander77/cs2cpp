@@ -259,8 +259,8 @@
             var locals = new List<IType>();
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter());
-            parameters.Add(typeResolver.System.System_Object.ToParameter());
+            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("ref"));
+            parameters.Add(typeResolver.System.System_Object.ToParameter("obj"));
 
             MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

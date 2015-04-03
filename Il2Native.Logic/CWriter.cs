@@ -329,31 +329,34 @@ namespace Il2Native.Logic
             }
         }
 
+        /// <summary>
+        /// Temporaryly disabled as it not pointing to correct position yet.
+        /// </summary>
         private void WriteDebugLine()
         {
-            if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
-            {
-                return;
-            }
+            ////if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
+            ////{
+            ////    return;
+            ////}
 
-            if (this.debugInfoGenerator.SourceFilePathChanged)
-            {
-                if (string.IsNullOrEmpty(this.debugInfoGenerator.SourceFilePath))
-                {
-                    Debug.Assert(false, "Source file is not provided");
-                    return;
-                }
+            ////if (this.debugInfoGenerator.SourceFilePathChanged)
+            ////{
+            ////    if (string.IsNullOrEmpty(this.debugInfoGenerator.SourceFilePath))
+            ////    {
+            ////        Debug.Assert(false, "Source file is not provided");
+            ////        return;
+            ////    }
 
-                this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.SourceFilePath);
+            ////    this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.SourceFilePath);
 
-                this.debugInfoGenerator.SourceFilePathChanged = false;
-            }
-            else
-            {
-                this.Output.WriteLine("#line {0}", this.debugInfoGenerator.CurrentDebugLine);
-            }
+            ////    this.debugInfoGenerator.SourceFilePathChanged = false;
+            ////}
+            ////else
+            ////{
+            ////    this.Output.WriteLine("#line {0}", this.debugInfoGenerator.CurrentDebugLine);
+            ////}
 
-            this.debugInfoGenerator.CurrentDebugLineNew = false;
+            ////this.debugInfoGenerator.CurrentDebugLineNew = false;
         }
 
         private void WriteTemporaryExpressionResult(OpCodePart opCode)
@@ -1812,7 +1815,8 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetArgVarName(string name, int index)
         {
-            return string.Format("{0}_{1}", name.CleanUpName(), index);
+            ////return string.Format("{0}_{1}", name.CleanUpName(), index);
+            return name.CleanUpName();
         }
 
         public int GetFieldIndex(IType type, string fieldName)
@@ -1847,6 +1851,11 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetLocalVarName(int index)
         {
+            if (this.DebugInfo)
+            {
+                return this.debugInfoGenerator.GetLocalNameByIndex(index);
+            }
+
             return string.Concat("local", index);
         }
 
@@ -1858,7 +1867,7 @@ namespace Il2Native.Logic
         /// </returns>
         public string GetThisName()
         {
-            return "this_0";
+            return "__this";
         }
 
         /// <summary>

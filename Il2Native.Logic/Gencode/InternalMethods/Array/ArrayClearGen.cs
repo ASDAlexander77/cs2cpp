@@ -63,8 +63,8 @@
                     typeResolver.System.System_Void,
                     new[]
                     {
-                        typeResolver.System.System_Byte.ToPointerType().ToParameter(),
-                        typeResolver.System.System_Int32.ToParameter()
+                        typeResolver.System.System_Byte.ToPointerType().ToParameter("src"),
+                        typeResolver.System.System_Int32.ToParameter("len")
                     },
                     (llvmWriter, opCode) =>
                     {
@@ -80,9 +80,9 @@
             locals.Add(typeResolver.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Array.ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Array.ToParameter("src"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
 
             MethodBodyBank.Register(Name, ByteCode, tokenResolutions, locals, parameters);
         }

@@ -69,7 +69,7 @@ namespace Il2Native.Logic.Gencode
                 new SynthesizedMethod(
                     typeResolver.GetAllocator(),
                     typeResolver.System.System_Void.ToPointerType(),
-                    new[] { typeResolver.System.System_Int32.ToParameter() }));
+                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
 
             newAlloc.Castclass(declaringClassType);
 
@@ -87,7 +87,7 @@ namespace Il2Native.Logic.Gencode
 
             var ilCodeBuilder = typeResolver.GetNewMethod(declaringClassType, true, doNotTestNullValue);
 
-            ilCodeBuilder.Parameters.Add(normal.ToParameter());
+            ilCodeBuilder.Parameters.Add(normal.ToParameter("_value"));
 
             // we need to remove last code which is Code.Ret
             ilCodeBuilder.RemoveLast();

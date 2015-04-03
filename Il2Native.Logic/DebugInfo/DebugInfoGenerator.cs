@@ -1,21 +1,12 @@
 ﻿namespace Il2Native.Logic.DebugInfo
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
-    using System.Text;
-
-    using Il2Native.Logic.Gencode;
 
     using PdbReader;
 
-    using PEAssemblyReader;
-
     public class DebugInfoGenerator
     {
-        private const string IdentityString = "C# Native compiler";
-
         private readonly string sourceFilePath;
 
         private readonly IDictionary<int, KeyValuePair<int, int>> indexByOffset = new SortedDictionary<int, KeyValuePair<int, int>>();
@@ -52,7 +43,19 @@
 
         public void DefineLocalVariable(string name, int slot)
         {
-            this.nameBySlot[slot] = name;
+            var index = 0;
+            var currentName = name;
+            for (var i = 0; i < slot; i++)
+            {
+                string existingName;
+                if (this.nameBySlot.TryGetValue(i, out existingName) && existingName == currentName)
+                {
+                    index++;
+                    currentName = string.Concat(name, "_", index);
+                }
+            }
+
+            this.nameBySlot[slot] = (index > 0 ? currentName : name).CleanUpName();
         }
 
         public void GenerateFunction(int token)

@@ -74,7 +74,7 @@ namespace Il2Native.Logic.Gencode
         public static IList<IParameter> GetParameters(ITypeResolver typeResolver)
         {
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
             return parameters;
         }
 
@@ -234,10 +234,10 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions.Add(systemString.GetFirstMethodByName("CreateStringFromEncoding", typeResolver));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(typeResolver.ResolveType("System.Text.Encoding").ToParameter());
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
+            parameters.Add(typeResolver.ResolveType("System.Text.Encoding").ToParameter("enc"));
         }
 
         public static void GetCtorSBytePtrStartLength(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
@@ -265,9 +265,9 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("index"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("size"));
         }
 
         public static void GetCtorSBytePtr(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
@@ -296,7 +296,7 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions.Add(typeResolver.ResolveType("System.Text.Encoding").GetFirstMethodByName("get_ASCII", typeResolver));
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
         }
 
         public static void GetStrLen(ITypeResolver typeResolver, out byte[] code, out IList<object> tokenResolutions, out IList<IType> locals, out IList<IParameter> parameters)
@@ -341,7 +341,7 @@ namespace Il2Native.Logic.Gencode
             tokenResolutions = new List<object>();
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_SByte.ToPointerType().ToParameter("str"));
         }
     }
 }

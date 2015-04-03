@@ -245,9 +245,9 @@
             locals.Add(typeResolver.System.System_Int32);
 
             var parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(typeResolver.System.System_Int32.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("array"));
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("len"));
+            parameters.Add(typeResolver.System.System_Int32.ToPointerType().ToParameter("typeRef"));
 
             MethodBodyBank.Register(Name, codeList.GetCode(), tokenResolutions, locals, parameters);
         }

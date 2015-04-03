@@ -210,7 +210,7 @@
 
             // parameters
             var list = GetParameters(arrayType, typeResolver);
-            list.Add(arrayType.GetElementType().ToParameter());
+            list.Add(arrayType.GetElementType().ToParameter("arrayElement"));
             parameters = list;
         }
 
@@ -246,7 +246,8 @@
         public static List<IParameter> GetParameters(IType type, ITypeResolver typeResolver)
         {
             var intType = typeResolver.System.System_Int32;
-            return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter()).ToList();
+            var index = 0;
+            return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter("param" + index++)).ToList();
         }
 
         public static IlCodeBuilder MultiDimArrayAllocationSizeMethodBody(

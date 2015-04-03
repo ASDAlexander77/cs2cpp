@@ -18,8 +18,8 @@
             var bytePointerType = typeResolver.System.System_SByte.ToPointerType();
 
             parameters = new List<IParameter>();
-            parameters.Add(typeResolver.System.System_Int32.ToParameter());
-            parameters.Add(bytePointerType.ToPointerType().ToParameter());
+            parameters.Add(typeResolver.System.System_Int32.ToParameter("value"));
+            parameters.Add(bytePointerType.ToPointerType().ToParameter("value"));
 
             var codeList = new List<object>();
             codeList.AddRange(
