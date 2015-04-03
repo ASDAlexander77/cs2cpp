@@ -334,29 +334,29 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteDebugLine()
         {
-            ////if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
-            ////{
-            ////    return;
-            ////}
+            if (!this.debugInfoGenerator.CurrentDebugLine.HasValue)
+            {
+                return;
+            }
 
-            ////if (this.debugInfoGenerator.SourceFilePathChanged)
-            ////{
-            ////    if (string.IsNullOrEmpty(this.debugInfoGenerator.SourceFilePath))
-            ////    {
-            ////        Debug.Assert(false, "Source file is not provided");
-            ////        return;
-            ////    }
+            if (this.debugInfoGenerator.SourceFilePathChanged)
+            {
+                if (string.IsNullOrEmpty(this.debugInfoGenerator.SourceFilePath))
+                {
+                    Debug.Assert(false, "Source file is not provided");
+                    return;
+                }
 
-            ////    this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.SourceFilePath);
+                this.Output.WriteLine("#line {0} \"{1}\"", this.debugInfoGenerator.CurrentDebugLine, this.debugInfoGenerator.SourceFilePath);
 
-            ////    this.debugInfoGenerator.SourceFilePathChanged = false;
-            ////}
-            ////else
-            ////{
-            ////    this.Output.WriteLine("#line {0}", this.debugInfoGenerator.CurrentDebugLine);
-            ////}
+                this.debugInfoGenerator.SourceFilePathChanged = false;
+            }
+            else
+            {
+                this.Output.WriteLine("#line {0}", this.debugInfoGenerator.CurrentDebugLine);
+            }
 
-            ////this.debugInfoGenerator.CurrentDebugLineNew = false;
+            this.debugInfoGenerator.CurrentDebugLineNew = false;
         }
 
         private void WriteTemporaryExpressionResult(OpCodePart opCode)
@@ -852,7 +852,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Div:
                 case Code.Div_Un:
-                    this.BinaryOper(writer, opCode, " / ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " / ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
@@ -863,7 +863,7 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.BinaryOper(writer, opCode, " % ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes);
+                        this.BinaryOper(writer, opCode, " % ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Rem_Un);
                     }
 
                     break;
@@ -881,7 +881,7 @@ namespace Il2Native.Logic
                     break;
                 case Code.Shr:
                 case Code.Shr_Un:
-                    this.BinaryOper(writer, opCode, " >> ", OperandOptions.AdjustIntTypes);
+                    this.BinaryOper(writer, opCode, " >> ", OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Shr_Un);
                     break;
                 case Code.Not:
                     this.UnaryOper(writer, opCode, "~");
@@ -1181,6 +1181,8 @@ namespace Il2Native.Logic
                 case Code.Bge_Un:
                 case Code.Bge_Un_S:
 
+                    bool unsigned = false;
+
                     // we need to invert all comare command
                     var oper = string.Empty;
                     switch (opCode.ToCode())
@@ -1192,6 +1194,7 @@ namespace Il2Native.Logic
                         case Code.Bne_Un:
                         case Code.Bne_Un_S:
                             oper = " != ";
+                            unsigned = true;
                             break;
                         case Code.Blt:
                         case Code.Blt_S:
@@ -1200,6 +1203,7 @@ namespace Il2Native.Logic
                         case Code.Blt_Un:
                         case Code.Blt_Un_S:
                             oper = " < ";
+                            unsigned = true;
                             break;
                         case Code.Ble:
                         case Code.Ble_S:
@@ -1208,6 +1212,7 @@ namespace Il2Native.Logic
                         case Code.Ble_Un:
                         case Code.Ble_Un_S:
                             oper = " <= ";
+                            unsigned = true;
                             break;
                         case Code.Bgt:
                         case Code.Bgt_S:
@@ -1216,6 +1221,7 @@ namespace Il2Native.Logic
                         case Code.Bgt_Un:
                         case Code.Bgt_Un_S:
                             oper = " > ";
+                            unsigned = true;
                             break;
                         case Code.Bge:
                         case Code.Bge_S:
@@ -1224,6 +1230,7 @@ namespace Il2Native.Logic
                         case Code.Bge_Un:
                         case Code.Bge_Un_S:
                             oper = " >= ";
+                            unsigned = true;
                             break;
                     }
 
@@ -1234,7 +1241,8 @@ namespace Il2Native.Logic
                         opCode,
                         oper,
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
-                        this.System.System_Boolean);
+                        this.System.System_Boolean,
+                        unsigned);
 
                     writer.Write(string.Concat(" goto a", opCode.JumpAddress()));
 
@@ -1287,7 +1295,8 @@ namespace Il2Native.Logic
                         opCode,
                         " < ",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
-                        this.System.System_Boolean);
+                        this.System.System_Boolean,
+                        true);
 
                     break;
                 case Code.Cgt:
@@ -1305,7 +1314,8 @@ namespace Il2Native.Logic
                         opCode,
                         " > ",
                         OperandOptions.GenerateResult | OperandOptions.CastPointersToBytePointer | OperandOptions.AdjustIntTypes,
-                        this.System.System_Boolean);
+                        this.System.System_Boolean,
+                        true);
                     break;
 
                 case Code.Conv_R4:
@@ -1733,12 +1743,13 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="beforeSecondOperand">
         /// </param>
-        public void BinaryOper(CIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null)
+        public void BinaryOper(CIndentedTextWriter writer, OpCodePart opCode, string op, OperandOptions options = OperandOptions.None, IType resultType = null, bool unsigned = false)
         {
+            var estimatedResultOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
+            var estimatedResultOperand1 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
+
             if (options.HasFlag(OperandOptions.CastPointersToBytePointer))
             {
-                var estimatedResultOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                var estimatedResultOperand1 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
                 if (estimatedResultOperand0.IsReference && estimatedResultOperand1.IsReference)
                 {
                     writer.Write("((Byte*)");
@@ -1752,10 +1763,34 @@ namespace Il2Native.Logic
             }
 
             writer.Write("(");
+            if (unsigned)
+            {
+                this.WriteUnsigned(estimatedResultOperand0.Type);
+            }
+            
             this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             writer.Write(op);
+            if (unsigned)
+            {
+                this.WriteUnsigned(estimatedResultOperand1.Type);
+            }
+
             this.WriteOperandResultOrActualWrite(writer, opCode, 1);
             writer.Write(")");
+        }
+
+        private void WriteUnsigned(IType type)
+        {
+            var bits = type.IntTypeBitSize();
+            if (bits == 0)
+            {
+                return;
+            }
+
+            var unsignedType = this.GetUIntTypeByBitSize(bits);
+            this.Output.Write("(");
+            unsignedType.WriteTypePrefix(this);
+            this.Output.Write(")");
         }
 
         /// <summary>

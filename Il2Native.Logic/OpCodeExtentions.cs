@@ -944,34 +944,6 @@ namespace Il2Native.Logic
                        || recurse && type.HasElementType && type.GetElementType().IsStructureType(recurse));
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public static bool IsUnsigned(this OpCodePart opCode)
-        {
-            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
-            {
-                return false;
-            }
-
-            var result1 = opCode.OpCodeOperands[0].Result;
-            var result2 = opCode.OpCodeOperands[1].Result;
-            if (result2 is ConstValue)
-            {
-                return result1.Type.IsUnsignedType();
-            }
-
-            if (result1 is ConstValue)
-            {
-                return result2.Type.IsUnsignedType();
-            }
-
-            return result1.Type.IsUnsignedType() && result2.Type.IsUnsignedType();
-        }
-
         public static bool IsUnsignedType(this IType thisType)
         {
             switch (thisType.FullName)
