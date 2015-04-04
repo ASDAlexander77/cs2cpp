@@ -1495,12 +1495,22 @@ namespace Il2Native.Logic
                 case Code.Constrained:
                     opCodeTypePart = opCode as OpCodeTypePart;
 
+                    // TODO: not fully implemented, https://msdn.microsoft.com/library/system.reflection.emit.opcodes.constrained.aspx
+                    // not implemented case when you need to box value type, read carefully documentation
+
                     var @class = opCodeTypePart.Operand.ToClass();
                     this.WriteVariableDeclare(opCode, @class, "_constr");
                     var constrVar = this.WriteVariable(opCode, "_constr");
 
                     var opCodeNone = OpCodePart.CreateNop;
-                    if (opCodeTypePart.Operand.IsValueType())
+
+                    if (opCodeTypePart.Operand.IsStructureType())
+                    {
+                        //&& Logic.IlReader.Methods(opCodeTypePart.Operand, this).Contains()
+                        // nothing to do, pass as is
+                        WriteOperandResultOrActualWrite(this.Output, opCode.Next, 0);
+                    }
+                    else if (opCodeTypePart.Operand.IsValueType())
                     {
                         opCodeNone.OpCodeOperands = new[]
                         {

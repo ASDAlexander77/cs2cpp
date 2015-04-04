@@ -209,11 +209,9 @@ namespace Il2Native.Logic.Gencode
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
                 }
 
-                // convert value to object
                 var opCodeNone = OpCodePart.CreateNop;
                 opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
                 primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
-
                 return;
             }
 

@@ -1318,6 +1318,15 @@ namespace Il2Native.Logic
 
                         this.AddGenericSpecializedType(type);
                         this.AddUsedTypeDeclaration(type);
+
+                        if (code == Code.Initobj)
+                        {
+                            if (type.IsStructureType())
+                            {
+                                this.AddCalledMethod(new SynthesizedInitMethod(type, this.TypeResolver));
+                            }
+                        }
+
                         if (code == Code.Box)
                         {
                             this.AddStructType(type);

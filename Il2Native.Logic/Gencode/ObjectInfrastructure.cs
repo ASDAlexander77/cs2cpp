@@ -362,6 +362,12 @@ namespace Il2Native.Logic.Gencode
             if (declaringTypeNormal.IsValueType)
             {
                 cWriter.WriteMemSet(declaringTypeNormal, opCodePart.OpCodeOperands[0]);
+                if (declaringTypeNormal.IsStructureType())
+                {
+                    // and you need to call Init to allow to use Struct address in virtual calls for Code.Constrained
+                    cWriter.Output.WriteLine(";");
+                    declaringTypeNormal.WriteCallInitObjectMethod(cWriter, opCodePart);
+                }
             }
             else
             {
