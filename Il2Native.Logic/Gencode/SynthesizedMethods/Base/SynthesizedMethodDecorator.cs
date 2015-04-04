@@ -33,7 +33,8 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             IMethod method,
             IMethodBody methodBody,
             IEnumerable<IParameter> parameters,
-            IModule module) : this(method)
+            IModule module)
+            : this(method)
         {
             this.methodBody = methodBody;
             this.module = module;
@@ -138,6 +139,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         public bool IsExplicitInterfaceImplementation
         {
             get { return this.method.IsExplicitInterfaceImplementation; }
+        }
+
+        public IType ExplicitInterface
+        {
+            get { return this.method.ExplicitInterface; }
         }
 
         public bool IsExternal

@@ -55,6 +55,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private readonly Lazy<IType> lazyExplicitInterface; 
+
+        /// <summary>
+        /// </summary>
         private readonly Lazy<IEnumerable<IParameter>> lazyParameters;
 
         /// <summary>
@@ -81,6 +85,7 @@ namespace PEAssemblyReader
             this.lazyNamespace = new Lazy<string>(this.CalculateNamespace);
             this.lazyParameters = new Lazy<IEnumerable<IParameter>>(this.CalculateParameters);
             this.lazyToString = new Lazy<string>(this.CalculateToString);
+            this.lazyExplicitInterface = new Lazy<IType>(this.CalculateExplicitInterface);
 
             var peMethodSymbol = methodDef as PEMethodSymbol;
             if (peMethodSymbol != null)
@@ -228,6 +233,16 @@ namespace PEAssemblyReader
             get
             {
                 return this.methodDef.IsExplicitInterfaceImplementation;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public IType ExplicitInterface
+        {
+            get
+            {
+                return this.lazyExplicitInterface.Value;
             }
         }
 
@@ -501,6 +516,11 @@ namespace PEAssemblyReader
             }
 
             return methodDef.IsVirtual;
+        }
+
+        private IType CalculateExplicitInterface()
+        {
+            return new MetadataTypeAdapter(this.methodDef.ExplicitInterfaceImplementations.First().ContainingType);
         }
 
         /// <summary>

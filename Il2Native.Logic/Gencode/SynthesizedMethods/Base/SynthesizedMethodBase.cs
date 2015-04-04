@@ -108,6 +108,13 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         /// <summary>
         /// </summary>
+        public IType ExplicitInterface
+        {
+            get { return null; }
+        }
+
+        /// <summary>
+        /// </summary>
         public bool IsExternal
         {
             get { return false; }

@@ -12,7 +12,10 @@
         {
             this._key = method.ToString(ownerOfExplicitInterface);
             this.Method = method;
-            this.OwnerOfExplicitInterface = ownerOfExplicitInterface;
+            if (ownerOfExplicitInterface != null)
+            {
+                this.OwnerOfExplicitInterface = ownerOfExplicitInterface.NormalizeType();
+            }
         }
 
         public IMethod Method { get; private set; }

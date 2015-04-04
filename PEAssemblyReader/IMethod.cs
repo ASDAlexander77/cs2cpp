@@ -48,6 +48,11 @@ namespace PEAssemblyReader
         /// <summary>
         /// custom field
         /// </summary>
+        IType ExplicitInterface { get; }
+
+        /// <summary>
+        /// custom field
+        /// </summary>
         bool IsExternal { get; }
 
         /// <summary>

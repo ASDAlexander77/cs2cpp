@@ -2676,9 +2676,11 @@ namespace Il2Native.Logic
                 ? methodBase.GetMethodName(ownerOfExplicitInterface)
                 : methodBase.GetFullMethodName(ownerOfExplicitInterface);
 
-            if (!shortName
-                && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
-                    || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)))
+            if (!shortName &&
+                (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray ||
+                 methodBase.IsGenericMethod || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType) ||
+                 (methodBase.IsExplicitInterfaceImplementation &&
+                  (methodBase.ExplicitInterface.IsGenericType || methodBase.ExplicitInterface.IsArray))))
             {
                 writer.Write(this.GetAssemblyPrefix());
             }

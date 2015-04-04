@@ -2130,7 +2130,7 @@ namespace Il2Native.Logic
                 case Code.Ldind_I:
 
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    if (retType.IsByRef)
+                    if (retType.IsByRef || retType.IsPointer)
                     {
                         return retType.GetElementType();
                     }
