@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
 
     using Il2Native.Logic.Gencode;
@@ -224,48 +225,56 @@
 
         public void New(IConstructor @constructor)
         {
+            Debug.Assert(@constructor != null, "@constructor is null");
             TokenResolutions.Add(@constructor);
             this.Add(Code.Newobj, (int)TokenResolutions.Count);
         }
 
         public void SizeOf(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Sizeof, (int)TokenResolutions.Count);
         }
 
         public void Call(IMethod method)
         {
+            Debug.Assert(method != null, "@method is null");
             TokenResolutions.Add(method);
             this.Add(method.IsVirtual ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
         }
 
         public void Castclass(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Castclass, (int)TokenResolutions.Count);
         }
 
         public void LoadField(IField field)
         {
+            Debug.Assert(field != null, "@field is null");
             TokenResolutions.Add(field);
             this.Add(field.IsStatic ? Code.Ldsfld : Code.Ldfld, (int)TokenResolutions.Count);
         }
 
         public void LoadFieldAddress(IField field)
         {
+            Debug.Assert(field != null, "@field is null");
             TokenResolutions.Add(field);
             this.Add(field.IsStatic ? Code.Ldsflda : Code.Ldflda, (int)TokenResolutions.Count);
         }
 
         public void SaveField(IField field)
         {
+            Debug.Assert(field != null, "@field is null");
             TokenResolutions.Add(field);
             this.Add(field.IsStatic ? Code.Stsfld : Code.Stfld, (int)TokenResolutions.Count);
         }
 
         public void LoadToken(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
@@ -278,24 +287,28 @@
 
         public void LoadToken(IField field)
         {
+            Debug.Assert(field != null, "@field is null");
             TokenResolutions.Add(field);
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
 
         public void CopyObject(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Cpobj, (int)TokenResolutions.Count);
         }
 
         public void LoadObject(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Ldobj, (int)TokenResolutions.Count);
         }
 
         public void SaveObject(IType type)
         {
+            Debug.Assert(type != null, "@type is null");
             TokenResolutions.Add(type);
             this.Add(Code.Stobj, (int)TokenResolutions.Count);
         }

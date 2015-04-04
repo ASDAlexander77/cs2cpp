@@ -2322,6 +2322,12 @@ namespace Il2Native.Logic
                 case Code.Ldftn:
                 case Code.Ldvirtftn:
                     return this.System.System_IntPtr;
+
+                case Code.Arglist:
+                    return this.System.System_RuntimeArgumentHandle;
+
+                case Code.Refanytype:
+                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
             }
 
             return retType;

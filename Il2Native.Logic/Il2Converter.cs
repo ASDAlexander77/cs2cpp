@@ -157,11 +157,6 @@ namespace Il2Native.Logic
                     continue;
                 }
 
-                if (type.FullName == "<Module>")
-                {
-                    continue;
-                }
-
                 IEnumerable<IMethod> genericMethodSpecializatonsForType = null;
                 genMethodSpec.TryGetValue(type, out genericMethodSpecializatonsForType);
 
@@ -184,11 +179,6 @@ namespace Il2Native.Logic
             {
                 Debug.Assert(type != null);
                 if (type == null)
-                {
-                    continue;
-                }
-
-                if (type.FullName == "<Module>")
                 {
                     continue;
                 }

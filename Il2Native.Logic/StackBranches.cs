@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Emit;
     using CodeParts;

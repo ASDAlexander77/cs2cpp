@@ -425,8 +425,12 @@ namespace Il2Native.Logic.Gencode
             var jumpIfNotNull = codeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
 
             codeBuilder.LoadFieldAddress(typeStorageType);
+#if !MSCORLIB
             codeBuilder.LoadToken(new SynthesizedConstBytesField(new RuntimeTypeConstBytes(declaringType)));
             codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, bytesArrayType, typeResolver));
+#else
+            codeBuilder.New(Logic.IlReader.FindConstructor(typeResolver.System.System_RuntimeType, typeResolver));
+#endif
             codeBuilder.LoadNull();
 
             codeBuilder.Call(
