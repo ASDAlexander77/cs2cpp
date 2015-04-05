@@ -1012,7 +1012,7 @@ namespace Il2Native.Logic
 
             // types in current assembly
             var readingTypesContext = ReadingTypesContext.New();
-            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition);
+            var types = ilReader.Types().Where(t => !t.IsGenericTypeDefinition && t.Name != "<Module>");
             if (filter != null)
             {
                 types = types.Where(t => CheckFilter(filter, t));

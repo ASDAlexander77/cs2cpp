@@ -12,6 +12,8 @@
 
             this.Directory = directory;
             this.FileName = fileName;
+
+            this.debugInfoGenerator.DefineFile(this.Directory, this.FileName);
         }
 
         public string Directory { get; private set; }

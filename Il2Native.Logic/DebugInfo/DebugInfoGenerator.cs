@@ -7,13 +7,13 @@
 
     public class DebugInfoGenerator
     {
-        private readonly string sourceFilePath;
-
         private readonly IDictionary<int, KeyValuePair<int, int>> indexByOffset = new SortedDictionary<int, KeyValuePair<int, int>>();
 
         private readonly IDictionary<int, string> nameBySlot = new SortedDictionary<int, string>();
 
         private readonly string pdbFileName;
+
+        private string sourceFilePath;
 
         public DebugInfoGenerator(string pdbFileName, string defaultSourceFilePath)
         {
@@ -40,6 +40,12 @@
         public bool SourceFilePathChanged { get; set; }
 
         public IConverter PdbConverter { get; set; }
+
+        public void DefineFile(string directory, string fileName)
+        {
+            this.sourceFilePath = Path.Combine(directory, fileName).Replace('\\', '/');
+            this.SourceFilePathChanged = true;
+        }
 
         public void DefineLocalVariable(string name, int slot)
         {
