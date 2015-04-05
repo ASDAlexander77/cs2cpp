@@ -274,20 +274,17 @@ namespace Il2Native.Logic
         /// </param>
         public void ActualWrite(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel = false)
         {
-            if (firstLevel && this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
-            {
-                this.WriteDebugLine();
-            }
-
             if (opCode.Result != null)
             {
                 return;
             }
 
+            var processAsSeparateStatement = this.ProcessAsSeparateStatement(opCode);
+
             this.WriteTryBegins(writer, opCode);
             this.WriteCatchBegins(opCode);
 
-            if (firstLevel && !ProcessAsSeparateStatement(opCode))
+            if (firstLevel && !processAsSeparateStatement)
             {
                 return;
             }
@@ -4345,11 +4342,6 @@ namespace Il2Native.Logic
         /// </param>
         private void WriteLocalVariableDeclarations(IEnumerable<ILocalVariable> locals)
         {
-            if (this.DebugInfo)
-            {
-                WriteDebugLine();
-            }
-
             foreach (var local in locals)
             {
                 this.GetEffectiveLocalType(local).WriteTypePrefix(this);
@@ -4603,14 +4595,20 @@ namespace Il2Native.Logic
 
                 while (currentAddress >= enumerator.Current.AddressStart)
                 {
+                    this.ReadDbgLine(enumerator.Current);
                     this.WriteLabels(this.Output, enumerator.Current);
+
+                    if (this.DebugInfo)
+                    {
+                        this.WriteDebugLine();
+                    }
+
                     if (!enumerator.MoveNext())
                     {
                         break;
                     }
                 }
 
-                this.ReadDbgLine(item);
                 this.ActualWrite(this.Output, item, true);
 
                 Debug.Assert(item != item.Next, "cercular reference detected");
