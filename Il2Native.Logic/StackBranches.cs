@@ -144,6 +144,11 @@
                 // set UsedByAlternativeValues
                 foreach (var value in alternativeValues.Values)
                 {
+                    if (value.UsedByAlternativeValues != null)
+                    {
+                        alternativeValues.UsedByAlternativeValues = value.UsedByAlternativeValues;
+                    }
+
                     value.UsedByAlternativeValues = alternativeValues;
                 }
             }

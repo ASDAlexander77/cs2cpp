@@ -25,8 +25,6 @@ namespace Il2Native.Logic.CodeParts
             this.Labels = new List<int>();
         }
 
-        public IType RequiredOutgoingType { get; set; }
-
         /// <summary>
         /// </summary>
         public List<int> Labels { get; private set; }
@@ -34,5 +32,13 @@ namespace Il2Native.Logic.CodeParts
         /// <summary>
         /// </summary>
         public List<OpCodePart> Values { get; private set; }
+
+        /// <summary>
+        /// </summary>
+        public IType RequiredOutgoingType { get; set; }
+
+        /// <summary>
+        /// </summary>
+        public PhiNodes UsedByAlternativeValues { get; set; }
     }
 }

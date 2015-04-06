@@ -2350,15 +2350,23 @@ namespace Il2Native.Logic
 
         public void WriteEndOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode)
         {
+            var usedByAlternativeValues = opCode.UsedByAlternativeValues;
+            while (usedByAlternativeValues.UsedByAlternativeValues != null)
+            {
+                usedByAlternativeValues = usedByAlternativeValues.UsedByAlternativeValues;
+            }
+
+            var firstOpCode = usedByAlternativeValues.Values[0];
+            var addressStart = firstOpCode.AddressStart;
             if (opCode.Result != null)
             {
                 this.Output.WriteLine(";");
-                this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+                this.Output.Write("_phi{0} = ", addressStart);
                 WriteResult(opCode.Result);
             }
 
             opCode.Result = new FullyDefinedReference(
-                "_phi" + opCode.UsedByAlternativeValues.Values[0].AddressStart, opCode.UsedByAlternativeValues.RequiredOutgoingType);
+                "_phi" + addressStart, usedByAlternativeValues.RequiredOutgoingType);
         }
 
         /// <summary>
@@ -3199,18 +3207,26 @@ namespace Il2Native.Logic
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
-            if (opCode == opCode.UsedByAlternativeValues.Values[0])
+            var usedByAlternativeValues = opCode.UsedByAlternativeValues;
+            while (usedByAlternativeValues.UsedByAlternativeValues != null)
             {
-                opCode.UsedByAlternativeValues.RequiredOutgoingType.WriteTypePrefix(this);
-                this.Output.WriteLine(" _phi{0};", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+                usedByAlternativeValues = usedByAlternativeValues.UsedByAlternativeValues;
+            }
+
+            var firstOpCode = usedByAlternativeValues.Values[0];
+            var addressStart = firstOpCode.AddressStart;
+            if (opCode == firstOpCode)
+            {
+                usedByAlternativeValues.RequiredOutgoingType.WriteTypePrefix(this);
+                this.Output.WriteLine(" _phi{0};", addressStart);
             }
 
             bool isVirtualCall;
             if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall) && firstLevel)
             {
-                var type = opCode.UsedByAlternativeValues.RequiredOutgoingType;
+                var type = usedByAlternativeValues.RequiredOutgoingType;
                 var estimatedResult = this.EstimatedResultOf(opCode, ignoreAlternativeValues: true);
-                this.Output.Write("_phi{0} = ", opCode.UsedByAlternativeValues.Values[0].AddressStart);
+                this.Output.Write("_phi{0} = ", addressStart);
                 if (estimatedResult.Type.TypeNotEquals(type))
                 {
                     if (estimatedResult.Type.IsDerivedFrom(type) || (estimatedResult.Type.IntTypeBitSize() > 0 && type.IntTypeBitSize() > 0)
@@ -4598,7 +4614,7 @@ namespace Il2Native.Logic
                     this.ReadDbgLine(enumerator.Current);
                     this.WriteLabels(this.Output, enumerator.Current);
 
-                    if (this.DebugInfo)
+                    if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
                     {
                         this.WriteDebugLine();
                     }
