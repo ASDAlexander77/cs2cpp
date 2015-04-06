@@ -5,6 +5,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+#define CLEAR_NAMES
+
 namespace Il2Native.Logic
 {
     using System;
@@ -2687,9 +2689,11 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
+#if !CLEAR_NAMES
             var name = shortName
                 ? methodBase.GetMethodName(ownerOfExplicitInterface)
                 : methodBase.GetFullMethodName(ownerOfExplicitInterface);
+#endif
 
             if (!shortName &&
                 (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray ||
@@ -2700,7 +2704,19 @@ namespace Il2Native.Logic
                 writer.Write(this.GetAssemblyPrefix());
             }
 
-            writer.Write(name);
+#if CLEAR_NAMES
+            if (ownerOfExplicitInterface != null)
+            {
+                writer.Write(ownerOfExplicitInterface.FullName.CleanUpName());
+                writer.Write("_");
+            }
+
+            var name = methodBase.IsUnmanaged || methodBase.IsUnmanagedDllImport || shortName
+                            ? methodBase.Name
+                            : methodBase.FullName;
+#endif
+
+            writer.Write(name.CleanUpName());
         }
 
         public string GetAssemblyPrefix(IType type = null)
