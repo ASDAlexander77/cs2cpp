@@ -1105,7 +1105,7 @@ namespace PEAssemblyReader
                 refKind |= RefKind.Ref;
             }
 
-            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind, name));
+            return new MetadataParameterAdapter(new SynthesizedParameterSymbol(null, this.typeDef, 0, refKind, name), false);
         }
 
         /// <summary>

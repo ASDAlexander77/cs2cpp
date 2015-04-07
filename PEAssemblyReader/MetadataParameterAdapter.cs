@@ -25,11 +25,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        private bool uniqueNameRequired;
+
+        /// <summary>
+        /// </summary>
         /// <param name="paramDef">
         /// </param>
-        internal MetadataParameterAdapter(ParameterSymbol paramDef)
+        internal MetadataParameterAdapter(ParameterSymbol paramDef, bool uniqueNameRequired)
         {
             this.paramDef = paramDef;
+            this.uniqueNameRequired = uniqueNameRequired;
         }
 
         /// <summary>
@@ -58,6 +63,11 @@ namespace PEAssemblyReader
         {
             get
             {
+                if (this.uniqueNameRequired)
+                {
+                    return string.Concat(this.paramDef.Name, this.paramDef.Ordinal);
+                }
+
                 return this.paramDef.Name;
             }
         }

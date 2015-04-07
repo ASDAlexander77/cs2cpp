@@ -386,6 +386,27 @@ namespace Ll2NativeTests
             // 418 - typeof (M3).Assembly.GetTypes
             // 419 - lib (which requires to compile DLL files)
             // 420 - lib (which uses files from 419)
+            // 437 - missing type UnmanagedType
+            // 438 - (3,14): error CS0234: The type or namespace name 'Security' does not exist
+            // 443 - missing file
+            // 444 - using UTF8
+            // 449 - error CS0103: The name 'ThreadPool' does not exist in the current context
+            // 451 - (10,20): error CS0030: Cannot convert type 'int' to 'System.IComparable'
+            // 454 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 458 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 463 - error CS0246: The type or namespace name 'ExpandableObjectConverter' could not be found
+            // 464 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames' and no extension method 'GetManifestResourceNames'
+            // 465 - error CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames' and no extension method 'GetManifestResourceNames'
+            // 466 - not compilable
+            // 468 - error CS0246: The type or namespace name 'ComImport' could not be found
+            // 471 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes
+            // 472 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetParameters'
+            // 473 - error CS0619: 'EnumWrapper' is obsolete
+            // 477 - error CS0234: The type or namespace name 'Conditional' does not exist in the namespace 'System.Diagnostics'
+            // 478 - error CS0234: The type or namespace name 'Design' does not exist in the namespace 'System.ComponentModel' (TODO: can be fixed)
+            // 483 - using IL file for Library
+            // 489 - error CS0430: The extern alias 'FULL' was not specified in a /reference option
+            // 492 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -484,7 +505,28 @@ namespace Ll2NativeTests
                         414,
                         418,
                         419,
-                        420
+                        420,
+                        437,
+                        438,
+                        443,
+                        444,
+                        449,
+                        451,
+                        454,
+                        458,
+                        463,
+                        464,
+                        465,
+                        466,
+                        468,
+                        471,
+                        472,
+                        473,
+                        477,
+                        478,
+                        483,
+                        489,
+                        492
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -494,9 +536,9 @@ namespace Ll2NativeTests
             }
 
             // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 141 });
+            skip.AddRange(new[] { 141, 485 });
 
-            foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(485, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }

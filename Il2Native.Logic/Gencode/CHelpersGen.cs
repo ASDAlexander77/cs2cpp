@@ -470,6 +470,10 @@ namespace Il2Native.Logic.Gencode
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
             }
+            else if ((estimatedOperandResultOf.Type.IsEnum || estimatedOperandResultOf.Type.IntTypeBitSize() > 0) && (toType.IsEnum || toType.IntTypeBitSize() > 0))
+            {
+                WriteCCast(cWriter, opCodeOperand, toType);
+            }
             else if (estimatedOperandResultOf.Type.IsArray
                      || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
                      || toType.IsArray 

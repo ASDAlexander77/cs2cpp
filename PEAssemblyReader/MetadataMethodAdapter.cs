@@ -563,7 +563,10 @@ namespace PEAssemblyReader
 
         public IEnumerable<IParameter> CalculateParameters()
         {
-            return this.methodDef.Parameters.Select(p => new MetadataParameterAdapter(p)).ToList();
+            return
+                this.methodDef.Parameters.Select(
+                    p => new MetadataParameterAdapter(p, this.methodDef.Parameters.Count(p2 => p.Ordinal > p2.Ordinal && p2.Name == p.Name) > 0))
+                    .ToList();
         }
 
         /// <summary>
@@ -691,6 +694,16 @@ namespace PEAssemblyReader
 
                 result.Append(parameterType);
                 index++;
+            }
+
+            if (CallingConvention.HasFlag(CallingConventions.VarArgs))
+            {
+                if (index != 0)
+                {
+                    result.Append(", ");
+                }
+
+                result.Append("__arglist");
             }
 
             result.Append(')');

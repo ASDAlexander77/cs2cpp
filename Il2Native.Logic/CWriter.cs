@@ -2260,6 +2260,8 @@ namespace Il2Native.Logic
             Debug.Assert(!fromType.Type.IsVoid());
             Debug.Assert(!fromTypeOriginal.Type.IsPrimitiveType());
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
+            Debug.Assert(!fromTypeOriginal.Type.IsEnum);
+            Debug.Assert(!fromType.Type.IsEnum);
 
             writer.Write("((");
             toType.WriteTypePrefix(this);
