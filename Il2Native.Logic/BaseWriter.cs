@@ -752,9 +752,25 @@ namespace Il2Native.Logic
 
                     break;
 
-                case Code.Callvirt:
+                case Code.Call:
 
                     var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
+                    if (opCodeMethodInfoPart != null && ActivatorGen.IsActivatorFunction(opCodeMethodInfoPart.Operand))
+                    {
+                        var type = opCodeMethodInfoPart.Operand.GetGenericArguments().First();
+                        if (!type.IsStructureType())
+                        {
+                            this.IlReader.AddCalledMethod(new SynthesizedNewMethod(type, this));
+                            var defaultConstructor = Logic.IlReader.FindConstructor(type, this);
+                            this.IlReader.AddCalledMethod(defaultConstructor);
+                        }
+                    }
+
+                    break;
+
+                case Code.Callvirt:
+
+                    opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
                     if (opCodeMethodInfoPart != null)
                     {
                         estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
