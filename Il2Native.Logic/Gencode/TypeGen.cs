@@ -519,11 +519,11 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <returns>
         /// </returns>
-        public static string TypeToCType(this IType type, bool? isPointerOpt = null)
+        public static string TypeToCType(this IType type, bool? isPointerOpt = null, bool enumAsName = false)
         {
             if (!type.UseAsClass)
             {
-                if (type.IsEnum)
+                if (type.IsEnum && !enumAsName)
                 {
                     return type.GetEnumUnderlyingType().Name;
                 }
@@ -589,9 +589,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="isPointer">
         /// </param>
-        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer)
+        public static void WriteTypeName(this IType type, CIndentedTextWriter writer, bool isPointer, bool enumAsName = false)
         {
-            var typeBaseName = type.TypeToCType(isPointer);
+            var typeBaseName = type.TypeToCType(isPointer, enumAsName);
             writer.Write(typeBaseName.CleanUpName());
         }
 
@@ -603,13 +603,13 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="asReference">
         /// </param>
-        public static void WriteTypePrefix(this IType type, CWriter codeWriter, bool asReference = false)
+        public static void WriteTypePrefix(this IType type, CWriter codeWriter, bool asReference = false, bool enumAsName = false)
         {
             var writer = codeWriter.Output;
 
             Debug.Assert(type != null, "Type can't be null to write");
 
-            type.WriteTypeWithoutModifiers(codeWriter);
+            type.WriteTypeWithoutModifiers(codeWriter, enumAsName: enumAsName);
             type.WriteTypeModifiers(writer, asReference);
         }
 
@@ -622,7 +622,8 @@ namespace Il2Native.Logic.Gencode
         public static void WriteTypeWithoutModifiers(
             this IType type,
             CWriter codeWriter,
-            bool isPointer = false)
+            bool isPointer = false,
+            bool enumAsName = false)
         {
             var writer = codeWriter.Output;
 
@@ -630,12 +631,12 @@ namespace Il2Native.Logic.Gencode
 
             if (effectiveType.IsPointer)
             {
-                effectiveType.GetElementType().WriteTypeWithoutModifiers(codeWriter, type.IsPointer);
+                effectiveType.GetElementType().WriteTypeWithoutModifiers(codeWriter, type.IsPointer, enumAsName);
                 return;
             }
 
             // write base name
-            effectiveType.WriteTypeName(writer, isPointer);
+            effectiveType.WriteTypeName(writer, isPointer, enumAsName);
         }
     }
 }

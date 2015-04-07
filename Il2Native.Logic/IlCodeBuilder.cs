@@ -230,6 +230,13 @@
             this.Add(Code.Newobj, (int)TokenResolutions.Count);
         }
 
+        public void NewArray(IType elementType)
+        {
+            Debug.Assert(elementType != null, "@elementType is null");
+            TokenResolutions.Add(elementType);
+            this.Add(Code.Newarr, (int)TokenResolutions.Count);
+        }
+
         public void SizeOf(IType type)
         {
             Debug.Assert(type != null, "@type is null");

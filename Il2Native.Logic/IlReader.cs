@@ -971,29 +971,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <param name="ctor">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        /// <param name="stackCall">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        public IEnumerable<OpCodePart> OpCodes(IConstructor ctor, IGenericContext genericContext, Queue<IMethod> stackCall = null)
-        {
-            if (ctor == null)
-            {
-                yield break;
-            }
-
-            foreach (var opCode in this.OpCodes(ctor.GetMethodBody(), ctor.Module, genericContext, stackCall))
-            {
-                yield return opCode;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="method">
         /// </param>
         /// <param name="genericContext">

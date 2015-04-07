@@ -1,6 +1,9 @@
 ﻿namespace Il2Native.Logic
 {
     using System.Collections.Generic;
+
+    using Il2Native.Logic.CodeParts;
+
     using PEAssemblyReader;
 
     public interface IIlReader
@@ -99,5 +102,9 @@
         /// <summary>
         /// </summary>
         void AddStaticField(IField field);
+
+        /// <summary>
+        /// </summary>
+        IEnumerable<OpCodePart> OpCodes(IMethod method, IGenericContext genericContext, Queue<IMethod> stackCall = null);
     }
 }

@@ -96,7 +96,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IIlReader IlReader { get; set; }
+        public IIlReader IlReader { get; set; }
 
         /// <summary>
         /// </summary>
@@ -124,7 +124,7 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        protected IType MethodReturnType { get; private set; }
+        public IType MethodReturnType { get; set; }
 
         /// <summary>
         /// </summary>

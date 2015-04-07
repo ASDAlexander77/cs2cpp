@@ -87,6 +87,7 @@
     <Compile Include="Gencode\SynthesizedMethods\Base\SynthesizedMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumGetHashCodeMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\Enum\SynthesizedEnumToStringMethod.cs" />
+    <Compile Include="Gencode\SynthesizedMethods\Main\SynthesizedMainMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayAddressMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayCtorMethod.cs" />
     <Compile Include="Gencode\SynthesizedMethods\MultiDimArray\SynthesizedMultiDimArrayGetMethod.cs" />

@@ -37,17 +37,7 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="rawText">
         /// </param>
-        void Write(string rawText);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ilCode">
-        /// </param>
-        void Write(OpCodePart ilCode);
-
-        /// <summary>
-        /// </summary>
-        void WriteAfterConstructors();
+        void WriteRawText(string rawText);
 
         /// <summary>
         /// </summary>
@@ -57,37 +47,9 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        void WriteAfterMethods();
-
-        /// <summary>
-        /// </summary>
-        void WriteBeforeConstructors();
-
-        /// <summary>
-        /// </summary>
         /// <param name="count">
         /// </param>
         void WriteBeforeFields(int count);
-
-        /// <summary>
-        /// </summary>
-        void WriteBeforeMethods();
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ctor">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        void WriteConstructorEnd(IMethod ctor, IGenericContext genericContext);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="ctor">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        void WriteConstructorStart(IMethod ctor, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>
@@ -125,15 +87,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        void WriteMethodEnd(IMethod method, IGenericContext genericContext);
-
-        /// <summary>
-        /// </summary>
-        /// <param name="method">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        void WriteMethodStart(IMethod method, IGenericContext genericContext, bool linkOnceOdr = false, bool noLocalVars = false);
+        void WriteMethod(IMethod method, IMethod methodOpCodeHolder, IGenericContext genericContext);
 
         /// <summary>
         /// </summary>
