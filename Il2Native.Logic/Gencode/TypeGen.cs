@@ -172,6 +172,11 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static IEnumerable<MemberLocationInfo> GetFieldsSizes(this IType type, ITypeResolver typeResolver, bool excludingStructs = false)
         {
+            foreach (var @interface in type.GetInterfacesExcludingBaseAllInterfaces())
+            {
+                yield return new MemberLocationInfo(@interface, CWriter.PointerSize);
+            }
+
             foreach (var field in IlReader.Fields(type, typeResolver).Where(t => !t.IsStatic).ToList())
             {
                 var fieldSize = 0;

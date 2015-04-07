@@ -167,7 +167,7 @@ namespace Il2Native.Logic.Gencode
             sb.Append("Byte* vtable");
 
             var index = 0;
-            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
                 if (sb.Length > 0)
                 {
