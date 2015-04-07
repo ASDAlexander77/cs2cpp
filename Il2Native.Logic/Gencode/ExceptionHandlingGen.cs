@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             writer.Indent--;
-            writer.Write("eh{0}:", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+            writer.Write("eh{0}_{1}:", exceptionHandlingClause.Offset, exceptionHandlingClause.Length);
             writer.Indent++;
             if (exceptionHandlingClause.OwnerTry.Catches.Last().Equals(exceptionHandlingClause))
             {
@@ -181,7 +181,7 @@ namespace Il2Native.Logic.Gencode
                 opCodeOperand.Result = new ConstValue("_ex" + exceptionHandlingClause.OwnerTry.Offset, cWriter.System.System_Object);
                 cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, exceptionType, forceCast: true);
 
-                writer.Write(") == 0) goto eh{0}", exceptionHandlingClause.Offset + exceptionHandlingClause.Length);
+                writer.Write(") == 0) goto eh{0}_{1}", exceptionHandlingClause.Offset, exceptionHandlingClause.Length);
             }
             else
             {

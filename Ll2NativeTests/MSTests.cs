@@ -301,6 +301,18 @@ namespace Ll2NativeTests
 	            }
              */
 
+            // Bug, needs to be fixed, LoadLocal/SaveLocal used in Code.Dup
+            // test-527
+            /*
+                  private int[] stack = new int[1];
+                  private int cc;
+                  public int fc;
+                  private int sp;
+
+                  fc = cc = bar();
+                  fc = stack[sp++] = cc;
+             */
+
             // 10 - Double conversion (in CoreLib.dll some conversions are missing)
             // 19 - using Thread class, Reflection
             // 36 - bug in execution (NotImplemented)
@@ -407,6 +419,10 @@ namespace Ll2NativeTests
             // 483 - using IL file for Library
             // 489 - error CS0430: The extern alias 'FULL' was not specified in a /reference option
             // 492 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
+            // 498 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
+            // 500 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition 
+            // 507 - error CS0103: The name 'MethodAttributes' does not exist in the current context
+            // 513 - CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -526,7 +542,11 @@ namespace Ll2NativeTests
                         478,
                         483,
                         489,
-                        492
+                        492,
+                        498,
+                        500,
+                        507,
+                        513
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -538,7 +558,7 @@ namespace Ll2NativeTests
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485 });
 
-            foreach (var index in Enumerable.Range(485, 906).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(507, 906).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("test-{0}", index));
             }
