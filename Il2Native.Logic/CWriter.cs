@@ -2293,7 +2293,7 @@ namespace Il2Native.Logic
             if (this.MainMethod != null && !this.Gctors)
             {
                 this.Output.WriteLine(string.Empty);
-                this.WriteCallGctors(true);
+                this.WriteGctorsForwardDeclarations();
             }
 
             if (this.MainMethod != null)
@@ -4091,18 +4091,13 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        private void WriteCallGctors(bool declaration)
+        private void WriteGctorsForwardDeclarations()
         {
             // get all references
-            foreach (var reference in this.AllReferences.Skip(declaration ? 1 : 0).Reverse().Distinct())
+            foreach (var reference in this.AllReferences.Skip(1).Reverse().Distinct())
             {
-                if (declaration)
-                {
-                    this.Output.Write(this.declarationPrefix);
-                    this.Output.Write(" void ");
-                }
-
-                this.Output.WriteLine(this.GetGlobalConstructorsFunctionName(reference) + "();");
+                this.Output.Write(this.declarationPrefix);
+                this.Output.WriteLine("void {0}();", this.GetGlobalConstructorsFunctionName(reference));
             }
         }
 
@@ -4336,11 +4331,6 @@ namespace Il2Native.Logic
         /// </summary>
         private void WriteMainFunction()
         {
-            if (!this.Gctors)
-            {
-                this.WriteCallGctors(false);
-            }
-
             var ilCodeBuilder = new IlCodeBuilder();
 
             if (!this.Gctors)
@@ -4606,7 +4596,7 @@ namespace Il2Native.Logic
             }
 
             // locals
-            foreach (var requiredType in method.GetMethodBody(null).LocalVariables.Select(ec => ec.LocalType))
+            foreach (var requiredType in method.GetMethodBody(null).LocalVariables.Select(ec => ec.LocalType.NormalizeType()))
             {
                 any = true;
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
@@ -4732,31 +4722,32 @@ namespace Il2Native.Logic
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(method.DeclaringType);
             }
 
-            if (!method.ReturnType.IsVoid() && !method.ReturnType.IsPrimitiveType())
+            var returnType = method.ReturnType.NormalizeType();
+            if (!returnType.IsVoid() && !returnType.IsPrimitiveType())
             {
-                if (method.ReturnType.IsStructureType())
+                if (returnType.IsStructureType())
                 {
-                    this.WriteTypeDefinitionIfNotWrittenYet(method.ReturnType);
+                    this.WriteTypeDefinitionIfNotWrittenYet(returnType);
                 }
                 else
                 {
-                    this.WriteTypeForwardDeclarationIfNotWrittenYet(method.ReturnType);
+                    this.WriteTypeForwardDeclarationIfNotWrittenYet(returnType);
                 }
             }
 
             var parameters = method.GetParameters();
             if (parameters != null)
             {
-                foreach (var parameter in
-                    parameters.Where(parameter => !parameter.ParameterType.IsPrimitiveType()))
+                foreach (var parameterType in
+                    parameters.Select(t => t.ParameterType.NormalizeType()).Where(parameter => !parameter.IsPrimitiveType()))
                 {
-                    if (parameter.ParameterType.IsStructureType())
+                    if (parameterType.IsStructureType())
                     {
-                        this.WriteTypeDefinitionIfNotWrittenYet(parameter.ParameterType);
+                        this.WriteTypeDefinitionIfNotWrittenYet(parameterType);
                     }
                     else
                     {
-                        this.WriteTypeForwardDeclarationIfNotWrittenYet(parameter.ParameterType);
+                        this.WriteTypeForwardDeclarationIfNotWrittenYet(parameterType);
                     }
                 }
             }
@@ -4999,6 +4990,9 @@ namespace Il2Native.Logic
 
         private void WriteTypeForwardDeclarationIfNotWrittenYet(IType type)
         {
+            Debug.Assert(!type.IsPointer, "you should use normolized type here");
+            Debug.Assert(!type.IsByRef, "you should use normolized type here");
+
             if (!this.forwardTypeDeclarationWritten.Add(type))
             {
                 return;

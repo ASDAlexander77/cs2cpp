@@ -20,25 +20,25 @@
 
             // code to call gctors
 
+            ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
             if (hasParameters)
             {
                 // locals
                 ilCodeBuilder.Locals.Add(stringType.ToArrayType(1));
-                ilCodeBuilder.Locals.Add(typeResolver.System.System_Int32);
 
                 // code
                 ilCodeBuilder.LoadArgument(0);
                 ilCodeBuilder.NewArray(stringType);
-                ilCodeBuilder.SaveLocal(0);
-                ilCodeBuilder.LoadConstant(0);
                 ilCodeBuilder.SaveLocal(1);
+                ilCodeBuilder.LoadConstant(0);
+                ilCodeBuilder.SaveLocal(0);
 
                 var jump = ilCodeBuilder.Branch(Code.Br, Code.Br_S);
 
                 var loop = ilCodeBuilder.CreateLabel();
 
-                ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.LoadArgument(1);
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.SizeOf(bytePointerType);
@@ -49,14 +49,14 @@
                     IlReader.Constructors(stringType, typeResolver)
                             .First(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(bytePointerType)));
                 ilCodeBuilder.Add(Code.Stelem_Ref);
-                ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.LoadConstant(1);
                 ilCodeBuilder.Add(Code.Add);
-                ilCodeBuilder.SaveLocal(1);
+                ilCodeBuilder.SaveLocal(0);
 
                 ilCodeBuilder.Add(jump);
 
-                ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(0);
                 ilCodeBuilder.LoadArgument(0);
 
                 ilCodeBuilder.Branch(Code.Blt, Code.Blt_S, loop);
@@ -72,11 +72,12 @@
                 ilCodeBuilder.LoadConstant(0);
                 ilCodeBuilder.Call(setExitCode);
             }
-            else
+
+            if (hasParameters)
             {
-                ilCodeBuilder.LoadLocal(1);
+                ilCodeBuilder.LoadLocal(0);
             }
-            
+
             ilCodeBuilder.Call(main);
 
             if (isVoid)

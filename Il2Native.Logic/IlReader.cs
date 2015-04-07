@@ -1157,7 +1157,6 @@ namespace Il2Native.Logic
                             }
                         }
 
-                        this.AddUsedTypeDeclaration(method.DeclaringType);
                         if (code == Code.Call)
                         {
                             this.AddCalledMethod(method);
