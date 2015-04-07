@@ -3213,11 +3213,15 @@ namespace Il2Native.Logic
                 this.Output.Write("_phi{0} = ", addressStart);
                 if (estimatedResult.Type.TypeNotEquals(type))
                 {
-                    if (estimatedResult.Type.IsDerivedFrom(type) || (estimatedResult.Type.IntTypeBitSize() > 0 && type.IntTypeBitSize() > 0)
-                        || ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) && (type.IsPointer || type.IsByRef))
-                        || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference)
-                        || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && !type.IsValueType)
-                        || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && type.IntTypeBitSize() > 0))
+                    if (estimatedResult.Type.IsDerivedFrom(type) ||
+                        ((estimatedResult.Type.IntTypeBitSize() > 0 || estimatedResult.Type.IsEnum) &&
+                         (type.IntTypeBitSize() > 0 || type.IsEnum)) ||
+                        ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) &&
+                         (type.IsPointer || type.IsByRef)) || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference) ||
+                        (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() &&
+                         !type.IsValueType) ||
+                        (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() &&
+                         type.IntTypeBitSize() > 0))
                     {
                         this.WriteCCastOnly(type);
                     }

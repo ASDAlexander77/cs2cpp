@@ -491,7 +491,7 @@ namespace Il2Native.Logic.Gencode
             dynamicCastRequired = false;
 
             var resultType = cWriter.EstimatedResultOf(opCodePart).Type;
-            var other = resultType.IsPointer || resultType.IsByRef ? resultType.GetElementType() : resultType;
+            var dereferencedEstimatedResultType = resultType.IsPointer || resultType.IsByRef ? resultType.GetElementType() : resultType;
             var constValue = opCodePart.Result as ConstValue;
             if (constValue != null && constValue.IsNull)
             {
@@ -500,12 +500,17 @@ namespace Il2Native.Logic.Gencode
 
             if ((resultType.IsClass || resultType.IsPointer || resultType.IsByRef) && requiredType.IsByRef)
             {
-                return requiredType.GetElementType().TypeNotEquals(other);
+                return requiredType.GetElementType().TypeNotEquals(dereferencedEstimatedResultType);
             }
 
-            if (requiredType.TypeNotEquals(other))
+            if (requiredType.TypeNotEquals(dereferencedEstimatedResultType))
             {
-                if (requiredType.IsAssignableFrom(other) || other.IsArray && requiredType.FullName == "System.Array")
+                if (requiredType.IsAssignableFrom(dereferencedEstimatedResultType) || dereferencedEstimatedResultType.IsArray && requiredType.FullName == "System.Array")
+                {
+                    return true;
+                }
+
+                if (resultType.IsPointer && dereferencedEstimatedResultType.IsVoid())
                 {
                     return true;
                 }
