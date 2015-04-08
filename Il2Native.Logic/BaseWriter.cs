@@ -1253,14 +1253,21 @@ namespace Il2Native.Logic
                 foreach (var alternativeValues in opCodePart.AlternativeValues)
                 {
                     // detect required types in alternative values
-                    var firstOpCode =
-                        alternativeValues.Values.FirstOrDefault(v => v != null && !(v.UsedBy != null && v.UsedBy.Any(Code.Pop)));
+                    var opCodeUsedFromAlternativeValues = alternativeValues.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
 
-                    Debug.Assert(firstOpCode != null, "Operand could not be found for Phi Nodes");
+                    Debug.Assert(opCodeUsedFromAlternativeValues != null, "Operand could not be found for Phi Nodes");
 
-                    var requiredType = this.RequiredOutgoingType(firstOpCode)
-                                       ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                       ?? this.EstimatedResultOf(firstOpCode).Type;
+                    var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
+
+                    var requiredType = opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes != null
+                                           ? alternativeValues.Values.Where(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop))
+                                                              .Select(v => opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes[v.UsedBy.OperandPosition])
+                                                              .LastOrDefault(v => v != null)
+                                           : null;
+                    requiredType = requiredType
+                                   ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
+                                   ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                                   ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues).Type;
 
                     if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {
@@ -2342,7 +2349,16 @@ namespace Il2Native.Logic
                 case Code.Arglist:
                     return this.System.System_RuntimeArgumentHandle;
 
+                case Code.Mkrefany:
+                    return this.System.System_TypedReference;
+
                 case Code.Refanytype:
+                    if (opCodePart.UsedBy == null)
+                    {
+                        // could not detect it yet
+                        return null;
+                    }
+
                     return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
             }
 

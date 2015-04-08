@@ -1776,7 +1776,7 @@ namespace Il2Native.Logic
             {
                 this.WriteUnsigned(estimatedResultOperand0.Type);
             }
-            
+
             this.WriteOperandResultOrActualWrite(writer, opCode, 0);
             writer.Write(op);
             if (unsigned)
@@ -1951,13 +1951,7 @@ namespace Il2Native.Logic
             {
                 case Code.Ldind_I:
                     type = this.GetTypeOfReference(opCode);
-                    if (type.IsVoid())
-                    {
-                        Debug.Assert(false, "you are loading void indirectly");
-                        return;
-                    }
-
-                    if (!type.IsPointer && !type.IsByRef && type.IntTypeBitSize() == PointerSize * 8)
+                    if (!type.IsPointer && !type.IsByRef && (type.IntTypeBitSize() == PointerSize * 8 || type.IsVoid()))
                     {
                         // using int as intptr
                         type = this.System.System_IntPtr;
@@ -2952,11 +2946,20 @@ namespace Il2Native.Logic
             }
 
             // find constructor
-            var constructorInfo = Logic.IlReader.Constructors(typeToCreate, cWriter).First(c => !c.GetParameters().Any());
+            var constructorInfo = Logic.IlReader.Constructors(typeToCreate, cWriter).FirstOrDefault(c => !c.GetParameters().Any());
 
-            var opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
-
-            this.WriteNewObject(opCodeNewInstance);
+            OpCodePart opCodeNewInstance = null;
+            if (constructorInfo != null)
+            {
+                opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
+                this.WriteNewObject((OpCodeConstructorInfoPart)opCodeNewInstance);
+            }
+            else
+            {
+                // we just need to create object without calling consturctor on it
+                opCodeNewInstance = OpCodePart.CreateNop;
+                this.WriteNewObject(opCodeNewInstance, typeToCreate);
+            }
 
             if (!noNewLines)
             {
@@ -4497,7 +4500,7 @@ namespace Il2Native.Logic
             }
 
             var item = enumerator.Current;
-            var currentAddress = -1; 
+            var currentAddress = -1;
             while (item != null)
             {
                 // move next item, we need next code to write address lables properly
@@ -4528,7 +4531,7 @@ namespace Il2Native.Logic
                 Debug.Assert(
                     item.Next == null || item.AddressEnd == 0 || item.Next.AddressEnd == 0 || item.AddressStart <= item.Next.AddressStart,
                     "circular reference detected");
-                
+
                 item = item.Next;
             }
         }
@@ -4767,6 +4770,11 @@ namespace Il2Native.Logic
         {
             var declaringType = opCodeConstructorInfoPart.Operand.DeclaringType;
             this.WriteNew(opCodeConstructorInfoPart, declaringType);
+        }
+
+        private void WriteNewObject(OpCodePart opCodePart, IType declaringType)
+        {
+            this.WriteNew(opCodePart, declaringType);
         }
 
         private void WriteNewSingleArray(OpCodeTypePart opCodeTypePart)

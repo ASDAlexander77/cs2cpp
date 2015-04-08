@@ -485,7 +485,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                Debug.Assert(estimatedOperandResultOf.Type.IntTypeBitSize() == 0);
+                Debug.Assert(estimatedOperandResultOf.IsReference || estimatedOperandResultOf.Type.IntTypeBitSize() == 0);
                 return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
             }
 

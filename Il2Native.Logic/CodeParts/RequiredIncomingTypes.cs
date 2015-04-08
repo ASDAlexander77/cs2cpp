@@ -1,6 +1,7 @@
 ﻿namespace Il2Native.Logic.CodeParts
 {
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Linq;
     using PEAssemblyReader;
 
@@ -19,8 +20,16 @@
 
         public IType this[int index]
         {
-            get { return this.types[index]; }
-            set { this.types[index] = value; }
+            get 
+            {
+                Debug.Assert(index < this.types.Length);
+                return this.types[index]; 
+            }
+
+            set
+            {
+                this.types[index] = value;
+            }
         }
     }
 }

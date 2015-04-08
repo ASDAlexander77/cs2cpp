@@ -470,6 +470,18 @@ namespace Il2Native.Logic.Gencode
             cWriter.WriteCallConstructor(opCodeConstructorInfoPart);
         }
 
+        public static void WriteNew(
+            this CWriter cWriter,
+            OpCodePart opCodePart,
+            IType declaringType)
+        {
+            var @class = declaringType.ToClass();
+            var objectReference = cWriter.WriteVariableForNew(opCodePart, @class);
+            @class.WriteCallNewObjectMethod(cWriter, opCodePart);
+
+            opCodePart.Result = objectReference;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="typeResolver">
