@@ -3290,7 +3290,10 @@ namespace Il2Native.Logic
         {
             this.WriteTypeRequiredDeclarationsAndDefinitions(type);
 
-            this.processedTypes.Add(type);
+            if (!this.processedTypes.Add(type))
+            {
+                return;
+            }
 
             this.ReadTypeInfo(type);
 
@@ -4821,18 +4824,24 @@ namespace Il2Native.Logic
 
             this.forwardStaticDeclarationWritten.Add(field);
 
-            field.FieldType.WriteTypePrefix(this, false);
+            var fieldType = field.FieldType;
+            if (fieldType.IsStructureType())
+            {
+                this.WriteTypeDefinitionIfNotWrittenYet(fieldType);
+            }
+
+            fieldType.WriteTypePrefix(this, false);
 
             this.Output.Write(" ");
             this.WriteStaticFieldName(field);
             if (!externalRef)
             {
-                if (field.FieldType.IsStructureType())
+                if (fieldType.IsStructureType())
                 {
                     this.Output.Write(" = ");
-                    if (field.FieldType.IsStaticArrayInit)
+                    if (fieldType.IsStaticArrayInit)
                     {
-                        var staticArrayInitSize = field.FieldType.GetStaticArrayInitSize();
+                        var staticArrayInitSize = fieldType.GetStaticArrayInitSize();
                         this.Output.Write("{ (Void**) 0");
                         this.Output.Write(", { ");
                         var data = field.GetFieldRVAData();
@@ -4851,15 +4860,15 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        field.FieldType.ToClass().WriteTypeWithoutModifiers(this);
+                        fieldType.ToClass().WriteTypeWithoutModifiers(this);
                         this.Output.Write("()/*undef*/");
                     }
                 }
-                else if (field.FieldType.IsValueType() && field.GetFieldRVAData() != null)
+                else if (fieldType.IsValueType() && field.GetFieldRVAData() != null)
                 {
                     var data = field.GetFieldRVAData();
                     this.Output.Write(" = ");
-                    switch (field.FieldType.IntTypeBitSize())
+                    switch (fieldType.IntTypeBitSize())
                     {
                         case 8:
                             this.Output.Write(data[0]);
@@ -4996,8 +5005,6 @@ namespace Il2Native.Logic
 
         private void WriteTypeRequiredDeclarationsAndDefinitions(IType type)
         {
-            Debug.Assert(type.Name != "GuidResult");
-
             foreach (var requiredDeclarationType in
                 Il2Converter.GetRequiredDeclarationTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
@@ -5006,7 +5013,9 @@ namespace Il2Native.Logic
 
             foreach (var requiredType in Il2Converter.GetRequiredDefinitionTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
-                this.WriteTypeDefinitionIfNotWrittenYet(requiredType.NormalizeType());
+                var normalizeType = requiredType.NormalizeType();
+                Debug.Assert(normalizeType.TypeNotEquals(type));
+                this.WriteTypeDefinitionIfNotWrittenYet(normalizeType);
             }
         }
 

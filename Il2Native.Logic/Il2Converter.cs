@@ -698,29 +698,10 @@ namespace Il2Native.Logic
                 }
             }
 
-            var fields = IlReader.Fields(
-                type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var field in fields.Where(field => (field.FieldType.IsStructureType() && !field.FieldType.IsPointer)))
+            var fields = IlReader.Fields(type, IlReader.DefaultFlags, _codeWriter);
+            foreach (var field in fields.Where(field => !field.IsStatic && field.FieldType.IsStructureType() && !field.FieldType.IsPointer))
             {
                 yield return field.FieldType;
-            }
-
-            if (type.IsInterface)
-            {
-                yield break;
-            }
-
-            // excluding interface
-            var ctors = IlReader.Constructors(type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var requiredType in ctors.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
-            {
-                yield return requiredType;
-            }
-
-            var methods = IlReader.Methods(type, IlReader.DefaultFlags, _codeWriter);
-            foreach (var requiredType in methods.SelectMany(IterateRequiredDefinitionTypesInMethodBody))
-            {
-                yield return requiredType;
             }
         }
 
