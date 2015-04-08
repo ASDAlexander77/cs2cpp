@@ -240,26 +240,26 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
 
-            CatchOfFinallyClause effectiveExceptionHandlingClause = null;
+            CatchOfFinallyClause effectiveFinally = null;
             if (exceptionHandlingClause != null &&
                 exceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
             {
-                effectiveExceptionHandlingClause = exceptionHandlingClause;
+                effectiveFinally = exceptionHandlingClause;
             }
             else if (upperLevelExceptionHandlingClause != null &&
                 upperLevelExceptionHandlingClause.Flags.HasFlag(ExceptionHandlingClauseOptions.Finally))
             {
-                effectiveExceptionHandlingClause = upperLevelExceptionHandlingClause;
+                effectiveFinally = upperLevelExceptionHandlingClause;
             }
 
-            if (effectiveExceptionHandlingClause != null)
+            if (effectiveFinally != null && opCode.JumpAddress() >= effectiveFinally.Offset)
             {
-                effectiveExceptionHandlingClause.FinallyJumps.Add(string.Concat("a", opCode.JumpAddress()));
+                effectiveFinally.FinallyJumps.Add(string.Concat("a", opCode.JumpAddress()));
                 writer.WriteLine(
                     "_finallyLeave{0} = {1};",
-                    effectiveExceptionHandlingClause.Offset,
-                    effectiveExceptionHandlingClause.FinallyJumps.Count);
-                writer.Write(string.Concat("goto finally", effectiveExceptionHandlingClause.Offset));
+                    effectiveFinally.Offset,
+                    effectiveFinally.FinallyJumps.Count);
+                writer.Write(string.Concat("goto finally", effectiveFinally.Offset));
             }
             else
             {

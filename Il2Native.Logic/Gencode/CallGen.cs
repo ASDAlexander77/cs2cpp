@@ -71,12 +71,11 @@ namespace Il2Native.Logic.Gencode
                 }
                 else if (!isCtor && used != null && used.Length > 0)
                 {
-
                     if (thisType.IsInterface)
                     {
                         writer.Write("(");
                         cWriter.WriteCCastOnly(thisType);
-                        writer.Write("((Byte*)");
+                        writer.Write("__interface_to_object(");
                     }
 
                     // this expression
@@ -89,7 +88,6 @@ namespace Il2Native.Logic.Gencode
 
                     if (thisType.IsInterface)
                     {
-                        cWriter.WriteGetThisPointerFromInterfacePointer(used[0]);
                         writer.Write("))");
                     }
                 }

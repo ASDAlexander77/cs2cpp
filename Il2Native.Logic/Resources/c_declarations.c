@@ -15,10 +15,10 @@ extern "C" void* memset(void *,int32_t,uint32_t);
 
 template<typename T> T compare_and_swap(T* reg, T oldval, T newval)
 {
-  T old_reg_val = *reg;
-  if (old_reg_val == oldval)
-     *reg = newval;
-  return old_reg_val;
+	T old_reg_val = *reg;
+	if (old_reg_val == oldval)
+		*reg = newval;
+	return old_reg_val;
 };
 
 void sync_synchronize()
@@ -84,4 +84,14 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 	}
 
 	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
+}
+
+inline Void* __interface_to_object(Void* _interface)
+{
+	if (!_interface)
+	{
+		return 0;
+	}
+
+	return (Void*) ((Byte*)_interface + *(*(Int32**)_interface - 2));
 }

@@ -2392,9 +2392,9 @@ namespace Il2Native.Logic
 
             if (isUsingObjectOnInterface)
             {
-                writer.Write("(");
+                writer.Write("((");
                 System.System_Object.WriteTypePrefix(this);
-                writer.Write(")(");
+                writer.Write(")__interface_to_object(");
             }
 
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
@@ -2402,9 +2402,8 @@ namespace Il2Native.Logic
             // special case when calling Object methods on interface
             if (classType.IsInterface && field.DeclaringType.IsObject)
             {
-                // TODO: this is hack remove it
-                this.WriteGetThisPointerFromInterfacePointer(opCodePart.OpCodeOperands[0]);
-                writer.Write(")");
+                // TODO: this is hack remove it (REVIEW!!!)
+                writer.Write("))");
             }
 
             writer.Write(")");
@@ -2560,27 +2559,6 @@ namespace Il2Native.Logic
             {
                 this.WriteFieldType(field.FieldType);
             }
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCodeMethodInfo">
-        /// </param>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="thisType">
-        /// </param>
-        /// <param name="pointerToInterfaceVirtualTablePointersResultNumber">
-        /// </param>
-        public void WriteGetThisPointerFromInterfacePointer(OpCodePart opCodeThis)
-        {
-            var writer = this.Output;
-
-            writer.Write(" + *(((int*)*(int**)(");
-            this.WriteResultOrActualWrite(writer, opCodeThis);
-            writer.Write("))-2)");
         }
 
         // TODO: doNotEstimateResult is hack
