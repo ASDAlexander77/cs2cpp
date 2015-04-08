@@ -5,8 +5,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-#define CLEAR_NAMES
-
 namespace Il2Native.Logic
 {
     using System;
@@ -5178,11 +5176,38 @@ namespace Il2Native.Logic
 
             var writer = this.Output;
 
+            if (!type.IsInterface)
+            {
+                var virtualTable = type.GetVirtualTable(this);
+
+                foreach (var method in virtualTable.Select(v => v.Value))
+                {
+                    WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                }
+            }
+            else
+            {
+                var virtualTable = type.GetVirtualInterfaceTableLayout(this);
+
+                foreach (var method in virtualTable)
+                {
+                    WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                }
+
+                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
+                {
+                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
+                    foreach (var method in virtualTableOfSecondaryInterface)
+                    {
+                        WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                    }
+                }
+            }
+
             writer.Write(this.declarationPrefix);
             writer.Write("struct ");
             table.WriteTypeName(writer, false);
-            writer.WriteLine("_vtbl");
-            writer.WriteLine("{");
+            writer.WriteLine("_vtbl {");
             writer.Indent++;
 
             if (!type.IsInterface)
@@ -5217,7 +5242,7 @@ namespace Il2Native.Logic
             }
 
             writer.Indent--;
-            writer.WriteLine("}");
+            writer.WriteLine("};");
         }
 
         /// <summary>

@@ -7,8 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-//#define USE_VIRTUAL_METHOD_INDEX
-
 namespace Il2Native.Logic.Gencode
 {
     using System;
@@ -84,8 +82,8 @@ namespace Il2Native.Logic.Gencode
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
 #else
             writer.Write("((");
-            (requiredInterface ?? effectiveType).WriteTypeName(writer, false);
-            writer.Write("_vtbl)");
+            (methodInfo.DeclaringType).WriteTypeName(writer, false);
+            writer.Write("_vtbl*)");
 
             if (requiredInterface != null || effectiveType.IsInterface)
             {

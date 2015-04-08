@@ -266,8 +266,7 @@ namespace Il2Native.Logic.Gencode
                 : null;
             resultOfFirstOperand = opCodeFirstOperand != null ? cWriter.EstimatedResultOf(opCodeFirstOperand) : null;
 
-            isIndirectMethodCall = isVirtual
-                                   && (methodInfo.IsAbstract || methodInfo.IsVirtual || (methodDeclaringType.IsInterface && methodDeclaringType.TypeEquals(resultOfFirstOperand.Type)));
+            isIndirectMethodCall = isVirtual && methodInfo.IsIndirectMethodCall(resultOfFirstOperand.Type);
 
             ownerOfExplicitInterface = isVirtual ? GetOwnerOfExplicitInterface(methodDeclaringType, resultOfFirstOperand.Type) : null;
 
@@ -280,9 +279,7 @@ namespace Il2Native.Logic.Gencode
                 rollbackType = true;
             }
 
-            if (isIndirectMethodCall && methodInfo.DeclaringType.TypeNotEquals(methodDeclaringType) &&
-                methodInfo.DeclaringType.IsInterface && !methodDeclaringType.IsInterface
-                && methodDeclaringType.HasExplicitInterfaceMethodOverride(methodInfo))
+            if (isIndirectMethodCall && methodDeclaringType.IsInterface && methodDeclaringType.HasExplicitInterfaceMethodOverride(methodInfo))
             {
                 // this is explicit call of interface
                 isIndirectMethodCall = false;

@@ -94,6 +94,11 @@ namespace Il2Native.Logic
             return new string(s);
         }
 
+        public static bool IsIndirectMethodCall(this IMethod method, IType thisType)
+        {
+            return method.IsAbstract || method.IsVirtual || (method.DeclaringType.IsInterface && method.DeclaringType.TypeEquals(thisType));
+        }
+
         public static int GetStaticArrayInitSize(this IType fieldType)
         {
             var pos = fieldType.Name.IndexOf("=");

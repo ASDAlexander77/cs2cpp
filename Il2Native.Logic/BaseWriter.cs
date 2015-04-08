@@ -769,14 +769,22 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Callvirt:
+                case Code.Ldvirtftn:
 
                     opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
                     if (opCodeMethodInfoPart != null)
                     {
                         estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-                        var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
+                        var methodDeclaringType = opCodeMethodInfoPart.Operand.DeclaringType;
+                        var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(methodDeclaringType, estimatedResult.Type);
+
                         this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
-                        this.IlReader.AddVirtualTable(estimatedResult.Type.ToVirtualTable());
+#if !USE_VIRTUAL_METHOD_INDEX
+                        if (opCodeMethodInfoPart.Operand.IsIndirectMethodCall(estimatedResult.Type))
+                        {
+                            this.IlReader.AddVirtualTable(methodDeclaringType.ToVirtualTable());
+                        }
+#endif
                         this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
                     }
 
