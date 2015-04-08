@@ -63,12 +63,18 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.uniqueNameRequired)
+                var value = this.paramDef.Name;
+                if (string.IsNullOrEmpty(value))
                 {
-                    return string.Concat(this.paramDef.Name, this.paramDef.Ordinal);
+                    value = "_param";
                 }
 
-                return this.paramDef.Name;
+                if (this.uniqueNameRequired)
+                {
+                    return string.Concat(value, this.paramDef.Ordinal);
+                }
+
+                return value;
             }
         }
 

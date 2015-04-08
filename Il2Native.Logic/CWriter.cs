@@ -3288,9 +3288,9 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteTypeStart(IType type, IGenericContext genericContext)
         {
-            this.processedTypes.Add(type);
-
             this.WriteTypeRequiredDeclarationsAndDefinitions(type);
+
+            this.processedTypes.Add(type);
 
             this.ReadTypeInfo(type);
 
@@ -4996,6 +4996,8 @@ namespace Il2Native.Logic
 
         private void WriteTypeRequiredDeclarationsAndDefinitions(IType type)
         {
+            Debug.Assert(type.Name != "GuidResult");
+
             foreach (var requiredDeclarationType in
                 Il2Converter.GetRequiredDeclarationTypes(type).Where(requiredType => !requiredType.IsGenericTypeDefinition))
             {
