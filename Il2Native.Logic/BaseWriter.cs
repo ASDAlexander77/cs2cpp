@@ -776,6 +776,7 @@ namespace Il2Native.Logic
                         estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
                         var ownerOfExplicitInterface = CallGen.GetOwnerOfExplicitInterface(opCodeMethodInfoPart.Operand.DeclaringType, estimatedResult.Type);
                         this.IlReader.AddUsedTypeDefinition(estimatedResult.Type);
+                        this.IlReader.AddVirtualTable(estimatedResult.Type.ToVirtualTable());
                         this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
                     }
 

@@ -212,7 +212,7 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="methodInfo">
         /// </param>
-        /// <param name="cWriter">
+        /// <param name="typeResolver">
         /// </param>
         /// <param name="requiredInterface">
         /// </param>
@@ -223,14 +223,14 @@ namespace Il2Native.Logic.Gencode
         public static int GetVirtualMethodIndexAndRequiredInterface(
             this IType thisType,
             IMethod methodInfo,
-            CWriter cWriter,
+            ITypeResolver typeResolver,
             out IType requiredInterface)
         {
             requiredInterface = null;
 
             if (!thisType.IsInterface)
             {
-                var virtualTable = thisType.GetVirtualTable(cWriter);
+                var virtualTable = thisType.GetVirtualTable(typeResolver);
 
                 var index = 0;
                 foreach (var virtualMethod in virtualTable.Select(v => v.Value))
@@ -248,7 +248,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                var virtualTable = thisType.GetVirtualInterfaceTableLayout(cWriter);
+                var virtualTable = thisType.GetVirtualInterfaceTableLayout(typeResolver);
 
                 var index = -1;
                 foreach (var virtualMethod in virtualTable)
@@ -270,7 +270,7 @@ namespace Il2Native.Logic.Gencode
                 // try to find a method in all interfaces
                 foreach (var @interface in thisType.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
                 {
-                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(cWriter);
+                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(typeResolver);
 
                     index = -1;
                     foreach (var virtualMethod in virtualTableOfSecondaryInterface)
@@ -499,15 +499,7 @@ namespace Il2Native.Logic.Gencode
             foreach (var virtualMethod in virtualTable)
             {
                 var method = virtualMethod.Key;
-
-                // write pointer to method
-                cWriter.WriteMethodReturnType(writer, method);
-                writer.Write("(*");
-                cWriter.WriteMethodDefinitionName(writer, method, shortName: methodsOnly);
-                writer.Write(")");
-                cWriter.WriteMethodParamsDef(writer, method, true, declarationType ?? method.DeclaringType, method.ReturnType, true);
-
-                // write method pointer
+                cWriter.WriteMethodPointerType(writer, method, declarationType ?? method.DeclaringType, withName: true, shortName: methodsOnly);
                 writer.WriteLine(";");
             }
 
@@ -542,11 +534,10 @@ namespace Il2Native.Logic.Gencode
                 var method = virtualMethod.Value;
 
                 writer.Write("(");
-                cWriter.WriteMethodReturnType(writer, methodKey);
-                writer.Write("(*)");
-                cWriter.WriteMethodParamsDef(writer, methodKey, true, methodKey.DeclaringType, methodKey.ReturnType, true);
+                cWriter.WriteMethodPointerType(writer, methodKey);
                 writer.Write(")");
                 writer.Write(" ");
+
 
                 if (method == null || virtualMethod.Value.IsAbstract)
                 {

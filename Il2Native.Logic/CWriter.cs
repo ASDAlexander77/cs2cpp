@@ -94,6 +94,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public readonly ISet<IType> virtualTableDeclarationsWritten = new NamespaceContainer<IType>();
+
+        /// <summary>
+        /// </summary>
         public readonly ISet<IType> typeRttiDeclarationWritten = new NamespaceContainer<IType>();
 
         /// <summary>
@@ -2763,11 +2767,17 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="thisType">
         /// </param>
-        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false)
+        public void WriteMethodPointerType(CIndentedTextWriter writer, IMethod methodBase, IType thisType = null, bool asStatic = false, bool withName = false, bool shortName = false)
         {
             var methodInfo = methodBase;
             this.WriteMethodReturnType(writer, methodBase);
-            writer.Write("(*)(");
+            writer.Write("(*");
+            if (withName)
+            {
+                this.WriteMethodDefinitionName(writer, methodBase, shortName: shortName);    
+            }
+
+            writer.Write(")(");
             var hasThis = !methodInfo.IsStatic && !asStatic;
             if (hasThis)
             {
@@ -2776,21 +2786,25 @@ namespace Il2Native.Logic
 
             var isAnonymousDelegate = methodBase.IsAnonymousDelegate;
             var index = 0;
-            foreach (var parameter in methodBase.GetParameters())
+            var parameters = methodBase.GetParameters();
+            if (parameters != null)
             {
-                if (isAnonymousDelegate)
+                foreach (var parameter in parameters)
                 {
-                    isAnonymousDelegate = false;
-                    continue;
-                }
+                    if (isAnonymousDelegate)
+                    {
+                        isAnonymousDelegate = false;
+                        continue;
+                    }
 
-                if (index > 0 || hasThis)
-                {
-                    writer.Write(", ");
-                }
+                    if (index > 0 || hasThis)
+                    {
+                        writer.Write(", ");
+                    }
 
-                parameter.ParameterType.WriteTypePrefix(this);
-                index++;
+                    parameter.ParameterType.WriteTypePrefix(this);
+                    index++;
+                }
             }
 
             if (methodInfo.CallingConvention.HasFlag(CallingConventions.VarArgs))
@@ -4681,6 +4695,10 @@ namespace Il2Native.Logic
                 {
                     this.WriteVirtualTableImplementations(vtableType);
                 }
+                else if (vtableType.IsVirtualTable)
+                {
+                    this.WriteVirtualTable(vtableType);
+                }
                 else
                 {
                     Debug.Assert(false, "this is not virtual table implementation");
@@ -5091,7 +5109,6 @@ namespace Il2Native.Logic
         /// </summary>
         /// <param name="type">
         /// </param>
-        // TODO: here the bug with index, index is caluclated for derived class but need to be calculated and used for type where the type belong to
         private void WriteVirtualTableImplementations(IType type)
         {
             // write VirtualTable
@@ -5124,7 +5141,7 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(string.Empty);
             }
 
-            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
                 var current = type;
                 IType typeContainingInterface = null;
@@ -5149,6 +5166,58 @@ namespace Il2Native.Logic
 
                 this.Output.WriteLine(string.Empty);
             }
+        }
+
+        private void WriteVirtualTable(IType type)
+        {
+            var table = type.ToVirtualTable();
+            if (!this.virtualTableDeclarationsWritten.Add(table))
+            {
+                return;
+            }
+
+            var writer = this.Output;
+
+            writer.Write(this.declarationPrefix);
+            writer.Write("struct ");
+            table.WriteTypeName(writer, false);
+            writer.WriteLine("_vtbl");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            if (!type.IsInterface)
+            {
+                var virtualTable = type.GetVirtualTable(this);
+
+                foreach (var method in virtualTable.Select(v => v.Value))
+                {
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                    writer.WriteLine(";");
+                }
+            }
+            else
+            {
+                var virtualTable = type.GetVirtualInterfaceTableLayout(this);
+
+                foreach (var method in virtualTable)
+                {
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                    writer.WriteLine(";");
+                }
+
+                foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
+                {
+                    var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
+                    foreach (var method in virtualTableOfSecondaryInterface)
+                    {
+                        this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                        writer.WriteLine(";");
+                    }
+                }
+            }
+
+            writer.Indent--;
+            writer.WriteLine("}");
         }
 
         /// <summary>

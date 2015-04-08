@@ -129,6 +129,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsVirtualTable { get; }
+
+        /// <summary>
+        /// </summary>
         bool IsRtti { get; }
 
         /// <summary>
@@ -158,6 +162,10 @@ namespace PEAssemblyReader
         /// <summary>
         /// </summary>
         bool UseAsVirtualTableImplementation { get; }
+
+        /// <summary>
+        /// </summary>
+        bool UseAsVirtualTable { get; }
 
         /// <summary>
         /// </summary>
@@ -344,6 +352,12 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         IType ToVirtualTableImplementation(IType interfaceOwner = null);
+
+        /// <summary>
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        IType ToVirtualTable();
 
         /// <summary>
         /// </summary>

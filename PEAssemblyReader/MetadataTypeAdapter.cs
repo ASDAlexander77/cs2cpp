@@ -492,6 +492,16 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool IsVirtualTable
+        {
+            get
+            {
+                return this.UseAsVirtualTable;
+            }
+        }
+
+        /// <summary>
+        /// </summary>
         public string MetadataFullName
         {
             get
@@ -558,6 +568,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        public bool UseAsVirtualTable { get; set; }
+
+        /// <summary>
+        /// </summary>
         internal TypeSymbol TypeDef
         {
             get
@@ -588,6 +602,13 @@ namespace PEAssemblyReader
             var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
             typeAdapter.UseAsVirtualTableImplementation = true;
             typeAdapter.InterfaceOwner = interfaceOwner;
+            return typeAdapter;
+        }
+
+        public IType AsVirtualTable()
+        {
+            var typeAdapter = new MetadataTypeAdapter(this.typeDef, this.IsByRef, this.IsPinned);
+            typeAdapter.UseAsVirtualTable = true;
             return typeAdapter;
         }
 
@@ -1165,6 +1186,16 @@ namespace PEAssemblyReader
             }
 
             return this.AsVirtualTableImplementation(interfaceOwner);
+        }
+
+        public IType ToVirtualTable()
+        {
+            if (this.UseAsVirtualTable)
+            {
+                return this;
+            }
+
+            return this.AsVirtualTable();
         }
 
         /// <summary>

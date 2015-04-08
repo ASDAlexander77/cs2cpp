@@ -1668,7 +1668,7 @@ namespace Il2Native.Logic
 
         public void AddVirtualTable(IType type)
         {
-            if (this._usedVirtualTables == null || type == null || !type.IsVirtualTableImplementation)
+            if (this._usedVirtualTables == null || type == null || !(type.IsVirtualTableImplementation || type.IsVirtualTable))
             {
                 return;
             }
