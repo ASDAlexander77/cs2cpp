@@ -3212,6 +3212,16 @@ namespace Il2Native.Logic
                         this.WriteInterfaceAccess(opCode, estimatedResult.Type, type, doNotEstimateResult: true);
                         return true;
                     }
+                    else if (estimatedResult.Type.IsInterface && type.IsObject)
+                    {
+                        writer.Write("((");
+                        this.WriteCCastOnly(type);
+                        writer.Write(")");
+                        writer.Write("__interface_to_object(");
+                        this.WriteResultOrActualWrite(writer, opCode);
+                        writer.Write("))");
+                        return true;
+                    }
                     else
                     {
                         Debug.Assert(false, "finish casting");
@@ -4432,17 +4442,14 @@ namespace Il2Native.Logic
 
                 this.Output.StartMethodBody();
             }
-            else
+            else if (isDelegateBodyFunctions)
             {
-                if (isDelegateBodyFunctions)
-                {
-                    this.WriteDelegateStubFunctionBody(method);
-                    this.Output.WriteLine(string.Empty);
-                }
-                else
-                {
-                    this.Output.WriteLine(";");
-                }
+                this.WriteDelegateStubFunctionBody(method);
+                this.Output.WriteLine(string.Empty);
+            }
+            else if (!this.Stubs)
+            {
+                this.Output.WriteLine(";");
             }
         }
 
