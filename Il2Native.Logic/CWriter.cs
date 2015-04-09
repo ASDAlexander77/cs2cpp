@@ -417,6 +417,7 @@ namespace Il2Native.Logic
                 case Code.Ldftn:
                 case Code.Ldvirtftn:
                 case Code.Localloc:
+                case Code.Constrained:
                     return true;
                 case Code.Ldtoken:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
@@ -796,6 +797,7 @@ namespace Il2Native.Logic
                     if (methodBase.DeclaringType.IsStructureType() && methodBase.IsConstructor)
                     {
                         // convert value to object
+                        // TODO: Review next line, it seems not needed anymore
                         methodBase.DeclaringType.ToClass().WriteCallInitObjectMethod(this, opCodeMethodInfoPart);
                         this.Output.WriteLine(";");
                     }
@@ -1507,7 +1509,7 @@ namespace Il2Native.Logic
                     {
                         //&& Logic.IlReader.Methods(opCodeTypePart.Operand, this).Contains()
                         // nothing to do, pass as is
-                        WriteOperandResultOrActualWrite(this.Output, opCode.Next, 0);
+                        WriteOperandResultOrActualWrite(this.Output, opCode.OpCodeOperands[0], 0);
                     }
                     else if (opCodeTypePart.Operand.IsValueType())
                     {
@@ -1517,7 +1519,7 @@ namespace Il2Native.Logic
                             {
                                 OpCodeOperands = new[]
                                 {
-                                    opCode.Next.OpCodeOperands[0]
+                                    opCode.OpCodeOperands[0]
                                 }
                             },
                         };
@@ -1526,11 +1528,11 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        opCodeNone.OpCodeOperands = new[] { opCode.Next.OpCodeOperands[0] };
+                        opCodeNone.OpCodeOperands = new[] { opCode.OpCodeOperands[0] };
                         LoadIndirect(writer, opCodeNone, opCodeTypePart.Operand);
                     }
 
-                    opCode.Next.OpCodeOperands[0].Result = new FullyDefinedReference(constrVar, @class);
+                    opCode.Result = new FullyDefinedReference(constrVar, @class);
 
                     break;
 

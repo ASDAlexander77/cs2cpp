@@ -1220,7 +1220,7 @@ namespace Il2Native.Logic
             return -2;
         }
 
-        private void ReplaceOperand(OpCodePart oldOperand, OpCodePart newOperand)
+        private void ReplaceOperand(OpCodePart oldOperand, OpCodePart newOperand, bool doNotChangeFlowOrder = false)
         {
             OpCodePart usedByOpCodePart = oldOperand.UsedBy.OpCode;
             usedByOpCodePart.OpCodeOperands[oldOperand.UsedBy.OperandPosition] = newOperand;
@@ -1228,19 +1228,22 @@ namespace Il2Native.Logic
             // do not remove usedby to prevent it to be written at first level
             ////usedByOpCodePart.UsedBy = null;
 
-            var isNew = newOperand.Next == null || newOperand.Previous == null;
-
-            newOperand.Next = oldOperand.Next;
-            if (isNew)
+            if (!doNotChangeFlowOrder)
             {
-                oldOperand.Previous.Next = newOperand;
-            }
-            else
-            {
-                oldOperand.Previous.Next = oldOperand.Next;
-            }
+                var isNew = newOperand.Next == null && newOperand.Previous == null;
 
-            newOperand.Previous = oldOperand.Previous;
+                newOperand.Next = oldOperand.Next;
+                if (isNew)
+                {
+                    oldOperand.Previous.Next = newOperand;
+                }
+                else if (oldOperand.Previous != null)
+                {
+                    oldOperand.Previous.Next = oldOperand.Next;
+                }
+
+                newOperand.Previous = oldOperand.Previous;
+            }
         }
 
         private void InsertOperand(OpCodePart oldOperand, OpCodePart newOperand)
@@ -1350,6 +1353,16 @@ namespace Il2Native.Logic
             foreach (var childCodePart in opCodeParts)
             {
                 childCodePart.UsedBy = new UsedByInfo(opCodePart, operandPosition++);
+            }
+
+            // to support Code.Constrained
+            if (opCodePart.ToCode() == Code.Callvirt && opCodePart.Previous.ToCode() == Code.Constrained)
+            {
+                var constrained = opCodePart.Previous;
+                var firstOperand = opCodePart.OpCodeOperands[0];
+                ReplaceOperand(firstOperand, constrained, true);
+                constrained.OpCodeOperands = new[] { firstOperand };
+                firstOperand.UsedBy = new UsedByInfo(constrained, 0);
             }
 
             this.AdjustTypes(opCodePart);
@@ -1770,13 +1783,17 @@ namespace Il2Native.Logic
 
             this.RequiredIncomingTypes(opCode);
 
+            // special case for constrained
+            if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || opCode.ToCode() == Code.Constrained)
+            {
+                opCode.RequiredOutgoingType = this.RequiredOutgoingType(opCode);
+            }
+
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
             {
                 return;
             }
-
-            opCode.RequiredOutgoingType = this.RequiredOutgoingType(opCode);
 
             var isItMethodWithVoid = opCode.OpCode.StackBehaviourPush == StackBehaviour.Varpush &&
                                      opCode is OpCodeMethodInfoPart
@@ -2385,6 +2402,15 @@ namespace Il2Native.Logic
                     }
 
                     return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+
+                case Code.Constrained:
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        return opCodeTypePart.Operand.IsValueType() ? opCodeTypePart.Operand.ToClass() : opCodeTypePart.Operand;
+                    }
+
+                    return null;
             }
 
             return retType;
