@@ -75,7 +75,7 @@
 
             if (hasParameters)
             {
-                ilCodeBuilder.LoadLocal(0);
+                ilCodeBuilder.LoadLocal(1);
             }
 
             ilCodeBuilder.Call(main);

@@ -2388,30 +2388,15 @@ namespace Il2Native.Logic
             var operandEstimatedResultOf = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
             var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef ? operandEstimatedResultOf.Type.GetElementType().ToClass() : operandEstimatedResultOf.Type.ToClass();
 
-            var isUsingObjectOnInterface = classType.IsInterface && field.DeclaringType.IsObject;
-
             writer.Write("(");
-
-            if (isUsingObjectOnInterface)
-            {
-                writer.Write("((");
-                System.System_Object.WriteTypePrefix(this);
-                writer.Write(")__interface_to_object(");
-            }
 
             this.WriteResultOrActualWrite(writer, opCodePart.OpCodeOperands[0]);
 
-            // special case when calling Object methods on interface
-            if (classType.IsInterface && field.DeclaringType.IsObject)
-            {
-                // TODO: this is hack remove it (REVIEW!!!)
-                writer.Write("))");
-            }
-
             writer.Write(")");
+
             writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
-            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex, isUsingObjectOnInterface);
+            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex, false);
         }
 
         private void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex, bool isUsingObjectOnInterface)
@@ -2619,10 +2604,6 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            var name = shortName
-                ? methodBase.GetMethodName(ownerOfExplicitInterface)
-                : methodBase.GetFullMethodName(ownerOfExplicitInterface);
-
             if (!shortName && methodBase.DeclaringType != null
                 && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
                     || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)
@@ -2630,6 +2611,13 @@ namespace Il2Native.Logic
             {
                 writer.Write(this.GetAssemblyPrefix());
             }
+
+            this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
+        }
+
+        public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
+        {
+            var name = shortName ? methodBase.GetMethodName(ownerOfExplicitInterface) : methodBase.GetFullMethodName(ownerOfExplicitInterface);
 
             if (methodBase.DeclaringType == null)
             {
@@ -2772,7 +2760,7 @@ namespace Il2Native.Logic
             writer.Write("(*");
             if (withName)
             {
-                this.WriteMethodDefinitionName(writer, methodBase, shortName: shortName);    
+                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);    
             }
 
             writer.Write(")(");
@@ -3226,12 +3214,7 @@ namespace Il2Native.Logic
                     }
                     else if (estimatedResult.Type.IsInterface && type.IsObject)
                     {
-                        writer.Write("((");
-                        this.WriteCCastOnly(type);
-                        writer.Write(")");
-                        writer.Write("__interface_to_object(");
-                        this.WriteResultOrActualWrite(writer, opCode);
-                        writer.Write("))");
+                        this.WriteInterfaceToObjectCast(writer, opCode, type);
                         return true;
                     }
                     else
@@ -3242,6 +3225,15 @@ namespace Il2Native.Logic
             }
 
             return false;
+        }
+
+        public void WriteInterfaceToObjectCast(CIndentedTextWriter writer, OpCodePart opCode, IType toType)
+        {
+            writer.Write("(");
+            this.WriteCCastOnly(toType);
+            writer.Write("__interface_to_object(");
+            this.WriteResultOrActualWrite(writer, opCode);
+            writer.Write("))");
         }
 
         /// <summary>
@@ -5182,7 +5174,7 @@ namespace Il2Native.Logic
 
                 foreach (var method in virtualTable.Select(v => v.Value))
                 {
-                    WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                    this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
                 }
             }
             else
@@ -5191,7 +5183,7 @@ namespace Il2Native.Logic
 
                 foreach (var method in virtualTable)
                 {
-                    WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                    this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
                 }
 
                 foreach (var @interface in type.SelectAllTopAndAllNotFirstChildrenInterfaces().Skip(1))
@@ -5199,7 +5191,7 @@ namespace Il2Native.Logic
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
                     foreach (var method in virtualTableOfSecondaryInterface)
                     {
-                        WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
+                        this.WriteMethodRequiredForwardDeclarationsAndDefinitionsWithoutMethodBody(method);
                     }
                 }
             }
@@ -5216,7 +5208,7 @@ namespace Il2Native.Logic
 
                 foreach (var method in virtualTable.Select(v => v.Value))
                 {
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
                     writer.WriteLine(";");
                 }
             }
@@ -5226,7 +5218,7 @@ namespace Il2Native.Logic
 
                 foreach (var method in virtualTable)
                 {
-                    this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                    this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
                     writer.WriteLine(";");
                 }
 
@@ -5235,7 +5227,7 @@ namespace Il2Native.Logic
                     var virtualTableOfSecondaryInterface = @interface.GetVirtualInterfaceTableLayout(this);
                     foreach (var method in virtualTableOfSecondaryInterface)
                     {
-                        this.WriteMethodPointerType(writer, method, withName: true, shortName: true);
+                        this.WriteMethodPointerType(writer, method, withName: true, shortName: false);
                         writer.WriteLine(";");
                     }
                 }

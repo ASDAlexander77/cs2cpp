@@ -554,6 +554,10 @@ namespace Ll2NativeTests
                 // object o = -(2147483648); type is "int", not "long" in Roslyn
                 skip.AddRange(new[] { 129 });
             }
+            else
+            {
+                skip.AddRange(new[] { 499 });
+            }
 
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 141, 485 });
@@ -683,6 +687,7 @@ namespace Ll2NativeTests
             // 305 - GetConstructors not implemented
             // 311 - extern is used with DllImport
             // 316 - TODO: NEED TO BE FIXED (new T() is removed in the code, find out why), call !!0 [CoreLib]System.Activator::CreateInstance<!!T>() needs to be replaced with new !!T();
+            // 329 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 53 - ValueType.ToString() not implemented
 
             var skip = new[]
@@ -734,7 +739,8 @@ namespace Ll2NativeTests
                 296,
                 297,
                 305,
-                311
+                311,
+                329
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {

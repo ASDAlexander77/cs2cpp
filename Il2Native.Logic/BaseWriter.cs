@@ -2340,6 +2340,12 @@ namespace Il2Native.Logic
                     var opCodeFieldInfoPartToken = opCodePart as OpCodeFieldInfoPart;
                     if (opCodeFieldInfoPartToken != null)
                     {
+                        var constBytes = opCodeFieldInfoPartToken.Operand.ConstantValue as IConstBytes;
+                        if (constBytes != null)
+                        {
+                            return System.System_Byte.ToArrayType(1);
+                        }
+
                         return this.System.System_RuntimeFieldHandle;
                     }
 

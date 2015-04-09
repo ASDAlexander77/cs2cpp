@@ -93,9 +93,9 @@ namespace Il2Native.Logic.Gencode
             {
                 cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
             }
-            
+
             writer.Write(")->");
-            cWriter.WriteMethodDefinitionName(writer, methodInfo, shortName: true);
+            cWriter.WriteMethodDefinitionNameNoPrefix(writer, methodInfo);
 #endif
         }
 
@@ -484,6 +484,11 @@ namespace Il2Native.Logic.Gencode
                     return cWriter.WriteDynamicCast(writer, opCode, opCodeOperand, toType, throwExceptionIfNull: throwExceptionIfNull);
                 }
             }
+            else if (estimatedOperandResultOf.Type.IsInterface && !toType.IsPointer && !toType.IsByRef)
+            {
+                cWriter.WriteInterfaceToObjectCast(writer, opCodeOperand, toType);
+                return true;
+            }
             else if (estimatedOperandResultOf.Type.IntTypeBitSize() == CWriter.PointerSize * 8 &&
                      (toType.IsPointer || toType.IsByRef))
             {
@@ -495,9 +500,8 @@ namespace Il2Native.Logic.Gencode
             }
             else if (estimatedOperandResultOf.Type.IsArray
                      || (estimatedOperandResultOf.Type.IsPointer && bareType.TypeEquals(cWriter.System.System_Void))
-                     || toType.IsArray 
-                     || toType.IsPointer 
-                     || toType.IsByRef 
+                     || toType.IsPointer
+                     || toType.IsByRef
                      || bareType.IsDerivedFrom(toType))
             {
                 WriteCCast(cWriter, opCodeOperand, toType);
@@ -537,7 +541,7 @@ namespace Il2Native.Logic.Gencode
             {
                 writer.Write("*(");
             }
-            
+
             cWriter.WriteResult(destination);
             if (destinationIsIndirect)
             {
