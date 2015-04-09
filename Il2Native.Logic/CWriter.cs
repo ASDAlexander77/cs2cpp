@@ -598,8 +598,7 @@ namespace Il2Native.Logic
                                 this.Output,
                                 System.System_RuntimeFieldHandle,
                                 System.System_RuntimeFieldHandle.GetFieldByName("fieldAddress", this, true),
-                                null,
-                                false);
+                                null);
                             this.Output.Write(" = (");
                             System.System_Byte.ToPointerType().WriteTypePrefix(this);
                             this.Output.Write(") &");
@@ -617,8 +616,7 @@ namespace Il2Native.Logic
                                 this.Output,
                                 System.System_RuntimeFieldHandle,
                                 System.System_RuntimeFieldHandle.GetFieldByName("fieldSize", this, true),
-                                null,
-                                false);
+                                null);
                             this.Output.Write(" = ");
                             if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit)
                             {
@@ -2396,18 +2394,14 @@ namespace Il2Native.Logic
 
             writer.Write(!operandEstimatedResultOf.Type.IsStructureType() ? "->" : ".");
 
-            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex, false);
+            this.WriteFieldAccessLeftExpression(writer, classType, field, fixedArrayElementIndex);
         }
 
-        private void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex, bool isUsingObjectOnInterface)
+        private void WriteFieldAccessLeftExpression(CIndentedTextWriter writer, IType classType, IField field, OpCodePart fixedArrayElementIndex)
         {
             if (field.DeclaringType.IsInterface)
             {
                 this.WriteInterfacePath(classType, field.DeclaringType, field);
-            }
-            else if (isUsingObjectOnInterface)
-            {
-                this.WriteFieldPath(this.System.System_Object, field);
             }
             else
             {

@@ -979,6 +979,16 @@ namespace Il2Native.Logic
                 return ConversionType.PointerToValue;
             }
 
+            if (sourceType.IsDerivedFrom(destinationType))
+            {
+                return ConversionType.DerivedToBase;
+            }
+
+            if (sourceType.IsInterface && destinationType.IsObject)
+            {
+                return ConversionType.InterfaceToObject;
+            }
+
             return ConversionType.None;
         }
 
