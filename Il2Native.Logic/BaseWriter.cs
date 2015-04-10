@@ -2140,8 +2140,8 @@ namespace Il2Native.Logic
                 case Code.Ldnull:
                     if (opCodePart.UsedBy == null)
                     {
-                        // could not detect it yet, but default is System.Object
-                        return System.System_Object;
+                        // could not detect it yet
+                        return System.System_Void.ToPointerType();
                     }
 
                     return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
