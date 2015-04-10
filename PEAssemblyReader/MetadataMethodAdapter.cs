@@ -565,7 +565,11 @@ namespace PEAssemblyReader
         {
             return
                 this.methodDef.Parameters.Select(
-                    p => new MetadataParameterAdapter(p, this.methodDef.Parameters.Count(p2 => p.Ordinal > p2.Ordinal && p2.Name == p.Name) > 0))
+                    p =>
+                        new MetadataParameterAdapter(
+                            p,
+                            Keywords.IsKeyword(p.Name) ||
+                            this.methodDef.Parameters.Count(p2 => p.Ordinal > p2.Ordinal && p2.Name == p.Name) > 0))
                     .ToList();
         }
 

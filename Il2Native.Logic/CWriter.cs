@@ -1508,8 +1508,11 @@ namespace Il2Native.Logic
 
                     if (opCodeTypePart.Operand.IsStructureType())
                     {
-                        //&& Logic.IlReader.Methods(opCodeTypePart.Operand, this).Contains()
-                        // nothing to do, pass as is
+                        if (opCodeTypePart.Operand.IsIntPtrOrUIntPtr())
+                        {
+                            this.WriteCCastOnly(@class);
+                        }
+
                         WriteOperandResultOrActualWrite(this.Output, opCode, 0);
                     }
                     else if (opCodeTypePart.Operand.IsValueType())
@@ -3727,11 +3730,6 @@ namespace Il2Native.Logic
         /// </param>
         private void LoadElement(CIndentedTextWriter writer, OpCodePart opCode)
         {
-            if (opCode.Result != null)
-            {
-                return;
-            }
-
             var actualLoad = true;
             IType type = null;
             switch (opCode.ToCode())

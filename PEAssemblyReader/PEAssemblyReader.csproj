@@ -57,6 +57,7 @@
     <Compile Include="IName.cs" />
     <Compile Include="IParameter.cs" />
     <Compile Include="IType.cs" />
+    <Compile Include="Keywords.cs" />
     <Compile Include="MetadataConstructorAdapter.cs" />
     <Compile Include="MetadataExceptionHandlingClauseAdapter.cs" />
     <Compile Include="MetadataFieldAdapter.cs" />

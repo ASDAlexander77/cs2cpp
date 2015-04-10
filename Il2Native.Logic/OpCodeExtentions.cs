@@ -978,6 +978,18 @@ namespace Il2Native.Logic
             return type != null && type.IsValueType;
         }
 
+        public static bool IsIntPtrOrUIntPtr(this IType thisType)
+        {
+            switch (thisType.FullName)
+            {
+                case "System.IntPtr":
+                case "System.UIntPtr":
+                    return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

@@ -4,6 +4,7 @@
     using System.IO;
 
     using PdbReader;
+    using PEAssemblyReader;
 
     public class DebugInfoGenerator
     {
@@ -51,6 +52,11 @@
         {
             var index = 0;
             var currentName = name;
+            if (Keywords.IsKeyword(currentName))
+            {
+                currentName = string.Concat("_", name);
+            }
+
             for (var i = 0; i < slot; i++)
             {
                 string existingName;
