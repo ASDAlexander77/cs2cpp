@@ -690,6 +690,7 @@ namespace Ll2NativeTests
             // 329 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 340 - error CS1061: 'System.Type' does not contain a definition for 'GetMember'
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
+            // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
 
             // 53 - ValueType.ToString() not implemented
 
@@ -745,7 +746,8 @@ namespace Ll2NativeTests
                 311,
                 329,
                 340,
-                341
+                341,
+                345
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {

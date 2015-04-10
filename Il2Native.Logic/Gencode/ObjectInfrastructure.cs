@@ -394,8 +394,8 @@ namespace Il2Native.Logic.Gencode
             {
                 // set virtual table
                 codeBuilder.LoadArgument(0);
-                // we do not need next line, as we do it in step: InsertMissingCastOps
-                //codeBuilder.Castclass(@interface);
+                // you need to have next line to select correct interface in case the same interface used many times
+                codeBuilder.Castclass(@interface);
                 codeBuilder.LoadToken(@interface.ToVirtualTableImplementation(declaringType));
                 codeBuilder.SaveField(@interface.GetInterfaceVTable(typeResolver));
             }
