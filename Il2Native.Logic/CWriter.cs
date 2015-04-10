@@ -417,6 +417,7 @@ namespace Il2Native.Logic
                 case Code.Ldftn:
                 case Code.Ldvirtftn:
                 case Code.Localloc:
+                case Code.Mkrefany:
                 case Code.Constrained:
                     return true;
                 case Code.Ldtoken:
@@ -1574,22 +1575,24 @@ namespace Il2Native.Logic
 
                 case Code.Mkrefany:
 
-                    writer.WriteLine("// TODO: Mkrefany");
+                    var mkRefVar = this.WriteVariableDeclare(opCode, System.System_TypedReference, "_mkref");
+                    opCode.Result = new FullyDefinedReference(mkRefVar, System.System_TypedReference);
+                    this.Output.Write("{0}.Value.m_value = (Void*)", mkRefVar);
+                    this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
 
                     break;
 
                 case Code.Refanytype:
 
-                    writer.WriteLine("// TODO: refany");
+                    this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
+                    this.Output.Write("->Type");
 
                     break;
 
                 case Code.Refanyval:
 
-                    var typedRefType = System.System_TypedReference;
-                    var _targetFieldIndex = this.GetFieldIndex(typedRefType, "Value");
-                    this.WriteFieldAccess(opCode, typedRefType, typedRefType, _targetFieldIndex, firstOpCodeOperand.Result);
-                    this.WriteFieldAccess(opCode, opCode.Result.Type, opCode.Result.Type, 0, opCode.Result);
+                    this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
+                    this.Output.Write("->Value");
 
                     break;
 
@@ -1615,11 +1618,12 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteVariableDeclare(OpCodePart opCode, IType type, string name)
+        private string WriteVariableDeclare(OpCodePart opCode, IType type, string name)
         {
             var variable = string.Format("{0}{1}", name, opCode.AddressStart);
             type.WriteTypePrefix(this);
             this.Output.WriteLine(string.Concat(" ", variable, ";"));
+            return variable;
         }
 
         private string WriteVariable(OpCodePart opCode, string name)
@@ -2176,55 +2180,6 @@ namespace Il2Native.Logic
                 this.Output.WriteLine(";");
                 index++;
             }
-        }
-
-        public IEnumerable<OpCodePart> WriteCustomMethodPart(IMethod constructedMethod, IGenericContext genericContext, bool useCurrentReturnType = false)
-        {
-            // save important vars
-            var parameters = this.Parameters;
-            var localInfo = this.LocalInfo;
-            var hasMethodThis = this.HasMethodThis;
-            var thisType = this.ThisType;
-            var methodReturnType = this.MethodReturnType;
-
-            // write custom part
-            var ilReader = new IlReader();
-            ilReader.TypeResolver = this;
-            var baseWriter = new BaseWriter();
-            baseWriter.Parameters = constructedMethod.GetParameters().ToArray();
-            baseWriter.LocalInfo = constructedMethod.GetMethodBody().LocalVariables.ToArray();
-            baseWriter.HasMethodThis = constructedMethod.CallingConvention.HasFlag(CallingConventions.HasThis);
-            baseWriter.ThisType = this.ThisType;
-            baseWriter.MethodReturnType = useCurrentReturnType ? methodReturnType : constructedMethod.ReturnType;
-
-            // sync important vars
-            this.Parameters = baseWriter.Parameters;
-            this.LocalInfo = baseWriter.LocalInfo;
-            this.HasMethodThis = baseWriter.HasMethodThis;
-            this.ThisType = baseWriter.ThisType;
-            this.MethodReturnType = baseWriter.MethodReturnType;
-
-            // start writing process
-            baseWriter.Initialize(this.ThisType);
-            baseWriter.StartProcess();
-            baseWriter.IlReader = this.IlReader;
-            foreach (var opCodePart in ilReader.OpCodes(constructedMethod, genericContext, null))
-            {
-                baseWriter.AddOpCode(opCodePart);
-            }
-
-            var rest = baseWriter.PrepareWritingMethodBody();
-
-            WriteMethodBody(rest);
-
-            // restor important vars
-            this.Parameters = parameters;
-            this.LocalInfo = localInfo;
-            this.HasMethodThis = hasMethodThis;
-            this.ThisType = thisType;
-            this.MethodReturnType = methodReturnType;
-
-            return rest;
         }
 
         /// <summary>

@@ -31,12 +31,24 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         public static void IncDecInterlockBase(
             this OpCodePart opCodeMethodInfo,
+            CWriter cWriter,
+            string op)
+        {
+            var writer = cWriter.Output;
+            var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("fetch_and_{0}(", op), estimatedResult.Type);
+            writer.Write(", 1)");
+        }
+
+        public static void Exchange(
+            this OpCodePart opCodeMethodInfo,
             CWriter cWriter)
         {
             var writer = cWriter.Output;
-            
-            // TODO: finish ATOMIC +/-
-            writer.Write("// TODO: finish ATOMIC +/-");
+            var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "swap(", estimatedResult.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 1, ", ", estimatedResult.Type);
+            writer.Write(")");
         }
 
         /// <summary>
@@ -112,16 +124,16 @@ namespace Il2Native.Logic.Gencode
             switch (method.MetadataName)
             {
                 case "Increment":
-                    opCodeMethodInfo.IncDecInterlockBase(cWriter);
+                    opCodeMethodInfo.IncDecInterlockBase(cWriter, "add");
                     break;
 
                 case "Decrement":
-                    opCodeMethodInfo.IncDecInterlockBase(cWriter);
+                    opCodeMethodInfo.IncDecInterlockBase(cWriter, "sub");
                     break;
 
                 case "Exchange`1":
                 case "Exchange":
-                    ////opCodeMethodInfo.CompareExchange(cWriter, new[] { 0, 1 });
+                    opCodeMethodInfo.Exchange(cWriter);
                     break;
 
                 case "CompareExchange`1":

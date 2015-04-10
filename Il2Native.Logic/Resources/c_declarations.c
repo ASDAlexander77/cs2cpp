@@ -39,6 +39,9 @@ extern void *__builtin_memset(void *,int32_t,uint32_t);
 extern void *__builtin_memcpy(void *,const void *,uint32_t);
 #define compare_and_swap __sync_val_compare_and_swap 
 #define sync_synchronize __sync_synchronize
+#define fetch_and_add __sync_fetch_and_add
+#define fetch_and_sub __sync_fetch_and_sub
+#define swap __sync_lock_test_and_set
 #define alloca __builtin_alloca
 
 inline void* memcpy(void* dst, void* src, int32_t size)
