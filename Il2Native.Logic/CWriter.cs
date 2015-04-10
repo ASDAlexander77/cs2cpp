@@ -2316,7 +2316,10 @@ namespace Il2Native.Logic
             {
                 this.Output.WriteLine(";");
                 this.Output.Write("_phi{0} = ", addressStart);
-                WriteResult(opCode.Result);
+                if (!this.WritePhiValueWithCast(writer, opCode, usedByAlternativeValues))
+                {
+                    this.WriteResultOrActualWrite(this.Output, opCode);
+                }
             }
 
             opCode.Result = new FullyDefinedReference(
@@ -3185,41 +3188,45 @@ namespace Il2Native.Logic
             bool isVirtualCall;
             if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall) && firstLevel)
             {
-                var type = usedByAlternativeValues.RequiredOutgoingType;
-                var estimatedResult = this.EstimatedResultOf(opCode, ignoreAlternativeValues: true);
                 this.Output.Write("_phi{0} = ", addressStart);
-                if (estimatedResult.Type.TypeNotEquals(type))
-                {
-                    if (estimatedResult.Type.IsDerivedFrom(type) ||
-                        ((estimatedResult.Type.IntTypeBitSize() > 0 || estimatedResult.Type.IsEnum) &&
-                         (type.IntTypeBitSize() > 0 || type.IsEnum)) ||
-                        ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) &&
-                         (type.IsPointer || type.IsByRef)) || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference) ||
-                        (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() &&
-                         !type.IsValueType) ||
-                        (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() &&
-                         type.IntTypeBitSize() > 0))
-                    {
-                        this.WriteCCastOnly(type);
-                    }
-                    else if (estimatedResult.Type.GetAllInterfaces().Contains(type))
-                    {
-                        writer.Write("&");
-                        this.WriteInterfaceAccess(opCode, estimatedResult.Type, type, doNotEstimateResult: true);
-                        return true;
-                    }
-                    else if (estimatedResult.Type.IsInterface && type.IsObject)
-                    {
-                        this.WriteInterfaceToObjectCast(writer, opCode, type);
-                        return true;
-                    }
-                    else
-                    {
-                        Debug.Assert(false, "finish casting");
-                    }
-                }
+                if (this.WritePhiValueWithCast(writer, opCode, usedByAlternativeValues)) return true;
             }
 
+            return false;
+        }
+
+        [Obsolete("you should use InsertMissingOps instead")]
+        private bool WritePhiValueWithCast(CIndentedTextWriter writer, OpCodePart opCode, PhiNodes usedByAlternativeValues)
+        {
+            var type = usedByAlternativeValues.RequiredOutgoingType;
+            var estimatedResult = this.EstimatedResultOf(opCode, ignoreAlternativeValues: true);
+            if (estimatedResult.Type.TypeNotEquals(type))
+            {
+                if (estimatedResult.Type.IsDerivedFrom(type)
+                    || ((estimatedResult.Type.IntTypeBitSize() > 0 || estimatedResult.Type.IsEnum) && (type.IntTypeBitSize() > 0 || type.IsEnum))
+                    || ((estimatedResult.Type.IsPointer || estimatedResult.Type.IsByRef) && (type.IsPointer || type.IsByRef))
+                    || (type.IsPointer && type.GetElementType().IsVoid() && estimatedResult.IsReference)
+                    || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && !type.IsValueType)
+                    || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && type.IntTypeBitSize() > 0))
+                {
+                    this.WriteCCastOnly(type);
+                }
+                else if (estimatedResult.Type.GetAllInterfaces().Contains(type))
+                {
+                    writer.Write("&");
+                    this.WriteInterfaceAccess(opCode, estimatedResult.Type, type, doNotEstimateResult: true);
+                    return true;
+                }
+                else if (estimatedResult.Type.IsInterface && type.IsObject)
+                {
+                    this.WriteInterfaceToObjectCast(writer, opCode, type);
+                    return true;
+                }
+                else
+                {
+                    Debug.Assert(false, "finish casting");
+                }
+            }
             return false;
         }
 

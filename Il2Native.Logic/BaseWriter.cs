@@ -290,6 +290,7 @@ namespace Il2Native.Logic
                 case Code.Callvirt:
                     var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
                     return new ReturnResult(methodBase.ReturnType);
+
                 case Code.Newobj:
                     if (opCode.ReadExceptionFromStack)
                     {
@@ -298,10 +299,18 @@ namespace Il2Native.Logic
 
                     var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
                     return new ReturnResult(ctorInfo.DeclaringType);
+
                 case Code.Ldfld:
                 case Code.Ldsfld:
                     var fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
                     return new ReturnResult(fieldInfo.FieldType);
+
+                case Code.Ldflda:
+                case Code.Ldsflda:
+                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
+                    var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                    return new ReturnResult(fieldType.ToPointerType());
+
                 case Code.Add:
                 case Code.Add_Ovf:
                 case Code.Add_Ovf_Un:
@@ -434,6 +443,7 @@ namespace Il2Native.Logic
                 case Code.Ldelem_Ref:
                     result = this.EstimatedResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
                     return result;
+
                 case Code.Ldelema:
                     result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
 
@@ -441,14 +451,11 @@ namespace Il2Native.Logic
                     // var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
                     var typeOfElement = result.Type.GetElementType();
                     return new ReturnResult(typeOfElement.ToPointerType());
+
                 case Code.Ldind_Ref:
                     var resultType = this.EstimatedResultOf(opCode.OpCodeOperands[0]).Type;
                     return new ReturnResult(resultType.GetElementType());
-                case Code.Ldflda:
-                case Code.Ldsflda:
-                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    var fieldType = opCodeFieldInfoPart.Operand.FieldType;
-                    return new ReturnResult(fieldType.ToPointerType());
+
                 case Code.Nop:
                     return null;
 
@@ -2013,7 +2020,7 @@ namespace Il2Native.Logic
                     }
 
                     return null;
-                
+
                 case Code.Call:
                 case Code.Callvirt:
                     var effectiveOperandPosition = operandPosition;
@@ -2071,6 +2078,35 @@ namespace Il2Native.Logic
                     }
 
                     break;
+
+                case Code.Localloc:
+                    return System.System_Int32;
+
+                case Code.Initblk:
+                    if (operandPosition == 0)
+                    {
+                        return System.System_Byte.ToPointerType();
+                    }
+                    else if (operandPosition == 1)
+                    {
+                        return System.System_Int32;
+                    }
+
+                    return null;
+
+
+                case Code.Cpblk:
+
+                    if (operandPosition <= 1)
+                    {
+                        return System.System_Byte.ToPointerType();
+                    }
+                    else if (operandPosition == 2)
+                    {
+                        return System.System_Int32;
+                    }
+
+                    return null;
             }
 
             if (forArithmeticOperations)
@@ -2091,7 +2127,8 @@ namespace Il2Native.Logic
         {
             // TODO: need a good review of required types etc
             IType retType = null;
-            switch (opCodePart.ToCode())
+            var code = opCodePart.ToCode();
+            switch (code)
             {
                 case Code.Ret:
                     retType = this.MethodReturnType;
@@ -2101,12 +2138,13 @@ namespace Il2Native.Logic
                     return this.System.System_String;
 
                 case Code.Ldnull:
-                    if (opCodePart.UsedBy != null)
+                    if (opCodePart.UsedBy == null)
                     {
-                        return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+                        // could not detect it yet, but default is System.Object
+                        return System.System_Object;
                     }
 
-                    return this.System.System_Void.ToPointerType();
+                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
 
                 case Code.Ldloc:
                 case Code.Ldloc_0:
@@ -2139,13 +2177,19 @@ namespace Il2Native.Logic
                         retType = this.GetArgType(index);
                     }
 
-                    return opCodePart.ToCode() ==  Code.Ldarga_S ? retType.ToPointerType() : retType;
+                    return code == Code.Ldarga_S ? retType.ToPointerType() : retType;
 
                 case Code.Ldfld:
                 case Code.Ldsfld:
                     var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
                     retType = operand.FieldType;
                     return retType;
+
+                case Code.Ldflda:
+                case Code.Ldsflda:
+                    var opCodeFieldInfoPart = opCodePart as OpCodeFieldInfoPart;
+                    var fieldType = opCodeFieldInfoPart.Operand.FieldType;
+                    return fieldType.ToPointerType();
 
                 case Code.Ldobj:
                     retType = ((OpCodeTypePart)opCodePart).Operand;
