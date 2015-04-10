@@ -476,8 +476,9 @@ namespace Il2Native.Logic.Gencode
             {
                 if (bareType.GetAllInterfaces().Contains(toType))
                 {
-                    writer.Write("&");
+                    writer.Write("(&");
                     cWriter.WriteInterfaceAccess(opCodeOperand, bareType, toType);
+                    writer.Write(")");
                 }
                 else
                 {

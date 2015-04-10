@@ -689,6 +689,7 @@ namespace Ll2NativeTests
             // 316 - TODO: NEED TO BE FIXED (new T() is removed in the code, find out why), call !!0 [CoreLib]System.Activator::CreateInstance<!!T>() needs to be replaced with new !!T();
             // 329 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 340 - error CS1061: 'System.Type' does not contain a definition for 'GetMember'
+            // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
 
             // 53 - ValueType.ToString() not implemented
 
@@ -743,7 +744,8 @@ namespace Ll2NativeTests
                 305,
                 311,
                 329,
-                340
+                340,
+                341
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {

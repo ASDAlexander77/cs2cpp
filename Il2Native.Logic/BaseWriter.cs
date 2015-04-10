@@ -878,8 +878,15 @@ namespace Il2Native.Logic
                 {
                     continue;
                 }
-                
-                if (opCodePart.AlternativeValues != null)
+
+                if (opCodePart.AlternativeValues == null)
+                {
+                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
+                    {
+                        this.InsertCastFixOperation(opCodeOperand);
+                    }
+                }
+                else
                 {
                     foreach (var alternativeValue in opCodePart.AlternativeValues)
                     {
@@ -891,13 +898,6 @@ namespace Il2Native.Logic
                             alternativeValue.Values[index++] = insertCastFixOperation;
                             insertCastFixOperation.UsedByAlternativeValues = alternativeValue;
                         }
-                    }
-                }
-                else
-                {
-                    foreach (var opCodeOperand in opCodePart.OpCodeOperands)
-                    {
-                        this.InsertCastFixOperation(opCodeOperand);
                     }
                 }
             }
@@ -1889,10 +1889,13 @@ namespace Il2Native.Logic
                     retType = this.GetArgType(index);
                     return retType;
 
-                case Code.Stfld:
                 case Code.Stsfld:
                     var operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
-                    retType = operandPosition == 0 ? operand.FieldType.DeclaringType : operand.FieldType;
+                    retType = operand.FieldType;
+                    return retType;
+                case Code.Stfld:
+                    operand = ((OpCodeFieldInfoPart)opCodePart).Operand;
+                    retType = operandPosition == 0 ? operand.DeclaringType.ToClass() : operand.FieldType;
                     return retType;
 
                 case Code.Stobj:
