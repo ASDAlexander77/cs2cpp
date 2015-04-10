@@ -1509,7 +1509,7 @@ namespace Il2Native.Logic
                     {
                         //&& Logic.IlReader.Methods(opCodeTypePart.Operand, this).Contains()
                         // nothing to do, pass as is
-                        WriteOperandResultOrActualWrite(this.Output, opCode.OpCodeOperands[0], 0);
+                        WriteOperandResultOrActualWrite(this.Output, opCode, 0);
                     }
                     else if (opCodeTypePart.Operand.IsValueType())
                     {
