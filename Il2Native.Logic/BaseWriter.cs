@@ -2448,12 +2448,12 @@ namespace Il2Native.Logic
 
                     return this.System.System_Void.ToPointerType();
 
+                case Code.Arglist:
+                    return this.System.System_RuntimeArgumentHandle;
+
                 case Code.Ldftn:
                 case Code.Ldvirtftn:
                     return this.System.System_IntPtr;
-
-                case Code.Arglist:
-                    return this.System.System_RuntimeArgumentHandle;
 
                 case Code.Mkrefany:
                     return this.System.System_TypedReference;

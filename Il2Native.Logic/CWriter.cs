@@ -419,6 +419,7 @@ namespace Il2Native.Logic
                 case Code.Localloc:
                 case Code.Mkrefany:
                 case Code.Constrained:
+                case Code.Refanytype:
                     return true;
                 case Code.Ldtoken:
                     var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
@@ -553,7 +554,7 @@ namespace Il2Native.Logic
                 case Code.Arglist:
 
                     // TODO: it really does not do anything. you need to use VA_START, VA_END, VA_ARG in ArgInterator class
-                    this.Output.Write("0/*undef*/");
+                    this.Output.Write("System_RuntimeArgumentHandle()/*undef*/");
                     break;
 
                 case Code.Ldtoken:
@@ -1588,15 +1589,21 @@ namespace Il2Native.Logic
 
                 case Code.Refanytype:
 
-                    this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
-                    this.Output.Write("->Type");
+                    System.System_RuntimeTypeHandle.WriteTypePrefix(this);
+                    var refAnyTypeVar = string.Format("_refanytype{0}", opCode.AddressStart);
+                    this.Output.Write(" {0}", refAnyTypeVar);
+
+                    ////this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
+                    ////this.Output.Write(".Type.m_value");
+ 
+                    opCode.Result = new FullyDefinedReference(refAnyTypeVar, System.System_RuntimeTypeHandle);
 
                     break;
 
                 case Code.Refanyval:
 
                     this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
-                    this.Output.Write("->Value");
+                    this.Output.Write(".Value.m_value");
 
                     break;
 
@@ -2718,7 +2725,7 @@ namespace Il2Native.Logic
             writer.Write("(*");
             if (withName)
             {
-                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);    
+                this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, shortName: shortName);
             }
 
             writer.Write(")(");
