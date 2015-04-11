@@ -1508,6 +1508,7 @@ namespace Il2Native.Logic
 
                     if (opCodeTypePart.Operand.IsStructureType())
                     {
+                        // TODO: IntPtr hack
                         if (opCodeTypePart.Operand.IsIntPtrOrUIntPtr())
                         {
                             this.WriteCCastOnly(@class);

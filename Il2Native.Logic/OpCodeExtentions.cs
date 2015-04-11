@@ -1001,6 +1001,11 @@ namespace Il2Native.Logic
             return type != null && type.Name == "Void" && type.Namespace == "System";
         }
 
+        public static bool IsVoidPointer(this IType type)
+        {
+            return type.IsPointer && type.GetElementType().IsVoid();
+        }
+
         public static bool NotSpecialUsage(this IType type)
         {
             return type != null && !type.UseAsRtti && !type.UseAsVirtualTableImplementation;

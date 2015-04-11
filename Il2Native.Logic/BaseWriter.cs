@@ -996,6 +996,11 @@ namespace Il2Native.Logic
                 return ConversionType.InterfaceToObject;
             }
 
+            if (sourceType.IsVoidPointer() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
+            {
+                return ConversionType.CCast;
+            }
+
             return ConversionType.None;
         }
 
@@ -1025,6 +1030,18 @@ namespace Il2Native.Logic
                         else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
                             this.FixAddSubPointerOperation(opCodeOperand1, opCodeOperand0, op1, op0);
+                        }
+                        else if (op0.Type.IsPointer && op1.Type.IsPointer && op0.Type.GetElementType().TypeNotEquals(op1.Type.GetElementType()))
+                        {
+                            if (op0.Type.GetElementType().TypeNotEquals(System.System_Byte))
+                            {
+                                this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                            }
+
+                            if (op1.Type.GetElementType().TypeNotEquals(System.System_Byte))
+                            {
+                                this.InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                            }
                         }
 
                         break;

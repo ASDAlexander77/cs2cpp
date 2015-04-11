@@ -207,10 +207,20 @@ namespace Il2Native.Logic.Gencode
                     primitiveType = resultOfFirstOperand.Type.GetElementType();
                 }
 
-                var opCodeNone = OpCodePart.CreateNop;
-                opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
-                primitiveType.ToClass().WriteCallBoxObjectMethod(cWriter, opCodeNone);
-                return;
+                // TODO: you need to review of this code (whole function), and check if you need to box it in case of Pointer operations on Array
+                var @class = primitiveType.ToClass();
+                if (@class.TypeNotEquals(thisType) && isPrimitivePointer && !thisType.IsPrimitive)
+                {
+                    // in case Void* used or Byte* used, you do not need to box it as it may be array operation.
+                    cWriter.WriteCCastOnly(thisType);
+                }
+                else
+                {
+                    var opCodeNone = OpCodePart.CreateNop;
+                    opCodeNone.OpCodeOperands = new[] { opCodeMethodInfo.OpCodeOperands[0] };
+                    @class.WriteCallBoxObjectMethod(cWriter, opCodeNone);
+                    return;
+                }
             }
 
             cWriter.WriteResultOrActualWrite(writer, opCodeFirstOperand);
@@ -293,27 +303,6 @@ namespace Il2Native.Logic.Gencode
         public static IType GetOwnerOfExplicitInterface(IType methodDeclaringType, IType argument0)
         {
             return methodDeclaringType.IsInterface && methodDeclaringType.TypeNotEquals(argument0) ? argument0 : null;
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="methodInfo">
-        /// </param>
-        /// <param name="cWriter">
-        /// </param>
-        public static void WriteFunctionCallReturnType(this IMethod methodInfo, CWriter cWriter)
-        {
-            var writer = cWriter.Output;
-
-            if (methodInfo != null && !methodInfo.ReturnType.IsVoid() && !methodInfo.ReturnType.IsStructureType())
-            {
-                methodInfo.ReturnType.WriteTypePrefix(cWriter, false);
-            }
-            else
-            {
-                // this is constructor
-                writer.Write("void");
-            }
         }
 
         /// <summary>
