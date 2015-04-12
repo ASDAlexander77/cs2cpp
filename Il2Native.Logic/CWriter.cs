@@ -1963,6 +1963,7 @@ namespace Il2Native.Logic
         public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode)
         {
             IType type = null;
+            var loadingIntPtrFromVoidPtr = false;
 
             switch (opCode.ToCode())
             {
@@ -1971,6 +1972,7 @@ namespace Il2Native.Logic
                     if (!type.IsPointer && !type.IsByRef && (type.IntTypeBitSize() == PointerSize * 8 || type.IsVoid()))
                     {
                         // using int as intptr
+                        loadingIntPtrFromVoidPtr = true;
                         type = this.System.System_IntPtr;
                         this.AdjustIntConvertableTypes(writer, opCode.OpCodeOperands[0], type.ToPointerType());
                     }
@@ -2029,7 +2031,7 @@ namespace Il2Native.Logic
 
             Debug.Assert(!type.IsVoid());
 
-            this.LoadIndirect(writer, opCode, type);
+            this.LoadIndirect(writer, opCode, type, loadingIntPtrFromVoidPtr);
         }
 
         /// <summary>
@@ -2040,7 +2042,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="type">
         /// </param>
-        public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type)
+        public void LoadIndirect(CIndentedTextWriter writer, OpCodePart opCode, IType type, bool loadingIntPtrFromVoidPtr = false)
         {
             // next code fixing issue with using Code.Ldind to load first value in value types
             var resultOfOperand0 = EstimatedResultOf(opCode.OpCodeOperands[0]);
@@ -2050,23 +2052,31 @@ namespace Il2Native.Logic
                 resultOfOperand0 = new ReturnResult(resultOfOperand0.Type.ToNormal());
             }
 
-            writer.Write("(*((");
-            type.ToPointerType().WriteTypePrefix(this);
-            writer.Write(")");
-
             var isValueType = resultOfOperand0.Type.IsValueType;
             if (isValueType && isUsedAsClass && !resultOfOperand0.Type.IsStructureType())
             {
                 // write first field access
-                writer.Write("&");
                 this.WriteFieldAccess(writer, opCode, resultOfOperand0.Type.GetFieldByFieldNumber(0, this));
+            }
+            else if (loadingIntPtrFromVoidPtr && type.IsIntPtrOrUIntPtr())
+            {
+                // write first field access
+                var field = type.GetFieldByFieldNumber(0, this);
+                writer.Write("((");
+                type.ToPointerType().WriteTypePrefix(this);
+                writer.Write(")");
+                this.WriteResultOrActualWrite(writer, opCode.OpCodeOperands[0]);
+                writer.Write(")->");
+                this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null); 
             }
             else
             {
+                writer.Write("(*((");
+                type.ToPointerType().WriteTypePrefix(this);
+                writer.Write(")");
                 this.WriteOperandResultOrActualWrite(writer, opCode, 0);
+                writer.Write("))");
             }
-
-            writer.Write("))");
         }
 
         public void ReadParameters(string sourceFilePath, string pdbFilePath, string[] args)
@@ -2355,7 +2365,9 @@ namespace Il2Native.Logic
         public void WriteFieldAccess(CIndentedTextWriter writer, OpCodePart opCodePart, IField field, OpCodePart fixedArrayElementIndex = null)
         {
             var operandEstimatedResultOf = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
-            var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef ? operandEstimatedResultOf.Type.GetElementType().ToClass() : operandEstimatedResultOf.Type.ToClass();
+            var classType = operandEstimatedResultOf.Type.IsPointer || operandEstimatedResultOf.Type.IsByRef
+                ? operandEstimatedResultOf.Type.GetElementType().ToClass()
+                : operandEstimatedResultOf.Type.ToClass();
 
             writer.Write("(");
 
