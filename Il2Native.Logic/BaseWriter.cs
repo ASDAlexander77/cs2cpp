@@ -874,6 +874,8 @@ namespace Il2Native.Logic
             InterfaceToObject,
             PointerToValue,
             ValueToPointer,
+            IntPtrToInt,
+            IntToIntPtr,
             CCast
         }
 
@@ -914,7 +916,7 @@ namespace Il2Native.Logic
         {
             IType destinationType;
             var conversionType = this.GetConversionType(opCodeOperand, out destinationType);
-            if (IsCastConversion(conversionType))
+            if (IsCastConversion(conversionType) || conversionType == ConversionType.IntToIntPtr)
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
@@ -924,6 +926,15 @@ namespace Il2Native.Logic
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Ldobj, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
+                return castOpCode;
+            }
+            if (conversionType == ConversionType.IntPtrToInt)
+            {
+                // 2 steps, load value, cast to int
+                var ldfldOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, System.System_IntPtr.GetFieldByFieldNumber(0, this));
+                this.InsertOperand(opCodeOperand, ldfldOpCode);
+                var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
+                this.InsertOperand(ldfldOpCode, castOpCode);
                 return castOpCode;
             }
 
@@ -999,6 +1010,16 @@ namespace Il2Native.Logic
             if (sourceType.IsVoidPointer() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.CCast;
+            }
+
+            if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
+            {
+                return ConversionType.IntPtrToInt;
+            }
+
+            if (destinationType.IsIntPtrOrUIntPtr() && sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
+            {
+                return ConversionType.IntToIntPtr;
             }
 
             return ConversionType.None;
@@ -1980,10 +2001,10 @@ namespace Il2Native.Logic
                     return operandPosition == 1 ? this.System.System_Double : null;
 
                 case Code.Stelem_Ref:
-                    return operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.GetTypeOfReference(opCodePart) : null;
 
                 case Code.Stelem_I:
-                    return operandPosition == 2 ? this.System.System_Void.ToPointerType() : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Void.ToPointerType() : null;
 
                 case Code.Stelem_I1:
 
@@ -2000,23 +2021,35 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        return null;
+                        return operandPosition == 1 ? this.System.System_Int32 : null;
                     }
 
                 case Code.Stelem_I2:
-                    return operandPosition == 2 ? this.System.System_Int16 : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int16 : null;
 
                 case Code.Stelem_I4:
-                    return operandPosition == 2 ? this.System.System_Int32 : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int32 : null;
 
                 case Code.Stelem_I8:
-                    return operandPosition == 2 ? this.System.System_Int64 : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Int64 : null;
 
                 case Code.Stelem_R4:
-                    return operandPosition == 2 ? this.System.System_Single : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Single : null;
 
                 case Code.Stelem_R8:
-                    return operandPosition == 2 ? this.System.System_Double : null;
+                    return operandPosition == 1 ? this.System.System_Int32 : operandPosition == 2 ? this.System.System_Double : null;
+
+                case Code.Ldelem_Ref:
+                case Code.Ldelem_I:
+                case Code.Ldelem_I1:
+                case Code.Ldelem_I2:
+                case Code.Ldelem_I4:
+                case Code.Ldelem_U1:
+                case Code.Ldelem_U2:
+                case Code.Ldelem_U4:
+                case Code.Ldelem_R4:
+                case Code.Ldelem_R8:
+                    return operandPosition == 1 ? this.System.System_Int32 : null;
 
                 case Code.Unbox:
                 case Code.Unbox_Any:
