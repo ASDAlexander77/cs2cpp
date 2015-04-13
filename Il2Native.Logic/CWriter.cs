@@ -3165,6 +3165,11 @@ namespace Il2Native.Logic
 
         public bool WriteStartOfPhiValues(CIndentedTextWriter writer, OpCodePart opCode, bool firstLevel)
         {
+            if (!firstLevel)
+            {
+                return false;
+            }
+
             var usedByAlternativeValues = opCode.UsedByAlternativeValues;
             while (usedByAlternativeValues.UsedByAlternativeValues != null)
             {
@@ -3180,7 +3185,7 @@ namespace Il2Native.Logic
             }
 
             bool isVirtualCall;
-            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall) && firstLevel)
+            if (opCode.Result == null && !OpCodeWithVariableDeclaration(opCode, out isVirtualCall))
             {
                 this.Output.Write("_phi{0} = ", addressStart);
                 if (this.WritePhiValueWithCast(writer, opCode, usedByAlternativeValues)) return true;
@@ -5104,6 +5109,11 @@ namespace Il2Native.Logic
             if (!this.virtualTableImplementationsWritten.Add(type.ToVirtualTableImplementation()))
             {
                 return;
+            }
+
+            if (this.WriteRttiDeclarationIfNotWrittenYet(type))
+            {
+                this.Output.WriteLine(";");
             }
 
             // TODO: review next line (use sizeof)

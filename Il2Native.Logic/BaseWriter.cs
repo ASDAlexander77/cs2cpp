@@ -354,7 +354,7 @@ namespace Il2Native.Logic
                     return returnOp;
 
                 case Code.Isinst:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand);
+                    return new ReturnResult((opCode as OpCodeTypePart).Operand.ToClass());
                 case Code.Beq:
                 case Code.Beq_S:
                 case Code.Blt:
@@ -2347,6 +2347,9 @@ namespace Il2Native.Logic
 
                 case Code.Castclass:
                     return ((OpCodeTypePart)opCodePart).Operand;
+
+                case Code.Isinst:
+                    return ((OpCodeTypePart)opCodePart).Operand.ToClass();
 
                 case Code.Conv_I8:
                 case Code.Conv_Ovf_I8:
