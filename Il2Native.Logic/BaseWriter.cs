@@ -875,7 +875,6 @@ namespace Il2Native.Logic
             PointerToValue,
             ValueToPointer,
             IntPtrToInt,
-            IntToIntPtr,
             CCast
         }
 
@@ -916,7 +915,7 @@ namespace Il2Native.Logic
         {
             IType destinationType;
             var conversionType = this.GetConversionType(opCodeOperand, out destinationType);
-            if (IsCastConversion(conversionType) || conversionType == ConversionType.IntToIntPtr)
+            if (IsCastConversion(conversionType))
             {
                 var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
                 this.InsertOperand(opCodeOperand, castOpCode);
@@ -1015,11 +1014,6 @@ namespace Il2Native.Logic
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.IntPtrToInt;
-            }
-
-            if (destinationType.IsIntPtrOrUIntPtr() && sourceType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
-            {
-                return ConversionType.IntToIntPtr;
             }
 
             return ConversionType.None;

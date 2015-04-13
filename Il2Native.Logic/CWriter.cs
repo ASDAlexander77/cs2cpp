@@ -983,7 +983,15 @@ namespace Il2Native.Logic
                     var localType = this.LocalInfo[index].LocalType;
 
                     var destination = new FullyDefinedReference(this.GetLocalVarName(index), localType);
-                    this.WriteSave(opCode, localType, 0, destination);
+                    var estResult = this.EstimatedResultOf(firstOpCodeOperand);
+                    if (localType.IsStructureType() && !localType.IsByRef && estResult.Type.IsPrimitiveType())
+                    {
+                        this.WriteSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
+                    }
+                    else
+                    {
+                        this.WriteSave(opCode, localType, 0, destination);
+                    }
 
                     break;
                 case Code.Ldloc:
@@ -1078,10 +1086,10 @@ namespace Il2Native.Logic
 
                     var argType = this.GetArgType(index);
                     destination = new FullyDefinedReference(this.GetArgVarName(actualIndex, index), this.GetArgType(index));
-                    var estResult = this.EstimatedResultOf(firstOpCodeOperand);
+                    estResult = this.EstimatedResultOf(firstOpCodeOperand);
                     if (argType.IsStructureType() && !argType.IsByRef && estResult.Type.IsPrimitiveType())
                     {
-                        this.WriteLlvmSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
+                        this.WriteSavePrimitiveIntoStructure(opCode, firstOpCodeOperand.Result, destination);
                     }
                     else
                     {
@@ -2426,7 +2434,15 @@ namespace Il2Native.Logic
             }
 
             writer.Write(valueReference);
-            writer.Write("->");
+            if (valueReference.Type.IsStructureType())
+            {
+                writer.Write(".");
+            }
+            else
+            {
+                writer.Write("->");
+            }
+
             this.WriteFieldPath(classType, field);
 
             return field;
