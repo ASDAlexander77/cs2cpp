@@ -217,8 +217,6 @@ namespace Il2Native.Logic
             {
                 this.LocalInfo = methodBody.LocalVariables.ToArray();
 
-                this.AdjustLocalVariableTypes();
-
 #if DEBUG
                 Debug.Assert(
                     genericContext == null || !this.LocalInfo.Any(li => li.LocalType.IsGenericParameter),
@@ -479,47 +477,6 @@ namespace Il2Native.Logic
             this.OpsByAddressEnd.Clear();
             this.OpsByGroupAddressStart.Clear();
             this.OpsByGroupAddressEnd.Clear();
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="opCode">
-        /// </param>
-        [Obsolete("review it and remove and finish migration to RequiredOutgoingType/RequiredIncomingTypes")]
-        protected void AdjustTypes(OpCodePart opCode)
-        {
-            // TODO: review this function, I think I need to get rid of it
-            if (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0)
-            {
-                return;
-            }
-
-            var usedOpCode1 = opCode.OpCodeOperands[0];
-            if (usedOpCode1 == null)
-            {
-                // todo: should not be here
-                return;
-            }
-
-            // fix types
-            var requiredType = this.RequiredIncomingType(opCode, 0);
-            if (requiredType != null)
-            {
-                if ((requiredType.IsPointer || requiredType.IsByRef) && usedOpCode1.Any(Code.Conv_U) &&
-                    usedOpCode1.OpCodeOperands[0].Any(Code.Ldc_I4_0))
-                {
-                    usedOpCode1.OpCodeOperands[0].UseAsNull = true;
-                }
-            }
-
-            requiredType = this.RequiredArithmeticIncomingType(opCode);
-            if (requiredType != null)
-            {
-                foreach (var opCodeOperand in opCode.OpCodeOperands)
-                {
-                    opCodeOperand.RequiredOutgoingType = requiredType;
-                }
-            }
         }
 
         /// <summary>
@@ -1046,7 +1003,8 @@ namespace Il2Native.Logic
                         {
                             this.FixAddSubPointerOperation(opCodeOperand1, opCodeOperand0, op1, op0);
                         }
-                        else if (op0.Type.IsPointer && op1.Type.IsPointer && op0.Type.GetElementType().TypeNotEquals(op1.Type.GetElementType()))
+                        else if (op0.Type.IsPointer && op1.Type.IsPointer
+                                 && (op0.Type.GetElementType().TypeNotEquals(op1.Type.GetElementType()) || op0.Type.IsVoidPointer() || op1.Type.IsVoidPointer()))
                         {
                             if (op0.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
@@ -1403,22 +1361,6 @@ namespace Il2Native.Logic
                 constrained.OpCodeOperands = new[] { firstOperand };
                 firstOperand.UsedBy = new UsedByInfo(constrained, 0);
             }
-
-            this.AdjustTypes(opCodePart);
-        }
-
-        protected IType GetEffectiveLocalType(ILocalVariable local)
-        {
-            var effectiveLocalType = local.LocalType;
-            if (effectiveLocalType.IsPinned)
-            {
-                var localPinnedType = effectiveLocalType.FullName == "System.IntPtr"
-                    ? this.System.System_Void.ToPointerType()
-                    : effectiveLocalType.IsValueType ? effectiveLocalType.ToPointerType() : effectiveLocalType;
-                return localPinnedType;
-            }
-
-            return effectiveLocalType;
         }
 
         /// <summary>
@@ -2600,17 +2542,6 @@ namespace Il2Native.Logic
             if (!this.OpsByAddressEnd.ContainsKey(opCode.AddressEnd))
             {
                 this.OpsByAddressEnd[opCode.AddressEnd] = opCode;
-            }
-        }
-
-        /// <summary>
-        /// </summary>
-        private void AdjustLocalVariableTypes()
-        {
-            // replace pinned IntPtr& with Int
-            foreach (var localInfo in this.LocalInfo.Where(li => li.LocalType.IsPinned))
-            {
-                localInfo.LocalType = this.GetEffectiveLocalType(localInfo);
             }
         }
 

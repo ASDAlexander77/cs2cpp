@@ -4323,7 +4323,7 @@ namespace Il2Native.Logic
         {
             foreach (var local in locals)
             {
-                this.GetEffectiveLocalType(local).WriteTypePrefix(this);
+                local.LocalType.WriteTypePrefix(this);
                 this.Output.Write(" ");
                 this.Output.Write(this.GetLocalVarName(local.LocalIndex));
                 this.Output.WriteLine(";");
