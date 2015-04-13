@@ -3208,7 +3208,8 @@ namespace Il2Native.Logic
                     || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && !type.IsValueType)
                     || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && type.IntTypeBitSize() > 0)
                     || (estimatedResult.Type.IsPointer && estimatedResult.Type.GetElementType().IsVoid() && !type.IsValueType)
-                    || (estimatedResult.Type.IsArray && type.IsArray && estimatedResult.Type.GetElementType().IsDerivedFrom(type.GetElementType())))
+                    || (estimatedResult.Type.IsArray && type.IsArray && estimatedResult.Type.GetElementType().IsDerivedFrom(type.GetElementType()))
+                    || estimatedResult.Type.IntTypeBitSize() > 0 && type.IsPointer)
                 {
                     this.WriteCCastOnly(type);
                 }

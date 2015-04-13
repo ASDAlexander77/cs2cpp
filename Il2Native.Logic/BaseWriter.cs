@@ -264,8 +264,6 @@ namespace Il2Native.Logic
         /// </returns>
         public ReturnResult EstimatedResultOf(OpCodePart opCode, bool doNotUseCachedResult = false, bool ignoreAlternativeValues = false)
         {
-            // TODO: remove duplication from RequiredOutgoingType (use RequiredOutgoingType as first)
-
             if (!doNotUseCachedResult && opCode.HasResult && opCode.Result.Type != null)
             {
                 return new ReturnResult(opCode.Result);
@@ -281,190 +279,7 @@ namespace Il2Native.Logic
                 return new ReturnResult(opCode.RequiredOutgoingType);
             }
 
-            var code = opCode.ToCode();
-            switch (code)
-            {
-                case Code.Call:
-                case Code.Callvirt:
-                    var methodBase = (opCode as OpCodeMethodInfoPart).Operand;
-                    return new ReturnResult(methodBase.ReturnType);
-
-                case Code.Newobj:
-                    if (opCode.ReadExceptionFromStack)
-                    {
-                        return new ReturnResult(opCode.ReadExceptionFromStackType);
-                    }
-
-                    var ctorInfo = (opCode as OpCodeConstructorInfoPart).Operand;
-                    return new ReturnResult(ctorInfo.DeclaringType);
-
-                case Code.Ldfld:
-                case Code.Ldsfld:
-                    var fieldInfo = (opCode as OpCodeFieldInfoPart).Operand;
-                    return new ReturnResult(fieldInfo.FieldType);
-
-                case Code.Ldflda:
-                case Code.Ldsflda:
-                    var opCodeFieldInfoPart = opCode as OpCodeFieldInfoPart;
-                    var fieldType = opCodeFieldInfoPart.Operand.FieldType;
-                    return new ReturnResult(fieldType.ToPointerType());
-
-                case Code.Add:
-                case Code.Add_Ovf:
-                case Code.Add_Ovf_Un:
-                case Code.Mul:
-                case Code.Mul_Ovf:
-                case Code.Mul_Ovf_Un:
-                case Code.Sub:
-                case Code.Sub_Ovf:
-                case Code.Sub_Ovf_Un:
-                case Code.Div:
-                case Code.Div_Un:
-                case Code.Rem:
-                case Code.Rem_Un:
-                case Code.Shl:
-                case Code.Shr:
-                case Code.Shr_Un:
-                case Code.And:
-                case Code.Or:
-                case Code.Xor:
-
-                    var opArithmetic = this.RequiredArithmeticIncomingType(opCode);
-                    if (opArithmetic != null)
-                    {
-                        return new ReturnResult(opArithmetic);
-                    }
-
-                    var op1 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    var op2 = this.EstimatedResultOf(opCode.OpCodeOperands[1]);
-                    var returnOp = op1.Type.TypeEquals(op2.Type) || op1.Type.IsPointer || op1.Type.IsByRef
-                                   || op1.Type.IntTypeBitSize() > op2.Type.IntTypeBitSize()
-                                       ? op1
-                                       : op2;
-
-                    // in case of Pointer operations
-                    if (returnOp.Type.IsPointer && returnOp.Type.GetElementType().IsVoid()
-                        && (IntTypeRequired(opCode.OpCodeOperands[0]) || IntTypeRequired(opCode.OpCodeOperands[1])))
-                    {
-                        return new ReturnResult(System.System_Int32);
-                    }
-
-                    return returnOp;
-
-                case Code.Isinst:
-                    return new ReturnResult((opCode as OpCodeTypePart).Operand.ToClass());
-                case Code.Beq:
-                case Code.Beq_S:
-                case Code.Blt:
-                case Code.Blt_S:
-                case Code.Bgt:
-                case Code.Bgt_S:
-                case Code.Ble:
-                case Code.Ble_S:
-                case Code.Bge:
-                case Code.Bge_S:
-                case Code.Brfalse:
-                case Code.Brfalse_S:
-                case Code.Brtrue:
-                case Code.Brtrue_S:
-                case Code.Bne_Un:
-                case Code.Bne_Un_S:
-                case Code.Bge_Un:
-                case Code.Bge_Un_S:
-                case Code.Ble_Un:
-                case Code.Ble_Un_S:
-                case Code.Bgt_Un:
-                case Code.Bgt_Un_S:
-                case Code.Blt_Un:
-                case Code.Blt_Un_S:
-                    return new ReturnResult(this.System.System_Boolean);
-                case Code.Ret:
-                case Code.Neg:
-                case Code.Not:
-                case Code.Dup:
-                    return this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                case Code.Ldloca:
-                case Code.Ldloca_S:
-                    var localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
-                    return new ReturnResult(localVarType.IsValueType ? localVarType.ToPointerType() : localVarType);
-                case Code.Ldloc:
-                case Code.Ldloc_S:
-                    localVarType = this.LocalInfo[(opCode as OpCodeInt32Part).Operand].LocalType;
-                    return new ReturnResult(localVarType);
-                case Code.Ldloc_0:
-                    localVarType = this.LocalInfo[0].LocalType;
-                    return new ReturnResult(localVarType);
-                case Code.Ldloc_1:
-                    localVarType = this.LocalInfo[1].LocalType;
-                    return new ReturnResult(localVarType);
-                case Code.Ldloc_2:
-                    localVarType = this.LocalInfo[2].LocalType;
-                    return new ReturnResult(localVarType);
-                case Code.Ldloc_3:
-                    localVarType = this.LocalInfo[3].LocalType;
-                    return new ReturnResult(localVarType);
-                case Code.Ldarg:
-                case Code.Ldarg_S:
-                    return
-                        new ReturnResult(
-                            this.Parameters[(opCode as OpCodeInt32Part).Operand - (this.HasMethodThis ? 1 : 0)]
-                                .ParameterType);
-                case Code.Ldarg_0:
-                    return new ReturnResult(this.HasMethodThis ? this.ThisType.ToClass() : this.Parameters[0].ParameterType);
-                case Code.Ldarg_1:
-                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 0 : 1].ParameterType);
-                case Code.Ldarg_2:
-                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 1 : 2].ParameterType);
-                case Code.Ldarg_3:
-                    return new ReturnResult(this.Parameters[this.HasMethodThis ? 2 : 3].ParameterType);
-                case Code.Ldarga:
-                case Code.Ldarga_S:
-                    var opCodeInt32Part = opCode as OpCodeInt32Part;
-                    var parameterType =
-                        this.Parameters[opCodeInt32Part.Operand - (this.HasMethodThis ? 1 : 0)].ParameterType;
-                    return new ReturnResult(parameterType.ToPointerType());
-                case Code.Ldelem:
-                case Code.Ldelem_I:
-                case Code.Ldelem_I1:
-                case Code.Ldelem_I2:
-                case Code.Ldelem_I4:
-                case Code.Ldelem_I8:
-                case Code.Ldelem_R4:
-                case Code.Ldelem_R8:
-                case Code.Ldelem_U1:
-                case Code.Ldelem_U2:
-                case Code.Ldelem_U4:
-                    var result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-
-                    // we are loading address of item of the array so we need to return type of element not the type of the array
-                    return new ReturnResult(result.Type.GetElementType());
-                case Code.Ldelem_Ref:
-                    result = this.EstimatedResultOf(opCode.OpCodeOperands[0]) ?? new ReturnResult((IType)null);
-                    return result;
-
-                case Code.Ldelema:
-                    result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-
-                    // we are loading address of item of the array so we need to return type of element not the type of the array
-                    // var typeOfElement = result.IType.HasElementType ? result.IType.GetElementType() : result.IType;
-                    var typeOfElement = result.Type.GetElementType();
-                    return new ReturnResult(typeOfElement.ToPointerType());
-
-                case Code.Ldind_Ref:
-                    var resultType = this.EstimatedResultOf(opCode.OpCodeOperands[0]).Type;
-                    return new ReturnResult(resultType.GetElementType());
-
-                case Code.Nop:
-                    return null;
-
-                case Code.Localloc:
-                    return new ReturnResult(this.System.System_Byte.ToPointerType());
-
-                default:
-                    return new ReturnResult(this.RequiredOutgoingType(opCode));
-            }
-
-            return null;
+            return new ReturnResult(this.RequiredOutgoingType(opCode));
         }
 
         /// <summary>
@@ -1762,13 +1577,7 @@ namespace Il2Native.Logic
 
             this.Stacks.SaveBranchStackValue(opCode, this);
 
-            this.RequiredIncomingTypes(opCode);
-
-            // special case for constrained
-            if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || opCode.ToCode() == Code.Constrained)
-            {
-                opCode.RequiredOutgoingType = this.RequiredOutgoingType(opCode);
-            }
+            this.RequiredIncomingOutgoingTypes(opCode);
 
             // add to stack
             if (opCode.OpCode.StackBehaviourPush == StackBehaviour.Push0)
@@ -1812,7 +1621,7 @@ namespace Il2Native.Logic
             this.ThisType = type;
         }
 
-        protected void RequiredIncomingTypes(OpCodePart opCodePart)
+        protected void RequiredIncomingOutgoingTypes(OpCodePart opCodePart)
         {
             if (opCodePart.OpCodeOperands == null)
             {
@@ -1824,7 +1633,16 @@ namespace Il2Native.Logic
             foreach (var opCodeOperand in opCodePart.OpCodeOperands)
             {
                 opCodePart.RequiredIncomingTypes[index] = this.RequiredIncomingType(opCodePart, index++);
+                // TODO: when Code.Dup is used then value can be calculated already
+                if (opCodeOperand.RequiredOutgoingType == null)
+                {
+                    opCodeOperand.RequiredOutgoingType = this.RequiredOutgoingType(opCodeOperand);
+                }
             }
+
+            // TODO: double check if you process Code.Constrained
+            // special case for constrained
+            ////if (opCode.OpCode.StackBehaviourPush != StackBehaviour.Push0 || opCode.ToCode() == Code.Constrained)
         }
 
         /// <summary>
@@ -2130,7 +1948,7 @@ namespace Il2Native.Logic
                         return System.System_Void.ToPointerType();
                     }
 
-                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition);
+                    return this.RequiredIncomingType(opCodePart.UsedBy.OpCode, opCodePart.UsedBy.OperandPosition) ?? System.System_Void.ToPointerType();
 
                 case Code.Ldloc:
                 case Code.Ldloc_0:
@@ -2181,6 +1999,14 @@ namespace Il2Native.Logic
                     retType = ((OpCodeTypePart)opCodePart).Operand;
                     return retType;
 
+                case Code.Ldelema:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType.ToPointerType();
+
+                case Code.Ldelem:
+                    retType = ((OpCodeTypePart)opCodePart).Operand;
+                    return retType;
+
                 case Code.Ldelem_I:
                     return this.System.System_Int32;
 
@@ -2192,6 +2018,9 @@ namespace Il2Native.Logic
 
                 case Code.Ldelem_I4:
                     return this.System.System_Int32;
+
+                case Code.Ldelem_I8:
+                    return this.System.System_Int64;
 
                 case Code.Ldelem_U1:
                     return this.System.System_Byte;
@@ -2383,6 +2212,75 @@ namespace Il2Native.Logic
                 case Code.Cgt_Un:
                 case Code.Clt:
                 case Code.Clt_Un:
+                    return this.System.System_Boolean;
+
+                case Code.Neg:
+                case Code.Not:
+                    return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+
+                case Code.Add:
+                case Code.Add_Ovf:
+                case Code.Add_Ovf_Un:
+                case Code.Mul:
+                case Code.Mul_Ovf:
+                case Code.Mul_Ovf_Un:
+                case Code.Sub:
+                case Code.Sub_Ovf:
+                case Code.Sub_Ovf_Un:
+                case Code.Div:
+                case Code.Div_Un:
+                case Code.Rem:
+                case Code.Rem_Un:
+                case Code.Shl:
+                case Code.Shr:
+                case Code.Shr_Un:
+                case Code.And:
+                case Code.Or:
+                case Code.Xor:
+
+                    var opArithmetic = this.RequiredArithmeticIncomingType(opCodePart);
+                    if (opArithmetic != null)
+                    {
+                        return opArithmetic;
+                    }
+
+                    var op1 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+                    var op2 = this.RequiredOutgoingType(opCodePart.OpCodeOperands[1]);
+                    var returnOp = op1.TypeEquals(op2) || op1.IsPointer || op1.IsByRef || op1.IntTypeBitSize() > op2.IntTypeBitSize() ? op1 : op2;
+
+                    // in case of Pointer operations
+                    if (returnOp.IsPointer && returnOp.GetElementType().IsVoid()
+                        && (IntTypeRequired(opCodePart.OpCodeOperands[0]) || IntTypeRequired(opCodePart.OpCodeOperands[1])))
+                    {
+                        return System.System_Int32;
+                    }
+
+                    return returnOp;
+
+                case Code.Beq:
+                case Code.Beq_S:
+                case Code.Blt:
+                case Code.Blt_S:
+                case Code.Bgt:
+                case Code.Bgt_S:
+                case Code.Ble:
+                case Code.Ble_S:
+                case Code.Bge:
+                case Code.Bge_S:
+                case Code.Brfalse:
+                case Code.Brfalse_S:
+                case Code.Brtrue:
+                case Code.Brtrue_S:
+                case Code.Bne_Un:
+                case Code.Bne_Un_S:
+                case Code.Bge_Un:
+                case Code.Bge_Un_S:
+                case Code.Ble_Un:
+                case Code.Ble_Un_S:
+                case Code.Bgt_Un:
+                case Code.Bgt_Un_S:
+                case Code.Blt_Un:
+                case Code.Blt_Un_S:
                     return this.System.System_Boolean;
 
                 case Code.Ldlen:
