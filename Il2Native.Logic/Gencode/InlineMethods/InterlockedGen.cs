@@ -45,9 +45,30 @@ namespace Il2Native.Logic.Gencode
             CWriter cWriter)
         {
             var writer = cWriter.Output;
-            var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, "swap(", estimatedResult.Type);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, 1, ", ", estimatedResult.Type);
+            var estimatedResult0 = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[0]);
+            var estimatedResult1 = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[1]);
+
+            var typeFix = string.Empty;
+            var typeFixOp1 = string.Empty;
+            var typeFixOp2 = string.Empty;
+
+            if (estimatedResult1.Type.TypeEquals(cWriter.System.System_Single))
+            {
+                typeFix = "Int32";
+            }
+            else if (estimatedResult1.Type.TypeEquals(cWriter.System.System_Double))
+            {
+                typeFix = "Int64";
+            }
+
+            if (!string.IsNullOrEmpty(typeFix))
+            {
+                typeFixOp1 = string.Format("({0}*)", typeFix);
+                typeFixOp2 = string.Format("*({0}*)&", typeFix);
+            }
+
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 0, string.Format("swap({0}", typeFixOp1), estimatedResult0.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, 1, string.Format(", {0}", typeFixOp2), estimatedResult1.Type);
             writer.Write(")");
         }
 
@@ -70,9 +91,29 @@ namespace Il2Native.Logic.Gencode
         {
             var writer = cWriter.Output;
             var estimatedResult = cWriter.EstimatedResultOf(opCodeMethodInfo.OpCodeOperands[operands[2]]);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[0], "compare_and_swap(", estimatedResult.Type.ToPointerType());
-            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[1], ", ", estimatedResult.Type);
-            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[2], ", ", estimatedResult.Type);
+
+            var typeFix = string.Empty;
+            var typeFixOp1 = string.Empty;
+            var typeFixOp2 = string.Empty;
+
+            if (estimatedResult.Type.TypeEquals(cWriter.System.System_Single))
+            {
+                typeFix = "Int32";
+            }
+            else if (estimatedResult.Type.TypeEquals(cWriter.System.System_Double))
+            {
+                typeFix = "Int64";
+            }
+
+            if (!string.IsNullOrEmpty(typeFix))
+            {
+                typeFixOp1 = string.Format("({0}*)", typeFix);
+                typeFixOp2 = string.Format("*({0}*)&", typeFix);
+            }
+
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[0], string.Format("compare_and_swap({0}", typeFixOp1), estimatedResult.Type.ToPointerType());
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[1], string.Format(", {0}", typeFixOp2), estimatedResult.Type);
+            cWriter.UnaryOper(writer, opCodeMethodInfo, operands[2], string.Format(", {0}", typeFixOp2), estimatedResult.Type);
             writer.Write(")");
         }
 
