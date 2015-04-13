@@ -812,11 +812,11 @@ namespace Il2Native.Logic
                         var op1 = EstimatedResultOf(opCodeOperand1);
                         if (op0.Type.IsPointer && (!op1.Type.IsPointer || IsPointerConvert(opCodeOperand1)))
                         {
-                            this.FixAddSubPointerOperation(opCodeOperand0, opCodeOperand1, op0, op1);
+                            this.FixAddSubPointerOperation(opCodePart, opCodeOperand0, opCodeOperand1, op0, op1);
                         }
                         else if (op1.Type.IsPointer && (!op0.Type.IsPointer || IsPointerConvert(opCodeOperand0)))
                         {
-                            this.FixAddSubPointerOperation(opCodeOperand1, opCodeOperand0, op1, op0);
+                            this.FixAddSubPointerOperation(opCodePart, opCodeOperand1, opCodeOperand0, op1, op0);
                         }
                         else if (op0.Type.IsPointer && op1.Type.IsPointer
                                  && (op0.Type.GetElementType().TypeNotEquals(op1.Type.GetElementType()) || op0.Type.IsVoidPointer() || op1.Type.IsVoidPointer()))
@@ -824,11 +824,15 @@ namespace Il2Native.Logic
                             if (op0.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
                                 this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                                // to force recalculation
+                                opCodePart.RequiredOutgoingType = null;
                             }
 
                             if (op1.Type.GetElementType().TypeNotEquals(System.System_Byte))
                             {
                                 this.InsertOperand(opCodeOperand1, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                                // to force recalculation
+                                opCodePart.RequiredOutgoingType = null;
                             }
                         }
 
@@ -857,12 +861,14 @@ namespace Il2Native.Logic
             }
         }
 
-        private void FixAddSubPointerOperation(OpCodePart opCodeOperand0, OpCodePart opCodeOperand1, ReturnResult op0, ReturnResult op1)
+        private void FixAddSubPointerOperation(OpCodePart opCodePart, OpCodePart opCodeOperand0, OpCodePart opCodeOperand1, ReturnResult op0, ReturnResult op1)
         {
             var pointerOpFixed = this.FixPointerOperation(opCodeOperand0, opCodeOperand1, op0.Type.GetElementType());
             if (!pointerOpFixed && this.GetIntegerValueFromOpCode(opCodeOperand0) <= 0 && !op1.Type.IsPointer)
             {
                 this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                // to force recalculation
+                opCodePart.RequiredOutgoingType = null;
             }
         }
 
@@ -885,9 +891,13 @@ namespace Il2Native.Logic
                     case Code.Sub_Ovf_Un:
                         this.InsertOperand(opCodeOperand0.OpCodeOperands[0], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
                         this.InsertOperand(opCodeOperand0.OpCodeOperands[1], new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        // to force recalculation
+                        opCodePart.RequiredOutgoingType = null;
                         break;
                     default:
                         this.InsertOperand(opCodeOperand0, new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, this.System.System_Byte.ToPointerType()));
+                        // to force recalculation
+                        opCodePart.RequiredOutgoingType = null;
                         break;
                 }
 
@@ -1633,11 +1643,7 @@ namespace Il2Native.Logic
             foreach (var opCodeOperand in opCodePart.OpCodeOperands)
             {
                 opCodePart.RequiredIncomingTypes[index] = this.RequiredIncomingType(opCodePart, index++);
-                // TODO: when Code.Dup is used then value can be calculated already
-                if (opCodeOperand.RequiredOutgoingType == null)
-                {
-                    opCodeOperand.RequiredOutgoingType = this.RequiredOutgoingType(opCodeOperand);
-                }
+                opCodeOperand.RequiredOutgoingType = this.RequiredOutgoingType(opCodeOperand);
             }
 
             // TODO: double check if you process Code.Constrained
