@@ -49,10 +49,10 @@ namespace System.Threading
         public static extern int Exchange(ref int location1, int value);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern int Exchange(ref long location1, long value);
+        public static extern long Exchange(ref long location1, long value);
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern int Exchange(ref object location1, object value);
+        public static extern object Exchange(ref object location1, object value);
 
         //[MethodImpl(MethodImplOptions.InternalCall)]
         //public static extern int Exchange(ref IntPtr location1, IntPtr value);

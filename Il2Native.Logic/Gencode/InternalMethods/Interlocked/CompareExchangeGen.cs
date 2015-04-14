@@ -73,7 +73,7 @@
 
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
-                    CompareAndSwap, null, parameterType, new[] { castTo.ToPointerType().ToParameter(Location), castTo.ToParameter(Value), castTo.ToParameter(Comparand) }));
+                    CompareAndSwap, null, castTo, new[] { castTo.ToPointerType().ToParameter(Location), castTo.ToParameter(Value), castTo.ToParameter(Comparand) }));
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;
@@ -99,7 +99,7 @@
             ilCodeBuilder.LoadField(field);
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
-                    CompareAndSwap, null, parameterType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value), field.FieldType.ToParameter(Comparand) }));
+                    CompareAndSwap, null, field.FieldType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value), field.FieldType.ToParameter(Comparand) }));
             
             ilCodeBuilder.SaveField(field);
             

@@ -69,7 +69,7 @@
 
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
-                    Swap, null, parameterType, new[] { castTo.ToPointerType().ToParameter(Location), castTo.ToParameter(Value) }));
+                    Swap, null, castTo, new[] { castTo.ToPointerType().ToParameter(Location), castTo.ToParameter(Value) }));
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;
@@ -93,7 +93,7 @@
             ilCodeBuilder.LoadField(field);
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
-                    Swap, null, parameterType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value) }));
+                    Swap, null, field.FieldType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value) }));
 
             ilCodeBuilder.SaveField(field);
 
