@@ -149,6 +149,10 @@
             // Runtime helpers
             OffsetToStringDataGen.Register(typeResolver);
             InitializeArrayGen.Register(typeResolver);
+
+            // Interlocked
+            ExchangeGen.Register(typeResolver);
+            CompareExchangeGen.Register(typeResolver);
         }
 
         [Obsolete]

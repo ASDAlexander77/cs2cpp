@@ -10,24 +10,25 @@
 namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Reflection;
     using System.Text;
+
+    using Il2Native.Logic.CodeParts;
+    using Il2Native.Logic.Gencode.InternalMethods;
+
     using Microsoft.CodeAnalysis;
     using PEAssemblyReader;
 
     /// <summary>
     /// </summary>
-    public class SynthesizedMethodDecorator : IMethod
+    public class SynthesizedMethodDecorator : IMethod, IMethodBodyCustomAction
     {
         private readonly IMethodBody methodBody;
         private readonly IModule module;
         private readonly IEnumerable<IParameter> parameters;
         private IMethod method;
-
-        public SynthesizedMethodDecorator(IMethod method)
-        {
-            this.method = method;
-        }
+        private IGenericContext genericContext;
 
         public SynthesizedMethodDecorator(
             IMethod method,
@@ -39,6 +40,17 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             this.methodBody = methodBody;
             this.module = module;
             this.parameters = parameters;
+        }
+
+        public SynthesizedMethodDecorator(IMethod method, IGenericContext genericContext)
+            : this(method)
+        {
+            this.genericContext = genericContext;
+        }
+
+        protected SynthesizedMethodDecorator(IMethod method)
+        {
+            this.method = method;
         }
 
         public string AssemblyQualifiedName
@@ -173,7 +185,15 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public IType ReturnType
         {
-            get { return this.method.ReturnType; }
+            get
+            {
+                if (this.genericContext != null)
+                {
+                    return this.genericContext.ResolveTypeParameter(this.method.ReturnType);
+                }
+
+                return this.method.ReturnType;
+            }
         }
 
         /// <summary>
@@ -219,12 +239,35 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
 
         public IEnumerable<IParameter> GetParameters()
         {
+            IEnumerable<IParameter> enumerator;
             if (this.parameters != null)
             {
-                return this.parameters;
+                enumerator = this.parameters;
+            }
+            else
+            {
+                enumerator = this.method.GetParameters();
             }
 
-            return this.method.GetParameters();
+            if (enumerator == null)
+            {
+                yield break;
+            }
+
+            if (this.genericContext != null)
+            {
+                foreach (var parameter in enumerator)
+                {
+                    yield return this.genericContext.ResolveTypeParameter(parameter.ParameterType).ToParameter(parameter.Name, parameter.IsOut, parameter.IsRef);
+                }
+            }
+            else
+            {
+                foreach (var parameter in enumerator)
+                {
+                    yield return parameter;
+                }                
+            }
         }
 
         public IMethod ToSpecialization(IGenericContext genericContext)
@@ -275,6 +318,19 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             result.Append(')');
 
             return result.ToString();
+        }
+
+        public void Execute(CWriter writer, OpCodePart opCode)
+        {
+            if (this.method.HasProceduralBody)
+            {
+                var methodBody = this.method as IMethodBodyCustomAction;
+                Debug.Assert(methodBody != null, "should have IMethodBodyCustomAction");
+                if (methodBody != null)
+                {
+                    methodBody.Execute(writer, opCode);
+                }
+            }
         }
     }
 }

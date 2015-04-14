@@ -277,11 +277,9 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         /// </param>
         /// <returns>
         /// </returns>
-        /// <exception cref="NotImplementedException">
-        /// </exception>
         public IMethod ToSpecialization(IGenericContext genericContext)
         {
-            throw new NotImplementedException();
+            return new SynthesizedMethodDecorator(this, genericContext);
         }
 
         /// <summary>

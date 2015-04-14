@@ -137,7 +137,6 @@ namespace Il2Native.Logic
         /// <param name="processGenericMethodsOnly">
         /// </param>
         private static void ConvertAllTypes(
-            IlReader ilReader,
             ICodeWriter codeWriter,
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genMethodSpec,
@@ -161,7 +160,6 @@ namespace Il2Native.Logic
                 genMethodSpec.TryGetValue(type, out genericMethodSpecializatonsForType);
 
                 ConvertType(
-                    ilReader,
                     codeWriter,
                     type,
                     genericMethodSpecializatonsForType,
@@ -171,7 +169,6 @@ namespace Il2Native.Logic
         }
 
         private static void ConvertAllRuntimeTypes(
-            IlReader ilReader,
             ICodeWriter codeWriter,
             IEnumerable<IType> types)
         {
@@ -184,7 +181,6 @@ namespace Il2Native.Logic
                 }
 
                 ConvertRuntimeTypeInfo(
-                    ilReader,
                     codeWriter,
                     type);
             }
@@ -207,7 +203,6 @@ namespace Il2Native.Logic
         /// <param name="processGenericMethodsOnly">
         /// </param>
         private static void ConvertType(
-            IlReader ilReader,
             ICodeWriter codeWriter,
             IType type,
             IEnumerable<IMethod> genericMethodSpecializatons,
@@ -239,7 +234,6 @@ namespace Il2Native.Logic
             {
                 if (!processGenericMethodsOnly)
                 {
-                    // pre process step to get all used undefined structures
                     foreach (var ctor in IlReader.Constructors(type, codeWriter).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
                     {
                         codeWriter.WriteMethod(ctor, type.IsGenericType ? ctor.GetMethodDefinition() : null, genericTypeContext);
@@ -249,7 +243,6 @@ namespace Il2Native.Logic
 
             if (mode == ConvertingMode.Definition)
             {
-                // pre process step to get all used undefined structures
                 foreach (
                     var method in
                         IlReader.Methods(type, codeWriter, true).Select(m => MethodBodyBank.GetMethodWithCustomBodyOrDefault(m, codeWriter)))
@@ -291,16 +284,16 @@ namespace Il2Native.Logic
         /// <summary>
         /// to support using RuntimeType info to Generic Definitions and Pointers
         /// </summary>
-        private static void ConvertRuntimeTypeInfo(IlReader ilReader, ICodeWriter codeWriter, IType type)
+        private static void ConvertRuntimeTypeInfo(ICodeWriter codeWriter, IType type)
         {
             Debug.Assert(type.IsGenericTypeDefinition || type.IsPointer, "This method is for Generic Definitions or pointers only as it should not be processed in notmal way using ConvertType");
 
             var method = MethodBodyBank.GetMethodWithCustomBodyOrDefault(new SynthesizedGetTypeStaticMethod(type, codeWriter), codeWriter);
             codeWriter.WritePostDeclarationsAndInternalDefinitions(type, true);
-            ConvertMethod(ilReader, codeWriter, type, method);
+            ConvertMethod(codeWriter, type, method);
         }
 
-        private static void ConvertMethod(IlReader ilReader, ICodeWriter codeWriter, IType type, IMethod method, IMethod methodOpCodeHolder = null)
+        private static void ConvertMethod(ICodeWriter codeWriter, IType type, IMethod method, IMethod methodOpCodeHolder = null)
         {
             var typeDefinition = type.IsGenericType ? type.GetTypeDefinition() : null;
             var typeSpecialization = type.IsGenericType && !type.IsGenericTypeDefinition ? type : null;
@@ -1078,14 +1071,12 @@ namespace Il2Native.Logic
             codeWriter.WriteStart(ilReader);
 
             ConvertAllTypes(
-                ilReader,
                 codeWriter,
                 types,
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
             ConvertAllTypes(
-                ilReader,
                 codeWriter,
                 types,
                 genericMethodSpecializationsSorted,
@@ -1093,7 +1084,6 @@ namespace Il2Native.Logic
 
             // Append definition of Generic Methods of not used non-generic types
             ConvertAllTypes(
-                ilReader,
                 codeWriter,
                 genericMethodSpecializationsSorted.Keys.Where(k => !types.Contains(k)).ToList(),
                 genericMethodSpecializationsSorted,
@@ -1102,7 +1092,6 @@ namespace Il2Native.Logic
 
             // Append not generated sgettypes
             ConvertAllRuntimeTypes(
-                ilReader,
                 codeWriter,
                 ilReader.UsedTypeTokens.Where(k => (k.IsGenericTypeDefinition || k.IsPointer) && !types.Contains(k)).ToList());
 

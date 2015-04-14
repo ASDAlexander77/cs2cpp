@@ -432,6 +432,12 @@ namespace Il2Native.Logic
             return IlReader.Methods(normalType, typeResolver).Where(f => f.Name == methodName);
         }
 
+        public static IEnumerable<IMethod> GetMethodsByMetadataName(this IType classType, string methodName, ITypeResolver typeResolver)
+        {
+            var normalType = classType.ToNormal();
+            return IlReader.Methods(normalType, typeResolver, true).Where(f => f.MetadataName == methodName);
+        }
+
         public static IField GetFieldByFieldNumber(this IType classType, int number, ITypeResolver typeResolver)
         {
             var normalType = classType.ToNormal();

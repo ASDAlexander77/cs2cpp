@@ -1,6 +1,8 @@
 ﻿namespace Il2Native.Logic.Gencode.SynthesizedMethods
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
+
     using PEAssemblyReader;
 
     public class SynthesizedModuleResolver : IModule
@@ -38,7 +40,13 @@
         {
             if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return this.tokenResolutions[token - 1] as IMethod;
+                var method = this.tokenResolutions[token - 1] as IMethod;
+                if (genericContext != null)
+                {
+                    return method.ToSpecialization(genericContext);
+                }
+
+                return method;
             }
 
             return this.method.Module.ResolveMethod(token, genericContext);
@@ -68,7 +76,20 @@
         {
             if (this.tokenResolutions != null && this.tokenResolutions.Count >= token)
             {
-                return this.tokenResolutions[token - 1] as IType;
+                var type = this.tokenResolutions[token - 1] as IType;
+                if (type != null && type.IsGenericParameter)
+                {
+                    Debug.Assert(genericContext != null, "You are using generic without context");
+
+                    if (type.Token.HasValue)
+                    {
+                        return this.method.Module.ResolveType(type.Token.Value, genericContext);
+                    }
+
+                    return genericContext.ResolveTypeParameter(type);
+                }
+
+                return type;
             }
 
             return this.method.Module.ResolveType(token, genericContext);

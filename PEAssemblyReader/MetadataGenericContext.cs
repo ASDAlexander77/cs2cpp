@@ -9,29 +9,19 @@
 namespace PEAssemblyReader
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
 
     using Microsoft.CodeAnalysis.CSharp.Symbols;
-    using Microsoft.CodeAnalysis.CSharp.Symbols.Metadata.PE;
 
-    // TODO: using generic context is not correct now, (or get rid of it, or make it right, see gtest-256.cs)
     /// <summary>
     /// </summary>
     public class MetadataGenericContext : IGenericContext
     {
-        /// <summary>
-        /// </summary>
-        protected MetadataGenericContext()
-        {
-        }
+        private AbstractTypeParameterMap cachedMap;
 
         /// <summary>
         /// </summary>
-        /// <param name="map">
-        /// </param>
-        protected MetadataGenericContext(object[] map)
+        protected MetadataGenericContext()
         {
         }
 
@@ -136,6 +126,12 @@ namespace PEAssemblyReader
         public static IGenericContext CreateCustomMap(IMethod methodDefinition, IMethod methodSpecialization, IMethod additionalMethodDefinition = null)
         {
             var context = new MetadataGenericContext();
+            context.CustomTypeSubstitution = CreateMap(methodDefinition, methodSpecialization, additionalMethodDefinition);
+            return context;
+        }
+
+        private static MutableTypeMap CreateMap(IMethod methodDefinition, IMethod methodSpecialization, IMethod additionalMethodDefinition = null)
+        {
             var customTypeSubstitution = new MutableTypeMap();
 
             var methodSpecAdapter = methodSpecialization as MetadataMethodAdapter;
@@ -162,8 +158,28 @@ namespace PEAssemblyReader
                 }
             }
 
-            context.CustomTypeSubstitution = customTypeSubstitution;
-            return context;
+            return customTypeSubstitution;
+        }
+
+        private static MutableTypeMap CreateMap(IType typeDefinition, IType typeSpecialization, IMethod methodDefinition, IMethod methodSpecialization, IMethod additionalMethodDefinition = null)
+        {
+            var typeMap = CreateMap(methodDefinition, methodSpecialization, additionalMethodDefinition);
+
+            var typeSpecAdapter = typeSpecialization as MetadataTypeAdapter;
+            if (typeSpecAdapter != null)
+            {
+                var typeSymbolSpec = typeSpecAdapter.TypeDef;
+                AppendMapping(typeMap, typeSymbolSpec as NamedTypeSymbol);
+            }
+
+            var typeDefAdapter = typeDefinition as MetadataTypeAdapter;
+            if (typeDefAdapter != null)
+            {
+                var typeSymbolDef = typeDefAdapter.TypeDef;
+                AppendMapping(typeMap, typeSymbolDef as NamedTypeSymbol, true);
+            }
+
+            return typeMap;
         }
 
         private static void AppendMapping(MutableTypeMap customTypeSubstitution, MethodSymbol methodSymbol, bool invert = false)
@@ -204,6 +220,11 @@ namespace PEAssemblyReader
 
         private static void AppendMapping(MutableTypeMap customTypeSubstitution, NamedTypeSymbol namedTypeSymbol, bool invert = false)
         {
+            if (namedTypeSymbol == null)
+            {
+                return;
+            }
+
             for (var i = 0; i < namedTypeSymbol.TypeParameters.Length; i++)
             {
                 var typeParameterSymbol = namedTypeSymbol.TypeParameters[i];
@@ -268,9 +289,57 @@ namespace PEAssemblyReader
         /// </param>
         /// <returns>
         /// </returns>
-        [Obsolete]
         public IType ResolveTypeParameter(IType typeParameter)
         {
+            if (!typeParameter.IsGenericTypeDefinition)
+            {
+                return typeParameter;
+            }
+
+            if (this.cachedMap == null)
+            {
+                this.cachedMap = CreateMap(this.TypeDefinition, this.TypeSpecialization, this.MethodDefinition, this.MethodSpecialization);
+            }
+
+            var map = this.cachedMap;
+
+            var typeDefAdapter = typeParameter as MetadataTypeAdapter;
+            if (typeDefAdapter != null)
+            {
+                IType elementType;
+                if (typeDefAdapter.IsPointer)
+                {
+                    elementType = typeDefAdapter.GetElementType();
+                    return ResolveTypeParameter(elementType).ToPointerType();
+                }
+
+                if (typeDefAdapter.IsByRef)
+                {
+                    elementType = typeDefAdapter.GetElementType();
+                    if (elementType.IsPinned)
+                    {
+                        return ResolveTypeParameter(elementType).ToByRefTypeAndPinned();
+                    }
+
+                    return ResolveTypeParameter(elementType).ToByRefType();
+                }
+
+                if (typeDefAdapter.IsArray)
+                {
+                    elementType = typeDefAdapter.GetElementType();
+                    return ResolveTypeParameter(elementType).ToArrayType(typeDefAdapter.ArrayRank);
+                }
+
+                if (!typeParameter.IsGenericParameter)
+                {
+                    return typeParameter;
+                }
+
+                var typeSymbolDef = typeDefAdapter.TypeDef;
+                var newType = map.SubstituteType(typeSymbolDef);
+                return new MetadataTypeAdapter(newType);
+            }
+
             return typeParameter;
         }
 
