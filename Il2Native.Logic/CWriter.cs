@@ -2242,6 +2242,7 @@ namespace Il2Native.Logic
             Debug.Assert(!fromTypeOriginal.Type.IsStructureType());
             Debug.Assert(!fromTypeOriginal.Type.IsEnum);
             Debug.Assert(!fromType.Type.IsEnum);
+            Debug.Assert(!fromType.Type.IsGenericTypeDefinition);
 
             writer.Write("((");
             toType.WriteTypePrefix(this);
