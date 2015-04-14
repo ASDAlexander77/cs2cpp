@@ -15,6 +15,11 @@
 
         private static readonly object Locker = new object();
 
+        public static void Clear()
+        {
+            MethodsByFullName.Clear();
+        }
+
         public static IMethod GetMethodWithCustomBodyOrDefault(IMethod method, ITypeResolver typeResolver)
         {
             if (MethodsByFullName.Count == 0)

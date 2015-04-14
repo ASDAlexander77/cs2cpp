@@ -2151,9 +2151,23 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
-                    var intPtrOper = IntTypeRequired(opCodePart);
+                case Code.Conv_U:
+                case Code.Conv_Ovf_U:
+                case Code.Conv_Ovf_U_Un:
+
                     retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    var nativeIntType = intPtrOper ? this.System.System_Int32 : retType != null && retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
+                    if (retType.IsPointer)
+                    {
+                        return retType;
+                    }
+
+                    if (retType.IsByRef)
+                    {
+                        return retType.GetElementType().ToPointerType();
+                    }
+
+                    var intPtrOper = IntTypeRequired(opCodePart);
+                    var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
                     return nativeIntType;
 
                 case Code.Conv_U8:
@@ -2175,14 +2189,6 @@ namespace Il2Native.Logic
                 case Code.Conv_Ovf_U1:
                 case Code.Conv_Ovf_U1_Un:
                     return this.System.System_Byte;
-
-                case Code.Conv_U:
-                case Code.Conv_Ovf_U:
-                case Code.Conv_Ovf_U_Un:
-                    intPtrOper = IntTypeRequired(opCodePart);
-                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    nativeIntType = intPtrOper ? this.System.System_Int32 : retType != null && retType.IsPointer ? retType : this.System.System_Void.ToPointerType();
-                    return nativeIntType;
 
                 case Code.Conv_R4:
                     return this.System.System_Single;
@@ -2292,6 +2298,9 @@ namespace Il2Native.Logic
                 case Code.Ldlen:
                 case Code.Sizeof:
                     return this.System.System_Int32;
+
+                case Code.Localloc:
+                    return this.System.System_Void.ToPointerType();
 
                 case Code.Dup:
                     return this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);

@@ -2136,6 +2136,7 @@ namespace Il2Native.Logic
         public override void StartProcess()
         {
             base.StartProcess();
+            MethodBodyBank.Clear();
             this.landingPadVariablesAreWritten = false;
             this.needToWriteUnwindException = false;
             this.needToWriteUnreachable = false;
@@ -4195,7 +4196,7 @@ namespace Il2Native.Logic
             var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
 
             var estimatedResultOfOperand0 = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-            if (!estimatedResultOfOperand0.Type.IsPointer)
+            if (!estimatedResultOfOperand0.Type.IsPointer && !estimatedResultOfOperand0.Type.IsByRef)
             {
                 this.WriteCCastOperand(opCode, 0, nativeIntType);
             }
