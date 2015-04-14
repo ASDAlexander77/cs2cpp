@@ -70,8 +70,22 @@ namespace PEAssemblyReader
         /// </returns>
         public static IMethodBody ResolveMethodBody(this IMethod methodInfo, IGenericContext genericContext)
         {
-            return methodInfo.GetMethodBody(genericContext)
-                   ?? (genericContext != null && genericContext.MethodDefinition != null ? genericContext.MethodDefinition.GetMethodBody(genericContext) : null);
+            var resolveMethodBody = methodInfo.GetMethodBody(genericContext);
+            if (resolveMethodBody.HasBody)
+            {
+                return resolveMethodBody;
+            }
+
+            if (genericContext != null && genericContext.MethodDefinition != null)
+            {
+                var genericContextResolveMethodBody = genericContext.MethodDefinition.GetMethodBody(genericContext);
+                if (genericContextResolveMethodBody.HasBody)
+                {
+                    return genericContextResolveMethodBody;
+                }
+            }
+
+            return resolveMethodBody;
         }
 
         /// <summary>

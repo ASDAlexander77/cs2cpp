@@ -4453,6 +4453,8 @@ namespace Il2Native.Logic
             }
             else if (!this.Stubs)
             {
+                Debug.Assert(method.MetadataName != "CompareExchange`1");
+
                 this.Output.WriteLine(";");
             }
         }
