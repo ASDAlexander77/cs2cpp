@@ -361,7 +361,7 @@
                     this.Add(Code.Ldc_I4_M1);
                     break;
                 default:
-                    if (@const>= 0 && @const <= byte.MaxValue)
+                    if (@const >= 0 && @const <= byte.MaxValue)
                     {
                         this.Add(Code.Ldc_I4_S, checked((byte)@const));
                     }
@@ -401,6 +401,18 @@
                     }
 
                     break;
+            }
+        }
+
+        public void LoadLocalAddress(int number)
+        {
+            if (number <= byte.MaxValue)
+            {
+                this.Add(Code.Ldloca_S, checked((byte)number));
+            }
+            else
+            {
+                this.Add(Code.Ldloca, number);
             }
         }
 

@@ -86,6 +86,11 @@
 
             var ilCodeBuilder = new IlCodeBuilder();
 
+            ilCodeBuilder.Locals.Add(parameterType);
+
+            // to save for SaveField
+            ilCodeBuilder.LoadLocalAddress(0);
+
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.LoadFieldAddress(field);
             ilCodeBuilder.LoadArgumentAddress(2);
@@ -94,7 +99,11 @@
             ilCodeBuilder.LoadField(field);
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
-                    CompareAndSwap, null, parameterType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value), parameterType.ToParameter(Comparand) }));
+                    CompareAndSwap, null, parameterType, new[] { field.FieldType.ToPointerType().ToParameter(Location), field.FieldType.ToParameter(Value), field.FieldType.ToParameter(Comparand) }));
+            
+            ilCodeBuilder.SaveField(field);
+            
+            ilCodeBuilder.LoadLocal(0);
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;
