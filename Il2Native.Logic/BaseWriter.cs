@@ -1098,6 +1098,16 @@ namespace Il2Native.Logic
                 {
                     // detect required types in alternative values
                     var opCodeUsedFromAlternativeValues = alternativeValues.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                    if (opCodeUsedFromAlternativeValues == null)
+                    {
+                        var usedByAlternativeValues = alternativeValues.Values.LastOrDefault(v => v.UsedByAlternativeValues != null);
+                        if (usedByAlternativeValues != null)
+                        {
+                            opCodeUsedFromAlternativeValues =
+                                usedByAlternativeValues.UsedByAlternativeValues.Values.LastOrDefault(
+                                    v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                        }
+                    }
 
                     Debug.Assert(opCodeUsedFromAlternativeValues != null, "Operand could not be found for Phi Nodes");
 

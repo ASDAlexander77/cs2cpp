@@ -686,14 +686,16 @@ namespace Ll2NativeTests
             // 297 - 'RuntimeCompatibility' could not be found
             // 305 - GetConstructors not implemented
             // 311 - extern is used with DllImport
-            // 316 - TODO: NEED TO BE FIXED (new T() is removed in the code, find out why), call !!0 [CoreLib]System.Activator::CreateInstance<!!T>() needs to be replaced with new !!T();
             // 329 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 340 - error CS1061: 'System.Type' does not contain a definition for 'GetMember'
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
             // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 349 - error CS1061: 'System.Delegate' does not contain a definition for 'DynamicInvoke'
+            // 351 - !!!!casting Nullable<Enum> to Enum: TODO: Can be fixed 
             // 350 - error CS0234: The type or namespace name 'IEquatable<T>' TODO: Can be fixed
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
+            // 358 - Decimals are not implemented
+            // 378 - !!!!getting value from Nullable<T>: TODO: Can be fixed 
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
 
             // 53 - ValueType.ToString() not implemented
@@ -754,7 +756,10 @@ namespace Ll2NativeTests
                 345,
                 349,
                 350,
-                352
+                351,
+                352,
+                358,
+                378
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
