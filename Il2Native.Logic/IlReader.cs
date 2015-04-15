@@ -1305,10 +1305,17 @@ namespace Il2Native.Logic
 
                         if (code == Code.Box)
                         {
-                            this.AddStructType(type);
+                            this.AddStructType(type);   
                             if (type.IsValueType)
                             {
                                 this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
+                            }
+                            else if (type.IsPointer)
+                            {
+                                this.AddCalledMethod(
+                                    new SynthesizedBoxMethod(
+                                        CWriter.PointerSize == 4 ? this.TypeResolver.System.System_Int32 : this.TypeResolver.System.System_Int64,
+                                        this.TypeResolver));
                             }
                         }
 
