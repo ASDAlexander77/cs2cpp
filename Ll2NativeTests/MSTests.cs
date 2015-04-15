@@ -283,6 +283,12 @@ namespace Ll2NativeTests
         [TestMethod]
         public void TestCompileAndRunLlvm()
         {
+            // TODO: finish
+            // __arglist
+
+            // TODO: finish
+            // Nullable<T> to object when nullable is null, tests gtests-378 and 372
+
             // Bug of using struct references instead of copying them into stack (following example has a problem because value from Code.Ldloc1 overwriting the value 
             // of Code.Ldloc2 after storing value into Code.Ldloc1, we would not have an issue if we have copied the value of Code.Ldloc1 into stack and then read it later
             /*
@@ -302,7 +308,7 @@ namespace Ll2NativeTests
              */
 
             // Bug, needs to be fixed, LoadLocal/SaveLocal used in Code.Dup
-            // test-527
+            // test-527 - for Roslyn
             /*
                   private int[] stack = new int[1];
                   private int cc;
@@ -423,6 +429,8 @@ namespace Ll2NativeTests
             // 500 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition 
             // 507 - error CS0103: The name 'MethodAttributes' does not exist in the current context
             // 513 - CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames'
+            // 524 - using lock with null (TODO: can be fixed)
+            // 527 - bug for Dup values in Roslyn (TODO: investigate)
             // -----------
             // 32, 55, 74 - missing class
 
@@ -546,7 +554,9 @@ namespace Ll2NativeTests
                         498,
                         500,
                         507,
-                        513
+                        513,
+                        524,
+                        527
                     });
 
             if (CompilerHelper.UsingRoslyn)
