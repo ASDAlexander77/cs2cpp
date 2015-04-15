@@ -692,6 +692,9 @@ namespace Ll2NativeTests
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
             // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 349 - error CS1061: 'System.Delegate' does not contain a definition for 'DynamicInvoke'
+            // 350 - error CS0234: The type or namespace name 'IEquatable<T>' TODO: Can be fixed
+            // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
+            // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
 
             // 53 - ValueType.ToString() not implemented
 
@@ -749,7 +752,9 @@ namespace Ll2NativeTests
                 340,
                 341,
                 345,
-                349
+                349,
+                350,
+                352
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {

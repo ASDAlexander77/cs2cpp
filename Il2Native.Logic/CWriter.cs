@@ -1574,7 +1574,7 @@ namespace Il2Native.Logic
                 case Code.Sizeof:
                     opCodeTypePart = opCode as OpCodeTypePart;
                     this.Output.Write("sizeof(");
-                    if (!opCodeTypePart.Operand.IsPointer && !opCodeTypePart.Operand.UseAsClass)
+                    if (!opCodeTypePart.Operand.IsPointer || opCodeTypePart.Operand.UseAsClass)
                     {
                         opCodeTypePart.Operand.WriteTypeWithoutModifiers(this);
                     }
