@@ -43,7 +43,7 @@ namespace System.IO
 
         public override void WriteLine(bool value)
         {
-            throw new NotImplementedException();
+            Write(value ? Boolean.TrueLiteral : Boolean.FalseLiteral);
         }
 
         public override void WriteLine(char value)
