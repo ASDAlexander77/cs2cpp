@@ -65,6 +65,8 @@ typedef uint64_t UInt64;
 typedef float Single;
 typedef double Double;
 
+#define GC_MALLOC calloc
+
 extern "C" Byte* calloc(UInt32);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);
 extern "C" Void __cxa_pure_virtual();

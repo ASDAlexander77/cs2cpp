@@ -124,4 +124,7 @@
   <data name="gc_declarations" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\gc_declarations.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="gc_declarations_debug" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\gc_declarations_debug.c;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

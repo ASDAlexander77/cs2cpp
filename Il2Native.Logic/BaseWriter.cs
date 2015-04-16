@@ -154,7 +154,7 @@ namespace Il2Native.Logic
 
         public virtual string GetAllocator()
         {
-            throw new NotImplementedException();
+            return "GC_MALLOC";
         }
 
         /// <summary>

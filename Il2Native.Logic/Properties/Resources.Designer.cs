@@ -61,8 +61,25 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to int8_t* malloc(int32_t);
-        ///.
+        ///   Looks up a localized string similar to #ifdef _MSC_VER
+        ///typedef __int8 int8_t;
+        ///typedef __int16 int16_t;
+        ///typedef __int32 int32_t;
+        ///typedef __int64 int64_t;
+        ///typedef unsigned __int8 uint8_t;
+        ///typedef unsigned __int16 uint16_t;
+        ///typedef unsigned __int32 uint32_t;
+        ///typedef unsigned __int64 uint64_t;
+        ///
+        ///extern &quot;C&quot; void* alloca(uint32_t);
+        ///
+        ///extern &quot;C&quot; void* memcpy(void* dst, void* src, int32_t size);
+        ///extern &quot;C&quot; void* memset(void *,int32_t,uint32_t);
+        ///
+        ///template&lt;typename T&gt; T compare_and_swap(T* reg, T oldval, T newval)
+        ///{
+        ///	T old_reg_val = *reg;
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string c_declarations {
             get {
@@ -71,16 +88,28 @@ namespace Il2Native.Logic.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to GC_init();
-        ///int8_t* GC_malloc(int32_t);
-        ///int8_t* GC_malloc_atomic(int32_t);
-        ///int8_t* GC_realloc(int8_t*, int32_t);
-        ///int32_t GC_get_heap_size();
-        ///.
+        ///   Looks up a localized string similar to extern &quot;C&quot; void GC_init();
+        ///extern &quot;C&quot; void* GC_malloc(UInt32);
+        ///
+        ///#undef GC_MALLOC
+        ///#define GC_MALLOC GC_malloc
+        ///
+        ///#undef GC_INIT
+        ///#define GC_INIT GC_init.
         /// </summary>
         internal static string gc_declarations {
             get {
                 return ResourceManager.GetString("gc_declarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to #define GC_DEBUG
+        ///#include &quot;gc.h&quot;.
+        /// </summary>
+        internal static string gc_declarations_debug {
+            get {
+                return ResourceManager.GetString("gc_declarations_debug", resourceCulture);
             }
         }
     }

@@ -163,6 +163,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool GcDebug { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool Gctors { get; private set; }
 
         /// <summary>
@@ -1865,15 +1869,6 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        public override string GetAllocator()
-        {
-            return this.Gc ? "GC_malloc" : "calloc";
-        }
-
-        /// <summary>
-        /// </summary>
         /// <param name="name">
         /// </param>
         /// <param name="index">
@@ -2100,6 +2095,8 @@ namespace Il2Native.Logic
             {
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
+
+            this.GcDebug = args != null && args.Contains("gcdebug");
 
             // predefined settings
             if (args != null && args.Contains("android"))
@@ -3156,7 +3153,7 @@ namespace Il2Native.Logic
 
             if (this.Gc)
             {
-                this.Output.WriteLine(Resources.gc_declarations);
+                this.Output.WriteLine(this.GcDebug ? Resources.gc_declarations_debug : Resources.gc_declarations);
                 this.Output.WriteLine(string.Empty);
             }
 
@@ -4235,7 +4232,7 @@ namespace Il2Native.Logic
 
             if (this.Gc && this.IsCoreLib)
             {
-                this.Output.WriteLine("GC_init();");
+                this.Output.WriteLine("GC_INIT();");
             }
 
             foreach (var staticCtor in this.StaticConstructors)

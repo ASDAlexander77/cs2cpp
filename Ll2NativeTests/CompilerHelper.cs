@@ -68,6 +68,10 @@
 
         /// <summary>
         /// </summary>
+        public const bool GcDebugEnabled = true;
+
+        /// <summary>
+        /// </summary>
         public const bool GctorsEnabled = true;
 
         /// <summary>
@@ -163,6 +167,11 @@
             if (stubs)
             {
                 args.Add("stubs");
+            }
+
+            if (GcDebugEnabled)
+            {
+                args.Add("gcdebug");
             }
 
             return args.ToArray();
