@@ -44,6 +44,7 @@ namespace Il2Native
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
                 Console.WriteLine("  /debug                  Generate debug information");
+                Console.WriteLine("  /line-                  Stop generating #line in C code to map C# source when /debug provided");
                 Console.WriteLine("  /gcdebug                Enable debug mode for Boehm garbage collector");
                 Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");

@@ -353,7 +353,7 @@ namespace System
                     {
                         if (gettimeofday(p, p2) == 0)
                         {
-                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10 + p2[2] * TicksPerMinute);
+                            return new DateTime(p[0] * TicksPerSecond + p[1] * 10 + p2[0] * TicksPerMinute);
                         }
                     }
 

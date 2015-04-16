@@ -159,6 +159,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool DebugInfoNoLineGenerating { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool Gc { get; private set; }
 
         /// <summary>
@@ -2096,6 +2100,8 @@ namespace Il2Native.Logic
                 this.debugInfoGenerator = new DebugInfoGenerator(pdbFilePath, sourceFilePath);
             }
 
+            this.DebugInfoNoLineGenerating = args != null && args.Contains("line-");
+
             this.GcDebug = args != null && args.Contains("gcdebug");
 
             // predefined settings
@@ -3142,7 +3148,7 @@ namespace Il2Native.Logic
                 this.DebugInfo = false;
             }
 
-            if (this.DebugInfo)
+            if (this.DebugInfo && !this.DebugInfoNoLineGenerating)
             {
                 this.WriteDebugLine();
             }
@@ -4507,7 +4513,7 @@ namespace Il2Native.Logic
                     this.ReadDbgLine(enumerator.Current);
                     this.WriteLabels(this.Output, enumerator.Current);
 
-                    if (this.DebugInfo && this.debugInfoGenerator.CurrentDebugLineNew)
+                    if (this.DebugInfo && !this.DebugInfoNoLineGenerating && this.debugInfoGenerator.CurrentDebugLineNew)
                     {
                         this.WriteDebugLine();
                     }
