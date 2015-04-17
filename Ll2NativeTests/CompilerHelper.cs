@@ -25,6 +25,8 @@
 
         public const string OutputObjectFileExt = "obj";
         public const string Target = "i686-w64-mingw32";
+
+        public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
 #endif
 #if _DISK_D_
         public const string SourcePath = @"D:\Temp\CSharpTranspilerExt\Mono-Class-Libraries\mcs\tests\";
@@ -48,6 +50,8 @@
 
         public const string OutputObjectFileExt = "obj";
         public const string Target = "i686-w64-mingw32";
+
+        public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
 #endif
 
         /// <summary>
@@ -76,7 +80,7 @@
 
         /// <summary>
         /// </summary>
-        public const bool DebugInfo = true;
+        public const bool DebugInfo = false;
 
         /// <summary>
         /// </summary>
@@ -220,7 +224,7 @@
                     Il2Converter.Convert(Path.GetFullPath(CoreLibPath), OutputPath, GetConverterArgs(false));
                 }
 
-                ExecCmd("g++", string.Format("-c {0}-o CoreLib.{1} CoreLib.cpp", opt ? "-O3 " : string.Empty, OutputObjectFileExt));
+                ExecCmd("g++", string.Format("-c {0}-o CoreLib.{1} CoreLib.cpp{2}", opt ? "-O3 " : string.Empty, OutputObjectFileExt, GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
             }
 
             if (!justCompile)
@@ -234,10 +238,11 @@
                 ExecCmd(
                     "g++",
                     string.Format(
-                        "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .",
+                        "-o {0}.exe {0}.cpp CoreLib.{1} {2} -lstdc++ -lgc-lib -march=i686 -L .{3}",
                         fileName,
                         OutputObjectFileExt,
-                        opt ? "-O3 " : string.Empty));
+                        opt ? "-O3 " : string.Empty,
+                        GcDebugEnabled ? " -I " + GcHeaders : string.Empty));
 
                 // test execution
                 ExecCmd(string.Format("{0}.exe", fileName), readOutput: true);

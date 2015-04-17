@@ -431,6 +431,7 @@ namespace Ll2NativeTests
             // 513 - CS1061: 'System.Reflection.Assembly' does not contain a definition for 'GetManifestResourceNames'
             // 524 - using lock with null (TODO: can be fixed)
             // 527 - bug for Dup values in Roslyn (TODO: investigate)
+            // 530 - special chars used
             // -----------
             // 32, 55, 74 - missing class
 
@@ -556,7 +557,8 @@ namespace Ll2NativeTests
                         507,
                         513,
                         524,
-                        527
+                        527,
+                        530
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -590,7 +592,11 @@ namespace Ll2NativeTests
 
             CompilerHelper.ExecCmd(
                 "g++",
-                string.Format("{1}-o CoreLib.obj -c CoreLib.cpp", CompilerHelper.Target, CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty));
+                string.Format(
+                    "{1}-o CoreLib.obj -c CoreLib.cpp{2}",
+                    CompilerHelper.Target,
+                    CompilerHelper.CompileWithOptimization ? "-O2 " : string.Empty,
+                    CompilerHelper.GcDebugEnabled ? " -I " + CompilerHelper.GcHeaders : string.Empty));
         }
 
         /// <summary>
@@ -769,7 +775,8 @@ namespace Ll2NativeTests
                 351,
                 352,
                 358,
-                378
+                378,
+                380
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
