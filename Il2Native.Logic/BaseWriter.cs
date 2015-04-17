@@ -152,9 +152,9 @@ namespace Il2Native.Logic
             ArraySingleDimensionGen.ResetClass();
         }
 
-        public virtual string GetAllocator()
+        public virtual string GetAllocator(bool isAtomic)
         {
-            return "GC_MALLOC";
+            return isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
         }
 
         /// <summary>

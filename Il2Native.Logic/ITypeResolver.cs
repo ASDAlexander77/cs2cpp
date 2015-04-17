@@ -6,7 +6,7 @@
     {
         SystemTypes System { get; }
 
-        string GetAllocator();
+        string GetAllocator(bool isAtomicAllocation);
 
         IType ResolveType(string fullTypeName, IGenericContext genericContext = null);
     }

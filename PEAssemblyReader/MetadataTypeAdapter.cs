@@ -1790,12 +1790,28 @@ namespace PEAssemblyReader
         /// </returns>
         private IEnumerable<IField> IterateFields(BindingFlags bindingFlags)
         {
-            if (this.typeDef.IsUnboundGenericType())
+            var typeSymbol = this.typeDef;
+            if (typeSymbol.IsUnboundGenericType())
             {
-                return this.typeDef.OriginalDefinition.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+                do
+                {
+                    foreach (var field in typeSymbol.OriginalDefinition.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol)))
+                    {
+                        yield return field;
+                    }
+                }
+                while (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy) && (typeSymbol = typeSymbol.BaseType) != null);
+                yield break;
             }
 
-            return this.typeDef.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol));
+            do
+            {
+                foreach (var field in typeSymbol.GetMembers().Where(m => m is FieldSymbol).Select(f => new MetadataFieldAdapter(f as FieldSymbol)))
+                {
+                    yield return field;
+                }
+            }
+            while (bindingFlags.HasFlag(BindingFlags.FlattenHierarchy) && (typeSymbol = typeSymbol.BaseType) != null);
         }
 
         /// <summary>

@@ -66,6 +66,7 @@ typedef float Single;
 typedef double Double;
 
 #define GC_MALLOC calloc
+#define GC_MALLOC_ATOMIC calloc
 
 extern "C" Byte* calloc(UInt32);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);

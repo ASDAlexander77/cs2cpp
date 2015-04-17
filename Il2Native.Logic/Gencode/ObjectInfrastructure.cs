@@ -12,6 +12,7 @@ namespace Il2Native.Logic.Gencode
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Reflection;
     using System.Reflection.Emit;
     using CodeParts;
 
@@ -37,7 +38,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("(Byte*) ");
-            writer.Write(cWriter.GetAllocator());
+            writer.Write(cWriter.GetAllocator(false));
             writer.Write("(");
             cWriter.WriteResult(size);
             writer.Write(")");
@@ -65,9 +66,17 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.SizeOf(declaringClassType);
             }
 
+            var isAtomicAllocation =
+                declaringClassType.GetFields(IlReader.DefaultFlags | BindingFlags.FlattenHierarchy).All(f => f.FieldType.IsValueType() || f.IsFixed);
+
+            if (declaringClassType.IsArray && declaringClassType.ArrayRank == 1 && declaringClassType.GetElementType().IsValueType)
+            {
+                isAtomicAllocation = true;
+            }
+
             newAlloc.Call(
                 new SynthesizedMethod(
-                    typeResolver.GetAllocator(),
+                    typeResolver.GetAllocator(isAtomicAllocation),
                     typeResolver.System.System_Void.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter("size") }));
 
