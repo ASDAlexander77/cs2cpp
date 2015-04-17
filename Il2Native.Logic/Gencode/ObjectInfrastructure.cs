@@ -66,8 +66,9 @@ namespace Il2Native.Logic.Gencode
                 newAlloc.SizeOf(declaringClassType);
             }
 
+            // static is not part of class
             var isAtomicAllocation =
-                declaringClassType.GetFields(IlReader.DefaultFlags | BindingFlags.FlattenHierarchy).All(f => f.FieldType.IsValueType() || f.IsFixed);
+                declaringClassType.GetFields(IlReader.DefaultFlags | BindingFlags.FlattenHierarchy).All(f => f.FieldType.IsValueType() || f.IsFixed || f.IsStatic);
 
             if (declaringClassType.IsArray && declaringClassType.ArrayRank == 1 && declaringClassType.GetElementType().IsValueType)
             {
