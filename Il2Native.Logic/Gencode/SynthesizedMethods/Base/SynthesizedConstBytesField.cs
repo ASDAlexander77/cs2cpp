@@ -38,6 +38,8 @@
 
         public bool IsVirtual { get; private set; }
 
+        public bool IsVirtualTable { get; private set; }
+
         public IModule Module { get; private set; }
 
         public bool Equals(IField other)

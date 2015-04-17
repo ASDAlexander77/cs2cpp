@@ -44,6 +44,10 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
+        bool IsVirtualTable { get; }
+
+        /// <summary>
+        /// </summary>
         /// <returns>
         /// </returns>
         byte[] GetFieldRVAData();

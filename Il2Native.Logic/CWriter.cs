@@ -39,6 +39,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public static string VTable = "__vtbl";
+
+        /// <summary>
+        /// </summary>
         public Stack<CatchOfFinallyClause> catchScopes = new Stack<CatchOfFinallyClause>();
 
         /// <summary>
@@ -2576,7 +2580,7 @@ namespace Il2Native.Logic
             this.WriteResultOrActualWrite(writer, operand);
             writer.Write("->");
             effectiveType = effectiveType.IsByRef ? effectiveType.GetElementType() : effectiveType;
-            this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName("vtable", this)*/);
+            this.WriteInterfacePath(effectiveType, interfaceType, null /*interfaceType.GetFieldByName(CWriter.VTable, this)*/);
         }
 
         /// <summary>

@@ -76,7 +76,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
             writer.Write("[{0}/*{1}*/])", methodIndex, methodInfo.Name);
@@ -91,7 +91,7 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName("vtable", cWriter));
+                cWriter.WriteFieldAccess(writer, opCodeMethodInfo, cWriter.System.System_Object.GetFieldByName(CWriter.VTable, cWriter));
             }
 
             writer.Write(")->");

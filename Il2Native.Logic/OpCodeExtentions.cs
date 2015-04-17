@@ -389,7 +389,7 @@ namespace Il2Native.Logic
                 type = type.GetInterfaces().First();
             }
 
-            return GetFieldByName(type, "vtable", typeResolver, false);
+            return GetFieldByName(type, CWriter.VTable, typeResolver, false);
         }
 
         public static IField GetFieldByName(this IType classType, string fieldName, ITypeResolver typeResolver, bool searchInBase = false)

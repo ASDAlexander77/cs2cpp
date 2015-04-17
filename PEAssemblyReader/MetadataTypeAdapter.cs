@@ -1063,7 +1063,7 @@ namespace PEAssemblyReader
         /// <returns>
         /// </returns>
         public IField ToField(
-            IType containingType, string name, bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0)
+            IType containingType, string name, bool isPublic = false, bool isReadOnly = false, bool isStatic = false, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false)
         {
             TypeSymbol containingTypeSymbol = null;
             var metadataTypeAdapter = containingType as MetadataTypeAdapter;
@@ -1084,7 +1084,8 @@ namespace PEAssemblyReader
                     containingTypeSymbol,
                     isFixed ? this.ToPointerType() : this,
                     isFixed,
-                    fixedSize);
+                    fixedSize,
+                    isVirtualTable);
         }
 
         /// <summary>

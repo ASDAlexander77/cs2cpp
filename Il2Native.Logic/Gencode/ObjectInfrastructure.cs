@@ -67,13 +67,7 @@ namespace Il2Native.Logic.Gencode
             }
 
             // static is not part of class
-            var isAtomicAllocation =
-                declaringClassType.GetFields(IlReader.DefaultFlags | BindingFlags.FlattenHierarchy).All(f => f.FieldType.IsValueType() || f.IsFixed || f.IsStatic);
-
-            if (declaringClassType.IsArray && declaringClassType.ArrayRank == 1 && declaringClassType.GetElementType().IsValueType)
-            {
-                isAtomicAllocation = true;
-            }
+            var isAtomicAllocation = typeResolver.CanBeAllocatedAtomically(declaringClassType);
 
             newAlloc.Call(
                 new SynthesizedMethod(
@@ -84,6 +78,48 @@ namespace Il2Native.Logic.Gencode
             newAlloc.Castclass(declaringClassType);
 
             return newAlloc;
+        }
+
+        private static bool CanBeAllocatedAtomically(this ITypeResolver typeResolver, IType declaringClassType)
+        {
+            if (declaringClassType.IsInterface)
+            {
+                return true;
+            }
+
+            return Logic.IlReader.Fields(declaringClassType, IlReader.DefaultFlags | BindingFlags.FlattenHierarchy, typeResolver)
+                        .All(typeResolver.IsAtomicValue);
+        }
+
+        private static bool IsAtomicValue(this ITypeResolver typeResolver, IField field)
+        {
+            if (field.IsConst || field.IsVirtualTable || field.IsStatic || typeResolver.IsAtomicValue(field.FieldType))
+            {
+                return true;
+            }
+
+            if (field.IsFixed)
+            {
+                var elementType = field.FieldType.GetElementType();
+                return typeResolver.IsAtomicValue(elementType);
+            }
+
+            return false;
+        }
+
+        private static bool IsAtomicValue(this ITypeResolver typeResolver, IType type)
+        {
+            if (!type.IsValueType || type.IsPointer)
+            {
+                return false;
+            }
+
+            if (type.IsStructureType())
+            {
+                return typeResolver.CanBeAllocatedAtomically(type);
+            }
+
+            return true;
         }
 
         public static IlCodeBuilder GetBoxMethod(
@@ -396,7 +432,7 @@ namespace Il2Native.Logic.Gencode
                 // set virtual table
                 codeBuilder.LoadArgument(0);
                 codeBuilder.LoadToken(declaringType.ToVirtualTableImplementation());
-                codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName("vtable", typeResolver));
+                codeBuilder.SaveField(typeResolver.System.System_Object.GetFieldByName(CWriter.VTable, typeResolver));
             }
 
             // init all interfaces

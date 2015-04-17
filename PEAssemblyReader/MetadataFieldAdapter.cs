@@ -64,10 +64,11 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="genericContext">
         /// </param>
-        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false, int fixedSize = 0)
+        internal MetadataFieldAdapter(FieldSymbol fieldDef, TypeSymbol contaningType, IType fieldType, bool isFixed = false, int fixedSize = 0, bool isVirtualTable = false)
             : this(fieldDef, contaningType, isFixed, fixedSize)
         {
             this._fieldType = fieldType;
+            this.IsVirtualTable = isVirtualTable;
         }
 
         /// <summary>
@@ -244,6 +245,10 @@ namespace PEAssemblyReader
                 return null;
             }
         }
+
+        /// <summary>
+        /// </summary>
+        public bool IsVirtualTable { get; set; }
 
         /// <summary>
         /// </summary>
