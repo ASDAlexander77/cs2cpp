@@ -152,8 +152,13 @@ namespace Il2Native.Logic
             ArraySingleDimensionGen.ResetClass();
         }
 
-        public virtual string GetAllocator(bool isAtomic)
+        public virtual string GetAllocator(bool isAtomic, bool isBigObj)
         {
+            if (isBigObj)
+            {
+                return isAtomic ? "GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE" : "GC_MALLOC_IGNORE_OFF_PAGE";
+            }
+
             return isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
         }
 

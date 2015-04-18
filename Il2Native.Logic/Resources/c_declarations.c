@@ -67,6 +67,8 @@ typedef double Double;
 
 #define GC_MALLOC calloc
 #define GC_MALLOC_ATOMIC calloc
+#define GC_MALLOC_IGNORE_OFF_PAGE calloc
+#define GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE calloc
 
 extern "C" Byte* calloc(UInt32);
 extern "C" Void* __dynamic_cast(Void*, Void*, Void*, Int32);

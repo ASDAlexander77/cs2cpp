@@ -432,6 +432,7 @@ namespace Ll2NativeTests
             // 524 - using lock with null (TODO: can be fixed)
             // 527 - bug for Dup values in Roslyn (TODO: investigate)
             // 530 - special chars used
+            // 531 - library IL
             // -----------
             // 32, 55, 74 - missing class
 
@@ -558,7 +559,8 @@ namespace Ll2NativeTests
                         513,
                         524,
                         527,
-                        530
+                        530,
+                        531
                     });
 
             if (CompilerHelper.UsingRoslyn)

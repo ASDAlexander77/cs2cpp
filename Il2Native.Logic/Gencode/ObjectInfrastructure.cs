@@ -38,7 +38,7 @@ namespace Il2Native.Logic.Gencode
             var writer = cWriter.Output;
 
             writer.Write("(Byte*) ");
-            writer.Write(cWriter.GetAllocator(false));
+            writer.Write(cWriter.GetAllocator(false, false));
             writer.Write("(");
             cWriter.WriteResult(size);
             writer.Write(")");
@@ -69,11 +69,36 @@ namespace Il2Native.Logic.Gencode
             // static is not part of class
             var isAtomicAllocation = typeResolver.CanBeAllocatedAtomically(declaringClassType);
 
+#if NO_GC_MALLOC_IGNORE_OFF_PAGE
             newAlloc.Call(
                 new SynthesizedMethod(
                     typeResolver.GetAllocator(isAtomicAllocation),
                     typeResolver.System.System_Void.ToPointerType(),
                     new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+#else
+            newAlloc.Add(Code.Dup);
+            // 100K
+            newAlloc.LoadConstant(100 * 1024);
+            var ifBigger100k = newAlloc.Branch(Code.Bge_Un, Code.Bge_Un_S);
+
+            newAlloc.Call(
+                new SynthesizedMethod(
+                    typeResolver.GetAllocator(isAtomicAllocation, false),
+                    typeResolver.System.System_Void.ToPointerType(),
+                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+
+            var leave = newAlloc.Branch(Code.Br, Code.Br_S);
+
+            newAlloc.Add(ifBigger100k);
+
+            newAlloc.Call(
+                new SynthesizedMethod(
+                    typeResolver.GetAllocator(isAtomicAllocation, true),
+                    typeResolver.System.System_Void.ToPointerType(),
+                    new[] { typeResolver.System.System_Int32.ToParameter("size") }));
+
+            newAlloc.Add(leave);
+#endif
 
             newAlloc.Castclass(declaringClassType);
 

@@ -1,4 +1,6 @@
 #undef GC_MALLOC
 #undef GC_MALLOC_ATOMIC
+#undef GC_MALLOC_IGNORE_OFF_PAGE
+#undef GC_MALLOC_ATOMIC_IGNORE_OFF_PAGE
 #define GC_DEBUG
 #include "gc.h"

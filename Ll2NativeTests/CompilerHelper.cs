@@ -51,7 +51,7 @@
         public const string OutputObjectFileExt = "obj";
         public const string Target = "i686-w64-mingw32";
 
-        public const string GcHeaders = @"C:\Dev\Gits\bdwgc\include\";
+        public const string GcHeaders = @"E:\Gits\bdwgc\include";
 #endif
 
         /// <summary>
