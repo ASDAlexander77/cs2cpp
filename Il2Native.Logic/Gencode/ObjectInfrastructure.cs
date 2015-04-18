@@ -69,6 +69,16 @@ namespace Il2Native.Logic.Gencode
             // static is not part of class
             var isAtomicAllocation = typeResolver.CanBeAllocatedAtomically(declaringClassType);
 
+            var localNumber = -1;
+            if (isAtomicAllocation)
+            {
+                localNumber = newAlloc.Locals.Count;
+                newAlloc.Locals.Add(typeResolver.System.System_Int32);
+
+                newAlloc.Add(Code.Dup);
+                newAlloc.SaveLocal(localNumber);
+            }
+
 #if NO_GC_MALLOC_IGNORE_OFF_PAGE
             newAlloc.Call(
                 new SynthesizedMethod(
@@ -99,6 +109,15 @@ namespace Il2Native.Logic.Gencode
 
             newAlloc.Add(leave);
 #endif
+
+            if (isAtomicAllocation)
+            {
+                // if this is atomic, you need to init memory
+                newAlloc.Add(Code.Dup);
+                newAlloc.LoadConstant(0);
+                newAlloc.LoadLocal(localNumber);
+                newAlloc.Add(Code.Initblk);
+            }
 
             newAlloc.Castclass(declaringClassType);
 

@@ -1632,7 +1632,7 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Initblk:
-                    this.WriteMemSet(opCode.OpCodeOperands[0], opCode.OpCodeOperands[1]);
+                    this.WriteMemSet(opCode.OpCodeOperands[0], opCode.OpCodeOperands[1], opCode.OpCodeOperands[2]);
                     break;
 
                 case Code.Cpblk:

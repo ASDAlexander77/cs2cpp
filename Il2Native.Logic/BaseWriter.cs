@@ -1411,6 +1411,7 @@ namespace Il2Native.Logic
                 case Code.Stelem_R4:
                 case Code.Stelem_R8:
                 case Code.Stelem_Ref:
+                case Code.Initblk:
                 case Code.Cpblk:
                     this.FoldNestedOpCodes(opCode, 3);
                     break;
