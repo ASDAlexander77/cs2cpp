@@ -560,7 +560,8 @@ namespace Ll2NativeTests
                         524,
                         527,
                         530,
-                        531
+                        531,
+                        547
                     });
 
             if (CompilerHelper.UsingRoslyn)
