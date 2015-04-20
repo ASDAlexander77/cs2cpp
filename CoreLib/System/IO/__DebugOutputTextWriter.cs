@@ -149,6 +149,12 @@ namespace System.IO
 
         public override void WriteLine(object value)
         {
+            if (value == null)
+            {
+                this.WriteLine();
+                return;
+            }
+
             WriteLine(value.ToString());
         }
 
@@ -328,7 +334,10 @@ namespace System.IO
 
         public override void Write(Object value)
         {
-            Write(value.ToString());
+            if (value != null)
+            {
+                Write(value.ToString());
+            }
         }
 
         public override void Write(String value)
