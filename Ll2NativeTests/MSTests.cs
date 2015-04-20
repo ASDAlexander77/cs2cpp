@@ -388,6 +388,12 @@ namespace Ll2NativeTests
             // 562 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'CallingConvention'
             // 564 - can't be compiled
             // 567 - error CS0246: The type or namespace name 'PreserveSig' could not be found
+            // 580 - Decimal not implemented
+            // 594 - Type.Assembly NotImplemented
+            // 604 - Type.GetMethods NotImplemented
+            // 605 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
+            // 606 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
+            // 607 - error CS0246: The type or namespace name 'AssemblyAlgorithmId' could not be found
             // -----------
             // 32, 55, 74 - missing class
 
@@ -522,7 +528,13 @@ namespace Ll2NativeTests
                         555,
                         562,
                         564,
-                        567
+                        567,
+                        580,
+                        594,
+                        604,
+                        605,
+                        606,
+                        607
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -658,6 +670,10 @@ namespace Ll2NativeTests
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
             // 358 - Decimals are not implemented
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
+            // 385 - error CS1061: 'System.Type' does not contain a definition for 'GetGenericArguments'
+            // 386 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
+            // 391 - error CS0019: Operator '??' cannot be applied to operands of type '<null>' and '<null>'
+            // 393 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
 
             // 53 - ValueType.ToString() not implemented
 
@@ -719,11 +735,15 @@ namespace Ll2NativeTests
                 350,
                 352,
                 358,
-                380
+                380,
+                385,
+                386,
+                391,
+                393
             });
 
             // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 382 });
+            skip.AddRange(new[] { 382, 386 });
 
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
