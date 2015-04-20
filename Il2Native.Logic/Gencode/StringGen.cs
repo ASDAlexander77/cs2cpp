@@ -29,14 +29,13 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         private static string _stringPrefixConstData;
 
-        public static IlCodeBuilder StringAllocationSizeMethodBody(
+        public static void StringAllocationSizeMethodBody(
+            IlCodeBuilder codeList,
             ITypeResolver typeResolver,
             IType stringType,
             IType charType,
             bool increaseSizeByOne = false)
         {
-            var codeList = new IlCodeBuilder();
-
             // add element size
             var elementSize = charType.GetTypeSize(typeResolver, true);
             codeList.SizeOf(charType);
@@ -67,8 +66,6 @@ namespace Il2Native.Logic.Gencode
 
             // parameters
             codeList.Parameters.AddRange(GetParameters(typeResolver));
-
-            return codeList;
         }
 
         public static IList<IParameter> GetParameters(ITypeResolver typeResolver)

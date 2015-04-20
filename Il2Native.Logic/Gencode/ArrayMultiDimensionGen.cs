@@ -250,13 +250,11 @@
             return Enumerable.Range(0, type.ArrayRank).Select(n => intType.ToParameter("param" + index++)).ToList();
         }
 
-        public static IlCodeBuilder MultiDimArrayAllocationSizeMethodBody(
+        public static void MultiDimArrayAllocationSizeMethodBody(
+            IlCodeBuilder codeBuilder,
             ITypeResolver typeResolver,
             IType arrayType)
         {
-            var codeBuilder = new IlCodeBuilder();
-
-            // TODO: replace with sizeof
             // add element size
             var elementType = arrayType.GetElementType();
             var elementSize = elementType.GetTypeSize(typeResolver, true);
@@ -285,8 +283,6 @@
 
             // parameters
             codeBuilder.Parameters.AddRange(GetParameters(arrayType, typeResolver));
-
-            return codeBuilder;
         }
 
         private static List<object> GetIndexPartMethodBody(

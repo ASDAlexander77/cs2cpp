@@ -49,12 +49,11 @@ namespace Il2Native.Logic.Gencode
             return arrayType.GetFieldByName("data", cWriter);
         }
 
-        public static IlCodeBuilder SingleDimArrayAllocationSizeMethodBody(
+        public static void SingleDimArrayAllocationSizeMethodBody(
+            IlCodeBuilder codeList,
             ITypeResolver typeResolver,
             IType arrayType)
         {
-            var codeList = new IlCodeBuilder();
-
             // add element size
             var elementType = arrayType.GetElementType();
             var elementSize = elementType.GetTypeSize(typeResolver, true);
@@ -79,8 +78,6 @@ namespace Il2Native.Logic.Gencode
 
             // parameters
             codeList.Parameters.AddRange(ArrayMultiDimensionGen.GetParameters(arrayType, typeResolver));
-
-            return codeList;
         }
 
         public static void GetSingleDimensionArrayCtor(

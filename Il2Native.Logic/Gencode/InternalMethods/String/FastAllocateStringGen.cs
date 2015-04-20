@@ -8,7 +8,8 @@
 
         public static void Register(ITypeResolver typeResolver)
         {
-            var codeBuilder = typeResolver.GetNewMethod(typeResolver.System.System_String, enableStringFastAllocation: true);
+            var codeBuilder = new IlCodeBuilder();
+            typeResolver.GetNewMethod(codeBuilder, typeResolver.System.System_String, enableStringFastAllocation: true);
 
             // additional code
             codeBuilder.Add(Code.Dup);

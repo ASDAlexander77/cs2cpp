@@ -44,25 +44,23 @@ namespace Il2Native.Logic.Gencode
             writer.Write(")");
         }
 
-        public static IlCodeBuilder GetAllocateMemoryCodeForObject(
-            this ITypeResolver typeResolver, IType declaringClassType, bool doNotTestNullValue, bool enableStringFastAllocation = false)
+        public static void GetAllocateMemoryCodeForObject(
+            this ITypeResolver typeResolver, IlCodeBuilder newAlloc, IType declaringClassType, bool doNotTestNullValue, bool enableStringFastAllocation = false)
         {
-            IlCodeBuilder newAlloc;
             if (declaringClassType.IsMultiArray)
             {
-                newAlloc = ArrayMultiDimensionGen.MultiDimArrayAllocationSizeMethodBody(typeResolver, declaringClassType);
+                ArrayMultiDimensionGen.MultiDimArrayAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType);
             }
             else if (declaringClassType.IsArray)
             {
-                newAlloc = ArraySingleDimensionGen.SingleDimArrayAllocationSizeMethodBody(typeResolver, declaringClassType);
+                ArraySingleDimensionGen.SingleDimArrayAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType);
             }
             else if (enableStringFastAllocation && declaringClassType.IsString)
             {
-                newAlloc = StringGen.StringAllocationSizeMethodBody(typeResolver, declaringClassType, typeResolver.System.System_Char, true);
+                StringGen.StringAllocationSizeMethodBody(newAlloc, typeResolver, declaringClassType, typeResolver.System.System_Char, true);
             }
             else
             {
-                newAlloc = new IlCodeBuilder();
                 newAlloc.SizeOf(declaringClassType);
             }
 
@@ -120,8 +118,6 @@ namespace Il2Native.Logic.Gencode
             }
 
             newAlloc.Castclass(declaringClassType);
-
-            return newAlloc;
         }
 
         private static bool CanBeAllocatedAtomically(this ITypeResolver typeResolver, IType declaringClassType)
@@ -175,7 +171,20 @@ namespace Il2Native.Logic.Gencode
             var normal = type.ToNormal();
             var isStruct = normal.IsStructureType();
 
-            var ilCodeBuilder = typeResolver.GetNewMethod(declaringClassType, true, doNotTestNullValue);
+            var ilCodeBuilder = new IlCodeBuilder();
+
+            // in case nullable does not have value just return null
+            if (declaringClassType.TypeEquals(typeResolver.System.System_Nullable_T))
+            {
+                ilCodeBuilder.LoadArgument(0);
+                ilCodeBuilder.LoadField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
+                var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+                ilCodeBuilder.LoadNull();
+                ilCodeBuilder.Add(Code.Ret);
+                ilCodeBuilder.Add(jump);
+            }
+
+            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, true, doNotTestNullValue);
 
             ilCodeBuilder.Parameters.Add(normal.ToParameter("_value"));
 
@@ -190,17 +199,6 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
-                // in case nullable does not have value just return null
-                if (declaringClassType.TypeEquals(typeResolver.System.System_Nullable_T))
-                {
-                    ilCodeBuilder.LoadArgument(0);
-                    ilCodeBuilder.LoadField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
-                    var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
-                    ilCodeBuilder.LoadNull();
-                    ilCodeBuilder.Add(Code.Ret);
-                    ilCodeBuilder.Add(jump);
-                }
-
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.LoadArgument(0);
@@ -593,8 +591,9 @@ namespace Il2Native.Logic.Gencode
         /// </param>
         /// <param name="doNotTestNullValue">
         /// </param>
-        public static IlCodeBuilder GetNewMethod(
+        public static void GetNewMethod(
             this ITypeResolver typeResolver,
+            IlCodeBuilder ilCodeBuilder,
             IType type,
             bool doNotCallInit = false,
             bool doNotTestNullValue = false,
@@ -602,7 +601,7 @@ namespace Il2Native.Logic.Gencode
         {
             var declaringClassType = type.ToClass();
 
-            var ilCodeBuilder = typeResolver.GetAllocateMemoryCodeForObject(declaringClassType, doNotTestNullValue, enableStringFastAllocation);
+            typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
 
             if (!doNotCallInit)
             {
@@ -614,8 +613,6 @@ namespace Il2Native.Logic.Gencode
             {
                 ilCodeBuilder.Add(Code.Ret);
             }
-
-            return ilCodeBuilder;
         }
 
         public static IlCodeBuilder GetSizeMethod(
