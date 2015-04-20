@@ -719,6 +719,12 @@ namespace PEAssemblyReader
                 return cmp;
             }
 
+            cmp = this.IsVirtualTable.CompareTo(type.IsVirtualTable);
+            if (cmp != 0)
+            {
+                return cmp;
+            }
+
             cmp = this.IsRtti.CompareTo(type.IsRtti);
             if (cmp != 0)
             {
@@ -1035,15 +1041,6 @@ namespace PEAssemblyReader
             }
 
             return this.Clone(true, true);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <returns>
-        /// </returns>
-        public IType ToDereferencedType()
-        {
-            return this.IsPointer ? this.GetElementType() : this;
         }
 
         /// <summary>

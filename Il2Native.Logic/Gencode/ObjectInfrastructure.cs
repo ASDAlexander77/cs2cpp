@@ -190,12 +190,20 @@ namespace Il2Native.Logic.Gencode
             }
             else
             {
+                // in case nullable does not have value just return null
+                if (declaringClassType.TypeEquals(typeResolver.System.System_Nullable_T))
+                {
+                    ilCodeBuilder.LoadArgument(0);
+                    ilCodeBuilder.LoadField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
+                    var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+                    ilCodeBuilder.LoadNull();
+                    ilCodeBuilder.Add(Code.Ret);
+                    ilCodeBuilder.Add(jump);
+                }
+
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
-                ////ilCodeBuilder.LoadArgumentAddress(0);
-                ////ilCodeBuilder.CopyObject(declaringClassType);
                 ilCodeBuilder.LoadArgument(0);
-                ////ilCodeBuilder.SaveObject(declaringClassType);
                 ilCodeBuilder.CopyObject(declaringClassType);
             }
 

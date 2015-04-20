@@ -961,12 +961,9 @@ namespace Il2Native.Logic
                     {
                         this.System.System_Int32.WriteCallUnboxObjectMethod(this, opCode);
                     }
-                    else
+                    else if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
                     {
-                        if (!this.WriteCast(opCodeTypePart, opCodeTypePart.OpCodeOperands[0], opCodeTypePart.Operand, true))
-                        {
-                            this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
-                        }
+                        this.WriteResultOrActualWrite(this.Output, opCodeTypePart.OpCodeOperands[0]);
                     }
 
                     break;
@@ -1615,7 +1612,7 @@ namespace Il2Native.Logic
 
                     ////this.WriteOperandResultOrActualWrite(this.Output, opCode, 0);
                     ////this.Output.Write(".Type.m_value");
- 
+
                     opCode.Result = new FullyDefinedReference(refAnyTypeVar, System.System_RuntimeTypeHandle);
 
                     break;
@@ -2078,7 +2075,7 @@ namespace Il2Native.Logic
                 writer.Write(")");
                 this.WriteResultOrActualWrite(writer, opCode.OpCodeOperands[0]);
                 writer.Write(")->");
-                this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null); 
+                this.WriteFieldAccessLeftExpression(writer, field.DeclaringType, field, null);
             }
             else
             {

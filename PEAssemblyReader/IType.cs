@@ -293,12 +293,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <returns>
-        /// </returns>
-        IType ToDereferencedType();
-
-        /// <summary>
-        /// </summary>
         /// <param name="containingType">
         /// </param>
         /// <param name="name">

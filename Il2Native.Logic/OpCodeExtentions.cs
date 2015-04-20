@@ -1040,6 +1040,11 @@ namespace Il2Native.Logic
             return opCode.Operand + opCode.AddressEnd;
         }
 
+        public static bool IsVirtual(this OpCodePart opCodePart)
+        {
+            return opCodePart.AddressEnd == 0;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCodeLabelsPart">
@@ -1248,6 +1253,35 @@ namespace Il2Native.Logic
             return type != null && other.CompareTo(type) == 0;
         }
 
+        public static bool TypeEqualsOrDerived(this IType type, IType other)
+        {
+            if (type == null && other == null)
+            {
+                return true;
+            }
+
+            if (type != null && other == null || type == null && other != null)
+            {
+                return false;
+            }
+
+            return type != null && (other.CompareTo(type) == 0 || type.IsDerivedFrom(other));
+        }
+
+        public static bool TypeEqualsOrBaseOf(this IType type, IType other)
+        {
+            if (type == null && other == null)
+            {
+                return true;
+            }
+
+            if (type != null && other == null || type == null && other != null)
+            {
+                return false;
+            }
+
+            return type != null && (other.CompareTo(type) == 0 || other.IsDerivedFrom(type));
+        }
         /// <summary>
         /// </summary>
         /// <param name="type">

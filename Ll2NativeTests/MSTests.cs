@@ -230,57 +230,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestCompile()
-        {
-            // TODO: WARNING! order of obj files in g++ cmd line is important, CoreLib.obj should be last one
-
-            // 10 - Double conversion (in CoreLib.dll some conversions are missing)
-            // 100 - using DllImport      
-            // 324 - bug NEED TO BE FIXED.
-            // 353 - does not have Main method
-            // 386 - Double conversion (in CoreLib.dll some conversions are missing)
-            // 387 - Decimal conversion (in CoreLib.dll some conversions are missing)
-            // 444 - codepage 65001 is used (can't be compiled)
-            // 535 - IntPtr conversion (in CoreLib.dll some conversions are missing)
-            // 550 - codepage 65001 is used (can't be compiled)
-            // 551 - multiple definition of Int32 (but all issues are fixed)
-            // 616 - test to compile Object (but it should be compiled without any Assembly reference)
-            // 631 - missing System_Decimal__op_UnaryNegation (the same issue as 596)
-            // 817 - redefinition of Int32
-            // 864 - Decimal conversion (in CoreLib.dll some conversions are missing)
-            var skip =
-                new List<int>(
-                    new[]
-                    {
-                        10,
-                        100,
-                        353,
-                        386,
-                        387,
-                        444,
-                        482,
-                        535,
-                        550,
-                        551,
-                        616,
-                        631,
-                        817,
-                        864
-                    });
-
-            CompilerHelper.AssertUiEnabled(false);
-
-            foreach (var index in Enumerable.Range(1, 907).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.Compile(string.Format("test-{0}", index));
-            }
-
-            CompilerHelper.AssertUiEnabled(true);
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         public void TestCompileAndRunLlvm()
         {
             // TODO: finish
@@ -433,6 +382,12 @@ namespace Ll2NativeTests
             // 527 - bug for Dup values in Roslyn (TODO: investigate)
             // 530 - special chars used
             // 531 - library IL
+            // 550 - used UTF8 in names
+            // 551 - using Int32 as struct in System name space (conflict of names)
+            // 555 - error CS0234: The type or namespace name 'Emit' does not exist in the namespace 'System.Reflection'
+            // 562 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'CallingConvention'
+            // 564 - can't be compiled
+            // 567 - error CS0246: The type or namespace name 'PreserveSig' could not be found
             // -----------
             // 32, 55, 74 - missing class
 
@@ -561,7 +516,13 @@ namespace Ll2NativeTests
                         527,
                         530,
                         531,
-                        547
+                        547,
+                        550,
+                        551,
+                        555,
+                        562,
+                        564,
+                        567
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -640,23 +601,6 @@ namespace Ll2NativeTests
         /// <summary>
         /// </summary>
         [TestMethod]
-        public void TestGenCompile()
-        {
-            var skip = new List<int>();
-
-            CompilerHelper.AssertUiEnabled(false);
-
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
-            {
-                CompilerHelper.Compile(string.Format("gtest-{0:000}", index));
-            }
-
-            CompilerHelper.AssertUiEnabled(true);
-        }
-
-        /// <summary>
-        /// </summary>
-        [TestMethod]
         public void TestGenCompileAndRunLlvm()
         {
             // 47 - not compilable
@@ -710,11 +654,9 @@ namespace Ll2NativeTests
             // 341 - error CS0246: The type or namespace name 'SpecialNameAttribute' could not be found
             // 345 - error CS0246: The type or namespace name 'Conditional' could not be found
             // 349 - error CS1061: 'System.Delegate' does not contain a definition for 'DynamicInvoke'
-            // 351 - !!!!casting Nullable<Enum> to Enum: TODO: Can be fixed 
             // 350 - error CS0234: The type or namespace name 'IEquatable<T>' TODO: Can be fixed
             // 352 - error CS1061: 'System.Type' does not contain a definition for 'GetConstructors'
             // 358 - Decimals are not implemented
-            // 378 - !!!!getting value from Nullable<T>: TODO: Can be fixed 
             // 380 - error CS1061: 'System.Reflection.FieldInfo' does not contain a definition for 'GetCustomAttributes'
 
             // 53 - ValueType.ToString() not implemented
@@ -775,10 +717,8 @@ namespace Ll2NativeTests
                 345,
                 349,
                 350,
-                351,
                 352,
                 358,
-                378,
                 380
             };
             foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))

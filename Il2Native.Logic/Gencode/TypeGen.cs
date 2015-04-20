@@ -191,12 +191,12 @@ namespace Il2Native.Logic.Gencode
                             yield return
                                 new MemberLocationInfo(
                                     field,
-                                    field.FieldType.ToDereferencedType().GetTypeSize(typeResolver, true) * field.FixedSize);
+                                    field.FieldType.GetElementType().GetTypeSize(typeResolver, true) * field.FixedSize);
                         }
                         else
                         {
                             yield return
-                                new MemberLocationInfo(field, field.FieldType.ToDereferencedType().GetTypeSize(typeResolver, true));
+                                new MemberLocationInfo(field, field.FieldType.GetElementType().GetTypeSize(typeResolver, true));
                         }
                     }
                     else

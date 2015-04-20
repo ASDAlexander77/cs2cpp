@@ -1007,6 +1007,8 @@ namespace Il2Native.Logic
         /// </returns>
         public IEnumerable<OpCodePart> OpCodes(IMethodBody methodBody, IModule module, IGenericContext genericContext, Queue<IMethod> stackCall)
         {
+            // TODO: remove all calls to disover used types into BaseWriter function Discover all forward declarations
+
             if (!methodBody.HasBody)
             {
                 yield break;
@@ -1302,27 +1304,6 @@ namespace Il2Native.Logic
                             {
                                 this.AddCalledMethod(new SynthesizedInitMethod(type, this.TypeResolver));
                             }
-                        }
-
-                        if (code == Code.Box)
-                        {
-                            this.AddStructType(type);   
-                            if (type.IsValueType)
-                            {
-                                this.AddCalledMethod(new SynthesizedBoxMethod(type, this.TypeResolver));
-                            }
-                            else if (type.IsPointer)
-                            {
-                                this.AddCalledMethod(
-                                    new SynthesizedBoxMethod(
-                                        CWriter.PointerSize == 4 ? this.TypeResolver.System.System_Int32 : this.TypeResolver.System.System_Int64,
-                                        this.TypeResolver));
-                            }
-                        }
-
-                        if (code == Code.Unbox || code == Code.Unbox_Any)
-                        {
-                            this.AddCalledMethod(new SynthesizedUnboxMethod(type, this.TypeResolver));
                         }
 
                         if (code == Code.Newarr || code == Code.Ldelem || code == Code.Stelem)
