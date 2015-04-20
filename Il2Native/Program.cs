@@ -43,7 +43,7 @@ namespace Il2Native
                 Console.WriteLine("  /roslyn                 Compile C# source file with Roslyn Compiler");
                 Console.WriteLine("  /gc-                    Disable Boehm garbage collector");
                 Console.WriteLine("  /gctors-                Disable using global constructors");
-                Console.WriteLine("  /safe-                  Disable throwing exceptions when allocating memory, accessing null class pointers, accessing array elements (OutOfMemory, NullPointer, ArgumentOutOfRange)");
+                Console.WriteLine("  /safe-                  Disable throwing exceptions: 'NullPointer' for 'this' pointers, 'ArgumentOutOfRange' for array indexes");
                 Console.WriteLine("  /debug                  Generate debug information");
                 Console.WriteLine("  /line-                  Stop generating #line in C code to map C# source when /debug provided");
                 Console.WriteLine("  /gcdebug                Enable debug mode for Boehm garbage collector");

@@ -320,10 +320,21 @@
             this.Add(Code.Stobj, (int)TokenResolutions.Count);
         }
 
+        public void Throw()
+        {
+            this.Add(Code.Throw);
+        }
+
         // helpers
         public void LoadNull()
         {
             this.Add(Code.Ldnull);
+        }
+
+        // helpers
+        public void Return()
+        {
+            this.Add(Code.Ret);
         }
 
         public void LoadConstant(int @const)

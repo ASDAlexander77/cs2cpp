@@ -10,6 +10,7 @@
 namespace Il2Native.Logic.Gencode
 {
     using System;
+    using System.CodeDom;
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
@@ -602,6 +603,21 @@ namespace Il2Native.Logic.Gencode
             var declaringClassType = type.ToClass();
 
             typeResolver.GetAllocateMemoryCodeForObject(ilCodeBuilder, declaringClassType, doNotTestNullValue, enableStringFastAllocation);
+
+            if (!doNotTestNullValue)
+            {
+                ilCodeBuilder.Add(Code.Dup);
+                var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+
+                var throwType = typeResolver.ResolveType("System.OutOfMemoryException");
+                var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
+                Debug.Assert(defaultConstructor != null, "default constructor is null");
+                ilCodeBuilder.New(defaultConstructor);
+                
+                ilCodeBuilder.Throw();
+
+                ilCodeBuilder.Add(jump);
+            }
 
             if (!doNotCallInit)
             {

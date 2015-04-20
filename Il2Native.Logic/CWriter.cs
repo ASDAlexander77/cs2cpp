@@ -2257,23 +2257,13 @@ namespace Il2Native.Logic
 
             writer.Write("((");
             toType.WriteTypePrefix(this);
-            writer.Write(") __dynamic_cast_null_test(");
+            writer.Write(") __dynamic_cast_null_test{0}(", throwExceptionIfNull ? "_throw" : string.Empty);
 
             this.WriteResultOrActualWrite(writer, opCodeOperand);
 
             writer.Write(", (Void*) &{0}", fromType.Type.GetRttiInfoName(this));
             writer.Write(", (Void*) &{0}", toType.GetRttiInfoName(this));
             writer.Write(", {0}))", CalculateDynamicCastInterfaceIndex(fromType.Type, toType));
-
-            if (throwExceptionIfNull)
-            {
-                // this.WriteTestNullValueAndThrowException(
-                // writer,
-                // opCodePart,
-                // dynamicCastResultNumber,
-                // "System.InvalidCastException",
-                // "dynamic_cast");
-            }
 
             return true;
         }

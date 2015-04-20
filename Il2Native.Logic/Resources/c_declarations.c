@@ -94,6 +94,28 @@ inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, I
 	return __dynamic_cast(src, rttiFrom, rttiTo, offset);
 }
 
+struct System_InvalidCastException;
+extern "C" System_InvalidCastException* System_InvalidCastException_System_InvalidCastException__newFN();
+extern "C" Void Void_System_InvalidCastException__ctorFN(System_InvalidCastException* __this);
+inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
+{
+	if (!src)
+	{
+		return 0;
+	}
+
+	Void* casted = __dynamic_cast(src, rttiFrom, rttiTo, offset);
+	if (!casted)
+	{
+		System_InvalidCastException* _new0;
+		_new0 = System_InvalidCastException_System_InvalidCastException__newFN();
+		Void_System_InvalidCastException__ctorFN(_new0);
+		throw (Void*) _new0;
+	}
+
+	return casted;
+}
+
 inline Void* __interface_to_object(Void* _interface)
 {
 	if (!_interface)
