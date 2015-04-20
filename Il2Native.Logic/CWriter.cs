@@ -5171,13 +5171,15 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteVirtualTable(IType type)
+        private void WriteVirtualTable(IType typeParam)
         {
-            var table = type.ToVirtualTable();
+            var table = typeParam.ToVirtualTable();
             if (!this.virtualTableDeclarationsWritten.Add(table))
             {
                 return;
             }
+
+            var type = typeParam.ToNormal();
 
             var writer = this.Output;
 

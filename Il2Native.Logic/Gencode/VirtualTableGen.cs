@@ -165,6 +165,8 @@ namespace Il2Native.Logic.Gencode
         /// </returns>
         public static List<IMethod> GetVirtualInterfaceTableLayout(this IType @interface, ITypeResolver typeResolver)
         {
+            Debug.Assert(!@interface.SpecialUsage(), "normalize type before using it");
+
             List<IMethod> virtualInterfaceTableLayout;
 
             var key = string.Concat(@interface.FullName, '+', @interface.FullName);
