@@ -171,6 +171,10 @@ namespace Il2Native.Logic
 
         /// <summary>
         /// </summary>
+        public bool Unsafe { get; private set; }
+
+        /// <summary>
+        /// </summary>
         public bool GcDebug { get; private set; }
 
         /// <summary>
@@ -2092,6 +2096,8 @@ namespace Il2Native.Logic
             // custom settings
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = false;
+
+            this.Unsafe = args == null || !args.Contains("safe-");
 
             this.Stubs = args != null && args.Contains("stubs");
 
