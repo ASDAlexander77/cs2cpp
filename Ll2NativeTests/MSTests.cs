@@ -394,6 +394,7 @@ namespace Ll2NativeTests
             // 605 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 606 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 607 - error CS0246: The type or namespace name 'AssemblyAlgorithmId' could not be found
+            // 608 - error CS0266: Cannot implicitly convert type 'System.Enum' to 'System.IConvertible'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -534,7 +535,8 @@ namespace Ll2NativeTests
                         604,
                         605,
                         606,
-                        607
+                        607,
+                        608
                     });
 
             if (CompilerHelper.UsingRoslyn)
