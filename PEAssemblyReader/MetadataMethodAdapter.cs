@@ -67,10 +67,6 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        private bool? isVirtual;
-
-        /// <summary>
-        /// </summary>
         /// <param name="methodDef">
         /// </param>
         internal MetadataMethodAdapter(MethodSymbol methodDef)
@@ -296,7 +292,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.methodDef.IsOverride;
+                return this.methodDef.IsOverride || (this.IsDestructor && !this.DeclaringType.IsObject);
             }
         }
 
@@ -336,7 +332,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                return this.isVirtual.HasValue ? this.isVirtual.Value : (isVirtual = CalculateIsVirtual()).Value;
+                return this.methodDef.IsVirtual || (this.IsDestructor && this.DeclaringType.IsObject);
             }
         }
 
@@ -520,16 +516,6 @@ namespace PEAssemblyReader
             }
 
             return this.methodDef.TypeParameters.Select(a => new MetadataTypeAdapter(a));
-        }
-
-        private bool CalculateIsVirtual()
-        {
-            if (this.FullName == "System.Object.Finalize")
-            {
-                return true;
-            }
-
-            return methodDef.IsVirtual;
         }
 
         private IType CalculateExplicitInterface()

@@ -672,6 +672,8 @@ namespace Il2Native.Logic.Gencode
             ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("cd"));
             
             ilCodeBuilder.LoadArgument(0);
+            // TODO: can be removed when InsertMissingTypes is finished
+            ilCodeBuilder.Castclass(type);
             ilCodeBuilder.Call(IlReader.FindFinalizer(type, typeResolver));
             
             ilCodeBuilder.Add(Code.Ret);
