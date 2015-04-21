@@ -398,6 +398,7 @@ namespace Ll2NativeTests
             // 616 - test system classes without fields. TODO: Can be fixed later
             // 617 - GetMethod for Type class NotImplemented
             // 621 - error CS0246: The type or namespace name 'FieldOffset'. TODO: have a look, we need to implement FieldOffset
+            // 631 - Decimal not implemented
             // -----------
             // 32, 55, 74 - missing class
 
@@ -542,7 +543,8 @@ namespace Ll2NativeTests
                         608,
                         616,
                         617,
-                        621
+                        621,
+                        631
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -684,6 +686,7 @@ namespace Ll2NativeTests
             // 393 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
             // 408 - error CS0246: The type or namespace name 'MarshalAs' could not be found
             // 412 - error CS1061: 'System.Type' does not contain a definition for 'GenericParameterAttributes'
+            // 418 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
 
             // 53 - ValueType.ToString() not implemented
 
@@ -751,7 +754,8 @@ namespace Ll2NativeTests
                 391,
                 393,
                 408,
-                412
+                412,
+                418
             });
 
             // TODO: remove when overflow ops are done

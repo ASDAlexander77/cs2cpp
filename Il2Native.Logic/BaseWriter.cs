@@ -1057,7 +1057,7 @@ namespace Il2Native.Logic
             return false;
         }
 
-        private long GetIntegerValueFromOpCode(OpCodePart opCodePart)
+        protected long GetIntegerValueFromOpCode(OpCodePart opCodePart)
         {
             switch (opCodePart.ToCode())
             {

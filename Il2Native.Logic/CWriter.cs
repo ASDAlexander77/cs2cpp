@@ -886,7 +886,7 @@ namespace Il2Native.Logic
                 case Code.Div:
                 case Code.Div_Un:
 
-                    if (this.IsFloatingPointOp(opCode) || this.Unsafe)
+                    if (this.IsFloatingPointOp(opCode) || this.Unsafe || GetIntegerValueFromOpCode(opCode.OpCodeOperands[1]) > 0)
                     {
                         this.BinaryOper(
                             writer, opCode, " / ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
