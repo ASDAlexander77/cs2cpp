@@ -893,9 +893,9 @@ namespace Il2Native.Logic
                     }
                     else
                     {
-                        this.Output.Write("__safe_divide");
                         this.BinaryOper(
-                            writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
+                            writer, opCode, " / __check_divide(", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
+                        this.Output.Write(")");
                     }
 
                     break;
