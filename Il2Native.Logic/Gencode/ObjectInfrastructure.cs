@@ -185,7 +185,7 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.Add(jump);
             }
 
-            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, true, doNotTestNullValue);
+            typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
 
             ilCodeBuilder.Parameters.Add(normal.ToParameter("_value"));
 
@@ -584,21 +584,17 @@ namespace Il2Native.Logic.Gencode
         /// </summary>
         /// <param name="typeResolver">
         /// </param>
-        /// <param name="opCodePart">
-        /// </param>
+        /// <param name="ilCodeBuilder"></param>
         /// <param name="type">
         /// </param>
         /// <param name="doNotCallInit">
         /// </param>
         /// <param name="doNotTestNullValue">
         /// </param>
-        public static void GetNewMethod(
-            this ITypeResolver typeResolver,
-            IlCodeBuilder ilCodeBuilder,
-            IType type,
-            bool doNotCallInit = false,
-            bool doNotTestNullValue = false,
-            bool enableStringFastAllocation = false)
+        /// <param name="enableStringFastAllocation"></param>
+        /// <param name="opCodePart">
+        /// </param>
+        public static void GetNewMethod(this ITypeResolver typeResolver, IlCodeBuilder ilCodeBuilder, IType type, bool doNotCallInit = false, bool doNotTestNullValue = false, bool enableStringFastAllocation = false)
         {
             var declaringClassType = type.ToClass();
 
@@ -613,7 +609,7 @@ namespace Il2Native.Logic.Gencode
                 var defaultConstructor = IlReader.FindConstructor(throwType, typeResolver);
                 Debug.Assert(defaultConstructor != null, "default constructor is null");
                 ilCodeBuilder.New(defaultConstructor);
-                
+
                 ilCodeBuilder.Throw();
 
                 ilCodeBuilder.Add(jump);
@@ -623,6 +619,31 @@ namespace Il2Native.Logic.Gencode
             {
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.Call(new SynthesizedInitMethod(declaringClassType, typeResolver));
+            }
+
+            if (typeResolver.GetGcSupport())
+            {
+                var finalizer = IlReader.FindFinalizer(declaringClassType, typeResolver);
+                if (finalizer != null)
+                {
+                    // obj
+                    ilCodeBuilder.Add(Code.Dup);
+                    // finalizer function address
+                    ilCodeBuilder.Add(Code.Dup);
+                    ilCodeBuilder.LoadToken(finalizer);
+                    // Dummy nulls
+                    ilCodeBuilder.LoadNull();
+                    ilCodeBuilder.LoadNull();
+                    ilCodeBuilder.LoadNull();
+
+                    var voidPointer = typeResolver.System.System_Void.ToPointerType();
+                    var parameters = new[]
+                                         {
+                                             voidPointer.ToParameter("obj"), voidPointer.ToParameter("fn"), voidPointer.ToParameter("cd"),
+                                             voidPointer.ToParameter("ofn"), voidPointer.ToPointerType().ToParameter("ocd")
+                                         };
+                    ilCodeBuilder.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, typeResolver.System.System_Void, parameters));
+                }
             }
 
             if (!enableStringFastAllocation)

@@ -6,6 +6,8 @@
     {
         SystemTypes System { get; }
 
+        bool GetGcSupport();
+
         string GetAllocator(bool isAtomicAllocation, bool isBigObj);
 
         IType ResolveType(string fullTypeName, IGenericContext genericContext = null);

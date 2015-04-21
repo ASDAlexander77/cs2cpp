@@ -682,6 +682,7 @@ namespace Ll2NativeTests
             // 386 - error CS0234: The type or namespace name 'Linq' does not exist in the namespace 'System'
             // 391 - error CS0019: Operator '??' cannot be applied to operands of type '<null>' and '<null>'
             // 393 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 408 - error CS0246: The type or namespace name 'MarshalAs' could not be found
 
             // 53 - ValueType.ToString() not implemented
 
@@ -747,7 +748,8 @@ namespace Ll2NativeTests
                 385,
                 386,
                 391,
-                393
+                393,
+                408
             });
 
             // TODO: remove when overflow ops are done

@@ -592,7 +592,7 @@ namespace Il2Native.Logic
                             break;
                         }
 
-                        this.Output.Write("0/*undef*/");
+                        this.Output.Write("System_RuntimeTypeHandle()/*undef*/");
                     }
 
                     var opCodeFieldInfoPartToken = opCode as OpCodeFieldInfoPart;
@@ -649,11 +649,25 @@ namespace Il2Native.Logic
                             }
 
                             opCode.Result = new FullyDefinedReference(tokenVar, System.System_RuntimeFieldHandle);
-
                             break;
                         }
 
                         this.Output.Write("System_RuntimeFieldHandle()/*undef*/");
+                    }
+
+                    // to support direct method address loading
+                    var opCodeMethodInfoPartToken = opCode as OpCodeMethodInfoPart;
+                    if (opCodeMethodInfoPartToken != null)
+                    {
+                        // hack to be able to initialize finalizer
+                        if (opCodeMethodInfoPartToken.Operand.IsDestructor)
+                        {
+                            this.Output.Write("&");
+                            this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPartToken.Operand);
+                            break;
+                        }
+
+                        this.Output.Write("System_RuntimeMethodHandle()/*undef*/");
                     }
 
                     break;
@@ -2624,6 +2638,11 @@ namespace Il2Native.Logic
             }
         }
 
+        public override bool GetGcSupport()
+        {
+            return this.Gc;
+        }
+
         public string GetAssemblyPrefix(IType type = null)
         {
             if (type != null && !(type.IsArray || type.IsGenericType))
@@ -3448,75 +3467,6 @@ namespace Il2Native.Logic
             return indexes;
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="writer">
-        /// </param>
-        /// <param name="opCode">
-        /// </param>
-        /// <param name="effectiveType">
-        /// </param>
-        /// <param name="castFrom">
-        /// </param>
-        /// <param name="intAdjustment">
-        /// </param>
-        /// <param name="intAdjustSecondOperand">
-        /// </param>
-        /// <param name="resultType">
-        /// </param>
-        /// <param name="options">
-        /// </param>
-        /// <param name="operand1">
-        /// </param>
-        /// <param name="operand2">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private IType ApplyTypeAdjustment(
-            CIndentedTextWriter writer,
-            OpCodePart opCode,
-            IType effectiveType,
-            IType castFrom,
-            IType intAdjustment,
-            bool intAdjustSecondOperand,
-            ref IType resultType,
-            OperandOptions options,
-            int operand1 = 0,
-            int operand2 = 1)
-        {
-            if (!options.HasFlag(OperandOptions.TypeIsInOperator) && (opCode.OpCodeOperands == null || opCode.OpCodeOperands.Length == 0))
-            {
-                return effectiveType;
-            }
-
-            var operator1 = options.HasFlag(OperandOptions.TypeIsInOperator) ? opCode : opCode.OpCodeOperands[operand1];
-            var operator2 = !options.HasFlag(OperandOptions.TypeIsInOperator)
-                                ? opCode.OpCodeOperands[operand2 >= 0 && opCode.OpCodeOperands.Length > operand2 && intAdjustSecondOperand ? operand2 : operand1
-                                      ]
-                                : null;
-
-            if (castFrom != null)
-            {
-                this.WriteCast(operator1, operator1, effectiveType);
-            }
-
-            if (intAdjustment != null)
-            {
-                var changeType = this.AdjustIntConvertableTypes(writer, operator2, intAdjustment);
-
-                if (changeType)
-                {
-                    effectiveType = intAdjustment;
-                    if (resultType == null)
-                    {
-                        resultType = intAdjustment;
-                    }
-                }
-            }
-
-            return effectiveType;
-        }
-
         private int CalculateFieldIndex(IType type, string fieldName)
         {
             var list = Logic.IlReader.Fields(type, this).Where(t => !t.IsStatic).ToList();
@@ -3582,6 +3532,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="intAdjustmentRequired">
         /// </param>
+        [Obsolete("should use InsertMissingTypes instead")]
         private void DetectConversion(IType sourceType, IType requiredType, out bool castRequired, out bool intAdjustmentRequired)
         {
             Debug.Assert(sourceType != null);
@@ -3662,62 +3613,6 @@ namespace Il2Native.Logic
             var fieldType = opCodeFieldInfoPart.Operand.FieldType;
 
             this.SaveToField(opCodeFieldInfoPart, fieldType);
-        }
-
-        /// <summary>
-        /// </summary>
-        /// <param name="firstOpCode">
-        /// </param>
-        /// <param name="lastOpCode">
-        /// </param>
-        /// <param name="stopAddress">
-        /// </param>
-        /// <returns>
-        /// </returns>
-        private string FindCustomLabel(OpCodePart firstOpCode, OpCodePart lastOpCode, int startAddress, int stopAddress)
-        {
-            if (lastOpCode == null)
-            {
-                return null;
-            }
-
-            string customLabel = null;
-            var current = lastOpCode;
-            if (startAddress > 0)
-            {
-                while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/ current.AddressStart < startAddress)
-                {
-                    if (current.CreatedLabel != null)
-                    {
-                        customLabel = current.CreatedLabel;
-                    }
-
-                    if (current.OpCode.FlowControl == FlowControl.Branch || current.OpCode.FlowControl == FlowControl.Cond_Branch)
-                    {
-                        break;
-                    }
-
-                    current = current.Next;
-                }
-            }
-
-            if (customLabel != null)
-            {
-                return customLabel;
-            }
-
-            current = lastOpCode;
-            while (current != null && /*firstOpCode.GroupAddressStart <= current.AddressStart &&*/ current.AddressStart >= stopAddress)
-            {
-                if (current.CreatedLabel != null)
-                {
-                    return current.CreatedLabel;
-                }
-
-                current = current.Previous;
-            }
-
-            return null;
         }
 
         /// <summary>

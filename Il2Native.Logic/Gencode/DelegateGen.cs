@@ -431,6 +431,10 @@ namespace Il2Native.Logic.Gencode
 
             /// <summary>
             /// </summary>
+            public bool IsDestructor { get; private set; }
+
+            /// <summary>
+            /// </summary>
             public bool IsUnmanagedDllImport
             {
                 get { return false; }

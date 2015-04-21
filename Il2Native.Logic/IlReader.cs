@@ -698,6 +698,11 @@ namespace Il2Native.Logic
                      .FirstOrDefault(c => c.GetParameters().Count() == 1 && c.GetParameters().First().ParameterType.TypeEquals(firstParameterType));
         }
 
+        public static IMethod FindFinalizer(IType type, ITypeResolver typeResolver)
+        {
+            return Logic.IlReader.Methods(type, typeResolver).FirstOrDefault(m => m.IsDestructor);
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="type">

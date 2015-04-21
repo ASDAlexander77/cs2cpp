@@ -39,7 +39,7 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
         protected override IlCodeBuilder GetIlCodeBuilder()
         {
             var codeBuilder = new IlCodeBuilder();
-            typeResolver.GetNewMethod(codeBuilder, Type);
+            typeResolver.GetNewMethod(codeBuilder, this.Type);
             return codeBuilder;
         }
     }

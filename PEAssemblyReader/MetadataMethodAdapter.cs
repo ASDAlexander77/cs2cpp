@@ -213,7 +213,21 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        public bool IsConstructor { get; set; }
+        public bool IsConstructor
+        {
+            get
+            {
+                return this.methodDef.MethodKind == MethodKind.Constructor;
+            }
+        }
+
+        public bool IsDestructor
+        {
+            get
+            {
+                return this.methodDef.MethodKind == MethodKind.Destructor;
+            }
+        }
 
         /// <summary>
         /// </summary>

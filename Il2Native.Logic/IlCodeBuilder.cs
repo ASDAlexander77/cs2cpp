@@ -279,6 +279,20 @@
             this.Add(field.IsStatic ? Code.Stsfld : Code.Stfld, (int)TokenResolutions.Count);
         }
 
+        public void LoadFunctionAddress(IMethod method)
+        {
+            Debug.Assert(method != null, "@method is null");
+            TokenResolutions.Add(method);
+            this.Add(Code.Ldftn, (int)TokenResolutions.Count);
+        }
+
+        public void LoadVirtualFunctionAddress(IMethod method)
+        {
+            Debug.Assert(method != null, "@method is null");
+            TokenResolutions.Add(method);
+            this.Add(Code.Ldvirtftn, (int)TokenResolutions.Count);
+        }
+
         public void LoadToken(IType type)
         {
             Debug.Assert(type != null, "@type is null");
@@ -296,6 +310,13 @@
         {
             Debug.Assert(field != null, "@field is null");
             TokenResolutions.Add(field);
+            this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
+        }
+
+        public void LoadToken(IMethod method)
+        {
+            Debug.Assert(method != null, "@method is null");
+            TokenResolutions.Add(method);
             this.Add(Code.Ldtoken, (int)TokenResolutions.Count);
         }
 

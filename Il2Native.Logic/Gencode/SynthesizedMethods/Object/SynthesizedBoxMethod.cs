@@ -17,13 +17,21 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
     /// </summary>
     public class SynthesizedBoxMethod : SynthesizedIlCodeBuilderStaticMethod
     {
+        private ITypeResolver typeResolver;
+
         /// <summary>
         /// </summary>
         /// <param name="type">
         /// </param>
         public SynthesizedBoxMethod(IType type, ITypeResolver typeResolver)
-            : base(typeResolver.GetBoxMethod(type, false), ".box", type, type.ToClass())
+            : base(null, ".box", type, type.ToClass())
         {
+            this.typeResolver = typeResolver;
+        }
+
+        protected override IlCodeBuilder GetIlCodeBuilder()
+        {
+            return typeResolver.GetBoxMethod(Type, false);
         }
     }
 }

@@ -36,6 +36,10 @@ namespace PEAssemblyReader
         bool IsConstructor { get; }
 
         /// <summary>
+        /// </summary>
+        bool IsDestructor { get; }
+
+        /// <summary>
         /// custom field
         /// </summary>
         bool IsUnmanagedDllImport { get; }

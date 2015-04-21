@@ -143,6 +143,11 @@ namespace Il2Native.Logic.Gencode.SynthesizedMethods
             get { return this.method.IsConstructor; }
         }
 
+        public bool IsDestructor
+        {
+            get { return this.method.IsDestructor; }
+        }
+
         public bool IsUnmanagedDllImport
         {
             get { return this.method.IsUnmanagedDllImport; }

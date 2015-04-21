@@ -162,6 +162,11 @@ namespace Il2Native.Logic
             return isAtomic ? "GC_MALLOC_ATOMIC" : "GC_MALLOC";
         }
 
+        public virtual bool GetGcSupport()
+        {
+            return true;
+        }
+
         /// <summary>
         /// </summary>
         /// <param name="opCode">
@@ -2415,6 +2420,12 @@ namespace Il2Native.Logic
                     var opCodeMethodInfoPartToken = opCodePart as OpCodeMethodInfoPart;
                     if (opCodeMethodInfoPartToken != null)
                     {
+                        // hack to be able to initialize finalizer
+                        if (opCodeMethodInfoPartToken.Operand.IsDestructor)
+                        {
+                            return System.System_Void.ToPointerType();
+                        }
+
                         return this.System.System_RuntimeMethodHandle;
                     }
 
