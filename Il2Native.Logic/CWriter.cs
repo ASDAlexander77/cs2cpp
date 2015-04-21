@@ -885,7 +885,19 @@ namespace Il2Native.Logic
                     break;
                 case Code.Div:
                 case Code.Div_Un:
-                    this.BinaryOper(writer, opCode, " / ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
+
+                    if (this.IsFloatingPointOp(opCode) || this.Unsafe)
+                    {
+                        this.BinaryOper(
+                            writer, opCode, " / ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
+                    }
+                    else
+                    {
+                        this.Output.Write("__safe_divide");
+                        this.BinaryOper(
+                            writer, opCode, ", ", OperandOptions.GenerateResult | OperandOptions.AdjustIntTypes, unsigned: opCode.ToCode() == Code.Div_Un);
+                    }
+
                     break;
                 case Code.Rem:
                 case Code.Rem_Un:
@@ -2111,7 +2123,7 @@ namespace Il2Native.Logic
             this.Gc = args == null || !args.Contains("gc-");
             this.Gctors = false;
 
-            this.Unsafe = args == null || !args.Contains("safe-");
+            this.Unsafe = args != null && args.Contains("safe-");
 
             this.Stubs = args != null && args.Contains("stubs");
 

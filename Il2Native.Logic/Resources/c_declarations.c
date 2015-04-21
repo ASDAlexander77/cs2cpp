@@ -1,30 +1,5 @@
 #ifdef _MSC_VER
-typedef __int8 int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-
-extern "C" void* alloca(uint32_t);
-
-extern "C" void* memcpy(void* dst, void* src, int32_t size);
-extern "C" void* memset(void *,int32_t,uint32_t);
-
-template<typename T> T compare_and_swap(T* reg, T oldval, T newval)
-{
-	T old_reg_val = *reg;
-	if (old_reg_val == oldval)
-		*reg = newval;
-	return old_reg_val;
-};
-
-void sync_synchronize()
-{
-}
-
+#error Not supported yet
 #elif __GNUC__ >= 3
 typedef signed char int8_t;
 typedef short int16_t;
@@ -84,6 +59,16 @@ extern "C" void* _ZTVN10__cxxabiv129__pointer_to_member_type_infoE;
 // Float
 extern "C" Double fmod (Double, Double);
 
+inline Void* __interface_to_object(Void* _interface)
+{
+	if (!_interface)
+	{
+		return 0;
+	}
+
+	return (Void*) ((Byte*)_interface + *(*(Int32**)_interface - 2));
+}
+
 inline Void* __dynamic_cast_null_test(Void* src, Void* rttiFrom, Void* rttiTo, Int32 offset)
 {
 	if (!src)
@@ -116,12 +101,18 @@ inline Void* __dynamic_cast_null_test_throw(Void* src, Void* rttiFrom, Void* rtt
 	return casted;
 }
 
-inline Void* __interface_to_object(Void* _interface)
+struct System_DivideByZeroException;
+extern "C" System_DivideByZeroException* System_DivideByZeroException_System_DivideByZeroException__newFN();
+extern "C" Void Void_System_DivideByZeroException__ctorFN(System_DivideByZeroException* __this);
+template < typename T > T __safe_divide(T num, T div)
 {
-	if (!_interface)
+	if (!div)
 	{
-		return 0;
+		System_DivideByZeroException* _new0;
+		_new0 = System_DivideByZeroException_System_DivideByZeroException__newFN();
+		Void_System_DivideByZeroException__ctorFN(_new0);
+		throw (Void*) _new0;
 	}
 
-	return (Void*) ((Byte*)_interface + *(*(Int32**)_interface - 2));
+	return num / div;
 }
