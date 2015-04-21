@@ -660,7 +660,7 @@ namespace Il2Native.Logic
                     if (opCodeMethodInfoPartToken != null)
                     {
                         // hack to be able to initialize finalizer
-                        if (opCodeMethodInfoPartToken.Operand.IsDestructor)
+                        if (opCodeMethodInfoPartToken.Operand is SynthesizedFinalizerWrapperMethod)
                         {
                             this.Output.Write("&");
                             this.WriteMethodDefinitionName(this.Output, opCodeMethodInfoPartToken.Operand);

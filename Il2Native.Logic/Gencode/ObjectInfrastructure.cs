@@ -629,8 +629,7 @@ namespace Il2Native.Logic.Gencode
                     // obj
                     ilCodeBuilder.Add(Code.Dup);
                     // finalizer function address
-                    ilCodeBuilder.Add(Code.Dup);
-                    ilCodeBuilder.LoadToken(finalizer);
+                    ilCodeBuilder.LoadToken(type.GetMethodsByName(SynthesizedFinalizerWrapperMethod.Name, typeResolver).First());
                     // Dummy nulls
                     ilCodeBuilder.LoadNull();
                     ilCodeBuilder.LoadNull();
@@ -643,6 +642,7 @@ namespace Il2Native.Logic.Gencode
                                              voidPointer.ToParameter("ofn"), voidPointer.ToPointerType().ToParameter("ocd")
                                          };
                     ilCodeBuilder.Call(new SynthesizedMethodStringAdapter("GC_REGISTER_FINALIZER", null, typeResolver.System.System_Void, parameters));
+
                 }
             }
 
@@ -658,6 +658,22 @@ namespace Il2Native.Logic.Gencode
         {
             var ilCodeBuilder = new IlCodeBuilder();
             ilCodeBuilder.SizeOf(type.ToClass());
+            ilCodeBuilder.Add(Code.Ret);
+            return ilCodeBuilder;
+        }
+
+        public static IlCodeBuilder GetFinalizerWrapperMethod(
+            this ITypeResolver typeResolver,
+            IType type)
+        {
+            var ilCodeBuilder = new IlCodeBuilder();
+
+            ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("obj"));
+            ilCodeBuilder.Parameters.Add(typeResolver.System.System_Void.ToPointerType().ToParameter("cd"));
+            
+            ilCodeBuilder.LoadArgument(0);
+            ilCodeBuilder.Call(IlReader.FindFinalizer(type, typeResolver));
+            
             ilCodeBuilder.Add(Code.Ret);
             return ilCodeBuilder;
         }

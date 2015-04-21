@@ -700,7 +700,7 @@ namespace Il2Native.Logic
 
         public static IMethod FindFinalizer(IType type, ITypeResolver typeResolver)
         {
-            return Logic.IlReader.Methods(type, typeResolver).FirstOrDefault(m => m.IsDestructor);
+            return type.GetMethods(IlReader.DefaultFlags).FirstOrDefault(m => m.IsDestructor);
         }
 
         /// <summary>
@@ -829,8 +829,12 @@ namespace Il2Native.Logic
             {
                 yield return new SynthesizedNewMethod(type, typeResolver);
                 yield return new SynthesizedInitMethod(type, typeResolver);
+                
+                if (IlReader.FindFinalizer(type, typeResolver) != null)
+                {
+                    yield return new SynthesizedFinalizerWrapperMethod(type, typeResolver);
+                }
 
-                // append C# native compiler infrastructure methods
                 yield return new SynthesizedGetSizeMethod(type, typeResolver);
                 yield return new SynthesizedGetTypeMethod(type, typeResolver);
             }

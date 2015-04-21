@@ -520,6 +520,14 @@ namespace Il2Native.Logic
                             this.IlReader.AddCalledMethod(tokenType.GetFirstMethodByName(SynthesizedGetTypeStaticMethod.Name, this));
                         }
                     }
+                    else
+                    {
+                        var opCodeMethodPart = opCodePart as OpCodeMethodInfoPart;
+                        if (opCodeMethodPart != null && opCodeMethodPart.Operand is SynthesizedFinalizerWrapperMethod)
+                        {
+                            this.IlReader.AddCalledMethod(new SynthesizedFinalizerWrapperMethod(opCodeMethodPart.Operand.DeclaringType, this));
+                        }
+                    }
 
                     break;
 
@@ -2421,7 +2429,7 @@ namespace Il2Native.Logic
                     if (opCodeMethodInfoPartToken != null)
                     {
                         // hack to be able to initialize finalizer
-                        if (opCodeMethodInfoPartToken.Operand.IsDestructor)
+                        if (opCodeMethodInfoPartToken.Operand is SynthesizedFinalizerWrapperMethod)
                         {
                             return System.System_Void.ToPointerType();
                         }
