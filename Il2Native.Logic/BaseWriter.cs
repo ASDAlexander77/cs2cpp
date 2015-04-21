@@ -593,6 +593,7 @@ namespace Il2Native.Logic
 
                     break;
 
+                case Code.Isinst:
                 case Code.Castclass:
 
                     opCodeTypePart = opCodePart as OpCodeTypePart;
@@ -1156,32 +1157,47 @@ namespace Il2Native.Logic
 
                 foreach (var alternativeValues in opCodePart.AlternativeValues)
                 {
+                    OpCodePart opCodeUsedFromAlternativeValues = null;
+                    IType requiredType = null;
+
+                    var current = alternativeValues;
                     // detect required types in alternative values
-                    var opCodeUsedFromAlternativeValues = alternativeValues.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
-                    if (opCodeUsedFromAlternativeValues == null)
+                    while (opCodeUsedFromAlternativeValues == null)
                     {
-                        var usedByAlternativeValues = alternativeValues.Values.LastOrDefault(v => v.UsedByAlternativeValues != null);
-                        if (usedByAlternativeValues != null)
+                        opCodeUsedFromAlternativeValues = current.Values.LastOrDefault(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                        if (opCodeUsedFromAlternativeValues == null)
                         {
-                            opCodeUsedFromAlternativeValues =
-                                usedByAlternativeValues.UsedByAlternativeValues.Values.LastOrDefault(
-                                    v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop));
+                            var usedByAlternativeValues = current.Values.LastOrDefault(v => v.UsedByAlternativeValues != null);
+                            if (usedByAlternativeValues != null && current != usedByAlternativeValues.UsedByAlternativeValues)
+                            {
+                                current = usedByAlternativeValues.UsedByAlternativeValues;
+                            }
+                            else
+                            {
+                                break;
+                            }
                         }
                     }
 
-                    Debug.Assert(opCodeUsedFromAlternativeValues != null, "Operand could not be found for Phi Nodes");
+                    if (opCodeUsedFromAlternativeValues != null)
+                    {
+                        var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
 
-                    var opCodeUsingAlternativeValues = opCodeUsedFromAlternativeValues.UsedBy;
-
-                    var requiredType = opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes != null
+                        requiredType = opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes != null
                                            ? alternativeValues.Values.Where(v => v != null && v.UsedBy != null && !v.UsedBy.Any(Code.Pop))
                                                               .Select(v => opCodeUsingAlternativeValues.OpCode.RequiredIncomingTypes[v.UsedBy.OperandPosition])
                                                               .LastOrDefault(v => v != null)
                                            : null;
-                    requiredType = requiredType
-                                   ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
-                                   ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
-                                   ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues).Type;
+
+                        requiredType = requiredType
+                                       ?? this.RequiredOutgoingType(opCodeUsedFromAlternativeValues)
+                                       ?? alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null)
+                                       ?? this.EstimatedResultOf(opCodeUsedFromAlternativeValues).Type;
+                    }
+                    else
+                    {
+                        requiredType = alternativeValues.Values.Select(this.RequiredOutgoingType).FirstOrDefault(v => v != null);
+                    }
 
                     if (requiredType != null && alternativeValues.Values.Any(v => requiredType.TypeNotEquals(this.RequiredOutgoingType(v))))
                     {

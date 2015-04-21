@@ -395,6 +395,9 @@ namespace Ll2NativeTests
             // 606 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 607 - error CS0246: The type or namespace name 'AssemblyAlgorithmId' could not be found
             // 608 - error CS0266: Cannot implicitly convert type 'System.Enum' to 'System.IConvertible'
+            // 616 - test system classes without fields. TODO: Can be fixed later
+            // 617 - GetMethod for Type class NotImplemented
+            // 621 - error CS0246: The type or namespace name 'FieldOffset'. TODO: have a look, we need to implement FieldOffset
             // -----------
             // 32, 55, 74 - missing class
 
@@ -536,7 +539,10 @@ namespace Ll2NativeTests
                         605,
                         606,
                         607,
-                        608
+                        608,
+                        616,
+                        617,
+                        621
                     });
 
             if (CompilerHelper.UsingRoslyn)
