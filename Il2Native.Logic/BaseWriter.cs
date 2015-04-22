@@ -802,6 +802,13 @@ namespace Il2Native.Logic
                 return ConversionType.None;
             }
 
+            // for Roslyn, must be fiest to prevent ConversionType.DerivedToBase
+            if (sourceType.UseAsClass && sourceType.TypeEquals(System.System_Nullable_T)
+                && sourceType.GenericTypeArguments.First().TypeEqualsOrDerived(destinationType))
+            {
+                return ConversionType.BoxedNullableToNestedType;
+            }
+
             // detect conversion
             if (sourceType.GetAllInterfaces().Contains(destinationType))
             {
@@ -831,13 +838,6 @@ namespace Il2Native.Logic
             if (sourceType.IsIntPtrOrUIntPtr() && destinationType.IntTypeBitSize() >= 8 * CWriter.PointerSize)
             {
                 return ConversionType.IntPtrToInt;
-            }
-
-            // for Roslyn
-            if (sourceType.UseAsClass && sourceType.TypeEquals(System.System_Nullable_T)
-                && sourceType.GenericTypeArguments.First().TypeEqualsOrDerived(destinationType))
-            {
-                return ConversionType.BoxedNullableToNestedType;
             }
 
             return ConversionType.None;

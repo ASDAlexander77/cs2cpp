@@ -220,6 +220,19 @@ namespace Il2Native.Logic.Gencode
 
             var ilCodeBuilder = new IlCodeBuilder();
 
+#if CHECK_NULL_IN_UNBOX_AND_RETURN_DEFAULT
+            ilCodeBuilder.LoadArgument(0);
+            var jumpIfNotNull = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
+
+            ilCodeBuilder.Locals.Add(type);
+            ilCodeBuilder.LoadLocalAddress(0);
+            ilCodeBuilder.InitializeObject(type);
+            ilCodeBuilder.LoadLocal(0);
+            ilCodeBuilder.Return();
+
+            ilCodeBuilder.Add(jumpIfNotNull);
+#endif
+
             if (!type.IsStructureType())
             {
                 var firstField = declaringClassType.GetFieldByFieldNumber(0, typeResolver);
@@ -239,7 +252,7 @@ namespace Il2Native.Logic.Gencode
                 ilCodeBuilder.LoadObject(type);
             }
 
-            ilCodeBuilder.Add(Code.Ret);
+            ilCodeBuilder.Return();
 
             return ilCodeBuilder;
         }

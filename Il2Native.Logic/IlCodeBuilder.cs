@@ -251,6 +251,13 @@
             this.Add(method.IsVirtual ? Code.Callvirt : Code.Call, (int)TokenResolutions.Count);
         }
 
+        public void InitializeObject(IType type)
+        {
+            Debug.Assert(type != null, "@type is null");
+            TokenResolutions.Add(type);
+            this.Add(Code.Initobj, (int)TokenResolutions.Count);
+        }
+
         public void Castclass(IType type)
         {
             Debug.Assert(type != null, "@type is null");
