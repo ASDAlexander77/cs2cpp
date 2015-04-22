@@ -54,6 +54,8 @@
         {
             var ilCodeBuilder = new IlCodeBuilder();
 
+            ilCodeBuilder.Locals.Add(castTo);
+
             ilCodeBuilder.LoadArgument(0);
             ilCodeBuilder.Castclass(castTo.ToPointerType());
             ilCodeBuilder.LoadArgumentAddress(1);
@@ -70,6 +72,11 @@
             ilCodeBuilder.Call(
                 new SynthesizedMethodStringAdapter(
                     Swap, null, castTo, new[] { castTo.ToPointerType().ToParameter(Location), castTo.ToParameter(Value) }));
+
+            ilCodeBuilder.SaveLocal(0);
+            ilCodeBuilder.LoadLocalAddress(0);
+            ilCodeBuilder.LoadIndirect(parameterType, typeResolver);
+
             ilCodeBuilder.Add(Code.Ret);
 
             return ilCodeBuilder;

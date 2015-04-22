@@ -455,6 +455,71 @@
             }
         }
 
+        public void LoadIndirect(IType type, ITypeResolver typeResolver)
+        {
+            if (type.TypeEquals(typeResolver.System.System_IntPtr))
+            {
+                this.Add(Code.Ldind_I);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_SByte))
+            {
+                this.Add(Code.Ldind_I1);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int16))
+            {
+                this.Add(Code.Ldind_I2);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int32))
+            {
+                this.Add(Code.Ldind_I4);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Int64))
+            {
+                this.Add(Code.Ldind_I8);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Byte))
+            {
+                this.Add(Code.Ldind_U1);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_UInt16))
+            {
+                this.Add(Code.Ldind_U2);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_UInt32))
+            {
+                this.Add(Code.Ldind_U4);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Single))
+            {
+                this.Add(Code.Ldind_R4);
+                return;
+            }
+
+            if (type.TypeEquals(typeResolver.System.System_Double))
+            {
+                this.Add(Code.Ldind_R8);
+                return;
+            }
+
+            this.Add(Code.Ldind_Ref);
+        }
+
         public void SaveArgument(int argIndex)
         {
             if (argIndex <= byte.MaxValue)
