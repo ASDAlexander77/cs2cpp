@@ -7,6 +7,8 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
+#define CHECK_NULL_IN_UNBOX_AND_RETURN_DEFAULT
+
 namespace Il2Native.Logic.Gencode
 {
     using System;
@@ -168,17 +170,18 @@ namespace Il2Native.Logic.Gencode
             IType type,
             bool doNotTestNullValue)
         {
-            var declaringClassType = type.ToClass();
-            var normal = type.ToNormal();
+            var isNullable = type.TypeEquals(typeResolver.System.System_Nullable_T);
+            var declaringClassType = isNullable ? type.GenericTypeArguments.First().ToClass() : type.ToClass();
+            var normal = declaringClassType.ToNormal();
             var isStruct = normal.IsStructureType();
 
             var ilCodeBuilder = new IlCodeBuilder();
 
             // in case nullable does not have value just return null
-            if (declaringClassType.TypeEquals(typeResolver.System.System_Nullable_T))
+            if (isNullable)
             {
                 ilCodeBuilder.LoadArgument(0);
-                ilCodeBuilder.LoadField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
+                ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(0, typeResolver));
                 var jump = ilCodeBuilder.Branch(Code.Brtrue, Code.Brtrue_S);
                 ilCodeBuilder.LoadNull();
                 ilCodeBuilder.Add(Code.Ret);
@@ -187,7 +190,7 @@ namespace Il2Native.Logic.Gencode
 
             typeResolver.GetNewMethod(ilCodeBuilder, declaringClassType, doNotCallInit: true, doNotTestNullValue: doNotTestNullValue);
 
-            ilCodeBuilder.Parameters.Add(normal.ToParameter("_value"));
+            ilCodeBuilder.Parameters.Add(type.ToParameter("_value"));
 
             // we need to remove last code which is Code.Ret
             ilCodeBuilder.RemoveLast();
@@ -196,6 +199,11 @@ namespace Il2Native.Logic.Gencode
             {
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.LoadArgument(0);
+                if (isNullable)
+                {
+                    ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                }
+
                 ilCodeBuilder.SaveField(declaringClassType.GetFieldByFieldNumber(0, typeResolver));
             }
             else
@@ -203,6 +211,11 @@ namespace Il2Native.Logic.Gencode
                 // copy structure
                 ilCodeBuilder.Add(Code.Dup);
                 ilCodeBuilder.LoadArgument(0);
+                if (isNullable)
+                {
+                    ilCodeBuilder.LoadField(type.GetFieldByFieldNumber(1, typeResolver));
+                }
+
                 ilCodeBuilder.CopyObject(declaringClassType);
             }
 

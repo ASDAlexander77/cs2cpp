@@ -4639,7 +4639,7 @@ namespace Il2Native.Logic
             }
 
             var returnType = method.ReturnType.NormalizeType();
-            if (!returnType.IsVoid() && !returnType.IsPrimitiveType())
+            if (!returnType.IsVoid() && !returnType.IsPrimitiveType() || method.ReturnType.UseAsClass)
             {
                 if (returnType.IsStructureType())
                 {

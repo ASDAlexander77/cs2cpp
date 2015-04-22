@@ -692,7 +692,6 @@ namespace Il2Native.Logic
             PointerToValue,
             ValueToPointer,
             IntPtrToInt,
-            BoxedNullableToNestedType,
             CCast
         }
 
@@ -749,10 +748,6 @@ namespace Il2Native.Logic
             {
                 return this.LoadFieldAndCast(opCodeOperand, this.System.System_IntPtr.GetFieldByFieldNumber(0, this), destinationType);
             }
-            else if (conversionType == ConversionType.BoxedNullableToNestedType)
-            {
-                return this.LoadFieldAndBoxThenCast(opCodeOperand, opCodeOperand.RequiredOutgoingType.GetFieldByName("value", this), destinationType);
-            }
 
             return opCodeOperand;
         }
@@ -800,13 +795,6 @@ namespace Il2Native.Logic
             if (sourceType == null || destinationType == null)
             {
                 return ConversionType.None;
-            }
-
-            // for Roslyn, must be fiest to prevent ConversionType.DerivedToBase
-            if (sourceType.UseAsClass && sourceType.TypeEquals(System.System_Nullable_T)
-                && sourceType.GenericTypeArguments.First().TypeEqualsOrDerived(destinationType))
-            {
-                return ConversionType.BoxedNullableToNestedType;
             }
 
             // detect conversion
@@ -920,18 +908,6 @@ namespace Il2Native.Logic
             this.InsertOperand(opCodeOperand, ldfldOpCode);
             var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
             this.InsertOperand(ldfldOpCode, castOpCode);
-            return castOpCode;
-        }
-
-        private OpCodePart LoadFieldAndBoxThenCast(OpCodePart opCodeOperand, IField field, IType destinationType)
-        {
-            // 2 steps, load value, cast to int
-            var ldfldOpCode = new OpCodeFieldInfoPart(OpCodesEmit.Ldfld, 0, 0, field);
-            this.InsertOperand(opCodeOperand, ldfldOpCode);
-            var boxOpCode = new OpCodeTypePart(OpCodesEmit.Box, 0, 0, field.FieldType);
-            this.InsertOperand(ldfldOpCode, boxOpCode);
-            var castOpCode = new OpCodeTypePart(OpCodesEmit.Castclass, 0, 0, destinationType);
-            this.InsertOperand(boxOpCode, castOpCode);
             return castOpCode;
         }
 
@@ -2205,7 +2181,8 @@ namespace Il2Native.Logic
 
                 case Code.Box:
                     retType = ((OpCodeTypePart)opCodePart).Operand;
-                    return retType.IsPrimitiveTypeOrEnum() || retType.IsStructureType() ? retType.ToClass() : retType;
+                    var isNullable = retType.TypeEquals(this.System.System_Nullable_T);
+                    return isNullable ? retType.GenericTypeArguments.First().ToClass() : retType.ToClass();
 
                 case Code.Call:
                 case Code.Callvirt:

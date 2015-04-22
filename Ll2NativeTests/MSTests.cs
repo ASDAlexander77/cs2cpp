@@ -687,6 +687,7 @@ namespace Ll2NativeTests
             // 408 - error CS0246: The type or namespace name 'MarshalAs' could not be found
             // 412 - error CS1061: 'System.Type' does not contain a definition for 'GenericParameterAttributes'
             // 418 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
+            // 421 - System.Type.IsValueType NotImplemented
 
             // 53 - ValueType.ToString() not implemented
 
@@ -755,7 +756,8 @@ namespace Ll2NativeTests
                 393,
                 408,
                 412,
-                418
+                418,
+                421
             });
 
             // TODO: remove when overflow ops are done
