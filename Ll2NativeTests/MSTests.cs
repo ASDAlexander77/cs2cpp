@@ -399,6 +399,7 @@ namespace Ll2NativeTests
             // 617 - GetMethod for Type class NotImplemented
             // 621 - error CS0246: The type or namespace name 'FieldOffset'. TODO: have a look, we need to implement FieldOffset
             // 631 - Decimal not implemented
+            // 636 - (6,14): error CS0161: 'Foo.test_while(int)': not all code paths return a value
             // -----------
             // 32, 55, 74 - missing class
 
@@ -544,7 +545,8 @@ namespace Ll2NativeTests
                         616,
                         617,
                         621,
-                        631
+                        631,
+                        636
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -688,6 +690,7 @@ namespace Ll2NativeTests
             // 412 - error CS1061: 'System.Type' does not contain a definition for 'GenericParameterAttributes'
             // 418 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 421 - System.Type.IsValueType NotImplemented
+            // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib
 
             // 53 - ValueType.ToString() not implemented
 
@@ -757,7 +760,8 @@ namespace Ll2NativeTests
                 408,
                 412,
                 418,
-                421
+                421,
+                431
             });
 
             // TODO: remove when overflow ops are done
