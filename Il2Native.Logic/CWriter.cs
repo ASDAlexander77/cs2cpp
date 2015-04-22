@@ -2017,29 +2017,10 @@ namespace Il2Native.Logic
 
                     break;
                 case Code.Ldind_I1:
-
-                    // it can be Bool or Byte, leave it null
-                    ////type = this.System.System_SByte;
-                    var result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
-                    {
-                        type = this.System.System_SByte;
-                    }
-
+                    type = this.System.System_SByte;
                     break;
                 case Code.Ldind_U1:
-
-                    // it can be Bool or Byte, leave it null
-                    ////type = this.System.System_Byte;
-                    result = this.EstimatedResultOf(opCode.OpCodeOperands[0]);
-                    type = result.Type.HasElementType ? result.Type.GetElementType() : result.Type;
-
-                    if (type.IsVoid() || type.IntTypeBitSize() > 8)
-                    {
-                        type = this.System.System_Byte;
-                    }
-
+                    type = this.System.System_Byte;
                     break;
                 case Code.Ldind_I2:
                     type = this.System.System_Int16;

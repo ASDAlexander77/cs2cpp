@@ -2228,24 +2228,14 @@ namespace Il2Native.Logic
                 case Code.Conv_I:
                 case Code.Conv_Ovf_I:
                 case Code.Conv_Ovf_I_Un:
+
+                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_IntPtr);
+
                 case Code.Conv_U:
                 case Code.Conv_Ovf_U:
                 case Code.Conv_Ovf_U_Un:
 
-                    retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
-                    if (retType.IsPointer)
-                    {
-                        return retType;
-                    }
-
-                    if (retType.IsByRef)
-                    {
-                        return retType.GetElementType().ToPointerType();
-                    }
-
-                    var intPtrOper = IntTypeRequired(opCodePart);
-                    var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
-                    return nativeIntType;
+                    return this.RequiredOutgoingTypeOfConv_I_U(opCodePart, System.System_UIntPtr);
 
                 case Code.Conv_U8:
                 case Code.Conv_Ovf_U8:
@@ -2446,6 +2436,25 @@ namespace Il2Native.Logic
             }
 
             return retType;
+        }
+
+        private IType RequiredOutgoingTypeOfConv_I_U(OpCodePart opCodePart, IType convType)
+        {
+            IType retType;
+            retType = this.RequiredOutgoingType(opCodePart.OpCodeOperands[0]);
+            if (retType.IsPointer)
+            {
+                return retType;
+            }
+
+            if (retType.IsByRef && retType.GetElementType().TypeNotEquals(convType))
+            {
+                return retType.GetElementType().ToPointerType();
+            }
+
+            var intPtrOper = IntTypeRequired(opCodePart);
+            var nativeIntType = intPtrOper ? this.System.System_Int32 : this.System.System_Void.ToPointerType();
+            return nativeIntType;
         }
 
         /// <summary>
