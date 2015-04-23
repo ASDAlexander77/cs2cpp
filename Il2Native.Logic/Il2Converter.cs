@@ -593,7 +593,12 @@ namespace Il2Native.Logic
             else
             {
                 // generate file for each namespace
-                var namespaces = ilReader.Types().Select(t => t.Namespace).Distinct().ToArray();
+                var namespaces = ilReader.Types().Select(t => t.Namespace).Distinct().ToList();
+                if (!namespaces.Contains(string.Empty))
+                {
+                    namespaces.Add(string.Empty);
+                }
+
                 GenerateMultiSources(ilReader, namespaces, settings);
             }
         }
@@ -632,7 +637,7 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted);
         }
 
-        private static void GenerateMultiSources(IlReader ilReader, string[] namespaces, Settings settings)
+        private static void GenerateMultiSources(IlReader ilReader, IEnumerable<string> namespaces, Settings settings)
         {
             // initialize step
             GetCodeWriter(ilReader, settings);
@@ -641,9 +646,10 @@ namespace Il2Native.Logic
             var sortedListOfTypes = ReadingTypes(ilReader, settings.Filter, out genericMethodSpecializationsSorted);
 
             var fileName = settings.FileName;
+
             foreach (var ns in namespaces)
             {
-                settings.FileName = string.Concat(string.IsNullOrEmpty(fileName) ? "no_namespace" : fileName, "_", ns.CleanUpName());
+                settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
                 var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
                 Writing(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
             }
