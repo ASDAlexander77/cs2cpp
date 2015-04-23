@@ -397,22 +397,6 @@ namespace Il2Native.Logic.Gencode
                     .Any(virtualMethod => virtualMethod.IsMatchingOverride(methodInfo));
         }
 
-        public static void WriteTableOfMethodsAsDeclaration(
-            this List<CWriter.Pair<IMethod, IMethod>> virtualTable,
-            CWriter cWriter,
-            IType type)
-        {
-            var writer = cWriter.Output;
-
-            writer.Write(cWriter.declarationPrefix);
-            writer.Write("struct ");
-            
-            writer.Write(type.GetVirtualTableName(cWriter));
-            writer.Write(" ");
-            VirtualTableDeclaration(virtualTable, cWriter, true, type);
-            cWriter.Output.Write(";");
-        }
-
         /// <summary>
         /// </summary>
         /// <param name="virtualTable">

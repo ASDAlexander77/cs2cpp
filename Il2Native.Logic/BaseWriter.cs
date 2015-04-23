@@ -481,6 +481,7 @@ namespace Il2Native.Logic
 
             switch (opCodePart.ToCode())
             {
+                case Code.Ldlen:
                 case Code.Ldelem:
                 case Code.Ldelem_I:
                 case Code.Ldelem_I1:
@@ -607,6 +608,18 @@ namespace Il2Native.Logic
                     break;
 
                 case Code.Isinst:
+                    opCodeTypePart = opCodePart as OpCodeTypePart;
+                    if (opCodeTypePart != null)
+                    {
+                        this.IlReader.AddRtti(opCodeTypePart.Operand.ToRtti());
+
+                        estimatedResult = this.EstimatedResultOf(opCodePart.OpCodeOperands[0]);
+                        var type = estimatedResult.Type;
+                        this.IlReader.AddRtti(type.ToRtti());
+                    }
+
+                    break;
+
                 case Code.Castclass:
 
                     opCodeTypePart = opCodePart as OpCodeTypePart;

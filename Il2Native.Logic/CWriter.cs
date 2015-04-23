@@ -5044,6 +5044,7 @@ namespace Il2Native.Logic
                 var virtualInterfaceTable = type.GetVirtualInterfaceTable(@interface, this);
 
                 // forward declarations
+                this.WriteTypeForwardDeclarationIfNotWrittenYet(@interface);
                 foreach (var method in virtualInterfaceTable.Where(m => m.Value != null).Select(m => m.Value))
                 {
                     this.WriteMethodForwardDeclarationIfNotWrittenYet(method, null);
