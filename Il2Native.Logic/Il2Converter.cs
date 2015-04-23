@@ -603,6 +603,7 @@ namespace Il2Native.Logic
             var codeWriter = GetCWriter(settings.FileName, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
             ilReader.TypeResolver = codeWriter;
             _codeWriter = codeWriter;
+            _codeWriter.Initialize(ilReader.Types().First());
             return codeWriter;
         }
 
@@ -617,11 +618,6 @@ namespace Il2Native.Logic
         private static void GenerateSource(IlReader ilReader, Settings settings)
         {
             var codeWriter = GetCodeWriter(ilReader, settings);
-
-            _codeWriter = codeWriter;
-
-            cachedRequiredDefinitionTypes.Clear();
-            cachedRequiredDeclarationTypes.Clear();
 
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             var sortedListOfTypes = ReadingTypes(
@@ -641,16 +637,13 @@ namespace Il2Native.Logic
             // initialize step
             GetCodeWriter(ilReader, settings);
 
-            cachedRequiredDefinitionTypes.Clear();
-            cachedRequiredDeclarationTypes.Clear();
-
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
             var sortedListOfTypes = ReadingTypes(ilReader, settings.Filter, out genericMethodSpecializationsSorted);
 
             var fileName = settings.FileName;
             foreach (var ns in namespaces)
             {
-                settings.FileName = string.Concat(fileName, "_", ns);
+                settings.FileName = string.Concat(string.IsNullOrEmpty(fileName) ? "no_namespace" : fileName, "_", ns.CleanUpName());
                 var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
                 Writing(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
             }
@@ -989,6 +982,9 @@ namespace Il2Native.Logic
             string[] filter,
             out IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted)
         {
+            cachedRequiredDefinitionTypes.Clear();
+            cachedRequiredDeclarationTypes.Clear();
+
             // clean it as you are using IlReader
             IlReader.GenericMethodSpecializations = null;
 
@@ -1002,9 +998,6 @@ namespace Il2Native.Logic
 
             var allTypes = ilReader.AllTypes().ToList();
 
-            // TODO: temp hack to initialize ThisType for TypeResolver
-            _codeWriter.Initialize(allTypes.First());
-
             var usedTypes = FindUsedTypes(types.ToList(), allTypes, readingTypesContext);
 
             genericMethodSpecializationsSorted = GroupGenericMethodsByType(readingTypesContext.GenericMethodSpecializations);
@@ -1013,31 +1006,6 @@ namespace Il2Native.Logic
             Debug.Assert(usedTypes.All(t => !t.IsPointer), "Type is used with flag IsPointer");
 
             return usedTypes;
-        }
-
-        private static int IsDerived(IType type, IType other)
-        {
-            if (type.IsDerivedFrom(other))
-            {
-                return 1;
-            }
-
-            if (other.IsDerivedFrom(type))
-            {
-                return -1;
-            }
-
-            if (type.IsInterface && other.GetAllInterfaces().Contains(type))
-            {
-                return 1;
-            }
-
-            if (other.IsInterface && type.GetAllInterfaces().Contains(other))
-            {
-                return -1;
-            }
-
-            return 0;
         }
 
         private static bool CheckFilter(IEnumerable<string> filters, IType type)
