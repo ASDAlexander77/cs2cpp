@@ -68,7 +68,7 @@ namespace Il2Native.Logic.Gencode
                     var type = method.GetGenericArguments().First();
                     if (!type.IsStructureType())
                     {
-                        opCodeMethodInfo.Result = cWriter.WriteNewCallingDefaultConstructor(cWriter, type, true);
+                        opCodeMethodInfo.Result = cWriter.WriteNewCallingDefaultConstructor(cWriter, opCodeMethodInfo, type, true);
                     }
 
                     break;

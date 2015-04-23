@@ -2907,10 +2907,10 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, string typeName)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, OpCodePart addressOpCode, string typeName)
         {
             var typeToCreate = this.ResolveType(typeName);
-            return this.WriteNewCallingDefaultConstructor(cWriter, typeToCreate);
+            return this.WriteNewCallingDefaultConstructor(cWriter, addressOpCode, typeToCreate);
         }
 
         /// <summary>
@@ -2921,7 +2921,7 @@ namespace Il2Native.Logic
         /// </param>
         /// <returns>
         /// </returns>
-        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, IType typeToCreate, bool noNewLines = false)
+        public FullyDefinedReference WriteNewCallingDefaultConstructor(CWriter cWriter, OpCodePart addressOpCode, IType typeToCreate, bool noNewLines = false)
         {
             var writer = cWriter.Output;
 
@@ -2936,7 +2936,7 @@ namespace Il2Native.Logic
             OpCodePart opCodeNewInstance = null;
             if (constructorInfo != null)
             {
-                opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, 0, 0, constructorInfo);
+                opCodeNewInstance = new OpCodeConstructorInfoPart(OpCodesEmit.Newobj, addressOpCode.AddressStart, 0, constructorInfo);
                 this.WriteNewObject((OpCodeConstructorInfoPart)opCodeNewInstance);
             }
             else

@@ -696,6 +696,18 @@ namespace Ll2NativeTests
             // 435 - Decimals are not implemented
             // 444 - error CS1061: 'System.Reflection.AssemblyName' does not contain a definition for 'Flags'
             // 447 - error CS0246: The type or namespace name 'TypeForwardedTo' could not be found
+            // 449 - error CS0103: The name 'PortableExecutableKinds' does not exist in the current context
+            // 450 - error CS0103: The name 'PortableExecutableKinds' does not exist in the current context
+            // 456 - GetType().ToString() does not return "G`1+S[System.Int32]". TODO: Can be fixed
+            // 464 - lib using IL
+            // 499 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetMethodBody'
+            // 500 - error CS0029: Cannot implicitly convert type 'int?' to 'System.IComparable'. TODO: Can be fixed 
+            // 502 - GetType().ToString() does not return "A+N`1[System.Double]". TODO: Can be fixed
+            // 503 - error CS1061: 'System.Type' does not contain a definition for 'GetCustomAttributes'
+            // 507 - BUG in compiling 2 (very cool bug, when you use the same specialized method in as generic method which causing issue to generate 2 the same methods)
+            // 511 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'GetGenericArguments'
+            // 528 - error CS0315: The type 'int' cannot be used as type parameter 'U' in the generic type or method 'GenericType<U>'. There is no boxing conversion from 'int' to 'System.IEquatable<int>'. TODO: Investigate
+            // 529 - error CS0315: The type 'byte' cannot be used as type parameter 'V' in the generic type or method 'Base<V>'. There is no boxing conversion from 'byte' to 'System.IEquatable<byte>'.
 
             // 53 - ValueType.ToString() not implemented
 
@@ -770,13 +782,25 @@ namespace Ll2NativeTests
                 434,
                 435,
                 444,
-                447
+                447,
+                449,
+                450,
+                456,
+                464,
+                499,
+                500,
+                502,
+                503,
+                507,
+                511,
+                528,
+                529
             });
 
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 382, 386 });
 
-            foreach (var index in Enumerable.Range(448, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

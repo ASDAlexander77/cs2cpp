@@ -117,6 +117,7 @@
     <Compile Include="System\IConvertible.cs" />
     <Compile Include="System\ICustomFormatter.cs" />
     <Compile Include="System\IDisposable.cs" />
+    <Compile Include="System\IEquatable.cs" />
     <Compile Include="System\IFormatProvider.cs" />
     <Compile Include="System\IFormattable.cs" />
     <Compile Include="System\IndexOutOfRangeException.cs" />
