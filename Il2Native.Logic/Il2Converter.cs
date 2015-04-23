@@ -34,6 +34,8 @@ namespace Il2Native.Logic
 
         private static ICodeWriter _codeWriter;
 
+        private static bool split;
+
         /// <summary>
         /// </summary>
         public enum ConvertingMode
@@ -572,10 +574,36 @@ namespace Il2Native.Logic
             string[] filter = null)
         {
             concurrent = args != null && args.Any(a => a == "multi");
+            split = args != null && args.Any(a => a == "split");
             VerboseOutput = args != null && args.Any(a => a == "verbose");
-            var codeWriter = GetCWriter(fileName, sourceFilePath, pdbFilePath, outputFolder, args);
+
+            var settings = new Settings()
+                               {
+                                   FileName = fileName,
+                                   SourceFilePath = sourceFilePath,
+                                   PdbFilePath = pdbFilePath,
+                                   OutputFolder = outputFolder,
+                                   Args = args,
+                                   Filter = filter
+                               };
+            if (!split)
+            {
+                GenerateSource(ilReader, settings);
+            }
+            else
+            {
+                // generate file for each namespace
+                var namespaces = ilReader.Types().Select(t => t.Namespace).Distinct().ToArray();
+                GenerateMultiSources(ilReader, namespaces, settings);
+            }
+        }
+
+        private static ICodeWriter GetCodeWriter(IlReader ilReader, Settings settings)
+        {
+            var codeWriter = GetCWriter(settings.FileName, settings.SourceFilePath, settings.PdbFilePath, settings.OutputFolder, settings.Args);
             ilReader.TypeResolver = codeWriter;
-            GenerateSource(ilReader, filter, codeWriter);
+            _codeWriter = codeWriter;
+            return codeWriter;
         }
 
         /// <summary>
@@ -586,17 +614,19 @@ namespace Il2Native.Logic
         /// </param>
         /// <param name="codeWriter">
         /// </param>
-        private static void GenerateSource(IlReader ilReader, string[] filter, ICodeWriter codeWriter)
+        private static void GenerateSource(IlReader ilReader, Settings settings)
         {
+            var codeWriter = GetCodeWriter(ilReader, settings);
+
             _codeWriter = codeWriter;
 
             cachedRequiredDefinitionTypes.Clear();
             cachedRequiredDeclarationTypes.Clear();
 
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
-            IEnumerable<IType> sortedListOfTypes = ReadingTypes(
+            var sortedListOfTypes = ReadingTypes(
                 ilReader,
-                filter,
+                settings.Filter,
                 out genericMethodSpecializationsSorted);
 
             Writing(
@@ -604,6 +634,26 @@ namespace Il2Native.Logic
                 codeWriter,
                 sortedListOfTypes,
                 genericMethodSpecializationsSorted);
+        }
+
+        private static void GenerateMultiSources(IlReader ilReader, string[] namespaces, Settings settings)
+        {
+            // initialize step
+            GetCodeWriter(ilReader, settings);
+
+            cachedRequiredDefinitionTypes.Clear();
+            cachedRequiredDeclarationTypes.Clear();
+
+            IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted;
+            var sortedListOfTypes = ReadingTypes(ilReader, settings.Filter, out genericMethodSpecializationsSorted);
+
+            var fileName = settings.FileName;
+            foreach (var ns in namespaces)
+            {
+                settings.FileName = string.Concat(fileName, "_", ns);
+                var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
+                Writing(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
+            }
         }
 
         public static IEnumerable<IType> GetRequiredDeclarationTypes(IType typeSource)
@@ -1128,5 +1178,20 @@ namespace Il2Native.Logic
             context.DiscoveredTypes = new NamespaceContainer<IType>();
             return context;
         }
+    }
+
+    public class Settings
+    {
+        public string FileName { get; set; }
+
+        public string SourceFilePath { get; set; }
+
+        public string PdbFilePath { get; set; }
+
+        public string OutputFolder { get; set; }
+
+        public string[] Args { get; set; }
+
+        public string[] Filter { get; set; }
     }
 }

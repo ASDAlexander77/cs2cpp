@@ -49,6 +49,7 @@ namespace Il2Native
                 Console.WriteLine("  /gcdebug                Enable debug mode for Boehm garbage collector");
                 Console.WriteLine("  /verbose                Verbose output");
                 Console.WriteLine("  /multi                  Use all CPU cores");
+                Console.WriteLine("  /split                  Generate C files for each namespace");
                 Console.WriteLine("  /android                Set recommended settings for Android platform");
                 Console.WriteLine("  /emscripten             Set recommended settings for Emscripten platform");
                 Console.WriteLine(string.Empty);

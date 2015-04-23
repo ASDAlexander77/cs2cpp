@@ -117,7 +117,8 @@
             bool gc = GcEnabled,
             bool gctors = GctorsEnabled,
             bool debugInfo = DebugInfo,
-            bool stubs = false)
+            bool stubs = false,
+            bool split = false)
         {
             var args = new List<string>();
             if (includeCoreLib)
@@ -185,6 +186,11 @@
             if (NoLineDebugInfo)
             {
                 args.Add("line-");
+            }
+
+            if (split)
+            {
+                args.Add("split");
             }
 
             return args.ToArray();
