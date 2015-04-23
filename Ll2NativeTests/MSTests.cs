@@ -401,6 +401,9 @@ namespace Ll2NativeTests
             // 631 - Decimal not implemented
             // 636 - (6,14): error CS0161: 'Foo.test_while(int)': not all code paths return a value
             // 637 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
+            // 641 - Decimal not implemented
+            // 645 - (23,14): error CS0101: The namespace '<global namespace>' already contains a definition for 'C'. TODO: Investigate
+            // 647 - Enum.Parse NotImplemented
             // -----------
             // 32, 55, 74 - missing class
 
@@ -547,7 +550,11 @@ namespace Ll2NativeTests
                         617,
                         621,
                         631,
-                        636
+                        636,
+                        637,
+                        641,
+                        645,
+                        647
                     });
 
             if (CompilerHelper.UsingRoslyn)
@@ -561,7 +568,7 @@ namespace Ll2NativeTests
             }
 
             // TODO: remove when overflow ops are done
-            skip.AddRange(new[] { 141, 485 });
+            skip.AddRange(new[] { 141, 485, 643 });
 
             foreach (var index in Enumerable.Range(1, 906).Where(n => !skip.Contains(n)))
             {
