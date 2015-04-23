@@ -500,17 +500,40 @@ namespace Il2Native.Logic
 
                 case Code.Newobj:
                     var opCodeConstructorInfoPart = opCodePart as OpCodeConstructorInfoPart;
-                    if (opCodeConstructorInfoPart != null && opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                    if (opCodeConstructorInfoPart != null)
                     {
-                        var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
-                            this.System.System_String, opCodeConstructorInfoPart.Operand.GetParameters(), this);
+                        if (opCodeConstructorInfoPart.Operand.DeclaringType.IsString)
+                        {
+                            var stringCtorMethodBase = StringGen.GetCtorMethodByParameters(
+                                this.System.System_String,
+                                opCodeConstructorInfoPart.Operand.GetParameters(),
+                                this);
 
-                        this.IlReader.AddCalledMethod(stringCtorMethodBase);
+                            this.IlReader.AddCalledMethod(stringCtorMethodBase);
+                        }
+
+                        this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeConstructorInfoPart.Operand);
                     }
 
                     break;
 
                 case Code.Ldtoken:
+
+                    var opCodeFieldInfoPartToken = opCodePart as OpCodeFieldInfoPart;
+                    if (opCodeFieldInfoPartToken != null)
+                    {
+                        ////var constBytes = opCodeFieldInfoPartToken.Operand.ConstantValue as IConstBytes;
+                        ////if (constBytes != null)
+                        ////{
+                        ////    break;
+                        ////}
+
+                        if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit ||
+                            opCodeFieldInfoPartToken.Operand.GetFieldRVAData() != null)
+                        {
+                            this.IlReader.AddStaticField(opCodeFieldInfoPartToken.Operand);
+                        }
+                    }
 
                     var opCodeTypePart = opCodePart as OpCodeTypePart;
                     if (opCodeTypePart != null)
@@ -562,15 +585,20 @@ namespace Il2Native.Logic
                 case Code.Call:
 
                     var opCodeMethodInfoPart = opCodePart as OpCodeMethodInfoPart;
-                    if (opCodeMethodInfoPart != null && opCodeMethodInfoPart.Operand.IsActivatorFunction())
+                    if (opCodeMethodInfoPart != null)
                     {
-                        var type = opCodeMethodInfoPart.Operand.GetGenericArguments().First();
-                        if (!type.IsStructureType())
+                        if (opCodeMethodInfoPart.Operand.IsActivatorFunction())
                         {
-                            this.IlReader.AddCalledMethod(new SynthesizedNewMethod(type, this));
-                            var defaultConstructor = Logic.IlReader.FindConstructor(type, this);
-                            this.IlReader.AddCalledMethod(defaultConstructor);
+                            var type = opCodeMethodInfoPart.Operand.GetGenericArguments().First();
+                            if (!type.IsStructureType())
+                            {
+                                this.IlReader.AddCalledMethod(new SynthesizedNewMethod(type, this));
+                                var defaultConstructor = Logic.IlReader.FindConstructor(type, this);
+                                this.IlReader.AddCalledMethod(defaultConstructor);
+                            }
                         }
+
+                        this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeMethodInfoPart.Operand);
                     }
 
                     break;
@@ -593,6 +621,11 @@ namespace Il2Native.Logic
                         }
 #endif
                         this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
+
+                        if (opCodePart.ToCode() == Code.Callvirt)
+                        {
+                            this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeMethodInfoPart.Operand);
+                        }
                     }
 
                     break;
@@ -692,6 +725,29 @@ namespace Il2Native.Logic
                     }
 
                     break;
+            }
+        }
+
+        private void DiscoverAllForwardDeclarationsInMethodCall(
+            OpCodePart opCodePart,
+            IMethod method)
+        {
+            var parameters = method.GetParameters();
+            if (parameters == null)
+            {
+                return;
+            }
+
+            var paramOffset =
+                parameters.Count() != opCodePart.OpCodeOperands.Length ? 1 : 0;
+            var index = 0;
+            foreach (var parameter in parameters)
+            {
+                var parameterEstimate = this.EstimatedResultOf(opCodePart.OpCodeOperands[paramOffset + index++]);
+                if (parameter.ParameterType.IsInterface && !parameterEstimate.Type.IsInterface)
+                {
+                    this.IlReader.AddUsedTypeDefinition(parameterEstimate.Type);
+                }
             }
         }
 

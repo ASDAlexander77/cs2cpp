@@ -649,6 +649,11 @@ namespace Il2Native.Logic
 
             foreach (var ns in namespaces)
             {
+                // TODO: remove next line
+                ////if (ns != "System")
+                ////    continue;
+
+
                 settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());
                 var codeWriterForNameSpace = GetCodeWriter(ilReader, settings);
                 Writing(ilReader, codeWriterForNameSpace, sortedListOfTypes.Where(t => t.Namespace == ns).ToList(), genericMethodSpecializationsSorted);
