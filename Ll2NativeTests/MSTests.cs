@@ -694,6 +694,8 @@ namespace Ll2NativeTests
             // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib#
             // 434 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
             // 435 - Decimals are not implemented
+            // 444 - error CS1061: 'System.Reflection.AssemblyName' does not contain a definition for 'Flags'
+            // 447 - error CS0246: The type or namespace name 'TypeForwardedTo' could not be found
 
             // 53 - ValueType.ToString() not implemented
 
@@ -766,13 +768,15 @@ namespace Ll2NativeTests
                 421,
                 431,
                 434,
-                435
+                435,
+                444,
+                447
             });
 
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 382, 386 });
 
-            foreach (var index in Enumerable.Range(434, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(448, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

@@ -475,7 +475,7 @@ namespace Il2Native.Logic
                 {
                     // find interface 
                     var @interfaceDefinition =
-                        classMethodDefinition.DeclaringType.GetInterfaces()
+                        classMethodDefinition.DeclaringType.GetAllInterfaces()
                             .First(i => i.TypeEquals(interfaceMethodSpecialization.DeclaringType));
 
                     var @interfaceMethodDefinition = @interfaceDefinition.GetMethods(flags)
