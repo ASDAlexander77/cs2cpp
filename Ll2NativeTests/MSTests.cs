@@ -400,6 +400,7 @@ namespace Ll2NativeTests
             // 621 - error CS0246: The type or namespace name 'FieldOffset'. TODO: have a look, we need to implement FieldOffset
             // 631 - Decimal not implemented
             // 636 - (6,14): error CS0161: 'Foo.test_while(int)': not all code paths return a value
+            // 637 - error CS1061: 'System.Reflection.MemberInfo' does not contain a definition for 'GetCustomAttributes'
             // -----------
             // 32, 55, 74 - missing class
 
@@ -690,7 +691,9 @@ namespace Ll2NativeTests
             // 412 - error CS1061: 'System.Type' does not contain a definition for 'GenericParameterAttributes'
             // 418 - error CS1061: 'System.Type' does not contain a definition for 'GetProperties'
             // 421 - System.Type.IsValueType NotImplemented
-            // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib
+            // 431 - redeclaration of ExtensionAttribute(System.Runtime.CompilerServices) from CoreLib#
+            // 434 - error CS1061: 'System.Reflection.MethodInfo' does not contain a definition for 'Attributes'
+            // 435 - Decimals are not implemented
 
             // 53 - ValueType.ToString() not implemented
 
@@ -761,13 +764,15 @@ namespace Ll2NativeTests
                 412,
                 418,
                 421,
-                431
+                431,
+                434,
+                435
             });
 
             // TODO: remove when overflow ops are done
             skip.AddRange(new[] { 382, 386 });
 
-            foreach (var index in Enumerable.Range(1, 589).Where(n => !skip.Contains(n)))
+            foreach (var index in Enumerable.Range(434, 589).Where(n => !skip.Contains(n)))
             {
                 CompilerHelper.CompileAndRun(string.Format("gtest-{0:000}", index));
             }

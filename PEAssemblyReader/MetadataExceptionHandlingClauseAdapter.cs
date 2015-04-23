@@ -14,6 +14,7 @@ namespace PEAssemblyReader
     using System.Reflection;
     using System.Reflection.Metadata;
 
+    using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp.Symbols;
 
     /// <summary>
@@ -23,7 +24,7 @@ namespace PEAssemblyReader
     {
         /// <summary>
         /// </summary>
-        private readonly TypeSymbol catchType;
+        private readonly IType catchType;
 
         /// <summary>
         /// </summary>
@@ -39,7 +40,7 @@ namespace PEAssemblyReader
         /// </param>
         /// <param name="catchType">
         /// </param>
-        internal MetadataExceptionHandlingClauseAdapter(ExceptionRegion exceptionRegion, TypeSymbol catchType)
+        internal MetadataExceptionHandlingClauseAdapter(ExceptionRegion exceptionRegion, IType catchType)
         {
             this.exceptionRegion = exceptionRegion;
             this.catchType = catchType;
@@ -48,27 +49,11 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        /// <param name="exceptionRegion">
-        /// </param>
-        /// <param name="catchType">
-        /// </param>
-        /// <param name="genericContext">
-        /// </param>
-        internal MetadataExceptionHandlingClauseAdapter(ExceptionRegion exceptionRegion, TypeSymbol catchType, IGenericContext genericContext)
-            : this(exceptionRegion, catchType)
-        {
-            this.GenericContext = genericContext;
-        }
-
-        /// <summary>
-        /// </summary>
         public IType CatchType
         {
             get
             {
-                return this.catchType != null
-                           ? new MetadataTypeAdapter(MetadataModuleAdapter.SubstituteTypeSymbolIfNeeded(this.catchType, this.GenericContext))
-                           : null;
+                return this.catchType;
             }
         }
 
@@ -109,10 +94,6 @@ namespace PEAssemblyReader
                 throw new NotImplementedException();
             }
         }
-
-        /// <summary>
-        /// </summary>
-        public IGenericContext GenericContext { get; set; }
 
         /// <summary>
         /// </summary>

@@ -43,7 +43,7 @@ namespace System.IO
 
         public override void WriteLine(bool value)
         {
-            Write(value ? Boolean.TrueLiteral : Boolean.FalseLiteral);
+            Write(value ? bool.TrueLiteral : bool.FalseLiteral);
         }
 
         public override void WriteLine(char value)
@@ -160,6 +160,12 @@ namespace System.IO
 
         public override void WriteLine(string value)
         {
+            if (value == null)
+            {
+                this.WriteLine();
+                return;
+            }
+
             var chars = value.ToCharArray();
             unsafe
             {
@@ -171,56 +177,56 @@ namespace System.IO
             }
         }
 
-        public override void WriteLine(String format, Object arg0)
+        public override void WriteLine(string format, object arg0)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0);
             WriteLine(sb.ToString());
         }
 
-        public override void WriteLine(String format, Object arg0, Object arg1)
+        public override void WriteLine(string format, object arg0, object arg1)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0, arg1);
             WriteLine(sb.ToString());
         }
 
-        public override void WriteLine(String format, Object arg0, Object arg1, Object arg2)
+        public override void WriteLine(string format, object arg0, object arg1, object arg2)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0, arg1, arg2);
             WriteLine(sb.ToString());
         }
 
-        public override void WriteLine(String format, params Object[] arg)
+        public override void WriteLine(string format, params object[] arg)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg);
             WriteLine(sb.ToString());
         }
 
-        public override void Write(String format, Object arg0)
+        public override void Write(string format, object arg0)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0);
             Write(sb.ToString());
         }
 
-        public override void Write(String format, Object arg0, Object arg1)
+        public override void Write(string format, object arg0, object arg1)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0, arg1);
             Write(sb.ToString());
         }
 
-        public override void Write(String format, Object arg0, Object arg1, Object arg2)
+        public override void Write(string format, object arg0, object arg1, object arg2)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg0, arg1, arg2);
             Write(sb.ToString());
         }
 
-        public override void Write(String format, params Object[] arg)
+        public override void Write(string format, params object[] arg)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, arg);
@@ -332,7 +338,7 @@ namespace System.IO
             }
         }
 
-        public override void Write(Object value)
+        public override void Write(object value)
         {
             if (value != null)
             {
@@ -340,13 +346,16 @@ namespace System.IO
             }
         }
 
-        public override void Write(String value)
+        public override void Write(string value)
         {
-            unsafe
+            if (value != null)
             {
-                fixed (char* p = value)
+                unsafe
                 {
-                    wprintf(p, __arglist());
+                    fixed (char* p = value)
+                    {
+                        wprintf(p, __arglist());
+                    }
                 }
             }
         }

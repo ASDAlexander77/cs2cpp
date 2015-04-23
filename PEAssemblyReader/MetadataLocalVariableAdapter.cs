@@ -24,11 +24,6 @@ namespace PEAssemblyReader
         /// </summary>
         private MetadataDecoder<TypeSymbol, MethodSymbol, FieldSymbol, AssemblySymbol, Symbol>.LocalInfo localInfo;
 
-        // we are using it to replace Pinner IntPtr& with Void* to work with it as value
-        /// <summary>
-        /// </summary>
-        private IType localTypeReplaced;
-
         private Lazy<IType> lazyLocalType;
 
         /// <summary>
@@ -75,17 +70,7 @@ namespace PEAssemblyReader
         {
             get
             {
-                if (this.localTypeReplaced != null)
-                {
-                    return this.localTypeReplaced;
-                }
-
                 return this.lazyLocalType.Value;
-            }
-
-            set
-            {
-                this.localTypeReplaced = value;
             }
         }
 

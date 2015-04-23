@@ -4249,7 +4249,7 @@ namespace Il2Native.Logic
             }
 
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
-            this.WriteMethodRequiredDeclarationsAndDefinitions(method);
+            this.WriteMethodRequiredDeclarationsAndDefinitions(method, genericContext);
 
             // after WriteMethodRequiredDeclatations which removed info about current method we need to reread info about method
             this.ReadMethodInfo(method, genericContext);
@@ -4462,7 +4462,7 @@ namespace Il2Native.Logic
             }
         }
 
-        private void WriteMethodRequiredDeclarationsAndDefinitions(IMethod method)
+        private void WriteMethodRequiredDeclarationsAndDefinitions(IMethod method, IGenericContext genericContext)
         {
             var any = false;
 
@@ -4489,14 +4489,14 @@ namespace Il2Native.Logic
             }
 
             // locals
-            foreach (var requiredType in method.GetMethodBody(null).LocalVariables.Select(ec => ec.LocalType.NormalizeType()))
+            foreach (var requiredType in method.GetMethodBody(genericContext).LocalVariables.Select(ec => ec.LocalType.NormalizeType()))
             {
                 any = true;
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
             }
 
             // exceptions
-            foreach (var requiredType in method.GetMethodBody(null).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
+            foreach (var requiredType in method.GetMethodBody(genericContext).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
             {
                 any = true;
                 this.WriteTypeForwardDeclarationIfNotWrittenYet(requiredType);
@@ -4600,7 +4600,7 @@ namespace Il2Native.Logic
             }
 
             // exception rttis
-            foreach (var type in method.GetMethodBody(null).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
+            foreach (var type in method.GetMethodBody(genericContext).ExceptionHandlingClauses.Select(ec => ec.CatchType ?? this.System.System_Exception))
             {
                 any |= WriteRttiDeclarationIfNotWrittenYet(type);
             }

@@ -17,6 +17,7 @@ namespace PEAssemblyReader
     using System.Diagnostics;
     using System.Linq;
     using System.Reflection.Metadata;
+    using System.Reflection.Metadata.Ecma335;
 
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -230,7 +231,10 @@ namespace PEAssemblyReader
                         methodBodyBlock.ExceptionRegions.Select(
                             er =>
                             new MetadataExceptionHandlingClauseAdapter(
-                                er, !er.CatchType.IsNil ? new MetadataDecoder(peModuleSymbol).GetTypeOfToken(er.CatchType) : null, this.GenericContext)).ToArray();
+                                er,
+                                !er.CatchType.IsNil
+                                    ? new MetadataModuleAdapter(peModuleSymbol).ResolveType(MetadataTokens.GetToken(er.CatchType), this.GenericContext)
+                                    : null)).ToArray();
                 }
             }
 

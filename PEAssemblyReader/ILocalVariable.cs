@@ -18,7 +18,7 @@ namespace PEAssemblyReader
 
         /// <summary>
         /// </summary>
-        IType LocalType { get; set; }
+        IType LocalType { get; }
 
         /// <summary>
         /// </summary>
