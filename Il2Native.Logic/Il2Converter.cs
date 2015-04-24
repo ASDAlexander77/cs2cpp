@@ -650,8 +650,8 @@ namespace Il2Native.Logic
             foreach (var ns in namespaces)
             {
                 // TODO: remove next line
-                ////if (ns != "System")
-                ////    continue;
+                if (ns != "System")
+                    continue;
 
 
                 settings.FileName = string.Concat(fileName, "_", string.IsNullOrEmpty(ns) ? "no_namespace" : ns.CleanUpName());

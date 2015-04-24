@@ -511,8 +511,6 @@ namespace Il2Native.Logic
 
                             this.IlReader.AddCalledMethod(stringCtorMethodBase);
                         }
-
-                        this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeConstructorInfoPart.Operand);
                     }
 
                     break;
@@ -597,8 +595,6 @@ namespace Il2Native.Logic
                                 this.IlReader.AddCalledMethod(defaultConstructor);
                             }
                         }
-
-                        this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeMethodInfoPart.Operand);
                     }
 
                     break;
@@ -621,11 +617,6 @@ namespace Il2Native.Logic
                         }
 #endif
                         this.IlReader.AddCalledMethod(opCodeMethodInfoPart.Operand, ownerOfExplicitInterface);
-
-                        if (opCodePart.ToCode() == Code.Callvirt)
-                        {
-                            this.DiscoverAllForwardDeclarationsInMethodCall(opCodePart, opCodeMethodInfoPart.Operand);
-                        }
                     }
 
                     break;
@@ -725,29 +716,6 @@ namespace Il2Native.Logic
                     }
 
                     break;
-            }
-        }
-
-        private void DiscoverAllForwardDeclarationsInMethodCall(
-            OpCodePart opCodePart,
-            IMethod method)
-        {
-            var parameters = method.GetParameters();
-            if (parameters == null)
-            {
-                return;
-            }
-
-            var paramOffset =
-                parameters.Count() != opCodePart.OpCodeOperands.Length ? 1 : 0;
-            var index = 0;
-            foreach (var parameter in parameters)
-            {
-                var parameterEstimate = this.EstimatedResultOf(opCodePart.OpCodeOperands[paramOffset + index++]);
-                if (parameter.ParameterType.IsInterface && !parameterEstimate.Type.IsInterface)
-                {
-                    this.IlReader.AddUsedTypeDefinition(parameterEstimate.Type);
-                }
             }
         }
 
