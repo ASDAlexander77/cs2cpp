@@ -69,7 +69,7 @@
 
         public byte[] GetFieldRVAData()
         {
-            throw new System.NotImplementedException();
+            return null;
         }
     }
 }

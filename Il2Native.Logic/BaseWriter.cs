@@ -526,7 +526,7 @@ namespace Il2Native.Logic
                         ////    break;
                         ////}
 
-                        if (opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit ||
+                        if ((opCodeFieldInfoPartToken.Operand.FieldType != null && opCodeFieldInfoPartToken.Operand.FieldType.IsStaticArrayInit) ||
                             opCodeFieldInfoPartToken.Operand.GetFieldRVAData() != null)
                         {
                             this.IlReader.AddStaticField(opCodeFieldInfoPartToken.Operand);
