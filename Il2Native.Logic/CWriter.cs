@@ -3960,8 +3960,7 @@ namespace Il2Native.Logic
             // get all references
             foreach (var reference in this.AllReferences.Reverse().Distinct())
             {
-                this.Output.Write(this.declarationPrefix);
-                this.Output.WriteLine("void {0}();", this.GetGlobalConstructorsFunctionName(reference));
+                this.Output.WriteLine("Void {0}();", this.GetGlobalConstructorsFunctionName(reference));
             }
         }
 
@@ -4086,7 +4085,7 @@ namespace Il2Native.Logic
         {
             // write global ctors caller
             this.Output.WriteLine(string.Empty);
-            this.Output.WriteLine("{2}void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{", this.declarationPrefix);
+            this.Output.WriteLine("Void {0}() {1}", this.GetGlobalConstructorsFunctionName(), "{");
             this.Output.Indent++;
 
             this.SortStaticConstructorsByUsage();
