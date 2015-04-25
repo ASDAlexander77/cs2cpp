@@ -1239,7 +1239,7 @@ namespace Il2Native.Logic
                 genericMethodSpecializationsSorted,
                 ConvertingMode.Declaration);
 
-            ConvertAllTypes(
+            WriteTypesWithGenericsStep(
                 codeHeaderWriter,
                 sortedListOfTypes,
                 genericMethodSpecializationsSorted,
@@ -1268,8 +1268,9 @@ namespace Il2Native.Logic
             // writing
             codeWriter.WriteStart();
 
-            WriteDefinitionsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
-            WriteDefinitionsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
+            WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.PreDefinition);
+
+            WriteTypesWithGenericsStep(codeWriter, types, genericMethodSpecializationsSorted, ConvertingMode.Definition);
 
             // Append not generated sgettypes
             ConvertAllRuntimeTypes(
@@ -1281,7 +1282,7 @@ namespace Il2Native.Logic
             codeWriter.Close();
         }
 
-        private static void WriteDefinitionsStep(
+        private static void WriteTypesWithGenericsStep(
             ICodeWriter codeWriter,
             IEnumerable<IType> types,
             IDictionary<IType, IEnumerable<IMethod>> genericMethodSpecializationsSorted,

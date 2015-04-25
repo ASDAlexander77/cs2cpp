@@ -2571,15 +2571,20 @@ namespace Il2Native.Logic
         /// </param>
         public void WriteMethodDefinitionName(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
         {
-            if (!shortName && methodBase.DeclaringType != null
-                && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
-                    || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)
-                    || (methodBase.IsExplicitInterfaceImplementation && (methodBase.ExplicitInterface.IsGenericType || methodBase.ExplicitInterface.IsArray))))
+            if (IsGeneric(methodBase, ownerOfExplicitInterface, shortName))
             {
                 writer.Write(this.GetAssemblyPrefix());
             }
 
             this.WriteMethodDefinitionNameNoPrefix(writer, methodBase, ownerOfExplicitInterface, shortName);
+        }
+
+        private static bool IsGeneric(IMethod methodBase, IType ownerOfExplicitInterface, bool shortName)
+        {
+            return !shortName && methodBase.DeclaringType != null
+                   && (methodBase.DeclaringType.IsGenericType || methodBase.DeclaringType.IsArray || methodBase.IsGenericMethod
+                       || (ownerOfExplicitInterface != null && ownerOfExplicitInterface.IsGenericType)
+                       || (methodBase.IsExplicitInterfaceImplementation && (methodBase.ExplicitInterface.IsGenericType || methodBase.ExplicitInterface.IsArray)));
         }
 
         public void WriteMethodDefinitionNameNoPrefix(CIndentedTextWriter writer, IMethod methodBase, IType ownerOfExplicitInterface = null, bool shortName = false)
