@@ -200,7 +200,7 @@ namespace Il2Native.Logic.Gencode
             sb.Append("(Byte*) ");
             sb.Append(bytesArrayType.GetVirtualTableNameReference(cWriter));
 
-            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces().Distinct())
+            foreach (var @interface in bytesArrayType.SelectAllTopAndAllNotFirstChildrenInterfaces())
             {
                 if (sb.Length > 0)
                 {
