@@ -4218,11 +4218,6 @@ namespace Il2Native.Logic
                 return;
             }
 
-            if (!IsHeader && NoBody)
-            {
-                return;
-            }
-
             this.forwardMethodDeclarationWritten.Add(new MethodKey(method, null));
             this.WriteMethodRequiredStringsAndConstArraysDefinitions();
 
